@@ -883,7 +883,7 @@ export const sceneOutlineMixin = {
       throw new Error('Change or remove the existing area shape in the waypoint inspector first.');
     }
     if (this._outlinePolygonPointCount() + 3 > PROJECT_MODEL_LIMITS.MAX_AREA_POINTS_TOTAL) {
-      throw new Error('The project polygon-vertex limit has been reached.');
+      throw new Error('The project area-corner limit has been reached.');
     }
     const x = waypoint.imgX;
     const y = waypoint.imgY;
@@ -903,12 +903,12 @@ export const sceneOutlineMixin = {
     this.eventBus.emit('waypoint:selected', waypoint);
     const key = sceneOutlineKey('vertex', waypoint.id, 0);
     this._sceneOutlineSelectionKey = key;
-    this._commitOutlineArea(waypoint, `${key}:select`, 'Polygon created with three vertices.');
+    this._commitOutlineArea(waypoint, `${key}:select`, 'Triangle area added around the waypoint, with three corners.');
   },
 
   _outlineUpdatePolygonTiming(command) {
     const waypoint = this._outlineWaypoint(command.waypointId);
-    if (waypoint.areaHighlight.shape !== 'polygon') throw new Error('That polygon no longer exists.');
+    if (waypoint.areaHighlight.shape !== 'polygon') throw new Error('That area no longer exists.');
     const fadeInMs = secondsDraft(command, 'fadeInSeconds', 'Fade in');
     const fadeOutMs = secondsDraft(command, 'fadeOutSeconds', 'Fade out');
     if (waypoint.areaHighlight.fadeInMs === fadeInMs
@@ -916,7 +916,7 @@ export const sceneOutlineMixin = {
     waypoint.areaHighlight.fadeInMs = fadeInMs;
     waypoint.areaHighlight.fadeOutMs = fadeOutMs;
     const key = sceneOutlineKey('polygon', waypoint.id);
-    this._commitOutlineArea(waypoint, `${key}:timing`, 'Polygon timing updated.');
+    this._commitOutlineArea(waypoint, `${key}:timing`, 'Area timing updated.');
   },
 
   _outlinePolygonPointCount() {
@@ -929,11 +929,11 @@ export const sceneOutlineMixin = {
     const waypoint = this._outlineWaypoint(command.waypointId);
     const points = waypoint.areaHighlight.points;
     if (waypoint.areaHighlight.shape !== 'polygon' || !Array.isArray(points)) {
-      throw new Error('That polygon no longer exists.');
+      throw new Error('That area no longer exists.');
     }
     if (points.length >= PROJECT_MODEL_LIMITS.MAX_AREA_POINTS_PER_WAYPOINT
         || this._outlinePolygonPointCount() >= PROJECT_MODEL_LIMITS.MAX_AREA_POINTS_TOTAL) {
-      throw new Error('The project polygon-vertex limit has been reached.');
+      throw new Error('The project area-corner limit has been reached.');
     }
     points.push({
       x: imagePercentDraft(command, 'x', 'Horizontal position'),
@@ -944,7 +944,7 @@ export const sceneOutlineMixin = {
     this.eventBus.emit('waypoint:selected', waypoint);
     const key = sceneOutlineKey('vertex', waypoint.id, index);
     this._sceneOutlineSelectionKey = key;
-    this._commitOutlineArea(waypoint, `${key}:select`, `Vertex ${index + 1} added.`);
+    this._commitOutlineArea(waypoint, `${key}:select`, `Corner ${index + 1} added.`);
   },
 
   _outlineUpdateVertex(command) {
@@ -952,7 +952,7 @@ export const sceneOutlineMixin = {
     const points = waypoint.areaHighlight.points;
     const index = Number(command.index);
     if (waypoint.areaHighlight.shape !== 'polygon' || !Number.isInteger(index) || !points?.[index]) {
-      throw new Error('That polygon vertex no longer exists.');
+      throw new Error('That corner no longer exists.');
     }
     const point = {
       x: imagePercentDraft(command, 'x', 'Horizontal position'),
@@ -961,7 +961,7 @@ export const sceneOutlineMixin = {
     if (points[index].x === point.x && points[index].y === point.y) return;
     points[index] = point;
     const key = sceneOutlineKey('vertex', waypoint.id, index);
-    this._commitOutlineArea(waypoint, `${key}:apply`, `Vertex ${index + 1} updated.`);
+    this._commitOutlineArea(waypoint, `${key}:apply`, `Corner ${index + 1} updated.`);
   },
 
   _outlineDeleteVertex(command) {
@@ -969,10 +969,10 @@ export const sceneOutlineMixin = {
     const points = waypoint.areaHighlight.points;
     const index = Number(command.index);
     if (waypoint.areaHighlight.shape !== 'polygon' || !Number.isInteger(index) || !points?.[index]) {
-      throw new Error('That polygon vertex no longer exists.');
+      throw new Error('That corner no longer exists.');
     }
     if (points.length <= 3) {
-      throw new Error('A polygon needs at least three vertices. Delete the polygon instead.');
+      throw new Error('A drawn area needs at least three corners. Delete the area instead.');
     }
     const previousOutlineSelection = this._sceneOutlineSelectionKey;
     const selectionPrefix = `${sceneOutlineKey('vertex', waypoint.id)}:`;
@@ -990,12 +990,12 @@ export const sceneOutlineMixin = {
     } else {
       this._sceneOutlineSelectionKey = previousOutlineSelection;
     }
-    this._commitOutlineArea(waypoint, `${key}:select`, 'Vertex deleted. Undo available.');
+    this._commitOutlineArea(waypoint, `${key}:select`, 'Corner deleted. Undo available.');
   },
 
   _outlineDeletePolygon(command) {
     const waypoint = this._outlineWaypoint(command.waypointId);
-    if (waypoint.areaHighlight.shape !== 'polygon') throw new Error('That polygon no longer exists.');
+    if (waypoint.areaHighlight.shape !== 'polygon') throw new Error('That area no longer exists.');
     const previousOutlineSelection = this._sceneOutlineSelectionKey;
     const deletingSelected = previousOutlineSelection === sceneOutlineKey('polygon', waypoint.id)
       || previousOutlineSelection?.startsWith(`${sceneOutlineKey('vertex', waypoint.id)}:`);
@@ -1004,7 +1004,7 @@ export const sceneOutlineMixin = {
     waypoint.areaHighlight.points = [];
     const key = sceneOutlineKey('waypoint', waypoint.id);
     this._sceneOutlineSelectionKey = deletingSelected ? key : previousOutlineSelection;
-    this._commitOutlineArea(waypoint, `${key}:select`, 'Polygon deleted. Undo available.');
+    this._commitOutlineArea(waypoint, `${key}:select`, 'Area deleted. Undo available.');
   },
 };
 

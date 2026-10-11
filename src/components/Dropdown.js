@@ -49,8 +49,9 @@ function openDropdownMenu(dropdown) {
     trigger.setAttribute('aria-expanded', 'true');
     openDropdown = dropdown;
     
-    // Focus the first item that can run: a disabled one is skipped, as the
-    // arrow keys skip it (UI-06 B-18, Codex r1)
+    // Focus the first item. One disabled by aria-disabled is focusable and
+    // read with its reason (UI-06 B-18 follow-up), as the arrow keys reach
+    // it; only a natively disabled one, which cannot take focus, is skipped.
     const firstItem = menu.querySelector('[role="menuitem"]:not([disabled])');
     if (firstItem) {
       firstItem.focus();
@@ -140,12 +141,11 @@ export function initDropdown(dropdown) {
     return;
   }
   
-  // Set up ARIA attributes
+  // Set up ARIA attributes. The menu's role="menu" and the trigger's
+  // aria-haspopup="menu" are the markup's, written once there (UI-06 J-20).
   const menuId = menu.id || `dropdown-menu-${Date.now()}`;
   menu.id = menuId;
-  menu.setAttribute('role', 'menu');
   menu.setAttribute('aria-hidden', 'true');
-  trigger.setAttribute('aria-haspopup', 'menu');
   trigger.setAttribute('aria-expanded', 'false');
   trigger.setAttribute('aria-controls', menuId);
   
@@ -170,6 +170,16 @@ export function initDropdown(dropdown) {
   menu.addEventListener('keydown', (e) => {
     handleDropdownKeyboard(e, dropdown);
   });
+
+  // An aria-disabled item is focusable, so a click reaches it: from the
+  // pointer, from Enter or Space (the button's own activation) or from a
+  // script. Refused here, before the item's own listeners, and the menu stays
+  // open on it (UI-06 B-18 follow-up).
+  menu.addEventListener('click', (e) => {
+    if (!e.target.closest?.('[role="menuitem"][aria-disabled="true"]')) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }, true);
   
   // Menu item click closes dropdown
   menu.querySelectorAll('[role="menuitem"]').forEach(item => {

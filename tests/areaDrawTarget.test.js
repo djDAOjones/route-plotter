@@ -666,7 +666,13 @@ test('Draw Area asked for again, as Space or Enter on it does, keeps the draw in
 
   expect(drawing(app)).toEqual({ active: true, vertices: 2, banner: true, canvasDraws: true });
   expect(app.areaDrawingService.targetWaypoint).toBe(target);
-  expect(document.querySelector('#area-draw-banner .banner-count').textContent).toBe('2 vertices (1 more needed to close)');
+  // "corners", the outline's word (reason: UI-06 low items, one word per concept [Q4]).
+  expect(document.querySelector('#area-draw-banner .banner-count').textContent).toBe('2 corners (1 more needed to close)');
+  // The banner says what is drawn in the panel's words: an area and its corners, never a polygon or vertices.
+  const banner = document.querySelector('#area-draw-banner .banner-text');
+  expect(banner.querySelector('strong').textContent).toBe('Drawing an area');
+  expect(banner.textContent.replace(/\s+/g, ' ')).toMatch(/— Click to place corners\./);
+  expect(banner.textContent).not.toMatch(/polygon|vertices|vertex/i);
 });
 
 test('Draw Area asked for again with three vertices placed, enough to close, keeps them, and a tap on the first closes the polygon', async () => {
@@ -680,7 +686,8 @@ test('Draw Area asked for again with three vertices placed, enough to close, kee
 
   expect(drawing(app)).toEqual({ active: true, vertices: 3, banner: true, canvasDraws: true });
   expect(app.areaDrawingService.targetWaypoint).toBe(target);
-  expect(document.querySelector('#area-draw-banner .banner-count').textContent).toBe('3 vertices (click near first to close)');
+  // "corners", the outline's word (reason: UI-06 low items, one word per concept [Q4]).
+  expect(document.querySelector('#area-draw-banner .banner-count').textContent).toBe('3 corners (click near first to close)');
   tap(app, TRIANGLE[0].x, TRIANGLE[0].y);
 
   expect(drawing(app)).toEqual(ENDED);

@@ -30,6 +30,7 @@ import { buildSceneOutlineSnapshot } from '../src/utils/sceneSemantics.js';
 import { dotOnsetFraction } from '../src/utils/crowdArrival.js';
 import { formatCrowdReleaseBias } from '../src/app/crowds.js';
 import { INTERACTION } from '../src/config/constants.js';
+import { formatBinding, getKeybindings } from '../src/config/keybindings.js';
 import { bootApp } from './helpers/bootApp.js';
 
 const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
@@ -117,7 +118,8 @@ describe('parameter hints as control descriptions', () => {
     expect(tokens[0]).toBe('dot-size-value');
     expect(tokens).toContain('dot-size-tip');
     expect(describedText(slider)).toEqual([
-      '8 reference px',
+      // The diameter drawn, twice the stored 8 (reason: DEF-96).
+      '16 reference px',
       slider.closest('label').querySelector('[data-tip]').getAttribute('data-tip'),
     ]);
   });
@@ -1547,6 +1549,42 @@ describe('UI-06: a button carries its own hint, reachable by keyboard', () => {
       }
       // Export's "Export animation" said nothing its words do not: gone, with no hint.
       expect(document.getElementById('export-dropdown-btn').hasAttribute('title')).toBe(false);
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+
+  // UI-06 G-10: Undo and Redo gave their shortcuts in a title alone, which
+  // only a pointer reaches; the title went for the hint here [Q4, the
+  // owner's words]. The h1's "Version …" title went too: Help shows the
+  // version, by keyboard (helpDialog.js).
+  test('Undo and Redo are described by hints with their shortcuts, and nothing in the header has a title', async () => {
+    const shellPage = new DOMParser().parseFromString(readFileSync(resolve(process.cwd(), 'index.html'), 'utf8'), 'text/html');
+    expect(shellPage.getElementById('undo-btn').getAttribute('data-tip')).toBe('Undo the last change (⌘+Z)');
+    expect(shellPage.getElementById('redo-btn').getAttribute('data-tip')).toBe('Redo what you undid (⌘+⇧+Z)');
+    const app = await bootApp();
+    try {
+      await app.ready;
+      document.getElementById('splash-close').click();
+      const { undo, redo } = getKeybindings().keyboard;
+      const hints = {
+        'undo-btn': `Undo the last change (${formatBinding(undo)})`,
+        'redo-btn': `Redo what you undid (${formatBinding(redo)})`,
+      };
+      for (const [id, hint] of Object.entries(hints)) {
+        const button = document.getElementById(id);
+        expect(button.getAttribute('data-tip'), id).toBe(hint);
+        expect(button.hasAttribute('title'), id).toBe(false);
+        expect(describedText(button), id).toEqual([hint]);
+        expect(button.getAttribute('aria-label'), id).toBe(id === 'undo-btn' ? 'Undo' : 'Redo');
+      }
+      const title = document.getElementById('app-title');
+      expect(title.hasAttribute('title')).toBe(false);
+      // An edit rewrites the title's indicator: still no title.
+      app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+      expect(title.textContent).toBe('Route Plotter');
+      expect(title.hasAttribute('title')).toBe(false);
+      expect([...document.querySelectorAll('header [title]')].map(el => el.id || el.className)).toEqual([]);
     } finally {
       app.interactionHandler.destroy();
     }

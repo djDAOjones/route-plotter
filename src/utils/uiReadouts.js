@@ -10,10 +10,23 @@ export function formatRendererPixels(value, fractionDigits = 0) {
 }
 
 /**
+ * A waypoint marker's Size as drawn (DEF-96): `dotSize` is the radius
+ * RenderingService draws (the dot's arc, the square's ±size), and the Size
+ * hint says diameter, so the readout is twice it: the default 8 reads "16
+ * reference px". The slider and the stored value stay the radius.
+ * @param {number|string} dotSize - The waypoint's own value, a radius
+ * @returns {string}
+ */
+export function formatMarkerSize(dotSize) {
+  return formatRendererPixels(Number(dotSize) * 2);
+}
+
+/**
  * A crowd's dot Size as drawn (CROWD-07 F1): the diameter DotRenderer gives
  * `dotSize`, 20 reference px per 1×, so the default 0.40× reads "8 reference
- * px" as the marker's default does. Whole at the slider's 0.05× steps; to a
- * tenth for a value set between them in the outline.
+ * px", half a default marker's 16 (DEF-96: both readouts are diameters). Whole
+ * at the slider's 0.05× steps; to a tenth for a value set between them in the
+ * outline.
  * @param {number} dotSize - The emitter's own unit (×)
  * @returns {string}
  */

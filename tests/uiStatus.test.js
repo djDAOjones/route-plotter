@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
-import { allRules, borderColourOf, cascade, colourIn, hex, paintOf, tokensFor } from './helpers/cssTokens.js';
+import { allRules, borderColourOf, cascade, colourIn, hex, paintOf, resolveValue, tokensFor } from './helpers/cssTokens.js';
 import { callsOf, lex, lexedFiles, lineAt } from './helpers/sourceScan.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
@@ -43,6 +43,8 @@ const UNDO = `press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`;
 
 const id = name => document.getElementById(name);
 const status = () => id('app-status').textContent;
+/** Whether an Export menu item is disabled: `aria-disabled`, so it stays focusable (UI-06 B-18 follow-up). */
+const off = item => item.getAttribute('aria-disabled') === 'true';
 /** The text an element is described by, through every token of its `aria-describedby`. */
 const describedBy = element => (element.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)
   .map(token => id(token)?.textContent ?? `<missing ${token}>`).join(' ').trim();
@@ -163,8 +165,19 @@ describe('the header status line (UI-06 B-17)', () => {
     const { toasts } = listen(app);
     expect(await app.loadExampleProject('parm-aerial-walk')).toBe(false);
     expect(status()).toBe('Could not open Site walk');
-    // One message, with the reason, heard as the toast it is.
-    expect(toasts).toEqual([{ message: 'Could not open Site walk: HTTP 404', priority: 'assertive' }]);
+    // One message, with the reason, heard as the toast it is; and what to do
+    // next (reason: UI-06 B-16, the owner's words [Q4]).
+    expect(toasts).toEqual([{ message: 'Could not open Site walk (HTTP 404). Check your connection and try again.', priority: 'assertive' }]);
+  });
+
+  test('an example that cannot be downloaded at all says what to do next, without a status (UI-06 B-16)', async () => {
+    const app = await editor();
+    allowConsole(/Failed to open example project/);
+    globalThis.fetch = vi.fn(() => Promise.reject(new TypeError('Failed to fetch')));
+    const { toasts } = listen(app);
+    expect(await app.loadExampleProject('parm-aerial-walk')).toBe(false);
+    expect(status()).toBe('Could not open Site walk');
+    expect(toasts).toEqual([{ message: 'Could not open Site walk. Check your connection and try again.', priority: 'assertive' }]);
   });
 });
 
@@ -321,6 +334,57 @@ describe('export progress in the status line (UI-06 J-18)', () => {
     expect(toggle.textContent).toBe(toggleText);
     expect(toggle.disabled).toBe(false);
     expect([id('export-mp4-btn').disabled, id('export-webm-btn').disabled, id('export-html-btn').disabled]).toEqual([false, false, false]);
+    // The items are let go as aria-disabled was set on them (UI-06 B-18 follow-up).
+    expect([id('export-mp4-btn'), id('export-webm-btn'), id('export-html-btn')].map(off)).toEqual([false, false, false]);
+  });
+
+  test('a Cancel button beside the status line, shown while a video exports, cancels as Esc does, then hides and gives focus to the toggle (UI-06 J-18, [Q3])', async () => {
+    const app = await routeOfTwo();
+    const toggle = id('export-dropdown-btn');
+    const cancel = id('export-cancel-btn');
+    // At rest: hidden, a 44 px secondary button named Cancel, described by the status line it follows.
+    expect(cancel.hidden).toBe(true);
+    expect(cancel.textContent.trim()).toBe('Cancel');
+    expect(cancel.type).toBe('button');
+    expect([...cancel.classList]).toEqual(['btn', 'btn-secondary']);
+    expect(cancel.getAttribute('aria-describedby')).toBe('app-status');
+    expect(cancel.previousElementSibling).toBe(id('app-status'));
+    expect(resolveValue(cascade(cancel, ['min-height']).value, tokensFor())).toBe('2.75rem');
+
+    let stop;
+    app.videoExporter = {
+      export: vi.fn(() => new Promise((_, reject) => { stop = reject; })),
+      cancel: vi.fn(() => stop(new Error('Export cancelled'))),
+    };
+    // The toggle has focus as the export starts (an item's click gives it back): the hold disables it.
+    toggle.focus();
+    const exporting = app.exportVideo({ format: 'mp4' });
+    expect(app.videoExporter.export).toHaveBeenCalledTimes(1);
+    expect(toggle.disabled).toBe(true);
+    expect(cancel.hidden).toBe(false);
+    expect(document.activeElement).toBe(cancel);
+    expect(describedBy(cancel)).toBe('Exporting MP4 0% · Esc to cancel');
+
+    cancel.click();
+    await exporting;
+    expect(app.videoExporter.cancel).toHaveBeenCalledTimes(1);
+    expect(status()).toBe('Export cancelled');
+    expect(cancel.hidden).toBe(true);
+    expect(toggle.disabled).toBe(false);
+    expect(document.activeElement).toBe(toggle);
+
+    // Focus elsewhere when an export starts stays there, and a click on the
+    // hidden Cancel afterwards cancels nothing.
+    const scope = id('scope-route-btn');
+    scope.focus();
+    const again = app.exportVideo({ format: 'webm' });
+    expect(cancel.hidden).toBe(false);
+    expect(document.activeElement).toBe(scope);
+    stop(new Error('Export cancelled'));
+    await again;
+    expect(document.activeElement).toBe(scope);
+    cancel.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(app.videoExporter.cancel).toHaveBeenCalledTimes(1);
   });
 
   test('a cancelled export says so; a failed one says so and tells the author why', async () => {
@@ -344,16 +408,20 @@ describe('export progress in the status line (UI-06 J-18)', () => {
     const words = item.textContent;
     let seen;
     vi.spyOn(app.htmlExportService, 'exportHTML').mockImplementation(async () => {
-      seen = { status: status(), words: item.textContent, disabled: item.disabled };
+      // aria-disabled while it works, never natively (UI-06 B-18 follow-up: the items stay focusable).
+      seen = { status: status(), words: item.textContent, disabled: off(item), native: item.hasAttribute('disabled') };
       return new Blob(['<html></html>'], { type: 'text/html' });
     });
 
     await app.exportHTML();
 
-    expect(seen).toEqual({ status: 'Exporting HTML…', words, disabled: true });
+    expect(seen).toEqual({ status: 'Exporting HTML…', words, disabled: true, native: false });
     expect(status()).toBe('Export complete');
     expect(item.textContent).toBe(words);
     expect(item.disabled).toBe(false);
+    // No native disabled is left after an HTML export, and the ARIA one is let go.
+    expect(item.hasAttribute('disabled')).toBe(false);
+    expect(off(item)).toBe(false);
   });
 });
 
@@ -364,10 +432,12 @@ describe('export validation (UI-06 B-18)', () => {
     const webm = id('export-webm-btn');
     const html = id('export-html-btn');
     const line = id('export-menu-reason');
+    // Disabled is aria-disabled now, never native: the items stay focusable (UI-06 B-18 follow-up).
+    const native = () => [mp4, webm, html].filter(item => item.hasAttribute('disabled'));
     expect(app.waypoints).toHaveLength(0);
     expect(app.background.image).not.toBeNull();
 
-    expect([mp4.disabled, webm.disabled, html.disabled]).toEqual([true, true, true]);
+    expect([off(mp4), off(webm), off(html)]).toEqual([true, true, true]);
     expect(describedBy(mp4)).toBe('Export MP4 and WebM need at least 2 waypoints.');
     expect(describedBy(webm)).toBe('Export MP4 and WebM need at least 2 waypoints.');
     expect(describedBy(html)).toBe('Export HTML needs at least 2 waypoints.');
@@ -376,9 +446,9 @@ describe('export validation (UI-06 B-18)', () => {
     expect(id('export-dropdown-btn').disabled).toBe(false);
 
     app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
-    expect([mp4.disabled, webm.disabled, html.disabled]).toEqual([true, true, true]);
+    expect([off(mp4), off(webm), off(html)]).toEqual([true, true, true]);
     app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
-    expect([mp4.disabled, webm.disabled, html.disabled]).toEqual([false, false, false]);
+    expect([off(mp4), off(webm), off(html)]).toEqual([false, false, false]);
     expect([describedBy(mp4), describedBy(webm), describedBy(html)]).toEqual(['', '', '']);
     expect(line.hidden).toBe(true);
     // The names never change with the state; the description does.
@@ -390,33 +460,37 @@ describe('export validation (UI-06 B-18)', () => {
       waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
     })).toBe(true);
     expect(app.background.image).toBeNull();
-    expect([mp4.disabled, webm.disabled, html.disabled]).toEqual([false, false, true]);
+    expect([off(mp4), off(webm), off(html)]).toEqual([false, false, true]);
     expect(describedBy(html)).toBe('Export HTML needs a background image.');
     expect(line.hidden).toBe(false);
 
     // And with neither.
     app.eventBus.emit('waypoint:delete', app.waypoints[1]);
-    expect([mp4.disabled, webm.disabled, html.disabled]).toEqual([true, true, true]);
+    expect([off(mp4), off(webm), off(html)]).toEqual([true, true, true]);
     expect(describedBy(html)).toBe('Export HTML needs at least 2 waypoints and a background image.');
+    expect(native()).toEqual([]);
   });
 
-  test('the Export menu opens on its first item that can run, never on a disabled one (Codex r1)', async () => {
+  test('the Export menu opens on its first item, a disabled one included (Codex r1; UI-06 B-18 follow-up)', async () => {
     const app = await editor();
     const toggle = id('export-dropdown-btn');
     const key = (target, name) => target.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true }));
     expect(app.waypoints).toHaveLength(0);
-    expect([id('export-mp4-btn'), id('export-webm-btn'), id('export-html-btn')].map(item => item.disabled))
+    // aria-disabled, not native (reason: disabled items are focusable now).
+    expect([id('export-mp4-btn'), id('export-webm-btn'), id('export-html-btn')].map(off))
       .toEqual([true, true, true]);
 
-    // Clicked open, and opened by the keyboard.
+    // Clicked open, and opened by the keyboard: on Export MP4, with its reason
+    // (reason: disabled items are focusable now; it opened on Download diagnostics…).
     toggle.focus();
     toggle.click();
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    expect(document.activeElement).toBe(id('download-debug-btn'));
+    expect(document.activeElement).toBe(id('export-mp4-btn'));
+    expect(describedBy(document.activeElement)).toBe('Export MP4 and WebM need at least 2 waypoints.');
     key(document.activeElement, 'Escape');
     expect(document.activeElement).toBe(toggle);
     key(toggle, 'ArrowDown');
-    expect(document.activeElement).toBe(id('download-debug-btn'));
+    expect(document.activeElement).toBe(id('export-mp4-btn'));
     key(document.activeElement, 'Escape');
 
     // Once the route has two waypoints, the first item can run, and is where it opens.
@@ -425,6 +499,64 @@ describe('export validation (UI-06 B-18)', () => {
     key(toggle, 'Enter');
     expect(document.activeElement).toBe(id('export-mp4-btn'));
     key(document.activeElement, 'Escape');
+  });
+
+  test('with one waypoint, the arrows reach WebM and HTML, each described by its reason; a click on one exports nothing and leaves the menu open (UI-06 B-18 follow-up)', async () => {
+    const app = await editor();
+    app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+    const toggle = id('export-dropdown-btn');
+    const [mp4, webm, html] = ['export-mp4-btn', 'export-webm-btn', 'export-html-btn'].map(id);
+    const key = (target, name) => target.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true }));
+    const VIDEO = 'Export MP4 and WebM need at least 2 waypoints.';
+    toggle.focus();
+    key(toggle, 'ArrowDown');
+    const reached = [];
+    for (let step = 0; step < 3; step += 1) {
+      const item = document.activeElement;
+      reached.push([item.id, off(item), item.disabled, describedBy(item)]);
+      key(item, 'ArrowDown');
+    }
+    expect(reached).toEqual([
+      ['export-mp4-btn', true, false, VIDEO],
+      ['export-webm-btn', true, false, VIDEO],
+      ['export-html-btn', true, false, 'Export HTML needs at least 2 waypoints.'],
+    ]);
+    expect(document.activeElement).toBe(id('download-debug-btn'));
+    key(document.activeElement, 'End');
+    expect(document.activeElement).toBe(id('copy-debug-btn'));
+    key(document.activeElement, 'Home');
+    expect(document.activeElement).toBe(mp4);
+    key(mp4, 'ArrowUp');
+    expect(document.activeElement).toBe(id('copy-debug-btn'));
+    // Drawn in the disabled tokens, as a natively disabled item was.
+    for (const item of [mp4, webm, html]) {
+      expect(cascade(item, 'color')?.value, item.id).toBe('var(--disabled-03)');
+      expect(cascade(item, 'cursor')?.value, item.id).toBe('not-allowed');
+    }
+
+    // A click, as Enter or Space or a script sends it: nothing is asked for, nothing is said, and the menu stays.
+    const asked = [];
+    app.eventBus.on('video:export-request', request => asked.push(['video', request]));
+    app.eventBus.on('html:export-request', () => asked.push(['html']));
+    const probe = vi.spyOn(VideoExporter, '_testWebCodecsConfig');
+    const { toasts } = listen(app);
+    for (const item of [mp4, webm, html]) {
+      item.focus();
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+      item.dispatchEvent(click);
+      expect(click.defaultPrevented, item.id).toBe(true);
+      expect(toggle.getAttribute('aria-expanded'), item.id).toBe('true');
+      expect(id('export-menu').classList.contains('is-open'), item.id).toBe(true);
+      expect(document.activeElement, item.id).toBe(item);
+    }
+    await Promise.resolve();
+    expect(asked).toEqual([]);
+    expect(probe).not.toHaveBeenCalled();
+    expect(toasts).toEqual([]);
+    key(document.activeElement, 'Escape');
+    // The enabled items still run: the guard is for a disabled one only.
+    id('copy-debug-btn').click();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
   });
 
   test('a refused or failed export is a toast the author must hear, never an alert', async () => {
@@ -543,7 +675,48 @@ describe('a background that fails to load (UI-06 B-16, DEF-91)', () => {
 
     expect(await app.loadExampleImage('images/Missing.png')).toBe(false);
 
-    expect(toasts).toEqual([{ message: 'Background not loaded: the file could not be fetched (HTTP 404)', priority: 'assertive' }]);
+    // What happened in the author's words, and what to do next (reason: UI-06 B-16, the owner's words [Q4]).
+    expect(toasts).toEqual([{
+      message: 'Background not loaded: the image could not be downloaded (HTTP 404). Check your connection and choose it again, or use Choose image.',
+      priority: 'assertive',
+    }]);
+  });
+
+  test('an example background that cannot be downloaded at all says what to do next, without a status (UI-06 B-16)', async () => {
+    const app = await editor();
+    allowConsole(/Failed to load example image/);
+    const { toasts } = listen(app);
+    globalThis.fetch = vi.fn(() => Promise.reject(new TypeError('Failed to fetch')));
+
+    expect(await app.loadExampleImage('images/Court.png')).toBe(false);
+
+    expect(toasts).toEqual([{
+      message: 'Background not loaded: the image could not be downloaded. Check your connection and choose it again, or use Choose image.',
+      priority: 'assertive',
+    }]);
+  });
+
+  test('an error stays until it is dismissed; any other toast goes after 5 s (UI-06 B-16, WCAG 2.2.3)', async () => {
+    const app = await editor();
+    allowConsole(/Failed to load example image/);
+    vi.useFakeTimers();
+    try {
+      const shown = () => [...document.querySelectorAll('#toast-container .toast')].map(toast => toast.firstChild.textContent);
+      app.eventBus.emit('ui:toast', { message: 'Saved' });
+      app.eventBus.emit('ui:toast', { message: 'Could not open Site walk. Check your connection and try again.', priority: 'assertive' });
+      app.showToast('Copied', 2000);
+      app.showToast('Export failed: the encoder failed', 3000, null, { priority: 'assertive' });
+      expect(shown()).toHaveLength(4);
+      vi.advanceTimersByTime(10_000);
+      // A duration given is kept, an error's included; one left out is 0 for an error, 5 s for the rest.
+      expect(shown()).toEqual(['Could not open Site walk. Check your connection and try again.']);
+      const error = document.querySelector('#toast-container .toast');
+      error.querySelector('.toast-dismiss').click();
+      vi.advanceTimersByTime(500);
+      expect(shown()).toEqual([]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   /**
@@ -845,12 +1018,14 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
     app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
 
     expect(line.hidden).toBe(false);
-    expect(line.textContent).toBe('This crowd has no emitter yet');
+    // What to do, in the panel's words (reason: UI-06 B-31, glossary §D, the owner's words [Q4]).
+    expect(line.textContent).toBe('This crowd has no dots. To start again, delete it in Layers and choose + Add crowd.');
     // Every control that edits the crowd is disabled, all 24 of them, as
-    // many as before help was told apart: only the 11 hints' triggers are
-    // left out ([editable, help] per card).
+    // many as before help was told apart: only the 12 hints' triggers are
+    // left out ([editable, help] per card). (Reason for 12, was 11: the
+    // Pattern seed's label has a hint now, CROWD-07 F18.)
     expect(Object.fromEntries(CARDS.map(name => [name, [editableOf(name).length, helpOf(name).length]])))
-      .toEqual({ dots: [13, 3], release: [8, 5], motion: [3, 3] });
+      .toEqual({ dots: [13, 3], release: [8, 6], motion: [3, 3] });
     for (const name of CARDS) {
       expect(editableOf(name).filter(control => !control.disabled), `${name} controls left enabled`).toEqual([]);
       expect(card(name).querySelector('.section-header').getAttribute('aria-describedby')).toBe('crowd-no-emitter');
@@ -859,11 +1034,12 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
     expect(id('crowd-guide-type').disabled).toBe(false);
     expect(id('crowd-guide-type').value).toBe('graph');
 
-    // Help stays (Codex r3, question 2-2): all 11 "?" triggers are enabled,
-    // and each opens its explanation by keyboard and by pointer.
+    // Help stays (Codex r3, question 2-2): all 12 "?" triggers are enabled,
+    // and each opens its explanation by keyboard and by pointer (12, was 11:
+    // the Pattern seed's hint, CROWD-07 F18).
     const help = CARDS.flatMap(helpOf);
     const named = trigger => trigger.getAttribute('aria-label');
-    expect(help).toHaveLength(11);
+    expect(help).toHaveLength(12);
     expect(help.filter(trigger => trigger.disabled || trigger.hidden).map(named)).toEqual([]);
     /** The explanation showing, if any: the one shared hint, made on first use. */
     const shown = () => {

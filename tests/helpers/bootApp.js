@@ -62,6 +62,8 @@ function stopApp(app) {
   attempt(() => app.storageService?.cancelAutoSave?.());
   attempt(() => app.eventBus?.removeAllListeners?.());
   attempt(() => releasePageListeners(app));
+  // Where a leaving toast gives focus back is tracked from the boot (UI-06 B-35).
+  attempt(() => app._stopTrackingFocusBeforeToasts?.());
   // A dialog's focus trap listens on the window and the document while the
   // dialog is open (added as it shows, so not among the boot's own listeners
   // above): a splash a test never closed would take every later test's

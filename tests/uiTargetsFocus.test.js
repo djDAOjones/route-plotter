@@ -22,7 +22,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, describe, expect, test } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { attachSwatchPickers } from '../src/components/SwatchPicker.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import {
   FORCED_COLOURS, cascade, colourIn, contrast, resolveValue, splitTopLevel, textPair, tokensFor,
 } from './helpers/cssTokens.js';
@@ -241,6 +242,43 @@ describe('Done gives focus back to a control that is on screen (UI-06 B-29, Code
     expect(button.disabled).toBe(false);
     expect(document.activeElement).toBe(button);
   });
+
+  // UI-06 B-34: entering the mode disables the Edit network button that had
+  // focus, and nothing took it: focus fell to the page. It goes to the
+  // banner's Done [Q2, the owner's call], which gives it back as above.
+  test('entered from the Edit network button, focus goes to the banner\'s Done, and Done gives it back (UI-06 B-34)', async () => {
+    const { app, header, button } = await drawing();
+    header.click();
+    button.focus();
+    button.click();
+    expect(app.networkEditService.active).toBe(true);
+    expect(button.disabled).toBe(true);
+    expect(document.activeElement).toBe(done());
+    done().click();
+    expect(app.networkEditService.active).toBe(false);
+    expect(document.activeElement).toBe(button);
+  });
+
+  test('entered with focus nowhere, it goes to Done; Custom network chosen for an empty network keeps the select (UI-06 B-34)', async () => {
+    const { app, header } = await drawing();
+    document.activeElement?.blur();
+    expect(document.activeElement).toBe(document.body);
+    app.enterNetworkEditMode();
+    expect(document.activeElement).toBe(done());
+    done().click();
+    // A second crowd, on the route: choosing Custom network for it hands
+    // over the pen at once, and the select the user is on keeps focus.
+    app.addCrowd();
+    header.click();
+    const select = document.getElementById('crowd-guide-type');
+    expect(select.value).toBe('route');
+    select.focus();
+    select.value = 'graph';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(app.networkEditService.active).toBe(true);
+    expect(app.networkEditService.layer).toBe(app.selectedCrowd);
+    expect(document.activeElement).toBe(select);
+  });
 });
 
 describe('a card header\'s focus ring is visible, collapsed or expanded (UI-06 B-02)', () => {
@@ -267,11 +305,29 @@ describe('a card header\'s focus ring is visible, collapsed or expanded (UI-06 B
         }
         if (node.matches('.settings-sections')) break;
       }
-      if (expanded) expect(ring).toMatch(/inset 4px 0 0 0 var\(--interactive-01\)/);
+      // The accent now follows the ring and starts past it (reason: UI-06 low item c, see below).
+      if (expanded) expect(ring).toMatch(/inset 9px 0 0 0 var\(--interactive-01\)/);
     }
     // The card does clip its children to its rounded corners, which is why the ring is inside.
     expect(cascade(section, 'overflow')?.value).toBe('hidden');
     expect(cascade(header, 'outline', focused)?.value).toBe('none');
+  });
+
+  // UI-06 low item c: expanded, the header's 4 px accent was listed first, so
+  // painted on top, and covered 4 of the ring's 5 px on its left. The ring's
+  // two layers come first now, and the accent, under them, reaches 9 px in:
+  // 4 px of it show past the ring's 5.
+  test('expanded and focused, the ring is painted over the accent, and the accent shows past it', () => {
+    const header = mount(SIDEBAR, '.section-header');
+    header.closest('.settings-section').classList.add('expanded');
+    const layers = splitTopLevel(cascade(header, 'box-shadow', { states: ['focus-visible'] })?.value ?? '');
+    expect(layers).toHaveLength(3);
+    expect(layers.slice(0, 2)).toEqual(['inset 0 0 0 2px var(--focus-inner)', 'inset 0 0 0 5px var(--focus-outer)']);
+    const accent = /^inset (\d+(?:\.\d+)?)px 0 0 0 var\(--interactive-01\)$/.exec(layers[2]);
+    expect(accent, layers[2]).not.toBeNull();
+    const ringWidth = Math.max(...layers.slice(0, 2).map(layer => parseFloat(layer.split(/\s+/)[4])));
+    expect(Number(accent[1])).toBeGreaterThan(ringWidth);
+    expect(Number(accent[1]) - ringWidth).toBe(4);
   });
 
   test('the sidebar\'s scroller leaves room for the last-used card\'s ring, which its own clip would take', () => {
@@ -502,5 +558,208 @@ describe('the scope chip\'s Route is the current scope, or the way back to it (U
     button.setAttribute('aria-current', 'true');
     expect(cascade(button, fill, { media: [FORCED_COLOURS] })?.value).toBe('Highlight');
     expect(cascade(button, 'color', { media: [FORCED_COLOURS] })?.value).toBe('HighlightText');
+  });
+});
+
+describe('a swatch picker\'s options are 44 px targets (UI-06 B-32)', () => {
+  // The fieldset had two tracks, 6rem and the rest, for a legend beside the
+  // grid; but a rendered <legend> takes no grid cell, so the grid landed in
+  // the 6rem track: (96 − 4 × 4) / 5 = 16 px per option. Now one track, the
+  // legend over the grid and the grid the picker's full width [Q1, the
+  // owner's call: 44 px chips spanning both of the old columns].
+  /** A picker with the custom colour row, built as the app builds it, in a card in the sidebar's scroller. */
+  function picker() {
+    const sections = mount(`<div id="settings-sections" class="settings-sections"><div class="settings-section expanded">
+      <div class="section-content"><input type="hidden" id="b32-colour" value="#0072B2">
+      <div class="swatch-picker" data-target-input="#b32-colour" data-mode="okabe-ito" data-label="Colour"
+        data-allow-custom="true"></div></div></div></div>`, '.settings-sections');
+    attachSwatchPickers(sections);
+    return { sections, fieldset: sections.querySelector('.swatch-fieldset') };
+  }
+  const px = (value) => {
+    const match = /^([\d.]+)(rem|px)$/.exec(String(value).trim());
+    if (!match) throw new Error(`not a length: ${value}`);
+    return parseFloat(match[1]) * (match[2] === 'rem' ? 16 : 1);
+  };
+
+  test('one track: the legend over the grid, and the grid, its actions, the custom colour and Mixed all in it', () => {
+    const { fieldset } = picker();
+    expect(cascade(fieldset, 'grid-template-columns')?.value).toBe('minmax(0, 1fr)');
+    for (const selector of ['.swatch-grid', '.swatch-actions', '.swatch-disclosure', '.swatch-mixed-state']) {
+      const child = fieldset.querySelector(selector);
+      expect(child?.parentElement, selector).toBe(fieldset);
+      expect(cascade(child, ['grid-column', 'grid-column-start']), selector).toBeUndefined();
+    }
+    expect(fieldset.firstElementChild.matches('legend.swatch-legend')).toBe(true);
+  });
+
+  test('every option is at least 2.75rem tall, and a neutral grid\'s columns no narrower', () => {
+    const { fieldset } = picker();
+    const option = fieldset.querySelector('.swatch-option');
+    expect(px(winning(option, 'min-height'))).toBeGreaterThanOrEqual(44);
+    const neutral = mount('<div class="swatch-grid swatch-grid-neutral"></div>', '.swatch-grid-neutral');
+    const columns = winning(neutral, 'grid-template-columns');
+    const floor = /minmax\(([\d.]+(?:rem|px)),/.exec(columns)?.[1];
+    expect(px(floor), columns).toBeGreaterThanOrEqual(44);
+  });
+
+  test('in the narrowest left sidebar above 80rem (20rem) and at or below it (18rem), each of five columns is 44 px or wider', () => {
+    // The sidebar's track less the scroller's inline padding and the card
+    // content's, both sides: 53.6 px and 47.2 px per option before a
+    // scrollbar takes its share (the lead checks those in Chromium).
+    const { sections, fieldset } = picker();
+    const content = sections.querySelector('.section-content');
+    const grid = fieldset.querySelector('.swatch-grid');
+    const main = mount('<main class="main"></main>', '.main');
+    const wide = winning(main, 'grid-template-columns');
+    const medium = winning(main, 'grid-template-columns', { media: ['@media (max-width: 80rem)'] });
+    const tracks = {
+      'above 80rem': /^clamp\(([\d.]+rem),/.exec(wide)?.[1],
+      'at 80rem and below': /^minmax\([\d.]+rem,\s*([\d.]+rem)\)/.exec(medium)?.[1],
+    };
+    expect(tracks).toEqual({ 'above 80rem': '20rem', 'at 80rem and below': '18rem' });
+    const scroller = px(winning(sections, ['padding-inline', 'padding']));
+    const card = px(winning(content, ['padding', 'padding-inline']));
+    // The grid sits in the fieldset's first track: all of it when there is one.
+    const fieldsetTracks = splitTopLevel(winning(fieldset, 'grid-template-columns'), ' ');
+    const columns = Number(/^repeat\((\d+),\s*1fr\)$/.exec(winning(grid, 'grid-template-columns'))?.[1]);
+    const gap = px(winning(grid, ['column-gap', 'gap']));
+    expect(columns).toBe(5);
+    for (const [where, track] of Object.entries(tracks)) {
+      const inner = px(track) - 2 * scroller - 2 * card;
+      const first = fieldsetTracks.length === 1 ? inner : px(fieldsetTracks[0]);
+      const option = (first - gap * (columns - 1)) / columns;
+      expect(option, where).toBeGreaterThanOrEqual(44);
+    }
+  });
+});
+
+describe('a toast that goes while it holds focus gives it back (UI-06 B-35)', () => {
+  // Dismiss took the focus away with its toast: focus fell to the page. It
+  // goes back to the control focused before, outside the toasts [Q2, the
+  // owner's call], if a browser would let it land there (PR 7's checks);
+  // else to the next toast still showing; else to the toasts' container.
+  const toasts = () => [...document.querySelectorAll('#toast-container .toast')];
+  const dismissOf = toast => toast.querySelector('.toast-dismiss');
+  const container = () => document.getElementById('toast-container');
+
+  /** The editor, its start tip seen: the tip's real-clock timer would add a toast mid-test. */
+  async function quietEditor() {
+    localStorage.getItem.mockImplementation(tipSeen());
+    return editor();
+  }
+
+  /** The dropdown stylesheet, which hides a closed menu, applied to the page for jsdom to compute. */
+  function applyDropdownStyles() {
+    const style = document.createElement('style');
+    style.textContent = readFileSync(resolve(process.cwd(), 'styles/dropdown.css'), 'utf8');
+    document.body.append(style);
+  }
+
+  test('Dismiss, or the toast\'s action, gives focus back to the control that had it', async () => {
+    const app = await quietEditor();
+    const route = document.getElementById('scope-route-btn');
+    route.focus();
+    app.showToast('Saved', 0);
+    dismissOf(toasts()[0]).focus();
+    dismissOf(toasts()[0]).click();
+    expect(document.activeElement).toBe(route);
+    let acted = 0;
+    app.showToast('Deleted Crowd 1', 0, { label: 'Undo', onClick: () => { acted += 1; } });
+    const action = toasts().at(-1).querySelector('.toast-action');
+    action.focus();
+    action.click();
+    expect(acted).toBe(1);
+    expect(document.activeElement).toBe(route);
+  });
+
+  test('a control removed, in a closed menu or in a disabled fieldset cannot take it: the next toast does, then the container', async () => {
+    const app = await quietEditor();
+    applyDropdownStyles();
+    const wouldTake = [
+      ['removed', () => {
+        const extra = document.createElement('button');
+        document.body.append(extra);
+        extra.focus();
+        return () => extra.remove();
+      }],
+      ['in a closed menu', () => {
+        const save = document.getElementById('save-project-btn');
+        document.getElementById('file-dropdown-btn').click();
+        expect(save.closest('.dropdown-menu').classList.contains('is-open')).toBe(true);
+        save.focus();
+        return () => document.body.click();
+      }],
+      ['in a disabled fieldset', () => {
+        const fieldset = document.createElement('fieldset');
+        fieldset.innerHTML = '<button type="button">Inside</button>';
+        document.body.append(fieldset);
+        fieldset.querySelector('button').focus();
+        return () => { fieldset.disabled = true; };
+      }],
+    ];
+    for (const [why, focusThen] of wouldTake) {
+      const takeAway = focusThen();
+      app.showToast(`First, ${why}`, 0);
+      app.showToast(`Second, ${why}`, 0);
+      const [first, second] = toasts().slice(-2);
+      takeAway();
+      dismissOf(first).focus();
+      dismissOf(first).click();
+      expect(document.activeElement, why).toBe(dismissOf(second));
+      dismissOf(second).click();
+      expect(document.activeElement, why).toBe(container());
+      expect(container().getAttribute('tabindex'), why).toBe('-1');
+      for (const toast of toasts()) toast.remove();
+    }
+  });
+
+  test('with no toast after it, an earlier one takes focus; one already leaving never does', async () => {
+    const app = await quietEditor();
+    const extra = document.createElement('button');
+    document.body.append(extra);
+    extra.focus();
+    app.showToast('Older', 0);
+    app.showToast('Newer', 0);
+    const [older, newer] = toasts();
+    extra.remove();
+    dismissOf(newer).focus();
+    dismissOf(newer).click();
+    expect(document.activeElement).toBe(dismissOf(older));
+    // Two at once: the first is on its way out when the second goes, so the container takes focus.
+    app.showToast('Third', 0);
+    const third = toasts().at(-1);
+    dismissOf(older).click();
+    dismissOf(third).focus();
+    dismissOf(third).click();
+    expect(document.activeElement).toBe(container());
+  });
+
+  test('a toast\'s timer moves focus only when focus is in it', async () => {
+    const app = await quietEditor();
+    const route = document.getElementById('scope-route-btn');
+    const chip = document.getElementById('scope-chip');
+    route.focus();
+    app.showToast('Here', 30);
+    dismissOf(toasts()[0]).focus();
+    await new Promise(done => setTimeout(done, 80));
+    expect(document.activeElement).toBe(route);
+    // Focus elsewhere when the timer runs: it stays there.
+    chip.setAttribute('tabindex', '-1');
+    chip.focus();
+    app.showToast('Elsewhere', 30);
+    await new Promise(done => setTimeout(done, 80));
+    expect(document.activeElement).toBe(chip);
+  });
+
+  test('no focus is tracked once the app is destroyed', async () => {
+    const app = await quietEditor();
+    const route = document.getElementById('scope-route-btn');
+    route.focus();
+    expect(app._focusBeforeToast).toBe(route);
+    app.destroy();
+    document.getElementById('scope-chip').setAttribute('tabindex', '-1');
+    document.getElementById('scope-chip').focus();
+    expect(app._focusBeforeToast).toBeNull();
   });
 });

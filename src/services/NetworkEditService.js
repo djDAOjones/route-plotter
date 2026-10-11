@@ -136,6 +136,14 @@ export class NetworkEditService {
   }
 
   /**
+   * Focus the banner's Done, the mode's one control (UI-06 B-34): where
+   * focus goes when the control that opened the mode is disabled by it.
+   */
+  focusBanner() {
+    this._banner?.querySelector('.banner-done')?.focus();
+  }
+
+  /**
    * Bind a layer for passive node/edge inspection without entering the
    * drawing tool. This deliberately does not show the banner, install the
    * capture-phase key handler, change Preview, or announce edit-mode state.

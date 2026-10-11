@@ -11,9 +11,23 @@ const MIME_BY_EXTENSION = Object.freeze({
   webp: 'image/webp',
 });
 
+/**
+ * A bundled image the browser could not download: what happened, in the
+ * author's words, with the status when the site answered one, and what to do
+ * next (UI-06 B-16, the owner's words).
+ * @param {number} [status]
+ * @returns {Error}
+ */
+function downloadFailure(status) {
+  const error = new Error(`the image could not be downloaded${status ? ` (HTTP ${status})` : ''}`);
+  error.nextStep = 'Check your connection and choose it again, or use Choose image.';
+  return error;
+}
+
 async function loadBundledImageAsset(imagePath) {
-  const response = await fetch(imagePath);
-  if (!response.ok) throw new Error(`the file could not be fetched (HTTP ${response.status})`);
+  // A fetch that rejects (offline) has no status to give.
+  const response = await fetch(imagePath).catch(() => { throw downloadFailure(); });
+  if (!response.ok) throw downloadFailure(response.status);
   const blob = await response.blob();
   const name = decodeURIComponent(imagePath.split('/').pop() || 'background');
   const extension = name.split('.').pop()?.toLowerCase();
@@ -40,13 +54,15 @@ function describeBackgroundFailure(error) {
 /**
  * A background that did not load is said, as a toast the author must hear,
  * and the reason with it (UI-06 B-16, DEF-91): never silent, never only a
- * console line. The toast is announced once through the queue (J-05); a host
- * with no toast hears the announcement alone.
+ * console line; a download that failed says what to do next too. The toast
+ * is announced once through the queue (J-05); a host with no toast hears the
+ * announcement alone.
  * @param {Object} app
  * @param {Error|string} error
  */
 function reportBackgroundFailure(app, error) {
-  const message = `Background not loaded: ${describeBackgroundFailure(error)}`;
+  const nextStep = error?.nextStep ? `. ${error.nextStep}` : '';
+  const message = `Background not loaded: ${describeBackgroundFailure(error)}${nextStep}`;
   if (app.eventBus?.emit) app.eventBus.emit('ui:toast', { message, priority: 'assertive' });
   else app.announce?.(message, 'assertive');
 }

@@ -638,7 +638,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
       · autosave
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}  (digest c508f5b0)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}  (digest 8d96a69e)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 502
@@ -741,7 +741,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(wp#1), wp(ex-uon-b1), …+1]  (digest 66023bd8)
       · autosave
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 3, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-2"}  (digest b80be917)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 3, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-2"}  (digest 38b44739)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 502
@@ -842,7 +842,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
       · autosave
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}  (digest 242a2578)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}  (digest 55737d0b)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 502
@@ -945,7 +945,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       waypoint:list-updated [wp(wp#1)]
       · autosave
       · queued render
-  scene-outline:update {crowds: [], focusKey: null, majorCount: 1, minorCount: 0, route: [{…}], selectionKey: null}  (digest d8898839)
+  scene-outline:update {crowds: [], focusKey: null, majorCount: 1, minorCount: 0, route: [{…}], selectionKey: null}  (digest 19d45ffc)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.trunk: "" -> "wp#1"
@@ -1045,7 +1045,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
       · autosave
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: null}  (digest d86a8466)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: null}  (digest ccc0f021)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.branchPaths: ["ex-uon-branch: 353 points"] -> ["ex-uon-branch: 117 points", "ex-uon-branch: 117 points"]
@@ -1215,7 +1215,7 @@ at once: autosave 2, queued render 4, path 2, retime 1, undo saved 2
     · autosave
     · queued render
     said "Branch added from Main entrance."
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: null}  (digest 517a9bb3)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: null}  (digest f50a2530)
   model:
     ~ runtime.branchArmed: "ex-uon-1" -> null
     ~ runtime.dirty: false -> true
@@ -1321,7 +1321,7 @@ at once: autosave 1, queued render 2, path 1, retime 1, undo saved 1
     ui:toast {message: "Branch now ends here"}
       toast "Branch now ends here"
       said "Branch now ends here"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 998eaf9a)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest fd0b29eb)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 117 points"]
@@ -1350,7 +1350,7 @@ at once: queued render 1
     ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest 6bff6eff)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest 672abc5c)
   model:
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
   selection: none -> [ex-uon-2] ex-uon-2
@@ -1370,7 +1370,7 @@ at once: queued render 1
     ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest efca9775)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest a2a2190f)
   model:
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
   selection: none -> [ex-uon-1 ex-uon-3] ex-uon-3
@@ -1392,7 +1392,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest efca9775)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest a2a2190f)
   model:
     (unchanged)
   selection: [ex-uon-1] ex-uon-1 -> [ex-uon-1 ex-uon-3] ex-uon-3
@@ -1415,7 +1415,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2a"}  (digest 6a2bc46f)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2a"}  (digest 44b5237c)
   model:
     (unchanged)
   selection: [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-3] ex-uon-3 -> [ex-uon-1 ex-uon-2 ex-uon-2a] ex-uon-2a
@@ -1438,7 +1438,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest efca9775)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest a2a2190f)
   model:
     (unchanged)
   selection: [ex-uon-1 ex-uon-2a ex-uon-3] ex-uon-3 -> [ex-uon-2a ex-uon-3] ex-uon-3
@@ -1461,7 +1461,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-1"}  (digest 02ab94e7)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-1"}  (digest 78e7ce33)
   model:
     (unchanged)
   selection: [ex-uon-1 ex-uon-3] ex-uon-3 -> [ex-uon-1] ex-uon-1
@@ -1483,7 +1483,7 @@ at once: queued render 1
     waypoint:deselected
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 998eaf9a)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest fd0b29eb)
   model:
     ~ runtime.ui.sections: "waypoints true selection true crowd false" -> "waypoints true selection false crowd false"
   selection: [ex-uon-1] ex-uon-1 -> none
@@ -1503,7 +1503,7 @@ at once: queued render 1
   waypoint:deselected
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 998eaf9a)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest fd0b29eb)
   model:
     ~ runtime.ui.sections: "waypoints true selection true crowd false" -> "waypoints true selection false crowd false"
   selection: [ex-uon-2] ex-uon-2 -> none
@@ -1537,7 +1537,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
     ui:toast {message: "Deleted Main entrance — press Ctrl+Z to undo"}
       toast "Deleted Main entrance — press Ctrl+Z to undo"
       said "Deleted Main entrance — press Ctrl+Z to undo"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 62c6320f)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 653e8ebe)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 302
@@ -1589,7 +1589,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
     ui:toast {message: "Deleted Main entrance — press Ctrl+Z to undo"}
       toast "Deleted Main entrance — press Ctrl+Z to undo"
       said "Deleted Main entrance — press Ctrl+Z to undo"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 62c6320f)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 653e8ebe)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 302
@@ -1635,7 +1635,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
     ui:toast {message: "Deleted waypoint — press Ctrl+Z to undo"}
       toast "Deleted waypoint — press Ctrl+Z to undo"
       said "Deleted waypoint — press Ctrl+Z to undo"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 79f5c75f)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest efe5b31c)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 373
@@ -1685,7 +1685,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     said "2 waypoints deleted"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 1, route: [{…}, {…}, {…}, {…}], selectionKey: null}  (digest 1bd22180)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 3, minorCount: 1, route: [{…}, {…}, {…}, {…}], selectionKey: null}  (digest 052fa4a0)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 225
@@ -1785,8 +1785,8 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
         · autosave
         · queued render
-    said "Waypoint added at center"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: null}  (digest fcc2f243)
+    said "Waypoint added at centre"
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: null}  (digest ce71103d)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 539
@@ -1878,7 +1878,7 @@ act: ex-uon-2 renamed in the list, then reported on the bus
 at once: autosave 1
   waypoint:name-changed {name: "Trent", waypoint: wp(ex-uon-2)}
     · autosave
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 7023cf92)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest fe512630)
   model:
     ~ runtime.dirty: false -> true
     ~ waypoints[ex-uon-2].name: "Trent Building" -> "Trent"
@@ -1907,7 +1907,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest 6bff6eff)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest 672abc5c)
   model:
     ~ runtime.ui.contextMenu: "closed" -> "Waypoint actions: Rename | Convert to minor waypoint | Insert waypoint before | Insert waypoint after | Delete waypoint"
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
@@ -1972,7 +1972,7 @@ at once: autosave 1, queued render 3, path 1, retime 1, undo saved 1
     · autosave
     · queued render
     said "Converted to major waypoint"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2a"}  (digest dc63fae6)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 1, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2a"}  (digest f8cb7087)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
@@ -2018,7 +2018,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]  (digest d6157b5d)
       · queued render
     said "Waypoint inserted after"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:wp#1"}  (digest 429441f7)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:wp#1"}  (digest ecd6d5a4)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 502
@@ -2126,7 +2126,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
       · queued render
     said "Waypoint inserted after"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}  (digest 67aba682)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}  (digest 0d0e2ecb)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.branchPaths: ["ex-uon-branch: 353 points"] -> ["ex-uon-branch: 117 points", "ex-uon-branch: 117 points"]
@@ -2237,7 +2237,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-b2), …+2]  (digest 73c14719)
       · queued render
     said "Waypoint inserted after"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}  (digest 4818beef)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}  (digest 1c25c822)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 502
@@ -2334,7 +2334,7 @@ at once: queued render 1
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest 6bff6eff)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest 672abc5c)
   model:
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
   selection: none -> [ex-uon-2] ex-uon-2
@@ -2804,7 +2804,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
     waypoint:list-updated [wp(ex-parm-2), wp(ex-parm-1), wp(ex-parm-1a), wp(ex-parm-3)]
     · autosave
     · queued render
-  scene-outline:update {crowds: [], focusKey: null, majorCount: 3, minorCount: 1, route: [{…}, {…}, {…}, {…}], selectionKey: null}  (digest 1b8f8dfa)
+  scene-outline:update {crowds: [], focusKey: null, majorCount: 3, minorCount: 1, route: [{…}, {…}, {…}, {…}], selectionKey: null}  (digest 1489a06e)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 368 -> 577
@@ -3058,7 +3058,7 @@ at once: queued render 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     section:flash {section: "leg"}
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest 6bff6eff)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-2"}  (digest 672abc5c)
   model:
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
   selection: none -> [ex-uon-2] ex-uon-2
@@ -3092,7 +3092,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       waypoint:list-updated [wp(ex-parm-1), wp(wp#1), wp(ex-parm-1a), wp(ex-parm-2), wp(ex-parm-3)]
       · queued render
     said "Minor waypoint added to leg"
-  scene-outline:update {crowds: [], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:wp#1"}  (digest 1c8b0424)
+  scene-outline:update {crowds: [], focusKey: null, majorCount: 3, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:wp#1"}  (digest 84e5a1d1)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 368 -> 402
@@ -3200,7 +3200,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
       · queued render
     said "Minor waypoint added to leg"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 3, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}  (digest 963942fa)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 3, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: "waypoint:wp#1"}  (digest 8a75ca10)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.branchPaths: ["ex-uon-branch: 353 points"] -> ["ex-uon-branch: 117 points", "ex-uon-branch: 117 points"]
@@ -3330,7 +3330,7 @@ at once: queued render 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     said "Selection cleared"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 998eaf9a)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest fd0b29eb)
   model:
     ~ runtime.ui.sections: "waypoints true selection true crowd false" -> "waypoints true selection false crowd false"
   selection: [ex-uon-2] ex-uon-2 -> none
@@ -3362,7 +3362,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         · autosave
         · queued render
     said "Waypoint duplicated"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-2"}  (digest 077291f4)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-2"}  (digest 4686b3d5)
   model:
     ~ runtime.dirty: false -> true
     ~ runtime.route.pathPoints: 402 -> 578
@@ -3457,7 +3457,7 @@ at once: queued render 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     said "All waypoints selected"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-1"}  (digest 02ab94e7)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-1"}  (digest 78e7ce33)
   model:
     ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints true selection true crowd false"
   selection: none -> [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3] ex-uon-1
@@ -3480,7 +3480,7 @@ at once: queued render 1
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     said "All waypoints selected"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest efca9775)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest a2a2190f)
   model:
     (unchanged)
   selection: [ex-uon-3] ex-uon-3 -> [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3] ex-uon-3
@@ -3625,7 +3625,7 @@ at once: autosave 1, render 1, queued render 1, path 1
     · render
     · autosave
     said "Undo"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest 998eaf9a)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest fd0b29eb)
   model:
     ~ runtime.route.branchPaths: ["ex-uon-branch: 330 points"] -> ["ex-uon-branch: 318 points"]
     ~ runtime.ui.redoDisabled: true -> false
@@ -3659,7 +3659,7 @@ at once: autosave 1, render 1, queued render 1, path 1
     · render
     · autosave
     said "Redo"
-  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest 2b2ba7fd)
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "waypoint:ex-uon-3"}  (digest 5c474dc1)
   model:
     ~ runtime.route.branchPaths: ["ex-uon-branch: 318 points"] -> ["ex-uon-branch: 330 points"]
     ~ runtime.ui.redoDisabled: false -> true

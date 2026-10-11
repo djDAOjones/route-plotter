@@ -19,6 +19,8 @@
  * read as descriptions, not names (J-21): the name stays "Reset".
  */
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, test, expect } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 
@@ -196,7 +198,9 @@ describe('a control’s visible words start its accessible name (UI-06 B-04)', (
       }
       expect(describedText(document.getElementById('marker-upload-btn'))).toEqual(['a custom marker image']);
       expect(describedText(document.getElementById('head-upload-btn'))).toEqual(['a custom head image']);
-      expect(describedText(document.getElementById('bg-upload-btn'))).toEqual(['the background image']);
+      // The drop tip, an orphan line until now, describes it too (reason: UI-06 J-04).
+      expect(describedText(document.getElementById('bg-upload-btn')))
+        .toEqual(['the background image', 'Tip: Drag an image onto the canvas to set the background.']);
 
       const addWaypoint = document.querySelector('#waypoint-list .waypoint-add-btn');
       expect(visibleWords(addWaypoint)).toBe('Add waypoint');
@@ -244,5 +248,38 @@ describe('a control’s visible words start its accessible name (UI-06 B-04)', (
     } finally {
       app.interactionHandler.destroy();
     }
+  });
+
+  // UI-06 J-16: the switch's name was "Toggle preview mode", which starts with
+  // no word the header shows. It is "Preview mode", and the "Edit" and
+  // "Preview" words either side of it are drawn, not read twice.
+  test('the Preview switch is named by the word beside it, which is not read again', () => {
+    const page = new DOMParser().parseFromString(
+      readFileSync(resolve(process.cwd(), 'index.html'), 'utf8'), 'text/html');
+    const toggle = page.getElementById('mode-toggle-btn');
+    expect(toggle.getAttribute('role')).toBe('switch');
+    expect(toggle.getAttribute('aria-label')).toBe('Preview mode');
+    const words = [...page.querySelectorAll('#mode-switch .mode-label')];
+    expect(words.map(word => word.textContent)).toEqual(['Edit', 'Preview']);
+    for (const word of words) expect(word.getAttribute('aria-hidden'), word.textContent).toBe('true');
+    expect(toggle.getAttribute('aria-label').toLowerCase().startsWith(words[1].textContent.toLowerCase())).toBe(true);
+  });
+
+  // UI-06 J-04: the drop tip was a screen-reader-only line nothing pointed at:
+  // read by no one who tabs. It stays as it is, and the background's Choose
+  // image is described by it, after its own description.
+  test('the background drop tip describes Choose image, and stays a line for the screen reader alone', () => {
+    const page = new DOMParser().parseFromString(
+      readFileSync(resolve(process.cwd(), 'index.html'), 'utf8'), 'text/html');
+    const choose = page.getElementById('bg-upload-btn');
+    expect((choose.getAttribute('aria-describedby') || '').split(/\s+/)).toEqual(['bg-upload-desc', 'bg-drop-hint']);
+    const tip = page.getElementById('bg-drop-hint');
+    expect(tip.classList.contains('sr-only')).toBe(true);
+    expect(tip.hidden).toBe(false);
+    // No screen-reader-only line in the shell is an orphan: each is a description, a label or a live region.
+    const referenced = new Set([...page.querySelectorAll('[aria-describedby], [aria-labelledby]')]
+      .flatMap(element => `${element.getAttribute('aria-describedby') ?? ''} ${element.getAttribute('aria-labelledby') ?? ''}`
+        .split(/\s+/).filter(Boolean)));
+    expect(referenced.has('bg-drop-hint')).toBe(true);
   });
 });

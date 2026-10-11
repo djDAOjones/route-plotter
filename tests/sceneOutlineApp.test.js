@@ -5,7 +5,8 @@ import { Scene } from '../src/models/Scene.js';
 import { Waypoint } from '../src/models/Waypoint.js';
 import { NetworkEditService } from '../src/services/NetworkEditService.js';
 import { sceneOutlineMixin } from '../src/app/sceneOutline.js';
-import { sceneOutlineKey } from '../src/utils/sceneSemantics.js';
+import { buildSceneOutlineSnapshot, sceneOutlineKey } from '../src/utils/sceneSemantics.js';
+import { SceneOutlineController } from '../src/controllers/SceneOutlineController.js';
 import { IMAGE_COORDINATES } from '../src/config/constants.js';
 
 function makeApp() {
@@ -514,7 +515,8 @@ describe('scene-outline command adapter', () => {
     });
     expect(waypoint.areaHighlight.points).toHaveLength(3);
     expect(app.undoSaves).toBe(1);
-    expect(app.announced.at(-1)).toContain('at least three vertices');
+    // "corners", the panel's word (reason: UI-06 low items, one word per concept [Q4]).
+    expect(app.announced.at(-1)).toContain('at least three corners');
 
     app._handleSceneOutlineCommand({
       action: 'add-vertex', waypointId: waypoint.id, x: '20', y: '80',
@@ -1098,5 +1100,130 @@ describe('the outline in the booted app (DEF-40)', () => {
     await nextTask();
     expect(app.selectedWaypoint?.id).toBe(second.id);
     expect(route().open).toBe(true);
+  });
+});
+
+describe('the outline\'s area announcements and errors say area and corner (UI-06 low items, one word per concept)', () => {
+  test('creating, editing and deleting an area, and each refusal, in the panel\'s words', () => {
+    const app = makeApp();
+    const waypoint = new Waypoint({
+      id: 'wp-a', imgX: 0.5, imgY: 0.5, isMajor: true, areaHighlight: { shape: 'none' },
+    });
+    const full = new Waypoint({
+      id: 'wp-full', imgX: 0.2, imgY: 0.2, isMajor: true,
+      areaHighlight: { shape: 'polygon', enabled: true, points: Array.from({ length: 256 }, (_, i) => ({ x: i / 512, y: 0.1 })) },
+    });
+    app.waypoints = [waypoint, full];
+    const run = command => app._handleSceneOutlineCommand({ waypointId: 'wp-a', ...command });
+    run({ action: 'create-polygon' });
+    run({ action: 'delete-vertex', index: '0' });
+    run({ action: 'add-vertex', x: '20', y: '80' });
+    run({ action: 'update-vertex', index: '0', x: '30', y: '40' });
+    run({ action: 'update-polygon-timing', fadeInSeconds: '1', fadeOutSeconds: '2' });
+    run({ action: 'delete-vertex', index: '3' });
+    run({ action: 'delete-vertex', index: '9' });
+    run({ action: 'delete-polygon' });
+    run({ action: 'update-polygon-timing', fadeInSeconds: '1', fadeOutSeconds: '2' });
+    run({ action: 'add-vertex', x: '1', y: '1' });
+    run({ action: 'delete-polygon' });
+    run({ action: 'add-vertex', waypointId: 'wp-full', x: '1', y: '1' });
+    expect(app.announced).toEqual([
+      'Triangle area added around the waypoint, with three corners.',
+      'A drawn area needs at least three corners. Delete the area instead.',
+      'Corner 4 added.',
+      'Corner 1 updated.',
+      'Area timing updated.',
+      'Corner deleted. Undo available.',
+      'That corner no longer exists.',
+      'Area deleted. Undo available.',
+      'That area no longer exists.',
+      'That area no longer exists.',
+      'That area no longer exists.',
+      'The project area-corner limit has been reached.',
+    ]);
+    for (const message of app.announced) expect(message).not.toMatch(/polygon|vertices|vertex/i);
+  });
+});
+
+describe('the outline\'s position fields show the heading\'s precision, losslessly (UI-06 W-02)', () => {
+  // A position field showed 18.914301880222837 under a heading that says
+  // 18.91. It shows 18.91 now; an Apply that leaves it alone keeps the exact
+  // stored value, and one typed is written as typed.
+  const EXACT = 0.18914301880222837;
+
+  function outlined() {
+    document.body.innerHTML = '<div id="scene-outline"></div>';
+    const app = makeApp();
+    const container = document.getElementById('scene-outline');
+    new SceneOutlineController(container, app.eventBus);
+    app.eventBus.on('scene-outline:command', command => app._handleSceneOutlineCommand(command));
+    const waypoint = new Waypoint({ id: 'wp-a', imgX: EXACT, imgY: 0.5, isMajor: true });
+    waypoint.areaHighlight.enabled = true;
+    waypoint.areaHighlight.shape = 'polygon';
+    waypoint.areaHighlight.points = [{ x: EXACT, y: 0.2 }, { x: 0.3, y: 0.4 }, { x: 0.5, y: 0.6 }];
+    app.waypoints = [waypoint];
+    const layer = app.scene.addFlowLayer({ id: 'crowd-a', name: 'Visitors', guideType: 'graph', emitters: [{ id: 'emitter-a' }] });
+    const node = layer.graph.addNode({ id: 'node-a', x: EXACT, y: 0.3, type: 'entry' });
+    layer.graph.addNode({ id: 'node-b', x: 0.8, y: 0.7, type: 'exit' });
+    const edge = layer.graph.addEdge({ id: 'edge-a', sourceId: 'node-a', targetId: 'node-b', direction: 'one-way' });
+    edge.addControlPoint(EXACT, 0.6);
+    const render = () => app.eventBus.emit('scene-outline:update', buildSceneOutlineSnapshot({ waypoints: app.waypoints, scene: app.scene }));
+    return { app, container, waypoint, node, edge, render };
+  }
+
+  async function openAll(container) {
+    for (let guard = 0; guard < 100; guard += 1) {
+      const closed = container.querySelector('details[data-outline-disclosure]:not([open])');
+      if (!closed) return;
+      closed.querySelector(':scope > summary').click();
+      await Promise.resolve();
+    }
+  }
+
+  const FIELDS = {
+    waypoint: ['waypoint:wp-a:x', 'waypoint:wp-a:apply'],
+    corner: ['vertex:wp-a:0:x', 'vertex:wp-a:0:apply'],
+    node: ['node:crowd-a:node-a:x', 'node:crowd-a:node-a:apply'],
+    bend: ['control:crowd-a:edge-a:0:x', 'control:crowd-a:edge-a:0:apply'],
+  };
+
+  test('each position field shows two decimals, and the new corner starts on its waypoint at the same', async () => {
+    const { container, render } = outlined();
+    render();
+    await openAll(container);
+    const field = key => container.querySelector(`input[data-outline-key="${key}"]`);
+    for (const [what, [key]] of Object.entries(FIELDS)) expect(field(key)?.value, what).toBe('18.91');
+    expect(field('polygon:wp-a:add-x').value).toBe('18.91');
+    expect(field('waypoint:wp-a:y').value).toBe('50');
+  });
+
+  test('an Apply that leaves a field alone keeps the exact value; one typed is written as typed', async () => {
+    const { app, container, waypoint, node, edge, render } = outlined();
+    const stored = {
+      waypoint: () => waypoint.imgX, corner: () => waypoint.areaHighlight.points[0].x,
+      node: () => node.x, bend: () => edge.controlPoints[0].x,
+    };
+    for (const [what, [key, formKey]] of Object.entries(FIELDS)) {
+      render();
+      await openAll(container);
+      const form = () => container.querySelector(`form[data-outline-form-key="${formKey}"]`);
+      // Untouched: the other field edited, so the Apply writes something.
+      const other = form().querySelector('input[name="y"]');
+      other.value = String(Number(other.value) + 1);
+      form().dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      expect(stored[what](), `${what}, left alone`).toBe(EXACT);
+      render();
+      await openAll(container);
+      const field = container.querySelector(`input[data-outline-key="${key}"]`);
+      field.value = '18.92';
+      form().dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      expect(stored[what](), `${what}, typed`).toBe(0.1892);
+      // Put back for the next.
+      if (what === 'waypoint') waypoint.imgX = EXACT;
+      if (what === 'corner') waypoint.areaHighlight.points[0] = { ...waypoint.areaHighlight.points[0], x: EXACT };
+      if (what === 'node') node.moveTo(EXACT, node.y);
+      if (what === 'bend') edge.controlPoints[0] = { ...edge.controlPoints[0], x: EXACT };
+    }
+    expect(app.announced.filter(message => /must be|no longer exists/.test(message))).toEqual([]);
   });
 });

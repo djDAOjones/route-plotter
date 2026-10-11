@@ -2,7 +2,7 @@
 
 ## #scope-route-btn · click
 emit waypoint:deselected
-emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 app ~ selected: "waypoint[0]" → null
 app ~ selection: "waypoint[0]" → ""
 app ~ focus: "body" → "#scope-route-btn"
@@ -16,11 +16,11 @@ ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 
 ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
-ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 6b236c13)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
 ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
-ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 81 inside, f219fdfc)
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 81 inside, 081cd17a)
 ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" (and 84 inside, 1d14242d)
 ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 138 inside, 757c0413)
 ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 103 inside, 5eb94273)
@@ -28,7 +28,7 @@ ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section=
 
 ## #scope-prev-btn · click
 emit waypoint:deselected
-emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 app ~ selected: "waypoint[0]" → null
 app ~ selection: "waypoint[0]" → ""
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
@@ -41,11 +41,11 @@ ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 
 ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
-ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 6b236c13)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
 ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
 ui ~ #waypoint-list>li[1]: li class="waypoint-item selected is-selected" data-original-index="0" data-route-index="0" draggable="true" → li class="waypoint-item" data-original-index="0" data-route-index="0" draggable="true"
 ui ~ #waypoint-list>li[1]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
-ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 81 inside, f219fdfc)
+ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 81 inside, 081cd17a)
 ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" (and 84 inside, 1d14242d)
 ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 138 inside, 757c0413)
 ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 103 inside, 5eb94273)
@@ -53,7 +53,7 @@ ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section=
 
 ## #scope-next-btn · click
 emit waypoint:selected waypoint[1]
-emit scene-outline:update {route: [{22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}, {22 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: "waypoint[0]" → "waypoint[1]"
 app ~ selection: "waypoint[0]" → "waypoint[1]"
 app ~ focus: "body" → "#scope-next-btn"
@@ -61,7 +61,7 @@ ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="sta
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input disabled="" type="hidden" value="#CC79A7" :value="#CC79A7"
 ui ~ #section-marker-content>div[1]>fieldset[1]: fieldset aria-describedby="{#section-marker-content>div[1]>fieldset[1]>span[1]}" class="swatch-fieldset" → fieldset aria-describedby="{#section-marker-content>div[1]>fieldset[1]>span[1]}" class="swatch-fieldset" disabled=""
 ui ~ #marker-style: select aria-describedby="marker-style-tip" :value="" → select aria-describedby="marker-style-tip" disabled="" :value="square"
-ui ~ #dot-size: input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="14 reference px" max="16" min="4" step="1" type="range" value="8" :value="14" → input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="14 reference px" disabled="" max="16" min="4" step="1" type="range" value="8" :value="14"
+ui ~ #dot-size: input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="28 reference px" max="16" min="4" step="1" type="range" value="8" :value="14" → input aria-describedby="dot-size-value dot-size-tip" aria-valuetext="28 reference px" disabled="" max="16" min="4" step="1" type="range" value="8" :value="14"
 ui ~ #section-marker-content>div[7]>button[0]: button aria-describedby="marker-actions-context marker-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="marker" type="button" :text="Reset" → button aria-describedby="marker-actions-context marker-reset-reason" class="btn btn-secondary" data-card-action="reset" data-card="marker" disabled="" type="button" :text="Reset"
 ui ~ #section-marker-content>div[7]>button[1]: button aria-describedby="marker-actions-context marker-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" type="button" :text="Apply onward" → button aria-describedby="marker-actions-context marker-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" type="button" :text="Apply onward"
 ui ~ #section-marker-content>p[8]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="marker"
@@ -171,7 +171,7 @@ storage ~ routePlotter_lastSection: "area-highlight" → "marker"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
-ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
+ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section expanded" data-last="true" data-section="marker"
 ui ~ #section-marker-content>div[7]>button[1]: button aria-describedby="marker-actions-context marker-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" type="button" :text="Apply onward" → button aria-describedby="marker-actions-context marker-apply-reason" class="btn btn-secondary" data-card-action="apply-onward" data-card="marker" disabled="" type="button" :text="Apply onward"
 ui ~ #section-marker-content>p[8]: p (not shown) → p class="section-hint waypoint-card-actions-reason" data-card="marker"
@@ -209,7 +209,7 @@ settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, ba9e7e1e]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
-  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
 ## #ripple-controls>div[1]>button[0] · click
 app ~ focus: "body" → "#ripple-controls>div[1]>button[0]"
@@ -238,7 +238,7 @@ settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, dbb1d3e9]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
-  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
 ## #ripple-wait · click
 emit animation:durationChange 30779.455541
@@ -263,7 +263,7 @@ settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, c8349d00]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
-  ui ~ #undo-btn: button aria-label="Undo" class="btn btn-icon" disabled="" title="Undo (Ctrl+Z)" → button aria-label="Undo" class="btn btn-icon" title="Undo (Ctrl+Z)"
+  ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
 ## #ripple-controls>button[3] · click
 app ~ focus: "body" → "#ripple-controls>button[3]"
@@ -279,8 +279,8 @@ emit area:draw-start {waypoint: waypoint[0]}
 app ~ focus: "body" → "#area-draw-btn"
 ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
 ui + #area-draw-banner: div aria-live="polite" role="status" style="align-items: center; background: var(--cds-interactive-01, #0f62fe); box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: rgb(255, 255, 255); display: flex; font-fami…[387 chars, b001f0ea]
-ui + #area-draw-banner>span[0]: span class="banner-text" :text="— Click to place vertices. Click near the first point to close. to cancel."
-ui + #area-draw-banner>span[0]>strong[0]: strong :text="Drawing polygon area"
+ui + #area-draw-banner>span[0]: span class="banner-text" :text="— Click to place corners. Click near the first point to close. to cancel."
+ui + #area-draw-banner>span[0]>strong[0]: strong :text="Drawing an area"
 ui + #area-draw-banner>span[0]>kbd[1]: kbd :text="Esc"
-ui + #area-draw-banner>span[0]>span[2]: span class="banner-count" :text="0 vertices"
+ui + #area-draw-banner>span[0]>span[2]: span class="banner-count" :text="0 corners"
 ui + #area-draw-banner>button[1]: button aria-label="Cancel drawing" class="banner-cancel" style="background-attachment: scroll; background-clip: border-box; background-color: transparent; background-image: none; background-origin: padding-box; background-p…[1119 chars, fa48a91a] :text="Cancel"

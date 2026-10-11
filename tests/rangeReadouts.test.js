@@ -160,3 +160,70 @@ describe('every range keeps its readout as the app writes it', () => {
     expect(readoutFaults(document)).toEqual([]);
   });
 });
+
+describe('the Marker card\'s Size reads the diameter drawn (DEF-96)', () => {
+  // A marker's `dotSize` is drawn as a radius (RenderingService: the dot's
+  // arc and the square's ±size), and its hint says diameter: the readout said
+  // the radius, so a default marker read "8 reference px" across 16. It reads
+  // the diameter now, at every writer; the slider, the stored value, the
+  // drawing and the hint are as they were [the owner, §E.3].
+  test('an 8 reads 16 reference px from the markup, a selection, a minor, an outline change and history; 10 reads 20', async () => {
+    const shell = new DOMParser().parseFromString(indexHtml, 'text/html');
+    const shown = doc => [doc.getElementById('dot-size').value, doc.getElementById('dot-size-value').textContent,
+      doc.getElementById('dot-size').getAttribute('aria-valuetext')];
+    expect(shown(shell)).toEqual(['8', '16 reference px', '16 reference px']);
+    expect(shell.querySelector('label[for="dot-size"] [data-tip]').getAttribute('data-tip'))
+      .toBe('Waypoint marker diameter in project reference pixels; exports scale from the reference short edge');
+
+    const route = [
+      major('a', 'A', { imgX: 0.2, imgY: 0.3, dotSize: 8 }),
+      major('b', 'B', { imgX: 0.5, imgY: 0.6, dotSize: 12 }),
+      { id: 'm', name: 'M', imgX: 0.6, imgY: 0.5, isMajor: false },
+      major('c', 'C', { imgX: 0.8, imgY: 0.4 }),
+    ];
+    const app = await withRoute(route);
+    document.getElementById('splash-close').click();
+    // A selection: the inspector's own write.
+    app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    await settle();
+    expect(shown(document)).toEqual(['8', '16 reference px', '16 reference px']);
+    app.eventBus.emit('waypoint:selected', app.waypoints[1]);
+    await settle();
+    expect(shown(document)).toEqual(['12', '24 reference px', '24 reference px']);
+    // A minor: the marker card's other write (its Size is off, and says the minor's own).
+    app.eventBus.emit('waypoint:selected', app.waypoints.find(each => !each.isMajor));
+    await settle();
+    expect(shown(document)).toEqual(['4', '8 reference px', '8 reference px']);
+
+    // Moved: the slider's write. Undone: history's.
+    app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    await settle();
+    const size = document.getElementById('dot-size');
+    size.value = '10';
+    size.dispatchEvent(new Event('input', { bubbles: true }));
+    size.dispatchEvent(new Event('change', { bubbles: true }));
+    await settle();
+    expect(app.waypoints[0].dotSize).toBe(10);
+    expect(shown(document)).toEqual(['10', '20 reference px', '20 reference px']);
+    app.undo();
+    await settle();
+    expect(app.waypoints[0].dotSize).toBe(8);
+    // The undo leaves nothing selected; the waypoint chosen again reads what was put back.
+    app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    await settle();
+    expect(shown(document)).toEqual(['8', '16 reference px', '16 reference px']);
+
+    // An outline change to the selected waypoint's area: the list controller's write, the last one made.
+    app.eventBus.emit('waypoint:selected', app.waypoints[1]);
+    await settle();
+    app._handleSceneOutlineCommand({ action: 'create-polygon', waypointId: app.waypoints[1].id });
+    await settle();
+    expect(app.waypoints[1].areaHighlight.shape).toBe('polygon');
+    expect(shown(document)).toEqual(['12', '24 reference px', '24 reference px']);
+
+    // What is stored is the radius, as before.
+    const saved = app._buildProjectSnapshot();
+    expect(saved.waypoints.find(each => each.id === 'a').dotSize).toBe(8);
+    expect(saved.waypoints.find(each => each.id === 'b').dotSize).toBe(12);
+  });
+});

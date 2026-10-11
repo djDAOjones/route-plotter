@@ -29,6 +29,8 @@ import { resolve } from 'node:path';
 import { describe, test, expect, vi } from 'vitest';
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
 import { bootApp } from './helpers/bootApp.js';
+import { lexedFiles, lineAt } from './helpers/sourceScan.js';
+import { TOOLTIPS } from '../src/config/tooltips.js';
 
 /**
  * Words the glossary retired (UI-06 §A, §C): none may come back, in a label,
@@ -45,6 +47,10 @@ const RETIRED_WORDS = [
   /\bbend points?\b/i, /\bClear all waypoints\b/, /\bhide controls\b/, /\bCollect at exit\b/, /\bRespawn at entry\b/,
   /\bLifecycle\b/, /\bvalid lifecycle\b/, /\bMulti-emitter\b/, /\bone connection\b/, /\bstart node\b/,
   /\bSpotlight Feather\b/, /\bView Dropoff\b/, /\bAngle of View\b/, /\bMarker Mode\b/, /\bWait Time\b/,
+  // UI-06 low items: a drawn area and its corners, the Area card's words.
+  /\bpolygons?\b/i, /\bvertex\b/i, /\bvertices\b/i,
+  // The glossary's spelling is "centre" (PR 7 made Help's so; the lead's addendum to PR 8 the rest).
+  /\bcenter\b/i,
 ];
 
 /** Proper nouns, products, formats and keys that keep their capital. */
@@ -70,6 +76,9 @@ const endsSegment = token => /[.:;!?]$/.test(token) || token === '—' || token 
 
 const isCapitalisedWord = token => /^[A-Z][a-z]/.test(bare(token));
 
+/** A shortcut written as keys joined by "+" ("Ctrl+Shift+Z"): each part a key's name or a single key. */
+const isChord = word => word.includes('+') && word.split('+').every(part => ALLOWED_WORDS.has(part) || part.length === 1);
+
 /**
  * What is wrong with a label, option, button, heading or menu item, or null.
  * @param {string} text
@@ -91,7 +100,6 @@ function labelFault(text) {
     if (word.length === 1) continue;
     const next = tokens[index + 1];
     if (ENTITY_WORDS.has(word) && next && /^\d/.test(next)) continue;
-    if ((word === 'Major' || word === 'Minor') && next === 'waypoint') continue;
     return `"${word}" is capitalised in "${text}"`;
   }
   return null;
@@ -117,7 +125,8 @@ function hintFault(text) {
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
     // "(Square)": a capital after an opening parenthesis is Title Case too.
-    if (/^\([A-Z]/.test(token) && !ALLOWED_WORDS.has(bare(token))) {
+    // A shortcut ("(Ctrl+Shift+Z)", UI-06 G-10) is keys, each a key's name.
+    if (/^\([A-Z]/.test(token) && !ALLOWED_WORDS.has(bare(token)) && !isChord(bare(token))) {
       return `capital after an opening parenthesis "${token}" in "${text.slice(0, 60)}"`;
     }
     const neutral = index === 0 || endsSegment(tokens[index - 1]) || ALLOWED_WORDS.has(bare(token));
@@ -374,7 +383,9 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
     expect(labelFault('Export MP4…')).toBeNull();
     expect(labelFault('Welcome to Route Plotter v3')).toBeNull();
     expect(labelFault('Select Crowd 1')).toBeNull();
-    expect(labelFault('After Major waypoint 1 — Alpha')).toBeNull();
+    // Stricter (UI-06 B-15): "Major" mid-label is Title Case now; running text says "major waypoint".
+    expect(labelFault('After Major waypoint 1 — Alpha')).toMatch(/"Major" is capitalised/);
+    expect(labelFault('After major waypoint 1 — Alpha')).toBeNull();
     expect(labelFault('Waypoint 1·B1 (branch B)')).toBeNull();
     expect(labelFault('0.25x')).toBeNull();
     expect(labelFault('+ Add crowd')).toBeNull();
@@ -386,6 +397,9 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
     // A capital after an opening parenthesis is Title Case too, unless a name.
     expect(hintFault('1080×1080 (Square)')).toMatch(/capital after an opening parenthesis "\(Square\)"/);
     expect(hintFault('1080×1080 (square)')).toBeNull();
+    // A shortcut in parentheses is keys, not Title Case (UI-06 G-10); a word that is not a key still is.
+    expect(hintFault('Redo what you undid (Ctrl+Shift+Z)')).toBeNull();
+    expect(hintFault('Redo what you undid (Control+Shift+Z)')).toMatch(/capital after an opening parenthesis/);
     expect(hintFault('Export the route (MP4 or WebM)')).toBeNull();
     expect(hintFault('Made with Route Plotter (UoN)')).toBeNull();
     expect(hintFault('Create animated routes with Route Plotter')).toBeNull();
@@ -558,6 +572,55 @@ describe('the crowd’s words agree (CROWD-07 F8)', () => {
       expect(texts.some(text => /Journeys start at entry nodes and end at exit nodes/.test(text))).toBe(true);
       expect(texts.some(text => /exports scale it from the project's reference short edge$/.test(text))).toBe(true);
       expect(faultsIn(strings)).toEqual([]);
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+});
+
+describe('the glossary spells it centre (UI-06, the lead\'s addendum to PR 8)', () => {
+  /**
+   * Every string or template text in src/ that says "center" as a word: a
+   * user-facing one, unless it is a CSS keyword, an event's name or an
+   * internal key. Read as code (`lex`), so a comment is never one.
+   */
+  function centerStringsIn(root) {
+    const found = [];
+    for (const { file, lexed } of lexedFiles(root, 'src')) {
+      const { source, kind } = lexed;
+      for (let start = 0; start < source.length;) {
+        if (kind[start] !== 's' && kind[start] !== 't') { start += 1; continue; }
+        let end = start;
+        while (end < source.length && kind[end] === kind[start]) end += 1;
+        const words = source.slice(start, end).replace(/^['"`]|['"`]$/g, '');
+        for (const match of words.matchAll(/\bcenter\b/gi)) {
+          const before = words.slice(0, match.index);
+          const after = words.slice(match.index + match[0].length);
+          // A CSS value ("align-items: center;"), a keyword alone, or part of a name ("add-at-center").
+          const internal = /[\w-]$|:\s*$/.test(before) || /^[\w-]/.test(after) || /^center$/i.test(words.trim());
+          if (!internal) found.push(`${file}:${lineAt(source, start + 1 + match.index)}: ${words.trim().slice(0, 80)}`);
+        }
+        start = end;
+      }
+    }
+    return found;
+  }
+
+  test('no string src/ shows or says spells "center"', () => {
+    expect(centerStringsIn(resolve(process.cwd()))).toEqual([]);
+    expect(TOOLTIPS.waypoint_add).toBe('Add a new waypoint at the centre of the map');
+  });
+
+  test('a waypoint added at the centre says so', async () => {
+    const app = await bootApp();
+    try {
+      await app.ready;
+      document.getElementById('splash-close').click();
+      const said = [];
+      vi.spyOn(app, 'announce').mockImplementation(message => said.push(message));
+      app.eventBus.emit('waypoint:add-at-center');
+      expect(said).toContain('Waypoint added at centre');
+      expect(said.map(retiredWord).filter(Boolean)).toEqual([]);
     } finally {
       app.interactionHandler.destroy();
     }

@@ -27,6 +27,7 @@ import { ANIMATION } from '../src/config/constants.js';
 import { MAX_BUSYNESS_HANDLES } from '../src/utils/busynessEnvelope.js';
 import { bootApp } from './helpers/bootApp.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { cascade } from './helpers/cssTokens.js';
 
 function makeApp({ hasRoute = true } = {}) {
   document.body.innerHTML = `
@@ -1028,7 +1029,8 @@ describe('the "At journey end" hint (DEF-77)', () => {
  * head and the path) read reference px (UI-STANDARDS: "Map-bound size
  * controls use reference px readouts"). DotRenderer draws a dot's radius as
  * 10 reference px per 1×, so the readout is the diameter, 20 per 1×: the
- * default 0.40× reads "8 reference px", as the marker's default does.
+ * default 0.40× reads "8 reference px", half a default marker's 16 (DEF-96:
+ * the Marker card's readout is a diameter now too; it read the radius).
  * `dotSize` is stored as before. Three writers say it: the shell's markup
  * (what a crowd with no emitter shows, since `syncCrowdEditor` stops before
  * the controls), the slider's own input, and the model's refresh of the panel.
@@ -1263,5 +1265,182 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
       .toBe('Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or end '
         + 'them where no path leads out. With no exit, journeys end at nodes with one path; with no entry, dots set '
         + 'off from any node they can leave');
+  });
+});
+
+describe('the Layers strip keeps focus through its rebuild (UI-06 B-33)', () => {
+  // Selecting, showing, hiding or deleting a crowd rebuilds the strip, and
+  // the rebuild took the focused control with it: focus fell to the page.
+  // As the waypoint list does, the replacement of the control that had
+  // focus takes it back, and only when the rebuild dropped it; a layer that
+  // is gone sends it to the Route row [Q2, the owner's call].
+  const rows = () => [...document.querySelectorAll('#layers-strip .layer-row')];
+  const routeRow = () => rows()[0];
+  const eyeOf = (app, layer) => app._crowdRowOf(layer)?.closest('li').querySelector('.layer-visibility');
+
+  test('a crowd row clicked keeps focus on its rebuilt row, and the Route row on the Route row', () => {
+    const app = makeApp();
+    app.addCrowd();
+    app.addCrowd();
+    const [first] = app.scene.getFlowLayers();
+    const row = app._crowdRowOf(first);
+    row.focus();
+    row.click();
+    expect(app.selectedCrowd).toBe(first);
+    expect(row.isConnected).toBe(false);
+    expect(document.activeElement).toBe(app._crowdRowOf(first));
+
+    const route = routeRow();
+    route.focus();
+    route.click();
+    expect(app.selectedCrowd).toBeNull();
+    expect(route.isConnected).toBe(false);
+    expect(document.activeElement).toBe(routeRow());
+    expect(document.activeElement.textContent).toBe('Route');
+  });
+
+  test('an eye keeps focus on its layer\'s rebuilt eye, hiding and showing', () => {
+    const app = makeApp();
+    app.addCrowd();
+    app.addCrowd();
+    const [first] = app.scene.getFlowLayers();
+    for (const visible of [false, true]) {
+      const eye = eyeOf(app, first);
+      eye.focus();
+      eye.click();
+      expect(first.visible).toBe(visible);
+      expect(eye.isConnected).toBe(false);
+      expect(document.activeElement).toBe(eyeOf(app, first));
+    }
+  });
+
+  test('deleting a crowd from its row sends focus to the Route row, selected or not', () => {
+    const app = makeApp();
+    app.addCrowd();
+    app.addCrowd();
+    const [first, second] = app.scene.getFlowLayers();
+    expect(app.selectedCrowd).toBe(second);
+    const deleteOf = layer => app._crowdRowOf(layer).closest('li').querySelector('.layer-delete');
+    // Not selected: the strip is rebuilt once.
+    deleteOf(first).focus();
+    deleteOf(first).click();
+    expect(app.scene.getFlowLayers()).toEqual([second]);
+    expect(document.activeElement).toBe(routeRow());
+    // Selected: crowd:deselected rebuilds it first, then the delete does again.
+    deleteOf(second).focus();
+    deleteOf(second).click();
+    expect(app.scene.getFlowLayers()).toEqual([]);
+    expect(app.selectedCrowd).toBeNull();
+    expect(document.activeElement).toBe(routeRow());
+  });
+
+  test('focus outside the strip stays where it is, and one the rebuild did not drop is left alone', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const [first] = app.scene.getFlowLayers();
+    const add = document.getElementById('add-crowd-btn');
+    add.focus();
+    app.updateLayersStrip();
+    expect(document.activeElement).toBe(add);
+    // Nothing focused anywhere: a rebuild focuses nothing.
+    add.blur();
+    app.updateLayersStrip();
+    expect(document.activeElement).toBe(document.body);
+    // Focus moved during the rebuild, so not dropped by it, keeps its move.
+    const build = app._buildCrowdRow;
+    app._buildCrowdRow = function buildMovingFocus(layer) {
+      add.focus();
+      return build.call(this, layer);
+    };
+    app._crowdRowOf(first).focus();
+    app.updateLayersStrip();
+    expect(document.activeElement).toBe(add);
+  });
+});
+
+describe('a crowd row\'s eye and delete say one thing, shown or hidden (CROWD-07 F12)', () => {
+  // Their titles said "Hide crowd" and "Delete crowd" where their names said
+  // "Hide Crowd 1" and "Delete Crowd 1": one control, two strings. The title
+  // is the name now, as on the transport buttons.
+  test('each title is its accessible name, before and after the crowd is hidden', () => {
+    const app = makeApp();
+    app.addCrowd();
+    const [layer] = app.scene.getFlowLayers();
+    const item = () => app._crowdRowOf(layer).closest('li');
+    const pairs = () => ['.layer-visibility', '.layer-delete'].map((selector) => {
+      const control = item().querySelector(selector);
+      return [control.getAttribute('aria-label'), control.title];
+    });
+    expect(pairs()).toEqual([['Hide Crowd 1', 'Hide Crowd 1'], ['Delete Crowd 1', 'Delete Crowd 1']]);
+    item().querySelector('.layer-visibility').click();
+    expect(layer.visible).toBe(false);
+    expect(pairs()).toEqual([['Show Crowd 1', 'Show Crowd 1'], ['Delete Crowd 1', 'Delete Crowd 1']]);
+  });
+});
+
+describe('the pattern seed has its hint, and Reset to even its reason (CROWD-07 F18)', () => {
+  // The seed was a span and an output, with no help; Reset to even, disabled
+  // when the busyness is already even, said neither what it does nor why it
+  // was off. The seed's label is a <label> (an <output> is labelable) with a
+  // hint, and Reset to even has a hint and, as Add handle has, a reason line
+  // it is described by while it is off [Q4, the owner's words].
+  const byId = name => document.getElementById(name);
+  const described = control => (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)
+    .map(token => byId(token)?.textContent ?? `<missing ${token}>`);
+
+  test('the seed is labelled and described; Reset to even says why it is off only while the busyness is even', async () => {
+    const app = await bootApp();
+    await app.ready;
+    byId('splash-close').click();
+    const SEED_HINT = 'The same seed always gives the same walking and set-off variation';
+    const RESET_HINT = 'Set busyness back to even across the window';
+    const label = byId('crowd-seed-label');
+    const seed = byId('crowd-seed-value');
+    expect(label.tagName).toBe('LABEL');
+    expect(label.getAttribute('for')).toBe('crowd-seed-value');
+    expect(label.querySelector('span[data-tip]').getAttribute('data-tip')).toBe(SEED_HINT);
+    expect(label.textContent.trim()).toBe('Pattern seed');
+    expect(described(seed)).toEqual([SEED_HINT]);
+    // Its words read as a label's, not as a value's (the span is the label's only child).
+    const words = label.querySelector('span[data-tip]');
+    const style = property => cascade(words, property)?.value;
+    expect([style('font-family'), style('text-align'), style('font-size'), style('font-weight')])
+      .toEqual(['inherit', 'left', 'var(--type-caption)', '500']);
+    expect(cascade(label, 'margin-bottom')?.value).toBe('0');
+
+    const reset = byId('crowd-busyness-reset');
+    const reason = byId('crowd-busyness-reset-reason');
+    expect(reset.getAttribute('data-tip')).toBe(RESET_HINT);
+    app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
+    app.addCrowd({ enterNetworkEditor: false });
+    // A new crowd's busyness is even: Reset to even is off, and says why.
+    expect(reset.disabled).toBe(true);
+    expect([reason.hidden, reason.textContent]).toEqual([false, 'Busyness is already even.']);
+    expect(described(reset)).toEqual(['Busyness is already even.', RESET_HINT]);
+    // A handle added: there is something to reset.
+    byId('crowd-busyness-add').click();
+    expect(reset.disabled).toBe(false);
+    expect([reason.hidden, reason.textContent]).toEqual([true, '']);
+    // Reset: even again.
+    reset.click();
+    expect(reset.disabled).toBe(true);
+    expect([reason.hidden, reason.textContent]).toEqual([false, 'Busyness is already even.']);
+
+    // A crowd with no emitter: every control is off under the card's own line, and this reason is not shown.
+    expect(await loadSnapshot(app, {
+      coordVersion: 9,
+      waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
+      scene: { flowLayers: [
+        { id: 'full', name: 'Full crowd', guideType: 'route', emitters: [{ id: 'e' }] },
+        { id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] },
+      ] },
+    })).toBe(true);
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('full'));
+    expect(reason.hidden).toBe(false);
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
+    expect(byId('crowd-no-emitter').hidden).toBe(false);
+    expect(reset.disabled).toBe(true);
+    expect(reason.hidden).toBe(true);
   });
 });

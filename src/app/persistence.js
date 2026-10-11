@@ -1186,11 +1186,17 @@ export const persistenceMixin = {
       this.announce('That example is not available.');
       return false;
     }
+    // The archive not downloaded, with the status when the site answered one
+    // (none when the fetch itself failed, offline): it says what to do next
+    // (UI-06 B-16, the owner's words).
+    const downloadFailed = status => Object.assign(new Error(status ? `HTTP ${status}` : 'download failed'),
+      { downloadFailed: true, status });
     try {
       this.announce(`Opening ${example.name}…`);
       this._beginOpening?.(example.name);
-      const response = await fetch(`examples/${example.id}.zip`, { cache: 'no-store' });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const response = await fetch(`examples/${example.id}.zip`, { cache: 'no-store' })
+        .catch(() => { throw downloadFailed(); });
+      if (!response.ok) throw downloadFailed(response.status);
       const blob = await response.blob();
       // Named so the load log and any error name the example, not "undefined".
       const file = typeof File === 'function'
@@ -1201,7 +1207,10 @@ export const persistenceMixin = {
       console.error('Failed to open example project:', err);
       // One message, with the reason, heard once as the toast it is (UI-06 J-05).
       this._endOpening?.(`Could not open ${example.name}`);
-      this.eventBus.emit('ui:toast', { message: `Could not open ${example.name}: ${err.message}`, priority: 'assertive' });
+      const message = err.downloadFailed
+        ? `Could not open ${example.name}${err.status ? ` (HTTP ${err.status})` : ''}. Check your connection and try again.`
+        : `Could not open ${example.name}: ${err.message}`;
+      this.eventBus.emit('ui:toast', { message, priority: 'assertive' });
       return false;
     }
   },
@@ -1291,8 +1300,8 @@ export const persistenceMixin = {
   updateTitleIndicator() {
     const titleEl = document.getElementById('app-title');
     if (!titleEl) return;
+    // No title: Help shows the version, by keyboard too (UI-06 G-10)
     titleEl.textContent = 'Route Plotter';
-    titleEl.title = `Version ${APP_VERSION}`;
     const glyph = document.getElementById('title-indicator');
     if (glyph) glyph.hidden = !this._isDirty;
     if (!this._isDirty && this._status === STATUS_UNSAVED) this.setStatus?.('');
