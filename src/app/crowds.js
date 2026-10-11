@@ -30,10 +30,15 @@ import { SCENE_LIMITS } from '../models/Scene.js';
 import { DOT_BASE_RADIUS_PX } from '../services/DotRenderer.js';
 import { stageProjectModel } from './persistence.js';
 import {
-  cleanNumber,
+  addDescription,
+  changedSinceShown,
   clearFieldError,
+  draftOwner,
   formatFieldNumber,
+  noteShownValue,
+  removeDescription,
   setControlReason,
+  shiftDecimal,
   showFieldError,
   SLIDER_REACH_REASON,
 } from '../utils/uiReadouts.js';
@@ -84,11 +89,22 @@ function busynessLabelText(text, hint) {
 /** A crowd dot's diameter in reference px per 1× of `dotSize` (CROWD-07 F1). */
 const DOT_DIAMETER_PER_X = 2 * DOT_BASE_RADIUS_PX;
 
-/** A percentage field's conversions: the model stores a fraction. */
+/** A percentage field's conversions: the model stores a fraction, moved two places in its digits (DEF-86). */
 const PERCENT_FIELD = Object.freeze({
   unit: '%',
-  toField: value => cleanNumber(value * 100),
-  fromField: number => cleanNumber(number / 100),
+  toField: value => shiftDecimal(value, 2),
+  fromField: number => shiftDecimal(number, -2),
+});
+
+/**
+ * Size's field, in reference px (CROWD-07 F1): × DOT_DIAMETER_PER_X, 20, as
+ * × 2, exact in binary, then × 10 in the value's digits, so a conversion
+ * adds no binary tail and cuts no digit (DEF-86).
+ */
+const SIZE_FIELD = Object.freeze({
+  unit: ' reference px',
+  toField: value => shiftDecimal(value * (DOT_DIAMETER_PER_X / 10), 1),
+  fromField: number => shiftDecimal(number / (DOT_DIAMETER_PER_X / 10), -1),
 });
 
 /** A field in the model's own unit. */
@@ -99,25 +115,26 @@ const SAME_UNIT = Object.freeze({ toField: value => value, fromField: number => 
  * pick of 2026-10-08, "Number field beside each crowd slider"). The field
  * reaches the model's whole range, in the slider's readout unit, and shows
  * the stored value as it is; the slider keeps its own narrower range, as
- * `scale` maps it (slider position = model value × `scale`). Where the
- * field is the readout, the slider says what it shows; Release bias keeps
- * its directional readout beside the field (F15). `what` names the quantity
- * in the field's error line; its bounds are the field's own, which
- * tests/rangeConstants.test.js holds to the model's, but for Count's
+ * `places` maps it (slider position = model value × 10^`places`, in the
+ * value's digits). Where the field is the readout, the slider says what it
+ * shows; Release bias keeps its directional readout beside the field (F15),
+ * and Release timing its words (the owner's pick, round 2). `what` names
+ * the quantity in the field's error line; its bounds are the field's own,
+ * which tests/rangeConstants.test.js holds to the model's, but for Count's
  * maximum, which also leaves room in the scene's dot budget.
  */
 const CROWD_RANGES = Object.freeze([
-  { id: 'crowd-dot-size', key: 'dotSize', journeys: false, scale: 100, unit: ' reference px', what: 'a size',
-    toField: value => cleanNumber(value * DOT_DIAMETER_PER_X), fromField: number => cleanNumber(number / DOT_DIAMETER_PER_X) },
-  { id: 'crowd-wobble', key: 'wobble', journeys: false, scale: 100, what: 'a walking variation', ...PERCENT_FIELD },
-  { id: 'crowd-count', key: 'dotCount', scale: 1, unit: '', what: 'a whole number of dots', whole: true, ...SAME_UNIT },
-  { id: 'crowd-release-start', key: 'releaseStart', scale: 100, what: 'a window start', ...PERCENT_FIELD },
-  { id: 'crowd-release-duration', key: 'releaseDuration', scale: 100, what: 'a window length', ...PERCENT_FIELD },
-  { id: 'crowd-onset-variance', key: 'onsetVariance', scale: 100, what: 'a release timing', ...PERCENT_FIELD },
-  { id: 'crowd-intensity-ramp', key: 'intensityRamp', scale: 100, what: 'a release bias', ...PERCENT_FIELD,
-    readout: value => formatCrowdReleaseBias(value * 100) },
-  { id: 'crowd-speed', key: 'speed', scale: 100, unit: ' image lengths/s', what: 'a speed', ...SAME_UNIT },
-  { id: 'crowd-speed-variance', key: 'speedVariance', scale: 100, what: 'a pace variation', ...PERCENT_FIELD },
+  { id: 'crowd-dot-size', key: 'dotSize', journeys: false, places: 2, what: 'a size', ...SIZE_FIELD },
+  { id: 'crowd-wobble', key: 'wobble', journeys: false, places: 2, what: 'a walking variation', ...PERCENT_FIELD },
+  { id: 'crowd-count', key: 'dotCount', places: 0, unit: '', what: 'a whole number of dots', whole: true, ...SAME_UNIT },
+  { id: 'crowd-release-start', key: 'releaseStart', places: 2, what: 'a window start', ...PERCENT_FIELD },
+  { id: 'crowd-release-duration', key: 'releaseDuration', places: 2, what: 'a window length', ...PERCENT_FIELD },
+  { id: 'crowd-onset-variance', key: 'onsetVariance', places: 2, what: 'a release timing', ...PERCENT_FIELD,
+    readout: value => formatCrowdReleaseTiming(shiftDecimal(value, 2)) },
+  { id: 'crowd-intensity-ramp', key: 'intensityRamp', places: 2, what: 'a release bias', ...PERCENT_FIELD,
+    readout: value => formatCrowdReleaseBias(shiftDecimal(value, 2)) },
+  { id: 'crowd-speed', key: 'speed', places: 2, unit: ' image lengths/s', what: 'a speed', ...SAME_UNIT },
+  { id: 'crowd-speed-variance', key: 'speedVariance', places: 2, what: 'a pace variation', ...PERCENT_FIELD },
 ].map(Object.freeze));
 
 /**
@@ -141,15 +158,40 @@ function crowdRangeText(entry, value) {
 /** A bound as an error line writes it: a minus sign, not a hyphen. */
 const boundText = value => formatFieldNumber(value).replace(/^-/, '−');
 
+/**
+ * A Release timing as its readout says it, beside its field (the owner's
+ * pick, round 2): "Even" at 0, else the stored amount as it is, unrounded,
+ * as Release bias's is (Codex r1 #2): "60% uneven", "12.5% uneven".
+ * @param {number} percent - The variation in percent, 0…100
+ * @returns {string}
+ */
 export function formatCrowdReleaseTiming(percent) {
-  const rounded = Math.round(percent);
-  return rounded === 0 ? 'Even' : `${rounded}% uneven`;
+  return percent > 0 ? `${formatFieldNumber(percent)}% uneven` : 'Even';
 }
 
+/**
+ * A Release bias as its readout says it: its direction and the stored
+ * amount as it is, unrounded, as the field beside it and the outline show it
+ * ("Earlier 37.5%", "Earlier 0.1%"; Codex r1 #2).
+ * @param {number} percent - The bias in percent, −100…100
+ * @returns {string}
+ */
 export function formatCrowdReleaseBias(percent) {
-  const rounded = Math.round(percent);
-  if (rounded === 0) return 'Even';
-  return rounded < 0 ? `Earlier ${Math.abs(rounded)}%` : `Later ${rounded}%`;
+  if (!(percent < 0) && !(percent > 0)) return 'Even';
+  return percent < 0 ? `Earlier ${formatFieldNumber(-percent)}%` : `Later ${formatFieldNumber(percent)}%`;
+}
+
+/** What the scene's dot budget says when a Count would pass it (the outline's words). */
+const DOT_BUDGET_MESSAGE = `The whole scene supports at most ${SCENE_LIMITS.MAX_DOTS_TOTAL} configured dots.`;
+
+/**
+ * Clear a row's error line from its field and from its slider, either of
+ * which it may describe (DEF-86).
+ * @param {{slider: HTMLInputElement|null, field: HTMLInputElement|null, error: HTMLElement|null}} parts
+ */
+function clearRangeError({ slider, field, error }) {
+  clearFieldError(field, error);
+  if (error) removeDescription(slider, error.id);
 }
 
 /**
@@ -236,6 +278,8 @@ export const crowdsMixin = {
     });
 
     this.eventBus.on('crowd:deselected', () => {
+      // Crowd scope closes with the cards: what was typed there goes to its crowd (Codex r1 #4).
+      this._commitCrowdFieldDrafts();
       this.selectedCrowd = null;
       this.updateLayersStrip();
     });
@@ -350,26 +394,57 @@ export const crowdsMixin = {
   /**
    * Wire one crowd slider: write-through on input (guarded on a crowd being
    * selected), its field and readout, the param-changed pipeline. A slider
-   * off because its crowd's value lies past its ends writes nothing: the
-   * stored value stays, and the slider is put back at its end (DEF-86).
+   * writes only where the author moves it (DEF-86): off, because its crowd's
+   * value lies past its ends, or not moved from the step its crowd's value
+   * put it at (a value between its steps), it writes nothing, and the stored
+   * value stays. A Count past the room the scene's dot budget leaves is
+   * refused in the row's error line, which then describes the slider too,
+   * and said once (Codex r1 #5).
    * @param {Object} entry - Its CROWD_RANGES entry
    * @private
    */
   _wireCrowdSlider(entry) {
-    const { slider, field, error } = rangeParts(entry.id);
+    const parts = rangeParts(entry.id);
+    const { slider } = parts;
     slider?.addEventListener('input', (e) => {
       const emitter = this.selectedCrowd?.emitters[0];
       if (!emitter) return;
-      if (slider.disabled) {
+      if (slider.disabled || !changedSinceShown(slider)) {
         this._syncCrowdRange(entry, emitter);
         return;
       }
-      emitter.update({ [entry.key]: cleanNumber(parseFloat(e.target.value) / entry.scale) });
+      const value = shiftDecimal(Number(e.target.value), -entry.places);
+      if (entry.key === 'dotCount' && value > this._crowdCountRoom(emitter)) {
+        this._refuseCrowdSliderMove(parts, DOT_BUDGET_MESSAGE);
+        this._syncCrowdRange(entry, emitter);
+        return;
+      }
+      emitter.update({ [entry.key]: value });
       // The field shows the value the slider set: whatever was wrong with what was typed there is gone.
-      clearFieldError(field, error);
+      clearRangeError(parts);
       this._syncCrowdRange(entry, emitter);
       this.eventBus.emit('crowd:param-changed', { journeys: entry.journeys !== false });
     });
+  },
+
+  /**
+   * A slider's move the model cannot take (Count past the scene's dot
+   * budget, Codex r1 #5): the row's error line says why, describes the
+   * slider (after its readout and hint) and the field (first, as a field's
+   * error is), and is said once as it first shows. Nothing is marked
+   * invalid: the slider and the field are put back at the value kept.
+   * @param {{slider: HTMLInputElement|null, field: HTMLInputElement|null, error: HTMLElement|null}} parts
+   * @param {string} message
+   * @private
+   */
+  _refuseCrowdSliderMove({ slider, field, error }, message) {
+    if (!error) return;
+    const showing = !error.hidden && error.textContent === message;
+    error.textContent = message;
+    error.hidden = false;
+    addDescription(field, error.id, { first: true });
+    addDescription(slider, error.id);
+    if (!showing) this.announce?.(message);
   },
 
   /**
@@ -382,20 +457,54 @@ export const crowdsMixin = {
    * @private
    */
   _wireCrowdField(entry) {
-    const { field, error } = rangeParts(entry.id);
-    field?.addEventListener('change', () => {
+    rangeParts(entry.id).field?.addEventListener('change', () => {
       const emitter = this.selectedCrowd?.emitters[0];
-      if (!emitter) return;
-      const problem = this._crowdFieldProblem(entry, field, emitter);
-      if (problem) {
-        showFieldError(field, error, problem, message => this.announce?.(message));
-        return;
-      }
-      clearFieldError(field, error);
-      emitter.update({ [entry.key]: entry.fromField(Number(field.value)) });
-      this._syncCrowdRange(entry, emitter);
-      this.eventBus.emit('crowd:param-changed', { journeys: entry.journeys !== false });
+      if (emitter) this._commitCrowdField(entry, emitter);
     });
+  },
+
+  /**
+   * Commit what a crowd field holds to `emitter`, the one it was typed for.
+   * A field committed as it was shown writes nothing: the model's value is
+   * kept exactly, which a Size or a percentage converted back from the
+   * field's unit need not be in its last binary digit (Codex r1 #3).
+   * @param {Object} entry - Its CROWD_RANGES entry
+   * @param {Object} emitter
+   * @private
+   */
+  _commitCrowdField(entry, emitter) {
+    const parts = rangeParts(entry.id);
+    const { field, error } = parts;
+    if (!changedSinceShown(field)) {
+      clearRangeError(parts);
+      return;
+    }
+    const problem = this._crowdFieldProblem(entry, field, emitter);
+    if (problem) {
+      showFieldError(field, error, problem, message => this.announce?.(message));
+      return;
+    }
+    clearRangeError(parts);
+    emitter.update({ [entry.key]: entry.fromField(Number(field.value)) });
+    this._syncCrowdRange(entry, emitter);
+    this.eventBus.emit('crowd:param-changed', { journeys: entry.journeys !== false });
+  },
+
+  /**
+   * Commit each crowd field's draft, typed and not committed, to the crowd it
+   * was typed for, before the cards show another crowd or none (Codex r1
+   * #4). A press on the canvas keeps focus in the field, so no `change`
+   * commits it first: a waypoint selected there leaves Crowd scope, and a
+   * busyness handle's cancelled drag shows the crowd afresh. A crowd gone
+   * from the scene (deleted, or put back by Undo) takes nothing.
+   * @private
+   */
+  _commitCrowdFieldDrafts() {
+    const inScene = emitter => this.scene.getFlowLayers().some(layer => layer.emitters.includes(emitter));
+    for (const entry of CROWD_RANGES) {
+      const emitter = draftOwner(rangeParts(entry.id).field);
+      if (emitter && inScene(emitter)) this._commitCrowdField(entry, emitter);
+    }
   },
 
   /**
@@ -419,9 +528,7 @@ export const crowdsMixin = {
       return `Enter ${entry.what} from ${boundText(min)} to ${boundText(max)}${unit}; `
         + `the crowd keeps ${crowdRangeText(entry, emitter[entry.key])} until you do.`;
     }
-    if (entry.key === 'dotCount' && number > this._crowdCountRoom(emitter)) {
-      return `The whole scene supports at most ${SCENE_LIMITS.MAX_DOTS_TOTAL} configured dots.`;
-    }
+    if (entry.key === 'dotCount' && number > this._crowdCountRoom(emitter)) return DOT_BUDGET_MESSAGE;
     return null;
   },
 
@@ -440,9 +547,11 @@ export const crowdsMixin = {
 
   /**
    * Show one crowd range from the model (DEF-86): the field holds the stored
-   * value as it is; the slider sits there, or, for a value past its ends, at
-   * its nearer end and off, saying why, so it never writes a value the
-   * author did not set on it; the slider says what its readout shows.
+   * value as it is, shown for `emitter`; the slider sits there, at its
+   * nearest step for a value between its steps, or, for a value past its
+   * ends, at its nearer end and off, saying why. Either way it writes
+   * nothing until the author moves it, so it never writes a value they did
+   * not set on it; the slider says what its readout shows.
    * @param {Object} entry
    * @param {Object} emitter
    * @private
@@ -452,14 +561,16 @@ export const crowdsMixin = {
     const value = emitter[entry.key];
     if (field) {
       field.value = formatFieldNumber(entry.toField(value));
+      noteShownValue(field, emitter);
       if (entry.key === 'dotCount') field.max = String(this._crowdCountRoom(emitter));
     }
     if (!slider) return;
-    const position = cleanNumber(value * entry.scale);
+    const position = shiftDecimal(value, entry.places);
     const min = Number(slider.min);
     const max = Number(slider.max);
     const reachable = position >= min && position <= max;
     slider.value = String(Math.round(Math.min(max, Math.max(min, position))));
+    noteShownValue(slider, emitter); // where its step put it: until moved from there, it writes nothing
     slider.disabled = !reachable;
     setControlReason(slider, reason, reachable ? '' : SLIDER_REACH_REASON);
     const text = crowdRangeText(entry, value);
@@ -476,9 +587,9 @@ export const crowdsMixin = {
    */
   _clearCrowdRangeNotes() {
     for (const entry of CROWD_RANGES) {
-      const { slider, field, reason, error } = rangeParts(entry.id);
-      setControlReason(slider, reason, '');
-      clearFieldError(field, error);
+      const parts = rangeParts(entry.id);
+      setControlReason(parts.slider, parts.reason, '');
+      clearRangeError(parts);
     }
     clearFieldError(document.getElementById('crowd-seed-value'), document.getElementById('crowd-seed-error'));
   },
@@ -502,7 +613,7 @@ export const crowdsMixin = {
     const text = field.value.trim();
     const seed = Number(text);
     if (text === '' || !Number.isInteger(seed) || seed < 0 || seed > EMITTER_LIMITS.MAX_SEED) {
-      showFieldError(field, error, `Seed is a whole number from 0 to ${EMITTER_LIMITS.MAX_SEED}`,
+      showFieldError(field, error, `Seed is a whole number from 0 to ${EMITTER_LIMITS.MAX_SEED}.`,
         message => this.announce?.(message));
       return false;
     }
@@ -1099,6 +1210,8 @@ export const crowdsMixin = {
    * Called on selection and after restores; safe with no selection.
    */
   syncCrowdEditor() {
+    // What was typed and not committed goes to its own crowd first (Codex r1 #4).
+    this._commitCrowdFieldDrafts();
     const layer = this.selectedCrowd;
     if (!layer) return;
     const em = layer.emitters[0];

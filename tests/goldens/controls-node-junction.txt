@@ -242,7 +242,7 @@ ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, ea7effa7)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
-ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 141 inside, e2b41b3b)
+ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
 ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 ui ~ #node-scope: div class="scope-group" → div (not shown)
 ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 40 inside, 3b802e9b)

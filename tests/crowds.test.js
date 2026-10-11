@@ -323,10 +323,9 @@ describe('seeded variation controls', () => {
 
     expect(emitter.onsetVariance).toBe(1);
     expect(emitter.intensityRamp).toBe(-1);
-    // Release timing's readout is its number field since DEF-86 (reason for
-    // the change: the field is the readout, "100" with its "%"); Release bias
-    // keeps its directional readout beside its field.
-    expect(onset.getAttribute('aria-valuetext')).toBe('100%');
+    // Release timing keeps its words beside its number field, as Release bias
+    // keeps its direction (the owner's pick, PR 5b round 2).
+    expect(onset.getAttribute('aria-valuetext')).toBe('100% uneven');
     expect(ramp.getAttribute('aria-valuetext')).toBe('Earlier 100%');
 
     onset.value = '0';
@@ -1725,7 +1724,8 @@ describe('a node\'s name heads the Node card (CROWD-07 X-05)', () => {
  * correction of chat #8]; Re-roll is as it was.
  */
 describe('the Pattern seed can be typed (CROWD-07 F16)', () => {
-  const ERROR = `Seed is a whole number from 0 to ${EMITTER_LIMITS.MAX_SEED}`;
+  // With its full stop, as the card's other reason and error lines end (the lead's settlement, round 2).
+  const ERROR = `Seed is a whole number from 0 to ${EMITTER_LIMITS.MAX_SEED}.`;
   const byId = name => document.getElementById(name);
   const described = control => (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)
     .map(token => byId(token)?.textContent ?? `<missing ${token}>`);

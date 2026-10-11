@@ -951,7 +951,7 @@ export class NetworkEditService {
     }
 
     // While drawing, each named node says which it is beside its glyph
-    // (CROWD-07 X-05): a traced node keeps its waypoint's name
+    // (CROWD-07 X-05), but for one under a waypoint's own label
     if (this.active && this.layer === layer) this._drawNodeLabels(svc, ctx, state, nodes, r);
 
     if (!this.active && this.layer === layer) {
@@ -965,11 +965,18 @@ export class NetworkEditService {
    * A named node's label, beside its glyph: 14 reference px (the editor's
    * legible label size) of the UI's primary text ink, over a 2 px casing of
    * its background so it reads on any map [Q8]. A node with no name has
-   * none: it is not numbered on the map.
+   * none: it is not numbered on the map. Nor has a node under a waypoint
+   * that shows a label of its own (the owner's pick, PR 5b round 2): the
+   * trace's link (`anchorWaypointId`, resolved) puts the node on that
+   * waypoint's marker, whose label already names the spot, and a second
+   * name would read twice.
    * @private
    */
   _drawNodeLabels(svc, ctx, state, nodes, r) {
-    const named = nodes.filter(node => typeof node.label === 'string' && node.label.trim());
+    const labelled = new Set((state.waypoints ?? [])
+      .filter(waypoint => waypoint.hasLabel?.()).map(waypoint => waypoint.id));
+    const underLabel = node => node.isAnchorResolved?.() && labelled.has(node.anchorWaypointId);
+    const named = nodes.filter(node => typeof node.label === 'string' && node.label.trim() && !underLabel(node));
     if (named.length === 0) return;
     ctx.save();
     ctx.font = `${svc.scaleLabelSize(14)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;

@@ -1,0 +1,916 @@
+# guide at progress 0.5, Edit network, a named node added, one waypoint label off
+vector setLineDash []
+vector save
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 105.6 415.8 @ 1 0 0 1 0 0
+vector lineTo 106.7 415.067 @ 1 0 0 1 0 0
+vector lineTo 107.8 414.333 @ 1 0 0 1 0 0
+vector lineTo 108.9 413.6 @ 1 0 0 1 0 0
+vector lineTo 110 412.867 @ 1 0 0 1 0 0
+vector lineTo 111.1 412.133 @ 1 0 0 1 0 0
+vector lineTo 112.2 411.4 @ 1 0 0 1 0 0
+vector lineTo 113.3 410.667 @ 1 0 0 1 0 0
+vector lineTo 114.4 409.933 @ 1 0 0 1 0 0
+vector lineTo 115.5 409.2 @ 1 0 0 1 0 0
+vector lineTo 116.6 408.467 @ 1 0 0 1 0 0
+vector lineTo 117.7 407.733 @ 1 0 0 1 0 0
+vector lineTo 118.8 407 @ 1 0 0 1 0 0
+vector lineTo 119.9 406.267 @ 1 0 0 1 0 0
+vector lineTo 121 405.533 @ 1 0 0 1 0 0
+vector lineTo 122.1 404.8 @ 1 0 0 1 0 0
+vector lineTo 123.2 404.067 @ 1 0 0 1 0 0
+vector lineTo 124.3 403.333 @ 1 0 0 1 0 0
+vector lineTo 125.4 402.6 @ 1 0 0 1 0 0
+vector lineTo 126.5 401.867 @ 1 0 0 1 0 0
+vector lineTo 127.6 401.133 @ 1 0 0 1 0 0
+vector lineTo 128.7 400.4 @ 1 0 0 1 0 0
+vector lineTo 129.8 399.667 @ 1 0 0 1 0 0
+vector lineTo 130.9 398.933 @ 1 0 0 1 0 0
+vector lineTo 132 398.2 @ 1 0 0 1 0 0
+vector lineTo 133.1 397.467 @ 1 0 0 1 0 0
+vector lineTo 134.2 396.733 @ 1 0 0 1 0 0
+vector lineTo 135.3 396 @ 1 0 0 1 0 0
+vector lineTo 136.4 395.267 @ 1 0 0 1 0 0
+vector lineTo 137.5 394.533 @ 1 0 0 1 0 0
+vector lineTo 138.6 393.8 @ 1 0 0 1 0 0
+vector lineTo 139.7 393.067 @ 1 0 0 1 0 0
+vector lineTo 140.8 392.333 @ 1 0 0 1 0 0
+vector lineTo 141.9 391.6 @ 1 0 0 1 0 0
+vector lineTo 143 390.867 @ 1 0 0 1 0 0
+vector lineTo 144.1 390.133 @ 1 0 0 1 0 0
+vector lineTo 145.2 389.4 @ 1 0 0 1 0 0
+vector lineTo 146.3 388.667 @ 1 0 0 1 0 0
+vector lineTo 147.4 387.933 @ 1 0 0 1 0 0
+vector lineTo 148.5 387.2 @ 1 0 0 1 0 0
+vector lineTo 149.6 386.467 @ 1 0 0 1 0 0
+vector lineTo 150.7 385.733 @ 1 0 0 1 0 0
+vector lineTo 151.8 385 @ 1 0 0 1 0 0
+vector lineTo 152.9 384.267 @ 1 0 0 1 0 0
+vector lineTo 154 383.533 @ 1 0 0 1 0 0
+vector lineTo 155.1 382.8 @ 1 0 0 1 0 0
+vector lineTo 156.2 382.067 @ 1 0 0 1 0 0
+vector lineTo 157.3 381.333 @ 1 0 0 1 0 0
+vector lineTo 158.4 380.6 @ 1 0 0 1 0 0
+vector lineTo 159.5 379.867 @ 1 0 0 1 0 0
+vector lineTo 160.6 379.133 @ 1 0 0 1 0 0
+vector lineTo 161.7 378.4 @ 1 0 0 1 0 0
+vector lineTo 162.8 377.667 @ 1 0 0 1 0 0
+vector lineTo 163.9 376.933 @ 1 0 0 1 0 0
+vector lineTo 165 376.2 @ 1 0 0 1 0 0
+vector lineTo 166.1 375.467 @ 1 0 0 1 0 0
+vector lineTo 167.2 374.733 @ 1 0 0 1 0 0
+vector lineTo 168.3 374 @ 1 0 0 1 0 0
+vector lineTo 169.4 373.267 @ 1 0 0 1 0 0
+vector lineTo 170.5 372.533 @ 1 0 0 1 0 0
+vector lineTo 171.6 371.8 @ 1 0 0 1 0 0
+vector lineTo 172.7 371.067 @ 1 0 0 1 0 0
+vector lineTo 173.8 370.333 @ 1 0 0 1 0 0
+vector lineTo 174.9 369.6 @ 1 0 0 1 0 0
+vector lineTo 176 368.867 @ 1 0 0 1 0 0
+vector lineTo 177.1 368.133 @ 1 0 0 1 0 0
+vector lineTo 178.2 367.4 @ 1 0 0 1 0 0
+vector lineTo 179.3 366.667 @ 1 0 0 1 0 0
+vector lineTo 180.4 365.933 @ 1 0 0 1 0 0
+vector lineTo 181.5 365.2 @ 1 0 0 1 0 0
+vector lineTo 182.6 364.467 @ 1 0 0 1 0 0
+vector lineTo 183.7 363.733 @ 1 0 0 1 0 0
+vector lineTo 184.8 363 @ 1 0 0 1 0 0
+vector lineTo 185.9 362.267 @ 1 0 0 1 0 0
+vector lineTo 187 361.533 @ 1 0 0 1 0 0
+vector lineTo 188.1 360.8 @ 1 0 0 1 0 0
+vector lineTo 189.2 360.067 @ 1 0 0 1 0 0
+vector lineTo 190.3 359.333 @ 1 0 0 1 0 0
+vector lineTo 191.4 358.6 @ 1 0 0 1 0 0
+vector lineTo 192.5 357.867 @ 1 0 0 1 0 0
+vector lineTo 193.6 357.133 @ 1 0 0 1 0 0
+vector lineTo 194.7 356.4 @ 1 0 0 1 0 0
+vector lineTo 195.8 355.667 @ 1 0 0 1 0 0
+vector lineTo 196.9 354.933 @ 1 0 0 1 0 0
+vector lineTo 198 354.2 @ 1 0 0 1 0 0
+vector lineTo 199.1 353.467 @ 1 0 0 1 0 0
+vector lineTo 200.2 352.733 @ 1 0 0 1 0 0
+vector lineTo 201.3 352 @ 1 0 0 1 0 0
+vector lineTo 202.4 351.267 @ 1 0 0 1 0 0
+vector lineTo 203.5 350.533 @ 1 0 0 1 0 0
+vector lineTo 204.6 349.8 @ 1 0 0 1 0 0
+vector lineTo 205.7 349.067 @ 1 0 0 1 0 0
+vector lineTo 206.8 348.333 @ 1 0 0 1 0 0
+vector lineTo 207.9 347.6 @ 1 0 0 1 0 0
+vector lineTo 209 346.867 @ 1 0 0 1 0 0
+vector lineTo 210.1 346.133 @ 1 0 0 1 0 0
+vector lineTo 211.2 345.4 @ 1 0 0 1 0 0
+vector lineTo 212.3 344.667 @ 1 0 0 1 0 0
+vector lineTo 213.4 343.933 @ 1 0 0 1 0 0
+vector lineTo 214.5 343.2 @ 1 0 0 1 0 0
+vector lineTo 215.6 342.467 @ 1 0 0 1 0 0
+vector lineTo 216.7 341.733 @ 1 0 0 1 0 0
+vector lineTo 217.8 341 @ 1 0 0 1 0 0
+vector lineTo 218.9 340.267 @ 1 0 0 1 0 0
+vector lineTo 220 339.533 @ 1 0 0 1 0 0
+vector lineTo 221.1 338.8 @ 1 0 0 1 0 0
+vector lineTo 222.2 338.067 @ 1 0 0 1 0 0
+vector lineTo 223.3 337.333 @ 1 0 0 1 0 0
+vector lineTo 224.4 336.6 @ 1 0 0 1 0 0
+vector lineTo 225.5 335.867 @ 1 0 0 1 0 0
+vector lineTo 226.6 335.133 @ 1 0 0 1 0 0
+vector lineTo 227.7 334.4 @ 1 0 0 1 0 0
+vector lineTo 228.8 333.667 @ 1 0 0 1 0 0
+vector lineTo 229.9 332.933 @ 1 0 0 1 0 0
+vector lineTo 231 332.2 @ 1 0 0 1 0 0
+vector lineTo 232.1 331.467 @ 1 0 0 1 0 0
+vector lineTo 233.2 330.733 @ 1 0 0 1 0 0
+vector lineTo 234.3 330 @ 1 0 0 1 0 0
+vector lineTo 235.4 329.267 @ 1 0 0 1 0 0
+vector lineTo 236.5 328.533 @ 1 0 0 1 0 0
+vector lineTo 237.6 327.8 @ 1 0 0 1 0 0
+vector lineTo 238.7 327.067 @ 1 0 0 1 0 0
+vector lineTo 239.8 326.333 @ 1 0 0 1 0 0
+vector lineTo 240.9 325.6 @ 1 0 0 1 0 0
+vector lineTo 242 324.867 @ 1 0 0 1 0 0
+vector lineTo 243.1 324.133 @ 1 0 0 1 0 0
+vector lineTo 244.2 323.4 @ 1 0 0 1 0 0
+vector lineTo 245.3 322.667 @ 1 0 0 1 0 0
+vector lineTo 246.4 321.933 @ 1 0 0 1 0 0
+vector lineTo 247.5 321.2 @ 1 0 0 1 0 0
+vector lineTo 248.6 320.467 @ 1 0 0 1 0 0
+vector lineTo 249.7 319.733 @ 1 0 0 1 0 0
+vector lineTo 250.8 319 @ 1 0 0 1 0 0
+vector lineTo 251.9 318.267 @ 1 0 0 1 0 0
+vector lineTo 253 317.533 @ 1 0 0 1 0 0
+vector lineTo 254.1 316.8 @ 1 0 0 1 0 0
+vector lineTo 255.2 316.067 @ 1 0 0 1 0 0
+vector lineTo 256.3 315.333 @ 1 0 0 1 0 0
+vector lineTo 257.4 314.6 @ 1 0 0 1 0 0
+vector lineTo 258.5 313.867 @ 1 0 0 1 0 0
+vector lineTo 259.6 313.133 @ 1 0 0 1 0 0
+vector lineTo 260.7 312.4 @ 1 0 0 1 0 0
+vector lineTo 261.8 311.667 @ 1 0 0 1 0 0
+vector lineTo 262.9 310.933 @ 1 0 0 1 0 0
+vector lineTo 264 310.2 @ 1 0 0 1 0 0
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 4
+vector set:globalAlpha 1
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=4 lineCap=round lineJoin=round
+vector set:strokeStyle #56B4E9
+vector set:lineWidth 2
+vector set:globalAlpha 0.55
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#56B4E9 lineWidth=2 lineCap=round lineJoin=round globalAlpha=0.55
+vector save
+vector translate 184.8 363
+vector rotate -0.588
+vector beginPath
+vector moveTo 7 0 @ 0.832 -0.555 0.555 0.832 184.8 363
+vector lineTo -4.2 4.2 @ 0.832 -0.555 0.555 0.832 184.8 363
+vector lineTo -4.2 -4.2 @ 0.832 -0.555 0.555 0.832 184.8 363
+vector closePath
+vector set:fillStyle #56B4E9
+vector set:globalAlpha 0.9
+vector fill @ 0.832 -0.555 0.555 0.832 184.8 363 | fillStyle=#56B4E9 globalAlpha=0.9
+vector restore
+vector beginPath
+vector moveTo 264 310.2 @ 1 0 0 1 0 0
+vector lineTo 264.766 310.919 @ 1 0 0 1 0 0
+vector lineTo 265.53 311.642 @ 1 0 0 1 0 0
+vector lineTo 266.293 312.366 @ 1 0 0 1 0 0
+vector lineTo 267.055 313.089 @ 1 0 0 1 0 0
+vector lineTo 267.818 313.813 @ 1 0 0 1 0 0
+vector lineTo 268.58 314.537 @ 1 0 0 1 0 0
+vector lineTo 269.343 315.262 @ 1 0 0 1 0 0
+vector lineTo 270.105 315.986 @ 1 0 0 1 0 0
+vector lineTo 270.868 316.71 @ 1 0 0 1 0 0
+vector lineTo 271.63 317.434 @ 1 0 0 1 0 0
+vector lineTo 272.393 318.158 @ 1 0 0 1 0 0
+vector lineTo 273.155 318.881 @ 1 0 0 1 0 0
+vector lineTo 273.918 319.605 @ 1 0 0 1 0 0
+vector lineTo 274.681 320.329 @ 1 0 0 1 0 0
+vector lineTo 275.444 321.053 @ 1 0 0 1 0 0
+vector lineTo 276.207 321.776 @ 1 0 0 1 0 0
+vector lineTo 276.97 322.5 @ 1 0 0 1 0 0
+vector lineTo 277.733 323.223 @ 1 0 0 1 0 0
+vector lineTo 278.496 323.946 @ 1 0 0 1 0 0
+vector lineTo 279.259 324.669 @ 1 0 0 1 0 0
+vector lineTo 280.023 325.392 @ 1 0 0 1 0 0
+vector lineTo 280.786 326.115 @ 1 0 0 1 0 0
+vector lineTo 281.55 326.838 @ 1 0 0 1 0 0
+vector lineTo 282.313 327.561 @ 1 0 0 1 0 0
+vector lineTo 283.077 328.283 @ 1 0 0 1 0 0
+vector lineTo 283.841 329.006 @ 1 0 0 1 0 0
+vector lineTo 284.605 329.728 @ 1 0 0 1 0 0
+vector lineTo 285.369 330.451 @ 1 0 0 1 0 0
+vector lineTo 286.134 331.173 @ 1 0 0 1 0 0
+vector lineTo 286.898 331.895 @ 1 0 0 1 0 0
+vector lineTo 287.662 332.616 @ 1 0 0 1 0 0
+vector lineTo 288.427 333.338 @ 1 0 0 1 0 0
+vector lineTo 289.192 334.06 @ 1 0 0 1 0 0
+vector lineTo 289.957 334.781 @ 1 0 0 1 0 0
+vector lineTo 290.722 335.502 @ 1 0 0 1 0 0
+vector lineTo 291.487 336.224 @ 1 0 0 1 0 0
+vector lineTo 292.252 336.944 @ 1 0 0 1 0 0
+vector lineTo 293.018 337.665 @ 1 0 0 1 0 0
+vector lineTo 293.784 338.386 @ 1 0 0 1 0 0
+vector lineTo 294.549 339.106 @ 1 0 0 1 0 0
+vector lineTo 295.315 339.827 @ 1 0 0 1 0 0
+vector lineTo 296.081 340.547 @ 1 0 0 1 0 0
+vector lineTo 296.848 341.267 @ 1 0 0 1 0 0
+vector lineTo 297.614 341.987 @ 1 0 0 1 0 0
+vector lineTo 298.381 342.706 @ 1 0 0 1 0 0
+vector lineTo 299.147 343.426 @ 1 0 0 1 0 0
+vector lineTo 299.914 344.145 @ 1 0 0 1 0 0
+vector lineTo 300.681 344.864 @ 1 0 0 1 0 0
+vector lineTo 301.449 345.583 @ 1 0 0 1 0 0
+vector lineTo 302.216 346.302 @ 1 0 0 1 0 0
+vector lineTo 302.984 347.02 @ 1 0 0 1 0 0
+vector lineTo 303.752 347.738 @ 1 0 0 1 0 0
+vector lineTo 304.52 348.456 @ 1 0 0 1 0 0
+vector lineTo 305.288 349.174 @ 1 0 0 1 0 0
+vector lineTo 306.057 349.892 @ 1 0 0 1 0 0
+vector lineTo 306.826 350.609 @ 1 0 0 1 0 0
+vector lineTo 307.595 351.326 @ 1 0 0 1 0 0
+vector lineTo 308.364 352.043 @ 1 0 0 1 0 0
+vector lineTo 309.133 352.759 @ 1 0 0 1 0 0
+vector lineTo 309.903 353.475 @ 1 0 0 1 0 0
+vector lineTo 310.673 354.191 @ 1 0 0 1 0 0
+vector lineTo 311.444 354.907 @ 1 0 0 1 0 0
+vector lineTo 312.214 355.622 @ 1 0 0 1 0 0
+vector lineTo 312.985 356.337 @ 1 0 0 1 0 0
+vector lineTo 313.756 357.052 @ 1 0 0 1 0 0
+vector lineTo 314.528 357.766 @ 1 0 0 1 0 0
+vector lineTo 315.3 358.48 @ 1 0 0 1 0 0
+vector lineTo 316.072 359.194 @ 1 0 0 1 0 0
+vector lineTo 316.844 359.907 @ 1 0 0 1 0 0
+vector lineTo 317.617 360.62 @ 1 0 0 1 0 0
+vector lineTo 318.391 361.332 @ 1 0 0 1 0 0
+vector lineTo 319.164 362.044 @ 1 0 0 1 0 0
+vector lineTo 319.939 362.755 @ 1 0 0 1 0 0
+vector lineTo 320.713 363.466 @ 1 0 0 1 0 0
+vector lineTo 321.488 364.177 @ 1 0 0 1 0 0
+vector lineTo 322.264 364.886 @ 1 0 0 1 0 0
+vector lineTo 323.04 365.596 @ 1 0 0 1 0 0
+vector lineTo 323.817 366.304 @ 1 0 0 1 0 0
+vector lineTo 324.594 367.012 @ 1 0 0 1 0 0
+vector lineTo 325.372 367.72 @ 1 0 0 1 0 0
+vector lineTo 326.15 368.426 @ 1 0 0 1 0 0
+vector lineTo 326.93 369.132 @ 1 0 0 1 0 0
+vector lineTo 327.71 369.836 @ 1 0 0 1 0 0
+vector lineTo 328.491 370.54 @ 1 0 0 1 0 0
+vector lineTo 329.272 371.243 @ 1 0 0 1 0 0
+vector lineTo 330.055 371.945 @ 1 0 0 1 0 0
+vector lineTo 330.839 372.646 @ 1 0 0 1 0 0
+vector lineTo 331.623 373.345 @ 1 0 0 1 0 0
+vector lineTo 332.41 374.042 @ 1 0 0 1 0 0
+vector lineTo 333.197 374.738 @ 1 0 0 1 0 0
+vector lineTo 333.986 375.433 @ 1 0 0 1 0 0
+vector lineTo 334.777 376.125 @ 1 0 0 1 0 0
+vector lineTo 335.57 376.814 @ 1 0 0 1 0 0
+vector lineTo 336.365 377.501 @ 1 0 0 1 0 0
+vector lineTo 337.162 378.184 @ 1 0 0 1 0 0
+vector lineTo 337.963 378.863 @ 1 0 0 1 0 0
+vector lineTo 338.767 379.536 @ 1 0 0 1 0 0
+vector lineTo 339.576 380.202 @ 1 0 0 1 0 0
+vector lineTo 340.389 380.858 @ 1 0 0 1 0 0
+vector lineTo 341.209 381.497 @ 1 0 0 1 0 0
+vector lineTo 342.031 382.102 @ 1 0 0 1 0 0
+vector lineTo 342.791 382.599 @ 1 0 0 1 0 0
+vector lineTo 343.106 382.76 @ 1 0 0 1 0 0
+vector lineTo 343.323 382.834 @ 1 0 0 1 0 0
+vector lineTo 343.974 382.914 @ 1 0 0 1 0 0
+vector lineTo 344.949 382.896 @ 1 0 0 1 0 0
+vector lineTo 345.969 382.807 @ 1 0 0 1 0 0
+vector lineTo 346.999 382.677 @ 1 0 0 1 0 0
+vector lineTo 348.031 382.521 @ 1 0 0 1 0 0
+vector lineTo 349.063 382.347 @ 1 0 0 1 0 0
+vector lineTo 350.094 382.159 @ 1 0 0 1 0 0
+vector lineTo 351.123 381.96 @ 1 0 0 1 0 0
+vector lineTo 352.152 381.753 @ 1 0 0 1 0 0
+vector lineTo 353.179 381.537 @ 1 0 0 1 0 0
+vector lineTo 354.206 381.316 @ 1 0 0 1 0 0
+vector lineTo 355.231 381.089 @ 1 0 0 1 0 0
+vector lineTo 356.256 380.856 @ 1 0 0 1 0 0
+vector lineTo 357.28 380.62 @ 1 0 0 1 0 0
+vector lineTo 358.303 380.38 @ 1 0 0 1 0 0
+vector lineTo 359.325 380.135 @ 1 0 0 1 0 0
+vector lineTo 360.346 379.888 @ 1 0 0 1 0 0
+vector lineTo 361.367 379.638 @ 1 0 0 1 0 0
+vector lineTo 362.387 379.384 @ 1 0 0 1 0 0
+vector lineTo 363.406 379.129 @ 1 0 0 1 0 0
+vector lineTo 364.425 378.87 @ 1 0 0 1 0 0
+vector lineTo 365.443 378.61 @ 1 0 0 1 0 0
+vector lineTo 366.461 378.347 @ 1 0 0 1 0 0
+vector lineTo 367.478 378.082 @ 1 0 0 1 0 0
+vector lineTo 368.495 377.815 @ 1 0 0 1 0 0
+vector lineTo 369.511 377.547 @ 1 0 0 1 0 0
+vector lineTo 370.527 377.276 @ 1 0 0 1 0 0
+vector lineTo 371.543 377.004 @ 1 0 0 1 0 0
+vector lineTo 372.558 376.73 @ 1 0 0 1 0 0
+vector lineTo 373.572 376.454 @ 1 0 0 1 0 0
+vector lineTo 374.586 376.177 @ 1 0 0 1 0 0
+vector lineTo 375.6 375.898 @ 1 0 0 1 0 0
+vector lineTo 376.613 375.618 @ 1 0 0 1 0 0
+vector lineTo 377.626 375.336 @ 1 0 0 1 0 0
+vector lineTo 378.638 375.052 @ 1 0 0 1 0 0
+vector lineTo 379.65 374.768 @ 1 0 0 1 0 0
+vector lineTo 380.662 374.482 @ 1 0 0 1 0 0
+vector lineTo 381.673 374.194 @ 1 0 0 1 0 0
+vector lineTo 382.684 373.905 @ 1 0 0 1 0 0
+vector lineTo 383.694 373.615 @ 1 0 0 1 0 0
+vector lineTo 384.704 373.323 @ 1 0 0 1 0 0
+vector lineTo 385.714 373.03 @ 1 0 0 1 0 0
+vector lineTo 386.723 372.735 @ 1 0 0 1 0 0
+vector lineTo 387.732 372.44 @ 1 0 0 1 0 0
+vector lineTo 388.74 372.142 @ 1 0 0 1 0 0
+vector lineTo 389.748 371.843 @ 1 0 0 1 0 0
+vector lineTo 390.756 371.543 @ 1 0 0 1 0 0
+vector lineTo 391.763 371.242 @ 1 0 0 1 0 0
+vector lineTo 392.769 370.938 @ 1 0 0 1 0 0
+vector lineTo 393.775 370.634 @ 1 0 0 1 0 0
+vector lineTo 394.781 370.327 @ 1 0 0 1 0 0
+vector lineTo 395.786 370.019 @ 1 0 0 1 0 0
+vector lineTo 396.791 369.71 @ 1 0 0 1 0 0
+vector lineTo 397.795 369.398 @ 1 0 0 1 0 0
+vector lineTo 398.798 369.085 @ 1 0 0 1 0 0
+vector lineTo 399.801 368.769 @ 1 0 0 1 0 0
+vector lineTo 400.803 368.452 @ 1 0 0 1 0 0
+vector lineTo 401.804 368.132 @ 1 0 0 1 0 0
+vector lineTo 402.805 367.81 @ 1 0 0 1 0 0
+vector lineTo 403.804 367.485 @ 1 0 0 1 0 0
+vector lineTo 404.803 367.158 @ 1 0 0 1 0 0
+vector lineTo 405.801 366.827 @ 1 0 0 1 0 0
+vector lineTo 406.797 366.493 @ 1 0 0 1 0 0
+vector lineTo 407.792 366.155 @ 1 0 0 1 0 0
+vector lineTo 408.785 365.812 @ 1 0 0 1 0 0
+vector lineTo 409.775 365.464 @ 1 0 0 1 0 0
+vector lineTo 410.763 365.109 @ 1 0 0 1 0 0
+vector lineTo 411.748 364.747 @ 1 0 0 1 0 0
+vector lineTo 412.727 364.374 @ 1 0 0 1 0 0
+vector lineTo 413.697 363.988 @ 1 0 0 1 0 0
+vector lineTo 414.65 363.581 @ 1 0 0 1 0 0
+vector lineTo 415.543 363.146 @ 1 0 0 1 0 0
+vector lineTo 416.341 362.627 @ 1 0 0 1 0 0
+vector lineTo 417.17 361.998 @ 1 0 0 1 0 0
+vector lineTo 417.992 361.348 @ 1 0 0 1 0 0
+vector lineTo 418.81 360.689 @ 1 0 0 1 0 0
+vector lineTo 419.623 360.024 @ 1 0 0 1 0 0
+vector lineTo 420.434 359.356 @ 1 0 0 1 0 0
+vector lineTo 421.243 358.685 @ 1 0 0 1 0 0
+vector lineTo 422.05 358.011 @ 1 0 0 1 0 0
+vector lineTo 422.855 357.336 @ 1 0 0 1 0 0
+vector lineTo 423.66 356.66 @ 1 0 0 1 0 0
+vector lineTo 424.463 355.982 @ 1 0 0 1 0 0
+vector lineTo 425.266 355.303 @ 1 0 0 1 0 0
+vector lineTo 426.068 354.623 @ 1 0 0 1 0 0
+vector lineTo 426.869 353.942 @ 1 0 0 1 0 0
+vector lineTo 427.67 353.26 @ 1 0 0 1 0 0
+vector lineTo 428.47 352.578 @ 1 0 0 1 0 0
+vector lineTo 429.269 351.895 @ 1 0 0 1 0 0
+vector lineTo 430.068 351.212 @ 1 0 0 1 0 0
+vector lineTo 430.867 350.528 @ 1 0 0 1 0 0
+vector lineTo 431.665 349.844 @ 1 0 0 1 0 0
+vector lineTo 432.463 349.159 @ 1 0 0 1 0 0
+vector lineTo 433.261 348.474 @ 1 0 0 1 0 0
+vector lineTo 434.058 347.789 @ 1 0 0 1 0 0
+vector lineTo 434.855 347.103 @ 1 0 0 1 0 0
+vector lineTo 435.651 346.417 @ 1 0 0 1 0 0
+vector lineTo 436.448 345.73 @ 1 0 0 1 0 0
+vector lineTo 437.244 345.043 @ 1 0 0 1 0 0
+vector lineTo 438.04 344.356 @ 1 0 0 1 0 0
+vector lineTo 438.836 343.669 @ 1 0 0 1 0 0
+vector lineTo 439.631 342.981 @ 1 0 0 1 0 0
+vector lineTo 440.426 342.294 @ 1 0 0 1 0 0
+vector lineTo 441.221 341.606 @ 1 0 0 1 0 0
+vector lineTo 442.016 340.917 @ 1 0 0 1 0 0
+vector lineTo 442.811 340.229 @ 1 0 0 1 0 0
+vector lineTo 443.606 339.54 @ 1 0 0 1 0 0
+vector lineTo 444.4 338.852 @ 1 0 0 1 0 0
+vector lineTo 445.194 338.163 @ 1 0 0 1 0 0
+vector lineTo 445.989 337.474 @ 1 0 0 1 0 0
+vector lineTo 446.783 336.784 @ 1 0 0 1 0 0
+vector lineTo 447.576 336.095 @ 1 0 0 1 0 0
+vector lineTo 448.37 335.405 @ 1 0 0 1 0 0
+vector lineTo 449.164 334.715 @ 1 0 0 1 0 0
+vector lineTo 449.957 334.025 @ 1 0 0 1 0 0
+vector lineTo 450.75 333.335 @ 1 0 0 1 0 0
+vector lineTo 451.544 332.645 @ 1 0 0 1 0 0
+vector lineTo 452.337 331.955 @ 1 0 0 1 0 0
+vector lineTo 453.13 331.265 @ 1 0 0 1 0 0
+vector lineTo 453.923 330.574 @ 1 0 0 1 0 0
+vector lineTo 454.716 329.883 @ 1 0 0 1 0 0
+vector lineTo 455.508 329.193 @ 1 0 0 1 0 0
+vector lineTo 456.301 328.502 @ 1 0 0 1 0 0
+vector lineTo 457.093 327.811 @ 1 0 0 1 0 0
+vector lineTo 457.886 327.12 @ 1 0 0 1 0 0
+vector lineTo 458.678 326.428 @ 1 0 0 1 0 0
+vector lineTo 459.47 325.737 @ 1 0 0 1 0 0
+vector lineTo 460.263 325.046 @ 1 0 0 1 0 0
+vector lineTo 461.055 324.354 @ 1 0 0 1 0 0
+vector lineTo 461.847 323.663 @ 1 0 0 1 0 0
+vector lineTo 462.639 322.971 @ 1 0 0 1 0 0
+vector lineTo 463.431 322.279 @ 1 0 0 1 0 0
+vector lineTo 464.222 321.588 @ 1 0 0 1 0 0
+vector lineTo 465.014 320.896 @ 1 0 0 1 0 0
+vector lineTo 465.806 320.204 @ 1 0 0 1 0 0
+vector lineTo 466.597 319.512 @ 1 0 0 1 0 0
+vector lineTo 467.389 318.819 @ 1 0 0 1 0 0
+vector lineTo 468.18 318.127 @ 1 0 0 1 0 0
+vector lineTo 468.972 317.435 @ 1 0 0 1 0 0
+vector lineTo 469.763 316.743 @ 1 0 0 1 0 0
+vector lineTo 470.554 316.05 @ 1 0 0 1 0 0
+vector lineTo 471.346 315.358 @ 1 0 0 1 0 0
+vector lineTo 472.137 314.665 @ 1 0 0 1 0 0
+vector lineTo 472.928 313.973 @ 1 0 0 1 0 0
+vector lineTo 473.719 313.28 @ 1 0 0 1 0 0
+vector lineTo 474.51 312.587 @ 1 0 0 1 0 0
+vector lineTo 475.301 311.894 @ 1 0 0 1 0 0
+vector lineTo 476.092 311.201 @ 1 0 0 1 0 0
+vector lineTo 476.882 310.508 @ 1 0 0 1 0 0
+vector lineTo 477.673 309.815 @ 1 0 0 1 0 0
+vector lineTo 478.464 309.122 @ 1 0 0 1 0 0
+vector lineTo 479.255 308.429 @ 1 0 0 1 0 0
+vector lineTo 480.045 307.736 @ 1 0 0 1 0 0
+vector lineTo 480.836 307.043 @ 1 0 0 1 0 0
+vector lineTo 481.626 306.35 @ 1 0 0 1 0 0
+vector lineTo 482.417 305.656 @ 1 0 0 1 0 0
+vector lineTo 483.207 304.963 @ 1 0 0 1 0 0
+vector lineTo 483.998 304.269 @ 1 0 0 1 0 0
+vector lineTo 484.788 303.576 @ 1 0 0 1 0 0
+vector lineTo 485.578 302.882 @ 1 0 0 1 0 0
+vector lineTo 486.368 302.189 @ 1 0 0 1 0 0
+vector lineTo 487.159 301.495 @ 1 0 0 1 0 0
+vector lineTo 487.949 300.802 @ 1 0 0 1 0 0
+vector lineTo 488.739 300.108 @ 1 0 0 1 0 0
+vector lineTo 489.529 299.414 @ 1 0 0 1 0 0
+vector lineTo 490.319 298.72 @ 1 0 0 1 0 0
+vector lineTo 491.109 298.026 @ 1 0 0 1 0 0
+vector lineTo 491.899 297.333 @ 1 0 0 1 0 0
+vector lineTo 492.689 296.639 @ 1 0 0 1 0 0
+vector lineTo 493.479 295.945 @ 1 0 0 1 0 0
+vector lineTo 494.269 295.251 @ 1 0 0 1 0 0
+vector lineTo 495.059 294.557 @ 1 0 0 1 0 0
+vector lineTo 495.849 293.862 @ 1 0 0 1 0 0
+vector lineTo 496.638 293.168 @ 1 0 0 1 0 0
+vector lineTo 497.428 292.474 @ 1 0 0 1 0 0
+vector lineTo 498.218 291.78 @ 1 0 0 1 0 0
+vector lineTo 499.007 291.086 @ 1 0 0 1 0 0
+vector lineTo 499.797 290.391 @ 1 0 0 1 0 0
+vector lineTo 500.587 289.697 @ 1 0 0 1 0 0
+vector lineTo 501.376 289.003 @ 1 0 0 1 0 0
+vector lineTo 502.166 288.308 @ 1 0 0 1 0 0
+vector lineTo 502.955 287.614 @ 1 0 0 1 0 0
+vector lineTo 503.745 286.92 @ 1 0 0 1 0 0
+vector lineTo 504.534 286.225 @ 1 0 0 1 0 0
+vector lineTo 505.324 285.531 @ 1 0 0 1 0 0
+vector lineTo 506.113 284.836 @ 1 0 0 1 0 0
+vector lineTo 506.903 284.142 @ 1 0 0 1 0 0
+vector lineTo 507.692 283.447 @ 1 0 0 1 0 0
+vector lineTo 508.482 282.753 @ 1 0 0 1 0 0
+vector lineTo 509.271 282.058 @ 1 0 0 1 0 0
+vector lineTo 510.06 281.364 @ 1 0 0 1 0 0
+vector lineTo 510.85 280.669 @ 1 0 0 1 0 0
+vector lineTo 511.639 279.975 @ 1 0 0 1 0 0
+vector lineTo 512.429 279.28 @ 1 0 0 1 0 0
+vector lineTo 513.219 278.586 @ 1 0 0 1 0 0
+vector lineTo 514.009 277.892 @ 1 0 0 1 0 0
+vector lineTo 514.8 277.2 @ 1 0 0 1 0 0
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 4
+vector set:globalAlpha 1
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=4 lineCap=round lineJoin=round
+vector set:strokeStyle #56B4E9
+vector set:lineWidth 2
+vector set:globalAlpha 0.55
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#56B4E9 lineWidth=2 lineCap=round lineJoin=round globalAlpha=0.55
+vector save
+vector translate 390.756 371.543
+vector rotate -0.29
+vector beginPath
+vector moveTo 7 0 @ 0.958 -0.286 0.286 0.958 390.756 371.543
+vector lineTo -4.2 4.2 @ 0.958 -0.286 0.286 0.958 390.756 371.543
+vector lineTo -4.2 -4.2 @ 0.958 -0.286 0.286 0.958 390.756 371.543
+vector closePath
+vector set:fillStyle #56B4E9
+vector set:globalAlpha 0.9
+vector fill @ 0.958 -0.286 0.286 0.958 390.756 371.543 | fillStyle=#56B4E9 globalAlpha=0.9
+vector restore
+vector beginPath
+vector moveTo 264 310.2 @ 1 0 0 1 0 0
+vector lineTo 264.228 308.891 @ 1 0 0 1 0 0
+vector lineTo 264.455 307.583 @ 1 0 0 1 0 0
+vector lineTo 264.683 306.274 @ 1 0 0 1 0 0
+vector lineTo 264.91 304.966 @ 1 0 0 1 0 0
+vector lineTo 265.138 303.657 @ 1 0 0 1 0 0
+vector lineTo 265.366 302.348 @ 1 0 0 1 0 0
+vector lineTo 265.593 301.04 @ 1 0 0 1 0 0
+vector lineTo 265.821 299.731 @ 1 0 0 1 0 0
+vector lineTo 266.048 298.422 @ 1 0 0 1 0 0
+vector lineTo 266.276 297.114 @ 1 0 0 1 0 0
+vector lineTo 266.503 295.805 @ 1 0 0 1 0 0
+vector lineTo 266.731 294.497 @ 1 0 0 1 0 0
+vector lineTo 266.959 293.188 @ 1 0 0 1 0 0
+vector lineTo 267.186 291.879 @ 1 0 0 1 0 0
+vector lineTo 267.414 290.571 @ 1 0 0 1 0 0
+vector lineTo 267.641 289.262 @ 1 0 0 1 0 0
+vector lineTo 267.869 287.953 @ 1 0 0 1 0 0
+vector lineTo 268.097 286.645 @ 1 0 0 1 0 0
+vector lineTo 268.324 285.336 @ 1 0 0 1 0 0
+vector lineTo 268.552 284.028 @ 1 0 0 1 0 0
+vector lineTo 268.779 282.719 @ 1 0 0 1 0 0
+vector lineTo 269.007 281.41 @ 1 0 0 1 0 0
+vector lineTo 269.234 280.102 @ 1 0 0 1 0 0
+vector lineTo 269.462 278.793 @ 1 0 0 1 0 0
+vector lineTo 269.69 277.484 @ 1 0 0 1 0 0
+vector lineTo 269.917 276.176 @ 1 0 0 1 0 0
+vector lineTo 270.145 274.867 @ 1 0 0 1 0 0
+vector lineTo 270.372 273.559 @ 1 0 0 1 0 0
+vector lineTo 270.6 272.25 @ 1 0 0 1 0 0
+vector lineTo 270.828 270.941 @ 1 0 0 1 0 0
+vector lineTo 271.055 269.633 @ 1 0 0 1 0 0
+vector lineTo 271.283 268.324 @ 1 0 0 1 0 0
+vector lineTo 271.51 267.016 @ 1 0 0 1 0 0
+vector lineTo 271.738 265.707 @ 1 0 0 1 0 0
+vector lineTo 271.966 264.398 @ 1 0 0 1 0 0
+vector lineTo 272.193 263.09 @ 1 0 0 1 0 0
+vector lineTo 272.421 261.781 @ 1 0 0 1 0 0
+vector lineTo 272.648 260.472 @ 1 0 0 1 0 0
+vector lineTo 272.876 259.164 @ 1 0 0 1 0 0
+vector lineTo 273.103 257.855 @ 1 0 0 1 0 0
+vector lineTo 273.331 256.547 @ 1 0 0 1 0 0
+vector lineTo 273.559 255.238 @ 1 0 0 1 0 0
+vector lineTo 273.786 253.929 @ 1 0 0 1 0 0
+vector lineTo 274.014 252.621 @ 1 0 0 1 0 0
+vector lineTo 274.241 251.312 @ 1 0 0 1 0 0
+vector lineTo 274.469 250.003 @ 1 0 0 1 0 0
+vector lineTo 274.697 248.695 @ 1 0 0 1 0 0
+vector lineTo 274.924 247.386 @ 1 0 0 1 0 0
+vector lineTo 275.152 246.078 @ 1 0 0 1 0 0
+vector lineTo 275.379 244.769 @ 1 0 0 1 0 0
+vector lineTo 275.607 243.46 @ 1 0 0 1 0 0
+vector lineTo 275.834 242.152 @ 1 0 0 1 0 0
+vector lineTo 276.062 240.843 @ 1 0 0 1 0 0
+vector lineTo 276.29 239.534 @ 1 0 0 1 0 0
+vector lineTo 276.517 238.226 @ 1 0 0 1 0 0
+vector lineTo 276.745 236.917 @ 1 0 0 1 0 0
+vector lineTo 276.972 235.609 @ 1 0 0 1 0 0
+vector lineTo 277.2 234.3 @ 1 0 0 1 0 0
+vector lineTo 277.428 232.991 @ 1 0 0 1 0 0
+vector lineTo 277.655 231.683 @ 1 0 0 1 0 0
+vector lineTo 277.883 230.374 @ 1 0 0 1 0 0
+vector lineTo 278.11 229.066 @ 1 0 0 1 0 0
+vector lineTo 278.338 227.757 @ 1 0 0 1 0 0
+vector lineTo 278.566 226.448 @ 1 0 0 1 0 0
+vector lineTo 278.793 225.14 @ 1 0 0 1 0 0
+vector lineTo 279.021 223.831 @ 1 0 0 1 0 0
+vector lineTo 279.248 222.522 @ 1 0 0 1 0 0
+vector lineTo 279.476 221.214 @ 1 0 0 1 0 0
+vector lineTo 279.703 219.905 @ 1 0 0 1 0 0
+vector lineTo 279.931 218.597 @ 1 0 0 1 0 0
+vector lineTo 280.159 217.288 @ 1 0 0 1 0 0
+vector lineTo 280.386 215.979 @ 1 0 0 1 0 0
+vector lineTo 280.614 214.671 @ 1 0 0 1 0 0
+vector lineTo 280.841 213.362 @ 1 0 0 1 0 0
+vector lineTo 281.069 212.053 @ 1 0 0 1 0 0
+vector lineTo 281.297 210.745 @ 1 0 0 1 0 0
+vector lineTo 281.524 209.436 @ 1 0 0 1 0 0
+vector lineTo 281.752 208.128 @ 1 0 0 1 0 0
+vector lineTo 281.979 206.819 @ 1 0 0 1 0 0
+vector lineTo 282.207 205.51 @ 1 0 0 1 0 0
+vector lineTo 282.434 204.202 @ 1 0 0 1 0 0
+vector lineTo 282.662 202.893 @ 1 0 0 1 0 0
+vector lineTo 282.89 201.584 @ 1 0 0 1 0 0
+vector lineTo 283.117 200.276 @ 1 0 0 1 0 0
+vector lineTo 283.345 198.967 @ 1 0 0 1 0 0
+vector lineTo 283.572 197.659 @ 1 0 0 1 0 0
+vector lineTo 283.8 196.35 @ 1 0 0 1 0 0
+vector lineTo 284.028 195.041 @ 1 0 0 1 0 0
+vector lineTo 284.255 193.733 @ 1 0 0 1 0 0
+vector lineTo 284.483 192.424 @ 1 0 0 1 0 0
+vector lineTo 284.71 191.116 @ 1 0 0 1 0 0
+vector lineTo 284.938 189.807 @ 1 0 0 1 0 0
+vector lineTo 285.166 188.498 @ 1 0 0 1 0 0
+vector lineTo 285.393 187.19 @ 1 0 0 1 0 0
+vector lineTo 285.621 185.881 @ 1 0 0 1 0 0
+vector lineTo 285.848 184.572 @ 1 0 0 1 0 0
+vector lineTo 286.076 183.264 @ 1 0 0 1 0 0
+vector lineTo 286.303 181.955 @ 1 0 0 1 0 0
+vector lineTo 286.531 180.647 @ 1 0 0 1 0 0
+vector lineTo 286.759 179.338 @ 1 0 0 1 0 0
+vector lineTo 286.986 178.029 @ 1 0 0 1 0 0
+vector lineTo 287.214 176.721 @ 1 0 0 1 0 0
+vector lineTo 287.441 175.412 @ 1 0 0 1 0 0
+vector lineTo 287.669 174.103 @ 1 0 0 1 0 0
+vector lineTo 287.897 172.795 @ 1 0 0 1 0 0
+vector lineTo 288.124 171.486 @ 1 0 0 1 0 0
+vector lineTo 288.352 170.178 @ 1 0 0 1 0 0
+vector lineTo 288.579 168.869 @ 1 0 0 1 0 0
+vector lineTo 288.807 167.56 @ 1 0 0 1 0 0
+vector lineTo 289.034 166.252 @ 1 0 0 1 0 0
+vector lineTo 289.262 164.943 @ 1 0 0 1 0 0
+vector lineTo 289.49 163.634 @ 1 0 0 1 0 0
+vector lineTo 289.717 162.326 @ 1 0 0 1 0 0
+vector lineTo 289.945 161.017 @ 1 0 0 1 0 0
+vector lineTo 290.172 159.709 @ 1 0 0 1 0 0
+vector lineTo 290.4 158.4 @ 1 0 0 1 0 0
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 4
+vector set:globalAlpha 1
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=4 lineCap=round lineJoin=round
+vector set:strokeStyle #56B4E9
+vector set:lineWidth 2
+vector set:globalAlpha 0.55
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#56B4E9 lineWidth=2 lineCap=round lineJoin=round globalAlpha=0.55
+vector save
+vector translate 277.2 234.3
+vector rotate -1.399
+vector beginPath
+vector moveTo 7 0 @ 0.171 -0.985 0.985 0.171 277.2 234.3
+vector lineTo -4.2 4.2 @ 0.171 -0.985 0.985 0.171 277.2 234.3
+vector lineTo -4.2 -4.2 @ 0.171 -0.985 0.985 0.171 277.2 234.3
+vector closePath
+vector set:fillStyle #56B4E9
+vector set:globalAlpha 0.9
+vector fill @ 0.171 -0.985 0.985 0.171 277.2 234.3 | fillStyle=#56B4E9 globalAlpha=0.9
+vector restore
+vector beginPath
+vector moveTo 290.4 158.4 @ 1 0 0 1 0 0
+vector lineTo 291.569 159.019 @ 1 0 0 1 0 0
+vector lineTo 292.738 159.638 @ 1 0 0 1 0 0
+vector lineTo 293.906 160.256 @ 1 0 0 1 0 0
+vector lineTo 295.075 160.875 @ 1 0 0 1 0 0
+vector lineTo 296.244 161.494 @ 1 0 0 1 0 0
+vector lineTo 297.413 162.113 @ 1 0 0 1 0 0
+vector lineTo 298.581 162.731 @ 1 0 0 1 0 0
+vector lineTo 299.75 163.35 @ 1 0 0 1 0 0
+vector lineTo 300.919 163.969 @ 1 0 0 1 0 0
+vector lineTo 302.087 164.588 @ 1 0 0 1 0 0
+vector lineTo 303.256 165.206 @ 1 0 0 1 0 0
+vector lineTo 304.425 165.825 @ 1 0 0 1 0 0
+vector lineTo 305.594 166.444 @ 1 0 0 1 0 0
+vector lineTo 306.762 167.063 @ 1 0 0 1 0 0
+vector lineTo 307.931 167.681 @ 1 0 0 1 0 0
+vector lineTo 309.1 168.3 @ 1 0 0 1 0 0
+vector lineTo 310.269 168.919 @ 1 0 0 1 0 0
+vector lineTo 311.438 169.537 @ 1 0 0 1 0 0
+vector lineTo 312.606 170.156 @ 1 0 0 1 0 0
+vector lineTo 313.775 170.775 @ 1 0 0 1 0 0
+vector lineTo 314.944 171.394 @ 1 0 0 1 0 0
+vector lineTo 316.113 172.013 @ 1 0 0 1 0 0
+vector lineTo 317.281 172.631 @ 1 0 0 1 0 0
+vector lineTo 318.45 173.25 @ 1 0 0 1 0 0
+vector lineTo 319.619 173.869 @ 1 0 0 1 0 0
+vector lineTo 320.787 174.488 @ 1 0 0 1 0 0
+vector lineTo 321.956 175.106 @ 1 0 0 1 0 0
+vector lineTo 323.125 175.725 @ 1 0 0 1 0 0
+vector lineTo 324.294 176.344 @ 1 0 0 1 0 0
+vector lineTo 325.463 176.963 @ 1 0 0 1 0 0
+vector lineTo 326.631 177.581 @ 1 0 0 1 0 0
+vector lineTo 327.8 178.2 @ 1 0 0 1 0 0
+vector lineTo 328.969 178.819 @ 1 0 0 1 0 0
+vector lineTo 330.138 179.438 @ 1 0 0 1 0 0
+vector lineTo 331.306 180.056 @ 1 0 0 1 0 0
+vector lineTo 332.475 180.675 @ 1 0 0 1 0 0
+vector lineTo 333.644 181.294 @ 1 0 0 1 0 0
+vector lineTo 334.813 181.912 @ 1 0 0 1 0 0
+vector lineTo 335.981 182.531 @ 1 0 0 1 0 0
+vector lineTo 337.15 183.15 @ 1 0 0 1 0 0
+vector lineTo 338.319 183.769 @ 1 0 0 1 0 0
+vector lineTo 339.488 184.387 @ 1 0 0 1 0 0
+vector lineTo 340.656 185.006 @ 1 0 0 1 0 0
+vector lineTo 341.825 185.625 @ 1 0 0 1 0 0
+vector lineTo 342.994 186.244 @ 1 0 0 1 0 0
+vector lineTo 344.163 186.862 @ 1 0 0 1 0 0
+vector lineTo 345.331 187.481 @ 1 0 0 1 0 0
+vector lineTo 346.5 188.1 @ 1 0 0 1 0 0
+vector lineTo 347.669 188.719 @ 1 0 0 1 0 0
+vector lineTo 348.838 189.338 @ 1 0 0 1 0 0
+vector lineTo 350.006 189.956 @ 1 0 0 1 0 0
+vector lineTo 351.175 190.575 @ 1 0 0 1 0 0
+vector lineTo 352.344 191.194 @ 1 0 0 1 0 0
+vector lineTo 353.512 191.813 @ 1 0 0 1 0 0
+vector lineTo 354.681 192.431 @ 1 0 0 1 0 0
+vector lineTo 355.85 193.05 @ 1 0 0 1 0 0
+vector lineTo 357.019 193.669 @ 1 0 0 1 0 0
+vector lineTo 358.188 194.287 @ 1 0 0 1 0 0
+vector lineTo 359.356 194.906 @ 1 0 0 1 0 0
+vector lineTo 360.525 195.525 @ 1 0 0 1 0 0
+vector lineTo 361.694 196.144 @ 1 0 0 1 0 0
+vector lineTo 362.863 196.763 @ 1 0 0 1 0 0
+vector lineTo 364.031 197.381 @ 1 0 0 1 0 0
+vector lineTo 365.2 198 @ 1 0 0 1 0 0
+vector lineTo 366.369 198.619 @ 1 0 0 1 0 0
+vector lineTo 367.538 199.238 @ 1 0 0 1 0 0
+vector lineTo 368.706 199.856 @ 1 0 0 1 0 0
+vector lineTo 369.875 200.475 @ 1 0 0 1 0 0
+vector lineTo 371.044 201.094 @ 1 0 0 1 0 0
+vector lineTo 372.212 201.712 @ 1 0 0 1 0 0
+vector lineTo 373.381 202.331 @ 1 0 0 1 0 0
+vector lineTo 374.55 202.95 @ 1 0 0 1 0 0
+vector lineTo 375.719 203.569 @ 1 0 0 1 0 0
+vector lineTo 376.887 204.188 @ 1 0 0 1 0 0
+vector lineTo 378.056 204.806 @ 1 0 0 1 0 0
+vector lineTo 379.225 205.425 @ 1 0 0 1 0 0
+vector lineTo 380.394 206.044 @ 1 0 0 1 0 0
+vector lineTo 381.563 206.663 @ 1 0 0 1 0 0
+vector lineTo 382.731 207.281 @ 1 0 0 1 0 0
+vector lineTo 383.9 207.9 @ 1 0 0 1 0 0
+vector lineTo 385.069 208.519 @ 1 0 0 1 0 0
+vector lineTo 386.238 209.138 @ 1 0 0 1 0 0
+vector lineTo 387.406 209.756 @ 1 0 0 1 0 0
+vector lineTo 388.575 210.375 @ 1 0 0 1 0 0
+vector lineTo 389.744 210.994 @ 1 0 0 1 0 0
+vector lineTo 390.913 211.612 @ 1 0 0 1 0 0
+vector lineTo 392.081 212.231 @ 1 0 0 1 0 0
+vector lineTo 393.25 212.85 @ 1 0 0 1 0 0
+vector lineTo 394.419 213.469 @ 1 0 0 1 0 0
+vector lineTo 395.587 214.088 @ 1 0 0 1 0 0
+vector lineTo 396.756 214.706 @ 1 0 0 1 0 0
+vector lineTo 397.925 215.325 @ 1 0 0 1 0 0
+vector lineTo 399.094 215.944 @ 1 0 0 1 0 0
+vector lineTo 400.263 216.563 @ 1 0 0 1 0 0
+vector lineTo 401.431 217.181 @ 1 0 0 1 0 0
+vector lineTo 402.6 217.8 @ 1 0 0 1 0 0
+vector lineTo 403.769 218.419 @ 1 0 0 1 0 0
+vector lineTo 404.938 219.038 @ 1 0 0 1 0 0
+vector lineTo 406.106 219.656 @ 1 0 0 1 0 0
+vector lineTo 407.275 220.275 @ 1 0 0 1 0 0
+vector lineTo 408.444 220.894 @ 1 0 0 1 0 0
+vector lineTo 409.613 221.513 @ 1 0 0 1 0 0
+vector lineTo 410.781 222.131 @ 1 0 0 1 0 0
+vector lineTo 411.95 222.75 @ 1 0 0 1 0 0
+vector lineTo 413.119 223.369 @ 1 0 0 1 0 0
+vector lineTo 414.288 223.988 @ 1 0 0 1 0 0
+vector lineTo 415.456 224.606 @ 1 0 0 1 0 0
+vector lineTo 416.625 225.225 @ 1 0 0 1 0 0
+vector lineTo 417.794 225.844 @ 1 0 0 1 0 0
+vector lineTo 418.963 226.463 @ 1 0 0 1 0 0
+vector lineTo 420.131 227.081 @ 1 0 0 1 0 0
+vector lineTo 421.3 227.7 @ 1 0 0 1 0 0
+vector lineTo 422.469 228.319 @ 1 0 0 1 0 0
+vector lineTo 423.638 228.938 @ 1 0 0 1 0 0
+vector lineTo 424.806 229.556 @ 1 0 0 1 0 0
+vector lineTo 425.975 230.175 @ 1 0 0 1 0 0
+vector lineTo 427.144 230.794 @ 1 0 0 1 0 0
+vector lineTo 428.313 231.413 @ 1 0 0 1 0 0
+vector lineTo 429.481 232.031 @ 1 0 0 1 0 0
+vector lineTo 430.65 232.65 @ 1 0 0 1 0 0
+vector lineTo 431.819 233.269 @ 1 0 0 1 0 0
+vector lineTo 432.988 233.887 @ 1 0 0 1 0 0
+vector lineTo 434.156 234.506 @ 1 0 0 1 0 0
+vector lineTo 435.325 235.125 @ 1 0 0 1 0 0
+vector lineTo 436.494 235.744 @ 1 0 0 1 0 0
+vector lineTo 437.663 236.363 @ 1 0 0 1 0 0
+vector lineTo 438.831 236.981 @ 1 0 0 1 0 0
+vector lineTo 440 237.6 @ 1 0 0 1 0 0
+vector lineTo 441.169 238.219 @ 1 0 0 1 0 0
+vector lineTo 442.338 238.838 @ 1 0 0 1 0 0
+vector lineTo 443.506 239.456 @ 1 0 0 1 0 0
+vector lineTo 444.675 240.075 @ 1 0 0 1 0 0
+vector lineTo 445.844 240.694 @ 1 0 0 1 0 0
+vector lineTo 447.013 241.313 @ 1 0 0 1 0 0
+vector lineTo 448.181 241.931 @ 1 0 0 1 0 0
+vector lineTo 449.35 242.55 @ 1 0 0 1 0 0
+vector lineTo 450.519 243.169 @ 1 0 0 1 0 0
+vector lineTo 451.688 243.788 @ 1 0 0 1 0 0
+vector lineTo 452.856 244.406 @ 1 0 0 1 0 0
+vector lineTo 454.025 245.025 @ 1 0 0 1 0 0
+vector lineTo 455.194 245.644 @ 1 0 0 1 0 0
+vector lineTo 456.363 246.263 @ 1 0 0 1 0 0
+vector lineTo 457.531 246.881 @ 1 0 0 1 0 0
+vector lineTo 458.7 247.5 @ 1 0 0 1 0 0
+vector lineTo 459.869 248.119 @ 1 0 0 1 0 0
+vector lineTo 461.038 248.737 @ 1 0 0 1 0 0
+vector lineTo 462.206 249.356 @ 1 0 0 1 0 0
+vector lineTo 463.375 249.975 @ 1 0 0 1 0 0
+vector lineTo 464.544 250.594 @ 1 0 0 1 0 0
+vector lineTo 465.713 251.213 @ 1 0 0 1 0 0
+vector lineTo 466.881 251.831 @ 1 0 0 1 0 0
+vector lineTo 468.05 252.45 @ 1 0 0 1 0 0
+vector lineTo 469.219 253.069 @ 1 0 0 1 0 0
+vector lineTo 470.388 253.688 @ 1 0 0 1 0 0
+vector lineTo 471.556 254.306 @ 1 0 0 1 0 0
+vector lineTo 472.725 254.925 @ 1 0 0 1 0 0
+vector lineTo 473.894 255.544 @ 1 0 0 1 0 0
+vector lineTo 475.063 256.163 @ 1 0 0 1 0 0
+vector lineTo 476.231 256.781 @ 1 0 0 1 0 0
+vector lineTo 477.4 257.4 @ 1 0 0 1 0 0
+vector lineTo 478.569 258.019 @ 1 0 0 1 0 0
+vector lineTo 479.738 258.638 @ 1 0 0 1 0 0
+vector lineTo 480.906 259.256 @ 1 0 0 1 0 0
+vector lineTo 482.075 259.875 @ 1 0 0 1 0 0
+vector lineTo 483.244 260.494 @ 1 0 0 1 0 0
+vector lineTo 484.413 261.113 @ 1 0 0 1 0 0
+vector lineTo 485.581 261.731 @ 1 0 0 1 0 0
+vector lineTo 486.75 262.35 @ 1 0 0 1 0 0
+vector lineTo 487.919 262.969 @ 1 0 0 1 0 0
+vector lineTo 489.088 263.588 @ 1 0 0 1 0 0
+vector lineTo 490.256 264.206 @ 1 0 0 1 0 0
+vector lineTo 491.425 264.825 @ 1 0 0 1 0 0
+vector lineTo 492.594 265.444 @ 1 0 0 1 0 0
+vector lineTo 493.763 266.063 @ 1 0 0 1 0 0
+vector lineTo 494.931 266.681 @ 1 0 0 1 0 0
+vector lineTo 496.1 267.3 @ 1 0 0 1 0 0
+vector lineTo 497.269 267.919 @ 1 0 0 1 0 0
+vector lineTo 498.438 268.538 @ 1 0 0 1 0 0
+vector lineTo 499.606 269.156 @ 1 0 0 1 0 0
+vector lineTo 500.775 269.775 @ 1 0 0 1 0 0
+vector lineTo 501.944 270.394 @ 1 0 0 1 0 0
+vector lineTo 503.113 271.013 @ 1 0 0 1 0 0
+vector lineTo 504.281 271.631 @ 1 0 0 1 0 0
+vector lineTo 505.45 272.25 @ 1 0 0 1 0 0
+vector lineTo 506.619 272.869 @ 1 0 0 1 0 0
+vector lineTo 507.788 273.488 @ 1 0 0 1 0 0
+vector lineTo 508.956 274.106 @ 1 0 0 1 0 0
+vector lineTo 510.125 274.725 @ 1 0 0 1 0 0
+vector lineTo 511.294 275.344 @ 1 0 0 1 0 0
+vector lineTo 512.462 275.963 @ 1 0 0 1 0 0
+vector lineTo 513.631 276.581 @ 1 0 0 1 0 0
+vector lineTo 514.8 277.2 @ 1 0 0 1 0 0
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 4
+vector set:globalAlpha 1
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=4 lineCap=round lineJoin=round
+vector set:strokeStyle #56B4E9
+vector set:lineWidth 2
+vector set:globalAlpha 0.55
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#56B4E9 lineWidth=2 lineCap=round lineJoin=round globalAlpha=0.55
+vector save
+vector translate 402.6 217.8
+vector rotate 0.487
+vector beginPath
+vector moveTo 7 0 @ 0.884 0.468 -0.468 0.884 402.6 217.8
+vector lineTo -4.2 4.2 @ 0.884 0.468 -0.468 0.884 402.6 217.8
+vector lineTo -4.2 -4.2 @ 0.884 0.468 -0.468 0.884 402.6 217.8
+vector closePath
+vector set:fillStyle #56B4E9
+vector set:globalAlpha 0.9
+vector fill @ 0.884 0.468 -0.468 0.884 402.6 217.8 | fillStyle=#56B4E9 globalAlpha=0.9
+vector restore
+vector set:globalAlpha 1
+vector beginPath
+vector moveTo 105.6 408.8 @ 1 0 0 1 0 0
+vector lineTo 111.69 419.3 @ 1 0 0 1 0 0
+vector lineTo 99.51 419.3 @ 1 0 0 1 0 0
+vector closePath
+vector set:fillStyle #56B4E9
+vector fill @ 1 0 0 1 0 0 | fillStyle=#56B4E9
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 1.5
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=1.5 lineCap=round lineJoin=round
+vector beginPath
+vector arc 264 310.2 4.2 0 6.283 @ 1 0 0 1 0 0
+vector set:fillStyle #56B4E9
+vector fill @ 1 0 0 1 0 0 | fillStyle=#56B4E9
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 1.5
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=1.5 lineCap=round lineJoin=round
+vector beginPath
+vector rect 509.2 271.6 11.2 11.2 @ 1 0 0 1 0 0
+vector set:fillStyle #56B4E9
+vector fill @ 1 0 0 1 0 0 | fillStyle=#56B4E9
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 1.5
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=1.5 lineCap=round lineJoin=round
+vector beginPath
+vector arc 290.4 158.4 4.2 0 6.283 @ 1 0 0 1 0 0
+vector set:fillStyle #56B4E9
+vector fill @ 1 0 0 1 0 0 | fillStyle=#56B4E9
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 1.5
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=1.5 lineCap=round lineJoin=round
+vector beginPath
+vector arc 330 594 4.2 0 6.283 @ 1 0 0 1 0 0
+vector set:fillStyle #56B4E9
+vector fill @ 1 0 0 1 0 0 | fillStyle=#56B4E9
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 1.5
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=1.5 lineCap=round lineJoin=round
+vector beginPath
+vector arc 330 66 4.2 0 6.283 @ 1 0 0 1 0 0
+vector set:fillStyle #56B4E9
+vector fill @ 1 0 0 1 0 0 | fillStyle=#56B4E9
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 1.5
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=1.5 lineCap=round lineJoin=round
+vector save
+vector set:font 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign left
+vector set:textBaseline middle
+vector set:lineJoin round
+vector set:lineWidth 4
+vector set:strokeStyle #FFFFFF
+vector set:fillStyle #0F0F0F
+vector strokeText Main entrance 116.6 415.8 @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=4 lineCap=round lineJoin=round font=14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=left textBaseline=middle
+vector fillText Main entrance 116.6 415.8 @ 1 0 0 1 0 0 | fillStyle=#0F0F0F font=14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=left textBaseline=middle
+vector strokeText Kiosk 341 66 @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=4 lineCap=round lineJoin=round font=14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=left textBaseline=middle
+vector fillText Kiosk 341 66 @ 1 0 0 1 0 0 | fillStyle=#0F0F0F font=14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=left textBaseline=middle
+vector restore
+vector restore
+vector save
+vector translate 513.835 278.045
+vector rotate -2.121
+vector beginPath
+vector set:fillStyle #E69F00
+vector moveTo 12 0 @ -0.523 -0.853 0.853 -0.523 513.835 278.045
+vector lineTo -6 6 @ -0.523 -0.853 0.853 -0.523 513.835 278.045
+vector lineTo -3 0 @ -0.523 -0.853 0.853 -0.523 513.835 278.045
+vector lineTo -6 -6 @ -0.523 -0.853 0.853 -0.523 513.835 278.045
+vector closePath

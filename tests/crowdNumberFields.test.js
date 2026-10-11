@@ -359,3 +359,273 @@ describe('the reasons belong to the crowd shown, and a crowd with no emitter sho
     expect(described(field)).toEqual(['Total dots released across the window']);
   });
 });
+
+/**
+ * PR 5b round 2 (Codex r1). A slider writes only where the author moves it:
+ * a stored value between its steps puts it at its nearest step, and an
+ * `input` from there, the slider unmoved, writes nothing (#1). Release bias
+ * reads its stored amount (#2). A field shows a number in the fewest digits
+ * that read back as it, and a field committed as it was shown keeps the
+ * stored value exactly (#3). A value typed and not committed goes to what it
+ * was typed for when the pointer, which keeps focus where it is, selects
+ * something else (#4). Count's slider keeps to the scene's dot budget (#5).
+ */
+describe('a slider writes only where the author moves it (DEF-86, Codex r1 #1)', () => {
+  test('Speed 0.12345 and Size 8.25 reference px, between the sliders\' steps: an input on the unmoved slider keeps them; a step writes the stepped value', async () => {
+    const app = await editorWith([crowd('fine', { speed: 0.12345, dotSize: 0.4125 })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const speed = byId('crowd-speed');
+    expect(byId('crowd-speed-field').value).toBe('0.12345');
+    expect([speed.value, speed.disabled]).toEqual(['12', false]);
+    speed.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(emitter.speed).toBe(0.12345);
+    expect(byId('crowd-speed-field').value).toBe('0.12345');
+    step(speed, 13);
+    expect(emitter.speed).toBe(0.13);
+    expect(byId('crowd-speed-field').value).toBe('0.13');
+
+    const size = byId('crowd-dot-size');
+    expect(byId('crowd-dot-size-field').value).toBe('8.25');
+    expect(size.disabled).toBe(false);
+    size.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(emitter.dotSize).toBe(0.4125);
+    expect(byId('crowd-dot-size-field').value).toBe('8.25');
+    step(size, 45);
+    expect(emitter.dotSize).toBe(0.45);
+    expect(byId('crowd-dot-size-field').value).toBe('9');
+  });
+
+  test('a weight of 1.55, between Share\'s steps: an input on the unmoved slider keeps it; a step writes 1.5', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.5, type: 'exit' }],
+        edges: [{ id: 'e1', sourceId: 'n1', targetId: 'n2', direction: 'one-way', weight: 1.55 }],
+      },
+    })]);
+    const layer = app.selectedCrowd;
+    app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'edge', layerId: layer.id, edgeId: 'e1' });
+    const edge = layer.graph.getEdge('e1');
+    const slider = byId('network-edge-weight');
+    expect(byId('network-edge-weight-field').value).toBe('1.55');
+    expect(slider.disabled).toBe(false);
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(edge.weight).toBe(1.55);
+    expect(byId('network-edge-weight-field').value).toBe('1.55');
+    step(slider, 15);
+    expect(edge.weight).toBe(1.5);
+    expect(byId('network-edge-weight-field').value).toBe('1.5');
+  });
+});
+
+describe('Release bias reads its stored amount (CROWD-07 F15, Codex r1 #2)', () => {
+  test('−37.5 and −0.1: the field, the readout and aria-valuetext agree, unrounded', async () => {
+    const app = await editorWith([crowd('bias')]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const field = byId('crowd-intensity-ramp-field');
+    const together = () => [field.value, byId('crowd-intensity-ramp-value').textContent,
+      byId('crowd-intensity-ramp').getAttribute('aria-valuetext')];
+    type(field, -37.5);
+    expect(emitter.intensityRamp).toBe(-0.375);
+    expect(together()).toEqual(['-37.5', 'Earlier 37.5%', 'Earlier 37.5%']);
+    type(field, -0.1);
+    expect(emitter.intensityRamp).toBe(-0.001);
+    expect(together()).toEqual(['-0.1', 'Earlier 0.1%', 'Earlier 0.1%']);
+  });
+});
+
+describe('Release timing keeps its words beside its field (the owner\'s pick, PR 5b round 2)', () => {
+  test('0, 60 and 12.5: the field holds the number, the readout and aria-valuetext say it in words, unrounded', async () => {
+    const app = await editorWith([crowd('timing')]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const field = byId('crowd-onset-variance-field');
+    const together = () => [field.value, byId('crowd-onset-variance-value').textContent,
+      byId('crowd-onset-variance').getAttribute('aria-valuetext')];
+    type(field, 0);
+    expect(emitter.onsetVariance).toBe(0);
+    expect(together()).toEqual(['0', 'Even', 'Even']);
+    type(field, 60);
+    expect(emitter.onsetVariance).toBe(0.6);
+    expect(together()).toEqual(['60', '60% uneven', '60% uneven']);
+    type(field, 12.5);
+    expect(together()).toEqual(['12.5', '12.5% uneven', '12.5% uneven']);
+    // The field is named by its row and unit and described by the words first, then the row's hint, as Release bias's is.
+    expect(described(field)).toEqual(['12.5% uneven', 'How unevenly individual dots set off within the release window']);
+    expect(described(byId('crowd-onset-variance'))[0]).toBe('12.5% uneven');
+  });
+});
+
+describe('a field shows the stored number and keeps it (DEF-86, Codex r1 #3)', () => {
+  test('a weight of 1234567890123456 shows as stored', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.5, type: 'exit' }],
+        edges: [{ id: 'e1', sourceId: 'n1', targetId: 'n2', direction: 'one-way', weight: 1234567890123456 }],
+      },
+    })]);
+    app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'edge', layerId: app.selectedCrowd.id, edgeId: 'e1' });
+    expect(byId('network-edge-weight-field').value).toBe('1234567890123456');
+  });
+
+  test('a Size and a percentage, committed as shown, keep their stored values exactly', async () => {
+    // 0.1234567890123456 (sixteen figures); 0.21000000000000002, 0.07 × 3 as a computation leaves it, which no
+    // reference px reads back as; 0.12345678901234561, which no percentage reads back as.
+    const app = await editorWith([
+      crowd('canonical', { dotSize: 0.1234567890123456, releaseStart: 0.12345678901234561 }),
+      crowd('tail', { dotSize: 0.07 * 3 }),
+    ]);
+    const commitAsShown = (id) => {
+      const field = byId(id);
+      const shown = field.value;
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+      return shown;
+    };
+    const emitter = app.selectedCrowd.emitters[0];
+    expect(commitAsShown('crowd-dot-size-field')).toBe('2.469135780246912');
+    expect(emitter.dotSize).toBe(0.1234567890123456);
+    expect(commitAsShown('crowd-release-start-field')).toBe('12.34567890123456');
+    expect(emitter.releaseStart).toBe(0.12345678901234561);
+
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('tail'));
+    const tail = app.selectedCrowd.emitters[0];
+    expect(tail.dotSize).toBe(0.21000000000000002);
+    expect(commitAsShown('crowd-dot-size-field')).toBe('4.2');
+    expect(tail.dotSize).toBe(0.21000000000000002);
+    // Typed, the same figures are the author's: 4.2 reference px is 0.21×.
+    type(byId('crowd-dot-size-field'), '4.20');
+    expect(tail.dotSize).toBe(0.21);
+  });
+});
+
+/** A tap on the canvas at an image position, through the interaction handler, whose press keeps focus where it is. */
+function tapCanvas(app, [imgX, imgY]) {
+  const { x, y } = app.imageToCanvas(imgX, imgY);
+  for (const kind of ['pointerdown', 'pointerup']) {
+    app.canvas.dispatchEvent(new PointerEvent(kind, {
+      bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true,
+      button: kind === 'pointerdown' ? 0 : -1, buttons: kind === 'pointerdown' ? 1 : 0, clientX: x, clientY: y,
+    }));
+  }
+}
+
+/** A value typed into a field and not committed: no Enter, focus still there. */
+function draft(field, value) {
+  field.focus();
+  field.value = String(value);
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+describe('a value typed and not committed goes to what it was typed for (DEF-86, Codex r1 #4)', () => {
+  test('a weight typed on one path, another selected by the pointer: the first path takes it, the second keeps its own', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.5, y: 0.5 }, { id: 'n3', x: 0.8, y: 0.5, type: 'exit' }],
+        edges: [{ id: 'a', sourceId: 'n1', targetId: 'n2', weight: 1 }, { id: 'b', sourceId: 'n2', targetId: 'n3', weight: 2 }],
+      },
+    })]);
+    const graph = app.selectedCrowd.graph;
+    byId('network-edit-btn').click();
+    expect(app.networkEditService.active).toBe(true);
+    tapCanvas(app, [0.35, 0.5]);
+    expect(app.networkEditService.selectedEdge()?.id).toBe('a');
+    const field = byId('network-edge-weight-field');
+    draft(field, 3);
+    tapCanvas(app, [0.65, 0.5]);
+    expect(app.networkEditService.selectedEdge()?.id).toBe('b');
+    expect([graph.getEdge('a').weight, graph.getEdge('b').weight]).toEqual([3, 2]);
+    expect(field.value).toBe('2');
+  });
+
+  test('a weight typed on an inspected path, Crowd scope left by the pointer selecting a waypoint: the path takes it', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.3, y: 0.8, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.8, type: 'exit' }],
+        edges: [{ id: 'a', sourceId: 'n1', targetId: 'n2', weight: 1 }],
+      },
+    })]);
+    const layer = app.selectedCrowd;
+    app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'edge', layerId: layer.id, edgeId: 'a' });
+    expect(app.networkEditService.active).toBe(false);
+    draft(byId('network-edge-weight-field'), 4);
+    tapCanvas(app, [0.2, 0.3]);
+    expect(app.selectedCrowd).toBeNull();
+    expect(layer.graph.getEdge('a').weight).toBe(4);
+  });
+
+  test('a weight typed, the same path\'s card refreshed by a committed network change: the path takes it', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.5, type: 'exit' }],
+        edges: [{ id: 'a', sourceId: 'n1', targetId: 'n2', weight: 1 }],
+      },
+    })]);
+    byId('network-edit-btn').click();
+    tapCanvas(app, [0.5, 0.5]);
+    expect(app.networkEditService.selectedEdge()?.id).toBe('a');
+    draft(byId('network-edge-weight-field'), 5);
+    // What every committed canvas edit sends (a node or bend moved, a path drawn): the cards are drawn afresh.
+    app.eventBus.emit('network:changed', { commit: true });
+    expect(app.selectedCrowd.graph.getEdge('a').weight).toBe(5);
+    expect(byId('network-edge-weight-field').value).toBe('5');
+  });
+
+  test('a crowd field typed in, the crowd left by the pointer selecting a waypoint: the crowd takes it', async () => {
+    const app = await editorWith([crowd('first', { speed: 0.4 })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    draft(byId('crowd-speed-field'), 0.7);
+    tapCanvas(app, [0.2, 0.3]);
+    expect(app.selectedWaypoint).toBeTruthy();
+    expect(app.selectedCrowd).toBeNull();
+    expect(emitter.speed).toBe(0.7);
+  });
+
+  test('a crowd field typed in, another crowd shown: the first crowd takes it, the second keeps its own', async () => {
+    const app = await editorWith([crowd('first', { speed: 0.4 }), crowd('second', { speed: 0.2 })]);
+    const [first, second] = app.scene.getFlowLayers().map(layer => layer.emitters[0]);
+    draft(byId('crowd-speed-field'), 0.7);
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('second'));
+    expect([first.speed, second.speed]).toEqual([0.7, 0.2]);
+    expect(byId('crowd-speed-field').value).toBe('0.2');
+  });
+});
+
+describe('Count\'s slider keeps to the scene\'s dot budget (DEF-86, Codex r1 #5)', () => {
+  test('19,950 dots elsewhere, Count 50, the slider tries 51: refused, the model, thumb and readout at 50, the error describing the slider, said once', async () => {
+    const app = await editorWith([
+      crowd('small', { dotCount: 50 }), crowd('b1', { dotCount: 5000 }), crowd('b2', { dotCount: 5000 }),
+      crowd('b3', { dotCount: 5000 }), crowd('b4', { dotCount: 4950 }),
+    ]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const slider = byId('crowd-count');
+    const field = byId('crowd-count-field');
+    const error = byId('crowd-count-field-error');
+    const BUDGET = `The whole scene supports at most ${SCENE_LIMITS.MAX_DOTS_TOTAL} configured dots.`;
+    const said = vi.spyOn(app, 'announce');
+    said.mockClear();
+    step(slider, 51);
+    expect(emitter.dotCount).toBe(50);
+    expect([slider.value, field.value, slider.getAttribute('aria-valuetext')]).toEqual(['50', '50', '50']);
+    expect([error.hidden, error.textContent]).toEqual([false, BUDGET]);
+    expect(described(slider)).toContain(BUDGET);
+    expect(described(slider)[0]).toBe('50');
+    expect(described(field)[0]).toBe(BUDGET);
+    // The field holds the 50 kept, which is no error of its own.
+    expect(field.getAttribute('aria-invalid')).toBeNull();
+    expect(said.mock.calls).toEqual([[BUDGET]]);
+    // Tried again while the line stands: refused, not said again.
+    step(slider, 52);
+    expect([emitter.dotCount, slider.value]).toEqual([50, '50']);
+    expect(said.mock.calls).toHaveLength(1);
+    expect(app.scene.getFlowLayers().reduce((sum, layer) => sum + layer.emitters[0].dotCount, 0)).toBe(20000);
+
+    step(slider, 49);
+    expect(emitter.dotCount).toBe(49);
+    expect(error.hidden).toBe(true);
+    expect(described(slider)).not.toContain(BUDGET);
+    expect(described(field)).not.toContain(BUDGET);
+  });
+});

@@ -93,31 +93,75 @@ export function setTimelineReadout(input, currentOutput, totalOutput, current, t
  * [Q5]. On, the slider would sit at its end and write that end on the first
  * nudge.
  */
-export const SLIDER_REACH_REASON = "Beyond the slider's reach — use the number field";
+export const SLIDER_REACH_REASON = "Beyond the slider's reach — use the number field.";
 
 /**
- * A number as a field shows it (DEF-86): the stored value itself, to fifteen
- * significant figures, so a value round-trips and no binary tail shows (0.07
- * × 100 reads 7, not 7.000000000000001), with no fixed decimals that would
- * round it (0.001 reads 0.001, never 0.00). −0 reads 0.
+ * A number as a field shows it (DEF-86): the stored value itself, in the
+ * fewest digits that read back as it (JavaScript's own round trip), with no
+ * fixed decimals or precision that would round it: 0.001 reads 0.001, never
+ * 0.00, and a weight of 1234567890123456 reads 1234567890123456. −0 reads 0.
  * @param {number} value
  * @returns {string}
  */
 export function formatFieldNumber(value) {
-  const number = Number(Number(value).toPrecision(15));
-  return Object.is(number, -0) ? '0' : String(number);
+  return String(Number(value));
 }
 
 /**
- * A value converted between a field's unit and the model's, to the fifteen
- * significant figures a field shows, so the conversion adds no binary tail of
- * its own (8.6 reference px is 0.43×, not 0.42999999999999994).
+ * `value` × 10^`places`, worked on its decimal digits rather than in binary
+ * (DEF-86): the digits `formatFieldNumber` shows, the point moved, read back.
+ * A stored 0.07 is 7%, not 7.000000000000001, and 8.6 reference px are
+ * 0.43×; no digit is cut to a fixed precision. A field's units and a
+ * slider's positions convert through it.
  * @param {number} value
+ * @param {number} places - Whole; negative divides
  * @returns {number}
  */
-export function cleanNumber(value) {
-  const number = Number(Number(value).toPrecision(15));
-  return Object.is(number, -0) ? 0 : number;
+export function shiftDecimal(value, places) {
+  const [digits, exponent = '0'] = formatFieldNumber(value).split('e');
+  return Number(`${digits}e${Number(exponent) + places}`);
+}
+
+/**
+ * What each field or slider was last given from the model, and for what
+ * (DEF-86): the value as the control holds it (a slider's step may have
+ * moved it), so what the author typed or moved there since can be told from
+ * it.
+ * @type {WeakMap<HTMLInputElement, {value: string, owner: *}>}
+ */
+const SHOWN = new WeakMap();
+
+/**
+ * Note what a field or a slider now holds as the model's value, just given
+ * it for `owner` (the crowd's emitter, the path). The caller writes the
+ * value itself, so each field keeps the one module that writes it
+ * (tests/rangeConstants.test.js).
+ * @param {HTMLInputElement|null} control
+ * @param {*} [owner]
+ */
+export function noteShownValue(control, owner = null) {
+  if (control) SHOWN.set(control, { value: control.value, owner });
+}
+
+/**
+ * Whether the author has typed in a field, or moved a slider, since it was
+ * last given the model's value: only then is what it holds theirs to write.
+ * @param {HTMLInputElement|null} control
+ * @returns {boolean}
+ */
+export function changedSinceShown(control) {
+  return Boolean(control) && control.value !== SHOWN.get(control)?.value;
+}
+
+/**
+ * What a field was last shown for (its `owner`), while it holds something
+ * typed and not yet committed: a draft that belongs to that crowd or path,
+ * whatever is selected by now. Null when it holds the model's value.
+ * @param {HTMLInputElement|null} field
+ * @returns {*}
+ */
+export function draftOwner(field) {
+  return changedSinceShown(field) ? SHOWN.get(field)?.owner ?? null : null;
 }
 
 /**

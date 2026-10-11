@@ -110,7 +110,7 @@ ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edg
 ui ~ #network-edge-weight: input aria-describedby="network-edge-weight-value network-edge-weight-tip" aria-valuetext="50% of departures" max="50" min="1" step="1" type="range" value="10" :value="10" → input aria-describedby="network-edge-weight-value network-edge-weight-tip network-edge-weight-reason" aria-valuetext="96% of departures" disabled="" max="50" min="1" step="1" type="range" value="10" :value="50"
 ui ~ #network-edge-weight-field: input aria-describedby="network-edge-weight-value network-edge-weight-field-tip" min="0.01" step="any" type="number" value="1" :value="1" → input aria-describedby="network-edge-weight-value network-edge-weight-field-tip" min="0.01" step="any" type="number" value="1" :value="24"
 ui ~ #network-edge-weight-value: span class="range-readout" :text="50% of departures" → span class="range-readout" :text="96% of departures"
-ui ~ #network-edge-weight-reason: p (not shown) → p class="section-hint range-reason" :text="Beyond the slider's reach — use the number field"
+ui ~ #network-edge-weight-reason: p (not shown) → p class="section-hint range-reason" :text="Beyond the slider's reach — use the number field."
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-2__ex-uon-b1", focusKey: null}
@@ -133,7 +133,7 @@ ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edg
 ui ~ #network-edge-weight: input aria-describedby="network-edge-weight-value network-edge-weight-tip" aria-valuetext="50% of departures" max="50" min="1" step="1" type="range" value="10" :value="10" → input aria-describedby="network-edge-weight-value network-edge-weight-tip network-edge-weight-reason" aria-valuetext="100% of departures" disabled="" max="50" min="1" step="1" type="range" value="10" :value="50"
 ui ~ #network-edge-weight-field: input aria-describedby="network-edge-weight-value network-edge-weight-field-tip" min="0.01" step="any" type="number" value="1" :value="1" → input aria-describedby="network-edge-weight-value network-edge-weight-field-tip" min="0.01" step="any" type="number" value="1" :value="99999"
 ui ~ #network-edge-weight-value: span class="range-readout" :text="50% of departures" → span class="range-readout" :text="100% of departures"
-ui ~ #network-edge-weight-reason: p (not shown) → p class="section-hint range-reason" :text="Beyond the slider's reach — use the number field"
+ui ~ #network-edge-weight-reason: p (not shown) → p class="section-hint range-reason" :text="Beyond the slider's reach — use the number field."
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-2__ex-uon-b1", focusKey: null}
@@ -170,7 +170,7 @@ ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 7f3a1b23)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
-ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 141 inside, e2b41b3b)
+ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
 ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 ui ~ #edge-scope: div class="scope-group" → div (not shown)
 ui - #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" (and 35 inside, 055d528b)

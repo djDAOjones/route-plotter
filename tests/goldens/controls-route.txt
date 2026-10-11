@@ -1379,7 +1379,7 @@ ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 4b8a0c98)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
-ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 141 inside, e2b41b3b)
+ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
 ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
@@ -1407,7 +1407,7 @@ ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 4b8a0c98)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
-ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 141 inside, e2b41b3b)
+ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
 ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
@@ -1444,7 +1444,7 @@ ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 4b8a0c98)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
-ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 141 inside, e2b41b3b)
+ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
 ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
@@ -1559,7 +1559,7 @@ ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, aa532887)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 8736fa52)
-ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 141 inside, dfe43f30)
+ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, c96aaec2)
 ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, fb73a3df)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"

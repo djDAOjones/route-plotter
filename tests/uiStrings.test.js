@@ -26,9 +26,9 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, test, expect, vi } from 'vitest';
+import { afterEach, describe, test, expect, vi } from 'vitest';
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { lex, lexedFiles, lineAt } from './helpers/sourceScan.js';
 import { TOOLTIPS } from '../src/config/tooltips.js';
@@ -702,7 +702,17 @@ describe('the glossary spells it centre (UI-06, the lead\'s addendum to PR 8)', 
  * reason [Q9], and the Node card's title (X-05).
  */
 describe('the words PR 5b adds keep the rules (CROWD-07)', () => {
+  // The storage reader the test installs goes with it: the next test reads as it did before (Codex r1 #6).
+  let reader = null;
+  afterEach(() => {
+    if (reader) localStorage.getItem.mockImplementation(reader);
+    reader = null;
+  });
+
   test('announcements, helper lines, reasons, errors, labels and titles: sentence case, no retired word', async () => {
+    // The test hears what is announced: the start's tip, on the real clock, must not land in it.
+    reader = localStorage.getItem.getMockImplementation() ?? (() => null);
+    localStorage.getItem.mockImplementation(tipSeen(reader));
     const app = await bootApp();
     try {
       await app.ready;
@@ -775,9 +785,11 @@ describe('the words PR 5b adds keep the rules (CROWD-07)', () => {
       for (const message of announced) prose('announcement', message);
 
       const texts = strings.map(string => string.text);
-      expect(texts).toContain('Beyond the slider\'s reach — use the number field');
-      expect(texts).toContain('Shares are already even.');
-      expect(texts).toContain('Seed is a whole number from 0 to 4294967295');
+      // Full stops, as the card's other reason lines end; the Even reason in the bias's own words, "share" being
+      // the Path card's (the lead's settlements, round 2).
+      expect(texts).toContain('Beyond the slider\'s reach — use the number field.');
+      expect(texts).toContain('Even favours neither end.');
+      expect(texts).toContain('Seed is a whole number from 0 to 4294967295.');
       expect(texts).toContain('The whole scene supports at most 20000 configured dots.');
       // Nine crowd fields' errors and the weight's, each in its line and said once.
       expect(new Set(texts.filter(text => /^Enter .+ until you do\.$/.test(text))).size).toBe(10);

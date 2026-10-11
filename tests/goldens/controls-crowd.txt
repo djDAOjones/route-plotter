@@ -24,7 +24,7 @@ ui ~ #layers-strip>li[1]>button[0]: button aria-describedby="{#layers-strip>li[1
 ui - #crowd-no-emitter: p (not shown)
 ui - #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 4b8a0c98)
 ui - #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
-ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 141 inside, 40978646)
+ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, fd5af58c)
 ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 
 ## #scope-prev-btn · disabled, not operated
@@ -748,8 +748,9 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #crowd-onset-variance: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="60%" max="100" min="0" step="1" type="range" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="33%" max="100" min="0" step="1" type="range" value="20" :value="33"
-ui ~ #crowd-onset-variance-field: input aria-describedby="crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="60" → input aria-describedby="crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="33"
+ui ~ #crowd-onset-variance: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="60% uneven" max="100" min="0" step="1" type="range" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="33% uneven" max="100" min="0" step="1" type="range" value="20" :value="33"
+ui ~ #crowd-onset-variance-field: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="33"
+ui ~ #crowd-onset-variance-value: span class="range-readout" :text="60% uneven" → span class="range-readout" :text="33% uneven"
 settled:
   emit animation:durationChange 30609.179801
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30609.179801, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -771,8 +772,9 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #crowd-onset-variance: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="60%" max="100" min="0" step="1" type="range" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="24%" max="100" min="0" step="1" type="range" value="20" :value="24"
-ui ~ #crowd-onset-variance-field: input aria-describedby="crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="60" → input aria-describedby="crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="24"
+ui ~ #crowd-onset-variance: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="60% uneven" max="100" min="0" step="1" type="range" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-valuetext="24% uneven" max="100" min="0" step="1" type="range" value="20" :value="24"
+ui ~ #crowd-onset-variance-field: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="60" → input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="24"
+ui ~ #crowd-onset-variance-value: span class="range-readout" :text="60% uneven" → span class="range-readout" :text="24% uneven"
 settled:
   emit animation:durationChange 30552.42122
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30552.42122, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -785,15 +787,15 @@ settled:
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
 ## #crowd-onset-variance-field · enter 99999
-announced "Enter a release timing from 0 to 100%; the crowd keeps 60% until you do."
+announced "Enter a release timing from 0 to 100%; the crowd keeps 60% uneven until you do."
 app ~ focus: "body" → "#crowd-onset-variance-field"
 storage + routePlotter_lastSection: "release"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a release timing from 0 to 100%; the crowd keeps 60% until you do."
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a release timing from 0 to 100%; the crowd keeps 60% uneven until you do."
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
-ui ~ #crowd-onset-variance-field: input aria-describedby="crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="60" → input aria-describedby="crowd-onset-variance-field-error crowd-onset-variance-tip" aria-invalid="true" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="99999"
-ui ~ #crowd-onset-variance-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a release timing from 0 to 100%; the crowd keeps 60% until you do."
+ui ~ #crowd-onset-variance-field: input aria-describedby="crowd-onset-variance-value crowd-onset-variance-tip" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="60" → input aria-describedby="crowd-onset-variance-field-error crowd-onset-variance-value crowd-onset-variance-tip" aria-invalid="true" aria-labelledby="crowd-onset-variance-label crowd-onset-variance-unit" max="100" min="0" step="any" type="number" value="20" :value="99999"
+ui ~ #crowd-onset-variance-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a release timing from 0 to 100%; the crowd keeps 60% uneven until you do."
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a release timing from 0 to 100%; the crowd keeps 60% until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a release timing from 0 to 100%; the crowd keeps 60% uneven until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #section-release-content>details[1]>div[1]>div[1]>button[0] · click
 app ~ focus: "body" → "#section-release-content>details[1]>div[1]>div[1]>button[0]"
@@ -1273,7 +1275,7 @@ ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p ar
 ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
 ui ~ #crowd-speed: input aria-describedby="crowd-speed-value crowd-speed-tip" aria-valuetext="0.06 image lengths/s" max="100" min="1" step="1" type="range" value="15" :value="6" → input aria-describedby="crowd-speed-value crowd-speed-tip crowd-speed-reason" aria-valuetext="24 image lengths/s" disabled="" max="100" min="1" step="1" type="range" value="15" :value="100"
 ui ~ #crowd-speed-field: input aria-describedby="crowd-speed-tip" aria-labelledby="crowd-speed-label crowd-speed-unit" max="1000" min="0.001" step="0.001" type="number" value="0.15" :value="0.06" → input aria-describedby="crowd-speed-tip" aria-labelledby="crowd-speed-label crowd-speed-unit" max="1000" min="0.001" step="0.001" type="number" value="0.15" :value="24"
-ui ~ #crowd-speed-reason: p (not shown) → p class="section-hint range-reason" :text="Beyond the slider's reach — use the number field"
+ui ~ #crowd-speed-reason: p (not shown) → p class="section-hint range-reason" :text="Beyond the slider's reach — use the number field."
 settled:
   emit animation:durationChange 27929.352554
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}

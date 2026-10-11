@@ -19,8 +19,8 @@ import { isMac } from '../config/keybindings.js';
 import { getGraphDepartureShares } from '../utils/graphRouting.js';
 import { nearestOnPolyline } from '../utils/segmentHitTest.js';
 import {
-  cleanNumber, clearFieldError, formatFieldNumber, setControlReason, setRangeReadout, showFieldError,
-  SLIDER_REACH_REASON,
+  changedSinceShown, clearFieldError, draftOwner, formatFieldNumber, noteShownValue, setControlReason, setRangeReadout,
+  shiftDecimal, showFieldError, SLIDER_REACH_REASON,
 } from '../utils/uiReadouts.js';
 
 const NODE_TYPE_LABELS = {
@@ -193,6 +193,8 @@ export const networkMixin = {
     this.eventBus.on('network:node-selected', () => this.syncNetworkCards());
     this.eventBus.on('network:edge-selected', () => this.syncNetworkCards());
     this.eventBus.on('network:node-deselected', () => this._syncNodePathWeights(null));
+    // The Path card closes with its path: a weight typed there goes to that path (Codex r1 #4).
+    this.eventBus.on('network:edge-deselected', () => this._commitEdgeWeightDraft());
 
     // ── Node card (single-writer wiring) ────────────────────
     document.getElementById('network-node-type')?.addEventListener('change', (e) => {
@@ -216,12 +218,13 @@ export const networkMixin = {
     weight.slider?.addEventListener('input', (e) => {
       const edge = this.networkEditService.selectedEdge();
       if (!edge) return;
-      // Off for a weight past its ends, it writes nothing: the weight stays (DEF-86).
-      if (weight.slider.disabled) {
+      // Off for a weight past its ends, or not moved from the step a weight
+      // between its steps put it at, it writes nothing: the weight stays (DEF-86).
+      if (weight.slider.disabled || !changedSinceShown(weight.slider)) {
         this._syncEdgeWeight(edge);
         return;
       }
-      edge.setWeight(cleanNumber(parseFloat(e.target.value) / 10));
+      edge.setWeight(shiftDecimal(Number(e.target.value), -1));
       // The field shows the weight the slider set: whatever was wrong with what was typed there is gone.
       clearFieldError(weight.field, weight.error);
       this._syncEdgeWeight(edge);
@@ -232,17 +235,50 @@ export const networkMixin = {
     // top, as the model takes it; the slider follows within its reach.
     weight.field?.addEventListener('change', () => {
       const edge = this.networkEditService.selectedEdge();
-      if (!edge) return;
-      const typed = Number(weight.field.value);
-      if (weight.field.value.trim() === '' || !Number.isFinite(typed) || typed < 0.01) {
-        showFieldError(weight.field, weight.error, weightMessage(edge), message => this.announce?.(message));
-        return;
-      }
-      clearFieldError(weight.field, weight.error);
-      edge.setWeight(typed);
-      this._syncEdgeWeight(edge);
-      this.eventBus.emit('crowd:param-changed');
+      if (edge) this._commitEdgeWeightField(edge);
     });
+  },
+
+  /**
+   * Commit the weight field to `edge`, the path it was typed for (DEF-86):
+   * a weight of 0.01 or more is written; anything else is refused in the
+   * field's error line, said aloud, and the path keeps its weight. A field
+   * committed as it was shown writes nothing.
+   * @param {Object} edge
+   * @private
+   */
+  _commitEdgeWeightField(edge) {
+    const { field, error } = edgeWeightParts();
+    if (!field) return;
+    if (!changedSinceShown(field)) {
+      clearFieldError(field, error);
+      return;
+    }
+    const typed = Number(field.value);
+    if (field.value.trim() === '' || !Number.isFinite(typed) || typed < 0.01) {
+      showFieldError(field, error, weightMessage(edge), message => this.announce?.(message));
+      return;
+    }
+    clearFieldError(field, error);
+    edge.setWeight(typed);
+    this._syncEdgeWeight(edge);
+    this.eventBus.emit('crowd:param-changed');
+  },
+
+  /**
+   * Commit a weight typed and not committed to the path it was typed for,
+   * before the Path card shows another path or closes (Codex r1 #4). A press
+   * on the canvas keeps focus in the field, so no `change` commits it first,
+   * and by the time the card hears of a new selection the service has made
+   * it: the field remembers its path from when it was shown. A path gone
+   * from the scene (deleted, or put back by Undo) takes nothing.
+   * @private
+   */
+  _commitEdgeWeightDraft() {
+    const edge = draftOwner(edgeWeightParts().field);
+    if (!edge) return;
+    const inScene = this.scene.getFlowLayers().some(layer => layer.graph?.getEdge?.(edge.id) === edge);
+    if (inScene) this._commitEdgeWeightField(edge);
   },
 
   /**
@@ -490,6 +526,8 @@ export const networkMixin = {
    * Safe with no selection (cards are hidden then anyway).
    */
   syncNetworkCards() {
+    // A weight typed for the path shown before goes to it first (Codex r1 #4).
+    this._commitEdgeWeightDraft();
     const svc = this.networkEditService;
     const hints = svc.active ? NETWORK_CARD_HINTS.active : NETWORK_CARD_HINTS.passive;
     const nodeHint = document.getElementById('network-node-hint');
@@ -518,22 +556,28 @@ export const networkMixin = {
   },
 
   /**
-   * Show a path's weight (DEF-86): the field holds it as stored; the Share
-   * slider, the weight × 10 from 0.1 to 5, sits there, or, for a weight past
-   * its ends, at its nearer end and off, saying why, so the first nudge
-   * never rewrites it; the readout says the share it gives.
+   * Show a path's weight (DEF-86): the field holds it as stored, shown for
+   * that path; the Share slider, the weight × 10 from 0.1 to 5, sits there,
+   * at its nearest step for a weight between its steps, or, for a weight
+   * past its ends, at its nearer end and off, saying why; it writes nothing
+   * until the author moves it, so the first nudge never rewrites a weight
+   * they did not set on it; the readout says the share it gives.
    * @param {Object} edge
    * @private
    */
   _syncEdgeWeight(edge) {
     const { slider, field, reason } = edgeWeightParts();
-    if (field) field.value = formatFieldNumber(edge.weight);
+    if (field) {
+      field.value = formatFieldNumber(edge.weight);
+      noteShownValue(field, edge);
+    }
     if (slider) {
-      const position = cleanNumber(edge.weight * 10);
+      const position = shiftDecimal(edge.weight, 1);
       const min = Number(slider.min);
       const max = Number(slider.max);
       const reachable = position >= min && position <= max;
       slider.value = String(Math.round(Math.min(max, Math.max(min, position))));
+      noteShownValue(slider, edge); // where its step put it: until moved from there, it writes nothing
       slider.disabled = !reachable;
       setControlReason(slider, reason, reachable ? '' : SLIDER_REACH_REASON);
     }

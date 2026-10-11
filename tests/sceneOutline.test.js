@@ -1065,7 +1065,8 @@ describe('the outline\'s Release bias is a direction and an amount (CROWD-07 F15
     const { form, direction, amount, reasonOf } = await biasForm(0);
     expect(direction.value).toBe('even');
     expect([amount.value, amount.disabled]).toEqual(['0', true]);
-    expect(reasonOf()?.textContent).toBe('Shares are already even.');
+    // The lead's settlement: "share" is the Path card's word (glossary, one word per concept).
+    expect(reasonOf()?.textContent).toBe('Even favours neither end.');
     expect(reasonOf().hidden).toBe(false);
     expect(reasonOf().closest('label')).toBeNull(); // a description, outside the field's label
 
@@ -1079,7 +1080,7 @@ describe('the outline\'s Release bias is a direction and an amount (CROWD-07 F15
     direction.value = 'even';
     direction.dispatchEvent(new Event('change', { bubbles: true }));
     expect([amount.value, amount.disabled]).toEqual(['0', true]);
-    expect(reasonOf()?.textContent).toBe('Shares are already even.');
+    expect(reasonOf()?.textContent).toBe('Even favours neither end.'); // the lead's settlement, as above
     const command = submitted(form);
     expect(command.intensityRampDirection).toBe('even');
     expect('intensityRampAmount' in command).toBe(false); // off, so not sent: Even is 0

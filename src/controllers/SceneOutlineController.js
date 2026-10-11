@@ -137,8 +137,12 @@ function releaseBiasText(percent) {
   return percent < 0 ? `Earlier ${-percent}%` : `Later ${percent}%`;
 }
 
-/** The Even direction's reason for the amount being off [Q9, the lead's words]. */
-const RELEASE_BIAS_EVEN_REASON = 'Shares are already even.';
+/**
+ * The Even direction's reason for the amount being off [Q9]: "share" is the
+ * Path card's word, so the lead's settlement says it in the bias's own
+ * (glossary, one word per concept).
+ */
+const RELEASE_BIAS_EVEN_REASON = 'Even favours neither end.';
 
 /** What a dot does at its journey's end, as the Motion card says it (UI-06 J-02). */
 const JOURNEY_END_LABELS = Object.freeze({

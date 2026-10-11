@@ -509,14 +509,32 @@ describe('golden draw logs (TST-02)', () => {
     // its glyph, in the guide's own layer, 14 reference px of the UI's
     // primary text ink over a 2 px casing of its background [Q8]. A node with
     // no name draws none, and neither does a network only inspected, nor
-    // preview, nor the export canvas.
-    test('in Edit network a named node\'s label is drawn beside its glyph, cased; an unnamed node, inspection and export draw none', async () => {
+    // preview, nor the export canvas. A node under a waypoint whose own label
+    // shows draws none either (the owner's pick, PR 5b round 2): the trace's
+    // link puts it on the marker, the waypoint's label names the spot, and
+    // Open day's names read twice. Reason for the changed expectation: Open
+    // day's traced nodes, each under its labelled waypoint, now draw none; a
+    // named node drawn away from the waypoints draws its own, as does a traced
+    // node whose waypoint's label is Off.
+    test('in Edit network a named node away from the waypoints, or under a waypoint with its label off, is labelled beside its glyph, cased; nodes under labelled waypoints, an unnamed node, inspection and export draw none', async () => {
       const labelsIn = lines => lines.filter(line => / (strokeText|fillText) /.test(line));
       const { app, layer } = await openDayWithItsCrowd('edit');
-      const named = layer.graph.getNodes().filter(node => node.label);
-      expect(named.length).toBeGreaterThan(1);
+      const traced = layer.graph.getNodes().filter(node => node.label);
+      expect(traced.length).toBeGreaterThan(1);
+      // Each traced node sits on its waypoint, which shows a label of its own.
+      for (const node of traced) {
+        const waypoint = app.waypoints.find(each => each.id === node.anchorWaypointId);
+        expect(node.isAnchorResolved(), node.label).toBe(true);
+        expect([waypoint.hasLabel(), node.position()], node.label).toEqual([true, { x: waypoint.imgX, y: waypoint.imgY }]);
+      }
       const unnamed = layer.graph.addNode({ x: 0.5, y: 0.9 });
       expect(unnamed.label).toBe('');
+      // Drawn with the pen and named, away from every waypoint.
+      const kiosk = layer.graph.addNode({ x: 0.5, y: 0.1, label: 'Kiosk' });
+      // A traced node whose waypoint shows no label (its label Off) is the one name at that spot: it keeps its own.
+      const [unlabelled, ...underLabels] = traced;
+      app.waypoints.find(each => each.id === unlabelled.anchorWaypointId).labelMode = 'off';
+      expect(Math.min(...app.waypoints.map(each => Math.hypot(each.imgX - 0.5, each.imgY - 0.1)))).toBeGreaterThan(0.05);
 
       // Inspected, not drawn: the guide carries no label.
       const inspected = frameAt(app, 0.5, { state: 'drawn' }).filter(line => line.startsWith('vector '));
@@ -527,9 +545,10 @@ describe('golden draw logs (TST-02)', () => {
       expect(app.networkEditService.active).toBe(true);
       const editing = frameAt(app, 0.5, { state: 'drawn' }).filter(line => line.startsWith('vector '));
       const marks = landmarks(editing);
-      const drawn = labelsIn(editing.slice(marks.lastRoute, marks.head));
+      const guide = editing.slice(marks.lastRoute + 1, marks.head);
+      const drawn = labelsIn(guide);
       const size = app.renderingService.scaleLabelSize(14);
-      for (const node of named) {
+      for (const node of [kiosk, unlabelled]) {
         const strokeLine = drawn.find(line => line.includes(` strokeText ${node.label} `));
         const fillLine = drawn.find(line => line.includes(` fillText ${node.label} `));
         expect(strokeLine, node.label).toBeDefined();
@@ -540,8 +559,15 @@ describe('golden draw logs (TST-02)', () => {
         expect(field(fillLine, 'fillStyle')).toBe('#0F0F0F');
         expect(fillLine).toContain(`font=${size}px `);
       }
-      expect(drawn).toHaveLength(2 * named.length);
+      // Only those two: no name of a node under its waypoint's label, and nothing for the unnamed node.
+      expect(drawn).toHaveLength(4);
+      expect(underLabels.length).toBeGreaterThan(0);
+      for (const node of underLabels) {
+        expect(drawn.some(line => line.includes(` ${node.label} `)), node.label).toBe(false);
+      }
       expect(drawn.some(line => / (strokeText|fillText) Node /.test(line))).toBe(false);
+      // The guide's draw, labels and all, pinned (regenerate with UPDATE_DRAW_GOLDENS=1).
+      expectGolden('uon-open-day-network-edit', [['guide at progress 0.5, Edit network, a named node added, one waypoint label off', guide]]);
 
       // Nothing else in the app strokes text: preview and export, whose waypoint labels are filled, stroke none.
       for (const mode of ['preview', 'export']) {
