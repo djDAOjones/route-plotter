@@ -555,7 +555,7 @@ describe('the crowd’s words agree (CROWD-07 F8)', () => {
       const texts = strings.map(string => string.text);
       expect(size).toBe('8 reference px');
       expect(texts.some(text => /^Disappear removes a dot at its journey's end;/.test(text))).toBe(true);
-      expect(texts.some(text => /Journeys start at Entry nodes and end at Exit nodes/.test(text))).toBe(true);
+      expect(texts.some(text => /Journeys start at entry nodes and end at exit nodes/.test(text))).toBe(true);
       expect(texts.some(text => /exports scale it from the project's reference short edge$/.test(text))).toBe(true);
       expect(faultsIn(strings)).toEqual([]);
     } finally {

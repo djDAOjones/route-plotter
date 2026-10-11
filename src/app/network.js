@@ -44,8 +44,8 @@ const NETWORK_CARD_HINTS = {
  * at a node with one path; with no Entry, dots set off from every node with a
  * path they can take (SwarmEngine `_buildGraphGuide`, `fallbackExitIds`).
  */
-const GUIDE_JOURNEY_HINT = "Journeys start at Entry nodes and end at Exit nodes (a node's Type). "
-  + 'With no Exit, they end at nodes with one path; with no Entry, dots set off from any node they can leave.';
+const GUIDE_JOURNEY_HINT = "Journeys start at entry nodes and end at exit nodes (a node's Type). "
+  + 'With no exit, they end at nodes with one path; with no entry, dots set off from any node they can leave.';
 
 /** A node's path-weight row hint (UI-03), worded as the Path card's Share hint. */
 const PATH_WEIGHT_HINT = 'How strongly dots leaving this node prefer this path, '

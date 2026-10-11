@@ -86,8 +86,8 @@ const FIELD_HINTS = Object.freeze({
   // The Motion card's "At journey end" hint (CROWD-07 F6), word for word: one
   // description for one control (tests/uiStrings.test.js pins the two equal).
   journeyEnd: "Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the " +
-    'start sends a new dot from the start with its own pace and sway; Repeat journey follows the same paths ' +
-    'again at the same pace',
+    'start sends a new dot from the start with its own pace and walking variation; Repeat journey follows the ' +
+    'same paths again at the same pace',
   nodeType: 'Entry nodes release dots and exit nodes end their journeys; pass-through nodes pass them on, or ' +
     'end them where no path leads out. With no exit, journeys end at nodes with one path; with no ' +
     'entry, dots set off from any node they can leave',

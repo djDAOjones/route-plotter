@@ -1129,10 +1129,10 @@ describe('the Size readout reads reference px (CROWD-07 F1)', () => {
  */
 describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
   const F6 = "Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start "
-    + 'sends a new dot from the start with its own pace and sway; Repeat journey follows the same paths again '
-    + 'at the same pace';
-  const F14 = "Journeys start at Entry nodes and end at Exit nodes (a node's Type). With no Exit, they end at nodes "
-    + 'with one path; with no Entry, dots set off from any node they can leave.';
+    + 'sends a new dot from the start with its own pace and walking variation; Repeat journey follows the same '
+    + 'paths again at the same pace';
+  const F14 = "Journeys start at entry nodes and end at exit nodes (a node's Type). With no exit, they end at nodes "
+    + 'with one path; with no entry, dots set off from any node they can leave.';
   const guideHint = () => document.getElementById('crowd-guide-hint').textContent;
   const tooltip = () => document.getElementById('param-tooltip');
   const shown = () => (tooltip()?.style.display === 'block' ? tooltip().textContent : null);
