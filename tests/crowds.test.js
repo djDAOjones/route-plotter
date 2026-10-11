@@ -1204,12 +1204,12 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
     app.waypoints = route.slice(0, 1);
     app.updateGuideCard();
     expect(guideHint()).toBe(`Dots walk this crowd's own network (2 nodes, 1 path). ${F14} `
-      + 'Add at least two route waypoints to set the master timing before previewing or exporting.');
+      + 'It takes at least two route waypoints to set the master timing before previewing or exporting.');
 
     // On an emitterless crowd too: the Guide card is the crowd's, emitter or not.
     app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
     expect(guideHint()).toBe(`No network yet — Edit network hands you the pen. ${F14} `
-      + 'Add at least two route waypoints to set the master timing before previewing or exporting.');
+      + 'It takes at least two route waypoints to set the master timing before previewing or exporting.');
 
     // Back on Follow route, it goes.
     app.waypoints = route;
@@ -1217,6 +1217,28 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
     layer.setGuideType('route');
     app.syncCrowdEditor();
     expect(guideHint()).not.toContain('Journeys start');
+  });
+
+  // The owner's audit (2026-10-10): with no route, the Trace reason and the Guide hint below it both said
+  // "Add at least two route waypoints". One says it: the reason Trace is off (UI-06 B-07); the hint keeps the timing.
+  test('on a Custom network with no route, the Guide card says "Add at least two route waypoints" once', async () => {
+    const app = await withEmptyCrowd();
+    app.addCrowd({ enterNetworkEditor: false });
+    const lines = () => [...document.querySelectorAll('#section-guide-content .section-hint')]
+      .filter(line => !line.hidden).map(line => line.textContent);
+    const asked = () => lines().join(' ').match(/Add at least two route waypoints/g) || [];
+    const reason = document.getElementById('crowd-trace-route-reason');
+    app.selectedCrowd.setGuideType('graph');
+    app.waypoints = app.waypoints.slice(0, 1);
+
+    for (const crowd of [app.selectedCrowd, app.scene.getFlowLayer('empty')]) {
+      app.eventBus.emit('crowd:selected', crowd);
+      app.updateGuideCard();
+      expect(lines()).toHaveLength(2);
+      expect([reason.hidden, reason.textContent]).toEqual([false, 'Add at least two route waypoints first.']);
+      expect(asked()).toHaveLength(1);
+      expect(guideHint()).toMatch(/at least two route waypoints to set the master timing before previewing or exporting\.$/);
+    }
   });
 
   test('F20 is DEF-93’s: the endless-network helper reads as it did, and the Node Type hint keeps both fallbacks', async () => {
