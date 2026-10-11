@@ -148,13 +148,23 @@
       ],
       "format": "esm"
     },
+    "src/services/DotRenderer.js": {
+      "bytes": 1990,
+      "imports": [],
+      "format": "esm"
+    },
     "src/utils/uiReadouts.js": {
-      "bytes": 2236,
+      "bytes": 2885,
       "imports": [
         {
           "path": "src/config/constants.js",
           "kind": "import-statement",
           "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/DotRenderer.js",
+          "kind": "import-statement",
+          "original": "../services/DotRenderer.js"
         }
       ],
       "format": "esm"
@@ -295,11 +305,6 @@
           "original": "../core/PlayerCore.js"
         }
       ],
-      "format": "esm"
-    },
-    "src/services/DotRenderer.js": {
-      "bytes": 1907,
-      "imports": [],
       "format": "esm"
     },
     "src/services/TextLabelService.js": {
@@ -3541,7 +3546,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 48491,
+      "bytes": 48634,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3577,12 +3582,17 @@
           "path": "src/app/persistence.js",
           "kind": "import-statement",
           "original": "./persistence.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
         }
       ],
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 26884,
+      "bytes": 27696,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3624,7 +3634,7 @@
       "format": "esm"
     },
     "src/controllers/SceneOutlineController.js": {
-      "bytes": 55200,
+      "bytes": 56003,
       "imports": [
         {
           "path": "src/utils/sceneSemantics.js",
@@ -3635,6 +3645,11 @@
           "path": "src/config/constants.js",
           "kind": "import-statement",
           "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
         }
       ],
       "format": "esm"
@@ -4047,13 +4062,13 @@
     }
   },
   "outputs": {
-    ".docs-build-cC8T0A/app.js.map": {
+    ".docs-build-A74hRf/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3645576
+      "bytes": 3648550
     },
-    ".docs-build-cC8T0A/app.js": {
+    ".docs-build-A74hRf/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4100,8 +4115,11 @@
         "src/services/MotionVisibilityService.js": {
           "bytesInOutput": 11724
         },
+        "src/services/DotRenderer.js": {
+          "bytesInOutput": 429
+        },
         "src/utils/uiReadouts.js": {
-          "bytesInOutput": 636
+          "bytesInOutput": 727
         },
         "src/services/StorageService.js": {
           "bytesInOutput": 8260
@@ -4141,9 +4159,6 @@
         },
         "src/utils/branchTiming.js": {
           "bytesInOutput": 1671
-        },
-        "src/services/DotRenderer.js": {
-          "bytesInOutput": 429
         },
         "src/services/TextLabelService.js": {
           "bytesInOutput": 3863
@@ -4401,16 +4416,16 @@
           "bytesInOutput": 1871
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 23159
+          "bytesInOutput": 23125
         },
         "src/app/network.js": {
-          "bytesInOutput": 11908
+          "bytesInOutput": 12080
         },
         "src/utils/sceneSemantics.js": {
           "bytesInOutput": 4321
         },
         "src/controllers/SceneOutlineController.js": {
-          "bytesInOutput": 32746
+          "bytesInOutput": 33030
         },
         "src/app/sceneOutline.js": {
           "bytesInOutput": 26766
@@ -4431,7 +4446,7 @@
           "bytesInOutput": 23141
         }
       },
-      "bytes": 1130915
+      "bytes": 1131428
     }
   }
 }
