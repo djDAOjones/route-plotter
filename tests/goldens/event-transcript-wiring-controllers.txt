@@ -1021,8 +1021,6 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
 later: autosave written 1, render 1
   +0 ms · render
   +0 ms said "Editing · Waypoint 1 · major"
-  +50 ms animation:durationChange 0
-  +51 ms animation:update AnimationState  (no listener)
   +1000 ms · autosave written
   model:
     (unchanged)
