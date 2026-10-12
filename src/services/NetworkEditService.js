@@ -966,10 +966,11 @@ export class NetworkEditService {
    * legible label size) of the UI's primary text ink, over a 2 px casing of
    * its background so it reads on any map [Q8]. A node with no name has
    * none: it is not numbered on the map. Nor has a node under a waypoint
-   * that shows a label of its own (the owner's pick, PR 5b round 2): the
-   * trace's link (`anchorWaypointId`, resolved) puts the node on that
-   * waypoint's marker, whose label already names the spot, and a second
-   * name would read twice.
+   * whose label is set to show (`hasLabel()`: text, and a mode other than
+   * Off; a fade-up label counts before it has faded in), the owner's pick,
+   * PR 5b round 2: the trace's link (`anchorWaypointId`, resolved) puts the
+   * node on that waypoint's marker, whose label names the spot, and a
+   * second name would read twice.
    * @private
    */
   _drawNodeLabels(svc, ctx, state, nodes, r) {

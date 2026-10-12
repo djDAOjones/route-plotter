@@ -593,6 +593,164 @@ describe('a value typed and not committed goes to what it was typed for (DEF-86,
   });
 });
 
+/**
+ * PR 5b round 3 (Codex r2 #1). The Pattern seed is a field too (CROWD-07
+ * F16), committed on `change` alone, and round 2's rule binds it: what is
+ * typed there and not committed goes to the crowd it was shown for when the
+ * cards show another crowd or none, through the seed's own commit (its
+ * check, its error line, its one undo entry, its announcement in that
+ * crowd's name). A refused seed is said once and the crowd keeps its own; a
+ * crowd gone from the scene takes nothing.
+ */
+describe('a seed typed and not committed goes to its own crowd (CROWD-07 F16, Codex r2 #1)', () => {
+  const SEED_ERROR = `Seed is a whole number from 0 to ${EMITTER_LIMITS.MAX_SEED}.`;
+  const history = app => app.undoService.createSnapshot().undoStack.length;
+  /** What `announce` has been given since the spy was cleared. */
+  const messages = said => said.mock.calls.map(([message]) => message);
+  /** What the seed has said: the project's first edit also says "Unsaved changes" (its save status), which is not the seed's. */
+  const seedSaid = said => messages(said).filter(message => /pattern seed|^Seed /.test(message));
+
+  /** The editor with `flowLayers`, any edit's undo entry saved, and `announce` heard from here. */
+  async function seedEditor(flowLayers) {
+    const app = await editorWith(flowLayers);
+    app._flushPendingUndo();
+    const said = vi.spyOn(app, 'announce');
+    said.mockClear();
+    return { app, said, seed: byId('crowd-seed-value') };
+  }
+
+  test('seed 7, 42 typed, a waypoint tapped by the pointer: the crowd\'s seed is 42, said once in its name, one undo entry; Undo puts 7 back', async () => {
+    const { app, said, seed } = await seedEditor([crowd('c1', {}, { name: 'Crowd 1' })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const before = history(app);
+    expect(seed.value).toBe('7');
+    draft(seed, 42);
+    tapCanvas(app, [0.2, 0.3]);
+    expect(app.selectedCrowd).toBeNull();
+    expect(emitter.seed).toBe(42);
+    expect(seedSaid(said)).toEqual(['Crowd 1 pattern seed set to 42. Undo is available.']);
+    expect(history(app)).toBe(before + 1);
+    // Back on the crowd, the field shows its seed; nothing more is written or said.
+    const heard = said.mock.calls.length;
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('c1'));
+    expect(byId('crowd-seed-value').value).toBe('42');
+    expect(said).toHaveBeenCalledTimes(heard);
+    expect(history(app)).toBe(before + 1);
+    app.undo();
+    expect(app.scene.getFlowLayer('c1').emitters[0].seed).toBe(7);
+  });
+
+  test('a seed typed, another crowd shown: the first crowd takes it, said in its own name; the second keeps its own', async () => {
+    const { app, said, seed } = await seedEditor([
+      crowd('c1', {}, { name: 'Crowd 1' }), crowd('c2', { seed: 9 }, { name: 'Crowd 2' }),
+    ]);
+    const [first, second] = app.scene.getFlowLayers().map(layer => layer.emitters[0]);
+    const changed = [];
+    app.eventBus.on('scene:semantic-changed', change => changed.push(change));
+    const before = history(app);
+    draft(seed, 42);
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('c2'));
+    expect([first.seed, second.seed]).toEqual([42, 9]);
+    expect(byId('crowd-seed-value').value).toBe('9');
+    expect(seedSaid(said)).toEqual(['Crowd 1 pattern seed set to 42. Undo is available.']);
+    expect(changed).toEqual([{ kind: 'crowd-pattern-seed', layerId: 'c1', emitterId: 'c1-e' }]);
+    expect(history(app)).toBe(before + 1);
+  });
+
+  test('a refused seed typed (−1, 1.5, empty), a waypoint tapped: the crowd keeps 7, its error said once each; back on the crowd, not said again', async () => {
+    const { app, said, seed } = await seedEditor([crowd('c1', {}, { name: 'Crowd 1' })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const before = history(app);
+    const error = byId('crowd-seed-error');
+    for (const [index, value] of ['-1', '1.5', ''].entries()) {
+      draft(seed, value);
+      tapCanvas(app, [0.2, 0.3]);
+      expect(app.selectedCrowd, value).toBeNull();
+      expect(emitter.seed, value).toBe(7);
+      expect([error.hidden, error.textContent, seed.getAttribute('aria-invalid')], value).toEqual([false, SEED_ERROR, 'true']);
+      expect(messages(said), value).toEqual(Array(index + 1).fill(SEED_ERROR));
+      // Back on the crowd: its seed shown, the error gone with the draft, and not said a second time.
+      app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('c1'));
+      expect([seed.value, error.hidden, seed.getAttribute('aria-invalid')], value).toEqual(['7', true, null]);
+      expect(said, value).toHaveBeenCalledTimes(index + 1);
+    }
+    expect(history(app)).toBe(before);
+  });
+
+  test('the seed shown afresh for its own crowd: nothing typed, nothing written or said; typed, the crowd takes it once', async () => {
+    const { app, said, seed } = await seedEditor([crowd('c1', {}, { name: 'Crowd 1' })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const before = history(app);
+    // A busyness handle's cancelled drag shows the crowd afresh; its press keeps focus where it is.
+    const cancelledDrag = () => {
+      const graph = byId('crowd-busyness-graph');
+      graph.querySelector('[data-busyness-handle="0"]')
+        .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 2 }));
+      graph.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId: 2 }));
+    };
+    cancelledDrag();
+    app.syncCrowdEditor();
+    expect([emitter.seed, seed.value]).toEqual([7, '7']);
+    expect(said).not.toHaveBeenCalled();
+    expect(history(app)).toBe(before);
+
+    draft(seed, 42);
+    cancelledDrag();
+    expect([emitter.seed, seed.value]).toEqual([42, '42']);
+    expect(seedSaid(said)).toEqual(['Crowd 1 pattern seed set to 42. Undo is available.']);
+    expect(history(app)).toBe(before + 1);
+    const heard = said.mock.calls.length;
+    cancelledDrag();
+    app.syncCrowdEditor();
+    expect(said).toHaveBeenCalledTimes(heard);
+    expect(history(app)).toBe(before + 1);
+  });
+
+  // A pin, passing before round 3 too: it holds the owner's identity check to the live scene.
+  test('a seed typed for a crowd since deleted, or since put back by Undo, goes nowhere', async () => {
+    const { app, said, seed } = await seedEditor([
+      crowd('c1', {}, { name: 'Crowd 1' }), crowd('c2', { seed: 9 }, { name: 'Crowd 2' }),
+    ]);
+    draft(seed, 42);
+    app.deleteCrowd(app.selectedCrowd);
+    expect(app.scene.getFlowLayers().map(layer => layer.id)).toEqual(['c2']);
+    expect(app.scene.getFlowLayer('c2').emitters[0].seed).toBe(9);
+    expect(seedSaid(said)).toEqual([]);
+
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('c2'));
+    type(seed, 11);
+    expect(seedSaid(said)).toEqual(['Crowd 2 pattern seed set to 11. Undo is available.']);
+    draft(seed, 12);
+    // Undo rebuilds the scene: the crowd shown is a new object, and the one the field was shown for is gone.
+    app.undo();
+    const restored = app.scene.getFlowLayer('c2');
+    expect(app.selectedCrowd).toBe(restored);
+    expect(restored.emitters[0].seed).toBe(9);
+    expect(byId('crowd-seed-value').value).toBe('9');
+    expect(seedSaid(said)).toHaveLength(1);
+    // Nothing was written during the restore, so Redo still has the 11.
+    app.redo();
+    expect(app.scene.getFlowLayer('c2').emitters[0].seed).toBe(11);
+  });
+
+  test('typed while a slider edit waits for its undo entry, then a waypoint tapped: the seed is an undo entry of its own, after the slider\'s', async () => {
+    const { app, seed } = await seedEditor([crowd('c1', { dotCount: 50 }, { name: 'Crowd 1' })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const before = history(app);
+    step(byId('crowd-count'), 120);
+    expect(emitter.dotCount).toBe(120);
+    draft(seed, 42);
+    tapCanvas(app, [0.2, 0.3]);
+    expect([emitter.seed, emitter.dotCount]).toEqual([42, 120]);
+    expect(history(app)).toBe(before + 2);
+    const live = () => app.scene.getFlowLayer('c1').emitters[0];
+    app.undo();
+    expect([live().seed, live().dotCount]).toEqual([7, 120]);
+    app.undo();
+    expect([live().seed, live().dotCount]).toEqual([7, 50]);
+  });
+});
+
 describe('Count\'s slider keeps to the scene\'s dot budget (DEF-86, Codex r1 #5)', () => {
   test('19,950 dots elsewhere, Count 50, the slider tries 51: refused, the model, thumb and readout at 50, the error describing the slider, said once', async () => {
     const app = await editorWith([
@@ -627,5 +785,40 @@ describe('Count\'s slider keeps to the scene\'s dot budget (DEF-86, Codex r1 #5)
     expect(error.hidden).toBe(true);
     expect(described(slider)).not.toContain(BUDGET);
     expect(described(field)).not.toContain(BUDGET);
+  });
+
+  // PR 5b round 3 (Codex r2 #2): a field holding the kept value is not invalid, however it was refused before.
+  test('51 refused in Count\'s field, then 51 tried on the slider: the field holds 50 and is valid again, the line stands for both, said once in all', async () => {
+    const app = await editorWith([
+      crowd('small', { dotCount: 50 }), crowd('b1', { dotCount: 5000 }), crowd('b2', { dotCount: 5000 }),
+      crowd('b3', { dotCount: 5000 }), crowd('b4', { dotCount: 4950 }),
+    ]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const slider = byId('crowd-count');
+    const field = byId('crowd-count-field');
+    const error = byId('crowd-count-field-error');
+    const BUDGET = `The whole scene supports at most ${SCENE_LIMITS.MAX_DOTS_TOTAL} configured dots.`;
+    const total = () => app.scene.getFlowLayers().reduce((sum, layer) => sum + layer.emitters[0].dotCount, 0);
+    const said = vi.spyOn(app, 'announce');
+    said.mockClear();
+    type(field, 51);
+    expect(emitter.dotCount).toBe(50);
+    expect([field.value, field.getAttribute('aria-invalid')]).toEqual(['51', 'true']);
+    expect([error.hidden, error.textContent]).toEqual([false, BUDGET]);
+    expect(said.mock.calls).toEqual([[BUDGET]]);
+
+    step(slider, 51);
+    expect(emitter.dotCount).toBe(50);
+    expect([slider.value, field.value, slider.getAttribute('aria-valuetext')]).toEqual(['50', '50', '50']);
+    expect(total()).toBe(20000);
+    // The 50 the field now holds is no error of its own: nothing marks it invalid.
+    expect(field.getAttribute('aria-invalid')).toBeNull();
+    expect(field.validity.valid).toBe(true);
+    // The line stands, read with both: the field first, the slider after its readout and hint.
+    expect([error.hidden, error.textContent]).toEqual([false, BUDGET]);
+    expect(described(field)[0]).toBe(BUDGET);
+    expect(described(slider)).toEqual(['50', 'Total dots released across the window', BUDGET]);
+    // Already said by the field's refusal, the same line is not said again: one announcement in all.
+    expect(said.mock.calls).toEqual([[BUDGET]]);
   });
 });

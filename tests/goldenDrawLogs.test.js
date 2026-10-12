@@ -472,7 +472,11 @@ describe('golden draw logs (TST-02)', () => {
       return { app, layer, lines };
     }
 
-    /** Where the route's strokes, the guide's, its casings and the head's first fill are. */
+    /**
+     * Where the route's strokes, the guide's, its casings and the head's
+     * first fill are, and where the head's drawing begins: the `save` its
+     * transform and geometry follow (`drawPathHead`).
+     */
     function landmarks(lines) {
       const strokes = lines.map((line, index) => ({ line, index })).filter(({ line }) => / stroke @/.test(line));
       const route = strokes.filter(({ line }) => field(line, 'strokeStyle') === ROUTE).map(({ index }) => index);
@@ -480,7 +484,8 @@ describe('golden draw logs (TST-02)', () => {
       const lastRoute = Math.max(...route);
       const head = lines.findIndex((line, index) => index > lastRoute && / fill @/.test(line)
         && field(line, 'fillStyle') === ROUTE);
-      return { strokes, route, guide, lastRoute, head };
+      const headStart = lines.findLastIndex((line, index) => index < head && line === 'vector save');
+      return { strokes, route, guide, lastRoute, head, headStart };
     }
 
     test('in the editor, the guide comes after the path\'s strokes and before its head and the markers, cased', async () => {
@@ -509,8 +514,8 @@ describe('golden draw logs (TST-02)', () => {
     // its glyph, in the guide's own layer, 14 reference px of the UI's
     // primary text ink over a 2 px casing of its background [Q8]. A node with
     // no name draws none, and neither does a network only inspected, nor
-    // preview, nor the export canvas. A node under a waypoint whose own label
-    // shows draws none either (the owner's pick, PR 5b round 2): the trace's
+    // preview, nor the export canvas. A node under a waypoint whose label is
+    // set to show draws none either (the owner's pick, PR 5b round 2): the trace's
     // link puts it on the marker, the waypoint's label names the spot, and
     // Open day's names read twice. Reason for the changed expectation: Open
     // day's traced nodes, each under its labelled waypoint, now draw none; a
@@ -521,7 +526,7 @@ describe('golden draw logs (TST-02)', () => {
       const { app, layer } = await openDayWithItsCrowd('edit');
       const traced = layer.graph.getNodes().filter(node => node.label);
       expect(traced.length).toBeGreaterThan(1);
-      // Each traced node sits on its waypoint, which shows a label of its own.
+      // Each traced node sits on its waypoint, whose label is set to show (text, and a mode other than Off).
       for (const node of traced) {
         const waypoint = app.waypoints.find(each => each.id === node.anchorWaypointId);
         expect(node.isAnchorResolved(), node.label).toBe(true);
@@ -545,7 +550,10 @@ describe('golden draw logs (TST-02)', () => {
       expect(app.networkEditService.active).toBe(true);
       const editing = frameAt(app, 0.5, { state: 'drawn' }).filter(line => line.startsWith('vector '));
       const marks = landmarks(editing);
-      const guide = editing.slice(marks.lastRoute + 1, marks.head);
+      // The guide's draw alone: from the path's last stroke to the head's `save`, its own `restore` the last line (Codex r2).
+      expect(editing.slice(marks.headStart, marks.headStart + 2)).toEqual(['vector save', expect.stringMatching(/^vector translate /)]);
+      const guide = editing.slice(marks.lastRoute + 1, marks.headStart);
+      expect(guide.at(-1)).toBe('vector restore');
       const drawn = labelsIn(guide);
       const size = app.renderingService.scaleLabelSize(14);
       for (const node of [kiosk, unlabelled]) {

@@ -360,7 +360,7 @@ export const crowdsMixin = {
 
     // The Pattern seed, typed (CROWD-07 F16)
     document.getElementById('crowd-seed-value')?.addEventListener('change', (e) => {
-      this._setCrowdSeedFromField(e.target);
+      this._setCrowdSeedFromField(e.target, emitterOf());
     });
 
     document.getElementById('crowd-lifecycle')?.addEventListener('change', (e) => {
@@ -431,14 +431,17 @@ export const crowdsMixin = {
    * A slider's move the model cannot take (Count past the scene's dot
    * budget, Codex r1 #5): the row's error line says why, describes the
    * slider (after its readout and hint) and the field (first, as a field's
-   * error is), and is said once as it first shows. Nothing is marked
-   * invalid: the slider and the field are put back at the value kept.
+   * error is), and is said once as it first shows: not again where the
+   * field's own refusal already says it. Nothing is marked invalid: the
+   * slider and the field are put back at the value kept, so a field refused
+   * before is no longer marked either, and the line stays (Codex r2 #2).
    * @param {{slider: HTMLInputElement|null, field: HTMLInputElement|null, error: HTMLElement|null}} parts
    * @param {string} message
    * @private
    */
   _refuseCrowdSliderMove({ slider, field, error }, message) {
     if (!error) return;
+    field?.removeAttribute('aria-invalid');
     const showing = !error.hidden && error.textContent === message;
     error.textContent = message;
     error.hidden = false;
@@ -496,7 +499,9 @@ export const crowdsMixin = {
    * #4). A press on the canvas keeps focus in the field, so no `change`
    * commits it first: a waypoint selected there leaves Crowd scope, and a
    * busyness handle's cancelled drag shows the crowd afresh. A crowd gone
-   * from the scene (deleted, or put back by Undo) takes nothing.
+   * from the scene (deleted, or put back by Undo) takes nothing. The Pattern
+   * seed's draft too, last (Codex r2 #1): its commit is an undo entry of its
+   * own, so a field's edit still waiting for one gets it first.
    * @private
    */
   _commitCrowdFieldDrafts() {
@@ -505,6 +510,9 @@ export const crowdsMixin = {
       const emitter = draftOwner(rangeParts(entry.id).field);
       if (emitter && inScene(emitter)) this._commitCrowdField(entry, emitter);
     }
+    const seed = document.getElementById('crowd-seed-value');
+    const seedOwner = draftOwner(seed);
+    if (seedOwner) this._setCrowdSeedFromField(seed, seedOwner);
   },
 
   /**
@@ -595,20 +603,25 @@ export const crowdsMixin = {
   },
 
   /**
-   * Set the pattern seed from its field (CROWD-07 F16). The field checks the
-   * value itself, before the model, whose own fallback for a seed it cannot
-   * use is a random one: a whole number from 0 to the largest seed is one
-   * undo entry of its own (a slider edit still waiting for its entry gets
-   * its own first), said as Re-roll says one; anything else is refused in
-   * the field's error line and the model keeps its seed.
+   * Set the pattern seed from its field (CROWD-07 F16) for `emitter`, the
+   * crowd it was typed for: the one shown, on `change`; for a draft, the one
+   * the field was shown for, whatever is selected by now (Codex r2 #1). A
+   * crowd no longer in the scene (deleted, or put back by Undo) takes
+   * nothing. The field checks the value itself, before the model, whose own
+   * fallback for a seed it cannot use is a random one: a whole number from 0
+   * to the largest seed is one undo entry of its own (a slider edit still
+   * waiting for its entry gets its own first), said as Re-roll says one, in
+   * that crowd's name; anything else is refused in the field's error line
+   * and the model keeps its seed. The cards are shown afresh after, and
+   * their draft check finds the seed already set: nothing is written twice.
    * @param {HTMLInputElement} field
+   * @param {Object} emitter
    * @returns {boolean} Whether the seed changed
    * @private
    */
-  _setCrowdSeedFromField(field) {
-    const layer = this.selectedCrowd;
-    const emitter = layer?.emitters[0];
-    if (!emitter) return false;
+  _setCrowdSeedFromField(field, emitter) {
+    const layer = this.scene.getFlowLayers().find(each => each.emitters.includes(emitter));
+    if (!layer) return false;
     const error = document.getElementById('crowd-seed-error');
     const text = field.value.trim();
     const seed = Number(text);
@@ -1236,6 +1249,7 @@ export const crowdsMixin = {
     for (const entry of CROWD_RANGES) this._syncCrowdRange(entry, em);
     set('crowd-lifecycle', em.lifecycleMode);
     set('crowd-seed-value', String(em.seed));
+    noteShownValue(document.getElementById('crowd-seed-value'), em); // what is typed there is this crowd's (Codex r2 #1)
     this._syncCrowdBusynessEditor(em);
 
     const hint = document.getElementById('crowd-pattern-hint');

@@ -904,13 +904,3 @@ vector strokeText Kiosk 341 66 @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=4 l
 vector fillText Kiosk 341 66 @ 1 0 0 1 0 0 | fillStyle=#0F0F0F font=14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=left textBaseline=middle
 vector restore
 vector restore
-vector save
-vector translate 513.835 278.045
-vector rotate -2.121
-vector beginPath
-vector set:fillStyle #E69F00
-vector moveTo 12 0 @ -0.523 -0.853 0.853 -0.523 513.835 278.045
-vector lineTo -6 6 @ -0.523 -0.853 0.853 -0.523 513.835 278.045
-vector lineTo -3 0 @ -0.523 -0.853 0.853 -0.523 513.835 278.045
-vector lineTo -6 -6 @ -0.523 -0.853 0.853 -0.523 513.835 278.045
-vector closePath
