@@ -14,6 +14,8 @@
 - DEF-91 — a background that fails to load, uploaded or from the examples, now says why in a toast and aloud, and the canvas area is marked busy while one decodes (2026-10-09) — see decisions
 - DEF-82 — with focus anywhere inside an open dialog, its title included, the page's shortcuts stand down, so Space, Delete or A no longer act on the editor behind it, nor Delete or T on the network pen's selection, while `?` still opens Help (2026-10-11) — see decisions
 - DEF-96 — the Marker card's Size reads the diameter it draws, "16 reference px" at the default where it read 8, in its readout and `aria-valuetext` wherever they are written, while what is stored and drawn is unchanged (2026-10-11) — see decisions
+- DEF-86 — a crowd slider or the Path card's Share no longer rewrites a stored value: a number field beside each takes the model's whole range, and a slider writes only where it is moved, off at its nearer end with its reason when the value lies past it, so a Count of 1000 or a weight of 24 survives a nudge (2026-10-12) — see decisions
+- DEF-89 — after Trace route into network the Guide card's helper counts the traced network at once, without entering Edit network, as it already did after Undo, Redo and an outline edit (2026-10-12) — see decisions
 
 ## Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
