@@ -81,14 +81,13 @@
 - [ ] DEF-80 — Player retimes constant-time projects — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-84 — Play silent without route — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-85 — Anchored window start misreads — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
-- [ ] DEF-86 — Sliders rewrite stored values — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-87 — Traced node drag no-op — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-88 — Branch keeps crowd inspector — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
-- [ ] DEF-89 — Guide helper stale after trace — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-90 — Window length readout unclipped — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-92 — Crowd sliders undo on timer — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-93 — Journey-end hint misadvises — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-95 — Network loop sway varies per lap — since 2026-10-11 — (from: CROWD-07, 2026-10-11)
+- [ ] DEF-97 — Busyness fields drop typed values — since 2026-10-12 — (from: CROWD-07, 2026-10-12)
 
 ## Icebox
 
