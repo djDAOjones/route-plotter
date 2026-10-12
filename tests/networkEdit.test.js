@@ -11,7 +11,7 @@
  */
 
 import { describe, test, expect, beforeEach } from 'vitest';
-import { NetworkEditService } from '../src/services/NetworkEditService.js';
+import { GUIDE_TOKENS, NetworkEditService } from '../src/services/NetworkEditService.js';
 import { SwarmEngine } from '../src/services/SwarmEngine.js';
 import { networkMixin } from '../src/app/network.js';
 import { Scene } from '../src/models/Scene.js';
@@ -19,6 +19,7 @@ import { EventBus } from '../src/core/EventBus.js';
 import { SectionController } from '../src/controllers/SectionController.js';
 import { UIController } from '../src/controllers/UIController.js';
 import { allowConsole } from './helpers/consoleGuard.js';
+import { resolveValue, tokens } from './helpers/cssTokens.js';
 
 const SCALE = 1000;
 
@@ -891,12 +892,26 @@ describe('Escape ladder and keys', () => {
 });
 
 describe('mixin glue', () => {
-  test('switching an empty-network crowd to Custom network hands over the pen', () => {
+  // CROWD-07 X-02: Custom network is a setting, not a mode (WCAG 3.2.5). The
+  // select used to hand over the pen, leaving Preview, when the network was
+  // empty. (Reason for the changed expectations: the mode stays off and
+  // Preview is left alone; the Guide card refreshes, and Edit network is the
+  // request.)
+  test('switching an empty-network crowd to Custom network leaves the mode off and Preview alone', () => {
     const layer = app.scene.addFlowLayer({ guideType: 'route', emitters: [{}] });
     app.selectedCrowd = layer;
-    app.previewMode = true; // Entering the mode is editing — Preview must yield
+    app.previewMode = true;
     layer.setGuideType('graph');
     app.eventBus.emit('network:guide-changed', layer);
+    expect(svc.active).toBe(false);
+    expect(svc.layer).toBe(null);
+    expect(app.previewMode).toBe(true);
+    expect(document.getElementById('network-edit-btn').hidden).toBe(false);
+    expect(document.getElementById('crowd-guide-hint').textContent)
+      .toMatch(/^No network yet — press Edit network to draw one, or Trace route into network\. /);
+
+    // Edit network is the request, and it still leaves Preview.
+    app.enterNetworkEditMode();
     expect(svc.active).toBe(true);
     expect(svc.layer).toBe(layer);
     expect(app.previewMode).toBe(false);
@@ -1257,9 +1272,18 @@ describe('mixin glue', () => {
       layer
     );
 
-    expect(strokes[0].width).toBeGreaterThan(strokes[1].width);
-    expect(strokes[1].width).toBeGreaterThan(2);
-    expect(strokes[0].style).toBe(strokes[1].style);
+    // Each edge is stroked over its casing now (CROWD-07 X-04; reason for the
+    // filter): the edges compared are the ink strokes, each a casing's
+    // width less two reference px.
+    const ink = layer.emitters[0].dotColor;
+    const edges = strokes.filter(stroke => stroke.style === ink);
+    expect(edges).toHaveLength(2);
+    const casings = strokes.filter((stroke, index) => stroke.style !== ink && strokes[index + 1]?.style === ink);
+    expect(casings.map(casing => [casing.style, casing.width]))
+      .toEqual(edges.map(edge => ['#FFFFFF', edge.width + 2]));
+    expect(edges[0].width).toBeGreaterThan(edges[1].width);
+    expect(edges[1].width).toBeGreaterThan(2);
+    expect(edges[0].style).toBe(edges[1].style);
   });
 
   test('restore re-binds the fresh layer and re-resolves the selection by id', () => {
@@ -1424,5 +1448,18 @@ describe('passive inspector UI state', () => {
 
     expect(document.activeElement)
       .toBe(list.querySelector('.waypoint-row:not(.waypoint-add-btn)'));
+  });
+});
+
+// CROWD-07 X-04, X-05: the canvas cannot read CSS, so the guide's casing and
+// its labels' ink are the tokens read from the page, or these when the page
+// gives none. They are tokens.css's own values, so either way they agree.
+describe('the guide draws in the UI\'s tokens (CROWD-07 X-04, X-05)', () => {
+  test('its fallbacks are tokens.css\'s --ui-background and --text-01', () => {
+    const map = tokens();
+    for (const [name, fallback] of Object.entries(GUIDE_TOKENS)) {
+      expect(resolveValue(map.get(name), map).toUpperCase(), name).toBe(fallback.toUpperCase());
+    }
+    expect(Object.keys(GUIDE_TOKENS)).toEqual(['--ui-background', '--text-01']);
   });
 });

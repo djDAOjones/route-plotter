@@ -86,3 +86,158 @@ export function setTimelineReadout(input, currentOutput, totalOutput, current, t
   const text = `${current} of ${total}`;
   if (input && input.getAttribute('aria-valuetext') !== text) input.setAttribute('aria-valuetext', text);
 }
+
+/**
+ * Why a crowd slider, or the Path card's Share, is off: its stored value lies
+ * past the slider's ends, and the number field beside it holds it (DEF-86)
+ * [Q5]. On, the slider would sit at its end and write that end on the first
+ * nudge.
+ */
+export const SLIDER_REACH_REASON = "Beyond the slider's reach — use the number field.";
+
+/**
+ * A number as a field shows it (DEF-86): the stored value itself, in the
+ * fewest digits that read back as it (JavaScript's own round trip), with no
+ * fixed decimals or precision that would round it: 0.001 reads 0.001, never
+ * 0.00, and a weight of 1234567890123456 reads 1234567890123456. −0 reads 0.
+ * @param {number} value
+ * @returns {string}
+ */
+export function formatFieldNumber(value) {
+  return String(Number(value));
+}
+
+/**
+ * `value` × 10^`places`, worked on its decimal digits rather than in binary
+ * (DEF-86): the digits `formatFieldNumber` shows, the point moved, read back.
+ * A stored 0.07 is 7%, not 7.000000000000001, and 8.6 reference px are
+ * 0.43×; no digit is cut to a fixed precision. A field's units and a
+ * slider's positions convert through it.
+ * @param {number} value
+ * @param {number} places - Whole; negative divides
+ * @returns {number}
+ */
+export function shiftDecimal(value, places) {
+  const [digits, exponent = '0'] = formatFieldNumber(value).split('e');
+  return Number(`${digits}e${Number(exponent) + places}`);
+}
+
+/**
+ * What each field or slider was last given from the model, and for what
+ * (DEF-86): the value as the control holds it (a slider's step may have
+ * moved it), so what the author typed or moved there since can be told from
+ * it.
+ * @type {WeakMap<HTMLInputElement, {value: string, owner: *}>}
+ */
+const SHOWN = new WeakMap();
+
+/**
+ * Note what a field or a slider now holds as the model's value, just given
+ * it for `owner` (the crowd's emitter, the path). The caller writes the
+ * value itself, so each field keeps the one module that writes it
+ * (tests/rangeConstants.test.js).
+ * @param {HTMLInputElement|null} control
+ * @param {*} [owner]
+ */
+export function noteShownValue(control, owner = null) {
+  if (control) SHOWN.set(control, { value: control.value, owner });
+}
+
+/**
+ * Whether the author has typed in a field, or moved a slider, since it was
+ * last given the model's value: only then is what it holds theirs to write.
+ * @param {HTMLInputElement|null} control
+ * @returns {boolean}
+ */
+export function changedSinceShown(control) {
+  return Boolean(control) && control.value !== SHOWN.get(control)?.value;
+}
+
+/**
+ * What a field was last shown for (its `owner`), while it holds something
+ * typed and not yet committed: a draft that belongs to that crowd or path,
+ * whatever is selected by now. Null when it holds the model's value.
+ * @param {HTMLInputElement|null} field
+ * @returns {*}
+ */
+export function draftOwner(field) {
+  return changedSinceShown(field) ? SHOWN.get(field)?.owner ?? null : null;
+}
+
+/**
+ * Add `id` to what describes `element`, once: at the end, or first. The
+ * tokens already there (a readout, a hint) keep their places.
+ * @param {Element} element
+ * @param {string} id
+ * @param {{first?: boolean}} [options]
+ */
+export function addDescription(element, id, { first = false } = {}) {
+  if (!element || !id) return;
+  const tokens = (element.getAttribute('aria-describedby') || '').split(/\s+/).filter(token => token && token !== id);
+  if (first) tokens.unshift(id);
+  else tokens.push(id);
+  element.setAttribute('aria-describedby', tokens.join(' '));
+}
+
+/**
+ * Take `id` out of what describes `element`, leaving every other token.
+ * @param {Element} element
+ * @param {string} id
+ */
+export function removeDescription(element, id) {
+  if (!element || !id) return;
+  const tokens = (element.getAttribute('aria-describedby') || '').split(/\s+/).filter(token => token && token !== id);
+  if (tokens.length) element.setAttribute('aria-describedby', tokens.join(' '));
+  else element.removeAttribute('aria-describedby');
+}
+
+/**
+ * Say why a control is off in its reason line, which it is then described
+ * by, or, with no text, empty and hide the line and drop it from the
+ * description (a description is read even from a hidden element).
+ * @param {Element} control
+ * @param {HTMLElement|null} line
+ * @param {string} text
+ */
+export function setControlReason(control, line, text) {
+  if (!line) return;
+  line.textContent = text;
+  line.hidden = !text;
+  if (text) addDescription(control, line.id);
+  else removeDescription(control, line.id);
+}
+
+/**
+ * A field whose value cannot be used says so (UI-06 B-30's path-weight
+ * pattern): in a line under it, named first among what describes it, and
+ * aloud when the line first shows; the typed value stays for the author to
+ * fix and the model keeps its own.
+ * @param {HTMLInputElement} field
+ * @param {HTMLElement|null} line
+ * @param {string} message
+ * @param {(message: string) => void} [announce]
+ */
+export function showFieldError(field, line, message, announce) {
+  const showing = field.getAttribute('aria-invalid') === 'true' && line?.textContent === message;
+  field.setAttribute('aria-invalid', 'true');
+  if (line) {
+    line.textContent = message;
+    line.hidden = false;
+    addDescription(field, line.id, { first: true });
+  }
+  if (!showing) announce?.(message);
+}
+
+/**
+ * The field's value is good again, or the field is drawn afresh: its error
+ * line empties and hides, and no longer describes it.
+ * @param {HTMLInputElement|null} field
+ * @param {HTMLElement|null} line
+ */
+export function clearFieldError(field, line) {
+  field?.removeAttribute('aria-invalid');
+  if (!line) return;
+  line.textContent = '';
+  line.hidden = true;
+  removeDescription(field, line.id);
+}

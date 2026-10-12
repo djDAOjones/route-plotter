@@ -3,9 +3,9 @@
 ## #node-scope>div[0]>h2[0]>button[0] · click
 app ~ focus: "body" → "#node-scope>div[0]>h2[0]>button[0]"
 storage + routePlotter_lastSection: "node"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[259 chars, 62292118] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[260 chars, 7424b4d9]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 5130e78f]
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section" data-last="true" data-section="node"
-ui ~ #node-scope>div[0]>h2[0]>button[0]: button aria-controls="section-node-content" aria-expanded="true" class="section-header" type="button" :text="Node" → button aria-controls="section-node-content" aria-expanded="false" class="section-header" type="button" :text="Node"
+ui ~ #node-scope>div[0]>h2[0]>button[0]: button aria-controls="section-node-content" aria-expanded="true" class="section-header" type="button" → button aria-controls="section-node-content" aria-expanded="false" class="section-header" type="button"
 
 ## #section-node-content>button[0] · click
 app ~ focus: "body" → "#section-node-content>button[0]"
@@ -28,6 +28,7 @@ ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p ar
 ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · pass-through" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
+ui ~ #node-section-title: span :text="Node · Trent Building · pass-through" → span :text="Node · Trent Building · entry"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="normal" → select aria-describedby="network-node-type-tip" :value="entry"
 ui ~ #network-path-weight-1: input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1"
 ui ~ #network-path-weight-rows>div[1]>button[0]: button aria-describedby="network-path-weight-2-tip" aria-expanded="false" aria-label="Help: Path 2 to pass-through 2" class="param-hint-trigger" style="position-anchor: --network-path-weight-2-tip;" type="button" → button aria-describedby="network-path-weight-2-tip" aria-expanded="false" aria-label="Help: Path 2 to pass-through 1" class="param-hint-trigger" style="position-anchor: --network-path-weight-2-tip;" type="button"
@@ -53,6 +54,7 @@ ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p ar
 ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · pass-through" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · exit"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
+ui ~ #node-section-title: span :text="Node · Trent Building · pass-through" → span :text="Node · Trent Building · exit"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="normal" → select aria-describedby="network-node-type-tip" :value="exit"
 ui ~ #network-path-weight-rows>div[0]>button[0]: button aria-describedby="network-path-weight-1-tip" aria-expanded="false" aria-label="Help: Path 1 to exit 1" class="param-hint-trigger" style="position-anchor: --network-path-weight-1-tip;" type="button" → button aria-describedby="network-path-weight-1-tip" aria-expanded="false" aria-label="Help: Path 1 to exit 2" class="param-hint-trigger" style="position-anchor: --network-path-weight-1-tip;" type="button"
 ui ~ #network-path-weight-1-name: span class="network-path-weight-name" data-tip-desc="network-path-weight-1-tip" data-tip="How strongly dots leaving this node prefer this path, shown as the share of them that take it. Arriving dots avoid turning straight back when another path is available" style="anchor-name: --network-path-weight-1-tip;" :text="Path 1 to exit 1" → span class="network-path-weight-name" data-tip-desc="network-path-weight-1-tip" data-tip="How strongly dots leaving this node prefer this path, shown as the share of them that take it. Arriving dots avoid turning straight back when another path is available" style="anchor-name: --network-path-weight-1-tip;" :text="Path 1 to exit 2"
@@ -238,12 +240,12 @@ ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast
 ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · pass-through" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
-ui + #crowd-scope>div[1]: div class="settings-section" data-section="guide" (and 20 inside, ca1f918e)
-ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 72 inside, 1d79ee7b)
-ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 120 inside, 5fd8d234)
-ui + #crowd-scope>div[4]: div class="settings-section" data-section="motion" (and 33 inside, 01fcb480)
+ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, ea7effa7)
+ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
+ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
+ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 ui ~ #node-scope: div class="scope-group" → div (not shown)
-ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 39 inside, 2a0c329a)
+ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 40 inside, 3b802e9b)
 settled:
   emit animation:durationChange 27929.352554
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}

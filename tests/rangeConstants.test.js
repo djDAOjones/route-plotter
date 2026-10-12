@@ -158,7 +158,23 @@ const FIELD_CONTRACT = {
   'crowd-speed': ['range', 1, 100, 15, 1],
   'crowd-speed-variance': ['range', 0, 100, 20, 1],
   'network-edge-weight': ['range', 1, 50, 10, 1],
-  'timeline-slider': ['range', 0, 1000, 0, 1]
+  'timeline-slider': ['range', 0, 1000, 0, 1],
+  // DEF-86: a number field beside each crowd slider and Share, reaching the
+  // model's whole range in the readout's unit; "any" step where the model
+  // takes any value (Size in reference px, the percentages, Release bias, the
+  // weight, which has no top), Count and Speed on the model's own grid.
+  'crowd-dot-size-field': ['number', 0.2, 2000, 8, 'any'],
+  'crowd-wobble-field': ['number', 0, 100, 0, 'any'],
+  'crowd-count-field': ['number', 1, 5000, 50, 1],
+  'crowd-release-start-field': ['number', 0, 100, 0, 'any'],
+  'crowd-release-duration-field': ['number', 0, 100, 100, 'any'],
+  'crowd-onset-variance-field': ['number', 0, 100, 20, 'any'],
+  'crowd-intensity-ramp-field': ['number', -100, 100, 0, 'any'],
+  'crowd-speed-field': ['number', 0.001, 1000, 0.15, 0.001],
+  'crowd-speed-variance-field': ['number', 0, 100, 20, 'any'],
+  'network-edge-weight-field': ['number', 0.01, null, 1, 'any'],
+  // CROWD-07 F16: the Pattern seed, a whole number from 0 to the largest seed.
+  'crowd-seed-value': ['number', 0, 4294967295, 0, 1]
 };
 
 /**
@@ -360,6 +376,52 @@ const PAIRINGS = {
   'network-edge-weight': { toModel: s => s / 10,
     min: [new GraphEdge({ sourceId: 'a', targetId: 'b', weight: 0 }).weight, "GraphEdge's smallest weight"],
     value: [new GraphEdge({ sourceId: 'a', targetId: 'b' }).weight, 'a new GraphEdge'] },
+  // DEF-86: each number field reaches what the model takes, in the readout's
+  // unit (crowds.js CROWD_RANGES; network.js for the weight): no disagreement.
+  'crowd-dot-size-field': { toModel: px => px / 20,
+    min: [new Emitter({ dotSize: 0 }).dotSize, "Emitter's smallest dot"],
+    max: [EMITTER_LIMITS.MAX_DOT_SIZE, 'EMITTER_LIMITS.MAX_DOT_SIZE'],
+    value: [DEFAULT_EMITTER.dotSize, 'a new Emitter'] },
+  'crowd-wobble-field': { toModel: percent,
+    min: [new Emitter({ wobble: -1 }).wobble, "Emitter's clamp"],
+    max: [new Emitter({ wobble: 2 }).wobble, "Emitter's clamp"],
+    value: [DEFAULT_EMITTER.wobble, 'a new Emitter'] },
+  'crowd-count-field': { toModel: s => s,
+    min: [new Emitter({ dotCount: 0 }).dotCount, "Emitter's clamp"],
+    max: [EMITTER_LIMITS.MAX_DOT_COUNT, 'EMITTER_LIMITS.MAX_DOT_COUNT'],
+    value: [DEFAULT_EMITTER.dotCount, 'a new Emitter'] },
+  'crowd-release-start-field': { toModel: percent,
+    min: [new Emitter({ releaseStart: -1 }).releaseStart, "Emitter's clamp"],
+    max: [new Emitter({ releaseStart: 2 }).releaseStart, "Emitter's clamp"],
+    value: [DEFAULT_EMITTER.releaseStart, 'a new Emitter'] },
+  'crowd-release-duration-field': { toModel: percent,
+    min: [new Emitter({ releaseDuration: -1 }).releaseDuration, "Emitter's clamp"],
+    max: [new Emitter({ releaseDuration: 2 }).releaseDuration, "Emitter's clamp"],
+    value: [DEFAULT_EMITTER.releaseDuration, 'a new Emitter'] },
+  'crowd-onset-variance-field': { toModel: percent,
+    min: [new Emitter({ onsetVariance: -1 }).onsetVariance, "Emitter's clamp"],
+    max: [new Emitter({ onsetVariance: 2 }).onsetVariance, "Emitter's clamp"],
+    value: [DEFAULT_EMITTER.onsetVariance, 'a new Emitter'] },
+  'crowd-intensity-ramp-field': { toModel: percent,
+    min: [new Emitter({ intensityRamp: -2 }).intensityRamp, "Emitter's clamp"],
+    max: [new Emitter({ intensityRamp: 2 }).intensityRamp, "Emitter's clamp"],
+    value: [DEFAULT_EMITTER.intensityRamp, 'a new Emitter'] },
+  'crowd-speed-field': { toModel: s => s,
+    min: [new Emitter({ speed: 0 }).speed, "Emitter's slowest speed"],
+    max: [EMITTER_LIMITS.MAX_SPEED, 'EMITTER_LIMITS.MAX_SPEED'],
+    value: [DEFAULT_EMITTER.speed, 'a new Emitter'] },
+  'crowd-speed-variance-field': { toModel: percent,
+    min: [new Emitter({ speedVariance: -1 }).speedVariance, "Emitter's clamp"],
+    max: [new Emitter({ speedVariance: 2 }).speedVariance, "Emitter's clamp"],
+    value: [DEFAULT_EMITTER.speedVariance, 'a new Emitter'] },
+  // No maximum: GraphEdge gives a weight no top.
+  'network-edge-weight-field': { toModel: s => s,
+    min: [new GraphEdge({ sourceId: 'a', targetId: 'b', weight: 0 }).weight, "GraphEdge's smallest weight"],
+    value: [new GraphEdge({ sourceId: 'a', targetId: 'b' }).weight, 'a new GraphEdge'] },
+  // CROWD-07 F16: a new emitter's seed is drawn at random, so there is no default to hold.
+  'crowd-seed-value': { toModel: s => s,
+    min: [0, 'the smallest seed'],
+    max: [EMITTER_LIMITS.MAX_SEED, 'EMITTER_LIMITS.MAX_SEED'] },
   'timeline-slider': { toModel: s => s / ANIMATION.TIMELINE_RESOLUTION,
     min: [0, 'the start of the timeline'],
     max: [1, 'the end of the timeline (ANIMATION.TIMELINE_RESOLUTION steps)'] }
@@ -490,6 +552,9 @@ function positionFor(id, toModel, modelValue) {
   const min = attribute(id, 'min');
   const max = attribute(id, 'max');
   const step = attribute(id, 'step') ?? 1;
+  // A step of "any" (DEF-86's number fields) puts every value on the grid:
+  // the field's value must mean the code's exactly.
+  if (Number.isNaN(step)) return { position: null, distance: 0 };
   let best = null;
   for (let index = 0; min + index * step <= max + 1e-9; index += 1) {
     const position = Number((min + index * step).toFixed(6));
@@ -544,7 +609,9 @@ function misfits(writes) {
     const step = /^any$/i.test(FIELDS.get(id).getAttribute('step') ?? '') ? null : attribute(id, 'step') ?? 1;
     const steps = step === null ? 0 : (value - (min ?? 0)) / step;
     const onStep = step === null || Math.abs(steps - Math.round(steps)) < 1e-6;
-    if (!Number.isFinite(value) || value < min || value > max || !onStep) found.add(`${id} ${rounded(value)}`);
+    // A field with no maximum (DEF-86's path weight, as GraphEdge has none) holds any value above its least.
+    const over = max !== null && value > max;
+    if (!Number.isFinite(value) || value < min || over || !onStep) found.add(`${id} ${rounded(value)}`);
   }
   return [...found].sort();
 }
@@ -595,16 +662,20 @@ const NOT_WRITTEN_AT_THE_LIMITS = {};
  */
 const WRITERS_ON_A_NEW_PROJECT = {
   'src/app/camera.js': ['camera-selected-zoom', 'camera-zoom'],
+  // DEF-86: each slider's number field is written with it; the seed is a field too (CROWD-07 F16).
   'src/app/crowds.js': [
-    'crowd-count', 'crowd-dot-size', 'crowd-intensity-ramp', 'crowd-onset-variance', 'crowd-release-duration',
-    'crowd-release-start', 'crowd-speed', 'crowd-speed-variance', 'crowd-wobble'
+    'crowd-count', 'crowd-count-field', 'crowd-dot-size', 'crowd-dot-size-field', 'crowd-intensity-ramp',
+    'crowd-intensity-ramp-field', 'crowd-onset-variance', 'crowd-onset-variance-field', 'crowd-release-duration',
+    'crowd-release-duration-field', 'crowd-release-start', 'crowd-release-start-field', 'crowd-seed-value',
+    'crowd-speed', 'crowd-speed-field', 'crowd-speed-variance', 'crowd-speed-variance-field', 'crowd-wobble',
+    'crowd-wobble-field'
   ],
   'src/app/editorPanel.js': [
     'dot-size', 'label-bg-opacity', 'label-offset-x', 'label-offset-y', 'label-size', 'label-width',
     'path-head-size', 'pulse-amplitude', 'pulse-cycle-speed', 'ripple-max-scale', 'ripple-thickness',
     'segment-width', 'shape-amplitude', 'shape-frequency', 'waypoint-pause-time', 'waypoint-segment-speed'
   ],
-  'src/app/network.js': ['network-edge-weight'],
+  'src/app/network.js': ['network-edge-weight', 'network-edge-weight-field'],
   // Start-up puts the Hold at end thumb where a new project's hold is (CROWD-06).
   'src/app/undoRedo.js': ['hold-at-end'],
   'src/app/wiringControllers.js': ['export-res-x', 'export-res-y'],
@@ -712,6 +783,12 @@ const LIMIT_EDGES = (() => {
  * CON-14 decided the UI range is the authoritative one. The rest fall between
  * a field's steps, or are written in another unit, as each says.
  */
+// DEF-86 (reason for five fewer): the crowd sliders and Share no longer take
+// a value past their ends. Count 5,000, Size 100×, Speed 1,000 and the weights
+// 0.01 and 1,000 are written to their number fields, which hold them, and
+// each slider is put at its nearer end, off, saying why; the pins
+// 'crowd-count 5000', 'crowd-dot-size 10000', 'crowd-speed 100000',
+// 'network-edge-weight 0' and 'network-edge-weight 10000' went with them.
 const LIMIT_MISFITS = {
   'animation-speed-right 1445': "start-up's write, off the field's 5-step grid as on a new project; the load " +
     'then writes 1, the end of the slider, which 10,000 px/s is past (its curve stops at 4,000 px/s)',
@@ -724,9 +801,6 @@ const LIMIT_MISFITS = {
   'camera-zoom 0.2409': "the next major waypoint's 1.95× is 0.2409 on the slider, whose 0.01 steps give 1.945× " +
     'or 2×: a browser moves the thumb to 0.24 while the readout, from the model, says 1.95×',
   'camera-selected-zoom 0.2409': 'as camera-zoom 0.2409',
-  'crowd-count 5000': 'EMITTER_LIMITS.MAX_DOT_COUNT; the slider stops at 500',
-  'crowd-dot-size 10000': 'EMITTER_LIMITS.MAX_DOT_SIZE (100×) is 10,000 on a slider that stops at 200 (2×)',
-  'crowd-speed 100000': 'EMITTER_LIMITS.MAX_SPEED (1,000 img/s) is 100,000 on a slider that stops at 100 (1 img/s)',
   'dot-size 100': 'load accepts markers up to 100 px; the slider stops at 16',
   'export-frame-rate 120': 'PROJECT_MODEL_LIMITS.MAX_FRAME_RATE; the field stops at 60',
   'export-res-x 16384': 'PROJECT_MODEL_LIMITS.MAX_EXPORT_DIMENSION; the field stops at 7,680',
@@ -735,10 +809,6 @@ const LIMIT_MISFITS = {
   'label-offset-x 1000': 'load accepts ±1,000%; the slider stops at TEXT_LABEL.OFFSET_MAX (50)',
   'label-offset-y -1000': 'load accepts ±1,000%; the slider stops at TEXT_LABEL.OFFSET_MIN (−50)',
   'label-width 100': 'load accepts up to 100%; the slider stops at TEXT_LABEL.WIDTH_MAX (50)',
-  'network-edge-weight 0': "GraphEdge's smallest weight, 0.01, is 0.1 on a slider of the weight × 10, written " +
-    "rounded to 0: below the slider's 1 (a weight of 0.1), as its min disagreement says",
-  'network-edge-weight 10000': 'load accepts any weight above 0; 1,000 is 10,000 on a slider that stops at 50 ' +
-    '(a weight of 5)',
   'path-trail 2763': 'load accepts any finite trail; 640 path lengths is 2,763 on a slider that stops at ' +
     'MOTION.PATH_TRAIL_MAX (4 path lengths)',
   'pulse-amplitude 100': 'load accepts up to 100; the slider stops at 3',
@@ -822,7 +892,19 @@ const RECEIVED = {
   'crowd-intensity-ramp': onCrowd('intensityRamp'),
   'crowd-speed': onCrowd('speed'),
   'crowd-speed-variance': onCrowd('speedVariance'),
-  'network-edge-weight': ['edge', app => app.networkEditService.selectedEdge().weight]
+  // DEF-86's number fields, each beside its slider; and the Pattern seed (CROWD-07 F16).
+  'crowd-dot-size-field': onCrowd('dotSize'),
+  'crowd-wobble-field': onCrowd('wobble'),
+  'crowd-count-field': onCrowd('dotCount'),
+  'crowd-release-start-field': onCrowd('releaseStart'),
+  'crowd-release-duration-field': onCrowd('releaseDuration'),
+  'crowd-onset-variance-field': onCrowd('onsetVariance'),
+  'crowd-intensity-ramp-field': onCrowd('intensityRamp'),
+  'crowd-speed-field': onCrowd('speed'),
+  'crowd-speed-variance-field': onCrowd('speedVariance'),
+  'crowd-seed-value': onCrowd('seed'),
+  'network-edge-weight': ['edge', app => app.networkEditService.selectedEdge().weight],
+  'network-edge-weight-field': ['edge', app => app.networkEditService.selectedEdge().weight]
 };
 
 /** The mapping a field's handler should apply, from its pairing. */
@@ -831,6 +913,13 @@ const toModelOf = id => (PAIRINGS[id] ?? APP_DEFAULTS[id] ?? NO_COUNTERPART[id])
 /** The field's min, max and markup value, and one position between them, on its own grid. */
 function positionsOf(id) {
   const [, min, max, value, step] = FIELD_CONTRACT[id];
+  // DEF-86's number fields: a step of "any" takes any value between, and the
+  // path weight, with no top, is driven past the slider's reach as the
+  // defect's probe was (24).
+  if (step === 'any') {
+    const between = max === null ? 24 : Number((min + (max - min) * 0.37).toFixed(6));
+    return [...new Set([min, max, value, between].filter(position => position !== null))];
+  }
   const onGrid = steps => Number((min + steps * step).toFixed(6));
   const third = Math.round(((max - min) / step) * 0.37);
   const between = onGrid(third) === value ? onGrid(third + 1) : onGrid(third);
@@ -882,13 +971,15 @@ function selectEdge(app, layer, edgeId) {
 
 /**
  * Give the selected crowd a network of its own and draw one edge on it, as a
- * user does: Custom network in the Guide card hands over the pen, and two
- * clicks place two linked nodes. Then select that edge.
+ * user does: Custom network in the Guide card, then Edit network hands over
+ * the pen (CROWD-07 X-02), and two clicks place two linked nodes. Then select
+ * that edge.
  */
 function drawAndSelectAnEdge(app) {
   const guide = document.getElementById('crowd-guide-type');
   guide.value = 'graph';
   guide.dispatchEvent(new Event('change', { bubbles: true }));
+  document.getElementById('network-edit-btn').click();
   expect(app.networkEditService.active).toBe(true);
   clickCanvas(app, [0.3, 0.2]);
   clickCanvas(app, [0.6, 0.2]);
@@ -931,7 +1022,8 @@ describe('index.html ranges against the code (TST-13)', () => {
     const paired = new Set([...Object.keys(PAIRINGS), ...Object.keys(APP_DEFAULTS), ...Object.keys(NO_COUNTERPART)]);
     expect([...FIELDS.keys()].filter(id => !paired.has(id)), 'a new field needs a pairing').toEqual([]);
     expect([...paired].filter(id => !FIELDS.has(id)), 'a paired field has gone from index.html').toEqual([]);
-    expect(FIELDS.size).toBe(53);
+    // 64, was 53: DEF-86's ten number fields and the Pattern seed's (CROWD-07 F16).
+    expect(FIELDS.size).toBe(64);
     const explained = [...Object.values(NO_COUNTERPART).map(({ why }) => why),
       ...Object.values(DISAGREEMENTS).map(({ why }) => why),
       ...Object.values(LOAD_LIMITS).map(({ why }) => why), ...Object.values(NEW_PROJECT_MISFITS),

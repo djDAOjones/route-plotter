@@ -10,7 +10,7 @@
 
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   crowdsMixin,
   formatCrowdReleaseBias,
@@ -25,7 +25,9 @@ import { PathCalculator } from '../src/services/PathCalculator.js';
 import { dotsReachingJourneyEnd } from '../src/utils/crowdArrival.js';
 import { ANIMATION } from '../src/config/constants.js';
 import { MAX_BUSYNESS_HANDLES } from '../src/utils/busynessEnvelope.js';
-import { bootApp } from './helpers/bootApp.js';
+import { Emitter, EMITTER_LIMITS } from '../src/models/Emitter.js';
+import { buildExampleProjects } from '../src/examples/index.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { cascade } from './helpers/cssTokens.js';
 
@@ -107,7 +109,11 @@ describe('addCrowd', () => {
     expect(app.scene.getFlowLayers().map(l => l.name)).toEqual(['Crowd 2', 'Crowd 1']);
   });
 
-  test('without a route creates a graph crowd, then hands it to network editing', () => {
+  // CROWD-07 X-02 (the owner, §E.4): a new crowd with no route is selected on
+  // its empty network and the mode stays off; Edit network is the request.
+  // (Reason for the changed expectations: no `network:guide-changed` is sent
+  // any more, and the announcement says which button draws the network.)
+  test('without a route creates a graph crowd and says how to draw its network, leaving the mode off', () => {
     const app = makeApp({ hasRoute: false });
     app.addCrowd();
 
@@ -117,11 +123,14 @@ describe('addCrowd', () => {
     expect(app.selectedCrowd).toBe(layer);
     expect(app.events).toEqual([
       ['selected', layer.id],
-      ['network-guide', layer.id],
     ]);
     expect(app.undoSaves).toBe(1);
     expect(app.autoSaves).toBe(1);
-    expect(app.announced[0]).toMatch(/draw the network/);
+    expect(app.announced).toEqual(['Crowd 1 added — press Edit network to draw the network its dots will follow']);
+
+    // The crowd's own name, whatever it is: a second one is Crowd 2.
+    app.addCrowd();
+    expect(app.announced[1]).toBe('Crowd 2 added — press Edit network to draw the network its dots will follow');
   });
 });
 
@@ -262,7 +271,7 @@ describe('layers strip', () => {
 describe('Add handle at the limit (UI-06 B-07)', () => {
   test('disabled, it says why in a line it is described by, with no title; enabled, the line is empty', () => {
     const app = makeApp({ hasRoute: false });
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     const add = document.getElementById('crowd-busyness-add');
     const reason = document.getElementById('crowd-busyness-add-reason');
     expect(add.disabled).toBe(false);
@@ -314,6 +323,8 @@ describe('seeded variation controls', () => {
 
     expect(emitter.onsetVariance).toBe(1);
     expect(emitter.intensityRamp).toBe(-1);
+    // Release timing keeps its words beside its number field, as Release bias
+    // keeps its direction (the owner's pick, PR 5b round 2).
     expect(onset.getAttribute('aria-valuetext')).toBe('100% uneven');
     expect(ramp.getAttribute('aria-valuetext')).toBe('Earlier 100%');
 
@@ -357,7 +368,7 @@ describe('seeded variation controls', () => {
 
   test('custom-network guidance separates junction shares from seeded assignments', () => {
     const app = makeApp({ hasRoute: false });
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     expect(document.getElementById('crowd-pattern-hint').textContent)
       .toMatch(/Path shares set the route proportions.*which dots take each path/);
   });
@@ -814,12 +825,14 @@ describe('the "At journey end" hint (DEF-77)', () => {
    * Turn the selected crowd onto a network nothing can end, drawn with the
    * pen: three pass-through nodes closed into a loop of two-way paths. Since
    * the end waits for every journey that ends (CROWD-05), this is the case
-   * the hint is left for.
+   * the hint is left for. Custom network is a setting: Edit network hands
+   * over the pen (CROWD-07 X-02).
    */
   const closedLoop = (app) => {
     const guide = document.getElementById('crowd-guide-type');
     guide.value = 'graph';
     guide.dispatchEvent(new Event('change', { bubbles: true }));
+    document.getElementById('network-edit-btn').click();
     const pen = app.networkEditService;
     const first = pen.placeNode({ x: 0.2, y: 0.3 });
     pen.placeNode({ x: 0.8, y: 0.3 });
@@ -891,6 +904,8 @@ describe('the "At journey end" hint (DEF-77)', () => {
     const guide = document.getElementById('crowd-guide-type');
     guide.value = 'graph';
     guide.dispatchEvent(new Event('change', { bubbles: true }));
+    // Custom network is a setting; Edit network hands over the pen (CROWD-07 X-02).
+    document.getElementById('network-edit-btn').click();
 
     // Drawn with the pen and closed on its first node: three pass-through
     // nodes, three two-way paths, every node on two of them.
@@ -961,6 +976,8 @@ describe('the "At journey end" hint (DEF-77)', () => {
       const app = await editorWithCrowd();
       const hint = document.getElementById('crowd-lifecycle-hint');
       pick('crowd-guide-type', 'graph', 'change');
+      // Custom network is a setting; Edit network hands over the pen (CROWD-07 X-02).
+      document.getElementById('network-edit-btn').click();
       const pen = app.networkEditService;
       const first = pen.placeNode({ x: 0.2, y: 0.3 });
       pen.placeNode({ x: 0.8, y: 0.3 });
@@ -1035,11 +1052,26 @@ describe('the "At journey end" hint (DEF-77)', () => {
  * (what a crowd with no emitter shows, since `syncCrowdEditor` stops before
  * the controls), the slider's own input, and the model's refresh of the panel.
  */
+/**
+ * The words an element shows, a field's value among them (DEF-86: a crowd
+ * slider's readout is the number field beside it, with its unit).
+ */
+function shownText(element) {
+  const copy = element.cloneNode(true);
+  const originals = [...element.querySelectorAll('input')];
+  [...copy.querySelectorAll('input')].forEach((input, index) => input.replaceWith(originals[index].value));
+  return copy.textContent.replace(/\s+/g, ' ').trim();
+}
+
 describe('the Size readout reads reference px (CROWD-07 F1)', () => {
   const readout = () => document.getElementById('crowd-dot-size-value');
   const slider = () => document.getElementById('crowd-dot-size');
-  /** What the readout shows and what the slider says, which must be one string. */
-  const said = () => [readout().textContent, slider().getAttribute('aria-valuetext')];
+  /**
+   * What the readout shows and what the slider says, which must be one
+   * string. The readout is the number field and its unit since DEF-86
+   * (reason for reading it so: its number is the field's value).
+   */
+  const said = () => [shownText(readout()), slider().getAttribute('aria-valuetext')];
   const twice = text => [text, text];
 
   test('is the diameter DotRenderer draws: 20 reference px per 1×, so 0.40× reads 8', () => {
@@ -1067,7 +1099,8 @@ describe('the Size readout reads reference px (CROWD-07 F1)', () => {
     const shell = new DOMParser()
       .parseFromString(readFileSync(resolve(process.cwd(), 'index.html'), 'utf8'), 'text/html');
     const input = shell.getElementById('crowd-dot-size');
-    expect([shell.getElementById('crowd-dot-size-value').textContent, input.getAttribute('aria-valuetext')])
+    // The readout is the number field and its unit since DEF-86 (reason: read with the field's value).
+    expect([shownText(shell.getElementById('crowd-dot-size-value')), input.getAttribute('aria-valuetext')])
       .toEqual(twice('8 reference px'));
     expect(input.closest('label').querySelector('[data-tip]').getAttribute('data-tip'))
       .toBe("Dot diameter in project reference pixels; exports scale it from the project's reference short edge");
@@ -1090,7 +1123,7 @@ describe('the Size readout reads reference px (CROWD-07 F1)', () => {
     expect(said()).toEqual(twice('8 reference px'));
 
     // Populated: the model's refresh of the panel.
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     const full = app.selectedCrowd;
     const [emitter] = full.emitters;
     emitter.update({ dotSize: 0.6 });
@@ -1179,21 +1212,23 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
     expect(shown()).toBe(F6);
     trigger.blur();
 
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     expect(select.disabled).toBe(false);
     expect(described(select)).toContain(F6);
   });
 
   test('F14: the Guide hint says where journeys start and end on a custom network, empty or drawn, and never on Follow route', async () => {
     const app = await withEmptyCrowd();
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     const layer = app.selectedCrowd;
     expect(layer.guideType).toBe('route');
     expect(guideHint()).toBe('Dots follow your route. Custom network lets you draw paths of their own.');
 
     layer.setGuideType('graph');
     app.syncCrowdEditor();
-    expect(guideHint()).toBe(`No network yet — Edit network hands you the pen. ${F14}`);
+    // (Reason for the changed sentence, CROWD-07 X-02: Custom network no longer
+    // hands over the pen, so the empty-network helper names the request.)
+    expect(guideHint()).toBe(`No network yet — press Edit network to draw one, or Trace route into network. ${F14}`);
 
     const entry = layer.graph.addNode({ x: 0.2, y: 0.5 });
     const exit = layer.graph.addNode({ x: 0.8, y: 0.5 });
@@ -1210,7 +1245,7 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
 
     // On an emitterless crowd too: the Guide card is the crowd's, emitter or not.
     app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
-    expect(guideHint()).toBe(`No network yet — Edit network hands you the pen. ${F14} `
+    expect(guideHint()).toBe(`No network yet — press Edit network to draw one, or Trace route into network. ${F14} `
       + 'It takes at least two route waypoints before previewing or exporting.');
 
     // Back on Follow route, it goes.
@@ -1225,7 +1260,7 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
   // "Add at least two route waypoints". One says it: the reason Trace is off (UI-06 B-07); the hint says what needs them.
   test('on a Custom network with no route, the Guide card says "Add at least two route waypoints" once', async () => {
     const app = await withEmptyCrowd();
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     const lines = () => [...document.querySelectorAll('#section-guide-content .section-hint')]
       .filter(line => !line.hidden).map(line => line.textContent);
     const asked = () => lines().join(' ').match(/Add at least two route waypoints/g) || [];
@@ -1247,7 +1282,7 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
     const app = await editor();
     app.eventBus.emit('waypoint:add', { imgX: 0.1, imgY: 0.5, isMajor: true });
     app.eventBus.emit('waypoint:add', { imgX: 0.9, imgY: 0.5, isMajor: true });
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     const layer = app.selectedCrowd;
     layer.setGuideType('graph');
     // A closed loop of pass-through nodes: no Exit, and no node with one path.
@@ -1413,7 +1448,7 @@ describe('the pattern seed has its hint, and Reset to even its reason (CROWD-07 
     expect(reset.getAttribute('data-tip')).toBe(RESET_HINT);
     app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
     app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
-    app.addCrowd({ enterNetworkEditor: false });
+    app.addCrowd();
     // A new crowd's busyness is even: Reset to even is off, and says why.
     expect(reset.disabled).toBe(true);
     expect([reason.hidden, reason.textContent]).toEqual([false, 'Busyness is already even.']);
@@ -1442,5 +1477,361 @@ describe('the pattern seed has its hint, and Reset to even its reason (CROWD-07 
     expect(byId('crowd-no-emitter').hidden).toBe(false);
     expect(reset.disabled).toBe(true);
     expect(reason.hidden).toBe(true);
+  });
+});
+
+/**
+ * CROWD-07 X-02 (its select half) — Custom network is a setting, not a mode.
+ * Choosing it, or adding a crowd with no route, put the author straight into
+ * Edit network, its banner taking the header (WCAG 3.2.5, predictable
+ * behaviour: no change of context on input). The select now only sets the
+ * guide, and Edit network is the request; the Guide helper says so.
+ */
+describe('Custom network is a setting, not a mode (CROWD-07 X-02)', () => {
+  const EMPTY_HELP = 'No network yet — press Edit network to draw one, or Trace route into network.';
+  const F14 = "Journeys start at entry nodes and end at exit nodes (a node's Type). With no exit, they end at nodes "
+    + 'with one path; with no entry, dots set off from any node they can leave.';
+  const guideHint = () => document.getElementById('crowd-guide-hint').textContent;
+  // The reader the boot below installs goes with the test: the next one's storage reads as empty.
+  afterEach(() => localStorage.getItem.mockImplementation(() => null));
+
+  async function editor({ route = true } = {}) {
+    // The test hears what is announced: the start's tip, on the real clock, must not land in it.
+    localStorage.getItem.mockImplementation(tipSeen());
+    const app = await bootApp();
+    await app.ready;
+    document.getElementById('splash-close').click();
+    if (route) {
+      app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.5, isMajor: true });
+      app.eventBus.emit('waypoint:add', { imgX: 0.8, imgY: 0.5, isMajor: true });
+    }
+    return app;
+  }
+
+  test('choosing Custom network keeps the mode off and the select focused; the helper names Edit network', async () => {
+    const app = await editor();
+    app.addCrowd();
+    const select = document.getElementById('crowd-guide-type');
+    select.focus();
+    select.value = 'graph';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+
+    expect(app.selectedCrowd.guideType).toBe('graph');
+    expect(app.networkEditService.active).toBe(false);
+    expect(document.getElementById('network-edit-banner')).toBeNull();
+    expect(document.activeElement).toBe(select);
+    expect(guideHint()).toBe(`${EMPTY_HELP} ${F14}`);
+    const edit = document.getElementById('network-edit-btn');
+    expect([edit.hidden, edit.disabled]).toEqual([false, false]);
+
+    // The request: Edit network hands over the pen.
+    edit.click();
+    expect(app.networkEditService.active).toBe(true);
+    expect(app.networkEditService.layer).toBe(app.selectedCrowd);
+  });
+
+  test('+ Add crowd with no route selects its empty network, leaves the mode off and says the whole next step', async () => {
+    const app = await editor({ route: false });
+    const said = vi.spyOn(app, 'announce');
+    document.getElementById('add-crowd-btn').click();
+
+    const layer = app.selectedCrowd;
+    expect(layer.guideType).toBe('graph');
+    expect(app.networkEditService.active).toBe(false);
+    expect(document.getElementById('network-edit-banner')).toBeNull();
+    const added = () => said.mock.calls.map(([message]) => message).filter(message => / added\b/.test(message));
+    expect(added()).toEqual(['Crowd 1 added — press Edit network to draw the network its dots will follow']);
+    expect(guideHint()).toBe(`${EMPTY_HELP} ${F14} It takes at least two route waypoints before previewing or exporting.`);
+
+    // Its own name, renamed or not: the next one is Crowd 2.
+    said.mockClear();
+    document.getElementById('add-crowd-btn').click();
+    expect(added()).toEqual(['Crowd 2 added — press Edit network to draw the network its dots will follow']);
+    expect(app.networkEditService.active).toBe(false);
+  });
+});
+
+/**
+ * DEF-89 (CROWD-07 X-03) — the Guide helper is true after a trace, after
+ * Undo and Redo of one, and after the outline edits the network. The trace
+ * said "Traced the route into Crowd 1 — 3 nodes, 3 paths" while the helper
+ * still read "No network yet" until Edit network was entered.
+ */
+describe('the Guide helper tells the truth after a trace (DEF-89)', () => {
+  const EMPTY_HELP = 'No network yet — press Edit network to draw one, or Trace route into network.';
+  const guideHint = () => document.getElementById('crowd-guide-hint').textContent;
+
+  async function tracedReady() {
+    const app = await bootApp();
+    await app.ready;
+    document.getElementById('splash-close').click();
+    for (const imgX of [0.2, 0.5, 0.8]) app.eventBus.emit('waypoint:add', { imgX, imgY: 0.5, isMajor: true });
+    app.addCrowd();
+    const select = document.getElementById('crowd-guide-type');
+    select.value = 'graph';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    // The choice's own undo entry, as its 400 ms debounce makes it before a person reaches Trace.
+    app._flushPendingUndo();
+    expect(guideHint()).toMatch(new RegExp(`^${EMPTY_HELP}`));
+    return app;
+  }
+
+  test('a trace refreshes it at once, without entering Edit network', async () => {
+    const app = await tracedReady();
+    document.getElementById('crowd-trace-route-btn').click();
+    const { graph } = app.selectedCrowd;
+    expect(graph.getNodes()).toHaveLength(3);
+    expect(app.networkEditService.active).toBe(false);
+    expect(guideHint()).toMatch(/^Dots walk this crowd's own network \(3 nodes, 2 paths\)\. Journeys start/);
+  });
+
+  test('Undo and Redo of a trace refresh it with the network they put back', async () => {
+    const app = await tracedReady();
+    document.getElementById('crowd-trace-route-btn').click();
+    expect(guideHint()).toMatch(/\(3 nodes, 2 paths\)/);
+    app.undo();
+    expect(app.selectedCrowd.graph.getNodes()).toHaveLength(0);
+    expect(guideHint()).toMatch(new RegExp(`^${EMPTY_HELP}`));
+    app.redo();
+    expect(app.selectedCrowd.graph.getNodes()).toHaveLength(3);
+    expect(guideHint()).toMatch(/^Dots walk this crowd's own network \(3 nodes, 2 paths\)\./);
+  });
+
+  test('an outline edit of the network refreshes it', async () => {
+    const app = await tracedReady();
+    app.eventBus.emit('scene-outline:command', {
+      action: 'add-node', layerId: app.selectedCrowd.id, x: '30', y: '40', type: 'entry', label: '',
+    });
+    expect(app.selectedCrowd.graph.getNodes()).toHaveLength(1);
+    expect(guideHint()).toMatch(/^Dots walk this crowd's own network \(1 node, 0 paths\)\./);
+  });
+});
+
+/**
+ * CROWD-07 X-09 — all crowd cards start open (the owner, 2026-10-08: "All
+ * crowd cards start open (Recommended)"). Guide and Motion started collapsed,
+ * so a new crowd hid "At journey end" and Speed. A layout the author stored
+ * still wins.
+ */
+describe('a new crowd shows all four of its cards open (CROWD-07 X-09)', () => {
+  const CARDS = ['guide', 'dots', 'release', 'motion'];
+  afterEach(() => localStorage.getItem.mockImplementation(() => null));
+  const expanded = () => CARDS.map(name => document
+    .querySelector(`#crowd-scope .settings-section[data-section="${name}"] .section-header`)
+    .getAttribute('aria-expanded'));
+
+  async function withNewCrowd() {
+    const app = await bootApp();
+    await app.ready;
+    document.getElementById('splash-close').click();
+    app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.8, imgY: 0.5, isMajor: true });
+    app.addCrowd();
+    expect(document.getElementById('crowd-scope').hidden).toBe(false);
+    return app;
+  }
+
+  test('with no stored layout, Guide, Dots, Release and Motion are all expanded', async () => {
+    await withNewCrowd();
+    expect(expanded()).toEqual(['true', 'true', 'true', 'true']);
+    for (const name of CARDS) {
+      expect(document.querySelector(`#crowd-scope .settings-section[data-section="${name}"]`).classList
+        .contains('expanded'), name).toBe(true);
+    }
+  });
+
+  test('a layout the author stored still wins: collapsed Guide and Motion stay collapsed', async () => {
+    // Stored before the boot, and read by it: a crowd added with no route
+    // (a first waypoint puts the defaults back, SectionController).
+    const stored = JSON.stringify({ guide: false, motion: false });
+    localStorage.getItem.mockImplementation(tipSeen(key => (key === 'routePlotter_sectionState' ? stored : null)));
+    const app = await bootApp();
+    await app.ready;
+    document.getElementById('splash-close').click();
+    app.addCrowd();
+    expect(expanded()).toEqual(['false', 'true', 'true', 'false']);
+  });
+
+  test('a card the author collapsed stays collapsed for the next new crowd', async () => {
+    const app = await withNewCrowd();
+    const guide = document.querySelector('#crowd-scope .settings-section[data-section="guide"] .section-header');
+    guide.click();
+    expect(expanded()).toEqual(['false', 'true', 'true', 'true']);
+    app.addCrowd();
+    expect(app.selectedCrowd.name).toBe('Crowd 2');
+    expect(expanded()).toEqual(['false', 'true', 'true', 'true']);
+  });
+});
+
+/**
+ * CROWD-07 X-05 — a node is named by the waypoint it was traced from. The
+ * Node card's header said "Node" for every node, and the waypoint's name a
+ * traced node keeps (`routeTrace.js`) showed only in the scene outline. The
+ * header reads "Node · Main entrance · entry" through a span the header
+ * button holds, as the Leg header does; a node with no name reads by its
+ * number in the network, "Node 3" [Q8].
+ */
+describe('a node\'s name heads the Node card (CROWD-07 X-05)', () => {
+  const title = () => document.getElementById('node-section-title');
+
+  async function openDay() {
+    const app = await bootApp();
+    await app.ready;
+    document.getElementById('splash-close').click();
+    const { project } = buildExampleProjects().find(each => each.id === 'uon-open-day');
+    expect(await loadSnapshot(app, structuredClone(project))).toBe(true);
+    const layer = app.scene.getFlowLayer('ex-uon-crowd');
+    // A node selected as the outline's Select node does it: inspected, no drawing.
+    const select = node => app.eventBus.emit('scene-outline:command', {
+      action: 'select', kind: 'node', layerId: layer.id, nodeId: node.id,
+    });
+    return { app, layer, select };
+  }
+
+  test('a traced node reads its waypoint\'s name and its type; the span is the header button\'s', async () => {
+    const { layer, select } = await openDay();
+    const header = document.querySelector('.settings-section[data-section="node"] .section-header');
+    expect(title().closest('button.section-header')).toBe(header);
+    const named = layer.graph.getNodes().find(node => node.label === 'Main entrance');
+    expect(named).toBeTruthy();
+    select(named);
+    expect(document.getElementById('node-scope').hidden).toBe(false);
+    expect(title().textContent).toBe(`Node · Main entrance · ${named.type === 'normal' ? 'pass-through' : named.type}`);
+    expect(header.textContent.replace(/\s+/g, ' ').trim()).toBe(title().textContent);
+
+    // Its type changed in the card: the title follows.
+    const type = document.getElementById('network-node-type');
+    type.value = 'exit';
+    type.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(title().textContent).toBe('Node · Main entrance · exit');
+  });
+
+  test('a node with no name reads by its number in the network', async () => {
+    const { layer, select } = await openDay();
+    const unnamed = layer.graph.addNode({ x: 0.5, y: 0.9 });
+    const number = layer.graph.getNodes().indexOf(unnamed) + 1;
+    select(unnamed);
+    expect(title().textContent).toBe(`Node ${number} · pass-through`);
+  });
+});
+
+/**
+ * CROWD-07 F16 — the Pattern seed can be typed. It was read-only: recreating
+ * a colleague's crowd needed their project file. The field checks what is
+ * typed itself, before the model, so the model's own fallback (a random seed
+ * for a value it cannot use) is never reached; a seed typed is one undo
+ * entry, said as Re-roll says one, "Undo is available." [Q5; the lead's
+ * correction of chat #8]; Re-roll is as it was.
+ */
+describe('the Pattern seed can be typed (CROWD-07 F16)', () => {
+  // With its full stop, as the card's other reason and error lines end (the lead's settlement, round 2).
+  const ERROR = `Seed is a whole number from 0 to ${EMITTER_LIMITS.MAX_SEED}.`;
+  const byId = name => document.getElementById(name);
+  const described = control => (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)
+    .map(token => byId(token)?.textContent ?? `<missing ${token}>`);
+  afterEach(() => localStorage.getItem.mockImplementation(() => null));
+
+  async function withCrowd() {
+    // Announcements are asserted: the start's tip must not land among them.
+    localStorage.getItem.mockImplementation(tipSeen());
+    const app = await bootApp();
+    await app.ready;
+    byId('splash-close').click();
+    app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.5, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.8, imgY: 0.5, isMajor: true });
+    app.addCrowd();
+    app._flushPendingUndo();
+    return { app, emitter: app.selectedCrowd.emitters[0], seed: byId('crowd-seed-value') };
+  }
+  const type = (field, value) => {
+    field.value = value;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+
+  test('the shell has a whole-number field where the read-only seed was, labelled Pattern seed', () => {
+    const shell = new DOMParser()
+      .parseFromString(readFileSync(resolve(process.cwd(), 'index.html'), 'utf8'), 'text/html');
+    const field = shell.getElementById('crowd-seed-value');
+    expect(field.tagName).toBe('INPUT');
+    expect(['type', 'inputmode', 'min', 'max', 'step'].map(name => field.getAttribute(name)))
+      .toEqual(['number', 'numeric', '0', String(EMITTER_LIMITS.MAX_SEED), '1']);
+    expect(field.labels[0]).toBe(shell.getElementById('crowd-seed-label'));
+  });
+
+  test('42 sets the seed: one undo entry, said as Re-roll says it; Undo puts the old seed back', async () => {
+    const { app, emitter, seed } = await withCrowd();
+    const before = emitter.seed;
+    expect(seed.value).toBe(String(before));
+    const said = vi.spyOn(app, 'announce');
+    const toasts = [];
+    app.eventBus.on('ui:toast', toast => toasts.push(toast.message));
+    const history = app.undoService.createSnapshot().undoStack.length;
+
+    type(seed, '42');
+    expect(emitter.seed).toBe(42);
+    expect(app.undoService.createSnapshot().undoStack.length).toBe(history + 1);
+    expect(said.mock.calls.map(([message]) => message)).toEqual(['Crowd 1 pattern seed set to 42. Undo is available.']);
+    expect(toasts).toEqual([]); // one route: the announcement alone
+    expect(seed.getAttribute('aria-invalid')).toBeNull();
+
+    app.undo();
+    const [layer] = app.scene.getFlowLayers();
+    expect(layer.emitters[0].seed).toBe(before);
+    app.eventBus.emit('crowd:selected', layer);
+    expect(byId('crowd-seed-value').value).toBe(String(before));
+  });
+
+  test('−1, 1.5, one past the largest and empty are refused in a line the field is described by; the model keeps its seed and draws no random one', async () => {
+    const { app, emitter, seed } = await withCrowd();
+    const kept = emitter.seed;
+    const random = vi.spyOn(Emitter, '_randomSeed');
+    const said = vi.spyOn(app, 'announce');
+    const history = app.undoService.createSnapshot().undoStack.length;
+    for (const value of ['-1', '1.5', String(EMITTER_LIMITS.MAX_SEED + 1), '']) {
+      type(seed, value);
+      expect(emitter.seed, value).toBe(kept);
+      expect(seed.getAttribute('aria-invalid'), value).toBe('true');
+      const error = byId('crowd-seed-error');
+      expect([error.hidden, error.textContent], value).toEqual([false, ERROR]);
+      expect(described(seed)[0], value).toBe(ERROR);
+    }
+    expect(random).not.toHaveBeenCalled();
+    expect(app.undoService.createSnapshot().undoStack.length).toBe(history);
+    // Said when it first shows, not again while it stands.
+    expect(said.mock.calls.map(([message]) => message)).toEqual([ERROR]);
+
+    // A good seed clears it.
+    type(seed, String(EMITTER_LIMITS.MAX_SEED));
+    expect(emitter.seed).toBe(EMITTER_LIMITS.MAX_SEED);
+    expect([byId('crowd-seed-error').hidden, byId('crowd-seed-error').textContent]).toEqual([true, '']);
+    expect(seed.getAttribute('aria-invalid')).toBeNull();
+    expect(described(seed)).not.toContain(ERROR);
+    type(seed, '0');
+    expect(emitter.seed).toBe(0);
+  });
+
+  test('typed while a slider edit waits for its undo entry, the seed is one step of its own, and the slider edit stays', async () => {
+    const { app, emitter, seed } = await withCrowd();
+    const count = byId('crowd-count');
+    count.value = '120';
+    count.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(emitter.dotCount).toBe(120);
+    const before = emitter.seed;
+
+    type(seed, '7');
+    expect(emitter.seed).toBe(7);
+    app.undo();
+    const [restored] = app.selectedCrowd.emitters;
+    expect(restored.seed).toBe(before);
+    expect(restored.dotCount).toBe(120);
+  });
+
+  test('Re-roll still draws a new seed, and the field shows it', async () => {
+    const { emitter, seed } = await withCrowd();
+    const before = emitter.seed;
+    byId('crowd-reroll-btn').click();
+    expect(emitter.seed).not.toBe(before);
+    expect(seed.value).toBe(String(emitter.seed));
   });
 });

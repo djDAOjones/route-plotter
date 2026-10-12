@@ -447,6 +447,154 @@ describe('golden draw logs (TST-02)', () => {
     }
   });
 
+  /**
+   * CROWD-07 X-04: a selected crowd's network was drawn beneath the route, so
+   * a network traced from it vanished under it. It is drawn above the path,
+   * cased in a lighter line one reference px wider on each side, and below
+   * the path's head and the markers; it is authoring scaffolding, so preview
+   * and the export canvas carry none. The fixtures above select no crowd, so
+   * their goldens do not see it: Open day's traced crowd is selected here.
+   */
+  describe('a selected crowd\'s network is drawn over the path (CROWD-07 X-04)', () => {
+    const INK = '#56B4E9';
+    const ROUTE = '#E69F00';
+    const field = (line, name) => new RegExp(`(?:^| )${name}=(\\S+)`).exec(line.split(' | ')[1] ?? '')?.[1];
+
+    /** Open day in `mode`, its crowd selected; the vector surface's drawn lines at the middle of the timeline. */
+    async function openDayWithItsCrowd(mode) {
+      const app = await appWithFixture(fixtures().find(each => each.id === 'uon-open-day'));
+      enterMode(app, mode);
+      const layer = app.scene.getFlowLayer('ex-uon-crowd');
+      expect(layer.guideType).toBe('graph');
+      app.eventBus.emit('crowd:selected', layer);
+      expect(app.selectedCrowd).toBe(layer);
+      const lines = frameAt(app, 0.5, { state: 'drawn' }).filter(line => line.startsWith('vector '));
+      return { app, layer, lines };
+    }
+
+    /**
+     * Where the route's strokes, the guide's, its casings and the head's
+     * first fill are, and where the head's drawing begins: the `save` its
+     * transform and geometry follow (`drawPathHead`).
+     */
+    function landmarks(lines) {
+      const strokes = lines.map((line, index) => ({ line, index })).filter(({ line }) => / stroke @/.test(line));
+      const route = strokes.filter(({ line }) => field(line, 'strokeStyle') === ROUTE).map(({ index }) => index);
+      const guide = strokes.filter(({ line }) => field(line, 'strokeStyle') === INK);
+      const lastRoute = Math.max(...route);
+      const head = lines.findIndex((line, index) => index > lastRoute && / fill @/.test(line)
+        && field(line, 'fillStyle') === ROUTE);
+      const headStart = lines.findLastIndex((line, index) => index < head && line === 'vector save');
+      return { strokes, route, guide, lastRoute, head, headStart };
+    }
+
+    test('in the editor, the guide comes after the path\'s strokes and before its head and the markers, cased', async () => {
+      const { app, layer, lines } = await openDayWithItsCrowd('edit');
+      const { strokes, route, guide, lastRoute, head } = landmarks(lines);
+      const edges = layer.graph.getEdges().length;
+      expect(route.length).toBeGreaterThan(0);
+      expect(guide).toHaveLength(edges);
+      expect(head).toBeGreaterThan(lastRoute);
+      // Above the path, below the head (and so below the markers drawn after it).
+      expect(guide[0].index).toBeGreaterThan(lastRoute);
+      expect(guide.at(-1).index).toBeLessThan(head);
+      // Each guide stroke has its casing stroked just before it: the lighter ink, a reference px wider each side.
+      const casing = app.renderingService.scaleSizeClamped(1);
+      for (const { line, index } of guide) {
+        const before = strokes[strokes.findIndex(stroke => stroke.index === index) - 1];
+        expect(before, line).toBeDefined();
+        expect(field(before.line, 'strokeStyle'), before.line).toBe('#FFFFFF');
+        expect(Number(field(before.line, 'lineWidth')) - Number(field(line, 'lineWidth')))
+          .toBeCloseTo(2 * casing, 3);
+        expect(field(line, 'globalAlpha')).toBe('0.55');
+      }
+    });
+
+    // CROWD-07 X-05: in Edit network each named node's label is drawn beside
+    // its glyph, in the guide's own layer, 14 reference px of the UI's
+    // primary text ink over a 2 px casing of its background [Q8]. A node with
+    // no name draws none, and neither does a network only inspected, nor
+    // preview, nor the export canvas. A node under a waypoint whose label is
+    // set to show draws none either (the owner's pick, PR 5b round 2): the trace's
+    // link puts it on the marker, the waypoint's label names the spot, and
+    // Open day's names read twice. Reason for the changed expectation: Open
+    // day's traced nodes, each under its labelled waypoint, now draw none; a
+    // named node drawn away from the waypoints draws its own, as does a traced
+    // node whose waypoint's label is Off.
+    test('in Edit network a named node away from the waypoints, or under a waypoint with its label off, is labelled beside its glyph, cased; nodes under labelled waypoints, an unnamed node, inspection and export draw none', async () => {
+      const labelsIn = lines => lines.filter(line => / (strokeText|fillText) /.test(line));
+      const { app, layer } = await openDayWithItsCrowd('edit');
+      const traced = layer.graph.getNodes().filter(node => node.label);
+      expect(traced.length).toBeGreaterThan(1);
+      // Each traced node sits on its waypoint, whose label is set to show (text, and a mode other than Off).
+      for (const node of traced) {
+        const waypoint = app.waypoints.find(each => each.id === node.anchorWaypointId);
+        expect(node.isAnchorResolved(), node.label).toBe(true);
+        expect([waypoint.hasLabel(), node.position()], node.label).toEqual([true, { x: waypoint.imgX, y: waypoint.imgY }]);
+      }
+      const unnamed = layer.graph.addNode({ x: 0.5, y: 0.9 });
+      expect(unnamed.label).toBe('');
+      // Drawn with the pen and named, away from every waypoint.
+      const kiosk = layer.graph.addNode({ x: 0.5, y: 0.1, label: 'Kiosk' });
+      // A traced node whose waypoint shows no label (its label Off) is the one name at that spot: it keeps its own.
+      const [unlabelled, ...underLabels] = traced;
+      app.waypoints.find(each => each.id === unlabelled.anchorWaypointId).labelMode = 'off';
+      expect(Math.min(...app.waypoints.map(each => Math.hypot(each.imgX - 0.5, each.imgY - 0.1)))).toBeGreaterThan(0.05);
+
+      // Inspected, not drawn: the guide carries no label.
+      const inspected = frameAt(app, 0.5, { state: 'drawn' }).filter(line => line.startsWith('vector '));
+      const { lastRoute, head } = landmarks(inspected);
+      expect(labelsIn(inspected.slice(lastRoute, head))).toEqual([]);
+
+      app.enterNetworkEditMode();
+      expect(app.networkEditService.active).toBe(true);
+      const editing = frameAt(app, 0.5, { state: 'drawn' }).filter(line => line.startsWith('vector '));
+      const marks = landmarks(editing);
+      // The guide's draw alone: from the path's last stroke to the head's `save`, its own `restore` the last line (Codex r2).
+      expect(editing.slice(marks.headStart, marks.headStart + 2)).toEqual(['vector save', expect.stringMatching(/^vector translate /)]);
+      const guide = editing.slice(marks.lastRoute + 1, marks.headStart);
+      expect(guide.at(-1)).toBe('vector restore');
+      const drawn = labelsIn(guide);
+      const size = app.renderingService.scaleLabelSize(14);
+      for (const node of [kiosk, unlabelled]) {
+        const strokeLine = drawn.find(line => line.includes(` strokeText ${node.label} `));
+        const fillLine = drawn.find(line => line.includes(` fillText ${node.label} `));
+        expect(strokeLine, node.label).toBeDefined();
+        expect(fillLine, node.label).toBeDefined();
+        expect(drawn.indexOf(strokeLine)).toBeLessThan(drawn.indexOf(fillLine));
+        expect(field(strokeLine, 'strokeStyle')).toBe('#FFFFFF');
+        expect(field(strokeLine, 'lineWidth')).toBe('4');
+        expect(field(fillLine, 'fillStyle')).toBe('#0F0F0F');
+        expect(fillLine).toContain(`font=${size}px `);
+      }
+      // Only those two: no name of a node under its waypoint's label, and nothing for the unnamed node.
+      expect(drawn).toHaveLength(4);
+      expect(underLabels.length).toBeGreaterThan(0);
+      for (const node of underLabels) {
+        expect(drawn.some(line => line.includes(` ${node.label} `)), node.label).toBe(false);
+      }
+      expect(drawn.some(line => / (strokeText|fillText) Node /.test(line))).toBe(false);
+      // The guide's draw, labels and all, pinned (regenerate with UPDATE_DRAW_GOLDENS=1).
+      expectGolden('uon-open-day-network-edit', [['guide at progress 0.5, Edit network, a named node added, one waypoint label off', guide]]);
+
+      // Nothing else in the app strokes text: preview and export, whose waypoint labels are filled, stroke none.
+      for (const mode of ['preview', 'export']) {
+        const shown = await openDayWithItsCrowd(mode);
+        expect(shown.lines.filter(line => / strokeText /.test(line)), mode).toEqual([]);
+        expect(shown.lines.some(line => / fillText Main entrance /.test(line)), mode).toBe(true);
+      }
+    });
+
+    test('preview and the export canvas draw no guide, cased or not', async () => {
+      for (const mode of ['preview', 'export']) {
+        const { lines } = await openDayWithItsCrowd(mode);
+        const { guide, route } = landmarks(lines);
+        expect(route.length, mode).toBeGreaterThan(0);
+        expect(guide, mode).toEqual([]);
+      }
+    });
+  });
+
   describe('fixed defects stay fixed', () => {
 
     test('DEF-02: the exported player follows a moved anchor waypoint', async () => {

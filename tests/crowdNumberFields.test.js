@@ -1,0 +1,824 @@
+/**
+ * DEF-86 — the crowd sliders and the Path card's Share never rewrite a value
+ * the author did not set on them, and every value the model takes can be
+ * typed (the owner's pick of 2026-10-08: "Number field beside each crowd
+ * slider + full-width Traffic (Recommended)").
+ *
+ * The sliders' ranges are narrower than the model's (Count 1–500 against
+ * 1–5,000; Speed 0.01–1 against 0.001–1,000; Size 0.05–2× against 0.01–100×;
+ * Share's weight 0.1–5 against 0.01 and up). A value set in the outline or
+ * opened from a file sat beyond a slider's end, the thumb sat at the end, and
+ * the first nudge wrote the end: a weight of 24 became 5. Now each slider
+ * has a number field beside it that holds the stored value, as it is, in
+ * the readout's unit; a slider whose value lies past its ends is put at its
+ * nearer end and turned off, with a line saying why, until the field brings
+ * the value within its reach. What the model cannot take is refused in the
+ * field's error line, as a path weight's is (UI-06 B-30), and the model
+ * keeps its value.
+ *
+ * jsdom does not move a range on ArrowLeft, so a keyboard step is a value set
+ * and `input` and `change` sent, as the browser would send them; the lead
+ * checks ArrowLeft itself in Chromium.
+ */
+
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
+import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { SLIDER_REACH_REASON } from '../src/utils/uiReadouts.js';
+import { EMITTER_LIMITS } from '../src/models/Emitter.js';
+import { SCENE_LIMITS } from '../src/models/Scene.js';
+
+const byId = id => document.getElementById(id);
+
+/** The words an element shows, a field's value among them (an embedded field is read by its value). */
+function shownText(element) {
+  const copy = element.cloneNode(true);
+  const originals = [...element.querySelectorAll('input')];
+  [...copy.querySelectorAll('input')].forEach((input, index) => input.replaceWith(originals[index].value));
+  return copy.textContent.replace(/\s+/g, ' ').trim();
+}
+
+/** The text each `aria-describedby` token resolves to, a readout's field read by its value. */
+const described = control => (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean)
+  .map(token => (byId(token) ? shownText(byId(token)) : `<missing ${token}>`));
+
+/** A slider moved as a keyboard step moves it: its value, then `input` and `change`. */
+function step(slider, value) {
+  slider.value = String(value);
+  slider.dispatchEvent(new Event('input', { bubbles: true }));
+  slider.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+/** A value typed into a field and committed (Enter, or leaving it). */
+function type(field, value) {
+  field.value = String(value);
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+  field.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+afterEach(() => localStorage.getItem.mockImplementation(() => null));
+
+/** The editor with `flowLayers` opened, its route of two, the first crowd selected. */
+async function editorWith(flowLayers) {
+  // Errors are announced and asserted: the start's tip must not land among them.
+  localStorage.getItem.mockImplementation(tipSeen());
+  const app = await bootApp();
+  await app.ready;
+  byId('splash-close').click();
+  expect(await loadSnapshot(app, {
+    coordVersion: 9,
+    waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
+    scene: { flowLayers },
+  })).toBe(true);
+  app.eventBus.emit('crowd:selected', app.scene.getFlowLayers()[0]);
+  return app;
+}
+
+const crowd = (id, emitter = {}, extra = {}) => ({
+  id, name: id, guideType: 'route', emitters: [{ id: `${id}-e`, seed: 7, ...emitter }], ...extra,
+});
+
+/** Each crowd field: its slider, its emitter key, a value inside the slider's reach and one past it. */
+const FIELDS = [
+  { slider: 'crowd-dot-size', key: 'dotSize', unit: ' reference px', min: 0.2, max: 2000, toModel: n => n / 20 },
+  { slider: 'crowd-wobble', key: 'wobble', unit: '%', min: 0, max: 100, toModel: n => n / 100 },
+  { slider: 'crowd-count', key: 'dotCount', unit: '', min: 1, max: 5000, toModel: n => n },
+  { slider: 'crowd-release-start', key: 'releaseStart', unit: '%', min: 0, max: 100, toModel: n => n / 100 },
+  { slider: 'crowd-release-duration', key: 'releaseDuration', unit: '%', min: 0, max: 100, toModel: n => n / 100 },
+  { slider: 'crowd-onset-variance', key: 'onsetVariance', unit: '%', min: 0, max: 100, toModel: n => n / 100 },
+  { slider: 'crowd-intensity-ramp', key: 'intensityRamp', unit: '%', min: -100, max: 100, toModel: n => n / 100 },
+  { slider: 'crowd-speed', key: 'speed', unit: ' image lengths/s', min: 0.001, max: 1000, toModel: n => n },
+  { slider: 'crowd-speed-variance', key: 'speedVariance', unit: '%', min: 0, max: 100, toModel: n => n / 100 },
+];
+
+describe('a stored value past a slider\'s reach is kept, not rewritten (DEF-86)', () => {
+  test('Count 1000: the field holds 1000, the slider is off at its end and says why; a step writes nothing; 400 typed brings it back', async () => {
+    const app = await editorWith([crowd('big', { dotCount: 1000 })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const slider = byId('crowd-count');
+    const field = byId('crowd-count-field');
+    const reason = byId('crowd-count-reason');
+    expect(field.value).toBe('1000');
+    expect([slider.value, slider.disabled]).toEqual(['500', true]);
+    expect([reason.hidden, reason.textContent]).toEqual([false, SLIDER_REACH_REASON]);
+    // Its readout (the field) first, its hint, and the reason, read with it.
+    expect(described(slider)).toEqual(['1000', 'Total dots released across the window', SLIDER_REACH_REASON]);
+    expect(slider.getAttribute('aria-valuetext')).toBe('1000');
+    expect(shownText(byId('crowd-count-value'))).toBe('1000');
+
+    // A keyboard step, as the browser would send it, is refused by the handler while the slider is off.
+    step(slider, 499);
+    expect(emitter.dotCount).toBe(1000);
+    expect([slider.value, slider.disabled, field.value]).toEqual(['500', true, '1000']);
+
+    type(field, 400);
+    expect(emitter.dotCount).toBe(400);
+    expect([slider.value, slider.disabled]).toEqual(['400', false]);
+    expect([reason.hidden, reason.textContent]).toEqual([true, '']);
+    expect(described(slider)).toEqual(['400', 'Total dots released across the window']);
+    step(slider, 399);
+    expect(emitter.dotCount).toBe(399);
+    expect(field.value).toBe('399');
+  });
+
+  test('weight 24: the Share field holds 24, the slider is off at its end; a step never writes 23.9 or 5; 3 typed brings it back', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.5, type: 'exit' }],
+        edges: [{ id: 'e1', sourceId: 'n1', targetId: 'n2', direction: 'one-way', weight: 24 }],
+      },
+    })]);
+    const layer = app.selectedCrowd;
+    app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'edge', layerId: layer.id, edgeId: 'e1' });
+    const edge = layer.graph.getEdge('e1');
+    const slider = byId('network-edge-weight');
+    const field = byId('network-edge-weight-field');
+    const reason = byId('network-edge-weight-reason');
+    expect(byId('edge-scope').hidden).toBe(false);
+    expect(field.value).toBe('24');
+    expect([slider.value, slider.disabled]).toEqual(['50', true]);
+    expect([reason.hidden, reason.textContent]).toEqual([false, SLIDER_REACH_REASON]);
+    expect(described(slider).at(-1)).toBe(SLIDER_REACH_REASON);
+    expect(described(slider)[0]).toBe('100% of departures');
+
+    step(slider, 49);
+    expect(edge.weight).toBe(24);
+    expect([slider.value, field.value]).toEqual(['50', '24']);
+
+    type(field, 3);
+    expect(edge.weight).toBe(3);
+    expect([slider.value, slider.disabled, reason.hidden]).toEqual(['30', false, true]);
+    step(slider, 29);
+    expect(edge.weight).toBe(2.9);
+    expect(field.value).toBe('2.9');
+
+    // No top to the weight (GraphEdge): 1000 is kept, and the slider goes off again.
+    type(field, 1000);
+    expect(edge.weight).toBe(1000);
+    expect(slider.disabled).toBe(true);
+    // What a weight cannot be is refused, as a path-weight row refuses it.
+    for (const bad of ['0', '0.001', '', 'abc', '-1']) {
+      type(field, bad);
+      expect(edge.weight, bad).toBe(1000);
+      expect(byId('network-edge-weight-field-error').textContent, bad)
+        .toBe('Enter a weight of 0.01 or more; the path keeps 1000 until you do.');
+      expect(field.getAttribute('aria-invalid'), bad).toBe('true');
+    }
+    type(field, 0.01);
+    expect(edge.weight).toBe(0.01);
+    expect(byId('network-edge-weight-field-error').hidden).toBe(true);
+  });
+
+  test('every crowd field takes its range and refuses the rest: min, max, past max, empty, not a number', async () => {
+    const app = await editorWith([crowd('all')]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const said = vi.spyOn(app, 'announce');
+    for (const { slider, key, unit, min, max, toModel } of FIELDS) {
+      const field = byId(`${slider}-field`);
+      const error = byId(`${slider}-field-error`);
+      for (const good of [min, max]) {
+        type(field, good);
+        expect(emitter[key], `${slider} ${good}`).toBeCloseTo(toModel(good), 12);
+        expect([error.hidden, field.getAttribute('aria-invalid')], `${slider} ${good}`).toEqual([true, null]);
+      }
+      const kept = emitter[key];
+      const pastMax = slider === 'crowd-speed' ? max + 0.001 : max + 1;
+      for (const bad of [pastMax, min - 1, '', 'abc']) {
+        said.mockClear();
+        type(field, bad);
+        expect(emitter[key], `${slider} ${bad}`).toBe(kept);
+        expect(error.hidden, `${slider} ${bad}`).toBe(false);
+        expect(error.textContent, `${slider} ${bad}`).toMatch(/^Enter .+ from .+ to .+; the crowd keeps .+ until you do\.$/);
+        expect(error.textContent, `${slider} ${bad}`)
+          .toContain(`the crowd keeps ${byId(slider).getAttribute('aria-valuetext')} until you do.`);
+        expect(described(field)[0], `${slider} ${bad}`).toBe(error.textContent);
+        expect(field.getAttribute('aria-invalid')).toBe('true');
+      }
+      // Said once as it first showed, not for each value refused while it stood.
+      expect(said.mock.calls.length, slider).toBeLessThanOrEqual(1);
+      expect(unit === '%' ? error.textContent.includes(`to ${max}%;`) : true, slider).toBe(true);
+    }
+    expect(byId('crowd-count-field-error').textContent)
+      .toBe('Enter a whole number of dots from 1 to 5000; the crowd keeps 5000 until you do.');
+    expect(byId('crowd-intensity-ramp-field-error').textContent)
+      .toBe('Enter a release bias from −100 to 100%; the crowd keeps Later 100% until you do.');
+    expect(byId('crowd-dot-size-field-error').textContent)
+      .toBe('Enter a size from 0.2 to 2000 reference px; the crowd keeps 2000 reference px until you do.');
+    // A part of a dot is not a count.
+    type(byId('crowd-count-field'), 2.5);
+    expect(emitter.dotCount).toBe(5000);
+    expect(byId('crowd-count-field-error').hidden).toBe(false);
+  });
+
+  test('Size reads and writes reference px: 8 is 0.40×, 8.6 is 0.43×, the least 0.2 is 0.01×, and back', async () => {
+    const app = await editorWith([crowd('size', { dotSize: 0.43 })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const field = byId('crowd-dot-size-field');
+    expect(field.value).toBe('8.6');
+    expect(byId('crowd-dot-size').getAttribute('aria-valuetext')).toBe('8.6 reference px');
+    type(field, 8);
+    expect(emitter.dotSize).toBe(0.4);
+    type(field, 8.6);
+    expect(emitter.dotSize).toBe(0.43);
+    type(field, 0.2);
+    expect(emitter.dotSize).toBe(0.01);
+    expect(field.value).toBe('0.2');
+    expect(byId('crowd-dot-size').disabled).toBe(true); // 0.01× is below the slider's 0.05×
+    type(field, 1.4);
+    expect(emitter.dotSize).toBe(0.07);
+    expect(field.value).toBe('1.4');
+  });
+
+  test('Speed shows its stored value as it is: 0.001 never reads 0.00, 0.4 reads 0.4', async () => {
+    const app = await editorWith([crowd('slow', { speed: 0.001 })]);
+    const field = byId('crowd-speed-field');
+    const slider = byId('crowd-speed');
+    expect(field.value).toBe('0.001');
+    expect(slider.getAttribute('aria-valuetext')).toBe('0.001 image lengths/s');
+    expect([slider.value, slider.disabled]).toEqual(['1', true]);
+    type(field, 0.4);
+    expect(app.selectedCrowd.emitters[0].speed).toBe(0.4);
+    expect([field.value, slider.value, slider.disabled]).toEqual(['0.4', '40', false]);
+    expect(slider.getAttribute('aria-valuetext')).toBe('0.4 image lengths/s');
+  });
+
+  test('the fields take what the model takes, natively too: Size 8 and 8.5, Speed 0.40 and 0.001, a bias of −37.5', async () => {
+    await editorWith([crowd('native')]);
+    const valid = (id, value) => {
+      const field = byId(id);
+      field.value = value;
+      return field.validity.valid;
+    };
+    expect(['8', '8.5', '0.2', '2000'].map(value => valid('crowd-dot-size-field', value))).toEqual([true, true, true, true]);
+    expect(['0.40', '0.001', '0.4', '1000'].map(value => valid('crowd-speed-field', value))).toEqual([true, true, true, true]);
+    expect(['-37.5', '100', '-100'].map(value => valid('crowd-intensity-ramp-field', value))).toEqual([true, true, true]);
+    expect(['12.25'].map(value => valid('crowd-wobble-field', value))).toEqual([true]);
+    expect(['0.01', '24', '123456'].map(value => valid('network-edge-weight-field', value))).toEqual([true, true, true]);
+    expect(byId('network-edge-weight-field').hasAttribute('max')).toBe(false);
+  });
+
+  test('Release bias keeps its direction beside its field: −40 typed reads Earlier 40%', async () => {
+    const app = await editorWith([crowd('bias')]);
+    const field = byId('crowd-intensity-ramp-field');
+    type(field, -40);
+    expect(app.selectedCrowd.emitters[0].intensityRamp).toBe(-0.4);
+    expect(byId('crowd-intensity-ramp-value').textContent).toBe('Earlier 40%');
+    expect(byId('crowd-intensity-ramp').getAttribute('aria-valuetext')).toBe('Earlier 40%');
+    expect(described(field)).toEqual(['Earlier 40%',
+      "Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither"]);
+  });
+
+  test('Count is refused past the room the scene\'s dot budget leaves, in the outline\'s words', async () => {
+    const app = await editorWith([
+      crowd('small', { dotCount: 1000 }), crowd('b1', { dotCount: 5000 }), crowd('b2', { dotCount: 5000 }),
+      crowd('b3', { dotCount: 5000 }), crowd('b4', { dotCount: 3000 }),
+    ]);
+    const emitter = app.selectedCrowd.emitters[0];
+    expect(app.selectedCrowd.id).toBe('small');
+    const field = byId('crowd-count-field');
+    // 19,000 dots configured: 18,000 elsewhere leave this crowd room for 2,000.
+    expect(field.max).toBe('2000');
+    type(field, 2001);
+    expect(emitter.dotCount).toBe(1000);
+    expect(byId('crowd-count-field-error').textContent)
+      .toBe(`The whole scene supports at most ${SCENE_LIMITS.MAX_DOTS_TOTAL} configured dots.`);
+    type(field, 2000);
+    expect(emitter.dotCount).toBe(2000);
+    expect(byId('crowd-count-field-error').hidden).toBe(true);
+    expect(EMITTER_LIMITS.MAX_DOT_COUNT).toBe(5000);
+  });
+
+  test('the outline and the card agree after a round trip, either way', async () => {
+    const app = await editorWith([crowd('trip', { dotSize: 0.4, speed: 0.4 })]);
+    const layer = app.selectedCrowd;
+    const emitter = layer.emitters[0];
+    type(byId('crowd-dot-size-field'), 8.6);
+    type(byId('crowd-speed-field'), 0.0015);
+    const snapshot = app._buildProjectSnapshot();
+    const saved = snapshot.scene.flowLayers[0].emitters[0];
+    expect([saved.dotSize, saved.speed]).toEqual([0.43, 0.0015]);
+
+    // The outline's own update, as its untouched fields send their stored values: the card shows them.
+    app.eventBus.emit('scene-outline:command', {
+      action: 'update-emitter', layerId: layer.id, emitterId: emitter.id,
+      dotCount: String(emitter.dotCount), speed: '0.0025', dotSize: '1.25', dotColor: emitter.dotColor,
+      lifecycleMode: emitter.lifecycleMode, intensityRampDirection: 'later', intensityRampAmount: '37.5',
+      releaseStart: '12.5', releaseDuration: '50', onsetVariance: '20', speedVariance: '20', wobble: '0',
+    });
+    expect([emitter.speed, emitter.dotSize, emitter.intensityRamp, emitter.releaseStart]).toEqual([0.0025, 1.25, 0.375, 0.125]);
+    expect(byId('crowd-speed-field').value).toBe('0.0025');
+    expect(byId('crowd-dot-size-field').value).toBe('25');
+    expect(byId('crowd-intensity-ramp-field').value).toBe('37.5');
+    expect(byId('crowd-release-start-field').value).toBe('12.5');
+    expect(byId('crowd-release-start').value).toBe('13'); // within reach: the nearest step, and on
+    expect(byId('crowd-release-start').disabled).toBe(false);
+  });
+});
+
+describe('the reasons belong to the crowd shown, and a crowd with no emitter shows none (DEF-86, UI-06 B-31)', () => {
+  test('a crowd with no emitter, after one storing Count 1000, keeps every control off and shows no reason', async () => {
+    const app = await editorWith([
+      crowd('big', { dotCount: 1000 }),
+      { id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] },
+    ]);
+    expect(byId('crowd-count-reason').hidden).toBe(false);
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
+    expect(byId('crowd-no-emitter').hidden).toBe(false);
+    for (const { slider } of FIELDS) {
+      expect(byId(slider).disabled, slider).toBe(true);
+      expect(byId(`${slider}-field`).disabled, slider).toBe(true);
+      expect([byId(`${slider}-reason`).hidden, byId(`${slider}-reason`).textContent], slider).toEqual([true, '']);
+      expect(described(byId(slider)), slider).not.toContain(SLIDER_REACH_REASON);
+    }
+    expect(byId('crowd-seed-value').disabled).toBe(true);
+  });
+
+  test('a reason and an error go with the crowd they were about; the readout and hint tokens stay, once each', async () => {
+    const app = await editorWith([crowd('big', { dotCount: 1000 }), crowd('small', { dotCount: 50 })]);
+    const slider = byId('crowd-count');
+    const field = byId('crowd-count-field');
+    type(byId('crowd-speed-field'), '');
+    expect(byId('crowd-speed-field-error').hidden).toBe(false);
+
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('small'));
+    expect([slider.disabled, byId('crowd-count-reason').hidden]).toEqual([false, true]);
+    expect(described(slider)).toEqual(['50', 'Total dots released across the window']);
+    expect([byId('crowd-speed-field-error').hidden, byId('crowd-speed-field').getAttribute('aria-invalid')])
+      .toEqual([true, null]);
+    expect(described(byId('crowd-speed-field'))).toEqual([
+      "Dot travel speed in image lengths per second: 1 is the image's width across or its height down",
+    ]);
+
+    // Back and forth: the reason's token is added once, and the others keep their places.
+    for (let index = 0; index < 3; index += 1) {
+      app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('big'));
+      app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('big'));
+    }
+    expect(described(slider)).toEqual(['1000', 'Total dots released across the window', SLIDER_REACH_REASON]);
+    expect(described(field)).toEqual(['Total dots released across the window']);
+  });
+});
+
+/**
+ * PR 5b round 2 (Codex r1). A slider writes only where the author moves it:
+ * a stored value between its steps puts it at its nearest step, and an
+ * `input` from there, the slider unmoved, writes nothing (#1). Release bias
+ * reads its stored amount (#2). A field shows a number in the fewest digits
+ * that read back as it, and a field committed as it was shown keeps the
+ * stored value exactly (#3). A value typed and not committed goes to what it
+ * was typed for when the pointer, which keeps focus where it is, selects
+ * something else (#4). Count's slider keeps to the scene's dot budget (#5).
+ */
+describe('a slider writes only where the author moves it (DEF-86, Codex r1 #1)', () => {
+  test('Speed 0.12345 and Size 8.25 reference px, between the sliders\' steps: an input on the unmoved slider keeps them; a step writes the stepped value', async () => {
+    const app = await editorWith([crowd('fine', { speed: 0.12345, dotSize: 0.4125 })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const speed = byId('crowd-speed');
+    expect(byId('crowd-speed-field').value).toBe('0.12345');
+    expect([speed.value, speed.disabled]).toEqual(['12', false]);
+    speed.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(emitter.speed).toBe(0.12345);
+    expect(byId('crowd-speed-field').value).toBe('0.12345');
+    step(speed, 13);
+    expect(emitter.speed).toBe(0.13);
+    expect(byId('crowd-speed-field').value).toBe('0.13');
+
+    const size = byId('crowd-dot-size');
+    expect(byId('crowd-dot-size-field').value).toBe('8.25');
+    expect(size.disabled).toBe(false);
+    size.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(emitter.dotSize).toBe(0.4125);
+    expect(byId('crowd-dot-size-field').value).toBe('8.25');
+    step(size, 45);
+    expect(emitter.dotSize).toBe(0.45);
+    expect(byId('crowd-dot-size-field').value).toBe('9');
+  });
+
+  test('a weight of 1.55, between Share\'s steps: an input on the unmoved slider keeps it; a step writes 1.5', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.5, type: 'exit' }],
+        edges: [{ id: 'e1', sourceId: 'n1', targetId: 'n2', direction: 'one-way', weight: 1.55 }],
+      },
+    })]);
+    const layer = app.selectedCrowd;
+    app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'edge', layerId: layer.id, edgeId: 'e1' });
+    const edge = layer.graph.getEdge('e1');
+    const slider = byId('network-edge-weight');
+    expect(byId('network-edge-weight-field').value).toBe('1.55');
+    expect(slider.disabled).toBe(false);
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(edge.weight).toBe(1.55);
+    expect(byId('network-edge-weight-field').value).toBe('1.55');
+    step(slider, 15);
+    expect(edge.weight).toBe(1.5);
+    expect(byId('network-edge-weight-field').value).toBe('1.5');
+  });
+});
+
+describe('Release bias reads its stored amount (CROWD-07 F15, Codex r1 #2)', () => {
+  test('−37.5 and −0.1: the field, the readout and aria-valuetext agree, unrounded', async () => {
+    const app = await editorWith([crowd('bias')]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const field = byId('crowd-intensity-ramp-field');
+    const together = () => [field.value, byId('crowd-intensity-ramp-value').textContent,
+      byId('crowd-intensity-ramp').getAttribute('aria-valuetext')];
+    type(field, -37.5);
+    expect(emitter.intensityRamp).toBe(-0.375);
+    expect(together()).toEqual(['-37.5', 'Earlier 37.5%', 'Earlier 37.5%']);
+    type(field, -0.1);
+    expect(emitter.intensityRamp).toBe(-0.001);
+    expect(together()).toEqual(['-0.1', 'Earlier 0.1%', 'Earlier 0.1%']);
+  });
+});
+
+describe('Release timing keeps its words beside its field (the owner\'s pick, PR 5b round 2)', () => {
+  test('0, 60 and 12.5: the field holds the number, the readout and aria-valuetext say it in words, unrounded', async () => {
+    const app = await editorWith([crowd('timing')]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const field = byId('crowd-onset-variance-field');
+    const together = () => [field.value, byId('crowd-onset-variance-value').textContent,
+      byId('crowd-onset-variance').getAttribute('aria-valuetext')];
+    type(field, 0);
+    expect(emitter.onsetVariance).toBe(0);
+    expect(together()).toEqual(['0', 'Even', 'Even']);
+    type(field, 60);
+    expect(emitter.onsetVariance).toBe(0.6);
+    expect(together()).toEqual(['60', '60% uneven', '60% uneven']);
+    type(field, 12.5);
+    expect(together()).toEqual(['12.5', '12.5% uneven', '12.5% uneven']);
+    // The field is named by its row and unit and described by the words first, then the row's hint, as Release bias's is.
+    expect(described(field)).toEqual(['12.5% uneven', 'How unevenly individual dots set off within the release window']);
+    expect(described(byId('crowd-onset-variance'))[0]).toBe('12.5% uneven');
+  });
+});
+
+describe('a field shows the stored number and keeps it (DEF-86, Codex r1 #3)', () => {
+  test('a weight of 1234567890123456 shows as stored', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.5, type: 'exit' }],
+        edges: [{ id: 'e1', sourceId: 'n1', targetId: 'n2', direction: 'one-way', weight: 1234567890123456 }],
+      },
+    })]);
+    app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'edge', layerId: app.selectedCrowd.id, edgeId: 'e1' });
+    expect(byId('network-edge-weight-field').value).toBe('1234567890123456');
+  });
+
+  test('a Size and a percentage, committed as shown, keep their stored values exactly', async () => {
+    // 0.1234567890123456 (sixteen figures); 0.21000000000000002, 0.07 × 3 as a computation leaves it, which no
+    // reference px reads back as; 0.12345678901234561, which no percentage reads back as.
+    const app = await editorWith([
+      crowd('canonical', { dotSize: 0.1234567890123456, releaseStart: 0.12345678901234561 }),
+      crowd('tail', { dotSize: 0.07 * 3 }),
+    ]);
+    const commitAsShown = (id) => {
+      const field = byId(id);
+      const shown = field.value;
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+      return shown;
+    };
+    const emitter = app.selectedCrowd.emitters[0];
+    expect(commitAsShown('crowd-dot-size-field')).toBe('2.469135780246912');
+    expect(emitter.dotSize).toBe(0.1234567890123456);
+    expect(commitAsShown('crowd-release-start-field')).toBe('12.34567890123456');
+    expect(emitter.releaseStart).toBe(0.12345678901234561);
+
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('tail'));
+    const tail = app.selectedCrowd.emitters[0];
+    expect(tail.dotSize).toBe(0.21000000000000002);
+    expect(commitAsShown('crowd-dot-size-field')).toBe('4.2');
+    expect(tail.dotSize).toBe(0.21000000000000002);
+    // Typed, the same figures are the author's: 4.2 reference px is 0.21×.
+    type(byId('crowd-dot-size-field'), '4.20');
+    expect(tail.dotSize).toBe(0.21);
+  });
+});
+
+/** A tap on the canvas at an image position, through the interaction handler, whose press keeps focus where it is. */
+function tapCanvas(app, [imgX, imgY]) {
+  const { x, y } = app.imageToCanvas(imgX, imgY);
+  for (const kind of ['pointerdown', 'pointerup']) {
+    app.canvas.dispatchEvent(new PointerEvent(kind, {
+      bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true,
+      button: kind === 'pointerdown' ? 0 : -1, buttons: kind === 'pointerdown' ? 1 : 0, clientX: x, clientY: y,
+    }));
+  }
+}
+
+/** A value typed into a field and not committed: no Enter, focus still there. */
+function draft(field, value) {
+  field.focus();
+  field.value = String(value);
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+describe('a value typed and not committed goes to what it was typed for (DEF-86, Codex r1 #4)', () => {
+  test('a weight typed on one path, another selected by the pointer: the first path takes it, the second keeps its own', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.5, y: 0.5 }, { id: 'n3', x: 0.8, y: 0.5, type: 'exit' }],
+        edges: [{ id: 'a', sourceId: 'n1', targetId: 'n2', weight: 1 }, { id: 'b', sourceId: 'n2', targetId: 'n3', weight: 2 }],
+      },
+    })]);
+    const graph = app.selectedCrowd.graph;
+    byId('network-edit-btn').click();
+    expect(app.networkEditService.active).toBe(true);
+    tapCanvas(app, [0.35, 0.5]);
+    expect(app.networkEditService.selectedEdge()?.id).toBe('a');
+    const field = byId('network-edge-weight-field');
+    draft(field, 3);
+    tapCanvas(app, [0.65, 0.5]);
+    expect(app.networkEditService.selectedEdge()?.id).toBe('b');
+    expect([graph.getEdge('a').weight, graph.getEdge('b').weight]).toEqual([3, 2]);
+    expect(field.value).toBe('2');
+  });
+
+  test('a weight typed on an inspected path, Crowd scope left by the pointer selecting a waypoint: the path takes it', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.3, y: 0.8, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.8, type: 'exit' }],
+        edges: [{ id: 'a', sourceId: 'n1', targetId: 'n2', weight: 1 }],
+      },
+    })]);
+    const layer = app.selectedCrowd;
+    app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'edge', layerId: layer.id, edgeId: 'a' });
+    expect(app.networkEditService.active).toBe(false);
+    draft(byId('network-edge-weight-field'), 4);
+    tapCanvas(app, [0.2, 0.3]);
+    expect(app.selectedCrowd).toBeNull();
+    expect(layer.graph.getEdge('a').weight).toBe(4);
+  });
+
+  test('a weight typed, the same path\'s card refreshed by a committed network change: the path takes it', async () => {
+    const app = await editorWith([crowd('net', {}, {
+      guideType: 'graph',
+      graph: {
+        nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.5, type: 'exit' }],
+        edges: [{ id: 'a', sourceId: 'n1', targetId: 'n2', weight: 1 }],
+      },
+    })]);
+    byId('network-edit-btn').click();
+    tapCanvas(app, [0.5, 0.5]);
+    expect(app.networkEditService.selectedEdge()?.id).toBe('a');
+    draft(byId('network-edge-weight-field'), 5);
+    // What every committed canvas edit sends (a node or bend moved, a path drawn): the cards are drawn afresh.
+    app.eventBus.emit('network:changed', { commit: true });
+    expect(app.selectedCrowd.graph.getEdge('a').weight).toBe(5);
+    expect(byId('network-edge-weight-field').value).toBe('5');
+  });
+
+  test('a crowd field typed in, the crowd left by the pointer selecting a waypoint: the crowd takes it', async () => {
+    const app = await editorWith([crowd('first', { speed: 0.4 })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    draft(byId('crowd-speed-field'), 0.7);
+    tapCanvas(app, [0.2, 0.3]);
+    expect(app.selectedWaypoint).toBeTruthy();
+    expect(app.selectedCrowd).toBeNull();
+    expect(emitter.speed).toBe(0.7);
+  });
+
+  test('a crowd field typed in, another crowd shown: the first crowd takes it, the second keeps its own', async () => {
+    const app = await editorWith([crowd('first', { speed: 0.4 }), crowd('second', { speed: 0.2 })]);
+    const [first, second] = app.scene.getFlowLayers().map(layer => layer.emitters[0]);
+    draft(byId('crowd-speed-field'), 0.7);
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('second'));
+    expect([first.speed, second.speed]).toEqual([0.7, 0.2]);
+    expect(byId('crowd-speed-field').value).toBe('0.2');
+  });
+});
+
+/**
+ * PR 5b round 3 (Codex r2 #1). The Pattern seed is a field too (CROWD-07
+ * F16), committed on `change` alone, and round 2's rule binds it: what is
+ * typed there and not committed goes to the crowd it was shown for when the
+ * cards show another crowd or none, through the seed's own commit (its
+ * check, its error line, its one undo entry, its announcement in that
+ * crowd's name). A refused seed is said once and the crowd keeps its own; a
+ * crowd gone from the scene takes nothing.
+ */
+describe('a seed typed and not committed goes to its own crowd (CROWD-07 F16, Codex r2 #1)', () => {
+  const SEED_ERROR = `Seed is a whole number from 0 to ${EMITTER_LIMITS.MAX_SEED}.`;
+  const history = app => app.undoService.createSnapshot().undoStack.length;
+  /** What `announce` has been given since the spy was cleared. */
+  const messages = said => said.mock.calls.map(([message]) => message);
+  /** What the seed has said: the project's first edit also says "Unsaved changes" (its save status), which is not the seed's. */
+  const seedSaid = said => messages(said).filter(message => /pattern seed|^Seed /.test(message));
+
+  /** The editor with `flowLayers`, any edit's undo entry saved, and `announce` heard from here. */
+  async function seedEditor(flowLayers) {
+    const app = await editorWith(flowLayers);
+    app._flushPendingUndo();
+    const said = vi.spyOn(app, 'announce');
+    said.mockClear();
+    return { app, said, seed: byId('crowd-seed-value') };
+  }
+
+  test('seed 7, 42 typed, a waypoint tapped by the pointer: the crowd\'s seed is 42, said once in its name, one undo entry; Undo puts 7 back', async () => {
+    const { app, said, seed } = await seedEditor([crowd('c1', {}, { name: 'Crowd 1' })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const before = history(app);
+    expect(seed.value).toBe('7');
+    draft(seed, 42);
+    tapCanvas(app, [0.2, 0.3]);
+    expect(app.selectedCrowd).toBeNull();
+    expect(emitter.seed).toBe(42);
+    expect(seedSaid(said)).toEqual(['Crowd 1 pattern seed set to 42. Undo is available.']);
+    expect(history(app)).toBe(before + 1);
+    // Back on the crowd, the field shows its seed; nothing more is written or said.
+    const heard = said.mock.calls.length;
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('c1'));
+    expect(byId('crowd-seed-value').value).toBe('42');
+    expect(said).toHaveBeenCalledTimes(heard);
+    expect(history(app)).toBe(before + 1);
+    app.undo();
+    expect(app.scene.getFlowLayer('c1').emitters[0].seed).toBe(7);
+  });
+
+  test('a seed typed, another crowd shown: the first crowd takes it, said in its own name; the second keeps its own', async () => {
+    const { app, said, seed } = await seedEditor([
+      crowd('c1', {}, { name: 'Crowd 1' }), crowd('c2', { seed: 9 }, { name: 'Crowd 2' }),
+    ]);
+    const [first, second] = app.scene.getFlowLayers().map(layer => layer.emitters[0]);
+    const changed = [];
+    app.eventBus.on('scene:semantic-changed', change => changed.push(change));
+    const before = history(app);
+    draft(seed, 42);
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('c2'));
+    expect([first.seed, second.seed]).toEqual([42, 9]);
+    expect(byId('crowd-seed-value').value).toBe('9');
+    expect(seedSaid(said)).toEqual(['Crowd 1 pattern seed set to 42. Undo is available.']);
+    expect(changed).toEqual([{ kind: 'crowd-pattern-seed', layerId: 'c1', emitterId: 'c1-e' }]);
+    expect(history(app)).toBe(before + 1);
+  });
+
+  test('a refused seed typed (−1, 1.5, empty), a waypoint tapped: the crowd keeps 7, its error said once each; back on the crowd, not said again', async () => {
+    const { app, said, seed } = await seedEditor([crowd('c1', {}, { name: 'Crowd 1' })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const before = history(app);
+    const error = byId('crowd-seed-error');
+    for (const [index, value] of ['-1', '1.5', ''].entries()) {
+      draft(seed, value);
+      tapCanvas(app, [0.2, 0.3]);
+      expect(app.selectedCrowd, value).toBeNull();
+      expect(emitter.seed, value).toBe(7);
+      expect([error.hidden, error.textContent, seed.getAttribute('aria-invalid')], value).toEqual([false, SEED_ERROR, 'true']);
+      expect(messages(said), value).toEqual(Array(index + 1).fill(SEED_ERROR));
+      // Back on the crowd: its seed shown, the error gone with the draft, and not said a second time.
+      app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('c1'));
+      expect([seed.value, error.hidden, seed.getAttribute('aria-invalid')], value).toEqual(['7', true, null]);
+      expect(said, value).toHaveBeenCalledTimes(index + 1);
+    }
+    expect(history(app)).toBe(before);
+  });
+
+  test('the seed shown afresh for its own crowd: nothing typed, nothing written or said; typed, the crowd takes it once', async () => {
+    const { app, said, seed } = await seedEditor([crowd('c1', {}, { name: 'Crowd 1' })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const before = history(app);
+    // A busyness handle's cancelled drag shows the crowd afresh; its press keeps focus where it is.
+    const cancelledDrag = () => {
+      const graph = byId('crowd-busyness-graph');
+      graph.querySelector('[data-busyness-handle="0"]')
+        .dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 2 }));
+      graph.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerId: 2 }));
+    };
+    cancelledDrag();
+    app.syncCrowdEditor();
+    expect([emitter.seed, seed.value]).toEqual([7, '7']);
+    expect(said).not.toHaveBeenCalled();
+    expect(history(app)).toBe(before);
+
+    draft(seed, 42);
+    cancelledDrag();
+    expect([emitter.seed, seed.value]).toEqual([42, '42']);
+    expect(seedSaid(said)).toEqual(['Crowd 1 pattern seed set to 42. Undo is available.']);
+    expect(history(app)).toBe(before + 1);
+    const heard = said.mock.calls.length;
+    cancelledDrag();
+    app.syncCrowdEditor();
+    expect(said).toHaveBeenCalledTimes(heard);
+    expect(history(app)).toBe(before + 1);
+  });
+
+  // A pin, passing before round 3 too: it holds the owner's identity check to the live scene.
+  test('a seed typed for a crowd since deleted, or since put back by Undo, goes nowhere', async () => {
+    const { app, said, seed } = await seedEditor([
+      crowd('c1', {}, { name: 'Crowd 1' }), crowd('c2', { seed: 9 }, { name: 'Crowd 2' }),
+    ]);
+    draft(seed, 42);
+    app.deleteCrowd(app.selectedCrowd);
+    expect(app.scene.getFlowLayers().map(layer => layer.id)).toEqual(['c2']);
+    expect(app.scene.getFlowLayer('c2').emitters[0].seed).toBe(9);
+    expect(seedSaid(said)).toEqual([]);
+
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('c2'));
+    type(seed, 11);
+    expect(seedSaid(said)).toEqual(['Crowd 2 pattern seed set to 11. Undo is available.']);
+    draft(seed, 12);
+    // Undo rebuilds the scene: the crowd shown is a new object, and the one the field was shown for is gone.
+    app.undo();
+    const restored = app.scene.getFlowLayer('c2');
+    expect(app.selectedCrowd).toBe(restored);
+    expect(restored.emitters[0].seed).toBe(9);
+    expect(byId('crowd-seed-value').value).toBe('9');
+    expect(seedSaid(said)).toHaveLength(1);
+    // Nothing was written during the restore, so Redo still has the 11.
+    app.redo();
+    expect(app.scene.getFlowLayer('c2').emitters[0].seed).toBe(11);
+  });
+
+  test('typed while a slider edit waits for its undo entry, then a waypoint tapped: the seed is an undo entry of its own, after the slider\'s', async () => {
+    const { app, seed } = await seedEditor([crowd('c1', { dotCount: 50 }, { name: 'Crowd 1' })]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const before = history(app);
+    step(byId('crowd-count'), 120);
+    expect(emitter.dotCount).toBe(120);
+    draft(seed, 42);
+    tapCanvas(app, [0.2, 0.3]);
+    expect([emitter.seed, emitter.dotCount]).toEqual([42, 120]);
+    expect(history(app)).toBe(before + 2);
+    const live = () => app.scene.getFlowLayer('c1').emitters[0];
+    app.undo();
+    expect([live().seed, live().dotCount]).toEqual([7, 120]);
+    app.undo();
+    expect([live().seed, live().dotCount]).toEqual([7, 50]);
+  });
+});
+
+describe('Count\'s slider keeps to the scene\'s dot budget (DEF-86, Codex r1 #5)', () => {
+  test('19,950 dots elsewhere, Count 50, the slider tries 51: refused, the model, thumb and readout at 50, the error describing the slider, said once', async () => {
+    const app = await editorWith([
+      crowd('small', { dotCount: 50 }), crowd('b1', { dotCount: 5000 }), crowd('b2', { dotCount: 5000 }),
+      crowd('b3', { dotCount: 5000 }), crowd('b4', { dotCount: 4950 }),
+    ]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const slider = byId('crowd-count');
+    const field = byId('crowd-count-field');
+    const error = byId('crowd-count-field-error');
+    const BUDGET = `The whole scene supports at most ${SCENE_LIMITS.MAX_DOTS_TOTAL} configured dots.`;
+    const said = vi.spyOn(app, 'announce');
+    said.mockClear();
+    step(slider, 51);
+    expect(emitter.dotCount).toBe(50);
+    expect([slider.value, field.value, slider.getAttribute('aria-valuetext')]).toEqual(['50', '50', '50']);
+    expect([error.hidden, error.textContent]).toEqual([false, BUDGET]);
+    expect(described(slider)).toContain(BUDGET);
+    expect(described(slider)[0]).toBe('50');
+    expect(described(field)[0]).toBe(BUDGET);
+    // The field holds the 50 kept, which is no error of its own.
+    expect(field.getAttribute('aria-invalid')).toBeNull();
+    expect(said.mock.calls).toEqual([[BUDGET]]);
+    // Tried again while the line stands: refused, not said again.
+    step(slider, 52);
+    expect([emitter.dotCount, slider.value]).toEqual([50, '50']);
+    expect(said.mock.calls).toHaveLength(1);
+    expect(app.scene.getFlowLayers().reduce((sum, layer) => sum + layer.emitters[0].dotCount, 0)).toBe(20000);
+
+    step(slider, 49);
+    expect(emitter.dotCount).toBe(49);
+    expect(error.hidden).toBe(true);
+    expect(described(slider)).not.toContain(BUDGET);
+    expect(described(field)).not.toContain(BUDGET);
+  });
+
+  // PR 5b round 3 (Codex r2 #2): a field holding the kept value is not invalid, however it was refused before.
+  test('51 refused in Count\'s field, then 51 tried on the slider: the field holds 50 and is valid again, the line stands for both, said once in all', async () => {
+    const app = await editorWith([
+      crowd('small', { dotCount: 50 }), crowd('b1', { dotCount: 5000 }), crowd('b2', { dotCount: 5000 }),
+      crowd('b3', { dotCount: 5000 }), crowd('b4', { dotCount: 4950 }),
+    ]);
+    const emitter = app.selectedCrowd.emitters[0];
+    const slider = byId('crowd-count');
+    const field = byId('crowd-count-field');
+    const error = byId('crowd-count-field-error');
+    const BUDGET = `The whole scene supports at most ${SCENE_LIMITS.MAX_DOTS_TOTAL} configured dots.`;
+    const total = () => app.scene.getFlowLayers().reduce((sum, layer) => sum + layer.emitters[0].dotCount, 0);
+    const said = vi.spyOn(app, 'announce');
+    said.mockClear();
+    type(field, 51);
+    expect(emitter.dotCount).toBe(50);
+    expect([field.value, field.getAttribute('aria-invalid')]).toEqual(['51', 'true']);
+    expect([error.hidden, error.textContent]).toEqual([false, BUDGET]);
+    expect(said.mock.calls).toEqual([[BUDGET]]);
+
+    step(slider, 51);
+    expect(emitter.dotCount).toBe(50);
+    expect([slider.value, field.value, slider.getAttribute('aria-valuetext')]).toEqual(['50', '50', '50']);
+    expect(total()).toBe(20000);
+    // The 50 the field now holds is no error of its own: nothing marks it invalid.
+    expect(field.getAttribute('aria-invalid')).toBeNull();
+    expect(field.validity.valid).toBe(true);
+    // The line stands, read with both: the field first, the slider after its readout and hint.
+    expect([error.hidden, error.textContent]).toEqual([false, BUDGET]);
+    expect(described(field)[0]).toBe(BUDGET);
+    expect(described(slider)).toEqual(['50', 'Total dots released across the window', BUDGET]);
+    // Already said by the field's refusal, the same line is not said again: one announcement in all.
+    expect(said.mock.calls).toEqual([[BUDGET]]);
+  });
+});

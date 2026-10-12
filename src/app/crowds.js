@@ -25,8 +25,23 @@ import {
 import { traceRouteIntoGraph, applyTraceToLayer } from '../utils/routeTrace.js';
 import { FLOW_LAYER_LIMITS } from '../models/FlowLayer.js';
 import { GraphModel } from '../models/GraphModel.js';
+import { EMITTER_LIMITS } from '../models/Emitter.js';
+import { SCENE_LIMITS } from '../models/Scene.js';
+import { DOT_BASE_RADIUS_PX } from '../services/DotRenderer.js';
 import { stageProjectModel } from './persistence.js';
-import { formatCrowdDotSize } from '../utils/uiReadouts.js';
+import {
+  addDescription,
+  changedSinceShown,
+  clearFieldError,
+  draftOwner,
+  formatFieldNumber,
+  noteShownValue,
+  removeDescription,
+  setControlReason,
+  shiftDecimal,
+  showFieldError,
+  SLIDER_REACH_REASON,
+} from '../utils/uiReadouts.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
 const NEW_CROWD_DOT_COLOR = '#56B4E9';
@@ -71,15 +86,112 @@ function busynessLabelText(text, hint) {
   return span;
 }
 
-export function formatCrowdReleaseTiming(percent) {
-  const rounded = Math.round(percent);
-  return rounded === 0 ? 'Even' : `${rounded}% uneven`;
+/** A crowd dot's diameter in reference px per 1× of `dotSize` (CROWD-07 F1). */
+const DOT_DIAMETER_PER_X = 2 * DOT_BASE_RADIUS_PX;
+
+/** A percentage field's conversions: the model stores a fraction, moved two places in its digits (DEF-86). */
+const PERCENT_FIELD = Object.freeze({
+  unit: '%',
+  toField: value => shiftDecimal(value, 2),
+  fromField: number => shiftDecimal(number, -2),
+});
+
+/**
+ * Size's field, in reference px (CROWD-07 F1): × DOT_DIAMETER_PER_X, 20, as
+ * × 2, exact in binary, then × 10 in the value's digits, so a conversion
+ * adds no binary tail and cuts no digit (DEF-86).
+ */
+const SIZE_FIELD = Object.freeze({
+  unit: ' reference px',
+  toField: value => shiftDecimal(value * (DOT_DIAMETER_PER_X / 10), 1),
+  fromField: number => shiftDecimal(number / (DOT_DIAMETER_PER_X / 10), -1),
+});
+
+/** A field in the model's own unit. */
+const SAME_UNIT = Object.freeze({ toField: value => value, fromField: number => number });
+
+/**
+ * Each crowd slider and the number field beside it (DEF-86; the owner's
+ * pick of 2026-10-08, "Number field beside each crowd slider"). The field
+ * reaches the model's whole range, in the slider's readout unit, and shows
+ * the stored value as it is; the slider keeps its own narrower range, as
+ * `places` maps it (slider position = model value × 10^`places`, in the
+ * value's digits). Where the field is the readout, the slider says what it
+ * shows; Release bias keeps its directional readout beside the field (F15),
+ * and Release timing its words (the owner's pick, round 2). `what` names
+ * the quantity in the field's error line; its bounds are the field's own,
+ * which tests/rangeConstants.test.js holds to the model's, but for Count's
+ * maximum, which also leaves room in the scene's dot budget.
+ */
+const CROWD_RANGES = Object.freeze([
+  { id: 'crowd-dot-size', key: 'dotSize', journeys: false, places: 2, what: 'a size', ...SIZE_FIELD },
+  { id: 'crowd-wobble', key: 'wobble', journeys: false, places: 2, what: 'a walking variation', ...PERCENT_FIELD },
+  { id: 'crowd-count', key: 'dotCount', places: 0, unit: '', what: 'a whole number of dots', whole: true, ...SAME_UNIT },
+  { id: 'crowd-release-start', key: 'releaseStart', places: 2, what: 'a window start', ...PERCENT_FIELD },
+  { id: 'crowd-release-duration', key: 'releaseDuration', places: 2, what: 'a window length', ...PERCENT_FIELD },
+  { id: 'crowd-onset-variance', key: 'onsetVariance', places: 2, what: 'a release timing', ...PERCENT_FIELD,
+    readout: value => formatCrowdReleaseTiming(shiftDecimal(value, 2)) },
+  { id: 'crowd-intensity-ramp', key: 'intensityRamp', places: 2, what: 'a release bias', ...PERCENT_FIELD,
+    readout: value => formatCrowdReleaseBias(shiftDecimal(value, 2)) },
+  { id: 'crowd-speed', key: 'speed', places: 2, unit: ' image lengths/s', what: 'a speed', ...SAME_UNIT },
+  { id: 'crowd-speed-variance', key: 'speedVariance', places: 2, what: 'a pace variation', ...PERCENT_FIELD },
+].map(Object.freeze));
+
+/**
+ * The parts of a slider's row (DEF-86): the slider, its number field, its
+ * readout, the line that says why the slider is off and the field's error
+ * line, each by its id from the slider's.
+ * @param {string} id - The slider's id
+ */
+function rangeParts(id) {
+  const byId = suffix => document.getElementById(`${id}${suffix}`);
+  return {
+    slider: byId(''), field: byId('-field'), readout: byId('-value'), reason: byId('-reason'), error: byId('-field-error'),
+  };
 }
 
+/** What a crowd range's readout says for `value`: the field's number and its unit, or its own readout's words. */
+function crowdRangeText(entry, value) {
+  return entry.readout ? entry.readout(value) : `${formatFieldNumber(entry.toField(value))}${entry.unit}`;
+}
+
+/** A bound as an error line writes it: a minus sign, not a hyphen. */
+const boundText = value => formatFieldNumber(value).replace(/^-/, '−');
+
+/**
+ * A Release timing as its readout says it, beside its field (the owner's
+ * pick, round 2): "Even" at 0, else the stored amount as it is, unrounded,
+ * as Release bias's is (Codex r1 #2): "60% uneven", "12.5% uneven".
+ * @param {number} percent - The variation in percent, 0…100
+ * @returns {string}
+ */
+export function formatCrowdReleaseTiming(percent) {
+  return percent > 0 ? `${formatFieldNumber(percent)}% uneven` : 'Even';
+}
+
+/**
+ * A Release bias as its readout says it: its direction and the stored
+ * amount as it is, unrounded, as the field beside it and the outline show it
+ * ("Earlier 37.5%", "Earlier 0.1%"; Codex r1 #2).
+ * @param {number} percent - The bias in percent, −100…100
+ * @returns {string}
+ */
 export function formatCrowdReleaseBias(percent) {
-  const rounded = Math.round(percent);
-  if (rounded === 0) return 'Even';
-  return rounded < 0 ? `Earlier ${Math.abs(rounded)}%` : `Later ${rounded}%`;
+  if (!(percent < 0) && !(percent > 0)) return 'Even';
+  return percent < 0 ? `Earlier ${formatFieldNumber(-percent)}%` : `Later ${formatFieldNumber(percent)}%`;
+}
+
+/** What the scene's dot budget says when a Count would pass it (the outline's words). */
+const DOT_BUDGET_MESSAGE = `The whole scene supports at most ${SCENE_LIMITS.MAX_DOTS_TOTAL} configured dots.`;
+
+/**
+ * Clear a row's error line from its field and from its slider, either of
+ * which it may describe (DEF-86).
+ * @param {{slider: HTMLInputElement|null, field: HTMLInputElement|null, error: HTMLElement|null}} parts
+ */
+function clearRangeError({ slider, field, error }) {
+  clearFieldError(field, error);
+  if (error) removeDescription(slider, error.id);
 }
 
 /**
@@ -166,6 +278,8 @@ export const crowdsMixin = {
     });
 
     this.eventBus.on('crowd:deselected', () => {
+      // Crowd scope closes with the cards: what was typed there goes to its crowd (Codex r1 #4).
+      this._commitCrowdFieldDrafts();
       this.selectedCrowd = null;
       this.updateLayersStrip();
     });
@@ -223,8 +337,9 @@ export const crowdsMixin = {
       this.selectedCrowd.setGuideType(e.target.value);
       this.syncCrowdEditor();
       this.eventBus.emit('crowd:param-changed');
-      // The network mixin reacts: empty-network crowds go straight into
-      // network editing; switching back to route closes the mode
+      // The network mixin reacts: the Guide card follows the setting, and
+      // switching back to route closes the mode (CROWD-07 X-02: choosing
+      // Custom network enters nothing; Edit network is the request)
       this.eventBus.emit('network:guide-changed', this.selectedCrowd);
     });
 
@@ -236,50 +351,16 @@ export const crowdsMixin = {
       this.eventBus.emit('crowd:param-changed', { journeys: false });
     });
 
-    // Read as the diameter drawn, in reference px (CROWD-07 F1); stored in ×.
-    this._wireCrowdSlider('crowd-dot-size', (raw) => {
-      emitterOf()?.update({ dotSize: raw / 100 });
-      return formatCrowdDotSize(raw / 100);
-    }, { journeys: false });
+    // Each slider and the number field beside it (DEF-86). Size reads the
+    // diameter drawn, in reference px (CROWD-07 F1); `dotSize` is stored in ×.
+    for (const entry of CROWD_RANGES) {
+      this._wireCrowdSlider(entry);
+      this._wireCrowdField(entry);
+    }
 
-    this._wireCrowdSlider('crowd-wobble', (raw) => {
-      emitterOf()?.update({ wobble: raw / 100 });
-      return `${Math.round(raw)}%`;
-    }, { journeys: false });
-
-    this._wireCrowdSlider('crowd-count', (raw) => {
-      emitterOf()?.update({ dotCount: raw });
-      return `${Math.round(raw)}`;
-    });
-
-    this._wireCrowdSlider('crowd-release-start', (raw) => {
-      emitterOf()?.update({ releaseStart: raw / 100 });
-      return `${Math.round(raw)}%`;
-    });
-
-    this._wireCrowdSlider('crowd-release-duration', (raw) => {
-      emitterOf()?.update({ releaseDuration: raw / 100 });
-      return `${Math.round(raw)}%`;
-    });
-
-    this._wireCrowdSlider('crowd-onset-variance', (raw) => {
-      emitterOf()?.update({ onsetVariance: raw / 100 });
-      return formatCrowdReleaseTiming(raw);
-    });
-
-    this._wireCrowdSlider('crowd-intensity-ramp', (raw) => {
-      emitterOf()?.update({ intensityRamp: raw / 100 });
-      return formatCrowdReleaseBias(raw);
-    });
-
-    this._wireCrowdSlider('crowd-speed', (raw) => {
-      emitterOf()?.update({ speed: raw / 100 });
-      return `${(raw / 100).toFixed(2)} image lengths/s`;
-    });
-
-    this._wireCrowdSlider('crowd-speed-variance', (raw) => {
-      emitterOf()?.update({ speedVariance: raw / 100 });
-      return `${Math.round(raw)}%`;
+    // The Pattern seed, typed (CROWD-07 F16)
+    document.getElementById('crowd-seed-value')?.addEventListener('change', (e) => {
+      this._setCrowdSeedFromField(e.target, emitterOf());
     });
 
     document.getElementById('crowd-lifecycle')?.addEventListener('change', (e) => {
@@ -311,25 +392,259 @@ export const crowdsMixin = {
   },
 
   /**
-   * Wire one crowd slider: write-through on input (guarded on a crowd
-   * being selected), value readout, param-changed pipeline.
-   * @param {string} id - Element id; `${id}-value` is the readout span
-   * @param {Function} apply - raw slider number → readout string (writes the model)
-   * @param {Object} [options]
-   * @param {boolean} [options.journeys=true] - False for a slider that moves
-   *   no dot's release or journey (crowd:param-changed)
+   * Wire one crowd slider: write-through on input (guarded on a crowd being
+   * selected), its field and readout, the param-changed pipeline. A slider
+   * writes only where the author moves it (DEF-86): off, because its crowd's
+   * value lies past its ends, or not moved from the step its crowd's value
+   * put it at (a value between its steps), it writes nothing, and the stored
+   * value stays. A Count past the room the scene's dot budget leaves is
+   * refused in the row's error line, which then describes the slider too,
+   * and said once (Codex r1 #5).
+   * @param {Object} entry - Its CROWD_RANGES entry
    * @private
    */
-  _wireCrowdSlider(id, apply, { journeys = true } = {}) {
-    const el = document.getElementById(id);
-    const valueEl = document.getElementById(`${id}-value`);
-    el?.addEventListener('input', (e) => {
-      if (!this.selectedCrowd?.emitters[0]) return;
-      const text = apply(parseFloat(e.target.value));
-      if (valueEl) valueEl.textContent = text;
-      el.setAttribute('aria-valuetext', text);
-      this.eventBus.emit('crowd:param-changed', { journeys });
+  _wireCrowdSlider(entry) {
+    const parts = rangeParts(entry.id);
+    const { slider } = parts;
+    slider?.addEventListener('input', (e) => {
+      const emitter = this.selectedCrowd?.emitters[0];
+      if (!emitter) return;
+      if (slider.disabled || !changedSinceShown(slider)) {
+        this._syncCrowdRange(entry, emitter);
+        return;
+      }
+      const value = shiftDecimal(Number(e.target.value), -entry.places);
+      if (entry.key === 'dotCount' && value > this._crowdCountRoom(emitter)) {
+        this._refuseCrowdSliderMove(parts, DOT_BUDGET_MESSAGE);
+        this._syncCrowdRange(entry, emitter);
+        return;
+      }
+      emitter.update({ [entry.key]: value });
+      // The field shows the value the slider set: whatever was wrong with what was typed there is gone.
+      clearRangeError(parts);
+      this._syncCrowdRange(entry, emitter);
+      this.eventBus.emit('crowd:param-changed', { journeys: entry.journeys !== false });
     });
+  },
+
+  /**
+   * A slider's move the model cannot take (Count past the scene's dot
+   * budget, Codex r1 #5): the row's error line says why, describes the
+   * slider (after its readout and hint) and the field (first, as a field's
+   * error is), and is said once as it first shows: not again where the
+   * field's own refusal already says it. Nothing is marked invalid: the
+   * slider and the field are put back at the value kept, so a field refused
+   * before is no longer marked either, and the line stays (Codex r2 #2).
+   * @param {{slider: HTMLInputElement|null, field: HTMLInputElement|null, error: HTMLElement|null}} parts
+   * @param {string} message
+   * @private
+   */
+  _refuseCrowdSliderMove({ slider, field, error }, message) {
+    if (!error) return;
+    field?.removeAttribute('aria-invalid');
+    const showing = !error.hidden && error.textContent === message;
+    error.textContent = message;
+    error.hidden = false;
+    addDescription(field, error.id, { first: true });
+    addDescription(slider, error.id);
+    if (!showing) this.announce?.(message);
+  },
+
+  /**
+   * Wire one crowd slider's number field (DEF-86): a value the model takes is
+   * written as it is committed (Enter, or leaving the field), and the slider
+   * follows it, on again once the value is within its reach; any other value
+   * is refused in the field's error line, said aloud, and the model keeps its
+   * own (UI-06 B-30's path-weight pattern).
+   * @param {Object} entry - Its CROWD_RANGES entry
+   * @private
+   */
+  _wireCrowdField(entry) {
+    rangeParts(entry.id).field?.addEventListener('change', () => {
+      const emitter = this.selectedCrowd?.emitters[0];
+      if (emitter) this._commitCrowdField(entry, emitter);
+    });
+  },
+
+  /**
+   * Commit what a crowd field holds to `emitter`, the one it was typed for.
+   * A field committed as it was shown writes nothing: the model's value is
+   * kept exactly, which a Size or a percentage converted back from the
+   * field's unit need not be in its last binary digit (Codex r1 #3).
+   * @param {Object} entry - Its CROWD_RANGES entry
+   * @param {Object} emitter
+   * @private
+   */
+  _commitCrowdField(entry, emitter) {
+    const parts = rangeParts(entry.id);
+    const { field, error } = parts;
+    if (!changedSinceShown(field)) {
+      clearRangeError(parts);
+      return;
+    }
+    const problem = this._crowdFieldProblem(entry, field, emitter);
+    if (problem) {
+      showFieldError(field, error, problem, message => this.announce?.(message));
+      return;
+    }
+    clearRangeError(parts);
+    emitter.update({ [entry.key]: entry.fromField(Number(field.value)) });
+    this._syncCrowdRange(entry, emitter);
+    this.eventBus.emit('crowd:param-changed', { journeys: entry.journeys !== false });
+  },
+
+  /**
+   * Commit each crowd field's draft, typed and not committed, to the crowd it
+   * was typed for, before the cards show another crowd or none (Codex r1
+   * #4). A press on the canvas keeps focus in the field, so no `change`
+   * commits it first: a waypoint selected there leaves Crowd scope, and a
+   * busyness handle's cancelled drag shows the crowd afresh. A crowd gone
+   * from the scene (deleted, or put back by Undo) takes nothing. The Pattern
+   * seed's draft too, last (Codex r2 #1): its commit is an undo entry of its
+   * own, so a field's edit still waiting for one gets it first.
+   * @private
+   */
+  _commitCrowdFieldDrafts() {
+    const inScene = emitter => this.scene.getFlowLayers().some(layer => layer.emitters.includes(emitter));
+    for (const entry of CROWD_RANGES) {
+      const emitter = draftOwner(rangeParts(entry.id).field);
+      if (emitter && inScene(emitter)) this._commitCrowdField(entry, emitter);
+    }
+    const seed = document.getElementById('crowd-seed-value');
+    const seedOwner = draftOwner(seed);
+    if (seedOwner) this._setCrowdSeedFromField(seed, seedOwner);
+  },
+
+  /**
+   * What is wrong with a crowd field's value, or null: empty, not a number,
+   * outside the model's range (the field's own bounds), a part of a dot, or
+   * more dots than the scene's budget has room for (the outline's words).
+   * @param {Object} entry
+   * @param {HTMLInputElement} field
+   * @param {Object} emitter
+   * @returns {string|null}
+   * @private
+   */
+  _crowdFieldProblem(entry, field, emitter) {
+    const text = field.value.trim();
+    const number = Number(text);
+    const min = Number(field.min);
+    const max = entry.key === 'dotCount' ? EMITTER_LIMITS.MAX_DOT_COUNT : Number(field.max);
+    const unit = entry.unit.trim() === '%' ? '%' : entry.unit;
+    if (text === '' || !Number.isFinite(number) || number < min || number > max
+        || (entry.whole && !Number.isInteger(number))) {
+      return `Enter ${entry.what} from ${boundText(min)} to ${boundText(max)}${unit}; `
+        + `the crowd keeps ${crowdRangeText(entry, emitter[entry.key])} until you do.`;
+    }
+    if (entry.key === 'dotCount' && number > this._crowdCountRoom(emitter)) return DOT_BUDGET_MESSAGE;
+    return null;
+  },
+
+  /**
+   * The most dots this emitter may have: the model's 5,000, or less, the
+   * room the scene's dot budget leaves beside every other emitter's.
+   * @param {Object} emitter
+   * @returns {number}
+   * @private
+   */
+  _crowdCountRoom(emitter) {
+    const others = this.scene.getFlowLayers().reduce((sum, layer) => sum + layer.emitters
+      .reduce((layerSum, each) => layerSum + (each === emitter ? 0 : each.dotCount), 0), 0);
+    return Math.min(EMITTER_LIMITS.MAX_DOT_COUNT, SCENE_LIMITS.MAX_DOTS_TOTAL - others);
+  },
+
+  /**
+   * Show one crowd range from the model (DEF-86): the field holds the stored
+   * value as it is, shown for `emitter`; the slider sits there, at its
+   * nearest step for a value between its steps, or, for a value past its
+   * ends, at its nearer end and off, saying why. Either way it writes
+   * nothing until the author moves it, so it never writes a value they did
+   * not set on it; the slider says what its readout shows.
+   * @param {Object} entry
+   * @param {Object} emitter
+   * @private
+   */
+  _syncCrowdRange(entry, emitter) {
+    const { slider, field, readout, reason } = rangeParts(entry.id);
+    const value = emitter[entry.key];
+    if (field) {
+      field.value = formatFieldNumber(entry.toField(value));
+      noteShownValue(field, emitter);
+      if (entry.key === 'dotCount') field.max = String(this._crowdCountRoom(emitter));
+    }
+    if (!slider) return;
+    const position = shiftDecimal(value, entry.places);
+    const min = Number(slider.min);
+    const max = Number(slider.max);
+    const reachable = position >= min && position <= max;
+    slider.value = String(Math.round(Math.min(max, Math.max(min, position))));
+    noteShownValue(slider, emitter); // where its step put it: until moved from there, it writes nothing
+    slider.disabled = !reachable;
+    setControlReason(slider, reason, reachable ? '' : SLIDER_REACH_REASON);
+    const text = crowdRangeText(entry, value);
+    slider.setAttribute('aria-valuetext', text);
+    if (entry.readout && readout) readout.textContent = text;
+  },
+
+  /**
+   * Clear every crowd range's reason and error line, and the seed's, before
+   * a crowd is shown: what they said was about the crowd shown before, and a
+   * crowd with no emitter shows none (UI-06 B-31's line says why its cards
+   * are off).
+   * @private
+   */
+  _clearCrowdRangeNotes() {
+    for (const entry of CROWD_RANGES) {
+      const parts = rangeParts(entry.id);
+      setControlReason(parts.slider, parts.reason, '');
+      clearRangeError(parts);
+    }
+    clearFieldError(document.getElementById('crowd-seed-value'), document.getElementById('crowd-seed-error'));
+  },
+
+  /**
+   * Set the pattern seed from its field (CROWD-07 F16) for `emitter`, the
+   * crowd it was typed for: the one shown, on `change`; for a draft, the one
+   * the field was shown for, whatever is selected by now (Codex r2 #1). A
+   * crowd no longer in the scene (deleted, or put back by Undo) takes
+   * nothing. The field checks the value itself, before the model, whose own
+   * fallback for a seed it cannot use is a random one: a whole number from 0
+   * to the largest seed is one undo entry of its own (a slider edit still
+   * waiting for its entry gets its own first), said as Re-roll says one, in
+   * that crowd's name; anything else is refused in the field's error line
+   * and the model keeps its seed. The cards are shown afresh after, and
+   * their draft check finds the seed already set: nothing is written twice.
+   * @param {HTMLInputElement} field
+   * @param {Object} emitter
+   * @returns {boolean} Whether the seed changed
+   * @private
+   */
+  _setCrowdSeedFromField(field, emitter) {
+    const layer = this.scene.getFlowLayers().find(each => each.emitters.includes(emitter));
+    if (!layer) return false;
+    const error = document.getElementById('crowd-seed-error');
+    const text = field.value.trim();
+    const seed = Number(text);
+    if (text === '' || !Number.isInteger(seed) || seed < 0 || seed > EMITTER_LIMITS.MAX_SEED) {
+      showFieldError(field, error, `Seed is a whole number from 0 to ${EMITTER_LIMITS.MAX_SEED}.`,
+        message => this.announce?.(message));
+      return false;
+    }
+    clearFieldError(field, error);
+    if (seed === emitter.seed) return false;
+    this._flushPendingUndo?.();
+    emitter.update({ seed });
+    this.syncCrowdEditor();
+    this.saveUndoState();
+    this.autoSave();
+    this.queueRender();
+    this.eventBus.emit('scene:semantic-changed', {
+      kind: 'crowd-pattern-seed',
+      layerId: layer.id,
+      emitterId: emitter.id,
+    });
+    this.announce(`${layer.name || 'Crowd'} pattern seed set to ${seed}. Undo is available.`);
+    return true;
   },
 
   /**
@@ -578,7 +893,7 @@ export const crowdsMixin = {
       strip.appendChild(this._buildCrowdRow(layer));
     }
 
-    // A route is optional: without one, Add crowd starts network authoring.
+    // A route is optional: without one, a new crowd starts on an empty network of its own.
     if (this._addCrowdBtn) {
       const noRoute = this.waypoints.length < 2;
       this._addCrowdBtn.disabled = false;
@@ -807,10 +1122,10 @@ export const crowdsMixin = {
 
   /**
    * Create and select a crowd with one dot stream. An existing route is
-   * the guide; otherwise the crowd starts with an empty custom network and
-   * the ordinary network event hands authoring to network edit mode.
+   * the guide; otherwise the crowd starts with an empty custom network, and
+   * the announcement says Edit network draws it (CROWD-07 X-02).
    */
-  addCrowd({ enterNetworkEditor = true } = {}) {
+  addCrowd() {
     const hasRoute = this.waypoints.length >= 2;
     const layer = this.scene.addFlowLayer({
       name: this._nextCrowdName(),
@@ -828,11 +1143,7 @@ export const crowdsMixin = {
     this.queueRender();
     this.announce(hasRoute
       ? `${layer.name} added — dots follow the route`
-      : `${layer.name} added — draw the network its dots will follow`);
-    if (!hasRoute && enterNetworkEditor) {
-      // crowd:selected must land first so the network mixin edits this layer.
-      this.eventBus.emit('network:guide-changed', layer);
-    }
+      : `${layer.name} added — press Edit network to draw the network its dots will follow`);
   },
 
   /**
@@ -873,6 +1184,9 @@ export const crowdsMixin = {
     this.saveUndoState();
     this.autoSave();
     this.updateLayersStrip();
+    // The Guide card says what the crowd now walks (DEF-89): the pen was put
+    // down before the network was replaced, so nothing else refreshes it.
+    this.updateGuideCard?.();
     this.queueRender();
     this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-network-traced', layerId: layer.id });
 
@@ -909,6 +1223,8 @@ export const crowdsMixin = {
    * Called on selection and after restores; safe with no selection.
    */
   syncCrowdEditor() {
+    // What was typed and not committed goes to its own crowd first (Codex r1 #4).
+    this._commitCrowdFieldDrafts();
     const layer = this.selectedCrowd;
     if (!layer) return;
     const em = layer.emitters[0];
@@ -917,49 +1233,23 @@ export const crowdsMixin = {
       const el = document.getElementById(id);
       if (el) el.value = value;
     };
-    const setText = (id, text) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = text;
-      const control = id.endsWith('-value')
-        ? document.getElementById(id.slice(0, -'-value'.length))
-        : null;
-      control?.setAttribute('aria-valuetext', text);
-    };
 
     set('crowd-guide-type', layer.guideType);
     this.updateGuideCard?.(); // Network mixin's Edit-network button + hint
     this._syncCrowdLifecycleHint(); // Before the emitter guard: no dots, no hint
     this._syncCrowdEmptyState(Boolean(em)); // The cards say why they are off (UI-06 B-31)
+    // Before the guard too: a reason or an error about the crowd shown before goes, emitter or not (DEF-86).
+    this._clearCrowdRangeNotes();
     if (!em) return;
 
     set('crowd-dot-color', em.dotColor);
     refreshSwatchPicker('#crowd-dot-color'); // Sync the swatch grid's radios
-    set('crowd-dot-size', Math.round(em.dotSize * 100));
-    setText('crowd-dot-size-value', formatCrowdDotSize(em.dotSize));
-    set('crowd-wobble', Math.round(em.wobble * 100));
-    setText('crowd-wobble-value', `${Math.round(em.wobble * 100)}%`);
-    set('crowd-count', em.dotCount);
-    setText('crowd-count-value', `${em.dotCount}`);
-    set('crowd-release-start', Math.round(em.releaseStart * 100));
-    setText('crowd-release-start-value', `${Math.round(em.releaseStart * 100)}%`);
-    set('crowd-release-duration', Math.round(em.releaseDuration * 100));
-    setText('crowd-release-duration-value', `${Math.round(em.releaseDuration * 100)}%`);
-    set('crowd-onset-variance', Math.round(em.onsetVariance * 100));
-    setText(
-      'crowd-onset-variance-value',
-      formatCrowdReleaseTiming(em.onsetVariance * 100)
-    );
-    set('crowd-intensity-ramp', Math.round(em.intensityRamp * 100));
-    setText(
-      'crowd-intensity-ramp-value',
-      formatCrowdReleaseBias(em.intensityRamp * 100)
-    );
-    set('crowd-speed', Math.round(em.speed * 100));
-    setText('crowd-speed-value', `${em.speed.toFixed(2)} image lengths/s`);
-    set('crowd-speed-variance', Math.round(em.speedVariance * 100));
-    setText('crowd-speed-variance-value', `${Math.round(em.speedVariance * 100)}%`);
+    // Each slider and its field: after the cards are on again, so a slider
+    // whose value lies past its ends is the one left off (DEF-86).
+    for (const entry of CROWD_RANGES) this._syncCrowdRange(entry, em);
     set('crowd-lifecycle', em.lifecycleMode);
-    setText('crowd-seed-value', String(em.seed));
+    set('crowd-seed-value', String(em.seed));
+    noteShownValue(document.getElementById('crowd-seed-value'), em); // what is typed there is this crowd's (Codex r2 #1)
     this._syncCrowdBusynessEditor(em);
 
     const hint = document.getElementById('crowd-pattern-hint');

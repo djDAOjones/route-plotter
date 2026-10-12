@@ -51,13 +51,16 @@ describe('RenderingService.VECTOR_LAYERS', () => {
   test('pins the canonical bottom-to-top draw order', () => {
     expect(RenderingService.VECTOR_LAYERS.map(l => l.name)).toEqual([
       'area-highlights',
-      'network-guide',
       'flow-layers',
       'leg-hover',
       // ROUTE-01b: branch paths sit beneath the trunk so the trunk still reads
       // as the primary line; branch heads sit alongside the trunk head.
       'branch-paths',
       'path',
+      // CROWD-07 X-04 (reason for the move): a selected crowd's network is
+      // drawn over the path, which hid a network traced from it, and below
+      // the head and the markers. It was second, under everything but areas.
+      'network-guide',
       'path-head',
       'branch-heads',
       'beacons',
@@ -85,6 +88,25 @@ describe('RenderingService.VECTOR_LAYERS', () => {
     RenderingService.prototype.renderVectorLayerTo.call(svc, {}, state);
 
     expect(calls).toEqual(['path', 'path-head', 'beacons', 'waypoints']);
+  });
+
+  test('a selected crowd\'s network draws between the path and its head, in the editor only (CROWD-07 X-04)', () => {
+    const calls = [];
+    const svc = makeRecordingService(calls);
+    const state = makeState({
+      waypoints: [Waypoint.createMajor(0.1, 0.1), Waypoint.createMajor(0.9, 0.9)],
+      pathPoints: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
+      swarmEngine: {},
+      selectedCrowd: { guideType: 'graph' },
+      networkEditService: { active: false, renderGuide: () => calls.push('network-guide') },
+    });
+
+    RenderingService.prototype.renderVectorLayerTo.call(svc, {}, state);
+    expect(calls).toEqual(['path', 'network-guide', 'path-head', 'beacons', 'waypoints']);
+
+    calls.length = 0;
+    RenderingService.prototype.renderVectorLayerTo.call(svc, {}, { ...state, previewMode: true });
+    expect(calls).not.toContain('network-guide');
   });
 
   test('path and path head honour the ALWAYS_HIDE visibility guard', () => {

@@ -31,6 +31,19 @@ function readoutOf(range) {
 }
 
 /**
+ * What a readout shows. A crowd slider's readout, and Share's beside it, is a
+ * number field with its unit since DEF-86: it shows the field's value and the
+ * unit after it, so the field is read by its value, as a browser reads a
+ * field inside an element that describes another.
+ */
+function shownText(readout) {
+  const copy = readout.cloneNode(true);
+  const fields = [...readout.querySelectorAll('input')];
+  [...copy.querySelectorAll('input')].forEach((input, index) => input.replaceWith(fields[index].value));
+  return copy.textContent.replace(/\s+/g, ' ').trim();
+}
+
+/**
  * The transport's readout is two times; it says "0:05 of 0:30", as the
  * exported player's does. Every other range says exactly what its readout says.
  */
@@ -39,7 +52,7 @@ function expectedValueText(range) {
   if (range.id === 'timeline-slider') {
     return `${readout.textContent.trim()} of ${range.ownerDocument.getElementById('total-time').textContent.trim()}`;
   }
-  return readout.textContent.trim();
+  return shownText(readout);
 }
 
 /** Each range whose readout is missing, not beside it, or not what `aria-valuetext` says. */
@@ -86,7 +99,7 @@ describe('every range in the shell is connected to its readout', () => {
       // The name is the label's words alone: no readout text, no unit, no number.
       const name = label.textContent.replace(/\s+/g, ' ').trim();
       expect(name, range.id).toBe(label.querySelector('span[data-tip]').textContent.trim());
-      expect(name, range.id).not.toContain(readout.textContent.trim());
+      expect(name, range.id).not.toContain(shownText(readout));
     }
     // The app toggles these rows whole: their ids sit on the row, not the label.
     for (const id of ['pause-time-control', 'segment-speed-control', 'head-rotation-offset-control',

@@ -93,7 +93,7 @@ undo, performed on the entry it saved, then redone:
 fixture: open day
 act: the crowd's dots raised from 60 to 80 in the outline
 at once: autosave 1, queued render 1, undo saved 1
-  scene-outline:command {action: "update-emitter", dotColor: "#56B4E9", dotCount: "80", dotSize: 0.45, emitterId: "ex-uon-emitter", intensityRamp: "0", layerId: "ex-uon-crowd", lifecycleMode: "disappear", …+7}  (digest 96305922)
+  scene-outline:command {action: "update-emitter", dotColor: "#56B4E9", dotCount: "80", dotSize: 0.45, emitterId: "ex-uon-emitter", intensityRampDirection: "even", layerId: "ex-uon-crowd", lifecycleMode: "disappear", …+7}  (digest ac661d8a)
     · undo saved
         ~ scene.flowLayers[ex-uon-crowd].emitters[ex-uon-emitter].dotCount: 60 -> 80
     undo:state-change {canRedo: false, canUndo: true, redoCount: 0, undoCount: 1}

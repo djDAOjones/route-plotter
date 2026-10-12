@@ -1129,8 +1129,10 @@ kbd{
   font-weight:500;
 }
 
+/* CROWD-07 F16: the seed is a field, wide enough for its largest, 4294967295 */
 #crowd-seed-value{
-  overflow-wrap:anywhere;
+  width:9rem;
+  box-sizing:border-box;
   font-family:var(--font-mono);
   font-variant-numeric:tabular-nums;
 }
@@ -1466,6 +1468,82 @@ kbd{
   font-size:var(--type-mono);
   font-weight:var(--w-mono);
   color:var(--text-02);
+}
+
+/* DEF-86: a number field beside each crowd slider and the Path card's Share
+   (Carbon's slider with an input). Where the field is the readout it takes
+   the readout's place, and class, and its unit follows it; Release bias and
+   Share keep a readout of another quantity after it. Like a long readout, it
+   wraps under its slider at the right in a 288px sidebar. */
+.section-content .range-row > .range-field{
+  flex:0 0 auto;
+  margin-inline-start:auto;
+}
+.section-content .range-row > .range-field + .range-readout{
+  margin-inline-start:0;
+}
+.section-content .range-field{
+  display:inline-flex;
+  align-items:center;
+  gap:var(--space-1);
+  min-width:0;
+}
+.section-content .range-field input[type="number"]{
+  width:6rem;
+  box-sizing:border-box;
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+}
+.section-content .range-field-unit{
+  color:var(--text-02);
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  font-weight:var(--w-mono);
+  white-space:nowrap;
+}
+/* Share's weight field has a label of its own, a quantity beside the share
+   it gives: as wide as its word, not the card's 6rem label column. */
+.section-content .range-field > .range-field-label{
+  margin-bottom:0;
+}
+.section-content .range-field > .range-field-label span:first-child{
+  flex:none;
+}
+/* Why a slider is off, and what is wrong with a value typed: each a line
+   of the row's own, under the slider and the field. */
+.section-content .range-row > .range-reason,
+.section-content .range-row > .range-field-error{
+  flex:1 0 100%;
+  margin:0;
+}
+.section-content .range-field-error{
+  color:var(--text-error);
+}
+.section-content input[type="number"][aria-invalid="true"]{
+  border-color:var(--support-01);
+  box-shadow:0 0 0 1px var(--support-01);
+}
+/* X-06: the Path card's Share takes the card's whole width on a line of its
+   own under its label, where it shared one with a long readout and was
+   48px wide for weights from 0.1 to 5. */
+.section-content .range-row-wide > label{
+  flex-wrap:wrap;
+}
+.section-content .range-row-wide > label > input[type="range"]{
+  flex:1 0 100%;
+  margin-inline:0;
+}
+
+/* CROWD-07 [Q6]: the Guide and At journey end selects take the full row on
+   a second line under their label, so "Custom network" and "Respawn at the
+   start" show whole in a 288px sidebar, where beside the label they were cut
+   to "Custom ne…". */
+.section-content label.label-stacked{
+  flex-wrap:wrap;
+}
+.section-content label.label-stacked > select{
+  flex:1 0 100%;
+  width:100%;
 }
 
 .section-content label span:last-child{
@@ -2076,10 +2154,12 @@ kbd{
   margin-bottom:var(--space-2);
 }
 
-/* Hint copy inside a card (e.g. the Guide card's follow-route note) */
+/* Hint copy inside a card (e.g. the Guide card's follow-route note), at the
+   1.5 leading WCAG 1.4.8 (AAA) asks of a block of text: a Custom network's
+   Guide hint runs to nine lines (CROWD-07 layout) */
 .section-hint{
   font-size:var(--type-caption);
-  line-height:var(--lh-caption);
+  line-height:var(--line-base);
   color:var(--text-02);
   margin:var(--space-1) 0 0;
 }
@@ -2183,7 +2263,7 @@ kbd{
 .scene-outline-empty{
   margin:0;
   color:var(--text-02);
-  line-height:var(--lh-caption);
+  line-height:var(--line-base); /* a block of text: WCAG 1.4.8's 1.5 (CROWD-07 layout) */
   overflow-wrap:anywhere;
 }
 
@@ -2228,6 +2308,12 @@ kbd{
   border:1px solid var(--border-subtle);
   border-radius:var(--radius-2);
   background:var(--ui-02);
+}
+
+/* CROWD-07 F15: why Release bias's amount is off, a line across the form's
+   grid under the field it describes */
+.scene-outline-reason{
+  grid-column:1 / -1;
 }
 
 .scene-outline-field-grid{
@@ -2397,7 +2483,7 @@ kbd{
   min-width:0;
   color:var(--text-error);
   font-size:var(--type-caption);
-  line-height:var(--lh-caption);
+  line-height:var(--line-base); /* a helper line, as .section-hint (CROWD-07 layout) */
 }
 .section-content .network-path-weight-row .network-path-weight-error[hidden]{
   display:none;

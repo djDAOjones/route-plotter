@@ -119,7 +119,7 @@ describe('a control’s visible words start its accessible name (UI-06 B-04)', (
       app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
       app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
       app.eventBus.emit('waypoint:selected', app.waypoints[0]);
-      app.addCrowd({ enterNetworkEditor: false });
+      app.addCrowd();
       const layer = app.selectedCrowd;
       layer.setGuideType('graph');
       app.syncCrowdEditor();

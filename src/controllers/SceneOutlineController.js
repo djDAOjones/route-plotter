@@ -16,6 +16,9 @@ const OUTLINE_CANONICAL_VALUE = Symbol('outlineCanonicalValue');
 const OUTLINE_EDITED = Symbol('outlineEdited');
 const OUTLINE_DRAFT_CONTEXT = Symbol('outlineDraftContext');
 const OUTLINE_ERROR_ID_PREFIX = 'scene-outline-error-';
+// A field's reason for being off (CROWD-07 F15): unique per drawing, never looked up by id.
+const OUTLINE_REASON_ID_PREFIX = 'scene-outline-reason-';
+let outlineReasonSerial = 0;
 
 // Waypoints and polygon vertices may sit off the image (DEF-03), as far as a
 // project can store a point, so their position fields take that range; 0–100%
@@ -83,10 +86,11 @@ const FIELD_HINTS = Object.freeze({
   releaseLength: 'How much of the timeline, as a percentage, the release is spread across',
   releaseTiming: 'How unevenly dots set off: 0% evenly spaced, 100% at random. Release bias and Busyness ' +
     'over time then shift set-offs, so 0% is even only with bias 0 and even busyness',
-  // The bias bends set-offs towards the start below 0, the end above it
-  // (dotOnsetFraction in src/utils/crowdArrival.js).
-  releaseBias: 'Below 0 is earlier: more dots set off near the start of the release; above 0 is later, ' +
-    'near its end; 0 favours neither',
+  // The bias bends set-offs towards the start or the end of the release
+  // (dotOnsetFraction in src/utils/crowdArrival.js), said as a direction and
+  // an amount, as the card's readout says it (CROWD-07 F15).
+  releaseBias: 'Earlier sets more dots off near the start of the release; Later near its end; Even favours neither',
+  releaseBiasAmount: 'How far the release leans towards the chosen end: 0% not at all, 100% the most',
   speed: 'How fast the dots travel, in image lengths per second: at 1, a dot covers the image’s width across ' +
     'or its height down in about a second; Pace variation makes some faster and some slower',
   paceVariation: 'How much each dot’s pace differs: 0% moves every dot at the same speed',
@@ -121,6 +125,24 @@ function dotSizeHint(dotSize) {
   return `Dot diameter as a multiple of ${formatCrowdDotSize(1)}: ${dotSize} draws a dot `
     + `${formatCrowdDotSize(dotSize)} across; exports scale it from the project’s reference short edge`;
 }
+
+/**
+ * A Release bias as its direction and amount (CROWD-07 F15), as the card's
+ * readout says it, to the stored value's own precision: "Earlier 37.5%".
+ * @param {number} percent - The bias in percent, −100…100
+ * @returns {string}
+ */
+function releaseBiasText(percent) {
+  if (!(percent < 0) && !(percent > 0)) return 'Even';
+  return percent < 0 ? `Earlier ${-percent}%` : `Later ${percent}%`;
+}
+
+/**
+ * The Even direction's reason for the amount being off [Q9]: "share" is the
+ * Path card's word, so the lead's settlement says it in the bias's own
+ * (glossary, one word per concept).
+ */
+const RELEASE_BIAS_EVEN_REASON = 'Even favours neither end.';
 
 /** What a dot does at its journey's end, as the Motion card says it (UI-06 J-02). */
 const JOURNEY_END_LABELS = Object.freeze({
@@ -200,6 +222,62 @@ function labelledSelect(name, label, value, options, { key = null, tip = null } 
   }
   wrapper.appendChild(select);
   return wrapper;
+}
+
+/**
+ * Release bias as a direction and an amount (CROWD-07 F15), not the signed
+ * number it is stored as: each submits the value it was drawn from until it
+ * is edited, so a stored −0.375 survives an Apply. The amount's reason line,
+ * a description outside its label, says why it is off while Even is chosen
+ * (`syncReleaseBias`).
+ * @param {Object} emitter - The emitter's outline descriptor
+ * @returns {HTMLElement[]}
+ */
+function releaseBiasFields(emitter) {
+  const canonical = Number(emitter.intensityRampCanonical);
+  const direction = canonical < 0 ? 'earlier' : (canonical > 0 ? 'later' : 'even');
+  const amount = labelledInput('intensityRampAmount', 'Release bias amount (%)', Math.abs(emitter.intensityRamp), {
+    min: 0, max: 100, step: 'any', key: `${emitter.key}:ramp-amount`,
+    canonicalValue: Math.abs(canonical), tip: FIELD_HINTS.releaseBiasAmount,
+  });
+  outlineReasonSerial += 1;
+  const reason = el('p', {
+    className: 'scene-outline-hint scene-outline-reason',
+    attrs: { id: `${OUTLINE_REASON_ID_PREFIX}${outlineReasonSerial}`, hidden: true },
+  });
+  return [
+    labelledSelect('intensityRampDirection', 'Release bias', direction, [
+      { value: 'earlier', label: 'Earlier' },
+      { value: 'even', label: 'Even' },
+      { value: 'later', label: 'Later' },
+    ], { key: `${emitter.key}:ramp-direction`, tip: FIELD_HINTS.releaseBias }),
+    amount,
+    reason,
+  ];
+}
+
+/**
+ * The amount follows the direction [Q9]: Even is 0, so the amount is set to
+ * 0 and turned off, its reason shown and named first among what describes
+ * it; another direction turns it back on, with no reason. Run as a form is
+ * drawn (after its drafts are put back), as its direction changes, and on
+ * Escape.
+ * @param {HTMLFormElement} formEl
+ */
+function syncReleaseBias(formEl) {
+  const direction = formEl?.elements?.intensityRampDirection;
+  const amount = formEl?.elements?.intensityRampAmount;
+  const reason = amount?.closest('label')?.nextElementSibling;
+  if (!direction || !amount || !reason?.classList.contains('scene-outline-reason')) return;
+  const even = direction.value === 'even';
+  if (even) amount.value = '0';
+  amount.disabled = even;
+  reason.textContent = even ? RELEASE_BIAS_EVEN_REASON : '';
+  reason.hidden = !even;
+  const tokens = (amount.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== reason.id);
+  if (even) tokens.push(reason.id);
+  if (tokens.length) amount.setAttribute('aria-describedby', tokens.join(' '));
+  else amount.removeAttribute('aria-describedby');
 }
 
 function form(action, data, fields, submitLabel = 'Apply', key = null, draftContext = null) {
@@ -416,6 +494,9 @@ export class SceneOutlineController {
     fragment.append(this._renderRoute(snapshot), this._renderCrowds(snapshot));
     this.container.replaceChildren(fragment);
     this._restoreDirtyDrafts();
+    for (const formEl of this.container.querySelectorAll('form[data-outline-action="update-emitter"]')) {
+      syncReleaseBias(formEl);
+    }
     this._renderCommandError();
 
     const requested = disclosureFocus || snapshot.focusKey || priorFocus;
@@ -956,7 +1037,7 @@ export class SceneOutlineController {
         ['Speed', `${emitter.speed} image lengths/s`],
         ['Pace variation', `${emitter.speedVariance}%`],
         ['Release timing', `${emitter.onsetVariance}%`],
-        ['Release bias', `${emitter.intensityRamp}%`],
+        ['Release bias', releaseBiasText(emitter.intensityRamp)],
         ['Busyness', `${emitter.busynessEnvelope.length} handles`],
         ['Walking variation', `${emitter.wobble}%`],
         ['At journey end', JOURNEY_END_LABELS[emitter.lifecycleMode] ?? emitter.lifecycleMode],
@@ -983,10 +1064,7 @@ export class SceneOutlineController {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:onset`, canonicalValue: emitter.onsetVarianceCanonical,
           tip: FIELD_HINTS.releaseTiming,
         }),
-        labelledInput('intensityRamp', 'Release bias (%)', emitter.intensityRamp, {
-          min: -100, max: 100, step: 'any', key: `${emitter.key}:ramp`, canonicalValue: emitter.intensityRampCanonical,
-          tip: FIELD_HINTS.releaseBias,
-        }),
+        ...releaseBiasFields(emitter),
         labelledInput('speed', 'Speed (image lengths/s)', emitter.speed, {
           min: 0.001, max: 1000, step: 'any', key: `${emitter.key}:speed`, tip: FIELD_HINTS.speed,
         }),
@@ -1329,6 +1407,7 @@ export class SceneOutlineController {
     this._drafts.delete(field.form?.dataset?.outlineFormKey);
     field.form?.reset();
     this._clearEdits(field.form);
+    syncReleaseBias(field.form);
     field.form?.querySelector('[type="submit"]')?.focus();
   }
 
@@ -1343,5 +1422,6 @@ export class SceneOutlineController {
     const field = event.target;
     if (!field?.form?.dataset?.outlineFormKey || !this.container.contains(field)) return;
     if (OUTLINE_CANONICAL_VALUE in field) field[OUTLINE_EDITED] = true;
+    if (field.name === 'intensityRampDirection') syncReleaseBias(field.form);
   }
 }

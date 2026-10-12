@@ -1146,6 +1146,8 @@ describe('what the page shortcuts react to (TST-13)', () => {
     const guide = document.getElementById('crowd-guide-type');
     guide.value = 'graph';
     guide.dispatchEvent(new Event('change', { bubbles: true }));
+    // Custom network is a setting; Edit network hands over the pen (CROWD-07 X-02).
+    document.getElementById('network-edit-btn').click();
     expect(app.networkEditService.active).toBe(true);
 
     const pressing = (key, flags) => {
@@ -1394,6 +1396,8 @@ describe('what the page shortcuts react to (TST-13)', () => {
     const guide = document.getElementById('crowd-guide-type');
     guide.value = 'graph';
     guide.dispatchEvent(new Event('change', { bubbles: true }));
+    // Custom network is a setting; Edit network hands over the pen (CROWD-07 X-02).
+    document.getElementById('network-edit-btn').click();
     const pen = app.networkEditService;
     expect(pen.active).toBe(true);
     const node = pen.placeNode({ x: 0.5, y: 0.5 });
@@ -2202,6 +2206,8 @@ const LISTENER_ROWS = [
       const guide = document.getElementById('crowd-guide-type');
       guide.value = 'graph';
       guide.dispatchEvent(new Event('change', { bubbles: true }));
+      // Custom network is a setting; Edit network hands over the pen (CROWD-07 X-02).
+      document.getElementById('network-edit-btn').click();
       const service = app.networkEditService;
       for (const at of [[0.3, 0.2], [0.6, 0.2], [0.6, 0.4]]) {
         const { x, y } = app.imageToCanvas(...at);

@@ -106,6 +106,23 @@ function textDraft(command, field, label, options = {}) {
     : shortText(command[field], label, options);
 }
 
+/** Release bias's directions, as the outline sends them (CROWD-07 F15), and the sign each gives the amount. */
+const RELEASE_BIAS_SIGNS = new Map([['earlier', -1], ['even', 0], ['later', 1]]);
+
+/**
+ * Release bias from the outline's direction and amount (CROWD-07 F15). An
+ * amount never edited sends the stored value it was drawn from, so a stored
+ * −0.375 comes back exactly; Even is 0, and no amount is sent with it.
+ */
+function releaseBiasDraft(command) {
+  const sign = RELEASE_BIAS_SIGNS.get(command.intensityRampDirection);
+  if (sign === undefined) throw new Error('Choose Earlier, Even or Later for Release bias.');
+  if (sign === 0) return 0;
+  const amount = originalCanonical(command, 'intensityRampAmount')
+    ?? numberBetween(command.intensityRampAmount, 'Release bias amount', 0, 100) / 100;
+  return amount === 0 ? 0 : sign * amount;
+}
+
 function clamp01(value) {
   return Math.max(0, Math.min(1, value));
 }
@@ -553,7 +570,7 @@ export const sceneOutlineMixin = {
       throw new Error('The project dot budget has been reached.');
     }
     const before = new Set(this.scene.getFlowLayers().map(layer => layer.id));
-    this.addCrowd({ enterNetworkEditor: false });
+    this.addCrowd();
     const layer = this.scene.getFlowLayers().find(candidate => !before.has(candidate.id));
     if (!layer) throw new Error('The crowd could not be created.');
     const key = sceneOutlineKey('crowd', layer.id);
@@ -630,8 +647,7 @@ export const sceneOutlineMixin = {
       releaseStart: percentDraft(command, 'releaseStart', 'Window start'),
       releaseDuration: percentDraft(command, 'releaseDuration', 'Window length'),
       onsetVariance: percentDraft(command, 'onsetVariance', 'Release timing'),
-      intensityRamp: originalCanonical(command, 'intensityRamp')
-        ?? numberBetween(command.intensityRamp, 'Release bias', -100, 100) / 100,
+      intensityRamp: releaseBiasDraft(command),
       speed: numberBetween(command.speed, 'Speed', 0.001, EMITTER_LIMITS.MAX_SPEED),
       speedVariance: percentDraft(command, 'speedVariance', 'Pace variation'),
       dotSize: numberBetween(command.dotSize, 'Dot size', 0.01, EMITTER_LIMITS.MAX_DOT_SIZE),
