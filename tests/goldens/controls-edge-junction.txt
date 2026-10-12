@@ -26,7 +26,7 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Path · one-way" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Path · two-way"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Path · one-way" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Path · two-way"
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section expanded" data-last="true" data-section="edge"
 ui ~ #network-edge-direction: select aria-describedby="network-edge-direction-tip" :value="one-way" → select aria-describedby="network-edge-direction-tip" :value="two-way"
 ui ~ #network-edge-swap: button aria-describedby="network-edge-swap-tip" class="btn btn-secondary" data-tip-desc="network-edge-swap-tip" data-tip="Reverse which way this one-way path carries dots" type="button" :text="Swap direction" → button (not shown)
@@ -163,9 +163,7 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
-ui + #toast-container>div[0]: div class="toast" :text="Deleted path — press Ctrl+Z to undo"
-ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Path · one-way" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Path · one-way" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 7f3a1b23)
@@ -173,6 +171,8 @@ ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="do
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
 ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 ui ~ #edge-scope: div class="scope-group" → div (not shown)
+ui + #toast-container>div[0]: div class="toast" :text="Deleted path — press Ctrl+Z to undo"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui - #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" (and 35 inside, 055d528b)
 settled:
   emit animation:durationChange 27929.352554

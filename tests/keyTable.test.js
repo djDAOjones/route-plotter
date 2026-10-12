@@ -801,9 +801,9 @@ describe("Help's key table (TST-13)", () => {
         'Help names it on its Alt-click line (UI-06), while the table entry stays the empty-map force-add'),
       {
         branchFrom: '#0 major 0.25,0.5',
-        toasts: ['Branch from this waypoint — click where it should go (Esc to cancel)'],
-        // The toast is the announcement: one message, heard once (UI-06 J-05).
-        said: 'Branch from this waypoint — click where it should go (Esc to cancel)'
+        // No toast: the gesture's banner shows in the slot below the header, with its Cancel, and is
+        // announced once in its words (UI-06 PR 6, item 2; it was a toast, heard once: UI-06 J-05).
+        said: 'Branch from this waypoint — click where it should go. Escape to cancel.'
       }],
     ['a waypoint', ['meta'],
       undocumented('adds the waypoint to the multi-selection, or takes it out; Help calls Cmd/Ctrl-click ' +
@@ -1132,7 +1132,7 @@ describe('what the page shortcuts react to (TST-13)', () => {
     click(app, [0.25, 0.5], chord(['alt']));
     expect(app.interactionHandler.branchArmed).toBe(app.waypoints[0]);
 
-    // Undocumented in Help; the branch toast says "Esc to cancel".
+    // Undocumented in Help; the branch banner says "Esc to cancel".
     // The toast is the announcement: one message, heard once (UI-06 J-05).
     expect(observe(app, () => press('Escape')).changed)
       .toEqual({ branchFrom: null, toasts: ['Branch cancelled'], said: 'Branch cancelled' });

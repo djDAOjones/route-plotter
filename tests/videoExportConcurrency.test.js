@@ -1322,7 +1322,7 @@ test.each(['full', 'reduced'].flatMap(stage => ['can', 'cannot'].map(answer => [
 });
 
 test('an app booted for these tests has the start\'s tip seen: on the real clock, it never lands in one (UI-06, Codex r2)', async () => {
-  // The tip waits 1.5 s on the real clock from the boot (`_showPreviewTipToast`);
+  // The tip waits 1.5 s on the real clock from the boot (`_showPreviewTip`);
   // a test that pins what is shown or said must not outlast it unmarked.
   const { app } = await exportingApp();
   const shown = vi.spyOn(app, 'showToast');

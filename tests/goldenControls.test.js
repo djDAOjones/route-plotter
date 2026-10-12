@@ -1665,6 +1665,17 @@ function holdToasts(app) {
   });
 }
 
+/**
+ * The first start's tip, shown as its timer shows it once the welcome has
+ * gone, but held, as a toast is: its 8 s are a timer every baseline's
+ * settling runs (UI-06 PR 6).
+ */
+function showTipHeld(app) {
+  app._previewTip = { timer: null, stopWaiting: null, expiry: null, owner: null, over: false };
+  app._offerPreviewTip();
+  clearTimeout(app._previewTip.expiry);
+}
+
 /** jsdom has neither WebCodecs nor MediaRecorder, so a WebM export stops at its first step. */
 const WEBM_UNSUPPORTED = [/Export failed: Error: Video export not supported/, /Video export failed: Error: Video export not supported/];
 
@@ -1907,6 +1918,22 @@ const CONTEXTS = [
       await settle(6);
       document.getElementById('area-draw-btn').click();
     },
+  },
+  // UI-06 PR 6: the branch gesture's banner, with its Cancel, and the first
+  // start's tip, both in the banner slot below the header.
+  {
+    name: 'branch-gesture',
+    about: `a branch armed from waypoint ${MAJOR}, its banner shown`,
+    roots: ['#branch-banner'],
+    enter: (app) => {
+      app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[MAJOR] });
+    },
+  },
+  {
+    name: 'preview-tip',
+    about: 'the first start\'s tip shown in the banner slot (held: its timer stopped)',
+    roots: ['#preview-tip-banner'],
+    enter: showTipHeld,
   },
   // Playback asks for a frame every frame, so this baseline is never at rest:
   // each row starts from the same instant of the same playback instead.

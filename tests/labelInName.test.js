@@ -156,6 +156,42 @@ describe('a control’s visible words start its accessible name (UI-06 B-04)', (
     }
   });
 
+  test('every banner the slot below the header shows names its actions by their visible words: the area\'s, the branch\'s and the tip\'s too (UI-06 PR 6)', async () => {
+    const app = await bootApp();
+    try {
+      await app.ready;
+      document.getElementById('splash-close').click();
+      app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+      app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
+      app.addCrowd();
+      app.selectedCrowd.setGuideType('graph');
+      app.syncCrowdEditor();
+      const shows = [
+        ['area-draw-banner', ['Cancel'], () => app.areaDrawingService.startDrawing(app.waypoints[0])],
+        ['branch-banner', ['Cancel'], () => app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] })],
+        ['network-edit-banner', ['Done'], () => app.enterNetworkEditMode()],
+        // Shown as its timer shows it, on a first start once the welcome has gone.
+        ['preview-tip-banner', ['Dismiss'], () => {
+          app.networkEditService.exit();
+          app._previewTip = { timer: null, stopWaiting: null, expiry: null, owner: null, over: false };
+          app._offerPreviewTip();
+        }],
+      ];
+      for (const [id, words, show] of shows) {
+        show();
+        const buttons = [...document.querySelectorAll('#mode-banner button')];
+        expect(document.getElementById(id), id).not.toBeNull();
+        // The F9/B-04 rule PR 1 applied to Done: the visible word is the name, no aria-label beside it.
+        expect(buttons.map(button => [button.textContent, button.getAttribute('aria-label')]), id)
+          .toEqual(words.map(word => [word, null]));
+        expect(labelFaults(document.getElementById('mode-banner')).faults).toEqual([]);
+      }
+      app._stopPreviewTip();
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+
   test('a disabled Draw area says why in a line it is described by, with no title (UI-06 B-07)', async () => {
     const app = await bootApp();
     try {

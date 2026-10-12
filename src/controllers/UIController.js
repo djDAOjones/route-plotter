@@ -442,7 +442,15 @@ export class UIController {
     }
 
     this._scopeChip.dataset.scope = scope;
-    if (this._scopeChipText) this._scopeChipText.textContent = text;
+    if (this._scopeChipText && this._scopeChipText.textContent !== text) {
+      this._scopeChipText.textContent = text;
+      // The chip is not a live region (UI-06 J-05): a change of scope is said
+      // once, unless focus is on the row that names it or the change's own
+      // message says it (a deletion's toast, "Undo": UI-06 PR 6, item 6).
+      if (!this._scopeReachedByFocus(scope, waypoint)) {
+        this.eventBus.emit('ui:announce', { message: text, unlessSaid: true });
+      }
+    }
     if (this._scopeRouteBtn) {
       // The current scope is marked as such, never disabled (UI-06 J-08):
       // a greyed Route read as a control that was off, not as where you are.
@@ -463,6 +471,39 @@ export class UIController {
     if (this._scopeNextBtn) {
       this._scopeNextBtn.disabled = !steppable || (waypoint ? index >= waypoints.length - 1 : false);
     }
+  }
+
+  /**
+   * Whether focus already names the scope the chip moved to: the list row of
+   * the waypoint now selected (a row clicked or pressed, which the canvas
+   * leaves focused when it selects another), or a row of the Layers strip or
+   * the scene outline, from which a crowd or an item was chosen.
+   * @param {string} scope
+   * @param {Object|null} waypoint
+   * @returns {boolean}
+   * @private
+   */
+  _scopeReachedByFocus(scope, waypoint) {
+    const active = document.activeElement;
+    if (!active || active === document.body) return false;
+    const item = active.closest?.('.waypoint-item[data-route-index]');
+    if (item && this.elements.waypointList?.contains(item)) {
+      return scope === 'waypoint' && (this._listedWaypoints || [])[Number(item.dataset.routeIndex)] === waypoint;
+    }
+    return Boolean(active.closest?.('#layers-strip, #scene-outline'));
+  }
+
+  /**
+   * The list row's button for a listed waypoint, looked up afresh (a rebuild
+   * replaces every row), or null: where focus goes back to from a branch
+   * banner (UI-06 PR 6).
+   * @param {Object} waypoint
+   * @returns {HTMLButtonElement|null}
+   */
+  rowButtonFor(waypoint) {
+    const index = (this._listedWaypoints || []).indexOf(waypoint);
+    if (index === -1 || !this.elements.waypointList) return null;
+    return this.elements.waypointList.querySelector(`.waypoint-item[data-route-index="${index}"] .waypoint-row`);
   }
 
   /**
@@ -1696,14 +1737,21 @@ export class UIController {
 
     const majorWaypoints = this._listedMajors;
 
-    // When no waypoints exist, show empty state message
+    // When no waypoints exist, show empty state message. Not a live region
+    // (UI-06 J-05): the list emptying is said once, unless what emptied it
+    // says so ("Deleted …", "Undo", "Project cleared": UI-06 PR 6, item 6).
+    const wasEmpty = this._listWasEmpty;
+    this._listWasEmpty = routeWaypoints.length === 0;
     if (routeWaypoints.length === 0) {
       this.elements.waypointList.innerHTML = `
-        <li class="waypoint-list-empty" role="status" aria-live="polite">
+        <li class="waypoint-list-empty" role="status" aria-live="off">
           <p>No waypoints yet</p>
           <p class="hint">Click on the map to add waypoints</p>
         </li>
       `;
+      if (wasEmpty === false) {
+        this.eventBus.emit('ui:announce', { message: 'No waypoints yet. Click on the map to add waypoints', unlessSaid: true });
+      }
       return;
     }
 

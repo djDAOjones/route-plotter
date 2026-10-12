@@ -53,7 +53,9 @@ function renderNetworkGuide(service, app, layer, ctx) {
 }
 
 function makeApp() {
+  // The page's banner slot heads the fixture: the mode's banner now shows there (UI-06 J-12).
   document.body.innerHTML = `
+    <div id="mode-banner"></div>
     <button id="network-edit-btn" type="button" hidden></button>
     <button id="crowd-trace-route-btn" type="button" hidden aria-describedby="crowd-trace-route-reason"
             data-tip="Copy the route into this crowd's network">Trace route into network</button>

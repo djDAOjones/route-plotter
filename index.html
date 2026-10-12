@@ -27,7 +27,7 @@
       <span id="title-indicator" class="title-indicator" aria-hidden="true" hidden>●</span>
       <p id="app-status" class="header-status" role="status" aria-live="off"></p>
       <!-- UI-06 J-18: a video export cancelled by pointer as well as by Esc,
-           shown with its progress; PR 6 may move it into the banner slot -->
+           shown with its progress, beside the status line (PR 6 keeps it here) -->
       <button id="export-cancel-btn" class="btn btn-secondary" type="button" aria-describedby="app-status" hidden>Cancel</button>
       <div class="header-controls">
         <!-- Mode Switch (Edit/Preview toggle) -->
@@ -99,10 +99,11 @@
       </div>
     </header>
 
-    <!-- Toast notification (replaces tip banner). Not a live region: every
-         toast is announced once through the queue (UI-06 J-05, C-5). It takes
-         focus from a leaving toast when nothing else can (UI-06 B-35) -->
-    <div id="toast-container" class="toast-container" aria-live="off" tabindex="-1"></div>
+    <!-- UI-06 J-12: the one banner slot, a row of its own below the header:
+         a mode's banner (drawing an area, editing the network, placing a
+         branch) or the first-start tip, built by ModeBanner. Not a live
+         region: each owner announces its banner once (UI-06 J-05) -->
+    <div id="mode-banner" class="mode-banner" aria-live="off"></div>
 
     <!-- Main Content -->
     <main class="main" id="main-content" aria-labelledby="app-title">
@@ -124,7 +125,7 @@
           <div id="scope-chip" class="scope-chip" data-scope="route">
             <button id="scope-route-btn" class="scope-route-btn" type="button" aria-current="true">Route</button>
             <button id="scope-prev-btn" class="scope-nav-btn" type="button" aria-label="Edit previous waypoint" disabled><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 2L3.5 6L7.5 10"/></svg></button>
-            <span id="scope-chip-text" class="scope-chip-text" role="status" aria-live="polite">Editing · Route</span>
+            <span id="scope-chip-text" class="scope-chip-text" role="status" aria-live="off">Editing · Route</span>
             <button id="scope-next-btn" class="scope-nav-btn" type="button" aria-label="Edit next waypoint" disabled><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 2L8.5 6L4.5 10"/></svg></button>
           </div>
         </div>
@@ -1360,6 +1361,9 @@
       <!-- Canvas Area (center column) - contains canvas + controls -->
       <div id="canvas-area" class="canvas-area" aria-busy="false">
         <canvas id="canvas" role="img" aria-label="Route animation canvas"></canvas>
+        <!-- UI-06 J-12: Preview mode's badge, top-right of the canvas area;
+             drawn, not read: the mode switch says the mode -->
+        <span id="preview-badge" class="preview-badge" aria-hidden="true">Preview</span>
         
         <!-- Controls Panel -->
         <div class="controls">
@@ -1376,6 +1380,12 @@
             <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="1000" value="0" step="1" aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:00">
             <span id="total-time" class="time">0:00</span>
           </div>
+          <!-- Toast notifications, bottom-centre of the canvas area, just above
+               the transport so they cover none of its controls (UI-06 J-12).
+               Not a live region: every toast is announced once through the
+               queue (UI-06 J-05, C-5). It takes focus from a leaving toast when
+               nothing else can (UI-06 B-35) -->
+          <div id="toast-container" class="toast-container" aria-live="off" tabindex="-1"></div>
         </div>
       </div>
       

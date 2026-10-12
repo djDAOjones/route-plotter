@@ -227,20 +227,26 @@ function expectTold() {
 }
 
 /**
- * The toasts' region where the app's stylesheet puts it: fixed, centred at
- * the top, above the page (z-index 9000), with no margin and nothing above
- * it moved. A structural check of this design, not of the screen: a new
- * design updates it.
+ * The toasts' region where the app's stylesheet puts it: bottom-centre of
+ * the canvas area, standing on the transport it sits in (its bottom a space
+ * above the transport's top, a space in from either end), under a dialog's
+ * backdrop (z-index 20, below .modal's 999), with no margin and nothing
+ * above it moved. A structural check of this design, not of the screen: a
+ * new design updates it. (UI-06 J-12 is that new design: the region was
+ * fixed, centred at the top, over the header's controls, at z-index 9000.)
  */
 function expectPlaced() {
   const region = getComputedStyle(toastRegion());
   expect({
-    position: region.position, top: region.top, left: region.left, transform: region.transform, zIndex: region.zIndex,
+    position: region.position, top: region.top, bottom: region.bottom, left: region.left, right: region.right,
+    transform: region.transform, zIndex: region.zIndex,
     margin: [region.marginTop, region.marginRight, region.marginBottom, region.marginLeft],
   }).toEqual({
-    position: 'fixed', top: 'var(--space-3)', left: '50%', transform: 'translateX(-50%)', zIndex: '9000',
+    position: 'absolute', top: 'auto', bottom: 'calc(100% + var(--space-2))', left: 'var(--space-3)',
+    right: 'var(--space-3)', transform: 'none', zIndex: '20',
     margin: ['0px', '0px', '0px', '0px'],
   });
+  expect(toastRegion().parentElement.matches('#canvas-area > .controls')).toBe(true);
   const above = [];
   for (let node = toastRegion().parentElement; node; node = node.parentElement) above.push(getComputedStyle(node).transform);
   expect(above.every(transform => transform === 'none')).toBe(true);

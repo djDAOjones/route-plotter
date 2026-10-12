@@ -3,11 +3,13 @@
 ## #scope-route-btn · click
 emit crowd:deselected
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Editing · Route"
 app ~ crowd: "layer[0]" → null
 app ~ focus: "body" → "#scope-route-btn"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route"
 ui ~ #scope-chip: div class="scope-chip" data-scope="crowd" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Route"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" type="button"
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
@@ -26,6 +28,8 @@ ui - #crowd-scope>div[1]: div class="settings-section expanded" data-section="gu
 ui - #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
 ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, fd5af58c)
 ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #scope-prev-btn · disabled, not operated
 
@@ -81,14 +85,15 @@ announced "Editing the network — click the map to place linked nodes. Escape l
 app ~ focus: "body" → "#network-edit-banner>button[1]"
 storage + routePlotter_lastSection: "guide"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing the network — click the map to place linked nodes. Escape lifts the pen."
-ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
-ui ~ #network-edit-btn: button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" type="button" :text="Edit network" → button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" disabled="" type="button" :text="Edit network"
-ui + #network-edit-banner: div aria-live="polite" role="status" style="align-items: center; background: var(--scope-crowd-fg, #0E4A38); box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: rgb(255, 255, 255); display: flex; font-family: …[383 chars, 0303c501]
+ui ~ #mode-banner: div aria-live="off" class="mode-banner" → div aria-live="off" class="mode-banner is-showing"
+ui + #network-edit-banner: div class="mode-banner-item"
 ui + #network-edit-banner>span[0]: span class="banner-text" :text="— click places a linked node, click a node to continue from it, drag a path to bend it. lifts the pen."
 ui + #network-edit-banner>span[0]>strong[0]: strong :text="Editing the network"
 ui + #network-edit-banner>span[0]>kbd[1]: kbd :text="Esc"
 ui + #network-edit-banner>span[0]>span[2]: span class="banner-count" :text="4 nodes · 4 paths"
-ui + #network-edit-banner>button[1]: button class="banner-done" style="background-attachment: scroll; background-clip: border-box; background-color: transparent; background-image: none; background-origin: padding-box; background-p…[1119 chars, fa48a91a] type="button" :text="Done"
+ui + #network-edit-banner>button[1]: button class="mode-banner-action banner-done" type="button" :text="Done"
+ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
+ui ~ #network-edit-btn: button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" type="button" :text="Edit network" → button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" disabled="" type="button" :text="Edit network"
 settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing the network — click the map to place linked nodes. Escape lifts the pen." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
@@ -145,12 +150,12 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
-ui + #toast-container>div[0]: div class="toast" :text="Traced the route into Visitors — 5 nodes, 4 paths"
-ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
 ui ~ #crowd-guide-hint: p class="section-hint" :text="Dots walk this crowd's own network (4 nodes, 4 paths). Journeys start at entry nodes and end at exit nodes (a node's Type). With no exit, they end at nodes with one path; with no entry, dots set off from any node they can leave." → p class="section-hint" :text="Dots walk this crowd's own network (5 nodes, 4 paths). Journeys start at entry nodes and end at exit nodes (a node's Type). With no exit, they end at nodes with one path; with no entry, dots set off from any node they can leave."
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:27" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
 ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:27"
+ui + #toast-container>div[0]: div class="toast" :text="Traced the route into Visitors — 5 nodes, 4 paths"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 27929.352554, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Traced the route into Visitors — 5 nodes, 4 paths"

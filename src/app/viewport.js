@@ -9,6 +9,19 @@ import { resolveRenderReference } from '../utils/renderReference.js';
  * Object.assign(RoutePlotter.prototype, viewportMixin).
  */
 
+/**
+ * The room the canvas area gives `canvas`: its width, and its height less
+ * the transport's (UI-06 PR 6: the banner slot compares it with the last fit).
+ * @param {HTMLCanvasElement} canvas
+ * @returns {{width: number, height: number}}
+ */
+function canvasAreaRoom(canvas) {
+  const container = canvas.parentElement;
+  const playbar = container.querySelector('.controls');
+  const playbarHeight = playbar ? playbar.offsetHeight : 60;
+  return { width: container.clientWidth, height: container.clientHeight - playbarHeight };
+}
+
 export const viewportMixin = {
   
   /**
@@ -27,9 +40,9 @@ export const viewportMixin = {
     // Get available space in canvas-area
     const container = this.canvas.parentElement;
     const playbar = container.querySelector('.controls');
-    const playbarHeight = playbar ? playbar.offsetHeight : 60;
-    const availableWidth = container.clientWidth;
-    const availableHeight = container.clientHeight - playbarHeight;
+    const { width: availableWidth, height: availableHeight } = canvasAreaRoom(this.canvas);
+    // The room this fit used: the banner slot refits only when it has changed (UI-06 PR 6)
+    this._fittedRoom = { width: availableWidth, height: availableHeight };
     const containerAspect = availableWidth / availableHeight;
     
     // Contain fit: use whichever dimension is the constraint
@@ -103,6 +116,16 @@ export const viewportMixin = {
     console.debug(`📐 [AspectRatio] Canvas set to ${Math.round(canvasWidth)}×${Math.round(canvasHeight)} (${targetAspect.toFixed(2)}:1)`);
   },
   
+  /**
+   * The room the canvas area gives the canvas: its width, and its height
+   * less the transport's.
+   * @returns {{width: number, height: number}}
+   * @private
+   */
+  _canvasAreaRoom() {
+    return canvasAreaRoom(this.canvas);
+  },
+
   /**
    * Calculate the visible image bounds in normalized coordinates (0-1)
    * Accounts for both canvas aspect ratio (cover mode) and zoom level.

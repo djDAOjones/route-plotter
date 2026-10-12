@@ -3,11 +3,13 @@
 ## #waypoint-list>li[1]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[0], waypoint[1], waypoint[2]], primary: waypoint[0]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+announced "Editing · 4 waypoints (1 minor)"
 app ~ selected: "waypoint[3]" → "waypoint[0]"
 app ~ selection: "waypoint[3]" → "waypoint[0] waypoint[1] waypoint[2] waypoint[3]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 4 waypoints (1 minor)"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 4 waypoints (1 minor)"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 4 waypoints (1 minor)"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-style: select aria-describedby="marker-style-tip" :value="square" → select aria-describedby="marker-style-tip" data-mixed="true" :value="__mixed__"
 ui ~ #marker-style>option[0]: option value="dot" :text="Dot" → option data-mixed-option="true" disabled="" value="__mixed__" :text="Mixed"
@@ -95,15 +97,19 @@ ui - #area-rect-controls>div[1]>label[1]>span[0]: span data-tip-desc="area-rect-
 ui - #area-rect-height: input aria-describedby="area-rect-height-value area-rect-height-tip" aria-valuetext="19%" max="1000" min="0" step="1" type="range" value="125" :value="228"
 ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
 ui - #area-rect-height-value: span class="range-readout" :text="19%"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 4 waypoints (1 minor)" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[1]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[0]], primary: waypoint[0]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+announced "Editing · 2 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[0]"
 app ~ selection: "waypoint[3]" → "waypoint[0] waypoint[3]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-style: select aria-describedby="marker-style-tip" :value="square" → select aria-describedby="marker-style-tip" data-mixed="true" :value="__mixed__"
 ui ~ #marker-style>option[0]: option value="dot" :text="Dot" → option data-mixed-option="true" disabled="" value="__mixed__" :text="Mixed"
@@ -187,15 +193,19 @@ ui - #area-rect-controls>div[1]>label[1]>span[0]: span data-tip-desc="area-rect-
 ui - #area-rect-height: input aria-describedby="area-rect-height-value area-rect-height-tip" aria-valuetext="19%" max="1000" min="0" step="1" type="range" value="125" :value="228"
 ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
 ui - #area-rect-height-value: span class="range-readout" :text="19%"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[1]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[0]], primary: waypoint[0]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+announced "Editing · 2 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[0]"
 app ~ selection: "waypoint[3]" → "waypoint[0] waypoint[3]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-style: select aria-describedby="marker-style-tip" :value="square" → select aria-describedby="marker-style-tip" data-mixed="true" :value="__mixed__"
 ui ~ #marker-style>option[0]: option value="dot" :text="Dot" → option data-mixed-option="true" disabled="" value="__mixed__" :text="Mixed"
@@ -279,15 +289,19 @@ ui - #area-rect-controls>div[1]>label[1]>span[0]: span data-tip-desc="area-rect-
 ui - #area-rect-height: input aria-describedby="area-rect-height-value area-rect-height-tip" aria-valuetext="19%" max="1000" min="0" step="1" type="range" value="125" :value="228"
 ui - #area-rect-height-tip: span class="sr-only" :text="Height of the rectangular highlight area"
 ui - #area-rect-height-value: span class="range-readout" :text="19%"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[2]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[1], waypoint[2]], primary: waypoint[1]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+announced "Editing · 3 waypoints (1 minor)"
 app ~ selected: "waypoint[3]" → "waypoint[1]"
 app ~ selection: "waypoint[3]" → "waypoint[1] waypoint[2] waypoint[3]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 3 waypoints (1 minor)"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 3 waypoints (1 minor)"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 3 waypoints (1 minor)"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__"
@@ -343,15 +357,19 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 3 waypoints (1 minor)" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[2]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[1]], primary: waypoint[1]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+announced "Editing · 2 waypoints (1 minor)"
 app ~ selected: "waypoint[3]" → "waypoint[1]"
 app ~ selection: "waypoint[3]" → "waypoint[1] waypoint[3]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints (1 minor)"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints (1 minor)"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints (1 minor)"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #camera-single-controls: div style="display: block;" → div (not shown)
@@ -393,15 +411,19 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints (1 minor)" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[2]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[1]], primary: waypoint[1]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+announced "Editing · 2 waypoints (1 minor)"
 app ~ selected: "waypoint[3]" → "waypoint[1]"
 app ~ selection: "waypoint[3]" → "waypoint[1] waypoint[3]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints (1 minor)"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints (1 minor)"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints (1 minor)"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #camera-single-controls: div style="display: block;" → div (not shown)
@@ -443,15 +465,19 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints (1 minor)" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[3]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[2]], primary: waypoint[2]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+announced "Editing · 2 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[2]"
 app ~ selection: "waypoint[3]" → "waypoint[2] waypoint[3]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__"
@@ -505,15 +531,19 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[3]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[2]], primary: waypoint[2]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+announced "Editing · 2 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[2]"
 app ~ selection: "waypoint[3]" → "waypoint[2] waypoint[3]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__"
@@ -567,15 +597,19 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[3]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[2]], primary: waypoint[2]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+announced "Editing · 2 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[2]"
 app ~ selection: "waypoint[3]" → "waypoint[2] waypoint[3]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__"
@@ -629,6 +663,8 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[4]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3]], primary: waypoint[3]}
@@ -661,12 +697,14 @@ settled:
 ## #waypoint-list>li[4]>button[0] · Cmd-click
 emit waypoint:deselected
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Editing · Route"
 app ~ selected: "waypoint[3]" → null
 app ~ selection: "waypoint[3]" → ""
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Route"
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
@@ -682,16 +720,20 @@ ui - #waypoint-scope>div[1]: div class="settings-section" data-section="on-arriv
 ui - #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 138 inside, 712d7514)
 ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 103 inside, 07477f09)
 ui - #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 197 inside, e304af09)
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[4]>button[0] · Ctrl-click
 emit waypoint:deselected
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+announced "Editing · Route"
 app ~ selected: "waypoint[3]" → null
 app ~ selection: "waypoint[3]" → ""
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Route"
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
@@ -707,15 +749,19 @@ ui - #waypoint-scope>div[1]: div class="settings-section" data-section="on-arriv
 ui - #waypoint-scope>div[2]: div class="settings-section" data-section="label" (and 138 inside, 712d7514)
 ui - #waypoint-scope>div[3]: div class="settings-section" data-section="leg" (and 103 inside, 07477f09)
 ui - #waypoint-scope>div[4]: div class="settings-section" data-section="area-highlight" (and 197 inside, e304af09)
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[5]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[4]], primary: waypoint[4]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+announced "Editing · 2 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[4]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[4]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__"
@@ -769,15 +815,19 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[5]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[4]], primary: waypoint[4]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+announced "Editing · 2 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[4]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[4]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__"
@@ -831,15 +881,19 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[5]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[4]], primary: waypoint[4]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+announced "Editing · 2 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[4]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[4]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__"
@@ -893,15 +947,19 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[6]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[4], waypoint[5]], primary: waypoint[5]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+announced "Editing · 3 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[5]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[4] waypoint[5]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 3 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 3 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 3 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__"
@@ -957,15 +1015,19 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 3 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[6]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[5]], primary: waypoint[5]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+announced "Editing · 2 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[5]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[5]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__"
@@ -1019,15 +1081,19 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #waypoint-list>li[6]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[5]], primary: waypoint[5]}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+announced "Editing · 2 waypoints"
 app ~ selected: "waypoint[3]" → "waypoint[5]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[5]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · 2 waypoints"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: select one waypoint to apply onward."
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" data-mixed="true" :value="__mixed__"
@@ -1081,3 +1147,5 @@ ui - #camera-next-zoom-value: span class="slider-value slider-value-readonly" :t
 ui - #section-label-content>div[0]>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #section-label-content>div[0]>label[1]>span[0]: span data-tip-desc="waypoint-label-tip" data-tip="Label text displayed near this waypoint" style="anchor-name: --waypoint-label-tip;" :text="Text"
 ui - #waypoint-label: input aria-describedby="waypoint-label-tip" placeholder="Enter label text..." type="text" :value="Label 4"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · 2 waypoints" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

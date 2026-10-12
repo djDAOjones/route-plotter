@@ -84,6 +84,43 @@ export function isInOpenModal(element) {
 }
 
 /**
+ * Whether any modal dialog is open, by `isInOpenModal`'s rule.
+ * @returns {boolean}
+ */
+export function isModalOpen() {
+  return [...document.querySelectorAll('[aria-modal="true"]')].some(modal => isInOpenModal(modal));
+}
+
+/** Waiting for the last open dialog to close (`whenNoModalOpen`). */
+const noModalWaiters = new Set();
+
+/**
+ * Run `callback` once no modal dialog is open: asked again each time a trap
+ * closes, once the close has finished (a dialog's Escape hides it after its
+ * trap lets go). The first-start tip waits for the welcome this way (UI-06
+ * PR 6, item 7): closing a dialog says nothing on the bus.
+ * @param {Function} callback
+ * @returns {Function} Stop waiting
+ */
+export function whenNoModalOpen(callback) {
+  const waiter = () => {
+    if (isModalOpen()) return;
+    noModalWaiters.delete(waiter);
+    callback();
+  };
+  noModalWaiters.add(waiter);
+  return () => noModalWaiters.delete(waiter);
+}
+
+/** Ask each waiter again, after the close that called this has run its course. */
+function askNoModalWaiters() {
+  if (!noModalWaiters.size) return;
+  queueMicrotask(() => {
+    for (const waiter of [...noModalWaiters]) if (noModalWaiters.has(waiter)) waiter();
+  });
+}
+
+/**
  * A scrolling body takes focus, named as its dialog, while it is longer than
  * the room it has; one that fits takes none (see the module's note).
  * @param {HTMLElement} modal
@@ -363,6 +400,7 @@ export function createFocusTrap(modal) {
       temporaryFocusTarget = null;
       previousTabindex = null;
     }
+    askNoModalWaiters();
   }
   
   return {

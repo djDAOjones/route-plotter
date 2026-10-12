@@ -49,6 +49,7 @@ import { NetworkEditService } from './services/NetworkEditService.js';
 import { AreaEditService } from './services/AreaEditService.js';
 import { getInlineHelpHTML } from './config/helpContent.js';
 import { attachSwatchPickers } from './components/SwatchPicker.js';
+import { ModeBanner } from './components/ModeBanner.js';
 import { attachAllTooltips } from './components/Tooltip.js';
 import { initParamTooltips } from './components/ParamTooltip.js';
 import { initAllDropdowns } from './components/Dropdown.js';
@@ -359,6 +360,8 @@ class RoutePlotter {
       modeLabelPreview: document.querySelector('.mode-label-preview'),
       // Toast container
       toastContainer: document.getElementById('toast-container'),
+      // The one banner slot below the header (UI-06 J-12)
+      modeBanner: document.getElementById('mode-banner'),
       // Ripple controls
       rippleControls: document.getElementById('ripple-controls'),
       rippleThickness: document.getElementById('ripple-thickness'),
@@ -491,7 +494,6 @@ class RoutePlotter {
     
     // Debounced resize handler to avoid excessive recalculations
     // Path recalculation is expensive, so we wait for resize to settle
-    let resizeTimeout = null;
     window.addEventListener('resize', () => {
       // Skip resize handling during animation playback to avoid interrupting zoom transitions
       if (this.animationEngine?.state?.isPlaying) {
@@ -501,24 +503,19 @@ class RoutePlotter {
       if (this._isExportMode) {
         return;
       }
-      
-      // Recalculate canvas size with contain-fit for new viewport
-      this.updateCanvasAspectRatio();
-      
-      // Debounce path recalculation (expensive operation)
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout);
-      }
-      resizeTimeout = setTimeout(() => {
-        // Recalculate path since pathPoints are in canvas coordinates
-        // Waypoints use normalized coords (0-1) so they scale automatically,
-        // but pathPoints need recalculation for the new canvas dimensions
-        if (this.waypoints.length >= 2) {
-          this.calculatePath();
-          this.render(); // Re-render with correct path
-        }
-      }, 100); // 100ms debounce
+      this._refitCanvasToArea();
     });
+
+    // The one banner slot below the header (UI-06 J-12): a mode's banner or
+    // the first-start tip. The canvas area gives up the slot's height, so the
+    // canvas is refitted each time that settles (Codex on 9466a3f).
+    this.modeBanner = this.elements.modeBanner
+      ? new ModeBanner(this.elements.modeBanner, { onHeightChange: () => this._refitAfterModeBanner() })
+      : null;
+    // A refit held back while playing runs once playback stops (Codex's recheck: Pause leaves `isPlaying` set).
+    for (const event of ['animation:pause', 'animation:complete', 'animation:reset']) {
+      this.eventBus.on(event, () => this._drainModeBannerRefit());
+    }
     
     // Initialize marker style controls
     this.elements.markerStyle.value = this.styles.markerStyle;
@@ -678,6 +675,79 @@ class RoutePlotter {
     return true;
   }
   
+  /**
+   * Fit the canvas to the room the canvas area has now (contain-fit), then,
+   * once that settles, recalculate the path: a window resize's work, and the
+   * banner slot's (UI-06 J-12). Path recalculation is expensive, so it waits.
+   * @private
+   */
+  _refitCanvasToArea() {
+    // Recalculate canvas size with contain-fit for new viewport
+    this.updateCanvasAspectRatio();
+
+    // Debounce path recalculation (expensive operation)
+    if (this._resizeTimeout) {
+      clearTimeout(this._resizeTimeout);
+    }
+    this._resizeTimeout = setTimeout(() => {
+      this._resizeTimeout = null;
+      // Recalculate path since pathPoints are in canvas coordinates
+      // Waypoints use normalized coords (0-1) so they scale automatically,
+      // but pathPoints need recalculation for the new canvas dimensions
+      if (this.waypoints?.length >= 2) {
+        this.calculatePath();
+        this.render(); // Re-render with correct path
+      }
+    }, 100); // 100ms debounce
+  }
+
+  /**
+   * The banner slot's height has settled: refit the canvas to what is left
+   * (UI-06 J-12), where that room has changed since the canvas was last
+   * fitted (a slot replaced by one as tall, or shown and gone while playing,
+   * leaves nothing to do). Not while the animation actively plays, as a
+   * resize waits too; held, it runs once when playback pauses, completes or
+   * resets (`_drainModeBannerRefit`). A video export keeps its own canvas,
+   * and its exit refits, so nothing is held for it (DEF-53).
+   * @private
+   */
+  _refitAfterModeBanner() {
+    if (this._isExportMode) return;
+    const room = this._canvasAreaRoom();
+    const fitted = this._fittedRoom;
+    if (fitted && fitted.width === room.width && fitted.height === room.height) {
+      this._modeBannerRefitPending = false;
+      return;
+    }
+    if (this.animationEngine?.state?.isActivelyPlaying?.()) {
+      this._modeBannerRefitPending = true;
+      return;
+    }
+    this._modeBannerRefitPending = false;
+    this._refitCanvasToArea();
+  }
+
+  /** Run a refit the slot held back while playing (`_refitAfterModeBanner`). @private */
+  _drainModeBannerRefit() {
+    if (this._modeBannerRefitPending) this._refitAfterModeBanner();
+  }
+
+  /**
+   * Stop what the banner slot and its owners wait on or keep running: the
+   * first-start tip's timers and waits, the slot's settle, an armed branch's
+   * focus step, the refit held back and the resize's debounce. `destroy()`
+   * runs it, and so does a test's teardown (UI-06 PR 6).
+   * @private
+   */
+  _stopModeBannerWork() {
+    this._stopPreviewTip?.();
+    this._stopBranchFocus?.();
+    this.modeBanner?.destroy();
+    this._modeBannerRefitPending = false;
+    if (this._resizeTimeout) clearTimeout(this._resizeTimeout);
+    this._resizeTimeout = null;
+  }
+
   /**
    * Sync UI controls with initial state on load.
    * Called after init to ensure UI reflects default preview mode and visibility settings.
@@ -975,6 +1045,39 @@ class RoutePlotter {
    */
   announce(message, priority = 'polite', options) {
     this._announcements.announce(message, priority, options);
+    this._noteSaid();
+  }
+
+  /**
+   * Say `message` once this turn's work is done, unless something else was
+   * said in it: what a region that was live used to say alone (the scope
+   * chip's words, the network's count, the empty list), now said through the
+   * one announcer, once per change, and not twice where the change's own
+   * message already says it ("Deleted …", "Undo", "Node placed": UI-06 PR 6,
+   * item 6). Two such messages of one turn are both said.
+   * @param {string} message
+   */
+  announceUnlessSaid(message) {
+    if (this._saidThisTurn) return;
+    const said = this._saidSerial ?? 0;
+    queueMicrotask(() => {
+      if (!this._announcements || (this._saidSerial ?? 0) !== said) return;
+      this._sayingUnlessSaid = true;
+      try {
+        this.announce(message);
+      } finally {
+        this._sayingUnlessSaid = false;
+      }
+    });
+  }
+
+  /** Something was said this turn (`announceUnlessSaid`). @private */
+  _noteSaid() {
+    if (this._sayingUnlessSaid) return;
+    this._saidSerial = (this._saidSerial ?? 0) + 1;
+    if (this._saidThisTurn) return;
+    this._saidThisTurn = true;
+    queueMicrotask(() => { this._saidThisTurn = false; });
   }
 
   /**
@@ -1120,6 +1223,9 @@ class RoutePlotter {
    * Clean up resources and event listeners
    */
   destroy() {
+    // What waits on the banner slot first: stopping the animation would run
+    // a refit it held back while playing (UI-06 PR 6)
+    this._stopModeBannerWork();
     // Stop animation
     this.animationEngine?.stop();
     this.storageService?.detachLifecycle();
@@ -1146,6 +1252,11 @@ class RoutePlotter {
     // Clear timeouts
     if (this._durationUpdateTimeout) {
       clearTimeout(this._durationUpdateTimeout);
+    }
+    // The scene's end, queued by a path rebuild: a banner's refit runs one (UI-06 PR 6)
+    if (this._sceneEndTimeout) {
+      clearTimeout(this._sceneEndTimeout);
+      this._sceneEndTimeout = null;
     }
     
     // Clear canvases

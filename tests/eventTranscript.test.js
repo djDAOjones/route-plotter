@@ -1492,6 +1492,21 @@ const CONTROLLER_ROWS = [
     setup: app => emit(app, 'route:branch-arm', { waypoint: wp(app, 'ex-uon-1') }),
     act: app => emit(app, 'route:branch-place', { imgX: 0.2, imgY: 0.3 }),
   },
+  // UI-06 PR 6: an armed gesture ends when an Open or Clear All replaces its
+  // fork. Emitted alone, the fork is still the route's own waypoint, so the
+  // gesture stays armed (the replacement itself: tests/modeBanner.test.js).
+  {
+    event: 'project:replaced', fixture: 'open day', given: 'a branch armed at ex-uon-1',
+    how: 'emitted alone, the project not replaced',
+    setup: app => emit(app, 'route:branch-arm', { waypoint: wp(app, 'ex-uon-1') }),
+    act: app => emit(app, 'project:replaced'),
+  },
+  {
+    event: 'app:cleared', fixture: 'open day', given: 'a branch armed at ex-uon-1',
+    how: 'emitted alone, the project not cleared',
+    setup: app => emit(app, 'route:branch-arm', { waypoint: wp(app, 'ex-uon-1') }),
+    act: app => emit(app, 'app:cleared'),
+  },
   {
     event: 'route:branch-rejoin', fixture: 'open day',
     how: 'the branch end dropped on the waypoint it already rejoins',

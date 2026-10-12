@@ -127,6 +127,7 @@ fixture: open day
 at once: autosave 1, queued render 2, undo saved 1
   scene-outline:command {action: "create-polygon", waypointId: "ex-uon-3"}
     waypoint:selected wp(ex-uon-3)
+      ui:announce {message: "Editing · Waypoint 3 'Library' · major", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -187,6 +188,7 @@ at once: autosave 1, queued render 1, undo saved 1
     · autosave
     scene:semantic-changed {kind: "crowd-added", layerId: "fl#1"}
     crowd:selected FlowLayer(fl#1)
+      ui:announce {message: "Editing · Crowd 1 · crowd", unlessSaid: true}
     · queued render
     said "Crowd 1 added — dots follow the route"
   scene-outline:update {crowds: [{…}, {…}], focusKey: "crowd:fl#1:select", majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: "crowd:fl#1"}  (digest d2a296b8)

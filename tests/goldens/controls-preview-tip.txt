@@ -1,0 +1,9 @@
+# preview-tip: the first start's tip shown in the banner slot (held: its timer stopped)
+
+## #preview-tip-banner>button[1] · click
+app ~ focus: "body" → "#scope-route-btn"
+ui ~ #mode-banner: div aria-live="off" class="mode-banner is-showing" → div aria-live="off" class="mode-banner"
+ui - #preview-tip-banner: div class="mode-banner-item"
+ui - #preview-tip-banner>span[0]: span class="banner-text" :text="Check your sequence in Preview mode before exporting"
+ui - #preview-tip-banner>span[0]>strong[0]: strong :text="Tip:"
+ui - #preview-tip-banner>button[1]: button class="mode-banner-action banner-dismiss" type="button" :text="Dismiss"

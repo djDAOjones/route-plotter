@@ -68,12 +68,15 @@ export const wiringBusMixin = {
    * told, since the polygon being drawn is lost (DEF-43). Told in a toast,
    * on screen and announced once through the queue, in turn with the
    * action's own outcome ("Deleted <name> — press Cmd/Ctrl+Z to undo",
-   * "Undo"), so neither replaces the other (DEF-45; UI-06 J-05).
+   * "Undo"), so neither replaces the other (DEF-45; UI-06 J-05). An armed
+   * branch gesture follows the model here too, and ends when its fork is no
+   * longer the model's (`followBranchFork`, UI-06 PR 6).
    */
   followAreaDrawTarget() {
     if (this.areaDrawingService?.followModel?.(this.waypoints)) {
       this.eventBus.emit('ui:toast', { message: 'Area drawing cancelled: its waypoint was removed.' });
     }
+    this.followBranchFork?.();
   },
 
 

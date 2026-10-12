@@ -26,7 +26,7 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · pass-through"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Node · pass-through"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
 ui ~ #node-section-title: span :text="Node · Main entrance · entry" → span :text="Node · Main entrance · pass-through"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="normal"
@@ -48,7 +48,7 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · exit"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Node · exit"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
 ui ~ #node-section-title: span :text="Node · Main entrance · entry" → span :text="Node · Main entrance · exit"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="exit"
@@ -117,9 +117,7 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
-ui + #toast-container>div[0]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
-ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Node · entry" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd"
 ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, c0770bf2)
@@ -127,6 +125,8 @@ ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="do
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
 ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 ui ~ #node-scope: div class="scope-group" → div (not shown)
+ui + #toast-container>div[0]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 19 inside, a374a0c1)
 settled:
   emit animation:durationChange 27929.352554

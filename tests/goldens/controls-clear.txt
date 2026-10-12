@@ -82,7 +82,7 @@ ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-val
 ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:00"
 ui ~ #add-crowd-btn: button aria-describedby="add-crowd-btn-tip" class="btn btn-secondary add-crowd-btn" data-tip-desc="add-crowd-btn-tip" data-tip="Add a crowd of dots that follows the route" type="button" :text="+ Add crowd" → button aria-describedby="add-crowd-btn-tip" class="btn btn-secondary add-crowd-btn" data-tip-desc="add-crowd-btn-tip" data-tip="Add a crowd and draw the network it follows" type="button" :text="+ Add crowd"
 ui ~ #add-crowd-btn-tip: span class="sr-only" :text="Add a crowd of dots that follows the route" → span class="sr-only" :text="Add a crowd and draw the network it follows"
-ui ~ #waypoint-list>li[0]: li class="waypoint-item waypoint-item-add" → li aria-live="polite" class="waypoint-list-empty" role="status"
+ui ~ #waypoint-list>li[0]: li class="waypoint-item waypoint-item-add" → li aria-live="off" class="waypoint-list-empty" role="status"
 ui + #waypoint-list>li[0]>p[0]: p :text="No waypoints yet"
 ui + #waypoint-list>li[0]>p[1]: p class="hint" :text="Click on the map to add waypoints"
 ui ~ #clear-confirm-modal: div aria-labelledby="modal-title-clear" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)

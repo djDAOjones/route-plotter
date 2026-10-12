@@ -222,7 +222,8 @@ function stringsIn(root) {
   for (const tip of root.querySelectorAll('[data-tip]')) add('hint', tip.getAttribute('data-tip'), true);
   for (const tip of root.querySelectorAll('[data-label-tip]')) add('hint', tip.getAttribute('data-label-tip'), true);
   // Prose the app shows: banners, helper lines, reasons, errors, dialogs, toasts.
-  const PROSE = ['#network-edit-banner .banner-text', '#network-edit-banner .banner-count', '.section-hint',
+  // UI-06 PR 6: every banner the slot below the header shows (it read the network's alone).
+  const PROSE = ['#mode-banner .banner-text', '#mode-banner .banner-count', '.section-hint',
     '.scene-outline-hint', '.scene-outline-empty', '[role="alert"]', '.modal-content > p', '.waypoint-card-actions-reason',
     '.network-path-weight-error', '.context-menu-item-reason', '.toast', '.splash-intro', '.help-section li',
     // UI-06 PR 4: the header's status line, the export menu's reason line, the crowd's empty-state line.
@@ -362,6 +363,39 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
     }
   });
 
+  test('every banner the slot below the header shows, in turn: its words are sentence case, its glossary words the glossary\'s (UI-06 PR 6)', async () => {
+    const { app, announced } = await populatedApp();
+    try {
+      const shows = [
+        ['network-edit-banner', () => {}],
+        ['area-draw-banner', () => app.areaDrawingService.startDrawing(app.waypoints[0])],
+        ['branch-banner', () => app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] })],
+        // Shown as its timer shows it, on a first start once the welcome has gone.
+        ['preview-tip-banner', () => {
+          app.eventBus.emit('route:branch-cancel');
+          app._previewTip = { timer: null, stopWaiting: null, expiry: null, owner: null, over: false };
+          app._offerPreviewTip();
+        }],
+      ];
+      for (const [id, show] of shows) {
+        show();
+        await Promise.resolve();
+        expect(document.getElementById(id), id).not.toBeNull();
+        const strings = stringsIn(document.getElementById('mode-banner'));
+        // Vacuous unless its words and its button were read.
+        expect(strings.filter(string => string.hint === 'prose').length, id).toBeGreaterThan(0);
+        expect(strings.filter(string => string.what === 'button').length, id).toBe(1);
+        expect(faultsIn(strings), id).toEqual([]);
+      }
+      const said = announced.map(text => ({ what: 'announcement', text, hint: 'prose' }));
+      expect(announced).toContain('Drawing an area — Click to place corners. Click near the first point to close. Escape to cancel.');
+      expect(faultsIn(said)).toEqual([]);
+      app._stopPreviewTip();
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+
   test('no stylesheet rule the words PR cleared sets text-transform: uppercase, and the badge says Preview', () => {
     const css = ['styles/main.css', 'styles/dropdown.css']
       .map(file => readFileSync(resolve(process.cwd(), file), 'utf8')).join('\n')
@@ -374,8 +408,10 @@ describe('every word the app shows is sentence case (UI-06 B-15)', () => {
       expect(found.length, `${selector} is styled`).toBeGreaterThan(0);
       expect(found.filter(([, body]) => /text-transform\s*:\s*uppercase/.test(body)).map(([text]) => text)).toEqual([]);
     }
-    const badge = rules.find(([text]) => text === 'body[data-mode="preview"]::after');
-    expect(badge?.[1]).toMatch(/content:\s*'Preview'/);
+    // The badge is a real element now, its word its text (UI-06 J-12): it was the `::after` rule's `content`.
+    const shell = new DOMParser().parseFromString(readFileSync(resolve(process.cwd(), 'index.html'), 'utf8'), 'text/html');
+    expect(shell.getElementById('preview-badge')?.textContent).toBe('Preview');
+    expect(rules.some(([text]) => text.includes('.preview-badge'))).toBe(true);
     expect(css).not.toMatch(/content:\s*'PREVIEW'/);
   });
 

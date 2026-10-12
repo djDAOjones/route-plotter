@@ -24,7 +24,8 @@
  *
  * ## State ownership
  * The service owns mode state (bound layer, pen, selection, hover,
- * drag) and the banner; the network mixin owns coordinate transforms
+ * drag) and its banner, shown in the page's one banner slot (ModeBanner,
+ * UI-06 J-12); the network mixin owns coordinate transforms
  * and hit-testing, and answers undo/autosave/render through the
  * `network:changed` pipeline. Model mutations happen here, on the
  * layer's GraphModel — persistence rides the scene machinery that has
@@ -35,6 +36,7 @@ import { snapToAngle } from '../utils/snapToAngle.js';
 import { getGraphDepartureShares } from '../utils/graphRouting.js';
 import { networkRoom, NETWORK_FULL } from '../utils/networkBudget.js';
 import { isInOpenModal } from '../utils/focusTrap.js';
+import { pageModeBanner, visibleFocusTarget } from '../components/ModeBanner.js';
 
 /** Node types in T-key cycle order; 'normal' is user-facing "pass-through". */
 const NODE_TYPE_CYCLE = ['normal', 'entry', 'exit'];
@@ -64,23 +66,16 @@ function guideToken(name) {
 }
 
 /**
- * The control to give focus to, or, when the card holding it is collapsed
- * (its content is display:none, so a browser cannot focus it), the card's
- * header button: the visible control that reveals it. The card is not
- * opened: leaving the mode is no reason to change the layout the user set.
- * Decided by the header's `aria-expanded` (jsdom lays nothing out). When
- * that target is itself inside something hidden — the mode left with the
- * crowd deselected, so SectionController has already hidden the Crowd scope
- * group — the scope chip's Route button, always shown and never disabled,
- * takes the focus instead.
- * @param {HTMLElement} control
- * @returns {HTMLElement}
+ * The banner's count line for a layer's network.
+ * @param {import('../models/FlowLayer.js').FlowLayer} layer
+ * @returns {string}
  */
-function visibleFocusTarget(control) {
-  const header = control.closest('.settings-section')?.querySelector('.section-header');
-  const target = !header || header.getAttribute('aria-expanded') === 'true' ? control : header;
-  if (!target.closest('[hidden]')) return target;
-  return document.getElementById('scope-route-btn') ?? target;
+function countLine(layer) {
+  const nodes = layer.graph.getNodes().length;
+  const edges = layer.graph.getEdges().length;
+  return nodes === 0
+    ? 'Click the map to start.'
+    : `${nodes} node${nodes === 1 ? '' : 's'} · ${edges} path${edges === 1 ? '' : 's'}`;
 }
 
 export class NetworkEditService {
@@ -121,6 +116,16 @@ export class NetworkEditService {
     /** @type {HTMLElement|null} Mode banner element */
     this._banner = null;
 
+    /** @type {import('../components/ModeBanner.js').ModeBanner|null} The slot the banner shows in */
+    this._modeBanner = null;
+
+    /** The layer the banner was drawn for, and the count line it shows. */
+    this._bannerLayer = null;
+    this._countLine = null;
+
+    /** Its owner in the slot: another mode's banner ends this one as Done does. */
+    this._bannerOwner = { onReplaced: () => this.exit() };
+
     /** @type {Function|null} Capture-phase keydown handler (Esc/Delete/T) */
     this._keyHandler = null;
   }
@@ -134,7 +139,11 @@ export class NetworkEditService {
   enter(layer, { returnFocusTo = null } = {}) {
     if (!layer) return;
     if (this.active) this.exit();
-    else if (this.layer) this.clearInspection();
+    // The slot first, before anything else here changes: another mode's
+    // banner ends that mode (an area's Preview restore among what it does)
+    // before this one is active (UI-06 PR 6; Codex on 9466a3f, blocking 1).
+    this.claimBanner(layer);
+    if (this.layer) this.clearInspection();
 
     this.active = true;
     this.layer = layer;
@@ -148,13 +157,36 @@ export class NetworkEditService {
     this.cursorImg = null;
     this.drag = null;
 
-    this._showBanner();
-
     this._keyHandler = (e) => this._handleKeyDown(e);
     document.addEventListener('keydown', this._keyHandler, true); // capture phase
 
     this.eventBus.emit('network:edit-mode-changed', { active: true, layer });
     this.eventBus.emit('render:request');
+  }
+
+  /**
+   * Claim the page's banner slot for drawing `layer`'s network: the first
+   * step of an entry, which the network mixin takes before it leaves
+   * Preview, and `enter` before it is active. Another mode's banner is
+   * replaced, that mode ended; this service's own, for this layer, stays.
+   * @param {import('../models/FlowLayer.js').FlowLayer} layer
+   */
+  claimBanner(layer) {
+    if (!layer) return;
+    this._modeBanner = pageModeBanner();
+    if (this._bannerLayer === layer && this._modeBanner?.isShowing(this._bannerOwner)) return;
+    this._countLine = countLine(layer);
+    const shown = this._modeBanner?.show(this._bannerOwner, {
+      id: 'network-edit-banner',
+      title: 'Editing the network',
+      text: [' — click places a linked node, click a node to continue from it, drag a path to bend it. ',
+        { kbd: 'Esc' }, ' lifts the pen.'],
+      count: this._countLine,
+      // Done stays the service's own button and listener (UI-06 B-29).
+      actions: [{ label: 'Done', className: 'banner-done', onClick: () => this.exit() }],
+    });
+    this._banner = shown?.root ?? null;
+    this._bannerLayer = shown ? layer : null;
   }
 
   /**
@@ -805,77 +837,29 @@ export class NetworkEditService {
 
   // ── banner ──────────────────────────────────────────────
 
-  /** @private */
-  _showBanner() {
-    this._hideBanner();
-
-    this._banner = document.createElement('div');
-    this._banner.id = 'network-edit-banner';
-    this._banner.setAttribute('role', 'status');
-    this._banner.setAttribute('aria-live', 'polite');
-    this._banner.innerHTML = `
-      <span class="banner-text">
-        <strong>Editing the network</strong> — click places a linked node,
-        click a node to continue from it, drag a path to bend it.
-        <kbd>Esc</kbd> lifts the pen.
-        <span class="banner-count"></span>
-      </span>
-      <button class="banner-done" type="button">Done</button>
-    `;
-
-    // Inline styles, same pattern as the area-draw banner (transient element)
-    Object.assign(this._banner.style, {
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      right: '0',
-      zIndex: '1000',
-      padding: '8px 16px',
-      background: 'var(--scope-crowd-fg, #0E4A38)',
-      color: '#fff',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      fontFamily: 'var(--font-ui, "IBM Plex Sans", sans-serif)',
-      fontSize: '14px',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
-    });
-
-    const doneBtn = this._banner.querySelector('.banner-done');
-    Object.assign(doneBtn.style, {
-      background: 'transparent',
-      border: '1px solid #fff',
-      color: '#fff',
-      padding: '4px 12px',
-      borderRadius: '4px',
-      cursor: 'pointer',
-      fontFamily: 'inherit',
-      fontSize: '13px'
-    });
-    doneBtn.addEventListener('click', () => this.exit());
-
-    document.body.appendChild(this._banner);
-    this._updateBannerCount();
-  }
-
-  /** @private */
+  /**
+   * Show the network's count in the banner, and say a change of it once,
+   * unless another message of the same change already says it ("Node
+   * placed", a deletion's toast, "Undo"): the banner was its only voice
+   * (UI-06 PR 6, item 6).
+   * @private
+   */
   _updateBannerCount() {
     if (!this._banner || !this.layer) return;
-    const countEl = this._banner.querySelector('.banner-count');
-    if (!countEl) return;
-    const nodes = this.layer.graph.getNodes().length;
-    const edges = this.layer.graph.getEdges().length;
-    countEl.textContent = nodes === 0
-      ? 'Click the map to start.'
-      : `${nodes} node${nodes === 1 ? '' : 's'} · ${edges} path${edges === 1 ? '' : 's'}`;
+    const line = countLine(this.layer);
+    if (line === this._countLine) return;
+    this._countLine = line;
+    if (this._modeBanner?.update(this._bannerOwner, { count: line })) {
+      this.eventBus.emit('ui:announce', { message: line, unlessSaid: true });
+    }
   }
 
   /** @private */
   _hideBanner() {
-    if (this._banner?.parentNode) {
-      this._banner.parentNode.removeChild(this._banner);
-    }
+    this._modeBanner?.hide(this._bannerOwner);
     this._banner = null;
+    this._bannerLayer = null;
+    this._countLine = null;
   }
 
   // ── rendering (called from RenderingService.VECTOR_LAYERS) ──

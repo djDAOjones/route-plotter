@@ -58,6 +58,13 @@ function stopApp(app) {
     }
   };
 
+  // What waits on the banner slot after the boot: the first-start tip's delay,
+  // its waits for a dialog or a mode and its 8 s, the slot's settle timer and
+  // transition listener, a branch's focus frame, the refit held back and the
+  // resize's debounce (UI-06 PR 6). None of it is the boot's own listeners.
+  // First: stopping the transport below pauses it, and a pause runs a refit
+  // held back while it played.
+  attempt(() => app._stopModeBannerWork?.());
   attempt(() => quiesce(app));
   attempt(() => app.storageService?.cancelAutoSave?.());
   attempt(() => app.eventBus?.removeAllListeners?.());
@@ -308,7 +315,7 @@ export async function bootApp({ viewport = DEFAULT_VIEWPORT } = {}) {
 /**
  * `localStorage.getItem` for a browser that has shown the start's preview tip
  * and, for every other key, reads as `read` does: by default, nothing. The tip
- * waits 1.5 s on the real clock from the boot (`_showPreviewTipToast`), so in
+ * waits 1.5 s on the real clock from the boot (`_showPreviewTip`), so in
  * a test that boots on the real clock and then pins what is announced or
  * shown as a toast, a slow runner had it land in the middle (UI-06, CI on
  * 882123d). Such a test boots with it seen; the tests of the tip do not. A

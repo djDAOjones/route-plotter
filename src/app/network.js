@@ -296,6 +296,12 @@ export const networkMixin = {
     const from = document.activeElement;
     const focusToBanner = from === this._editNetworkBtn || !from || from === document.body
       || from === document.documentElement || !from.isConnected;
+    // Its own session on another crowd ends first; then the banner slot is
+    // claimed, so a mode whose banner is up has ended, an area's Preview
+    // restore included, before this entry leaves Preview (UI-06 PR 6; Codex
+    // on 9466a3f, blocking 1).
+    if (svc.active) svc.exit();
+    svc.claimBanner(layer);
     // Drawing a network is editing: leave Preview through the canonical
     // switch (flipping back to Preview later closes the mode)
     this._setPreviewMode(false);

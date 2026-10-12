@@ -151,7 +151,10 @@ export const exportingMixin = {
     this._isExportMode = false;
 
     // updateCanvasAspectRatio resets canvas.width/height, ctx transform,
-    // displayWidth/Height, coordinate transform, image bounds, and re-renders
+    // displayWidth/Height, coordinate transform, image bounds, and re-renders.
+    // It is the refit a banner shown or hidden meanwhile waited for, so none
+    // is left held for later (UI-06 PR 6).
+    this._modeBannerRefitPending = false;
     this.updateCanvasAspectRatio();
 
     console.log(`🎬 [ExportMode] Exited: restored display resolution`);
