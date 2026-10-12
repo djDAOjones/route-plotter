@@ -551,21 +551,21 @@
       "ms": 0,
       "rested": {
         "zoom": 1,
-        "centerX": 499.848377,
+        "centerX": 586.666667,
         "centerY": 330,
-        "enabled": true
+        "enabled": false
       },
       "near": {
         "zoom": 1,
-        "centerX": 519.062306,
+        "centerX": 586.666667,
         "centerY": 330,
-        "enabled": true
+        "enabled": false
       },
       "scrub": {
         "zoom": 1,
-        "centerX": 529.446336,
+        "centerX": 586.666667,
         "centerY": 330,
-        "enabled": true
+        "enabled": false
       }
     },
     "climb": {
@@ -659,9 +659,9 @@
       "flatInstant": true,
       "seeked": {
         "zoom": 1,
-        "centerX": 499.848377,
+        "centerX": 586.666667,
         "centerY": 330,
-        "enabled": true
+        "enabled": false
       },
       "realtime25": {
         "reached": {
@@ -1070,7 +1070,7 @@
   "linear.seek": {
     "columns": ["fractionOfB","pathProgress","targetZoom","zoom","centerX","centerY","enabled"],
     "rows": [
-      [0,0,1,1,499.848377,330,true],
+      [0,0,1,1,586.666667,330,false],
       [0.05,0.097034,1.022299,1.022299,573.869962,337.198146,true],
       [0.1,0.194068,1.192953,1.192953,491.776819,383.375539,true],
       [0.15,0.291103,1.809425,1.809425,413.155543,390.565532,true],

@@ -33,16 +33,23 @@ const cancelledFrames = new Set();
 /** Each pending frame's timer handle, so a cancel under the same clock clears it too (no timer left behind). */
 const frameTimers = new Map();
 let frameSerial = 0;
-defineGlobal('requestAnimationFrame', vi.fn((cb) => {
-  const id = ++frameSerial;
+/** Frames asked for while a test holds them (`holdAnimationFrames`), by id, in the order asked for; else null. */
+let heldFrames = null;
+function timeFrame(id, cb) {
   frameTimers.set(id, setTimeout(() => {
     frameTimers.delete(id);
     if (cancelledFrames.delete(id)) return;
     cb(Date.now());
   }, 0));
+}
+defineGlobal('requestAnimationFrame', vi.fn((cb) => {
+  const id = ++frameSerial;
+  if (heldFrames) heldFrames.set(id, cb);
+  else timeFrame(id, cb);
   return id;
 }));
 defineGlobal('cancelAnimationFrame', vi.fn((id) => {
+  if (heldFrames?.delete(id)) return;
   const timer = frameTimers.get(id);
   if (timer !== undefined) {
     clearTimeout(timer);
@@ -50,6 +57,36 @@ defineGlobal('cancelAnimationFrame', vi.fn((id) => {
   }
   cancelledFrames.add(id);
 }));
+
+/**
+ * Hold animation frames instead of timing them, for a test that must not
+ * depend on how many frames its runner fits into a real wait (UI-06 PR 6
+ * round 5: CI drew one frame fewer while a project opened). Frames asked for
+ * are kept, by their own ids, until `runFrame` runs every one held, in the
+ * order asked for, at the given step of a clock of its own (ms from 0); a
+ * frame they ask for runs on the next. `release` times what is still held as
+ * any other frame, under the same ids, so a later cancel still finds it.
+ * @returns {{runFrame: (stepMs: number) => void, release: () => void}}
+ */
+function holdAnimationFrames() {
+  if (heldFrames) throw new Error('Animation frames are held already');
+  const held = new Map();
+  heldFrames = held;
+  let clock = 0;
+  return {
+    runFrame(stepMs) {
+      clock += stepMs;
+      for (const [id, cb] of [...held]) {
+        if (held.delete(id)) cb(clock);
+      }
+    },
+    release() {
+      if (heldFrames === held) heldFrames = null;
+      for (const [id, cb] of held) timeFrame(id, cb);
+      held.clear();
+    },
+  };
+}
 
 // Mock performance API (getter-only in jsdom)
 defineGlobal('performance', { now: vi.fn(() => Date.now()) });
@@ -583,7 +620,8 @@ export {
   contextFor,
   contextIdFor,
   recordCallOrder,
-  takeOrderedCalls
+  takeOrderedCalls,
+  holdAnimationFrames
 };
 
 // Unexpected console.error/warn fails the test that produced it (TST-10).
