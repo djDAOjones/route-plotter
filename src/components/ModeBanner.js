@@ -186,7 +186,9 @@ export class ModeBanner {
    * that of any owner its exit hands the slot to, each once. The same
    * owner's is redrawn, replacing nothing. Inside a claim's exits, a claim
    * by an owner leaving in it, or one past `MAX_HANDOVERS`, is refused: null,
-   * and its owner must not enter its mode.
+   * and its owner must not enter its mode. So is a claim whose owner leaves
+   * while it waits, its banner shown and replaced in the exits it waited on:
+   * checked again once they have run (Codex r3 on bc2d3a4, 2).
    * @param {{onReplaced?: Function}} owner
    * @param {Object} spec
    * @param {string} spec.id - The banner's own id (`network-edit-banner`, …)
@@ -208,10 +210,14 @@ export class ModeBanner {
     const heightBefore = outermost ? this.slot.offsetHeight : 0;
     const wasEmpty = !this._holder;
     this._claims += 1;
-    let drawn;
+    let drawn = null;
     try {
       this._replaceHolders(owner);
-      drawn = this._draw(owner, { id, title, text, count, actions });
+      // The exits just run may have shown this owner's banner and replaced
+      // it, running its exit: then it is refused, not drawn for an owner
+      // that has left (the suspended claim drew it, and its mode was
+      // entered while another owner held the slot).
+      if (!this._leaving.has(owner)) drawn = this._draw(owner, { id, title, text, count, actions });
     } finally {
       this._claims -= 1;
       if (outermost) {
@@ -220,7 +226,9 @@ export class ModeBanner {
       }
     }
     if (outermost) {
-      if (wasEmpty) this._heightChanged(true);
+      // Refused, its holders gone: the slot is free, as a hide leaves it.
+      if (!drawn && !this._holder) this._freed();
+      else if (wasEmpty) this._heightChanged(true);
       else if (this.slot.offsetHeight !== heightBefore) this._heightChanged(false);
     }
     return drawn;
@@ -324,13 +332,22 @@ export class ModeBanner {
     // Replaced: the incoming banner takes the slot in the same call, so the
     // slot is not free and its height is told once, by `show`.
     if (this._claims > 0) return true;
+    this._freed();
+    return true;
+  }
+
+  /**
+   * The slot is free, outside any claim: its waiters are told, until one
+   * takes it; its height is told if none did.
+   * @private
+   */
+  _freed() {
     for (const waiter of [...this._freeWaiters]) {
       this._freeWaiters.delete(waiter);
       waiter();
       if (this._holder) break;
     }
     if (!this._holder) this._heightChanged(true);
-    return true;
   }
 
   /**

@@ -134,12 +134,16 @@ export const viewportMixin = {
    * What a fit set (`updateCanvasAspectRatio`): the canvas's display and
    * backing sizes, its scale, the room it was fitted to and the transport's
    * width. A project load that fails after its commit fitted the canvas puts
-   * them back (UI-06 PR 6; Codex's check of the round-3 brief).
-   * @returns {Object|null} null with no canvas
+   * them back (UI-06 PR 6; Codex's check of the round-3 brief). In a video
+   * export the commit fits nothing (the fit's guard), so there is no fit to
+   * put back: the export's canvas and its identity transform stand, where
+   * the display's scale put back on them drew its later frames at twice
+   * their size at pixel density 2 (Codex r3 on bc2d3a4, 1).
+   * @returns {Object|null} null with no canvas, or in a video export
    * @private
    */
   _canvasFit() {
-    if (!this.canvas) return null;
+    if (!this.canvas || this._isExportMode) return null;
     const playbar = canvasAreaOf(this.canvas)?.querySelector('.controls');
     return {
       styleWidth: this.canvas.style.width,

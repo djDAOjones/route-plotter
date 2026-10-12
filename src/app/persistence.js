@@ -1068,6 +1068,11 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     // waits for after it is measured once the path below is in place.
     app.animationEngine.setDuration?.(staged.animationState.duration);
     app.animationEngine.setPlaybackSpeed?.(1);
+    // The fit below supersedes the refit work held or due (a banner's refit
+    // or a rebuild held while playing, a resize's debounce): dropped before
+    // the pause would run it, so that fit is the one rebuild (UI-06 PR 6;
+    // Codex r3 on bc2d3a4, 5).
+    app._supersedeRefitWork?.();
     app.animationEngine.pause?.();
     app.animationEngine.seekToProgress?.(0);
     app.uiController?.setPlaybackSpeed?.(1);

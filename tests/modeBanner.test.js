@@ -2591,3 +2591,311 @@ describe('round 3, the lead\'s settlement: opening a project refits the canvas t
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// Round 4 (Codex r3 on bc2d3a4, its findings by number).
+// ---------------------------------------------------------------------------
+
+describe('round 4, finding 2: a claim the replacements suspend is checked again before it draws', () => {
+  test('through the real area entry: P\'s exit shows A, then draws an area; A\'s exit draws an area too, then shows C. The area claim A\'s exit outlived is refused: no area drawing while X holds the slot (Codex\'s case)', async () => {
+    const app = await routeOfTwo();
+    const banner = app.modeBanner;
+    const area = app.areaDrawingService;
+    const waypoint = app.waypoints[0];
+    const exits = [];
+    const c = { onReplaced: () => { exits.push('c'); banner.hide(c); } };
+    const a = {
+      onReplaced: () => {
+        exits.push('a');
+        banner.hide(a);
+        area.startDrawing(waypoint);
+        banner.show(c, { id: 'c' });
+      },
+    };
+    const p = {
+      onReplaced: () => {
+        exits.push('p');
+        banner.hide(p);
+        banner.show(a, { id: 'a' });
+        area.startDrawing(waypoint);
+      },
+    };
+    banner.show(p, { id: 'p' });
+    const areaExits = vi.spyOn(area, 'cancelDrawing');
+    const x = { onReplaced: vi.fn() };
+
+    expect(banner.show(x, { id: 'x' })).not.toBeNull();
+
+    expect(area.isDrawing).toBe(false);
+    expect(area._keyHandler).toBeNull();
+    expect(exits).toEqual(['p', 'a', 'c']);
+    // The area's own exit ran once: as C replaced the area A's exit drew.
+    expect(areaExits).toHaveBeenCalledTimes(1);
+    expect(x.onReplaced).not.toHaveBeenCalled();
+    expect(banner.holder).toBe(x);
+    expect(shown()).toEqual(['x']);
+  });
+
+  test('the outermost claimant the same: shown and replaced inside its own claim, it is refused at its end; the slot is free, its waiter told and its height told once', () => {
+    document.body.innerHTML = '<div id="mode-banner"></div>';
+    const heights = vi.fn();
+    const banner = new ModeBanner(slot(), { onHeightChange: heights });
+    const exits = [];
+    const x = { onReplaced: () => { exits.push('x'); banner.hide(x); } };
+    const y = { onReplaced: () => { exits.push('y'); banner.hide(y); } };
+    const p = {
+      onReplaced: () => {
+        exits.push('p');
+        banner.hide(p);
+        banner.show(x, { id: 'x-inside' });
+        banner.show(y, { id: 'y' });
+      },
+    };
+    banner.show(p, { id: 'p' });
+    heights.mockClear();
+    const waiter = vi.fn();
+    banner.whenFree(waiter);
+
+    expect(banner.show(x, { id: 'x' })).toBeNull();
+
+    expect(exits).toEqual(['p', 'x', 'y']);
+    expect(banner.holder).toBeNull();
+    expect(shown()).toEqual([]);
+    expect(waiter).toHaveBeenCalledTimes(1);
+    expect(heights).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('round 4, findings 3 and 4: a capped toast stack keeps the author\'s scrolling, and is capped with the controls out of view', () => {
+  const cleanups = [];
+  afterEach(() => { for (const cleanup of cleanups.splice(0).reverse()) cleanup(); });
+  function narrowViewport(height) {
+    const media = window.matchMedia;
+    window.matchMedia = vi.fn(query => ({ ...media(query), matches: /max-width:\s*64rem/.test(query) }));
+    const original = Object.getOwnPropertyDescriptor(window, 'innerHeight');
+    Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: height });
+    cleanups.push(() => {
+      window.matchMedia = media;
+      if (original) Object.defineProperty(window, 'innerHeight', original);
+      else delete window.innerHeight;
+    });
+  }
+  function controlsAt(top, bottom) {
+    const controls = document.querySelector('#canvas-area > .controls');
+    controls.getBoundingClientRect = () => ({ top, bottom, left: 0, right: 400, width: 400, height: bottom - top });
+  }
+  /**
+   * The stack as a browser lays it out: toasts `each` px tall, 8 px apart;
+   * its height theirs, or its cap's; its scroll clamped to what the cap
+   * shows. (jsdom lays nothing out; these stand in for the browser's
+   * geometry, not for its focus reveal, which the lead checks in Chromium.)
+   */
+  function stackOfToasts(each) {
+    const container = byId('toast-container');
+    const toasts = () => [...container.children].filter(child => child.classList.contains('toast'));
+    const content = () => Math.max(0, toasts().length * (each + 8) - 8);
+    const shownHeight = () => {
+      const room = container.style.getPropertyValue('--toast-room');
+      return room ? Math.min(content(), parseFloat(room)) : content();
+    };
+    Object.defineProperty(container, 'scrollHeight', { configurable: true, get: content });
+    Object.defineProperty(container, 'offsetHeight', { configurable: true, get: shownHeight });
+    Object.defineProperty(container, 'clientHeight', { configurable: true, get: shownHeight });
+    let scrolled = 0;
+    Object.defineProperty(container, 'scrollTop', {
+      configurable: true,
+      get: () => scrolled,
+      set: (value) => { scrolled = Math.max(0, Math.min(value, content() - shownHeight())); },
+    });
+    const offsetTop = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetTop');
+    const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    Object.defineProperty(HTMLElement.prototype, 'offsetTop', {
+      configurable: true,
+      get() { return this.parentElement === container ? toasts().indexOf(this) * (each + 8) : offsetTop.get.call(this); },
+    });
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get() { return this.parentElement === container ? each : offsetHeight.get.call(this); },
+    });
+    cleanups.push(() => {
+      Object.defineProperty(HTMLElement.prototype, 'offsetTop', offsetTop);
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetHeight);
+    });
+    return container;
+  }
+  /** Where the stack stands from what the app wrote: `--toast-lift` + 8 px above the viewport's bottom, its height capped to `--toast-room`. */
+  function placed(container) {
+    const lift = parseFloat(container.style.getPropertyValue('--toast-lift')) || 0;
+    const room = container.style.getPropertyValue('--toast-room');
+    const bottom = window.innerHeight - lift - 8;
+    return { top: bottom - container.offsetHeight, bottom, capped: Boolean(room) };
+  }
+  const overlap = (a, b) => Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+  /** The part of the stack its cap shows, in the stack's own coordinates. */
+  const inView = container => ({ top: container.scrollTop, bottom: container.scrollTop + container.clientHeight });
+  /** Whether a toast is wholly in that part. */
+  const wholly = (container, toast) => toast.offsetTop >= inView(container).top
+    && toast.offsetTop + toast.offsetHeight <= inView(container).bottom;
+  const scrolledByItself = (container, to) => {
+    container.scrollTop = to;
+    // An element's scroll does not bubble: the window's capturing listener hears it.
+    container.dispatchEvent(new Event('scroll'));
+  };
+  const MESSAGES = ['Deleted waypoint — press Ctrl+Z to undo', 'Deleted Crowd 1 — press Ctrl+Z to undo', 'Branch cancelled'];
+
+  test.each([
+    ['wholly below the viewport (Codex\'s case)', [900, 1100]],
+    ['wholly above it', [-300, -100]],
+    ['partly in view, below the fold (a pin: bc2d3a4 capped it above them)', [700, 900]],
+    ['partly in view, scrolled away above (a pin: bc2d3a4 capped it below them)', [-100, 100]],
+  ])('the transport\'s controls %s, a 900 px stack in an 800 px viewport: capped, in the viewport, over none of the controls (finding 4)', async (_, [top, bottom]) => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(top, bottom);
+    const container = stackOfToasts(900);
+    app.showToast(MESSAGES[0], 0);
+    const stack = placed(container);
+    expect(stack.capped).toBe(true);
+    expect(stack.top, 'in the viewport').toBeGreaterThanOrEqual(0);
+    expect(stack.bottom, 'in the viewport').toBeLessThanOrEqual(800);
+    expect(overlap(stack, { top: Math.max(top, 0), bottom: Math.min(bottom, 800) }), 'over the controls').toBe(0);
+  });
+
+  test('the controls out of view, a stack that fits: uncapped at the viewport\'s bottom (a pin: bc2d3a4 placed it so)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(900, 1100);
+    const container = stackOfToasts(400);
+    app.showToast(MESSAGES[0], 0);
+    expect(placed(container)).toEqual({ top: 392, bottom: 792, capped: false });
+  });
+
+  test('the stack scrolled by the author stays where they put it: its own scroll moves nothing, and a page scroll after it places the stack again without scrolling it (finding 3)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(300, 460);
+    const container = stackOfToasts(150);
+    for (const message of MESSAGES) app.showToast(message, 0);
+    // Capped below the controls (324 px), scrolled to the newest as each was added (a pin).
+    expect(placed(container)).toEqual({ top: 468, bottom: 792, capped: true });
+    expect(container.scrollTop).toBe(466 - 324);
+
+    const placements = vi.spyOn(app, '_placeToasts');
+    scrolledByItself(container, 0);
+    expect(container.scrollTop).toBe(0);
+    // Not a scroll of the page: nothing is placed again for it.
+    expect(placements).not.toHaveBeenCalled();
+
+    controlsAt(250, 410);
+    window.dispatchEvent(new Event('scroll'));
+    expect(placements).toHaveBeenCalledTimes(1);
+    // Placed again for the controls' new place (374 px below them), its scroll the author's.
+    expect(placed(container)).toEqual({ top: 418, bottom: 792, capped: true });
+    expect(container.scrollTop).toBe(0);
+    window.dispatchEvent(new Event('resize'));
+    expect(container.scrollTop).toBe(0);
+  });
+
+  test('a toast added scrolls the stack to it, the newest, where focus is in none of the toasts (a pin: bc2d3a4 did so)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(300, 460);
+    const container = stackOfToasts(150);
+    for (const message of MESSAGES) app.showToast(message, 0);
+    scrolledByItself(container, 0);
+    app.showToast('Selection cleared', 0);
+    const toasts = [...container.querySelectorAll('.toast')];
+    expect(wholly(container, toasts.at(-1))).toBe(true);
+  });
+
+  test('keyboard focus on an older toast\'s Dismiss: the browser\'s reveal of it is kept, and a toast added after keeps that toast in view, not the newest (finding 3)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(300, 460);
+    const container = stackOfToasts(150);
+    for (const message of MESSAGES) app.showToast(message, 0);
+    const oldest = container.querySelector('.toast');
+    oldest.querySelector('.toast-dismiss').focus();
+    expect(oldest.contains(document.activeElement)).toBe(true);
+    // What a browser does as focus lands there: the stack scrolls itself to show it.
+    scrolledByItself(container, 0);
+    expect(wholly(container, oldest)).toBe(true);
+
+    app.showToast('Selection cleared', 0);
+    expect(wholly(container, oldest)).toBe(true);
+    expect(oldest.contains(document.activeElement)).toBe(true);
+  });
+
+  test('keyboard focus on an older toast scrolled out of view by the author: a toast added scrolls the stack to the focused toast (finding 3)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(300, 460);
+    const container = stackOfToasts(150);
+    for (const message of MESSAGES) app.showToast(message, 0);
+    const oldest = container.querySelector('.toast');
+    oldest.querySelector('.toast-dismiss').focus();
+    expect(wholly(container, oldest)).toBe(false);
+    app.showToast('Selection cleared', 0);
+    expect(wholly(container, oldest)).toBe(true);
+  });
+});
+
+describe('round 4, finding 5 (advisory): opening a project supersedes the refit work held or due; its own fit is the one rebuild', () => {
+  /** Two waypoints in a wide export (2.4:1), as round 3's settlement opens. */
+  const wide = {
+    coordVersion: 9,
+    waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.8, imgY: 0.7, isMajor: true }],
+    exportSettings: { resolutionX: 2400, resolutionY: 1000 },
+    animationState: { mode: 'constant-speed', speed: 200, duration: 10000 },
+  };
+  const play = (app) => {
+    app.animationEngine.state.isPlaying = true;
+    app.animationEngine.state.isPaused = false;
+  };
+  /** A banner's refit held while playing: the slot's own report, its room changed. */
+  const bannerRefitHeld = async (app) => {
+    play(app);
+    slotTakes(48);
+    app.modeBanner.show({ onReplaced: () => {} }, { id: 'held-banner' });
+    expect(app._modeBannerRefitPending).toBe(true);
+  };
+  /** A refit's rebuild held: its debounce ran while playing. */
+  const rebuildHeld = async (app) => {
+    slotTakes(30);
+    window.dispatchEvent(new Event('resize'));
+    play(app);
+    await vi.advanceTimersByTimeAsync(200);
+    expect(app._fittedPathPending).toBe(true);
+  };
+  /** A refit's debounce still to run. */
+  const debounceDue = async (app) => {
+    slotTakes(30);
+    window.dispatchEvent(new Event('resize'));
+    expect(app._resizeTimeout).not.toBeNull();
+  };
+
+  test.each([
+    ['a banner refit held while playing (Codex\'s case)', [bannerRefitHeld]],
+    ['a refit\'s rebuild held while playing', [rebuildHeld]],
+    ['a refit\'s debounce still to run', [debounceDue]],
+    ['both held: a rebuild, then a banner refit', [rebuildHeld, bannerRefitHeld]],
+  ])('%s, then a project opened: its path laid out once, by its own fit, to the room as it is', async (_, holds) => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const frames = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0);
+    try {
+      for (const hold of holds) await hold(app);
+      const paths = recordPaths(app);
+      const loaded = loadSnapshot(app, wide);
+      await vi.advanceTimersByTimeAsync(50);
+      expect(await loaded).toBe(true);
+      await vi.advanceTimersByTimeAsync(500);
+      expect(paths).toHaveLength(1);
+      expect([app._modeBannerRefitPending, app._fittedPathPending, app._resizeTimeout]).toEqual([false, false, null]);
+      expect(app._fittedRoom).toEqual(app._canvasAreaRoom());
+      expect(app.displayWidth / app.displayHeight).toBeCloseTo(2.4, 5);
+    } finally {
+      frames.mockRestore();
+    }
+  });
+});

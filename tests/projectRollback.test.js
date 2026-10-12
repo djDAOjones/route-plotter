@@ -20,6 +20,8 @@ import { bootApp } from './helpers/bootApp.js';
 import { allowConsole, recordedConsole } from './helpers/consoleGuard.js';
 import { loadSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
+import { contextIdFor, recordCallOrder, takeOrderedCalls } from './setup.js';
+import { VideoExporter } from '../src/services/VideoExporter.js';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -182,4 +184,73 @@ test('a failed load whose project has another export aspect puts back the canvas
   expect(fitted).toHaveBeenCalled();
   expect(geometryOf(app)).toEqual(geometry);
   expect(stateOf(app)).toEqual(before);
+});
+
+// ---------------------------------------------------------------------------
+// UI-06 PR 6 round 4 (Codex r3 on bc2d3a4, 1).
+// ---------------------------------------------------------------------------
+
+test('a failed load during a video export at pixel density 2 leaves the export as it was: its canvas, its identity transform, the scale and the frames it draws after (round 4, Codex r3 1: round 3\'s rollback put the display\'s scale on the export\'s canvas)', async () => {
+  allowConsole(/Failed to load project/);
+  const density = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+  Object.defineProperty(window, 'devicePixelRatio', { configurable: true, value: 2 });
+  recordCallOrder(true);
+  try {
+    const { app } = await appAndIncomingProject({ exportSize: { resolutionX: 1000, resolutionY: 1000 } });
+    app.updateCanvasAspectRatio();
+    expect(app.canvasScale).toBe(2);
+    let release;
+    const held = new Promise(resolveHeld => { release = resolveHeld; });
+    let started;
+    const running = new Promise(resolveStarted => { started = resolveStarted; });
+    const frames = [];
+    const frame = () => takeOrderedCalls()
+      .filter(([context]) => context === contextIdFor(app.canvas))
+      .map(entry => [...entry.slice(1), `@ ${entry.transform.join(' ')}`]);
+    app.videoExporter = {
+      cancel() {},
+      async export({ renderFrame }) {
+        takeOrderedCalls();
+        await renderFrame(0.5);
+        frames.push(frame());
+        started();
+        await held;
+        await renderFrame(0.5);
+        frames.push(frame());
+        return new Blob(['video'], { type: 'video/mp4' });
+      },
+    };
+    vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+    const exported = app.exportVideo();
+    await running;
+    expect(app._isExportMode).toBe(true);
+    const exporting = {
+      canvasScale: app.canvasScale,
+      backing: [app.canvas.width, app.canvas.height],
+      display: [app.displayWidth, app.displayHeight],
+      coordinateCanvas: [app.coordinateTransform.canvasWidth, app.coordinateTransform.canvasHeight],
+    };
+    failLate(app);
+
+    expect(await app.loadProject(new File([''], 'incoming.zip'))).toBe(false);
+
+    expect({
+      canvasScale: app.canvasScale,
+      backing: [app.canvas.width, app.canvas.height],
+      display: [app.displayWidth, app.displayHeight],
+      coordinateCanvas: [app.coordinateTransform.canvasWidth, app.coordinateTransform.canvasHeight],
+    }).toEqual(exporting);
+    takeOrderedCalls();
+    release();
+    await exported;
+    // The export's frame after the failed load is drawn as the one before it, through the identity transform.
+    expect(frames).toHaveLength(2);
+    expect(frames[0].length).toBeGreaterThan(0);
+    expect([frames[0][0][0], frames[0][0].at(-1)]).toEqual(['clearRect', '@ 1 0 0 1 0 0']);
+    expect(frames[1]).toEqual(frames[0]);
+  } finally {
+    recordCallOrder(false);
+    if (density) Object.defineProperty(window, 'devicePixelRatio', density);
+    else delete window.devicePixelRatio;
+  }
 });

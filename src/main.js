@@ -101,13 +101,18 @@ const TOAST_GAP_PX = 8;
  * the viewport's takes it; else wholly below them, at the viewport's bottom,
  * where the room under them does, or they are out of view; else capped
  * (`room`) to the larger of the two rooms, below them where neither has any.
+ * With them out of view, a stack taller than the viewport less its gap is
+ * capped to that (Codex r3 on bc2d3a4, 4: it ran off the viewport's top).
  * @param {{top: number, bottom: number}} controls - Their edges, in the viewport
  * @param {number} height - The stack's own height
  * @param {number} viewport - The viewport's height
  * @returns {{lift: number, room: (number|null)}} room: the cap, null for none
  */
 function toastPlacement({ top, bottom }, height, viewport) {
-  if (bottom <= 0 || top >= viewport) return { lift: 0, room: null };
+  if (bottom <= 0 || top >= viewport) {
+    const room = Math.max(0, viewport - TOAST_GAP_PX);
+    return { lift: 0, room: height <= room ? null : room };
+  }
   const above = { lift: viewport - top, room: Math.max(0, top - TOAST_GAP_PX) };
   const below = { lift: 0, room: Math.max(0, viewport - bottom - 2 * TOAST_GAP_PX) };
   if (height <= above.room) return { lift: above.lift, room: null };
@@ -769,6 +774,18 @@ class RoutePlotter {
   }
 
   /**
+   * A fit about to be made stands for every refit still held or due: the
+   * slot's refit and a refit's rebuild held while playing, and the resize's
+   * debounce, are dropped. A project's commit, before the pause that would
+   * run them: it fits once (Codex r3 on bc2d3a4, 5: three rebuilds).
+   * @private
+   */
+  _supersedeRefitWork() {
+    this._modeBannerRefitPending = false;
+    this._cancelFittedPathRecalculation();
+  }
+
+  /**
    * The banner slot's height has settled: refit the canvas to what is left
    * (UI-06 J-12), where that room has changed since the canvas was last
    * fitted (a slot replaced by one as tall, or shown and gone while playing,
@@ -977,7 +994,7 @@ class RoutePlotter {
     toast.appendChild(dismiss);
     
     container.appendChild(toast);
-    this._placeToasts();
+    this._placeToasts({ added: toast });
     
     // Trigger enter animation on next frame
     requestAnimationFrame(() => toast.classList.add('is-visible'));
@@ -1024,9 +1041,10 @@ class RoutePlotter {
    * toast shows, and on each scroll and resize while one shows (the lead's
    * Q5). At full width the container stands on the sticky transport, as
    * built, and nothing is written.
+   * @param {{added?: HTMLElement}} [change] - The toast just added, if one was
    * @private
    */
-  _placeToasts() {
+  _placeToasts({ added = null } = {}) {
     const container = this.elements.toastContainer;
     const controls = container?.parentElement;
     if (!container || !controls) return;
@@ -1041,37 +1059,56 @@ class RoutePlotter {
     const { lift, room } = toastPlacement({ top, bottom }, Math.max(container.offsetHeight, container.scrollHeight),
       window.innerHeight);
     container.style.setProperty('--toast-lift', `${Math.round(lift)}px`);
-    this._capToasts(container, room);
+    this._capToasts(container, room, added);
   }
 
   /**
-   * Cap the toast stack to `room` px, scrolled to its newest toast, or lift
-   * the cap (null).
+   * Cap the toast stack to `room` px, or lift the cap (null). Capped, it
+   * scrolls only as a toast is added: to that toast, the newest, unless
+   * focus is in an older one, which is kept in view instead. Otherwise its
+   * scroll is the author's, or the browser's revealing a focused control,
+   * and is left as it is (Codex r3 on bc2d3a4, 3).
    * @param {HTMLElement} container
    * @param {number|null} room
+   * @param {HTMLElement|null} [added] - The toast just added
    * @private
    */
-  _capToasts(container, room) {
+  _capToasts(container, room, added = null) {
     if (room === null) {
       if (container.style.getPropertyValue('--toast-room')) container.style.removeProperty('--toast-room');
       container.classList.remove('is-capped');
       return;
     }
-    container.style.setProperty('--toast-room', `${Math.floor(room)}px`);
+    const shown = Math.floor(room);
+    container.style.setProperty('--toast-room', `${shown}px`);
     container.classList.add('is-capped');
-    container.scrollTop = container.scrollHeight;
+    if (!added) return;
+    const focused = document.activeElement?.closest?.('.toast');
+    if (!focused || focused.parentElement !== container) {
+      container.scrollTop = container.scrollHeight;
+      return;
+    }
+    const top = focused.offsetTop;
+    const bottom = top + focused.offsetHeight;
+    if (top < container.scrollTop) container.scrollTop = top;
+    else if (bottom > container.scrollTop + shown) container.scrollTop = bottom - shown;
   }
 
   /**
    * Place the toasts again on every scroll, of the page or of any part of
-   * it, and every resize, while one shows (`_placeToasts`); `destroy()`
-   * stops it.
+   * it but the stack itself, and every resize, while one shows
+   * (`_placeToasts`); `destroy()` stops it.
    * @private
    */
   _placeToastsOnScroll() {
     if (this._toastPlacement) return;
-    this._toastPlacement = () => {
-      if (this.elements.toastContainer?.querySelector('.toast')) this._placeToasts();
+    this._toastPlacement = (event) => {
+      const container = this.elements.toastContainer;
+      // The stack's own scroll (the author's, or the browser revealing a
+      // focused toast) moves nothing: placing it then scrolled it back to
+      // the newest toast (Codex r3 on bc2d3a4, 3).
+      if (event?.target === container) return;
+      if (container?.querySelector('.toast')) this._placeToasts();
     };
     window.addEventListener('scroll', this._toastPlacement, { capture: true, passive: true });
     window.addEventListener('resize', this._toastPlacement);
