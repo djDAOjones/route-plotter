@@ -105,7 +105,7 @@ import { basename, dirname, join } from 'node:path';
 import { setTimeout as realDelay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, retireApp } from './helpers/bootApp.js';
 import { FIXED_NOW, freezeClock, loadSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject, PIXEL_DATA_URL } from './fixtures/authoredExtras.js';
 import { buildExampleProjects } from '../src/examples/index.js';
@@ -130,12 +130,18 @@ freezeClock();
  * still names new ids by their order of appearance, not their value.
  */
 let seededRandom = null;
-beforeEach(() => {
+
+/** The sequence each test's `Math.random` starts from. */
+function seededSequence() {
   let seed = 20260930;
-  seededRandom = vi.spyOn(Math, 'random').mockImplementation(() => {
+  return () => {
     seed = (seed * 48271) % 2147483647;
     return seed / 2147483647;
-  });
+  };
+}
+
+beforeEach(() => {
+  seededRandom = vi.spyOn(Math, 'random').mockImplementation(seededSequence());
 });
 afterEach(() => {
   seededRandom?.mockRestore();
@@ -390,11 +396,16 @@ async function bootReturning() {
  * own `loadAsset` seam. Loading it sets the export resolution to its native
  * size, so the fixture's own is put back and the canvas fitted to it, which
  * is how opening the example leaves the editor.
+ *
+ * `hooks.booted` and `hooks.beforeSettling` are for the test that the
+ * opening's scene end is settled whichever side of the fake clock it falls
+ * (`sceneEndHeld`).
  */
-async function bootWith(fixtureName) {
+async function bootWith(fixtureName, hooks = {}) {
   const fixture = FIXTURES[fixtureName]();
   const app = await bootReturning();
   oneFramePerRequest(app);
+  hooks.booted?.(app);
   expect(await loadSnapshot(app, fixture.project)).toBe(true);
 
   const image = stubImage(fixture.image);
@@ -416,7 +427,12 @@ async function bootWith(fixtureName) {
   // browser recovery leaves the background out is then given here, not in
   // the first row that autosaves.
   for (let i = 0; i < 3; i += 1) await nextTask();
+  await hooks.beforeSettling?.(app);
   app.invalidateAnimationTiming();
+  // With no route to retime, the scene end the load queued is still waiting
+  // on its real timer, or has run, at the runner's pace: it is measured now,
+  // so every row starts from the measured end (`sceneEndHeld`).
+  if (app._sceneEndTimeout) app.refreshSceneEnd();
   app._flushPendingUndo();
   app.autoSave();
   app.storageService.flushAutoSave();
@@ -1158,14 +1174,16 @@ async function undoAndRedo(app, saved) {
  * act and after each phase, so a change shows in the phase that made it. The
  * engine runs only the frames it is asked for, so a playing transport shows
  * one frame there, not a loop. What recovery holds is read then, before the
- * undo entries the row saved are undone and redone.
+ * undo entries the row saved are undone and redone. `hooks` are `bootWith`'s,
+ * and `hooks.recording` is shown the app as its recording starts.
  */
-async function transcribe(row) {
-  const app = await bootWith(row.fixture);
+async function transcribe(row, hooks = {}) {
+  const app = await bootWith(row.fixture, hooks);
   fakeTimers();
   const context = {};
   if (row.setup) await row.setup(app, context);
   await settleSetup(app);
+  hooks.recording?.(app);
 
   const recorder = new Recorder(app);
   const states = [observe(app, row)];
@@ -1491,6 +1509,21 @@ const CONTROLLER_ROWS = [
     event: 'route:branch-place', fixture: 'open day', given: 'a branch armed at ex-uon-1',
     setup: app => emit(app, 'route:branch-arm', { waypoint: wp(app, 'ex-uon-1') }),
     act: app => emit(app, 'route:branch-place', { imgX: 0.2, imgY: 0.3 }),
+  },
+  // UI-06 PR 6: an armed gesture ends when an Open or Clear All replaces its
+  // fork. Emitted alone, the fork is still the route's own waypoint, so the
+  // gesture stays armed (the replacement itself: tests/modeBanner.test.js).
+  {
+    event: 'project:replaced', fixture: 'open day', given: 'a branch armed at ex-uon-1',
+    how: 'emitted alone, the project not replaced',
+    setup: app => emit(app, 'route:branch-arm', { waypoint: wp(app, 'ex-uon-1') }),
+    act: app => emit(app, 'project:replaced'),
+  },
+  {
+    event: 'app:cleared', fixture: 'open day', given: 'a branch armed at ex-uon-1',
+    how: 'emitted alone, the project not cleared',
+    setup: app => emit(app, 'route:branch-arm', { waypoint: wp(app, 'ex-uon-1') }),
+    act: app => emit(app, 'app:cleared'),
   },
   {
     event: 'route:branch-rejoin', fixture: 'open day',
@@ -2346,3 +2379,101 @@ for (const golden of GOLDENS) {
     }
   });
 }
+
+// ========== THE OPENING'S SCENE END ==========
+
+/**
+ * The empty route's opening leaves its scene end queued on the real clock,
+ * 50 ms after the load cleared the route (`queueSceneEnd`,
+ * `src/app/pathTiming.js`), and the retime that settles every other opening
+ * returns before it reaches it: there is no path to rebuild. Whether that
+ * timer ran before the fake clock took over was the runner's pace. On CI it
+ * ran, and the row's own measurement then found nothing new; here it was
+ * still waiting, and the row's measurement emitted a duration change (run
+ * 38294027421, UI-06 PR 6 round 6).
+ *
+ * This holds it to one side. From the fixture's load, which measures nothing
+ * and queues it afresh, each real timeout the app sets is watched; when the
+ * one the app holds as its scene end falls due, it runs (`ran`: the setup
+ * waits for it before it settles) or is kept from running (`waiting`: still
+ * queued as the setup settles). What the setup then had is kept in `notes`.
+ */
+function sceneEndHeld(ordering, notes) {
+  const realSetTimeout = globalThis.setTimeout;
+  let watched = null;
+  // Only its own: a fake clock put in after it is the fake clock's to take out.
+  const restore = () => {
+    if (globalThis.setTimeout === watched) globalThis.setTimeout = realSetTimeout;
+  };
+  const sceneEnd = app => ({ queued: Boolean(app._sceneEndTimeout), parts: app.animationEngine.sceneEndParts });
+  let ran = false;
+  return {
+    restore,
+    booted(app) {
+      notes.app = app;
+      watched = function watchedTimeout(callback, delay, ...args) {
+        const id = realSetTimeout(() => {
+          if (app._sceneEndTimeout === id) {
+            if (ordering === 'waiting') return;
+            ran = true;
+          }
+          callback(...args);
+        }, delay);
+        return id;
+      };
+      globalThis.setTimeout = watched;
+    },
+    async beforeSettling(app) {
+      for (let waited = 0; ordering === 'ran' && !ran; waited += 10) {
+        if (waited > 2000) throw new Error('The opening\'s scene end never ran');
+        await realDelay(10);
+      }
+      restore();
+      notes.beforeSettling = sceneEnd(app);
+    },
+    recording(app) {
+      notes.atRecording = { ...sceneEnd(app), durationMs: app.animationEngine.state.duration };
+    },
+  };
+}
+
+describe('the opening\'s scene end', () => {
+  const suite = 'the opening\'s scene end';
+  const golden = GOLDENS.find(each => each.source === 'wiringControllers.js');
+  const row = CONTROLLER_ROWS.find(each => each.fixture === 'empty route');
+
+  const title = 'is settled before the row records, whether it ran before the fake clock took over or was still waiting';
+  fileTest(suite, title, async () => {
+    const runs = new Map();
+    for (const ordering of ['ran', 'waiting']) {
+      if (runs.size > 0) {
+        // The next opening starts as a test does: the last app retired on
+        // the real clock, then the clock frozen, the seed and storage fresh.
+        vi.useRealTimers();
+        retireApp(runs.get('ran').notes.app);
+        vi.useFakeTimers({ toFake: ['Date'] });
+        vi.setSystemTime(FIXED_NOW);
+        seededRandom.mockImplementation(seededSequence());
+        for (const method of ['getItem', 'setItem', 'removeItem', 'clear']) localStorage[method].mockClear();
+      }
+      const notes = {};
+      const held = sceneEndHeld(ordering, notes);
+      try {
+        runs.set(ordering, { text: await transcribe(row, held), notes });
+      } finally {
+        held.restore();
+      }
+    }
+    const [ran, waiting] = [runs.get('ran'), runs.get('waiting')];
+    expect(waiting.text, 'the row, its opening\'s scene end still waiting, against the row with it run').toBe(ran.text);
+    if (!UPDATING) expect(ran.text).toBe(goldenSections(golden.file).get(row.title));
+    // Held where each was meant to be as the setup settled, and settled alike
+    // as the row records: the empty route's end, measured.
+    const measured = { routeMs: 0, crowdsMs: 0, beaconsMs: 0, holdMs: 0 };
+    expect(ran.notes.beforeSettling, 'ran').toEqual({ queued: false, parts: measured });
+    expect(waiting.notes.beforeSettling, 'waiting').toEqual({ queued: true, parts: null });
+    for (const [ordering, { notes }] of runs) {
+      expect(notes.atRecording, ordering).toEqual({ queued: false, parts: measured, durationMs: 0 });
+    }
+  }, 20000);
+});

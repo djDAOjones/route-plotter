@@ -6,7 +6,7 @@ ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, e511cdd8)
+ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 08f96cb0)
 
 ## #diagnostics-modal>div[0]>button[0] · click
 app ~ focus: "#diagnostics-title" → "#report-bug-btn"
@@ -14,7 +14,7 @@ ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, e511cdd8)
+ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 08f96cb0)
 
 ## #diagnostics-open-security · click
 announced "Private vulnerability reporting was requested in a new tab. Diagnostics were not sent."
@@ -40,7 +40,7 @@ ui ~ body>a[0]: a class="skip-link" href="#main-content" inert="" :text="Skip to
 ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title" inert="" :text="Skip to scene outline" → a class="skip-link skip-link-outline" href="#scene-outline-title" :text="Skip to scene outline"
 ui ~ #app: div inert="" → div
 ui ~ #diagnostics-modal: div aria-describedby="diagnostics-description diagnostics-public-warning" aria-labelledby="diagnostics-title" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
-ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, e511cdd8)
+ui - #diagnostics-modal>div[0]: div class="modal-content diagnostics-modal-content" (and 16 inside, 08f96cb0)
 
 ## #diagnostics-copy · click
 announced "Diagnostics copy failed"
@@ -51,7 +51,7 @@ settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Diagnostics copy failed" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
 
 ## #diagnostics-download · click
-download route-plotter-diagnostics-2026-09-23T09-01-00.json application/json;charset=utf-8 479 bytes b63e553279a5
+download route-plotter-diagnostics-2026-09-23T09-01-00.json application/json;charset=utf-8 479 bytes 256ac4eb49f6
 announced "Diagnostics downloaded. Nothing was sent."
 app ~ focus: "#diagnostics-title" → "#diagnostics-download"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Diagnostics downloaded. Nothing was sent."

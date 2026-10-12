@@ -45,8 +45,8 @@ export const wiringDomMixin = {
       this._togglePreviewMode();
     });
     
-    // Show one-time toast tip (replaces old tip banner)
-    this._showPreviewTipToast();
+    // The first start's one-time tip, in the banner slot (UI-06 PR 6)
+    this._showPreviewTip();
     
     // Example Backgrounds dropdown - handle menu item clicks to load images
     // (Dropdown open/close is handled by initAllDropdowns() in Dropdown.js)

@@ -19,6 +19,7 @@ import { PROJECT_MODEL_LIMITS } from './persistence.js';
 import { assertSafeStoredColor } from '../utils/safeColor.js';
 import { IMAGE_COORDINATES } from '../config/constants.js';
 import { clampImageCoordinate, isImageCoordinateInRange } from '../utils/imageCoordinates.js';
+import { regionOperation } from './regionLines.js';
 
 const NODE_TYPES = new Set(['normal', 'entry', 'exit']);
 const EDGE_DIRECTIONS = new Set(['one-way', 'two-way']);
@@ -721,16 +722,20 @@ export const sceneOutlineMixin = {
     const selectionRemoved = (selected?.kind === 'node' && selected.id === node.id)
       || (selected?.kind === 'edge' && cascadedEdges.some(edge => edge.id === selected.id));
     const previousOutlineSelection = this._sceneOutlineSelectionKey;
-    if (!layer.graph.removeNode(node.id)) return;
-    if (selectionRemoved) {
-      this.networkEditService.clearSelection();
-    }
-    this.eventBus.emit('network:changed', { commit: true });
-    this._sceneOutlineSelectionKey = selectionRemoved
-      ? sceneOutlineKey('crowd', layer.id)
-      : previousOutlineSelection;
-    this._queueSceneOutlineRefresh(`${sceneOutlineKey('network', layer.id)}:summary`);
-    this.announce(`Node deleted${cascaded ? ` with ${plural(cascaded, 'connected path')}` : ''}. Undo available.`);
+    // It says the change: the network's count and the chip are not said again (UI-06 PR 6)
+    regionOperation(this, cover => {
+      if (!layer.graph.removeNode(node.id)) return;
+      if (selectionRemoved) {
+        this.networkEditService.clearSelection();
+      }
+      this.eventBus.emit('network:changed', { commit: true });
+      this._sceneOutlineSelectionKey = selectionRemoved
+        ? sceneOutlineKey('crowd', layer.id)
+        : previousOutlineSelection;
+      this._queueSceneOutlineRefresh(`${sceneOutlineKey('network', layer.id)}:summary`);
+      this.announce(`Node deleted${cascaded ? ` with ${plural(cascaded, 'connected path')}` : ''}. Undo available.`);
+      cover();
+    });
   },
 
   _outlineConnectNodes(command) {
@@ -794,16 +799,19 @@ export const sceneOutlineMixin = {
     const selectionRemoved = this.networkEditService.layer === layer
       && this.networkEditService.selection?.kind === 'edge'
       && this.networkEditService.selection.id === edge.id;
-    layer.graph.removeEdge(edge.id);
-    if (selectionRemoved) {
-      this.networkEditService.clearSelection();
-    }
-    this.eventBus.emit('network:changed', { commit: true });
-    this._sceneOutlineSelectionKey = selectionRemoved
-      ? sceneOutlineKey('crowd', layer.id)
-      : previousOutlineSelection;
-    this._queueSceneOutlineRefresh(`${sceneOutlineKey('network', layer.id)}:summary`);
-    this.announce('Path deleted. Undo available.');
+    regionOperation(this, cover => {
+      layer.graph.removeEdge(edge.id);
+      if (selectionRemoved) {
+        this.networkEditService.clearSelection();
+      }
+      this.eventBus.emit('network:changed', { commit: true });
+      this._sceneOutlineSelectionKey = selectionRemoved
+        ? sceneOutlineKey('crowd', layer.id)
+        : previousOutlineSelection;
+      this._queueSceneOutlineRefresh(`${sceneOutlineKey('network', layer.id)}:summary`);
+      this.announce('Path deleted. Undo available.');
+      cover();
+    });
   },
 
   _outlineAddControl(command) {

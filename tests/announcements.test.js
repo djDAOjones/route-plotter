@@ -172,6 +172,8 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
     expect(await settle(app.ready)).toBe(true);
     expect(app.waypoints).toHaveLength(2);
     expect(app.background.image).toBeTruthy();
+    // The welcome closed: the start's tip waits while a dialog is open (UI-06 PR 6, proposal (a), the owner's).
+    document.getElementById('splash-close').click();
     await playOut();
 
     // The start's tip follows, once both have had their time (the owner, 2026-10-09).
@@ -205,7 +207,7 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
   });
 
   test('an app booted idle stays idle once the start\'s tip would be due: the tip, on the real clock, never lands in a test (UI-06, CI on 882123d)', async () => {
-    // The tip waits 1.5 s on the real clock from the boot (`_showPreviewTipToast`).
+    // The tip waits 1.5 s on the real clock from the boot (`_showPreviewTip`).
     // A slow runner let a test outlast it, and the tip was read in the middle of
     // what the test pinned. The one real wait in this file: just past it.
     await bootIdleApp();
@@ -780,6 +782,8 @@ describe('what browser recovery did or could not do reaches the region, whatever
     if (!writes) vi.spyOn(app.storageService, 'saveAutoSave').mockReturnValue(false);
     const { shown } = recordRegion();
     expect(await settle(app.ready)).toBe(true);
+    // The welcome closed: the start's tip waits while a dialog is open (UI-06 PR 6, proposal (a), the owner's).
+    document.getElementById('splash-close').click();
 
     // The editor opens to the author with the warning showing and the outcome waiting.
     press(app, 'play', 'pause', 'play', 'pause');
@@ -812,6 +816,8 @@ describe('what browser recovery did or could not do reaches the region, whatever
     expect(shown).toEqual([]);
     release();
     expect(await settle(app.ready)).toBe(true);
+    // The welcome closed: the start's tip waits while a dialog is open (UI-06 PR 6, proposal (a), the owner's).
+    document.getElementById('splash-close').click();
     // The author plays and pauses at once, as in the restore above.
     press(app, 'play', 'pause', 'play', 'pause');
     await playOut();
@@ -940,8 +946,9 @@ describe('what browser recovery did or could not do reaches the region, whatever
 
     for (let click = 0; click < 12; click += 1) {
       if (click) await vi.advanceTimersByTimeAsync(1000);
-      // Shown as `_showPreviewTipToast` shows it, on the test's clock.
-      if (click === 6) app.showToast(BOOT_TIP, 8000, null, { whenIdle: true });
+      // Said as `_offerPreviewTip` says it, on the test's clock (UI-06 PR 6: it shows in the banner slot now,
+      // where it was a toast, and is said as the toast was).
+      if (click === 6) app.announce(BOOT_TIP, 'polite', { whenIdle: true });
       siteWalk.click();
       expect(await settle(opening.mock.results.at(-1).value)).toBe(true);
     }

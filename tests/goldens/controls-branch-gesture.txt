@@ -1,0 +1,19 @@
+# branch-gesture: a branch armed from waypoint 3, its banner shown
+
+## #branch-banner>button[1] · click
+emit route:branch-cancel
+announced "Branch cancelled"
+app ~ focus: "body" → "#waypoint-list>li[4]>button[0]"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Branch cancelled"
+ui ~ #mode-banner: div aria-live="off" class="mode-banner is-showing" → div aria-live="off" class="mode-banner"
+ui + #toast-container>div[0]: div class="toast" :text="Branch cancelled"
+ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui - #branch-banner: div class="mode-banner-item"
+ui - #branch-banner>span[0]: span class="banner-text" :text="— click where it should go. to cancel."
+ui - #branch-banner>span[0]>strong[0]: strong :text="Branch from Extras 4"
+ui - #branch-banner>span[0]>kbd[1]: kbd :text="Esc"
+ui - #branch-banner>button[1]: button class="mode-banner-action banner-cancel" type="button" :text="Cancel"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Branch cancelled" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui - #toast-container>div[0]: div class="toast" :text="Branch cancelled"
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

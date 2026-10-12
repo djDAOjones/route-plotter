@@ -205,11 +205,17 @@ describe('dots — DEF-79, stated', () => {
   test('a linear route\'s anchored crowd: the video export releases it where the editor does not', async () => {
     const app = await openProject(FIXTURES.linear());
     const editorArrival = app.getRouteArrivalMap().arrivalMsById['ex-parm-2'];
+    const editorFit = { width: app.displayWidth, height: app.displayHeight };
     app._setPreviewMode(true);
     app._enterExportMode(app.exportSettings.resolutionX, app.exportSettings.resolutionY);
     try {
-      // Measured again in export pixels, with the waits unchanged.
-      expect(app.getRouteArrivalMap().arrivalMsById['ex-parm-2']).toBeGreaterThan(editorArrival * 2);
+      // Measured again in export pixels, with the waits unchanged: no wait comes before it, so the arrival scales by
+      // the two canvases' short edges. The editor's canvas is the project's own 16:9 fit since UI-06 PR 6 round 3
+      // (the lead's settlement), so that is 1080 / 660; on the start's square it kept, it was more than 2×.
+      const editorShortEdge = Math.min(editorFit.width, editorFit.height);
+      expect(app.getRouteArrivalMap().arrivalMsById['ex-parm-2'])
+        .toBeCloseTo(editorArrival * (Math.min(app.displayWidth, app.displayHeight) / editorShortEdge), 6);
+      expect(app.getRouteArrivalMap().arrivalMsById['ex-parm-2']).toBeGreaterThan(editorArrival * 1.6);
     } finally {
       app._exitExportMode();
     }

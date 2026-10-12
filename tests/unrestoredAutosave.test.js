@@ -3052,7 +3052,7 @@ describe('Codex’s round-9 cases: faults while records are known', () => {
 });
 
 test('every app these tests boot, the probe included, has the start\'s tip seen over the test\'s own storage: on the real clock, it never lands in one (UI-06, Codex r2)', async () => {
-  // The tip waits 1.5 s on the real clock from each boot (`_showPreviewTipToast`).
+  // The tip waits 1.5 s on the real clock from each boot (`_showPreviewTip`).
   const record = JSON.stringify(await savedProject());
   const { store, prototype } = await bootRecording({ [AUTOSAVE]: record });
   const shown = vi.spyOn(prototype, 'showToast');

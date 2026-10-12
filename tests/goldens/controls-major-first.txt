@@ -9,11 +9,11 @@ app ~ focus: "body" → "#scope-route-btn"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Route"
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, 3c7d9c23)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
@@ -25,6 +25,8 @@ ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section=
 ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 138 inside, 757c0413)
 ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 103 inside, 5eb94273)
 ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 183 inside, 9d0fe3e7)
+settled:
+  announced "Editing · Route"
 
 ## #scope-prev-btn · click
 emit waypoint:deselected
@@ -34,11 +36,11 @@ app ~ selection: "waypoint[0]" → ""
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Route"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Route"
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, 3c7d9c23)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
@@ -50,6 +52,8 @@ ui - #waypoint-scope>div[1]: div class="settings-section expanded" data-section=
 ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" (and 138 inside, 757c0413)
 ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 103 inside, 5eb94273)
 ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 183 inside, 9d0fe3e7)
+settled:
+  announced "Editing · Route"
 
 ## #scope-next-btn · click
 emit waypoint:selected waypoint[1]
@@ -57,7 +61,7 @@ emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {
 app ~ selected: "waypoint[0]" → "waypoint[1]"
 app ~ selection: "waypoint[0]" → "waypoint[1]"
 app ~ focus: "body" → "#scope-next-btn"
-ui ~ #scope-chip-text: span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="polite" class="scope-chip-text" role="status" :text="Editing · minor 'Extras 2'"
+ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · minor 'Extras 2'"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input disabled="" type="hidden" value="#CC79A7" :value="#CC79A7"
 ui ~ #section-marker-content>div[1]>fieldset[1]: fieldset aria-describedby="{#section-marker-content>div[1]>fieldset[1]>span[1]}" class="swatch-fieldset" → fieldset aria-describedby="{#section-marker-content>div[1]>fieldset[1]>span[1]}" class="swatch-fieldset" disabled=""
 ui ~ #marker-style: select aria-describedby="marker-style-tip" :value="" → select aria-describedby="marker-style-tip" disabled="" :value="square"
@@ -159,6 +163,8 @@ ui - #waypoint-segment-speed-tip: span class="sr-only" :text="How fast the path 
 ui - #waypoint-segment-speed-value: span class="range-readout" :text="2.5x"
 ui - #area-draw-btn: button aria-describedby="area-draw-reason" class="btn btn-secondary" style="width: 100%;" :text="Draw area"
 ui - #area-draw-reason: p (not shown)
+settled:
+  announced "Editing · minor 'Extras 2'"
 
 ## #section-marker-content>div[7]>button[1] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
@@ -180,7 +186,7 @@ ui + #marker-apply-reason: span data-card-reason="apply-onward" data-card="marke
 settled:
   announced "Marker applied to 4 later waypoints. Undo is available."
   announced "Saved to browser recovery"
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9724 chars, cd4265f3]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9754 chars, c6bc19ee]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
@@ -206,7 +212,7 @@ ui ~ #ripple-thickness-value: span class="range-readout" :text="5 reference px" 
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   announced "Saved to browser recovery"
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, ba9e7e1e]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, d97b71fb]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
@@ -219,7 +225,7 @@ ui ~ #ripple-controls>div[1]>button[0]: button aria-describedby="ripple-max-scal
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Maximum expansion radius of the ripple effect"
 
 ## #ripple-max-scale · set 1700
-emit animation:durationChange 30779.455541
+emit animation:durationChange 30923.834135
 emit waypoint:style-changed waypoint[0]
 announced "Unsaved changes"
 model ~ waypoints[0].rippleMaxScale: 2400 → 1700
@@ -232,16 +238,16 @@ ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section=
 ui ~ #ripple-max-scale: input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" aria-valuetext="2400%" max="4000" min="500" step="100" type="range" value="1000" :value="2400" → input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" aria-valuetext="1700%" max="4000" min="500" step="100" type="range" value="1000" :value="1700"
 ui ~ #ripple-max-scale-value: span class="range-readout" :text="2400%" → span class="range-readout" :text="1700%"
 settled:
-  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30923.834135, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   announced "Saved to browser recovery"
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, dbb1d3e9]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, 9b92dc2c]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
 ## #ripple-wait · click
-emit animation:durationChange 30779.455541
+emit animation:durationChange 30923.834135
 emit waypoint:path-property-changed waypoint[0]
 announced "Unsaved changes"
 model ~ waypoints[0].rippleWait: false → true
@@ -257,10 +263,10 @@ ui ~ #waypoint-pause-time: input aria-describedby="waypoint-pause-time-value way
 ui ~ #waypoint-pause-time-value: span class="range-readout" :text="2.8s" → span class="range-readout" :text="9.6s"
 ui ~ #ripple-wait: input aria-describedby="ripple-wait-tip" checked="" type="checkbox" :unchecked → input aria-describedby="ripple-wait-tip" checked="" type="checkbox" :checked
 settled:
-  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30923.834135, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   announced "Saved to browser recovery"
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, c8349d00]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f857e34d]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
@@ -276,11 +282,16 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #area-draw-btn · click
 emit area:draw-start {waypoint: waypoint[0]}
+announced "Drawing an area — Click to place corners. Click near the first point to close. Escape to cancel."
 app ~ focus: "body" → "#area-draw-btn"
-ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
-ui + #area-draw-banner: div aria-live="polite" role="status" style="align-items: center; background: var(--cds-interactive-01, #0f62fe); box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: rgb(255, 255, 255); display: flex; font-fami…[387 chars, b001f0ea]
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Drawing an area — Click to place corners. Click near the first point to close. Escape to cancel."
+ui ~ #mode-banner: div aria-live="off" class="mode-banner" → div aria-live="off" class="mode-banner is-showing"
+ui + #area-draw-banner: div class="mode-banner-item"
 ui + #area-draw-banner>span[0]: span class="banner-text" :text="— Click to place corners. Click near the first point to close. to cancel."
 ui + #area-draw-banner>span[0]>strong[0]: strong :text="Drawing an area"
 ui + #area-draw-banner>span[0]>kbd[1]: kbd :text="Esc"
 ui + #area-draw-banner>span[0]>span[2]: span class="banner-count" :text="0 corners"
-ui + #area-draw-banner>button[1]: button aria-label="Cancel drawing" class="banner-cancel" style="background-attachment: scroll; background-clip: border-box; background-color: transparent; background-image: none; background-origin: padding-box; background-p…[1119 chars, fa48a91a] :text="Cancel"
+ui + #area-draw-banner>button[1]: button class="mode-banner-action banner-cancel" type="button" :text="Cancel"
+ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section expanded" data-last="true" data-section="area-highlight"
+settled:
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Drawing an area — Click to place corners. Click near the first point to close. Escape to cancel." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

@@ -185,7 +185,8 @@ describe('area edit handle coordinates', () => {
   });
 
   test('successful project boundaries clear modal draw and edit state but failed loads do not', () => {
-    document.body.innerHTML = '';
+    // The page's banner slot, where the draw's banner now shows (UI-06 J-12); a page without one shows none.
+    document.body.innerHTML = '<div id="mode-banner"></div>';
     const bus = new EventBus();
     const drawing = new AreaDrawingService(bus);
     const editing = new AreaEditService(bus);

@@ -9,27 +9,53 @@ import { resolveRenderReference } from '../utils/renderReference.js';
  * Object.assign(RoutePlotter.prototype, viewportMixin).
  */
 
+/**
+ * The canvas area holding `canvas`: its frame's parent since the Preview
+ * badge stands in the canvas's own box (UI-06 J-12); the canvas's parent on
+ * a page with no frame.
+ * @param {HTMLCanvasElement} canvas
+ * @returns {HTMLElement}
+ */
+function canvasAreaOf(canvas) {
+  return canvas.closest('.canvas-area') ?? canvas.parentElement;
+}
+
+/**
+ * The room the canvas area gives `canvas`: its width, and its height less
+ * the transport's (UI-06 PR 6: the banner slot compares it with the last fit).
+ * @param {HTMLCanvasElement} canvas
+ * @returns {{width: number, height: number}}
+ */
+function canvasAreaRoom(canvas) {
+  const container = canvasAreaOf(canvas);
+  const playbar = container.querySelector('.controls');
+  const playbarHeight = playbar ? playbar.offsetHeight : 60;
+  return { width: container.clientWidth, height: container.clientHeight - playbarHeight };
+}
+
 export const viewportMixin = {
   
   /**
    * Update canvas size to match export aspect ratio using contain-fit.
    * Maximizes canvas within available space while maintaining aspect ratio.
-   * Called on export resolution change and window resize.
+   * Called on export resolution change and window resize, and as a project
+   * is opened (UI-06 PR 6).
+   * @returns {boolean} Whether it fitted: false in a video export, whose canvas is its own
    */
   updateCanvasAspectRatio() {
     // A video export draws on a canvas of its own size. A size or layout
     // change meanwhile (the export size fields, a preset, Native, a resize)
     // applies when the export ends, when `_exitExportMode` calls this again,
     // not to its remaining frames (DEF-53).
-    if (this._isExportMode) return;
+    if (this._isExportMode) return false;
     const targetAspect = this.exportSettings.resolutionX / this.exportSettings.resolutionY;
     
     // Get available space in canvas-area
-    const container = this.canvas.parentElement;
+    const container = canvasAreaOf(this.canvas);
     const playbar = container.querySelector('.controls');
-    const playbarHeight = playbar ? playbar.offsetHeight : 60;
-    const availableWidth = container.clientWidth;
-    const availableHeight = container.clientHeight - playbarHeight;
+    const { width: availableWidth, height: availableHeight } = canvasAreaRoom(this.canvas);
+    // The room this fit used: the banner slot refits only when it has changed (UI-06 PR 6)
+    this._fittedRoom = { width: availableWidth, height: availableHeight };
     const containerAspect = availableWidth / availableHeight;
     
     // Contain fit: use whichever dimension is the constraint
@@ -101,8 +127,75 @@ export const viewportMixin = {
     this.render();
     
     console.debug(`📐 [AspectRatio] Canvas set to ${Math.round(canvasWidth)}×${Math.round(canvasHeight)} (${targetAspect.toFixed(2)}:1)`);
+    return true;
+  },
+
+  /**
+   * What a fit set (`updateCanvasAspectRatio`): the canvas's display and
+   * backing sizes, its scale, the room it was fitted to and the transport's
+   * width. A project load that fails after its commit fitted the canvas puts
+   * them back (UI-06 PR 6; Codex's check of the round-3 brief). In a video
+   * export the commit fits nothing (the fit's guard), so there is no fit to
+   * put back: the export's canvas and its identity transform stand, where
+   * the display's scale put back on them drew its later frames at twice
+   * their size at pixel density 2 (Codex r3 on bc2d3a4, 1).
+   * @returns {Object|null} null with no canvas, or in a video export
+   * @private
+   */
+  _canvasFit() {
+    if (!this.canvas || this._isExportMode) return null;
+    const playbar = canvasAreaOf(this.canvas)?.querySelector('.controls');
+    return {
+      styleWidth: this.canvas.style.width,
+      styleHeight: this.canvas.style.height,
+      width: this.canvas.width,
+      height: this.canvas.height,
+      displayWidth: this.displayWidth,
+      displayHeight: this.displayHeight,
+      canvasScale: this.canvasScale,
+      fittedRoom: this._fittedRoom ? { ...this._fittedRoom } : this._fittedRoom,
+      playbarWidth: playbar ? playbar.style.width : null,
+    };
+  },
+
+  /**
+   * Put back a fit `_canvasFit` read, with the context's scale and the
+   * coordinate transform's canvas as that fit set them.
+   * @param {Object|null} fit
+   * @private
+   */
+  _restoreCanvasFit(fit) {
+    if (!fit || !this.canvas) return;
+    this.canvas.style.width = fit.styleWidth;
+    this.canvas.style.height = fit.styleHeight;
+    const playbar = canvasAreaOf(this.canvas)?.querySelector('.controls');
+    if (playbar && fit.playbarWidth !== null) playbar.style.width = fit.playbarWidth;
+    // A backing size set resets the context, so its scale is set again.
+    this.canvas.width = fit.width;
+    this.canvas.height = fit.height;
+    this.canvasScale = fit.canvasScale;
+    if (this.ctx && fit.canvasScale) {
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      this.ctx.scale(fit.canvasScale, fit.canvasScale);
+      this.ctx.imageSmoothingEnabled = true;
+      this.ctx.imageSmoothingQuality = 'high';
+    }
+    this.displayWidth = fit.displayWidth;
+    this.displayHeight = fit.displayHeight;
+    this._fittedRoom = fit.fittedRoom;
+    this.coordinateTransform?.setCanvasDimensions(fit.displayWidth, fit.displayHeight);
   },
   
+  /**
+   * The room the canvas area gives the canvas: its width, and its height
+   * less the transport's.
+   * @returns {{width: number, height: number}}
+   * @private
+   */
+  _canvasAreaRoom() {
+    return canvasAreaRoom(this.canvas);
+  },
+
   /**
    * Calculate the visible image bounds in normalized coordinates (0-1)
    * Accounts for both canvas aspect ratio (cover mode) and zoom level.

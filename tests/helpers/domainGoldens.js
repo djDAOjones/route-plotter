@@ -18,6 +18,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, expect } from 'vitest';
 import { bootApp } from './bootApp.js';
+import { holdAnimationFrames } from '../setup.js';
 import { loadSnapshot } from './projectSnapshot.js';
 import { buildExampleProjects } from '../../src/examples/index.js';
 
@@ -104,19 +105,49 @@ export function exampleProject(id) {
 /** Past the 50 ms the app waits before it measures timing again. */
 export const settled = () => new Promise(resolve => setTimeout(resolve, 120));
 
+/** A frame of the clock the opening's frames run on: a 50 fps display, so the engine draws each (it draws at most 60). */
+const OPENING_FRAME_MS = 20;
+/** No opening comes to rest in this many frames; reaching it is a failure. */
+const MAX_OPENING_FRAMES = 2000;
+
+/** The app at rest: its loop asleep (the camera settled, nothing playing) and no render queued. */
+const atRest = app => app.animationEngine.animationFrameId === null && !app.renderQueued;
+
 /**
  * The booted app with a project loaded through browser recovery, in Preview
  * or Edit, its timing rebuilt for that mode. The default background has
  * loaded by `app.ready`, so the canvas (660 × 660 in jsdom) and with it the
  * route's timing are fixed before the project arrives.
+ *
+ * The opening's frames are held (UI-06 PR 6 round 5). On real timers a frame
+ * is a `setTimeout(0)` and the engine draws one only once 1/60 s of
+ * `Date.now()` has passed, so how many it drew in the 120 ms of `settled` was
+ * the runner's pace: CI drew one fewer than a laptop, and the camera, easing
+ * 8% a frame from where the project's fit left it, opened 7.5 px elsewhere
+ * (`linear.seek`, 492.298961 against 499.848377). Held, no frame runs between
+ * the boot, the load, its fit and its timers; then they run in the order asked
+ * for, a frame at a time, until the app is at rest, so it opens in the same
+ * state on every runner, however many frames that took.
  * @param {Object} project
  * @param {{preview?: boolean}} [options]
  */
 export async function openProject(project, { preview = true } = {}) {
-  const app = await bootApp();
-  await app.ready;
-  expect(await loadSnapshot(app, project)).toBe(true);
-  await settled();
+  const frames = holdAnimationFrames();
+  let app;
+  try {
+    app = await bootApp();
+    await app.ready;
+    expect(await loadSnapshot(app, project)).toBe(true);
+    await settled();
+    let count = 0;
+    do {
+      expect(count, 'the opened project comes to rest within the bound').toBeLessThan(MAX_OPENING_FRAMES);
+      frames.runFrame(OPENING_FRAME_MS);
+      count += 1;
+    } while (!atRest(app));
+  } finally {
+    frames.release();
+  }
   app._setPreviewMode(preview);
   app.invalidateAnimationTiming();
   return app;

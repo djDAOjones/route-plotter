@@ -41,6 +41,7 @@ import {
   recoveryFailureGuidance,
 } from './unrestoredAutosave.js';
 import { clearRouteSchedules, settleSavedTiming } from './pathTiming.js';
+import { regionOperation } from './regionLines.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -520,11 +521,12 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
   }
 
   const exportSettings = { ...CANONICAL_PROJECT_DEFAULTS.exportSettings, ...exportSettingsData };
+  // The project's own visual reference, or null: one with none adopts the
+  // canvas it is shown on as the commit fits it, not the canvas before the
+  // load (`commitStagedProject`; UI-06 PR 6).
   const renderReference = resolveRenderReference(
     projectData.renderReference,
-    projectData.timingReference,
-    { width: app.displayWidth, height: app.displayHeight },
-    { width: exportSettings.resolutionX, height: exportSettings.resolutionY }
+    projectData.timingReference
   );
 
   return {
@@ -825,6 +827,7 @@ function captureLiveState(app) {
     selectedWaypoints: app.selectedWaypoints,
     selectedCrowd: app.selectedCrowd,
     pathPoints: app.pathPoints,
+    canvasFit: app._canvasFit?.() ?? null,
     animation: { ...animationState },
     animationTransport: animationState.captureTransportState?.() || {
       timelineProgress: animationState.progress ?? 0,
@@ -917,6 +920,9 @@ function restoreLiveState(app, previous) {
     motionSettings: previous.motionSettings,
     animationState: previous.animation,
   };
+  // The canvas first: the commit fitted it to the staged project's export
+  // size (UI-06 PR 6), and the image's transform is measured on it.
+  runRollbackStep('the canvas size', () => app._restoreCanvasFit?.(previous.canvasFit));
   runRollbackStep('the background transform', () => {
     app.updateImageTransform?.(previous.background.image ?? null);
   });
@@ -1062,6 +1068,11 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     // waits for after it is measured once the path below is in place.
     app.animationEngine.setDuration?.(staged.animationState.duration);
     app.animationEngine.setPlaybackSpeed?.(1);
+    // The fit below supersedes the refit work held or due (a banner's refit
+    // or a rebuild held while playing, a resize's debounce): dropped before
+    // the pause would run it, so that fit is the one rebuild (UI-06 PR 6;
+    // Codex r3 on bc2d3a4, 5).
+    app._supersedeRefitWork?.();
     app.animationEngine.pause?.();
     app.animationEngine.seekToProgress?.(0);
     app.uiController?.setPlaybackSpeed?.(1);
@@ -1069,9 +1080,25 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     if (app.interactionHandler?.setSelection) app.interactionHandler.setSelection([], null);
     else app.interactionHandler?.setSelectedWaypoint?.(null);
 
-    // Always: a project of fewer than two waypoints clears what the last
-    // route fed (DEF-06).
-    app.calculatePath?.();
+    // The canvas takes this project's export size before its path is laid
+    // out, as a fresh start's takes its image's: it kept the last fit until a
+    // window resize, or the first banner's refit, changed it and the timing
+    // with it (UI-06 PR 6, the lead's settlement on 753f93f). The fit lays
+    // out a route of two or more waypoints; a video export keeps its own
+    // canvas (the fit's guard). Always: a project of fewer than two
+    // waypoints clears what the last route fed (DEF-06).
+    const fitted = app.updateCanvasAspectRatio?.() === true;
+    if (!fitted || app.waypoints.length < 2) app.calculatePath?.();
+    // A project with no visual reference of its own has adopted the canvas
+    // it is shown on, the fit's (the fit adopts one): the same project
+    // opened twice takes the same one, never the last project's canvas. With
+    // no fit, the canvas as it is, else the export size, as before.
+    if (!resolveRenderReference(app.renderReference)) {
+      app.renderReference = resolveRenderReference(
+        { width: app.displayWidth, height: app.displayHeight },
+        { width: app.exportSettings.resolutionX, height: app.exportSettings.resolutionY }
+      );
+    }
     syncLoadedProjectUI(app, staged);
     app.updateWaypointList?.();
     app.render?.();
@@ -1237,22 +1264,29 @@ export const persistenceMixin = {
       });
       if (!isAsyncProjectOperationCurrent(this, operation)) return false;
       staged.backgroundSourceDataURL = imported.backgroundBase64 || null;
-      commitStagedProject(this, staged, { markClean: true });
-      completeProjectReplacement(this);
+      // The commit and its message, one operation after the awaits above: the
+      // message says the change, so the regions' lines the open moves are not
+      // said again; a selection made while it waited is (UI-06 PR 6; Codex r2
+      // on 753f93f, 3).
+      regionOperation(this, cover => {
+        commitStagedProject(this, staged, { markClean: true });
+        completeProjectReplacement(this);
 
-      // Replace the previous session's recovery point with the newly loaded
-      // project. If the browser quota rejects it, remove the stale recovery
-      // point so a reload cannot resurrect the old project.
-      const recovery = replaceImmediateRecovery(this);
-      const recoveryUnavailable = recovery.attempted && !recovery.saved;
-      
-      this._endOpening?.(recoveryUnavailable ? STATUS_RECOVERY_FAILED : STATUS_RECOVERED);
-      if (recoveryUnavailable) {
-        this.announce('Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.'
-          + recoveryFailureGuidance(this), 'polite', RECOVERY_NOTICE);
-      } else {
-        this.announce('Project loaded');
-      }
+        // Replace the previous session's recovery point with the newly loaded
+        // project. If the browser quota rejects it, remove the stale recovery
+        // point so a reload cannot resurrect the old project.
+        const recovery = replaceImmediateRecovery(this);
+        const recoveryUnavailable = recovery.attempted && !recovery.saved;
+
+        this._endOpening?.(recoveryUnavailable ? STATUS_RECOVERY_FAILED : STATUS_RECOVERED);
+        if (recoveryUnavailable) {
+          this.announce('Project loaded, but browser recovery is unavailable. Save the project file to keep it safe.'
+            + recoveryFailureGuidance(this), 'polite', RECOVERY_NOTICE);
+        } else {
+          this.announce('Project loaded');
+        }
+        cover();
+      });
       console.log(`📦 Project loaded: ${file.name} (${this.waypoints.length} waypoints, ${this.imageAssetService.getAssetCount()} assets)`);
       return true;
     } catch (err) {
@@ -1480,29 +1514,38 @@ export const persistenceMixin = {
         return refuse(error);
       }
       staged.backgroundSourceDataURL = data.backgroundImage || null;
-      try {
-        commitStagedProject(this, staged);
-      } catch (error) {
-        // The commit rolled back, so this record was not restored either.
-        return refuse(error);
-      }
-      completeProjectReplacement(this);
-      // Legacy recovery points may contain image bytes and original filenames.
-      // Restore them once, then immediately replace or clear the local record
-      // so browser storage conforms to the model-only policy going forward.
-      const recovery = replaceImmediateRecovery(this);
-      console.debug(`📷 Loaded ${staged.assets.length} image assets`);
-      console.debug('Loaded waypoints:', staged.waypoints.length);
-      console.debug('Loaded flow layers:', staged.scene.getFlowLayers().length);
-      if (recovery.attempted && !recovery.saved) {
-        this.announce('Previous session restored, but browser recovery is now unavailable. Save a project file to keep it safe.'
-          + recoveryFailureGuidance(this), 'polite', RECOVERY_NOTICE);
-      } else {
-        // Announced over a record kept earlier, so it names that record too.
-        const earlier = keptEarlierNote(this);
-        this.announce(earlier ? `Previous session restored.${earlier}` : 'Previous session restored',
-          earlier ? 'assertive' : 'polite', RECOVERY_NOTICE);
-      }
+      // The commit and its message, one operation: the message says the
+      // change, so the regions' lines the restore moves are not said again; a
+      // commit that rolled back says no such message (UI-06 PR 6; Codex r2 on
+      // 753f93f, 3).
+      const failedCommit = regionOperation(this, cover => {
+        try {
+          commitStagedProject(this, staged);
+        } catch (error) {
+          return error;
+        }
+        completeProjectReplacement(this);
+        // Legacy recovery points may contain image bytes and original filenames.
+        // Restore them once, then immediately replace or clear the local record
+        // so browser storage conforms to the model-only policy going forward.
+        const recovery = replaceImmediateRecovery(this);
+        console.debug(`📷 Loaded ${staged.assets.length} image assets`);
+        console.debug('Loaded waypoints:', staged.waypoints.length);
+        console.debug('Loaded flow layers:', staged.scene.getFlowLayers().length);
+        if (recovery.attempted && !recovery.saved) {
+          this.announce('Previous session restored, but browser recovery is now unavailable. Save a project file to keep it safe.'
+            + recoveryFailureGuidance(this), 'polite', RECOVERY_NOTICE);
+        } else {
+          // Announced over a record kept earlier, so it names that record too.
+          const earlier = keptEarlierNote(this);
+          this.announce(earlier ? `Previous session restored.${earlier}` : 'Previous session restored',
+            earlier ? 'assertive' : 'polite', RECOVERY_NOTICE);
+        }
+        cover();
+        return null;
+      });
+      // The commit rolled back, so this record was not restored either.
+      if (failedCommit) return refuse(failedCommit);
       return true;
     } catch (error) {
       // After the commit: the project is live, so there is no record to keep.

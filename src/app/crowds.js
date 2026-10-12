@@ -42,6 +42,7 @@ import {
   showFieldError,
   SLIDER_REACH_REASON,
 } from '../utils/uiReadouts.js';
+import { regionOperation } from './regionLines.js';
 
 /** Okabe-Ito sky blue — visually distinct from the vermillion route default. */
 const NEW_CROWD_DOT_COLOR = '#56B4E9';
@@ -1127,23 +1128,27 @@ export const crowdsMixin = {
    */
   addCrowd() {
     const hasRoute = this.waypoints.length >= 2;
-    const layer = this.scene.addFlowLayer({
-      name: this._nextCrowdName(),
-      guideType: hasRoute ? 'route' : 'graph',
-      emitters: [{
-        dotColor: NEW_CROWD_DOT_COLOR,
-        speed: NEW_CROWD_SPEED,
-        releaseDuration: NEW_CROWD_RELEASE_DURATION,
-      }],
+    // It says the change: the chip moving to the new crowd is not said again (UI-06 PR 6)
+    regionOperation(this, cover => {
+      const layer = this.scene.addFlowLayer({
+        name: this._nextCrowdName(),
+        guideType: hasRoute ? 'route' : 'graph',
+        emitters: [{
+          dotColor: NEW_CROWD_DOT_COLOR,
+          speed: NEW_CROWD_SPEED,
+          releaseDuration: NEW_CROWD_RELEASE_DURATION,
+        }],
+      });
+      this.saveUndoState();
+      this.autoSave();
+      this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-added', layerId: layer.id });
+      this.eventBus.emit('crowd:selected', layer);
+      this.queueRender();
+      this.announce(hasRoute
+        ? `${layer.name} added — dots follow the route`
+        : `${layer.name} added — press Edit network to draw the network its dots will follow`);
+      cover();
     });
-    this.saveUndoState();
-    this.autoSave();
-    this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-added', layerId: layer.id });
-    this.eventBus.emit('crowd:selected', layer);
-    this.queueRender();
-    this.announce(hasRoute
-      ? `${layer.name} added — dots follow the route`
-      : `${layer.name} added — press Edit network to draw the network its dots will follow`);
   },
 
   /**
@@ -1203,18 +1208,22 @@ export const crowdsMixin = {
    */
   deleteCrowd(layer) {
     const wasSelected = this.selectedCrowd === layer;
-    if (!this.scene.removeFlowLayer(layer.id)) return;
-    if (wasSelected) {
-      this.selectedCrowd = null;
-      this.eventBus.emit('crowd:deselected');
-    }
-    this.saveUndoState();
-    this.autoSave();
-    this.updateLayersStrip();
-    this.queueRender();
-    this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-deleted', layerId: layer.id });
-    this.eventBus.emit('ui:toast', {
-      message: `Deleted ${layer.name} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+    // Its toast says the change: the chip it moves is not said again (UI-06 PR 6)
+    regionOperation(this, cover => {
+      if (!this.scene.removeFlowLayer(layer.id)) return;
+      if (wasSelected) {
+        this.selectedCrowd = null;
+        this.eventBus.emit('crowd:deselected');
+      }
+      this.saveUndoState();
+      this.autoSave();
+      this.updateLayersStrip();
+      this.queueRender();
+      this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-deleted', layerId: layer.id });
+      this.eventBus.emit('ui:toast', {
+        message: `Deleted ${layer.name} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+      });
+      cover();
     });
   },
 

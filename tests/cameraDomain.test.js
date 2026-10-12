@@ -34,9 +34,10 @@
  * `render()` makes, on a clock `performance.now()` reads.
  */
 
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { CameraService } from '../src/services/CameraService.js';
 import { PlayerCore } from '../src/core/PlayerCore.js';
+import { retireApp } from './helpers/bootApp.js';
 import { domainGolden, exampleProject, openProject, rounded } from './helpers/domainGoldens.js';
 
 const pin = domainGolden('camera');
@@ -65,7 +66,10 @@ const FIXTURES = {
   linear: {
     id: 'parm-aerial-walk',
     zooms: { 'ex-parm-1': 1, 'ex-parm-2': 3, 'ex-parm-3': 1 },
-    instants: { start: 0, climb: 960, held: 4000, lastLeg: 8000, end: 9600 },
+    // The same domains, on its timeline as the project opens on its own 16:9 fit (UI-06 PR 6 round 3, the lead's
+    // settlement; it kept the start's square): 2's wait 3,615–8,115 ms, the last leg to 10,878, the end's wait to
+    // 12,378 (8,000 and 9,600 were the last leg and the end's wait on the square).
+    instants: { start: 0, climb: 960, held: 4000, lastLeg: 10000, end: 12000 },
   },
 };
 
@@ -80,8 +84,31 @@ afterEach(() => {
   performance.now.mockImplementation(() => Date.now());
 });
 
+/**
+ * The opening paced as a slower or faster runner would pace it: its first
+ * camera frame on the project's waypoints dropped (`fewer`: drawn flat, the
+ * camera not advanced) or drawn twice (`more`). Returns the undo.
+ * @param {'asOpened'|'fewer'|'more'} pace
+ */
+function paceOpening(pace) {
+  if (pace === 'asOpened') return () => {};
+  const calculate = CameraService.prototype.calculateCameraState;
+  let paced = false;
+  const spy = vi.spyOn(CameraService.prototype, 'calculateCameraState').mockImplementation(function (params) {
+    if (paced || !params.waypoints?.length) return calculate.call(this, params);
+    paced = true;
+    if (pace === 'fewer') return { zoom: 1, centerX: params.canvasWidth / 2, centerY: params.canvasHeight / 2, enabled: false };
+    calculate.call(this, params);
+    return calculate.call(this, params);
+  });
+  return () => {
+    spy.mockRestore();
+    expect(paced, `the opening drew a camera frame to pace (${pace})`).toBe(true);
+  };
+}
+
 /** The fixture in Preview, with Camera movement on and its zooms authored (continuous). */
-async function cameraApp(name) {
+async function cameraApp(name, pace = 'asOpened') {
   const fixture = FIXTURES[name];
   const project = exampleProject(fixture.id);
   project.exportSettings = { ...project.exportSettings, includeCamera: true };
@@ -90,7 +117,13 @@ async function cameraApp(name) {
       waypoint.camera = { zoom: fixture.zooms[waypoint.id], zoomMode: 'continuous' };
     }
   }
-  const app = await openProject(project);
+  const unpace = paceOpening(pace);
+  let app;
+  try {
+    app = await openProject(project);
+  } finally {
+    unpace();
+  }
   expect(app.previewMode).toBe(true);
   return app;
 }
@@ -195,6 +228,20 @@ function flatView(app) {
   return { zoom: 1, centerX: app.displayWidth / 2, centerY: app.displayHeight / 2, enabled: false };
 }
 
+/** At each twentieth of B, the state a seek lands on after resting from a far seek, with the head and the target zoom. */
+function seekRows(app) {
+  const B = app.animationEngine.state.baseDuration;
+  const rows = [];
+  for (let step = 0; step <= 20; step += 1) {
+    const ms = (B * step) / 20;
+    seek(app, farFrom(app, ms));
+    const state = seek(app, ms);
+    rows.push([step / 20, app.animationEngine.getPathProgress(), app.cameraService._targetZoom,
+      state.zoom, state.centerX, state.centerY, state.enabled]);
+  }
+  return rows;
+}
+
 /** Settled within `isZoomTransitioning`'s own thresholds of `target`, the state a snap would give. */
 function expectNear(actual, target) {
   expect(Math.abs(actual.zoom - target.zoom)).toBeLessThan(0.002);
@@ -220,16 +267,7 @@ for (const name of Object.keys(FIXTURES)) {
 
     test('seek: the state a seek lands on after resting from a far seek, across the base timeline', async () => {
       const app = await cameraApp(name);
-      const B = app.animationEngine.state.baseDuration;
-      const rows = [];
-      for (let step = 0; step <= 20; step += 1) {
-        const ms = (B * step) / 20;
-        seek(app, farFrom(app, ms));
-        const state = seek(app, ms);
-        rows.push([step / 20, app.animationEngine.getPathProgress(), app.cameraService._targetZoom,
-          state.zoom, state.centerX, state.centerY, state.enabled]);
-      }
-      pin(`${name}.seek`, { columns: ['fractionOfB', 'pathProgress', 'targetZoom', 'zoom', 'centerX', 'centerY', 'enabled'], rows: rounded(rows) });
+      pin(`${name}.seek`, { columns: ['fractionOfB', 'pathProgress', 'targetZoom', 'zoom', 'centerX', 'centerY', 'enabled'], rows: rounded(seekRows(app)) });
     });
 
     test('after a different prior seek: a zoomed one lands exactly alike; a 1× one leaves the camera easing (DEF-07)', async () => {
@@ -333,5 +371,26 @@ describe('camera — the defects, stated', () => {
     seek(app, 0);
     seek(app, B);
     expect(app.cameraService._targetZoom).toBe(2);
+  });
+});
+
+describe('camera — the project opened, whatever the runner\'s pace', () => {
+
+  test('one camera frame fewer or more while the project opens: the camera opens at rest, and every seek lands alike (UI-06 PR 6 round 5: CI drew one fewer)', async () => {
+    // On a real-timer opening a slower runner drew one frame fewer, so the
+    // camera, still easing from the project's fit, opened 8% short of where a
+    // faster one had it, and the first seek (1×, which eases) landed there.
+    for (const name of Object.keys(FIXTURES)) {
+      const rows = {};
+      for (const pace of ['asOpened', 'fewer', 'more']) {
+        const app = await cameraApp(name, pace);
+        expect(transitioning(app), `${name}, ${pace}: the camera opens at rest`).toBe(false);
+        rows[pace] = rounded(seekRows(app));
+        // Stopped before the next opening: its seeks leave it easing on the stopped wall clock, its loop awake.
+        retireApp(app);
+      }
+      expect(rows.fewer, `${name}: one frame fewer`).toEqual(rows.asOpened);
+      expect(rows.more, `${name}: one frame more`).toEqual(rows.asOpened);
+    }
   });
 });

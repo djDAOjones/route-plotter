@@ -94,13 +94,14 @@ select{
 
 /* App Container - CSS Grid for proper viewport fill
    Row 1: Header (fixed height)
-   Row 2: Main content (fills remaining space)
-   Row 3: Timeline/controls (auto height)
+   Row 2: The banner slot (UI-06 J-12): 0 px empty, one line while a mode shows
+   Row 3: Main content (fills remaining space)
+   Row 4: Timeline/controls (auto height)
    Sidebar widths use clamp() for responsive sizing (relative units)
 */
 #app {
   display: grid;
-  grid-template-rows: auto 1fr auto; /* header row auto-sizes to content+padding */
+  grid-template-rows: auto auto 1fr auto; /* header row auto-sizes to content+padding */
   grid-template-columns: var(--sidebar-left) 1fr var(--sidebar-right);
   height: 100vh;
   overflow: hidden;
@@ -116,6 +117,105 @@ select{
   align-items:center;
   gap:var(--topbar-gap);
   /* Removed border-bottom per user request */
+}
+
+/* UI-06 J-12: the one banner slot, a row of its own below the header, so a
+   mode's banner or the first-start tip never covers the header's controls
+   (wish-list 22's ModeBanner). Empty, it takes no room; showing, one line of
+   3 rem, two at a width that wraps it, and the canvas area below gives up
+   that height. Its height eases over 150 ms, not under reduced motion. The
+   surface is each banner's own (.mode-banner-item); the slot paints none. */
+#mode-banner{
+  grid-row:2;
+  grid-column:1 / -1;
+  min-height:0;
+  max-height:0;
+  padding:0;
+  border:0;
+  overflow:hidden;
+  transition:min-height 150ms var(--ease-out), max-height 150ms var(--ease-out);
+}
+
+#mode-banner.is-showing{
+  min-height:3rem;
+  max-height:6rem;
+}
+
+@media (prefers-reduced-motion:reduce){
+  #mode-banner{
+    transition:none;
+  }
+}
+
+/* A banner: its words, then its actions (44 px buttons). White on UoN blue
+   is 11.7:1; the network's keeps the crowd scope's green (≥ 10:1).
+   The banner takes its owner's scope colour, as the scope chip does: the
+   route's modes and the tip UoN blue, network editing the crowd's green
+   (the owner, 2026-10-12). */
+.mode-banner-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-4);
+  box-sizing:border-box;
+  min-height:3rem;
+  padding:0 var(--space-4);
+  background:var(--interactive-01);
+  color:var(--text-04);
+  font-size:var(--type-body);
+  line-height:var(--lh-body);
+}
+
+#network-edit-banner{
+  background:var(--scope-crowd-fg);
+}
+
+.mode-banner-item .banner-text{
+  flex:1 1 auto;
+  min-width:0;
+}
+
+.mode-banner-item .banner-count{
+  margin-left:var(--space-1);
+}
+
+/* A key named in a banner: drawn in the banner's own colours, outlined. */
+.mode-banner-item kbd{
+  color:inherit;
+  background:transparent;
+  border-color:currentColor;
+  box-shadow:none;
+}
+
+.mode-banner-action{
+  flex:none;
+  min-height:var(--touch-target-min);
+  min-width:var(--touch-target-min);
+  padding:0 var(--space-3);
+  background:transparent;
+  color:inherit;
+  border:1px solid currentColor;
+  border-radius:var(--radius-1);
+  font:inherit;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.mode-banner-action:hover{
+  box-shadow:inset 0 0 0 1px currentColor;
+}
+
+/* Focused, under the pointer too: a 4 px ring inside the button, in its
+   words' colour (white on the banner, 11.7:1 and ≥ 10:1). Inside, because
+   the slot clips what is drawn outside its 3 rem, so the page's two-layer
+   ring would be cut. 4 px, so the pixels it changes from hover's 1 px, as
+   from no ring, are at least a 2 px perimeter's area at any size the button
+   takes (WCAG 2.4.12, 2.4.13; Codex r1 on 7a74755, 6; Codex r2 on 753f93f,
+   5). */
+.mode-banner-action:focus-visible,
+.mode-banner-action:hover:focus-visible{
+  outline:none;
+  box-shadow:inset 0 0 0 4px currentColor;
 }
 
 .header-title{
@@ -326,13 +426,23 @@ select{
   transform:translate(1.25rem,-50%);
 }
 
-/* Toast notification — replaces tip banner, auto-dismisses */
+/* Toast notification — auto-dismisses. Bottom-centre of the canvas area,
+   never over the header (UI-06 J-12): it stands on the transport, the
+   container's containing block, so it covers none of the transport's
+   controls at any height the transport takes; under .modal's 999, so a
+   dialog's backdrop covers it. */
 .toast-container{
-  position:fixed;
-  top:var(--space-3);
-  left:50%;
-  transform:translateX(-50%);
-  z-index:9000;
+  /* How far above the viewport's bottom the toasts stand where the
+     transport scrolls with the page, measured by the app (≤ 64 rem, below) */
+  --toast-lift:0px;
+  /* The stack's cap there, where neither the room above the transport's
+     controls nor the room below them takes it (the app's; none otherwise) */
+  --toast-room:none;
+  position:absolute;
+  left:var(--space-3);
+  right:var(--space-3);
+  bottom:calc(100% + var(--space-2));
+  z-index:20;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -352,7 +462,7 @@ select{
   box-shadow:var(--elev-3, 0 4px 16px rgba(0,0,0,0.25));
   pointer-events:auto;
   opacity:0;
-  transform:translateY(-0.5rem);
+  transform:translateY(0.5rem);
   transition:opacity var(--motion-med) var(--ease-out),
              transform var(--motion-med) var(--ease-out);
 }
@@ -545,9 +655,9 @@ kbd{
   margin-bottom:var(--space-1);
 }
 
-/* Main Content - spans all columns in row 2, contains sidebars + canvas */
+/* Main Content - spans all columns in row 3, below the banner slot, contains sidebars + canvas */
 .main{
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 1 / -1;
   display:grid;
   grid-template-columns: var(--sidebar-left) 1fr var(--sidebar-right);
@@ -3467,6 +3577,14 @@ kbd{
   border-right:1px solid var(--border-subtle);
 }
 
+/* The canvas's own box, as large as the canvas: the Preview badge stands in
+   its top-right corner, on the canvas however it is letterboxed in the
+   canvas area (UI-06 J-12, the lead's Q5). */
+.canvas-frame{
+  position:relative;
+  flex:0 0 auto;
+}
+
 /* Canvas - fills width, height determined by aspect-ratio (set via JS) */
 #canvas{
   flex:0 0 auto;
@@ -3996,10 +4114,27 @@ a.btn-primary:visited{
   }
 
   .controls{
-    position:static;
+    /* In flow here, not sticky (UI-06 J-12) */
+    position:relative;
     width:100%;
     align-self:stretch;
     flex-wrap:wrap;
+  }
+
+  /* The transport scrolls with the page here, so the toasts are fixed to
+     the viewport, in view however far it scrolls, and over none of the
+     transport's controls: wholly above them or wholly below them, or, where
+     neither room takes the stack, capped to the larger and scrolling inside
+     itself (`--toast-lift`, `--toast-room`, measured by the app on scroll
+     and resize: UI-06 J-12, the lead's Q5; Codex r2 on 753f93f, 2). */
+  .toast-container{
+    position:fixed;
+    bottom:calc(var(--toast-lift) + var(--space-2));
+    max-height:var(--toast-room);
+  }
+
+  .toast-container.is-capped{
+    overflow-y:auto;
   }
 
   .timeline{
@@ -4128,29 +4263,28 @@ body[data-mode="preview"] .canvas-area {
   grid-column: 1 / -1;
 }
 
-/* Preview mode badge */
-body[data-mode="preview"]::after {
-  content: 'Preview';
-  position: fixed;
+/* Preview mode badge (UI-06 J-12): a real element, top-right of the canvas
+   itself (its frame), where no toast stands (they are bottom-centre); white
+   on UoN blue, 11.7:1. It was a pseudo-element fixed over the header. Shown
+   in Preview alone, by its own `hidden`, which the mode switch keeps true
+   (Codex r1 on 7a74755, 2). */
+.preview-badge[hidden] {
+  display: none;
+}
+
+.preview-badge {
+  display: block;
+  position: absolute;
   top: var(--space-3);
-  left: 50%;
-  transform: translateX(-50%);
+  right: var(--space-3);
   padding: var(--space-1) var(--space-3);
   background: var(--interactive-01);
   color: var(--text-04);
   font-size: var(--text-xs);
   font-weight: 600;
   border-radius: var(--radius-2);
-  opacity: 0.9;
-  z-index: 1000;
+  z-index: 2;
   pointer-events: none;
-}
-
-/* Reduced motion: no opacity animation */
-@media (prefers-reduced-motion: reduce) {
-  body[data-mode="preview"]::after {
-    opacity: 1;
-  }
 }
 
 /* ============================================================================
@@ -4220,6 +4354,12 @@ body[data-mode="preview"]::after {
   /* A card header's ring is drawn inside its box (B-02), and so is its
      outline here: the card clips what its header draws outside itself. */
   .section-header:focus-visible{
+    outline-offset:-5px !important;
+  }
+
+  /* A banner's action likewise: the slot clips what is drawn outside its
+     3 rem (UI-06 J-12; Codex r1 on 7a74755, 6). */
+  .mode-banner-action:focus-visible{
     outline-offset:-5px !important;
   }
 

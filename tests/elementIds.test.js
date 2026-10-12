@@ -226,6 +226,9 @@ const LOOKED_UP = {
   `),
   'src/app/viewport.js': words('zoom-prompt'),
   'src/app/wiringDom.js': words('example-projects-menu waypoint-scope'),
+  // UI-06 PR 6: the page's banner slot, found by the banner every owner shares (`pageModeBanner`), and the
+  // Route button, focus's last stop when a banner that held it goes (Done's rule, moved here to be shared).
+  'src/components/ModeBanner.js': words('mode-banner scope-route-btn'),
   'src/components/Tooltip.js': words('tooltip-container'),
   'src/controllers/SectionController.js': words(`
     crowd-scope edge-scope node-scope route-scope settings-help-placeholder settings-sections waypoint-scope
@@ -237,6 +240,8 @@ const LOOKED_UP = {
     scope-chip-text scope-next-btn scope-prev-btn scope-route-btn spotlight-controls
     spotlight-controls
   `),
+  // UI-06 PR 6: the banner slot, in the elements bag (`mode-banner`); round 2: the Preview badge, whose
+  // `hidden` the mode switch keeps true to the mode (`preview-badge`, Codex r1 on 7a74755, 2).
   'src/main.js': words(`
     animation-speed animation-speed-right animation-speed-value animation-speed-value-right announcer
     aov-angle aov-angle-value aov-distance aov-distance-value aov-dropoff aov-dropoff-value app
@@ -260,11 +265,11 @@ const LOOKED_UP = {
     label-bg-opacity-value label-color label-mode label-offset-x label-offset-x-value label-offset-y
     label-offset-y-value label-size label-size-value label-size-warning label-width label-width-value
     load-project-btn load-project-input marker-filename marker-preview marker-preview-img marker-style
-    marker-upload marker-upload-btn mode-toggle-btn
+    marker-upload marker-upload-btn mode-banner mode-toggle-btn
     pacing-duration-breakdown path-casing-toggle path-glow-intensity path-glow-toggle
     path-glow-value path-head-color path-head-size path-head-size-value path-head-style path-shape
     path-trail path-trail-value path-visibility pause-btn pause-time-control play-btn preset-1-1 preset-16-9
-    preset-9-16 preset-native pulse-amplitude pulse-amplitude-value pulse-controls pulse-cycle-speed
+    preset-9-16 preset-native preview-badge pulse-amplitude pulse-amplitude-value pulse-controls pulse-cycle-speed
     pulse-cycle-speed-value redo-btn reveal-feather reveal-feather-value reveal-size reveal-size-value
     reveal-trail reveal-trail-value ripple-controls ripple-max-scale ripple-max-scale-value ripple-thickness
     ripple-thickness-value ripple-wait save-project-btn segment-color segment-speed-control segment-style
@@ -278,9 +283,12 @@ const LOOKED_UP = {
     canvas current-time play-btn player-announcer player-error player-error-detail reset-btn
     scene-summary-content scene-summary-content speed-select timeline total-time
   `),
-  // Where focus returns from the banner's Done, unless the mixin names another control (UI-06 B-29),
-  // and the Route button it falls back to when that control sits in a hidden scope group (round 2).
-  'src/services/NetworkEditService.js': words('network-edit-btn scope-route-btn')
+  // UI-06 PR 6: Draw area, where focus goes back from the banner's Cancel (Done's rule).
+  'src/services/AreaDrawingService.js': words('area-draw-btn'),
+  // Where focus returns from the banner's Done, unless the mixin names another control (UI-06 B-29).
+  // The Route button it falls back to when that control sits in a hidden scope group (round 2) is looked
+  // up in ModeBanner.js now, where every banner's focus rule shares it (UI-06 PR 6).
+  'src/services/NetworkEditService.js': words('network-edit-btn')
 };
 
 /**

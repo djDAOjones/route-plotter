@@ -1,0 +1,2901 @@
+/**
+ * UI-06 J-12 (PR 6), CROWD-07 X-02's banner half and wish-list 22 — one
+ * banner slot below the header (ModeBanner), toasts bottom-centre, the
+ * Preview badge on the canvas.
+ *
+ * Every mode banner, tip and toast sat on top of the header's controls: the
+ * area draw and the network edit each inline-styled a banner fixed over the
+ * page, the branch gesture was a toast, and the first-start tip painted over
+ * the welcome's backdrop. Now one slot, `#mode-banner`, is a row of its own
+ * between the header and the main area (the owner's pick, 2026-10-08), and
+ * these pin what the brief settles: one banner at a time, a replacement that
+ * ends the outgoing mode before the incoming one is active (Codex on
+ * 9466a3f, blocking 1), the branch gesture's Cancel and its focus fallback
+ * (proposal (c); blocking 2), the tip that waits for the welcome and for a
+ * mode (proposal (a); blocking 3), one announcer, the canvas refitted to the
+ * room the slot leaves, and nothing left running after teardown.
+ *
+ * jsdom lays nothing out: the stylesheet is read through the test helper's
+ * cascade, and what only a browser shows (the shrink, the wrapping, what a
+ * screen reader speaks) is the lead's Chromium list.
+ */
+
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { afterEach, describe, expect, test, vi } from 'vitest';
+import { MAX_HANDOVERS, ModeBanner } from '../src/components/ModeBanner.js';
+import { bootApp, retireApp, tipSeen } from './helpers/bootApp.js';
+import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { FORCED_COLOURS, cascade, contrast, hex, resolveValue, textPair, tokensFor } from './helpers/cssTokens.js';
+import { VideoExporter } from '../src/services/VideoExporter.js';
+import { createFocusTrap, whenNoModalOpen } from '../src/utils/focusTrap.js';
+
+const byId = id => document.getElementById(id);
+const slot = () => byId('mode-banner');
+/** The banners the slot shows, by id. */
+const shown = () => [...slot().children].map(child => child.id);
+
+const NETWORK_ENTRY = 'Editing the network — click the map to place linked nodes. Escape lifts the pen.';
+const AREA_ENTRY = 'Drawing an area — Click to place corners. Click near the first point to close. Escape to cancel.';
+const BRANCH_ARM = 'Branch from this waypoint — click where it should go. Escape to cancel.';
+const TIP = 'Tip: Check your sequence in Preview mode before exporting';
+const REDUCED = '@media(prefers-reduced-motion:reduce)';
+const NARROW = '@media(max-width:64rem)';
+
+const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+const shellBody = indexHtml.slice(indexHtml.indexOf('>', indexHtml.indexOf('<body')) + 1, indexHtml.lastIndexOf('</body>'))
+  .replace(/<script\b[\s\S]*?<\/script>/g, '');
+
+/** The shipped shell, mounted unbooted, for the cascade to read. */
+function mountShell() {
+  document.body.innerHTML = shellBody;
+}
+
+/** Let this turn's microtasks and a macrotask run (an `unlessSaid` message is decided at the turn's end). */
+const turn = () => new Promise(resolveTurn => setTimeout(resolveTurn, 0));
+/** Past the frames a list rebuild queued (the setup's frames are timers). */
+const frames = () => new Promise(resolveFrames => setTimeout(resolveFrames, 30));
+
+/** The apps this file booted: a mode one leaves on is ended, so its capture-phase Escape leaves with it. */
+const booted = [];
+async function boot() {
+  const app = await bootApp();
+  booted.push(app);
+  return app;
+}
+
+afterEach(() => {
+  for (const app of booted.splice(0)) {
+    app.areaDrawingService?.cancelDrawing?.();
+    app.networkEditService?.exit?.();
+  }
+  vi.useRealTimers();
+  localStorage.getItem.mockImplementation(() => null);
+  localStorage.setItem.mockImplementation(() => {});
+});
+
+/** The editor, its start's tip seen and its welcome closed. */
+async function editor() {
+  localStorage.getItem.mockImplementation(tipSeen());
+  const app = await boot();
+  await app.ready;
+  byId('splash-close').click();
+  return app;
+}
+
+async function routeOfTwo() {
+  const app = await editor();
+  app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+  app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
+  expect(app.waypoints).toHaveLength(2);
+  // What the adds say, the chip's lines among it, is said at their turn's end (round 2, finding 4): before a test listens.
+  await turn();
+  return app;
+}
+
+/** A route of two and a crowd on a custom network, selected: Edit network is there to press. */
+async function withCrowdNetwork() {
+  const app = await routeOfTwo();
+  app.addCrowd();
+  app.selectedCrowd.setGuideType('graph');
+  app.syncCrowdEditor();
+  return app;
+}
+
+/** Every message announced through the app, in turn. */
+function listen(app) {
+  const announce = vi.spyOn(app, 'announce');
+  const toasts = [];
+  app.eventBus.on('ui:toast', toast => toasts.push(toast.message));
+  return { said: () => announce.mock.calls.map(([message]) => message), toasts };
+}
+
+/** A tap on the canvas at an image position, through the interaction handler, whose press keeps focus where it is. */
+function tapCanvas(app, [imgX, imgY]) {
+  const { x, y } = app.imageToCanvas(imgX, imgY);
+  for (const kind of ['pointerdown', 'pointerup']) {
+    app.canvas.dispatchEvent(new PointerEvent(kind, {
+      bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', isPrimary: true,
+      button: kind === 'pointerdown' ? 0 : -1, buttons: kind === 'pointerdown' ? 1 : 0, clientX: x, clientY: y,
+    }));
+  }
+}
+
+/**
+ * The canvas area's height as a browser lays it out while the slot takes `by`
+ * px of it (bootApp's layout is 720 px tall; jsdom lays nothing out).
+ */
+function slotTakes(by) {
+  Object.defineProperty(byId('canvas-area'), 'clientHeight', { configurable: true, get: () => 720 - by });
+}
+
+const escape = () => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+
+describe('the component (ModeBanner)', () => {
+  function bare() {
+    document.body.innerHTML = '<button id="before">Before</button><div id="mode-banner"></div>';
+    return new ModeBanner(slot());
+  }
+  const owner = (log = []) => ({ onReplaced: vi.fn(() => log.push('replaced')) });
+
+  test('one slot: its title, words, key, count and actions drawn; actions are buttons named by their words; update rewrites the count; hide empties it', () => {
+    const banner = bare();
+    const area = owner();
+    const clicked = vi.fn();
+    const { root, actions, count } = banner.show(area, {
+      id: 'area-draw-banner', title: 'Drawing an area', text: [' — Click to place corners. ', { kbd: 'Esc' }, ' to cancel.'],
+      count: '0 corners', actions: [{ label: 'Cancel', className: 'banner-cancel', onClick: clicked }],
+    });
+    expect(shown()).toEqual(['area-draw-banner']);
+    expect(slot().classList.contains('is-showing')).toBe(true);
+    expect(root.querySelector('strong').textContent).toBe('Drawing an area');
+    expect(root.querySelector('kbd').textContent).toBe('Esc');
+    expect(count.textContent).toBe('0 corners');
+    expect(actions).toHaveLength(1);
+    expect([actions[0].type, actions[0].textContent, actions[0].hasAttribute('aria-label')]).toEqual(['button', 'Cancel', false]);
+    expect(actions[0].classList.contains('mode-banner-action')).toBe(true);
+    actions[0].click();
+    expect(clicked).toHaveBeenCalledTimes(1);
+    // Nothing in it is live: the owner says what it shows (UI-06 J-05).
+    expect(slot().querySelector('[aria-live], [role]')).toBeNull();
+
+    expect(banner.update(area, { count: '1 corner (2 more needed to close)' })).toBe(true);
+    expect(count.textContent).toBe('1 corner (2 more needed to close)');
+    expect(banner.isShowing(area)).toBe(true);
+    expect(banner.hide(area)).toBe(true);
+    expect(shown()).toEqual([]);
+    expect(slot().classList.contains('is-showing')).toBe(false);
+    expect(banner.isShowing()).toBe(false);
+  });
+
+  test('a second owner\'s show runs the first owner\'s onReplaced to its end before its own banner is drawn; the same owner\'s replaces nothing', () => {
+    const banner = bare();
+    const log = [];
+    const first = { onReplaced: vi.fn(() => { log.push(`replaced while showing ${shown()}`); banner.hide(first); }) };
+    const second = owner(log);
+    banner.show(first, { id: 'first' });
+    banner.show(first, { id: 'first' });
+    expect(first.onReplaced).not.toHaveBeenCalled();
+    banner.show(second, { id: 'second' });
+    expect(first.onReplaced).toHaveBeenCalledTimes(1);
+    expect(log).toEqual(['replaced while showing first']);
+    expect(shown()).toEqual(['second']);
+    expect(banner.holder).toBe(second);
+  });
+
+  test('an owner that leaves its banner up when replaced loses it all the same', () => {
+    const banner = bare();
+    const stubborn = owner();
+    banner.show(stubborn, { id: 'stubborn' });
+    banner.show(owner(), { id: 'next' });
+    expect(shown()).toEqual(['next']);
+  });
+
+  test('hide and update by an owner no longer holding the slot change nothing (m22)', () => {
+    const banner = bare();
+    const tip = { onReplaced: () => banner.hide(tip) };
+    const mode = owner();
+    banner.show(tip, { id: 'tip' });
+    banner.show(mode, { id: 'mode', count: '2 nodes · 1 path' });
+    expect(banner.hide(tip)).toBe(false);
+    expect(banner.update(tip, { count: 'stale' })).toBe(false);
+    expect(shown()).toEqual(['mode']);
+    expect(slot().querySelector('.banner-count').textContent).toBe('2 nodes · 1 path');
+  });
+
+  test('a waiter for a free slot runs when a banner goes and none replaces it, not on a replacement', () => {
+    const banner = bare();
+    const waited = vi.fn();
+    const first = { onReplaced: () => banner.hide(first) };
+    banner.show(first, { id: 'first' });
+    banner.whenFree(waited);
+    const second = owner();
+    banner.show(second, { id: 'second' });
+    expect(waited).not.toHaveBeenCalled();
+    banner.hide(second);
+    expect(waited).toHaveBeenCalledTimes(1);
+  });
+
+  test('the height is told at once where the slot does not animate: on a show from empty and on a hide to empty, once each', () => {
+    const banner = bare();
+    banner.onHeightChange = vi.fn();
+    const first = { onReplaced: () => banner.hide(first) };
+    banner.show(first, { id: 'first' });
+    expect(banner.onHeightChange).toHaveBeenCalledTimes(1);
+    // A replacement keeps the slot shown: jsdom measures no change, so nothing is told.
+    const second = owner();
+    banner.show(second, { id: 'second' });
+    expect(banner.onHeightChange).toHaveBeenCalledTimes(1);
+    banner.hide(second);
+    expect(banner.onHeightChange).toHaveBeenCalledTimes(2);
+  });
+
+  test('where it animates, the height is told at the transition\'s end, or by the fallback timer, once; reduced motion tells at once', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const banner = bare();
+    banner.onHeightChange = vi.fn();
+    Object.assign(slot().style, { transitionProperty: 'min-height, max-height', transitionDuration: '150ms' });
+    const mode = owner();
+    banner.show(mode, { id: 'mode' });
+    expect(banner.onHeightChange).not.toHaveBeenCalled();
+    // Each height-bearing transition's end, by name (round 2, advisory 8: the settle waits for them all).
+    for (const propertyName of ['min-height', 'max-height']) {
+      const ended = new Event('transitionend');
+      Object.defineProperty(ended, 'propertyName', { value: propertyName });
+      slot().dispatchEvent(ended);
+    }
+    expect(banner.onHeightChange).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(1000);
+    expect(banner.onHeightChange).toHaveBeenCalledTimes(1);
+
+    banner.hide(mode);
+    vi.advanceTimersByTime(249);
+    expect(banner.onHeightChange).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(1);
+    expect(banner.onHeightChange).toHaveBeenCalledTimes(2);
+
+    // Reduced motion: `transition: none`, whatever duration the page's 0.01 ms rule leaves.
+    Object.assign(slot().style, { transitionProperty: 'none', transitionDuration: '0.01ms' });
+    banner.show(mode, { id: 'mode' });
+    expect(banner.onHeightChange).toHaveBeenCalledTimes(3);
+  });
+
+  test('destroyed, a settle waiting for its transition never reports', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const banner = bare();
+    banner.onHeightChange = vi.fn();
+    slot().style.transitionDuration = '150ms';
+    banner.show(owner(), { id: 'mode' });
+    banner.destroy();
+    slot().dispatchEvent(new Event('transitionend'));
+    vi.advanceTimersByTime(1000);
+    expect(banner.onHeightChange).not.toHaveBeenCalled();
+  });
+
+  test('it remembers the control focused before focus entered the slot', () => {
+    const banner = bare();
+    const { actions } = banner.show(owner(), { id: 'tip', actions: [{ label: 'Dismiss' }] });
+    byId('before').focus();
+    actions[0].focus();
+    expect(banner.focusBefore).toBe(byId('before'));
+  });
+});
+
+describe('the slot is a row of its own below the header (item 1)', () => {
+  test('in the shell between the header and the main area, not live, empty', () => {
+    mountShell();
+    const header = document.querySelector('header.header');
+    expect(header.nextElementSibling).toBe(slot());
+    expect(slot().nextElementSibling).toBe(byId('main-content'));
+    expect(slot().closest('header')).toBeNull();
+    expect(slot().getAttribute('aria-live')).toBe('off');
+    expect(slot().children).toHaveLength(0);
+  });
+
+  test('the grid gives it row 2 and the main area row 3; empty it takes no room; showing, one line of 3 rem; never positioned or stacked; still under reduced motion (m02, m12)', () => {
+    mountShell();
+    const app = document.getElementById('app');
+    expect(cascade(app, 'grid-template-rows').value).toBe('auto auto 1fr auto');
+    expect(cascade(slot(), 'grid-row').value).toBe('2');
+    expect(cascade(slot(), 'grid-column').value).toBe('1 / -1');
+    expect(cascade(byId('main-content'), 'grid-row').value).toBe('3');
+    expect(cascade(document.querySelector('.header'), 'grid-row').value).toBe('1');
+    // Empty: nothing of its own takes room.
+    expect(cascade(slot(), 'min-height').value).toBe('0');
+    expect(cascade(slot(), 'max-height').value).toBe('0');
+    expect(cascade(slot(), ['padding', 'padding-top']).value).toBe('0');
+    expect(cascade(slot(), ['border', 'border-top']).value).toBe('0');
+    for (const media of [[], [NARROW]]) {
+      expect(cascade(slot(), 'position', { media })).toBeUndefined();
+      expect(cascade(slot(), 'z-index', { media })).toBeUndefined();
+    }
+    expect(['fixed', 'absolute', 'sticky']).not.toContain(cascade(document.querySelector('.header'), 'position')?.value);
+    // Showing: one line, its actions 44 px.
+    slot().classList.add('is-showing');
+    expect(cascade(slot(), 'min-height').value).toBe('3rem');
+    const banner = new ModeBanner(slot());
+    const { actions } = banner.show({}, { id: 'network-edit-banner', title: 'Editing the network', actions: [{ label: 'Done' }] });
+    const tokens = tokensFor();
+    expect(resolveValue(cascade(actions[0], 'min-height').value, tokens)).toBe('2.75rem');
+    expect(resolveValue(cascade(actions[0], 'min-width').value, tokens)).toBe('2.75rem');
+    expect(cascade(slot().firstElementChild, 'min-height').value).toBe('3rem');
+    // A 150 ms ease, and none under reduced motion.
+    expect(cascade(slot(), 'transition').value).toMatch(/max-height 150ms/);
+    expect(cascade(slot(), 'transition', { media: [REDUCED] }).value).toBe('none');
+  });
+
+  test('at 64 rem and below, where #app is a flex column, the slot comes after the header in document order', () => {
+    mountShell();
+    expect(cascade(byId('app'), 'display', { media: [NARROW] }).value).toBe('flex');
+    expect(cascade(byId('app'), 'flex-direction', { media: [NARROW] }).value).toBe('column');
+    const children = [...byId('app').children];
+    expect(children.indexOf(slot())).toBe(children.indexOf(document.querySelector('header.header')) + 1);
+  });
+
+  test('every banner\'s words and actions read at 7:1 on its surface, at rest and hovered', () => {
+    mountShell();
+    const banner = new ModeBanner(slot());
+    slot().classList.add('is-showing');
+    for (const id of ['network-edit-banner', 'area-draw-banner', 'branch-banner', 'preview-tip-banner']) {
+      const { root, actions } = banner.show({ id }, {
+        id, title: 'Title', text: [' words ', { kbd: 'Esc' }, ' more.'], count: '2 nodes', actions: [{ label: 'Done' }],
+      });
+      const elements = [root.querySelector('.banner-text'), root.querySelector('strong'), root.querySelector('kbd'),
+        root.querySelector('.banner-count'), actions[0]];
+      for (const element of elements) {
+        for (const states of [[], ['hover']]) {
+          const { fg, bg } = textPair(element, { states });
+          const ratio = contrast(fg, bg);
+          expect(ratio, `${id} ${element.className || element.localName} ${states}: ${hex(fg)} on ${hex(bg)}`)
+            .toBeGreaterThanOrEqual(7);
+        }
+      }
+    }
+  });
+});
+
+describe('toasts bottom-centre of the canvas area, the Preview badge top-right (items 3, 4, 7)', () => {
+  test('the toast container stands on the transport, never over the header, under a dialog (m05)', () => {
+    mountShell();
+    const container = byId('toast-container');
+    expect(container.parentElement).toBe(document.querySelector('#canvas-area > .controls'));
+    expect(container.closest('header')).toBeNull();
+    expect(cascade(container, 'position').value).toBe('absolute');
+    expect(cascade(container, 'top')).toBeUndefined();
+    expect(cascade(container, 'bottom').value).toBe('calc(100% + var(--space-2))');
+    expect([cascade(container, 'left').value, cascade(container, 'right').value]).toEqual(['var(--space-3)', 'var(--space-3)']);
+    // Its containing block is the transport, sticky at full width and in flow below 64 rem.
+    const controls = container.parentElement;
+    expect(cascade(controls, 'position').value).toBe('sticky');
+    expect(cascade(controls, 'position', { media: [NARROW] }).value).toBe('relative');
+    // Below the welcome's and every dialog's 999 (proposal (b), the owner's).
+    const modal = document.querySelector('.modal');
+    expect(Number(cascade(container, 'z-index').value)).toBeLessThan(Number(cascade(modal, 'z-index').value));
+    expect(Number(cascade(container, 'z-index').value)).toBeLessThan(Number(cascade(byId('splash'), 'z-index').value));
+  });
+
+  test('the badge is a real element in the canvas area, drawn not read, shown only in Preview, top-right, at 7:1 (m06)', () => {
+    mountShell();
+    const badge = byId('preview-badge');
+    expect(badge.closest('#canvas-area')).toBe(byId('canvas-area'));
+    expect([badge.getAttribute('aria-hidden'), badge.textContent]).toEqual(['true', 'Preview']);
+    expect(cascade(badge, 'display').value).toBe('none');
+    // Shown as the mode switch shows it, by its own `hidden` (round 2, finding 2: no page writes `body[data-mode]`).
+    badge.hidden = false;
+    expect(cascade(badge, 'display').value).toBe('block');
+    expect(cascade(badge, 'position').value).toBe('absolute');
+    expect([cascade(badge, 'top').value, cascade(badge, 'right').value]).toEqual(['var(--space-3)', 'var(--space-3)']);
+    expect(cascade(badge, 'left')).toBeUndefined();
+    expect(cascade(badge, 'bottom')).toBeUndefined();
+    const { fg, bg } = textPair(badge);
+    expect(contrast(fg, bg)).toBeGreaterThanOrEqual(7);
+    // Its containing block at both widths is the canvas's own frame (round 2, Q5), no longer the canvas area.
+    for (const media of [[], [NARROW]]) expect(cascade(badge.parentElement, 'position', { media }).value).toBe('relative');
+    // No pseudo-element badge is left over the header.
+    const css = readFileSync(resolve(process.cwd(), 'styles/main.css'), 'utf8');
+    expect(css).not.toMatch(/data-mode="preview"\]::after/);
+  });
+});
+
+describe('a mode replaces the one whose banner is up, and is active once it has ended (item 1; blocking 1)', () => {
+  test.each([
+    ['area → network, the area entered from Edit', 'area', false],
+    ['area → network, the area entered from Preview', 'area', true],
+    ['network → area, the network entered from Edit', 'network', false],
+    ['network → area, the network entered while Preview showed', 'network', true],
+  ])('%s: the incoming mode is active and its banner alone shows; the outgoing ended; Preview off; one announcement (m13)', async (_, outgoing, fromPreview) => {
+    const app = await withCrowdNetwork();
+    const area = app.areaDrawingService;
+    const network = app.networkEditService;
+    app._setPreviewMode(fromPreview);
+    if (outgoing === 'area') area.startDrawing(app.waypoints[0]);
+    else app.enterNetworkEditMode();
+    expect(outgoing === 'area' ? area.isDrawing : network.active).toBe(true);
+    expect(app.previewMode).toBe(false);
+    await turn();
+    const { said } = listen(app);
+
+    if (outgoing === 'area') app.enterNetworkEditMode();
+    else area.startDrawing(app.waypoints[0]);
+    await turn();
+
+    if (outgoing === 'area') {
+      expect([network.active, area.isDrawing]).toEqual([true, false]);
+      expect(shown()).toEqual(['network-edit-banner']);
+      expect(said()).toEqual([NETWORK_ENTRY]);
+    } else {
+      expect([area.isDrawing, network.active]).toEqual([true, false]);
+      expect(shown()).toEqual(['area-draw-banner']);
+      expect(said()).toEqual([AREA_ENTRY]);
+    }
+    expect(app.previewMode).toBe(false);
+  });
+
+  test('a weight typed in network editing and not committed goes to its path when an area draw takes the slot (m20)', async () => {
+    const app = await editor();
+    expect(await loadSnapshot(app, {
+      coordVersion: 9,
+      waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
+      scene: {
+        flowLayers: [{
+          id: 'net', name: 'net', guideType: 'graph', emitters: [{ id: 'net-e', seed: 7 }],
+          graph: {
+            nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.5, type: 'exit' }],
+            edges: [{ id: 'e1', sourceId: 'n1', targetId: 'n2', weight: 1 }],
+          },
+        }],
+      },
+    })).toBe(true);
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayers()[0]);
+    byId('network-edit-btn').click();
+    const network = app.networkEditService;
+    expect(network.active).toBe(true);
+    const graph = app.selectedCrowd.graph;
+    network.selectEdge(graph.getEdge('e1'));
+    const field = byId('network-edge-weight-field');
+    field.focus();
+    field.value = '7';
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+
+    // Called directly, so the replacement, not a deselection, is what ends the network's session.
+    app.areaDrawingService.startDrawing(app.waypoints[0]);
+
+    expect([network.active, app.areaDrawingService.isDrawing]).toEqual([false, true]);
+    expect(graph.getEdge('e1').weight).toBe(7);
+    expect(shown()).toEqual(['area-draw-banner']);
+  });
+
+  test('Edit network\'s banner replaces a branch gesture by its cancel path, and the gesture ends', async () => {
+    const app = await withCrowdNetwork();
+    const { toasts } = listen(app);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(shown()).toEqual(['branch-banner']);
+    app.enterNetworkEditMode();
+    expect(app.interactionHandler.branchArmed).toBeNull();
+    expect(toasts).toEqual(['Branch cancelled']);
+    expect(shown()).toEqual(['network-edit-banner']);
+  });
+});
+
+describe('the canvas is refitted to the room the slot leaves (item 1; the lead\'s settlement and Codex\'s recheck)', () => {
+  test('a banner shown and hidden refits the canvas once each, and the canvas fits the area again (m17)', async () => {
+    const app = await routeOfTwo();
+    const before = app.displayHeight;
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    slotTakes(48);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(refit).toHaveBeenCalledTimes(1);
+    expect(app.displayHeight).toBe(before - 48);
+    expect(app.canvas.height).toBe(Math.round(app.displayHeight * app.canvasScale));
+    slotTakes(0);
+    app.eventBus.emit('route:branch-cancel');
+    expect(refit).toHaveBeenCalledTimes(2);
+    expect(app.displayHeight).toBe(before);
+    expect(app.canvas.width).toBe(Math.round(app.displayWidth * app.canvasScale));
+  });
+
+  test('a banner that leaves the canvas area\'s room as it was refits nothing', async () => {
+    const app = await routeOfTwo();
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    app.eventBus.emit('route:branch-cancel');
+    expect(refit).not.toHaveBeenCalled();
+  });
+
+  test.each([
+    ['a pause', app => app.animationEngine.pause()],
+    ['the end of playback', app => { app.animationEngine.state.isPaused = true; app.animationEngine.emit('complete'); }],
+    ['a reset', app => app.animationEngine.reset()],
+  ])('while playing, nothing refits until the playback stops; %s runs the refit held back, once (Codex\'s recheck)', async (_, stop) => {
+    const app = await routeOfTwo();
+    const state = app.animationEngine.state;
+    state.isPlaying = true;
+    state.isPaused = false;
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    slotTakes(48);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(refit).not.toHaveBeenCalled();
+    stop(app);
+    expect(refit).toHaveBeenCalledTimes(1);
+    app.animationEngine.pause();
+    expect(refit).toHaveBeenCalledTimes(1);
+  });
+
+  test('a banner shown during a video export leaves the export\'s canvas as it is; its exit refits once, and nothing is held for later', async () => {
+    const app = await routeOfTwo();
+    app._enterExportMode(640, 360);
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    slotTakes(48);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect([app.canvas.width, app.canvas.height]).toEqual([640, 360]);
+    app._exitExportMode();
+    expect(refit).toHaveBeenCalledTimes(1);
+    app.animationEngine.pause();
+    app.animationEngine.reset();
+    expect(refit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('the branch gesture: a banner with a Cancel (item 2)', () => {
+  test('arming shows its banner and raises no toast; it is said once; Cancel and Escape each end it once (m08)', async () => {
+    const app = await routeOfTwo();
+    const { said, toasts } = listen(app);
+    const cancels = vi.fn();
+    app.eventBus.on('route:branch-cancel', cancels);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    await turn();
+    expect(app.interactionHandler.branchArmed).toBe(app.waypoints[0]);
+    expect(shown()).toEqual(['branch-banner']);
+    const banner = byId('branch-banner');
+    expect(banner.querySelector('strong').textContent).toBe('Branch from this waypoint');
+    expect(banner.querySelector('kbd').textContent).toBe('Esc');
+    expect(banner.textContent).toMatch(/click where it should go\. Esc to cancel\./);
+    expect(toasts).toEqual([]);
+    expect(said()).toEqual([BRANCH_ARM]);
+
+    const cancel = banner.querySelector('.banner-cancel');
+    expect([cancel.textContent, cancel.hasAttribute('aria-label')]).toEqual(['Cancel', false]);
+    cancel.click();
+    expect(app.interactionHandler.branchArmed).toBeNull();
+    expect(shown()).toEqual([]);
+    expect(cancels).toHaveBeenCalledTimes(1);
+    expect(toasts).toEqual(['Branch cancelled']);
+
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    escape();
+    expect(app.interactionHandler.branchArmed).toBeNull();
+    expect(shown()).toEqual([]);
+    expect(cancels).toHaveBeenCalledTimes(2);
+  });
+
+  test('arming moves no focus: the gesture is on the canvas', async () => {
+    const app = await routeOfTwo();
+    byId('help-btn').focus();
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(document.activeElement).toBe(byId('help-btn'));
+  });
+
+  test('Cancel pressed from the keyboard gives focus back to the element focused at arm', async () => {
+    const app = await routeOfTwo();
+    byId('help-btn').focus();
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    const cancel = byId('branch-banner').querySelector('.banner-cancel');
+    cancel.focus();
+    cancel.click();
+    expect(document.activeElement).toBe(byId('help-btn'));
+  });
+
+  test('that element removed, focus goes to the fork\'s row (m15)', async () => {
+    const app = await routeOfTwo();
+    const [fork] = app.waypoints;
+    const helper = document.createElement('button');
+    helper.textContent = 'Somewhere';
+    document.body.append(helper);
+    helper.focus();
+    app.eventBus.emit('route:branch-arm', { waypoint: fork });
+    helper.remove();
+    const cancel = byId('branch-banner').querySelector('.banner-cancel');
+    cancel.focus();
+    cancel.click();
+    expect(document.activeElement).toBe(app.uiController.rowButtonFor(fork));
+    expect(document.activeElement.isConnected).toBe(true);
+  });
+
+  test.each([
+    ['deleted', (app, fork) => app.eventBus.emit('waypoint:delete', fork)],
+    ['undone away', app => app.eventBus.emit('history:undo')],
+    ['replaced by an Open', app => loadSnapshot(app, {
+      coordVersion: 9, waypoints: [{ id: 'z1', imgX: 0.3, imgY: 0.3, isMajor: true }, { id: 'z2', imgX: 0.6, imgY: 0.6, isMajor: true }],
+    })],
+  ])('its fork %s, with focus on Cancel: the gesture ends at once, said once, and focus goes to the Route button (m14, m15)', async (_, remove) => {
+    const app = await routeOfTwo();
+    const fork = app.waypoints[1];
+    app.uiController.rowButtonFor(fork).focus();
+    app.eventBus.emit('route:branch-arm', { waypoint: fork });
+    const cancel = byId('branch-banner').querySelector('.banner-cancel');
+    cancel.focus();
+    const cancels = vi.fn();
+    app.eventBus.on('route:branch-cancel', cancels);
+    const { toasts } = listen(app);
+
+    await remove(app, fork);
+
+    expect(app.interactionHandler.branchArmed).toBeNull();
+    expect(shown()).toEqual([]);
+    expect(cancels).toHaveBeenCalledTimes(1);
+    expect(toasts.filter(message => message === 'Branch cancelled')).toHaveLength(1);
+    await frames();
+    expect(document.activeElement).toBe(byId('scope-route-btn'));
+  });
+
+  test('any Undo cancels it: a fork that survives the Undo, another waypoint selected by the restore, focus on the fork\'s current row', async () => {
+    const app = await routeOfTwo();
+    const [fork] = app.waypoints;
+    app.eventBus.emit('waypoint:add', { imgX: 0.5, imgY: 0.8, isMajor: true });
+    expect(app.waypoints).toHaveLength(3);
+    const rowAtArm = app.uiController.rowButtonFor(fork);
+    rowAtArm.focus();
+    app.eventBus.emit('route:branch-arm', { waypoint: fork });
+    const cancel = byId('branch-banner').querySelector('.banner-cancel');
+    cancel.focus();
+
+    app.eventBus.emit('history:undo');
+
+    expect(app.interactionHandler.branchArmed).toBeNull();
+    expect(shown()).toEqual([]);
+    const restoredFork = app.waypointsById.get(fork.id);
+    expect(restoredFork).toBeTruthy();
+    expect(restoredFork).not.toBe(fork);
+    expect(app.selectedWaypoint?.id).not.toBe(fork.id);
+    await frames();
+    const row = app.uiController.rowButtonFor(restoredFork);
+    expect(document.activeElement).toBe(row);
+    expect(row).not.toBe(rowAtArm);
+    expect(document.activeElement.isConnected).toBe(true);
+  });
+
+  test('another waypoint\'s deletion leaves the gesture armed on its fork', async () => {
+    const app = await routeOfTwo();
+    app.eventBus.emit('waypoint:add', { imgX: 0.5, imgY: 0.8, isMajor: true });
+    const [fork, , other] = app.waypoints;
+    app.eventBus.emit('route:branch-arm', { waypoint: fork });
+    app.eventBus.emit('waypoint:delete', other);
+    expect(app.interactionHandler.branchArmed).toBe(fork);
+    expect(shown()).toEqual(['branch-banner']);
+  });
+});
+
+describe('focus when a banner takes its own control away (item 5)', () => {
+  /** Draw area shown and its card open, the first waypoint selected. */
+  async function drawAreaReady() {
+    const app = await routeOfTwo();
+    app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    const shape = byId('area-shape');
+    shape.value = 'polygon';
+    shape.dispatchEvent(new Event('change', { bubbles: true }));
+    const header = byId('area-draw-btn').closest('.settings-section').querySelector('.section-header');
+    if (header.getAttribute('aria-expanded') !== 'true') header.click();
+    return app;
+  }
+
+  test('entering area draw keeps focus on Draw area; its Cancel pressed from the keyboard gives it back there (m19)', async () => {
+    const app = await drawAreaReady();
+    const draw = byId('area-draw-btn');
+    draw.focus();
+    draw.click();
+    expect(app.areaDrawingService.isDrawing).toBe(true);
+    expect(document.activeElement).toBe(draw);
+    const cancel = byId('area-draw-banner').querySelector('.banner-cancel');
+    expect([cancel.textContent, cancel.hasAttribute('aria-label')]).toEqual(['Cancel', false]);
+    cancel.focus();
+    cancel.click();
+    expect(app.areaDrawingService.isDrawing).toBe(false);
+    expect(document.activeElement).toBe(draw);
+  });
+
+  test('Escape with focus on the area\'s Cancel does the same', async () => {
+    const app = await drawAreaReady();
+    const draw = byId('area-draw-btn');
+    draw.click();
+    byId('area-draw-banner').querySelector('.banner-cancel').focus();
+    escape();
+    expect(app.areaDrawingService.isDrawing).toBe(false);
+    expect(document.activeElement).toBe(draw);
+  });
+
+  test('Draw area hidden by then, focus goes to the Route button', async () => {
+    const app = await drawAreaReady();
+    byId('area-draw-btn').click();
+    byId('area-draw-controls').style.display = 'none';
+    const cancel = byId('area-draw-banner').querySelector('.banner-cancel');
+    cancel.focus();
+    cancel.click();
+    expect(app.areaDrawingService.isDrawing).toBe(false);
+    expect(document.activeElement).toBe(byId('scope-route-btn'));
+  });
+});
+
+describe('one announcer (item 6)', () => {
+  test('each mode\'s entry is said once, by its owner, and nothing in the slot is live (m07)', async () => {
+    const app = await withCrowdNetwork();
+    const { said } = listen(app);
+    app.enterNetworkEditMode();
+    await turn();
+    expect(said()).toEqual([NETWORK_ENTRY]);
+    expect(slot().querySelector('[aria-live], [role]')).toBeNull();
+    byId('network-edit-banner').querySelector('.banner-done').click();
+    await turn();
+
+    const areaFrom = said().length;
+    app.areaDrawingService.startDrawing(app.waypoints[0]);
+    await turn();
+    expect(said().slice(areaFrom)).toEqual([AREA_ENTRY]);
+    expect(slot().querySelector('[aria-live], [role]')).toBeNull();
+    app.areaDrawingService.cancelDrawing();
+    await turn();
+
+    const branchFrom = said().length;
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    await turn();
+    expect(said().slice(branchFrom)).toEqual([BRANCH_ARM]);
+    expect(slot().querySelector('[aria-live], [role]')).toBeNull();
+  });
+
+  test('three corners placed: three announcements, the last the line the banner shows (m18)', async () => {
+    const app = await routeOfTwo();
+    app.areaDrawingService.startDrawing(app.waypoints[0]);
+    await turn();
+    const { said } = listen(app);
+    for (const [imgX, imgY] of [[0.2, 0.2], [0.6, 0.2], [0.4, 0.6]]) {
+      app.eventBus.emit('area:draw-click', { imgX, imgY });
+    }
+    await turn();
+    expect(said()).toEqual([
+      '1 corner (2 more needed to close)',
+      '2 corners (1 more needed to close)',
+      '3 corners (click near first to close)',
+    ]);
+    expect(slot().querySelector('.banner-count').textContent).toBe('3 corners (click near first to close)');
+  });
+
+  test('the network\'s count is said where nothing else says its change: a node placed is "Node placed", a link drawn between nodes is the count', async () => {
+    const app = await withCrowdNetwork();
+    app.enterNetworkEditMode();
+    const network = app.networkEditService;
+    await turn();
+    const { said } = listen(app);
+    app._handleNetworkClick(...Object.values(app.imageToCanvas(0.2, 0.2)), false);
+    await turn();
+    expect(said()).toEqual(['Node placed']);
+    network.penNodeId = null;
+    const first = network.layer.graph.getNodes()[0];
+    const second = network.placeNode({ x: 0.8, y: 0.8 });
+    await turn();
+    said();
+    const before = said().length;
+    network.penNodeId = second.id;
+    network.clickNode(first);
+    await turn();
+    expect(said().slice(before)).toEqual(['2 nodes · 1 path']);
+    expect(slot().querySelector('.banner-count').textContent).toBe('2 nodes · 1 path');
+  });
+
+  test('the last waypoint deleted is heard once, by its deletion\'s message; the empty list is not live', async () => {
+    const app = await editor();
+    app.eventBus.emit('waypoint:add', { imgX: 0.4, imgY: 0.4, isMajor: true });
+    await turn();
+    const { said } = listen(app);
+    app.eventBus.emit('waypoint:delete', app.waypoints[0]);
+    await turn();
+    expect(app.waypoints).toHaveLength(0);
+    const empty = document.querySelector('#waypoint-list .waypoint-list-empty');
+    expect(empty.getAttribute('aria-live')).toBe('off');
+    // "Deleted waypoint — press … to undo" says the change: not the empty row, nor the chip's Route, again.
+    expect(said()).toHaveLength(1);
+    expect(said()[0]).toMatch(/^Deleted waypoint — press (Cmd|Ctrl)\+Z to undo$/);
+  });
+
+  test('the chip moved from Route to a waypoint by a pointer selection is heard once, in its words', async () => {
+    const app = await routeOfTwo();
+    await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+    app.eventBus.emit('waypoint:deselected');
+    await turn();
+    expect(byId('scope-chip-text').textContent).toBe('Editing · Route');
+    expect(byId('scope-chip-text').getAttribute('aria-live')).toBe('off');
+    const { said } = listen(app);
+    tapCanvas(app, [app.waypoints[0].imgX, app.waypoints[0].imgY]);
+    await turn();
+    expect(app.selectedWaypoint).toBe(app.waypoints[0]);
+    expect(said()).toEqual(['Editing · Waypoint 1 · major']);
+  });
+
+  test('a message said earlier in the same turn says the change: the chip is not said after it; two such lines of one turn are both said', async () => {
+    const app = await routeOfTwo();
+    app.eventBus.emit('waypoint:deselected');
+    await turn();
+    const { said } = listen(app);
+    // The change's own message, and the operation says it is (round 2, finding 4: a message covers by saying so, not by being said);
+    // the selection is that operation's own change, after its message (round 3, finding 3: coverage is the operation's).
+    app.regionOperation(cover => {
+      app.announce('Undo');
+      cover();
+      app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    });
+    await turn();
+    expect(said()).toEqual(['Undo']);
+
+    app.announceUnlessSaid('first line');
+    app.announceUnlessSaid('second line');
+    await turn();
+    expect(said()).toEqual(['Undo', 'first line', 'second line']);
+  });
+
+  test('a row of the list selected names its waypoint itself: the chip is not said again', async () => {
+    const app = await routeOfTwo();
+    app.eventBus.emit('waypoint:deselected');
+    await turn();
+    const { said } = listen(app);
+    const row = app.uiController.rowButtonFor(app.waypoints[0]);
+    row.focus();
+    row.click();
+    await turn();
+    expect(app.selectedWaypoint).toBe(app.waypoints[0]);
+    expect(said()).not.toContain('Editing · Waypoint 1 · major');
+  });
+});
+
+describe('the first-start tip shows in the slot (item 7; proposals (a), (b); blocking 3)', () => {
+  /** A first start on the fake clock: nothing stored, so the welcome shows and the tip is due. */
+  async function firstStart() {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const app = await boot();
+    await vi.advanceTimersByTimeAsync(50);
+    await app.ready;
+    return app;
+  }
+  const tipBanner = () => byId('preview-tip-banner');
+  const tipSaid = said => said().filter(message => message === TIP);
+
+  test('the welcome open past 1.5 s: no tip and no toast; the welcome closed: the tip is in the slot, heard once (m11)', async () => {
+    const app = await firstStart();
+    const { said } = listen(app);
+    expect(byId('splash').style.display).toBe('flex');
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(tipBanner()).toBeNull();
+    expect(byId('toast-container').querySelector('.toast')).toBeNull();
+
+    byId('splash-close').click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(shown()).toEqual(['preview-tip-banner']);
+    expect(tipBanner().textContent).toContain('Check your sequence in Preview mode before exporting');
+    expect(tipBanner().querySelector('button').textContent).toBe('Dismiss');
+    expect(byId('toast-container').querySelector('.toast')).toBeNull();
+    expect(tipSaid(said)).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(tipBanner()).toBeNull();
+  });
+
+  test('a draw started before the tip is due keeps the slot; the draw cancelled, the tip shows; Edit network replaces it, and its 8 s leave the network\'s banner up (m16, m22)', async () => {
+    const app = await firstStart();
+    byId('splash-close').click();
+    app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
+    app.addCrowd();
+    app.selectedCrowd.setGuideType('graph');
+    app.syncCrowdEditor();
+    const { said } = listen(app);
+    app.areaDrawingService.startDrawing(app.waypoints[0]);
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(tipBanner()).toBeNull();
+    expect(app.areaDrawingService.isDrawing).toBe(true);
+    expect(shown()).toEqual(['area-draw-banner']);
+
+    app.areaDrawingService.cancelDrawing();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(shown()).toEqual(['preview-tip-banner']);
+    expect(tipSaid(said)).toHaveLength(1);
+
+    app.enterNetworkEditMode();
+    expect(shown()).toEqual(['network-edit-banner']);
+    await vi.advanceTimersByTimeAsync(9000);
+    expect(shown()).toEqual(['network-edit-banner']);
+    expect(app.networkEditService.active).toBe(true);
+
+    // A tip a mode replaced does not come back.
+    byId('network-edit-banner').querySelector('.banner-done').click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(shown()).toEqual([]);
+    expect(tipSaid(said)).toHaveLength(1);
+  });
+
+  test.each([
+    ['its Dismiss', () => tipBanner().querySelector('button').click()],
+    ['its 8 s, with focus in it', () => vi.advanceTimersByTimeAsync(8000)],
+  ])('taken away by %s, it gives focus back to the control focused before; that control removed, to the Route button (m19)', async (_, end) => {
+    const app = await firstStart();
+    byId('splash-close').click();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(shown()).toEqual(['preview-tip-banner']);
+    byId('help-btn').focus();
+    tipBanner().querySelector('button').focus();
+    await end();
+    expect(shown()).toEqual([]);
+    expect(document.activeElement).toBe(byId('help-btn'));
+
+    // Again, from a control gone by the time the tip goes.
+    retireApp(app);
+    const next = await firstStart();
+    byId('splash-close').click();
+    await vi.advanceTimersByTimeAsync(1500);
+    const helper = document.createElement('button');
+    document.body.append(helper);
+    helper.focus();
+    tipBanner().querySelector('button').focus();
+    helper.remove();
+    await end();
+    expect(document.activeElement).toBe(byId('scope-route-btn'));
+    expect(next.modeBanner.isShowing()).toBe(false);
+  });
+
+  test('its 8 s with focus elsewhere move no focus', async () => {
+    const app = await firstStart();
+    byId('splash-close').click();
+    await vi.advanceTimersByTimeAsync(1500);
+    byId('help-btn').focus();
+    await vi.advanceTimersByTimeAsync(8000);
+    expect(app.modeBanner.isShowing()).toBe(false);
+    expect(document.activeElement).toBe(byId('help-btn'));
+  });
+});
+
+describe('nothing waits on the slot after teardown (m21; Codex\'s recheck)', () => {
+  const teardowns = [
+    ['stopApp', app => retireApp(app)],
+    ['destroy()', app => app.destroy()],
+  ];
+
+  test.each(teardowns)('a first start stopped by %s before the tip shows: the timers run, no tip, nothing thrown', async (_, stop) => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const app = await boot();
+    await vi.advanceTimersByTimeAsync(50);
+    await app.ready;
+    const shownBanner = vi.spyOn(app.modeBanner, 'show');
+    stop(app);
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(shownBanner).not.toHaveBeenCalled();
+    expect(byId('preview-tip-banner')).toBeNull();
+  });
+
+  test('a first start stopped while the tip waits for the welcome: the welcome closed after, no tip', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const app = await boot();
+    await vi.advanceTimersByTimeAsync(50);
+    await app.ready;
+    await vi.advanceTimersByTimeAsync(2000);
+    const shownBanner = vi.spyOn(app.modeBanner, 'show');
+    retireApp(app);
+    // The welcome goes as its own close would take it: hidden, its trap let go.
+    byId('splash').style.display = 'none';
+    app._splashFocusTrap.deactivate();
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(shownBanner).not.toHaveBeenCalled();
+    expect(byId('preview-tip-banner')).toBeNull();
+  });
+
+  test.each(teardowns)('the tip showing, its 8 s running, stopped by %s: nothing takes it away after', async (_, stop) => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const app = await boot();
+    await vi.advanceTimersByTimeAsync(50);
+    await app.ready;
+    byId('splash-close').click();
+    await vi.advanceTimersByTimeAsync(1500);
+    expect(byId('preview-tip-banner')).not.toBeNull();
+    const hidden = vi.spyOn(app.modeBanner, 'hide');
+    stop(app);
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(hidden).not.toHaveBeenCalled();
+  });
+
+  test.each(teardowns)('a banner mid-transition stopped by %s: its settle never refits', async (_, stop) => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    Object.assign(slot().style, { transitionProperty: 'min-height, max-height', transitionDuration: '150ms' });
+    const refit = vi.spyOn(app, '_refitAfterModeBanner');
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(refit).not.toHaveBeenCalled();
+    stop(app);
+    slot().dispatchEvent(new Event('transitionend'));
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(refit).not.toHaveBeenCalled();
+  });
+
+  test.each(teardowns)('a refit held back while playing, and the resize\'s path recalculation waiting, stopped by %s: neither runs', async (_, stop) => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    slotTakes(48);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    const state = app.animationEngine.state;
+    state.isPlaying = true;
+    state.isPaused = false;
+    slotTakes(0);
+    app.eventBus.emit('route:branch-cancel');
+    expect(app._modeBannerRefitPending).toBe(true);
+    const path = vi.spyOn(app, 'calculatePath');
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    stop(app);
+    expect(app._modeBannerRefitPending).toBe(false);
+    state.isPaused = true;
+    app.animationEngine.emit?.('pause');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(refit).not.toHaveBeenCalled();
+    expect(path).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Round 2 (Codex r1 on 7a74755, its findings by number; the owner's answer and
+// the lead's settlements, 2026-10-12).
+// ---------------------------------------------------------------------------
+
+/** A path recalculation's moment: inside a video export, or while playback runs. */
+function recordPaths(app) {
+  const runs = [];
+  const original = app.calculatePath;
+  app.calculatePath = function recordedCalculatePath(...args) {
+    runs.push({ exporting: Boolean(app._isExportMode), playing: Boolean(app.animationEngine.state.isActivelyPlaying()) });
+    return original.apply(this, args);
+  };
+  return runs;
+}
+
+/** A video export that draws one frame, then holds until the test lets it end. */
+function holdingExport(app) {
+  let release;
+  const held = new Promise(resolveHeld => { release = resolveHeld; });
+  let started;
+  const running = new Promise(resolveStarted => { started = resolveStarted; });
+  app.videoExporter = {
+    cancel() {},
+    async export({ renderFrame }) {
+      await renderFrame(0.5);
+      started();
+      await held;
+      return new Blob(['video'], { type: 'video/mp4' });
+    },
+  };
+  vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+  return { running, finish: () => release() };
+}
+
+/** Let an export the test released finish, its clean-up included, on the fake clock. */
+async function exportEnds(exported) {
+  let done = false;
+  exported.then(() => { done = true; }, () => { done = true; });
+  for (let step = 0; step < 50 && !done; step += 1) await vi.advanceTimersByTimeAsync(0);
+  expect(done).toBe(true);
+}
+
+describe('round 2, finding 1: a refit\'s path recalculation never runs inside an export or while playing', () => {
+  test('a banner shown, an export started before its recalculation is due: nothing recalculates while it exports; its exit\'s refit is the only recalculation after', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { running, finish } = holdingExport(app);
+    slotTakes(48);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    const paths = recordPaths(app);
+    const exited = vi.spyOn(app, '_exitExportMode');
+    const exported = app.exportVideo();
+    await running;
+    await vi.advanceTimersByTimeAsync(500);
+    expect(paths.filter(run => run.exporting)).toEqual([]);
+    finish();
+    await exportEnds(exported);
+    expect(exited).toHaveBeenCalledTimes(1);
+    const atExit = paths.length;
+    expect(atExit).toBeGreaterThanOrEqual(1);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(paths.length).toBe(atExit);
+  });
+
+  test('an export that ends before the recalculation is due: none follows its exit\'s refit', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { running, finish } = holdingExport(app);
+    slotTakes(48);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    const paths = recordPaths(app);
+    const exported = app.exportVideo();
+    await running;
+    finish();
+    await exportEnds(exported);
+    const atExit = paths.length;
+    await vi.advanceTimersByTimeAsync(500);
+    expect(paths.length).toBe(atExit);
+    expect(paths.filter(run => run.exporting)).toEqual([]);
+  });
+
+  test('a pause draining a held refit as an export starts: nothing recalculates while it exports', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { running, finish } = holdingExport(app);
+    const state = app.animationEngine.state;
+    state.isPlaying = true;
+    state.isPaused = false;
+    slotTakes(48);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(app._modeBannerRefitPending).toBe(true);
+    const paths = recordPaths(app);
+    app.animationEngine.pause();
+    const exported = app.exportVideo();
+    await running;
+    await vi.advanceTimersByTimeAsync(500);
+    expect(paths.filter(run => run.exporting)).toEqual([]);
+    finish();
+    await exportEnds(exported);
+    const atExit = paths.length;
+    await vi.advanceTimersByTimeAsync(500);
+    expect(paths.length).toBe(atExit);
+  });
+
+  test('playback started before the recalculation is due: none while it plays; the pause runs it, once', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    // The engine's frames held, so the playback stays where the test puts it while its clock runs.
+    const frames = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0);
+    try {
+      slotTakes(48);
+      app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+      const paths = recordPaths(app);
+      const state = app.animationEngine.state;
+      state.isPlaying = true;
+      state.isPaused = false;
+      await vi.advanceTimersByTimeAsync(500);
+      expect(paths).toEqual([]);
+      app.animationEngine.pause();
+      expect(paths).toEqual([{ exporting: false, playing: false }]);
+      app.animationEngine.pause();
+      app.animationEngine.reset();
+      await vi.advanceTimersByTimeAsync(500);
+      expect(paths).toHaveLength(1);
+    } finally {
+      frames.mockRestore();
+    }
+  });
+});
+
+describe('round 2, finding 2 and Q5: the Preview badge shows in Preview, on the canvas\'s own corner', () => {
+  const badge = () => byId('preview-badge');
+  /** Whether the stylesheet draws the badge, its own `hidden` included. */
+  const badgeShown = () => cascade(badge(), 'display').value !== 'none';
+  /** Space or Enter on the switch, as a browser activates a button: a click unless a key listener refused it. */
+  function pressOn(control, key) {
+    control.focus();
+    const down = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    control.dispatchEvent(down);
+    if (key === 'Enter' && !down.defaultPrevented) control.click();
+    const up = new KeyboardEvent('keyup', { key, bubbles: true, cancelable: true });
+    control.dispatchEvent(up);
+    if (key === ' ' && !down.defaultPrevented && !up.defaultPrevented) control.click();
+  }
+
+  test('as served the shell is in Edit and the badge is hidden; the app starts in Preview and shows it; the start\'s sync in Edit hides it', async () => {
+    mountShell();
+    expect(byId('mode-toggle-btn').getAttribute('aria-checked')).toBe('false');
+    expect(badgeShown()).toBe(false);
+    const app = await editor();
+    expect(app.previewMode).toBe(true);
+    expect(badgeShown()).toBe(true);
+    // The app always starts in Preview (main.js); its start's sync, run in Edit, hides it.
+    app.previewMode = false;
+    app._syncInitialUIState();
+    expect(badgeShown()).toBe(false);
+    app.previewMode = true;
+    app._syncInitialUIState();
+    expect(badgeShown()).toBe(true);
+  });
+
+  test('the mode switch shows and hides it: its click, and Space and Enter on it', async () => {
+    const app = await editor();
+    const toggle = byId('mode-toggle-btn');
+    toggle.click();
+    expect([app.previewMode, badgeShown()]).toEqual([false, false]);
+    toggle.click();
+    expect([app.previewMode, badgeShown()]).toEqual([true, true]);
+    for (const key of [' ', 'Enter']) {
+      pressOn(toggle, key);
+      expect([key, app.previewMode, badgeShown()]).toEqual([key, false, false]);
+      pressOn(toggle, key);
+      expect([key, app.previewMode, badgeShown()]).toEqual([key, true, true]);
+    }
+  });
+
+  test('an export from Edit shows it while it draws in Preview, and hides it again with Edit after', async () => {
+    const app = await routeOfTwo();
+    byId('mode-toggle-btn').click();
+    expect([app.previewMode, badgeShown()]).toEqual([false, false]);
+    const { running, finish } = holdingExport(app);
+    const exported = app.exportVideo();
+    await running;
+    expect([app.previewMode, badgeShown()]).toEqual([true, true]);
+    finish();
+    await exported;
+    expect([app.previewMode, badgeShown()]).toEqual([false, false]);
+  });
+
+  test('it stands in the canvas\'s own box, top-right, at both widths, so a letterboxed canvas keeps it on the canvas; the room is still the canvas area\'s (Q5)', async () => {
+    mountShell();
+    const frame = badge().parentElement;
+    expect(frame).toBe(byId('canvas').parentElement);
+    expect(frame).not.toBe(byId('canvas-area'));
+    expect(frame.parentElement).toBe(byId('canvas-area'));
+    for (const media of [[], [NARROW]]) {
+      expect(cascade(frame, 'position', { media }).value).toBe('relative');
+      expect(cascade(frame, 'width', { media })).toBeUndefined();
+      expect(cascade(frame, 'height', { media })).toBeUndefined();
+    }
+    badge().hidden = false;
+    expect(cascade(badge(), 'position').value).toBe('absolute');
+    expect([cascade(badge(), 'top').value, cascade(badge(), 'right').value]).toEqual(['var(--space-3)', 'var(--space-3)']);
+    const app = await editor();
+    // bootApp's canvas area: 1280 × 720, its transport 60 px.
+    expect(app._canvasAreaRoom()).toEqual({ width: 1280, height: 660 });
+    expect(app._fittedRoom).toEqual({ width: 1280, height: 660 });
+  });
+});
+
+describe('round 2, finding 3: a replacement never overwrites a holder without its exit', () => {
+  function bare() {
+    document.body.innerHTML = '<div id="mode-banner"></div>';
+    return new ModeBanner(slot());
+  }
+
+  test('a holder whose exit shows a third owner\'s banner: that owner exits too before the incoming one is drawn; one owner active at the end, and no height told for the passing claim', () => {
+    const banner = bare();
+    banner.onHeightChange = vi.fn();
+    const active = new Set();
+    const c = { onReplaced: vi.fn(() => { active.delete(c); banner.hide(c); }) };
+    const a = { onReplaced: vi.fn(() => { active.delete(a); banner.hide(a); banner.show(c, { id: 'c' }); active.add(c); }) };
+    const b = { onReplaced: vi.fn() };
+    banner.show(a, { id: 'a' });
+    active.add(a);
+    banner.onHeightChange.mockClear();
+    banner.show(b, { id: 'b' });
+    active.add(b);
+    expect([a.onReplaced.mock.calls.length, c.onReplaced.mock.calls.length, b.onReplaced.mock.calls.length]).toEqual([1, 1, 0]);
+    expect([...active]).toEqual([b]);
+    expect(shown()).toEqual(['b']);
+    expect(banner.holder).toBe(b);
+    expect(banner.onHeightChange).not.toHaveBeenCalled();
+  });
+
+  test('a holder whose exit claims the slot again before it hides: its exit runs once, and the claim it made exits in turn', () => {
+    const banner = bare();
+    const active = new Set();
+    const c = { onReplaced: vi.fn(() => { active.delete(c); banner.hide(c); }) };
+    const a = {
+      onReplaced: vi.fn(() => {
+        // On 7a74755 the claim below re-entered this exit; stop that recursion here so the count shows it.
+        if (a.onReplaced.mock.calls.length > 1) return;
+        active.delete(a);
+        banner.show(c, { id: 'c' });
+        active.add(c);
+        banner.hide(a);
+      }),
+    };
+    const b = { onReplaced: vi.fn() };
+    banner.show(a, { id: 'a' });
+    active.add(a);
+    banner.show(b, { id: 'b' });
+    active.add(b);
+    expect([a.onReplaced.mock.calls.length, c.onReplaced.mock.calls.length]).toEqual([1, 1]);
+    expect([...active]).toEqual([b]);
+    expect(shown()).toEqual(['b']);
+  });
+
+  test('a waiter for a free slot waits through a nested claim and runs once the last banner goes (a pin: 7a74755 held it too)', () => {
+    const banner = bare();
+    const waited = vi.fn();
+    const c = { onReplaced: () => banner.hide(c) };
+    const a = { onReplaced: () => { banner.hide(a); banner.show(c, { id: 'c' }); } };
+    const b = { onReplaced: () => banner.hide(b) };
+    banner.show(a, { id: 'a' });
+    banner.whenFree(waited);
+    banner.show(b, { id: 'b' });
+    expect(waited).not.toHaveBeenCalled();
+    expect(shown()).toEqual(['b']);
+    banner.hide(b);
+    expect(waited).toHaveBeenCalledTimes(1);
+  });
+
+  test('in the app: a branch armed while an area draw ends by showing the tip\'s turn: the draw ends, the branch alone holds the slot', async () => {
+    const app = await routeOfTwo();
+    const area = app.areaDrawingService;
+    area.startDrawing(app.waypoints[0]);
+    // An exit that hands the slot on, as a waiting owner would.
+    const tipLike = { onReplaced: vi.fn(() => app.modeBanner.hide(tipLike)) };
+    const cancel = area.cancelDrawing.bind(area);
+    area.cancelDrawing = () => { cancel(); app.modeBanner.show(tipLike, { id: 'passing-banner' }); };
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(area.isDrawing).toBe(false);
+    expect(tipLike.onReplaced).toHaveBeenCalledTimes(1);
+    expect(app.interactionHandler.branchArmed).toBe(app.waypoints[0]);
+    expect(shown()).toEqual(['branch-banner']);
+  });
+});
+
+describe('round 2, finding 4: a region\'s line is left unsaid only where its change\'s own message says it', () => {
+  /** Two crowd nodes not yet linked, on a project just opened: a clean status episode. */
+  const twoNodes = {
+    coordVersion: 9,
+    waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
+    scene: {
+      flowLayers: [{
+        id: 'net', name: 'net', guideType: 'graph', emitters: [{ id: 'net-e', seed: 7 }],
+        graph: { nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.5, type: 'exit' }], edges: [] },
+      }],
+    },
+  };
+
+  test('a link drawn between two nodes of a project just opened says its count and "Unsaved changes", both new', async () => {
+    const app = await editor();
+    expect(await loadSnapshot(app, twoNodes)).toBe(true);
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayers()[0]);
+    byId('network-edit-btn').click();
+    const network = app.networkEditService;
+    expect(network.active).toBe(true);
+    await turn();
+    const { said } = listen(app);
+    const [first, second] = network.layer.graph.getNodes();
+    network.penNodeId = second.id;
+    network.clickNode(first);
+    await turn();
+    expect(said()).toContain('Unsaved changes');
+    expect(said().filter(message => message === '2 nodes · 1 path')).toHaveLength(1);
+  });
+
+  test('a waypoint added on the canvas of a fresh start says its scope and "Unsaved changes", both new', async () => {
+    const app = await editor();
+    await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+    app._setPreviewMode(false);
+    await turn();
+    const { said } = listen(app);
+    tapCanvas(app, [0.5, 0.5]);
+    await turn();
+    expect(app.waypoints).toHaveLength(1);
+    expect(said()).toContain('Unsaved changes');
+    expect(said().filter(message => message === 'Editing · Waypoint 1 · major')).toHaveLength(1);
+  });
+
+  test('an area\'s corner on a project just opened says its count line (a pin: its line was never a region\'s alone)', async () => {
+    const app = await editor();
+    expect(await loadSnapshot(app, { coordVersion: 9, waypoints: twoNodes.waypoints })).toBe(true);
+    app.areaDrawingService.startDrawing(app.waypoints[0]);
+    await turn();
+    const { said } = listen(app);
+    app.eventBus.emit('area:draw-click', { imgX: 0.2, imgY: 0.2 });
+    await turn();
+    expect(said()).toContain('1 corner (2 more needed to close)');
+  });
+
+  test('the change\'s own message covers its region\'s line in continuations it awaits, before or after the line', async () => {
+    // Round 3, finding 3: coverage is the operation's, never an await's. The line and the message are one
+    // operation's (`regionOperation`), in either order; a continuation after its awaits re-enters it.
+    const app = await routeOfTwo();
+    await turn();
+    const { said } = listen(app);
+    app.regionOperation(cover => {
+      app.announceUnlessSaid('Editing · Route');
+      app.announce('Undo');
+      cover();
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    await turn();
+    expect(said()).toEqual(['Undo']);
+
+    app.regionOperation(cover => {
+      app.announce('Redo');
+      cover();
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    app.regionOperation(cover => {
+      app.announceUnlessSaid('Editing · Waypoint 1 · major');
+      cover();
+    });
+    await turn();
+    expect(said()).toEqual(['Undo', 'Redo']);
+  });
+
+  test('a status line or a notice in the same task, before, after or in an awaited continuation, covers nothing: the line is said too', async () => {
+    const app = await routeOfTwo();
+    await turn();
+    const { said } = listen(app);
+    app.announce('Unsaved changes');
+    app.announceUnlessSaid('2 nodes · 1 path');
+    await turn();
+    expect(said()).toEqual(['Unsaved changes', '2 nodes · 1 path']);
+
+    app.announceUnlessSaid('3 nodes · 2 paths');
+    await Promise.resolve();
+    app.announce('Saved to browser recovery');
+    await turn();
+    expect(said()).toEqual(['Unsaved changes', '2 nodes · 1 path', 'Saved to browser recovery', '3 nodes · 2 paths']);
+  });
+
+  test('a region\'s line written twice in one turn is said once, as the region ends the turn; another region\'s is said beside it', async () => {
+    const app = await routeOfTwo();
+    await turn();
+    const { said } = listen(app);
+    app.announceUnlessSaid('Editing · Waypoint 2 · major', 'scope-chip');
+    app.announceUnlessSaid('2 nodes · 1 path', 'network-count');
+    app.announceUnlessSaid('Editing · Waypoint 1·B1', 'scope-chip');
+    await turn();
+    expect(said()).toEqual(['Editing · Waypoint 1·B1', '2 nodes · 1 path']);
+  });
+
+  test('a branch placed: the chip is said once, naming the branch\'s first waypoint, not the numbering it passed through', async () => {
+    const app = await routeOfTwo();
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    await turn();
+    const { said } = listen(app);
+    app.eventBus.emit('route:branch-place', { imgX: 0.4, imgY: 0.8 });
+    await turn();
+    const chip = said().filter(message => message.startsWith('Editing ·'));
+    expect(chip).toEqual([byId('scope-chip-text').textContent]);
+  });
+
+  test('the start\'s tip waiting in the queue covers nothing', async () => {
+    const app = await routeOfTwo();
+    await turn();
+    const { said } = listen(app);
+    app.announce(TIP, 'polite', { whenIdle: true });
+    app.announceUnlessSaid('Editing · Route');
+    await turn();
+    expect(said()).toEqual([TIP, 'Editing · Route']);
+  });
+
+  test('a real Undo still covers the chip it moves (a pin of a covering message)', async () => {
+    const app = await routeOfTwo();
+    const chipBefore = byId('scope-chip-text').textContent;
+    const { said } = listen(app);
+    app.eventBus.emit('history:undo');
+    await turn();
+    expect(app.waypoints).toHaveLength(1);
+    expect(byId('scope-chip-text').textContent).not.toBe(chipBefore);
+    expect(said().filter(message => message.startsWith('Editing ·'))).toEqual([]);
+    expect(said()).toContain('Undo');
+  });
+});
+
+describe('round 2, finding 5: focus stops the chip\'s line only where the focused control names what is now selected', () => {
+  async function routeOnCanvas() {
+    const app = await routeOfTwo();
+    await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+    app.eventBus.emit('waypoint:deselected');
+    await turn();
+    return app;
+  }
+  const selectOnCanvas = (app, waypoint) => tapCanvas(app, [waypoint.imgX, waypoint.imgY]);
+
+  test('focus left on the Layers strip\'s Route row: a waypoint chosen on the canvas is said', async () => {
+    const app = await routeOnCanvas();
+    byId('layers-strip').querySelector('.layer-row').focus();
+    const { said } = listen(app);
+    selectOnCanvas(app, app.waypoints[0]);
+    await turn();
+    expect(app.selectedWaypoint).toBe(app.waypoints[0]);
+    expect(said()).toEqual(['Editing · Waypoint 1 · major']);
+  });
+
+  test('focus on that waypoint\'s own list row: not said again (a pin)', async () => {
+    const app = await routeOnCanvas();
+    app.uiController.rowButtonFor(app.waypoints[0]).focus();
+    const { said } = listen(app);
+    selectOnCanvas(app, app.waypoints[0]);
+    await turn();
+    expect(app.selectedWaypoint).toBe(app.waypoints[0]);
+    expect(said()).not.toContain('Editing · Waypoint 1 · major');
+  });
+
+  test('focus left in the scene outline on another waypoint\'s entry: a waypoint chosen on the canvas is said; on its own entry, not again', async () => {
+    const app = await routeOnCanvas();
+    const summaryOf = waypoint => [...byId('scene-outline').querySelectorAll('summary[data-outline-key]')]
+      .find(summary => summary.dataset.outlineKey.startsWith(`waypoint:${waypoint.id}:`));
+    summaryOf(app.waypoints[1]).focus();
+    const { said } = listen(app);
+    selectOnCanvas(app, app.waypoints[0]);
+    await turn();
+    expect(app.selectedWaypoint).toBe(app.waypoints[0]);
+    expect(said()).toEqual(['Editing · Waypoint 1 · major']);
+
+    app.eventBus.emit('waypoint:deselected');
+    await turn();
+    await frames();
+    summaryOf(app.waypoints[0]).focus();
+    const before = said().length;
+    selectOnCanvas(app, app.waypoints[0]);
+    await turn();
+    expect(app.selectedWaypoint).toBe(app.waypoints[0]);
+    expect(said().slice(before)).not.toContain('Editing · Waypoint 1 · major');
+  });
+
+  test('a crowd chosen from its own Layers row is not said again; chosen with focus on the Route row, it is', async () => {
+    const app = await routeOnCanvas();
+    app.addCrowd();
+    app.eventBus.emit('crowd:deselected');
+    await turn();
+    const rows = () => [...byId('layers-strip').querySelectorAll('.layer-row')];
+    const { said } = listen(app);
+    rows()[1].focus();
+    rows()[1].click();
+    await turn();
+    expect(app.selectedCrowd).toBe(app.scene.getFlowLayers()[0]);
+    expect(said()).not.toContain('Editing · Crowd 1 · crowd');
+
+    rows()[0].click();
+    await turn();
+    rows()[0].focus();
+    const before = said().length;
+    app.eventBus.emit('crowd:selected', app.scene.getFlowLayers()[0]);
+    await turn();
+    expect(said().slice(before)).toEqual(['Editing · Crowd 1 · crowd']);
+  });
+});
+
+describe('round 2, finding 6: a banner\'s action keeps its focus indicator under the pointer, inside the slot', () => {
+  test('focused, and focused under the pointer: a 4 px ring inside the button (round 3, finding 5: 3 px changed too little against hover\'s 1 px), in its words\' colour, at 3:1 or more on every banner; never outside the slot\'s clip; forced colours an inset outline', () => {
+    mountShell();
+    const banner = new ModeBanner(slot());
+    slot().classList.add('is-showing');
+    for (const id of ['network-edit-banner', 'area-draw-banner', 'branch-banner', 'preview-tip-banner']) {
+      const { actions: [action] } = banner.show({ id }, { id, title: 'Title', actions: [{ label: 'Done' }] });
+      for (const states of [['focus-visible'], ['hover', 'focus-visible']]) {
+        expect(cascade(action, 'box-shadow', { states }).value, `${id} ${states}`).toBe('inset 0 0 0 4px currentColor');
+        expect(cascade(action, 'outline', { states }).value, `${id} ${states}`).toBe('none');
+        const { fg, bg } = textPair(action, { states });
+        expect(contrast(fg, bg), `${id} ${states}`).toBeGreaterThanOrEqual(3);
+      }
+      // Hovered alone, a thinner ring: the focused one is told apart.
+      expect(cascade(action, 'box-shadow', { states: ['hover'] }).value).toBe('inset 0 0 0 1px currentColor');
+      // Forced colours: the system outline drawn inside the button's edge.
+      const tokens = tokensFor([FORCED_COLOURS]);
+      const offset = resolveValue(cascade(action, 'outline-offset', { states: ['focus-visible'], media: [FORCED_COLOURS] }).value, tokens);
+      const width = resolveValue(cascade(action, 'outline-width', { states: ['focus-visible'], media: [FORCED_COLOURS] })?.value
+        ?? cascade(action, 'outline', { states: ['focus-visible'], media: [FORCED_COLOURS] }).value.split(' ')[0], tokens);
+      const px = value => (value.endsWith('rem') ? parseFloat(value) * 16 : parseFloat(value));
+      expect(px(offset) + px(width), `${id} forced colours: ${offset} + ${width}`).toBeLessThanOrEqual(0);
+    }
+  });
+});
+
+describe('round 2, finding 7: no line waiting for its turn\'s end is said after teardown', () => {
+  test.each([
+    ['destroy()', app => app.destroy()],
+    ['stopApp', app => retireApp(app)],
+  ])('a line queued, then %s, then the turn ends: nothing is said (stopApp\'s a pin: on 7a74755 its own pause message hid the line)', async (_, stop) => {
+    const app = await routeOfTwo();
+    await turn();
+    const { said } = listen(app);
+    app.announceUnlessSaid('pending count');
+    stop(app);
+    await Promise.resolve();
+    await turn();
+    // What the teardown says of itself (stopping the transport) is not this line.
+    expect(said()).not.toContain('pending count');
+  });
+});
+
+describe('round 2, the lead\'s settlement: the refit measures the canvas area once the slot has its final height', () => {
+  /**
+   * The slot eases as the stylesheet has it. Its height is the test's, and
+   * changes with what it shows, as text that wraps does; the canvas area's
+   * room is less what the test says the slot takes.
+   */
+  function easing() {
+    Object.assign(slot().style, { transitionProperty: 'min-height, max-height', transitionDuration: '150ms, 150ms' });
+    let height = 0;
+    Object.defineProperty(slot(), 'offsetHeight', { configurable: true, get: () => height + slot().textContent.length });
+    const setHeight = value => {
+      height = value;
+      slotTakes(value);
+    };
+    return { setHeight };
+  }
+  const end = property => {
+    const event = new Event('transitionend');
+    Object.defineProperty(event, 'propertyName', { value: property });
+    slot().dispatchEvent(event);
+  };
+
+  test.each([
+    ['nothing else (a pin)', () => {}],
+    ['a corner placed during the entry, its count line rewritten', app => app.eventBus.emit('area:draw-click', { imgX: 0.2, imgY: 0.2 })],
+    ['a branch armed during the entry, replacing it', app => app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[1] })],
+  ])('an area draw\'s banner shown, with %s: one refit, once the fallback has run, to the final room', async (_, during) => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { setHeight } = easing();
+    const before = app.displayHeight;
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    app.areaDrawingService.startDrawing(app.waypoints[0]);
+    await vi.advanceTimersByTimeAsync(50);
+    // Mid-way through the ease.
+    setHeight(20);
+    during(app);
+    expect(refit).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(50);
+    setHeight(48);
+    await vi.advanceTimersByTimeAsync(149);
+    expect(refit).not.toHaveBeenCalled();
+    // 250 ms: the 150 ms ease and the fallback's margin.
+    await vi.advanceTimersByTimeAsync(1);
+    expect(refit).toHaveBeenCalledTimes(1);
+    expect(app.displayHeight).toBe(before - 48);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(refit).toHaveBeenCalledTimes(1);
+  });
+
+  test('shown, then hidden: one refit each, after each fallback, to each final room (a pin)', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { setHeight } = easing();
+    const before = app.displayHeight;
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    setHeight(48);
+    await vi.advanceTimersByTimeAsync(250);
+    expect(refit).toHaveBeenCalledTimes(1);
+    app.eventBus.emit('route:branch-cancel');
+    setHeight(0);
+    await vi.advanceTimersByTimeAsync(249);
+    expect(refit).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(refit).toHaveBeenCalledTimes(2);
+    expect(app.displayHeight).toBe(before);
+  });
+
+  test('interrupted: a show hidden before its end refits nothing; a hide shown again before its end refits nothing (pins)', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { setHeight } = easing();
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    setHeight(20);
+    await vi.advanceTimersByTimeAsync(60);
+    app.eventBus.emit('route:branch-cancel');
+    setHeight(0);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(refit).not.toHaveBeenCalled();
+
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    setHeight(48);
+    await vi.advanceTimersByTimeAsync(250);
+    expect(refit).toHaveBeenCalledTimes(1);
+    app.eventBus.emit('route:branch-cancel');
+    setHeight(30);
+    await vi.advanceTimersByTimeAsync(60);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    setHeight(48);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(refit).toHaveBeenCalledTimes(1);
+  });
+
+  test('the end waited for is the height-bearing transitions\', each by name: min-height\'s alone refits nothing; max-height\'s then refits once', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { setHeight } = easing();
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    setHeight(48);
+    end('opacity');
+    end('min-height');
+    expect(refit).not.toHaveBeenCalled();
+    end('max-height');
+    expect(refit).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(refit).toHaveBeenCalledTimes(1);
+  });
+
+  test('a fallback that ran before the slot had eased: the late end refits to the room it then has', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { setHeight } = easing();
+    const before = app.displayHeight;
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    setHeight(20);
+    await vi.advanceTimersByTimeAsync(250);
+    expect(refit).toHaveBeenCalledTimes(1);
+    setHeight(48);
+    end('min-height');
+    end('max-height');
+    expect(refit).toHaveBeenCalledTimes(2);
+    expect(app.displayHeight).toBe(before - 48);
+  });
+
+  test('reduced motion: the refit runs at once, to the room the slot leaves (a pin)', async () => {
+    const app = await routeOfTwo();
+    Object.assign(slot().style, { transitionProperty: 'none', transitionDuration: '0.01ms' });
+    const before = app.displayHeight;
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    slotTakes(48);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(refit).toHaveBeenCalledTimes(1);
+    expect(app.displayHeight).toBe(before - 48);
+  });
+
+  test('the transition\'s lists repeat as CSS repeats them: one duration and two delays wait for the longer delay', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    document.body.innerHTML = '<div id="mode-banner"></div>';
+    const banner = new ModeBanner(slot());
+    banner.onHeightChange = vi.fn();
+    Object.assign(slot().style, { transitionProperty: 'min-height, max-height', transitionDuration: '150ms', transitionDelay: '0ms, 300ms' });
+    banner.show({}, { id: 'mode' });
+    vi.advanceTimersByTime(549);
+    expect(banner.onHeightChange).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(banner.onHeightChange).toHaveBeenCalledTimes(1);
+  });
+
+  test('a refit compares the room with the one the canvas was last fitted to: a fit meanwhile at the final room leaves nothing to do (a pin)', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { setHeight } = easing();
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    setHeight(48);
+    app.updateCanvasAspectRatio();
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(refit).not.toHaveBeenCalled();
+  });
+
+  test('a banner\'s refit is a resize\'s: the same fit and the same path rebuild (Q3, settled: a pin)', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const viaResize = vi.spyOn(app, '_refitCanvasToArea');
+    slotTakes(48);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(viaResize).toHaveBeenCalledTimes(1);
+    const bannerFit = { width: app.displayWidth, height: app.displayHeight };
+    slotTakes(0);
+    app.eventBus.emit('route:branch-cancel');
+    expect(viaResize).toHaveBeenCalledTimes(2);
+    // The window made 48 px shorter instead: the resize's own refit, to the same fit.
+    slotTakes(48);
+    window.dispatchEvent(new Event('resize'));
+    expect(viaResize).toHaveBeenCalledTimes(3);
+    expect({ width: app.displayWidth, height: app.displayHeight }).toEqual(bannerFit);
+  });
+});
+
+describe('round 2, Q5: toasts stay in view at narrow widths, clear of the transport\'s controls', () => {
+  const cleanups = [];
+  afterEach(() => { for (const cleanup of cleanups.splice(0).reverse()) cleanup(); });
+  function narrowViewport(height) {
+    const media = window.matchMedia;
+    window.matchMedia = vi.fn(query => ({ ...media(query), matches: /max-width:\s*64rem/.test(query) }));
+    const original = Object.getOwnPropertyDescriptor(window, 'innerHeight');
+    Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: height });
+    cleanups.push(() => {
+      window.matchMedia = media;
+      if (original) Object.defineProperty(window, 'innerHeight', original);
+      else delete window.innerHeight;
+    });
+  }
+  const lift = () => byId('toast-container').style.getPropertyValue('--toast-lift');
+
+  test('at 64 rem and below the container is fixed to the viewport\'s bottom centre, lifted by what the app measures; above, it stands on the sticky transport as built', () => {
+    mountShell();
+    const container = byId('toast-container');
+    expect(cascade(container, 'position', { media: [NARROW] }).value).toBe('fixed');
+    expect(cascade(container, 'bottom', { media: [NARROW] }).value).toBe('calc(var(--toast-lift) + var(--space-2))');
+    expect(cascade(container, '--toast-lift').value).toBe('0px');
+    expect([cascade(container, 'left', { media: [NARROW] }).value, cascade(container, 'right', { media: [NARROW] }).value])
+      .toEqual(['var(--space-3)', 'var(--space-3)']);
+    expect(cascade(container, 'position').value).toBe('absolute');
+    // Nothing between it and the viewport makes a containing block of its own.
+    for (let element = container.parentElement; element && element !== document.body; element = element.parentElement) {
+      for (const property of ['transform', 'filter', 'contain', 'perspective', 'will-change']) {
+        const value = cascade(element, property, { media: [NARROW] })?.value;
+        expect(value === undefined || value === 'none', `${element.id || element.className} ${property}: ${value}`).toBe(true);
+      }
+    }
+  });
+
+  test('the transport\'s controls in view: the toasts sit above them; scrolled away, at the viewport\'s bottom (measured on scroll)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    const controls = document.querySelector('#canvas-area > .controls');
+    const container = byId('toast-container');
+    Object.defineProperty(container, 'offsetHeight', { configurable: true, get: () => 56 });
+    let top = 500;
+    controls.getBoundingClientRect = () => ({ top, bottom: top + 100, left: 0, right: 400, width: 400, height: 100 });
+    app.showToast('Deleted waypoint — press Ctrl+Z to undo', 0);
+    expect(lift()).toBe('300px');
+    top = -150;
+    window.dispatchEvent(new Event('scroll'));
+    expect(lift()).toBe('0px');
+    top = 40;
+    document.dispatchEvent(new Event('scroll'));
+    expect(lift()).toBe('0px');
+    top = 900;
+    window.dispatchEvent(new Event('resize'));
+    expect(lift()).toBe('0px');
+    top = 640;
+    window.dispatchEvent(new Event('scroll'));
+    expect(lift()).toBe('160px');
+  });
+
+  test('torn down with a toast up, scrolling measures nothing more and throws nothing (its listeners released)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    const controls = document.querySelector('#canvas-area > .controls');
+    Object.defineProperty(byId('toast-container'), 'offsetHeight', { configurable: true, get: () => 56 });
+    let top = 500;
+    controls.getBoundingClientRect = () => ({ top, bottom: top + 100, left: 0, right: 400, width: 400, height: 100 });
+    app.showToast('Deleted waypoint — press Ctrl+Z to undo', 0);
+    expect(lift()).toBe('300px');
+    app.destroy();
+    // A listener left behind would run against a destroyed app (its elements gone) and throw.
+    const thrown = [];
+    const onError = event => { thrown.push(event.error ?? event.message); event.preventDefault(); };
+    window.addEventListener('error', onError);
+    try {
+      top = -150;
+      window.dispatchEvent(new Event('scroll'));
+    } finally {
+      window.removeEventListener('error', onError);
+    }
+    expect(thrown).toEqual([]);
+    expect(lift()).toBe('300px');
+  });
+});
+
+describe('round 2: the owner\'s colours and the words, kept (pins)', () => {
+  test('each banner takes its owner\'s scope colour, as the scope chip does: the route\'s modes and the tip UoN blue, network editing the crowd\'s green (the owner, 2026-10-12)', () => {
+    mountShell();
+    const banner = new ModeBanner(slot());
+    const surfaces = {};
+    for (const id of ['network-edit-banner', 'area-draw-banner', 'branch-banner', 'preview-tip-banner']) {
+      const { root } = banner.show({ id }, { id, title: 'Title' });
+      surfaces[id] = cascade(root, 'background').value;
+    }
+    expect(surfaces).toEqual({
+      'network-edit-banner': 'var(--scope-crowd-fg)',
+      'area-draw-banner': 'var(--interactive-01)',
+      'branch-banner': 'var(--interactive-01)',
+      'preview-tip-banner': 'var(--interactive-01)',
+    });
+    // The chip's crowd scope is drawn in the same green.
+    const chip = document.querySelector('.scope-chip');
+    chip.dataset.scope = 'crowd';
+    expect(cascade(chip, 'color').value).toBe(surfaces['network-edit-banner']);
+  });
+
+  test('each banner\'s words, its key written "Esc" and said "Escape", as the network\'s entry says it (Q4, settled)', async () => {
+    const app = await withCrowdNetwork();
+    const { said } = listen(app);
+    app.enterNetworkEditMode();
+    app.networkEditService.exit();
+    app.areaDrawingService.startDrawing(app.waypoints[0]);
+    expect(byId('area-draw-banner').querySelector('kbd').textContent).toBe('Esc');
+    app.areaDrawingService.cancelDrawing();
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(byId('branch-banner').querySelector('kbd').textContent).toBe('Esc');
+    await turn();
+    expect(said()).toEqual(expect.arrayContaining([NETWORK_ENTRY, AREA_ENTRY, BRANCH_ARM]));
+    for (const line of [NETWORK_ENTRY, AREA_ENTRY, BRANCH_ARM]) expect(line).not.toMatch(/\bEsc\b/);
+  });
+});
+
+describe('round 2, advisory 8', () => {
+  test('a branch placed from a fork the model has replaced by an object of the same id is refused, as the cancel\'s test refuses it', async () => {
+    const app = await routeOfTwo();
+    const fork = app.waypoints[0];
+    app.eventBus.emit('route:branch-arm', { waypoint: fork });
+    const { toasts } = listen(app);
+    // The fork's id now names another object (a restore the gesture did not follow).
+    const stand = Object.assign(Object.create(Object.getPrototypeOf(fork)), fork);
+    app.waypointsById.set(fork.id, stand);
+    app.eventBus.emit('route:branch-place', { imgX: 0.5, imgY: 0.5 });
+    expect(app.waypoints).toHaveLength(2);
+    expect(toasts).toEqual(['That waypoint is no longer on the route']);
+  });
+
+  test('the wait for no dialog open wakes as a trapped dialog closes; it waits only on trapped ones, every dialog of the app opening through a trap (a pin of its contract)', async () => {
+    document.body.innerHTML = '<div id="trapped" role="dialog" aria-modal="true"><button>In</button></div>'
+      + '<div id="untrapped" role="dialog" aria-modal="true" style="display:none"><button>In</button></div>';
+    const trapped = byId('trapped');
+    const trap = createFocusTrap(trapped);
+    trap.activate();
+    const woke = vi.fn();
+    whenNoModalOpen(woke);
+    trapped.style.display = 'none';
+    trap.deactivate();
+    await Promise.resolve();
+    expect(woke).toHaveBeenCalledTimes(1);
+
+    // A dialog opened and closed without a trap is not watched: the waiter wakes at the next trap's close.
+    const untrapped = byId('untrapped');
+    untrapped.style.display = 'block';
+    const late = vi.fn();
+    const stop = whenNoModalOpen(late);
+    untrapped.style.display = 'none';
+    await Promise.resolve();
+    expect(late).not.toHaveBeenCalled();
+    stop();
+
+    // Every dialog in the shipped shell is one the app opens through a trap.
+    const source = ['src/app/wiringDom.js', 'src/app/helpDialog.js', 'src/app/privacy.js', 'src/app/unrestoredAutosave.js',
+      'src/controllers/UIController.js'].map(file => readFileSync(resolve(process.cwd(), file), 'utf8')).join('\n');
+    const dialogs = [...indexHtml.matchAll(/<div id="([\w-]+)"[^>]*aria-modal="true"/g)].map(([, id]) => id);
+    expect(dialogs).toHaveLength(7);
+    const trappedBy = {
+      'splash': /createFocusTrap\(this\.elements\.splash\)/,
+      'help-modal': /getElementById\('help-modal'\)[\s\S]{0,400}createFocusTrap\(modal\)/,
+      'codec-unsupported-modal': /createFocusTrap\(this\._codecModal\)/,
+      'clear-confirm-modal': /createFocusTrap\(clearModal\)/,
+      'discard-confirm-modal': /createFocusTrap\(discardModal\)/,
+      'share-disclosure-modal': /getElementById\('share-disclosure-modal'\)[\s\S]{0,1500}createFocusTrap\(modal\)/,
+      'diagnostics-modal': /getElementById\('diagnostics-modal'\)[\s\S]{0,1500}createFocusTrap\(modal\)/,
+    };
+    for (const id of dialogs) expect(source, id).toMatch(trappedBy[id]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Round 3 (Codex r2 on 753f93f, its findings by number; the lead's
+// settlements, 2026-10-12). Each test fails on 753f93f unless its title says
+// it is a pin.
+// ---------------------------------------------------------------------------
+
+/**
+ * The slot eases as the stylesheet has it; its height is the test's and
+ * changes with what it shows, as text that wraps does; the canvas area's
+ * room is less what the test says the slot takes (round 2's `easing`).
+ */
+function easingSlot() {
+  Object.assign(slot().style, { transitionProperty: 'min-height, max-height', transitionDuration: '150ms, 150ms' });
+  let height = 0;
+  Object.defineProperty(slot(), 'offsetHeight', { configurable: true, get: () => height + slot().textContent.length });
+  const setHeight = value => {
+    height = value;
+    slotTakes(value);
+  };
+  const end = property => {
+    const event = new Event('transitionend');
+    Object.defineProperty(event, 'propertyName', { value: property });
+    slot().dispatchEvent(event);
+  };
+  return { setHeight, end };
+}
+
+describe('round 3, finding 1: a count line or a replacement after an early fallback keeps the late end\'s refit', () => {
+  test.each([
+    ['a count line rewritten', app => app.eventBus.emit('area:draw-click', { imgX: 0.2, imgY: 0.2 })],
+    ['a replacement', app => app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[1] })],
+  ])('the fallback at 20 px, then %s at 25 px, the ease ending at 48 px: the canvas fits the final room', async (_, change) => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { setHeight, end } = easingSlot();
+    const before = app.displayHeight;
+    app.areaDrawingService.startDrawing(app.waypoints[0]);
+    setHeight(20);
+    await vi.advanceTimersByTimeAsync(250);
+    expect(app.displayHeight).toBe(before - 20);
+    setHeight(25);
+    change(app);
+    await vi.advanceTimersByTimeAsync(0);
+    setHeight(48);
+    end('min-height');
+    end('max-height');
+    expect(app.displayHeight).toBe(before - 48);
+    // The late end is the last report: nothing refits after it.
+    const refit = vi.spyOn(app, 'updateCanvasAspectRatio');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(refit).not.toHaveBeenCalled();
+  });
+
+  test('the fallback at 20 px, then a count line at 25 px, and no late end at all: the count line\'s room is fitted at once, never left unreported (a pin: 753f93f reported it at once too)', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const { setHeight } = easingSlot();
+    const before = app.displayHeight;
+    app.areaDrawingService.startDrawing(app.waypoints[0]);
+    setHeight(20);
+    await vi.advanceTimersByTimeAsync(250);
+    setHeight(25);
+    app.eventBus.emit('area:draw-click', { imgX: 0.2, imgY: 0.2 });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(app.displayHeight).toBe(before - 25);
+  });
+});
+
+describe('round 3, finding 2: at narrow widths the toasts cover none of the transport\'s controls', () => {
+  const cleanups = [];
+  afterEach(() => { for (const cleanup of cleanups.splice(0).reverse()) cleanup(); });
+  function narrowViewport(height) {
+    const media = window.matchMedia;
+    window.matchMedia = vi.fn(query => ({ ...media(query), matches: /max-width:\s*64rem/.test(query) }));
+    const original = Object.getOwnPropertyDescriptor(window, 'innerHeight');
+    Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: height });
+    cleanups.push(() => {
+      window.matchMedia = media;
+      if (original) Object.defineProperty(window, 'innerHeight', original);
+      else delete window.innerHeight;
+    });
+  }
+  /** The stack's own height as the browser lays it out (`scrollHeight` too, as it is uncapped or not). */
+  function stackOf(height) {
+    const container = byId('toast-container');
+    Object.defineProperty(container, 'offsetHeight', { configurable: true, get: () => height });
+    Object.defineProperty(container, 'scrollHeight', { configurable: true, get: () => height });
+    let scrolled = 0;
+    Object.defineProperty(container, 'scrollTop', { configurable: true, get: () => scrolled, set: value => { scrolled = value; } });
+    return container;
+  }
+  /** Where the stack stands from what the app wrote: `--toast-lift` + 8 px above the viewport's bottom, its height capped to `--toast-room`. */
+  function placed(container, height) {
+    const lift = parseFloat(container.style.getPropertyValue('--toast-lift')) || 0;
+    const room = container.style.getPropertyValue('--toast-room');
+    const shown = room ? Math.min(height, parseFloat(room)) : height;
+    const bottom = window.innerHeight - lift - 8;
+    return { top: bottom - shown, bottom, height: shown, capped: Boolean(room) };
+  }
+  const overlap = (a, b) => Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+
+  test.each([
+    ['three toasts taller than the room either side, the controls mid-screen (Codex\'s case)', [300, 460], 400, true],
+    ['the controls partly scrolled away above (a pin)', [-60, 100], 200, false],
+    ['the controls partly below the fold (a pin)', [700, 900], 120, false],
+    ['tall controls with room above for the stack (a pin)', [100, 760], 80, false],
+    ['tall controls, the stack taller than the room either side', [100, 700], 200, true],
+    ['no room either side: the controls fill the viewport', [4, 796], 56, true],
+  ])('%s: the stack stays in the viewport and over none of the controls', async (_, [top, bottom], height, capped) => {
+    const app = await editor();
+    narrowViewport(800);
+    const controls = document.querySelector('#canvas-area > .controls');
+    controls.getBoundingClientRect = () => ({ top, bottom, left: 0, right: 400, width: 400, height: bottom - top });
+    const container = stackOf(height);
+    for (const message of ['Deleted waypoint — press Ctrl+Z to undo', 'Deleted Crowd 1 — press Ctrl+Z to undo', 'Branch cancelled']) {
+      app.showToast(message, 0);
+    }
+    const stack = placed(container, height);
+    expect(stack.top, 'in the viewport').toBeGreaterThanOrEqual(0);
+    expect(stack.bottom, 'in the viewport').toBeLessThanOrEqual(800);
+    expect(overlap(stack, { top: Math.max(top, 0), bottom: Math.min(bottom, 800) }), 'over the controls').toBe(0);
+    expect(stack.capped).toBe(capped);
+    // Capped, the stack scrolls inside itself, its newest toast (the last) in view.
+    expect(container.classList.contains('is-capped')).toBe(capped);
+    if (capped) expect(container.scrollTop).toBe(height);
+  });
+
+  test('the cap is the stylesheet\'s at 64 rem and below: its height the room the app measured, scrolling inside it; none above 64 rem, and none uncapped', () => {
+    mountShell();
+    const container = byId('toast-container');
+    expect(cascade(container, '--toast-room').value).toBe('none');
+    expect(cascade(container, 'max-height', { media: [NARROW] }).value).toBe('var(--toast-room)');
+    expect(cascade(container, 'overflow-y', { media: [NARROW] })).toBeUndefined();
+    container.classList.add('is-capped');
+    expect(cascade(container, 'overflow-y', { media: [NARROW] }).value).toBe('auto');
+    expect(cascade(container, 'max-height')).toBeUndefined();
+    expect(cascade(container, 'overflow-y')).toBeUndefined();
+  });
+
+  test('the stack shrinking or the controls moving lifts the cap where the stack fits again', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    const controls = document.querySelector('#canvas-area > .controls');
+    let rect = { top: 300, bottom: 460 };
+    controls.getBoundingClientRect = () => ({ ...rect, left: 0, right: 400, width: 400, height: rect.bottom - rect.top });
+    const container = stackOf(400);
+    app.showToast('Deleted waypoint — press Ctrl+Z to undo', 0);
+    expect(placed(container, 400).capped).toBe(true);
+    rect = { top: 600, bottom: 760 };
+    window.dispatchEvent(new Event('scroll'));
+    const stack = placed(container, 400);
+    expect([stack.capped, container.classList.contains('is-capped')]).toEqual([false, false]);
+    expect(overlap(stack, rect)).toBe(0);
+  });
+});
+
+describe('round 3, finding 3: a region\'s line is covered by the operation that changes it, not by whatever runs near it', () => {
+  async function routeOfThree() {
+    const app = await routeOfTwo();
+    app.eventBus.emit('waypoint:add', { imgX: 0.5, imgY: 0.8, isMajor: true });
+    await turn();
+    app.eventBus.emit('waypoint:deselected');
+    await turn();
+    return app;
+  }
+
+  test('a selection task queued before an Undo: the Undo\'s chip is covered by "Undo", the selection\'s chip is said (Codex\'s case)', async () => {
+    const app = await routeOfThree();
+    const { said } = listen(app);
+    setTimeout(() => app.eventBus.emit('waypoint:selected', app.waypoints[0]), 0);
+    app.eventBus.emit('history:undo');
+    expect(byId('scope-chip-text').textContent).toBe('Editing · Waypoint 2 · major');
+    await turn();
+    await turn();
+    expect(byId('scope-chip-text').textContent).toBe('Editing · Waypoint 1 · major');
+    expect(said()).toEqual(['Undo', 'Editing · Waypoint 1 · major']);
+  });
+
+  /** A project load whose file read the test controls: at once (the same task), or after `ms` on a timer. */
+  function loadingProject(app, ms = null) {
+    const project = app._buildProjectSnapshot({ includeAssets: false });
+    project.imageAssets = [];
+    const read = { projectData: project, imageAssets: [], backgroundBase64: null };
+    vi.spyOn(app.imageAssetService, 'importZip').mockImplementation(() => (ms === null
+      ? Promise.resolve(read)
+      : new Promise(resolveRead => setTimeout(() => resolveRead(read), ms))));
+    return app.loadProject(new File([''], 'project.zip'));
+  }
+
+  test('a selection task queued while a project load waits, run just after it commits: the load\'s chip line is covered by "Project loaded", the selection\'s is said (Codex\'s case, in a load)', async () => {
+    const app = await routeOfThree();
+    const { said } = listen(app);
+    const loaded = loadingProject(app, 20);
+    setTimeout(() => app.eventBus.emit('waypoint:selected', app.waypoints[0]), 20);
+    expect(await loaded).toBe(true);
+    await turn();
+    await turn();
+    expect(byId('scope-chip-text').textContent).toBe('Editing · Waypoint 1 · major');
+    expect(said().filter(message => message.startsWith('Editing ·'))).toEqual(['Editing · Waypoint 1 · major']);
+    expect(said()).toContain('Project loaded');
+  });
+
+  test('a selection made while a load waits in the same task: the load\'s covered change is the chip\'s last in the turn, so neither chip line is said beside "Project loaded" (latest wins, the covered state included: a pin)', async () => {
+    const app = await routeOfThree();
+    const { said } = listen(app);
+    const loaded = loadingProject(app);
+    app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    expect(await loaded).toBe(true);
+    await turn();
+    expect(byId('scope-chip-text').textContent).toBe('Editing · Route');
+    expect(said().filter(message => message.startsWith('Editing ·'))).toEqual([]);
+    expect(said()).toContain('Project loaded');
+  });
+
+  test('a selection made while a load waits on its file (a timer) is said, before the load\'s own change, covered (a pin: 753f93f\'s turn had ended before the load committed)', async () => {
+    const app = await routeOfThree();
+    const { said } = listen(app);
+    const loaded = loadingProject(app, 20);
+    await turn();
+    app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    expect(await loaded).toBe(true);
+    await turn();
+    expect(said().filter(message => message.startsWith('Editing ·'))).toEqual(['Editing · Waypoint 1 · major']);
+    expect(said()).toContain('Project loaded');
+  });
+
+  test('an operation\'s asynchronous continuation (a timer inside it) that re-enters it is still covered; a selection made meanwhile is said', async () => {
+    const app = await routeOfThree();
+    const { said } = listen(app);
+    const operation = (async () => {
+      app.regionOperation(cover => {
+        app.announce('Project loaded');
+        cover();
+      });
+      await new Promise(resolveTimer => setTimeout(resolveTimer, 20));
+      app.regionOperation(cover => {
+        app.eventBus.emit('waypoint:selected', app.waypoints[2]);
+        cover();
+      });
+    })();
+    await turn();
+    app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    await operation;
+    await turn();
+    expect(said()).toEqual(['Project loaded', 'Editing · Waypoint 1 · major']);
+    expect(byId('scope-chip-text').textContent).toBe('Editing · Waypoint 3 · major');
+  });
+
+  test('a covering operation\'s change cancels its region\'s line still waiting from earlier in the turn (latest wins, the covered state included)', async () => {
+    const app = await routeOfThree();
+    const { said } = listen(app);
+    app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    app.regionOperation(cover => {
+      app.eventBus.emit('waypoint:deselected');
+      app.announce('Selection cleared');
+      cover();
+    });
+    await turn();
+    expect(said()).toEqual(['Selection cleared']);
+  });
+
+  test('an operation that does not say its change after all (it never covers) leaves its lines said', async () => {
+    const app = await routeOfThree();
+    const { said } = listen(app);
+    app.regionOperation(() => {
+      app.eventBus.emit('waypoint:selected', app.waypoints[1]);
+      app.announce('Browser recovery could not be cleared; reload may restore old work.', 'assertive');
+    });
+    await turn();
+    expect(said()).toEqual(['Browser recovery could not be cleared; reload may restore old work.', 'Editing · Waypoint 2 · major']);
+  });
+});
+
+describe('round 3, finding 4: a scope change conveyed by focus cancels the chip\'s line still waiting', () => {
+  const twoCrowds = {
+    coordVersion: 9,
+    waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
+    scene: {
+      flowLayers: [
+        {
+          id: 'net', name: 'net', guideType: 'graph', emitters: [{ id: 'net-e', seed: 7 }],
+          graph: { nodes: [{ id: 'n1', x: 0.2, y: 0.5, type: 'entry' }, { id: 'n2', x: 0.8, y: 0.5, type: 'exit' }], edges: [] },
+        },
+        {
+          id: 'two', name: 'two', guideType: 'graph', emitters: [{ id: 'two-e', seed: 7 }],
+          graph: { nodes: [{ id: 'm1', x: 0.3, y: 0.5, type: 'entry' }], edges: [] },
+        },
+      ],
+    },
+  };
+  const outline = key => byId('scene-outline').querySelector(`[data-outline-key="${key}"]`);
+
+  test('the outline\'s node Select: the crowd it passes through is not said, nor the node its focus names (Codex\'s case)', async () => {
+    const app = await editor();
+    expect(await loadSnapshot(app, twoCrowds)).toBe(true);
+    for (const key of ['crowd:net:summary', 'network:net:summary', 'nodes:net:summary', 'node:net:n1:summary']) {
+      outline(key).click();
+      await frames();
+    }
+    const select = outline('node:net:n1:select');
+    const { said } = listen(app);
+    select.focus();
+    select.click();
+    await turn();
+    expect(byId('scope-chip-text').textContent).toBe('Editing · Node · entry');
+    expect(said().filter(message => message.startsWith('Editing ·'))).toEqual([]);
+  });
+
+  test('the Layers strip: a crowd chosen from its own row, a line for another crowd still waiting in the turn, says neither', async () => {
+    const app = await editor();
+    expect(await loadSnapshot(app, twoCrowds)).toBe(true);
+    await turn();
+    const [net, two] = app.scene.getFlowLayers();
+    const rowOf = layer => app._crowdRowOf(layer);
+    const { said } = listen(app);
+    app.eventBus.emit('crowd:selected', net);
+    rowOf(two).focus();
+    rowOf(two).click();
+    await turn();
+    expect(app.selectedCrowd).toBe(two);
+    expect(said().filter(message => message.startsWith('Editing ·'))).toEqual([]);
+  });
+
+  test('the Layers strip\'s Route row the same, the waiting line a waypoint\'s', async () => {
+    const app = await editor();
+    expect(await loadSnapshot(app, twoCrowds)).toBe(true);
+    const [net] = app.scene.getFlowLayers();
+    app.eventBus.emit('crowd:selected', net);
+    await turn();
+    const route = byId('layers-strip').querySelector('.layer-row');
+    const { said } = listen(app);
+    route.focus();
+    route.click();
+    app.eventBus.emit('waypoint:selected', app.waypoints[0]);
+    app.eventBus.emit('waypoint:deselected');
+    await turn();
+    expect(byId('scope-chip-text').textContent).toBe('Editing · Route');
+    expect(said().filter(message => message.startsWith('Editing ·'))).toEqual([]);
+  });
+});
+
+describe('round 3, finding 5: a focused banner action\'s indicator changes at least a 2 px perimeter\'s area against each unfocused state (WCAG 2.4.13)', () => {
+  /** The inset ring a state draws, in px, inside the button's border (0 for none). */
+  const insetOf = (action, states) => {
+    const value = cascade(action, 'box-shadow', { states })?.value ?? 'none';
+    const match = /^inset 0 0 0 (\d+(?:\.\d+)?)px currentColor$/.exec(value);
+    return match ? parseFloat(match[1]) : 0;
+  };
+  /** The area of the band between two inset rings inside a w × h button with a `border` px border. */
+  const band = (w, h, border, from, to) => {
+    const box = inset => Math.max(0, w - 2 * (border + inset)) * Math.max(0, h - 2 * (border + inset));
+    return box(from) - box(to);
+  };
+
+  test.each([['area-draw-banner', 'UoN blue'], ['network-edit-banner', 'the crowd\'s green']])('%s (%s): focused, plain or under the pointer, against plain and hovered', (id) => {
+    mountShell();
+    const banner = new ModeBanner(slot());
+    slot().classList.add('is-showing');
+    const { actions: [action] } = banner.show({ id }, { id, title: 'Title', actions: [{ label: 'Cancel' }] });
+    const border = parseFloat(cascade(action, 'border').value);
+    expect(border).toBe(1);
+    const plain = insetOf(action, []);
+    const hovered = insetOf(action, ['hover']);
+    for (const states of [['focus-visible'], ['hover', 'focus-visible']]) {
+      const focused = insetOf(action, states);
+      // A 44 px square (the touch target's least), and the widths its words give it.
+      for (const [w, h] of [[44, 44], [96, 44], [180, 44], [120, 88]]) {
+        const perimeter = w * h - (w - 4) * (h - 4);
+        for (const [name, unfocused] of [['plain', plain], ['hovered', hovered]]) {
+          expect(band(w, h, border, unfocused, focused), `${id} ${states} against ${name}, ${w}×${h}`).toBeGreaterThanOrEqual(perimeter);
+        }
+      }
+      // The changed pixels go from the banner's surface to the words' colour: 3:1 or more.
+      const { fg, bg } = textPair(action, { states });
+      expect(contrast(fg, bg)).toBeGreaterThanOrEqual(3);
+      // Forced colours keep their outline inside the edge (round 2).
+      expect(cascade(action, 'outline-offset', { states: ['focus-visible'], media: [FORCED_COLOURS] }).value).toBe('-5px');
+    }
+  });
+});
+
+describe('round 3, finding 6: a claim past the bound is refused before its owner is active; every accepted owner exits once', () => {
+  function bare() {
+    document.body.innerHTML = '<div id="mode-banner"></div>';
+    return new ModeBanner(slot());
+  }
+
+  test('a cycling chain: an owner whose exit has run claims again inside the same claim and is refused; each owner exits once; the incoming one holds', () => {
+    const banner = bare();
+    const active = new Set();
+    const exits = new Map();
+    const owner = (name, next) => {
+      const self = {
+        name,
+        onReplaced: () => {
+          exits.set(name, (exits.get(name) ?? 0) + 1);
+          active.delete(self);
+          banner.hide(self);
+          const handed = next();
+          if (handed && banner.show(handed, { id: handed.name })) active.add(handed);
+        },
+      };
+      return self;
+    };
+    let p = null;
+    const q = owner('q', () => p);
+    p = owner('p', () => q);
+    banner.show(p, { id: 'p' });
+    active.add(p);
+    const incoming = { name: 'incoming', onReplaced: vi.fn() };
+    expect(banner.show(incoming, { id: 'incoming' })).not.toBeNull();
+    active.add(incoming);
+    expect(Object.fromEntries(exits)).toEqual({ p: 1, q: 1 });
+    expect([...active]).toEqual([incoming]);
+    expect(banner.holder).toBe(incoming);
+    expect(shown()).toEqual(['incoming']);
+  });
+
+  test('a chain of new owners past the bound: the claim past it is refused and that owner never active; every accepted one exits once; one holder at the end', () => {
+    const banner = bare();
+    const active = new Set();
+    const exits = [];
+    const owners = Array.from({ length: MAX_HANDOVERS + 2 }, (_, index) => ({ index }));
+    owners.forEach((owner) => {
+      owner.onReplaced = () => {
+        exits.push(owner.index);
+        active.delete(owner);
+        banner.hide(owner);
+        const next = owners[owner.index + 1];
+        if (next && banner.show(next, { id: `owner-${next.index}` })) active.add(next);
+      };
+    });
+    banner.show(owners[0], { id: 'owner-0' });
+    active.add(owners[0]);
+    const incoming = { onReplaced: vi.fn() };
+    banner.show(incoming, { id: 'incoming' });
+    active.add(incoming);
+    // The first holder, then the bound's worth of handovers, each exited once; the next refused.
+    expect(exits).toEqual(owners.slice(0, MAX_HANDOVERS + 1).map(owner => owner.index));
+    expect([...active]).toEqual([incoming]);
+    expect(shown()).toEqual(['incoming']);
+  });
+
+  test.each([
+    ['an area draw', app => app.areaDrawingService.startDrawing(app.waypoints[0]), app => app.areaDrawingService.isDrawing],
+    ['network editing', app => app.enterNetworkEditMode(), app => app.networkEditService.active],
+    ['a branch gesture', app => app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] }), app => app.interactionHandler.branchArmed !== null],
+  ])('%s entered by the exit past the bound is refused through its own entry and is not active', async (_, enter, isActive) => {
+    const app = await withCrowdNetwork();
+    const banner = app.modeBanner;
+    const exits = [];
+    const owners = Array.from({ length: MAX_HANDOVERS + 1 }, (_, index) => ({ index }));
+    owners.forEach((owner) => {
+      owner.onReplaced = () => {
+        exits.push(owner.index);
+        banner.hide(owner);
+        const next = owners[owner.index + 1];
+        if (next) banner.show(next, { id: `owner-${next.index}` });
+        else enter(app);
+      };
+    });
+    banner.show(owners[0], { id: 'owner-0' });
+    const previewBefore = app.previewMode;
+    const incoming = { onReplaced: vi.fn() };
+    banner.show(incoming, { id: 'incoming' });
+    expect(exits).toEqual(owners.map(owner => owner.index));
+    expect(isActive(app)).toBe(false);
+    expect(app.previewMode).toBe(previewBefore);
+    expect(shown()).toEqual(['incoming']);
+    expect(banner.holder).toBe(incoming);
+  });
+});
+
+describe('round 3, finding 6: the first-start tip offered by an exit past the bound', () => {
+  test('is refused, waits for the slot as it waits for a mode, and shows once the incoming banner goes', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const app = await boot();
+    await vi.advanceTimersByTimeAsync(50);
+    await app.ready;
+    byId('splash').style.display = 'none';
+    app._splashFocusTrap.deactivate();
+    const banner = app.modeBanner;
+    const owners = Array.from({ length: MAX_HANDOVERS + 1 }, (_, index) => ({ index }));
+    owners.forEach((owner) => {
+      owner.onReplaced = () => {
+        banner.hide(owner);
+        const next = owners[owner.index + 1];
+        if (next) banner.show(next, { id: `owner-${next.index}` });
+        else app._offerPreviewTip();
+      };
+    });
+    banner.show(owners[0], { id: 'owner-0' });
+    const incoming = { onReplaced: vi.fn() };
+    banner.show(incoming, { id: 'incoming' });
+    expect(shown()).toEqual(['incoming']);
+    expect(byId('preview-tip-banner')).toBeNull();
+    banner.hide(incoming);
+    expect(shown()).toEqual(['preview-tip-banner']);
+  });
+});
+
+describe('round 3, finding 7 (advisory): a held path rebuild is consumed by the new fit that supersedes it', () => {
+  test('debounce held while playing, the slot changed again, then the pause: the resize path\'s two rebuilds, not three', async () => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const frames = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0);
+    try {
+      // The resize path's count: a fit, then its debounced rebuild.
+      const paths = recordPaths(app);
+      slotTakes(30);
+      window.dispatchEvent(new Event('resize'));
+      await vi.advanceTimersByTimeAsync(500);
+      const resizeCount = paths.length;
+      expect(resizeCount).toBe(2);
+
+      paths.length = 0;
+      slotTakes(48);
+      app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+      paths.length = 0;
+      const state = app.animationEngine.state;
+      state.isPlaying = true;
+      state.isPaused = false;
+      await vi.advanceTimersByTimeAsync(500);
+      expect(app._fittedPathPending).toBe(true);
+      slotTakes(0);
+      app.eventBus.emit('route:branch-cancel');
+      expect(app._modeBannerRefitPending).toBe(true);
+      expect(paths).toEqual([]);
+      app.animationEngine.pause();
+      await vi.advanceTimersByTimeAsync(500);
+      expect(paths).toHaveLength(resizeCount);
+      expect(paths.every(run => !run.playing && !run.exporting)).toBe(true);
+    } finally {
+      frames.mockRestore();
+    }
+  });
+});
+
+describe('round 3, item 8: a minor waypoint added to a leg is said once, by its own message', () => {
+  test('"Minor waypoint added to leg" covers the chip\'s "Editing · minor waypoint"', async () => {
+    const app = await routeOfTwo();
+    const { said } = listen(app);
+    app.eventBus.emit('waypoint:insert-on-leg', { waypointIndex: 0, imgX: 0.45, imgY: 0.45 });
+    await turn();
+    expect(app.waypoints).toHaveLength(3);
+    expect(byId('scope-chip-text').textContent).toBe('Editing · minor waypoint');
+    expect(said().filter(message => message !== 'Unsaved changes')).toEqual(['Minor waypoint added to leg']);
+  });
+});
+
+describe('round 3, the lead\'s settlement: opening a project refits the canvas to its export size before its path is laid out', () => {
+  /** Two waypoints in a wide export (2.4:1), timed by speed so the duration follows the canvas. */
+  const wide = {
+    coordVersion: 9,
+    waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.8, imgY: 0.7, isMajor: true }],
+    exportSettings: { resolutionX: 2400, resolutionY: 1000 },
+    animationState: { mode: 'constant-speed', speed: 200, duration: 10000 },
+  };
+  const settle = () => new Promise(resolveSettle => setTimeout(resolveSettle, 300));
+  const aspect = app => app.displayWidth / app.displayHeight;
+
+  test('restored from browser recovery: the canvas takes the project\'s aspect at once, its path laid out once, on that canvas', async () => {
+    const app = await editor();
+    await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+    expect(aspect(app)).toBeCloseTo(1, 5);
+    const paths = recordPaths(app);
+    const fitted = [];
+    const fit = app.updateCanvasAspectRatio.bind(app);
+    vi.spyOn(app, 'updateCanvasAspectRatio').mockImplementation(() => {
+      const result = fit();
+      fitted.push(paths.length);
+      return result;
+    });
+    expect(await loadSnapshot(app, wide)).toBe(true);
+    expect(aspect(app)).toBeCloseTo(2.4, 5);
+    // bootApp's room: 1280 × 660; width-bound at 2.4:1.
+    expect([app.displayWidth, app.displayHeight]).toEqual([1280, 1280 / 2.4]);
+    // The fit lays the path out: once, during it, not again after it.
+    expect(fitted).toEqual([1]);
+    expect(paths).toHaveLength(1);
+  });
+
+  test('opened from a file, the same', async () => {
+    const app = await editor();
+    await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+    vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({ projectData: { ...wide, imageAssets: [] }, imageAssets: [], backgroundBase64: null });
+    expect(await app.loadProject(new File([''], 'wide.zip'))).toBe(true);
+    expect(aspect(app)).toBeCloseTo(2.4, 5);
+  });
+
+  test('then a banner shown and hidden on that width-bound canvas changes neither the canvas nor the duration', async () => {
+    const app = await editor();
+    await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+    expect(await loadSnapshot(app, wide)).toBe(true);
+    app._setPreviewMode(false);
+    await settle();
+    const canvas = [app.displayWidth, app.displayHeight, app.canvas.width, app.canvas.height];
+    const duration = app.animationEngine.state.duration;
+    expect(duration).toBeGreaterThan(0);
+    slotTakes(48);
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    await settle();
+    expect([app.displayWidth, app.displayHeight, app.canvas.width, app.canvas.height]).toEqual(canvas);
+    expect(app.animationEngine.state.duration).toBe(duration);
+    slotTakes(0);
+    app.eventBus.emit('route:branch-cancel');
+    await settle();
+    expect([app.displayWidth, app.displayHeight, app.canvas.width, app.canvas.height]).toEqual(canvas);
+    expect(app.animationEngine.state.duration).toBe(duration);
+  });
+
+  test('a project with no visual reference of its own adopts the canvas it is fitted to, opened once or twice; one with its own keeps it', async () => {
+    const app = await editor();
+    await vi.waitFor(() => expect(app.background.image).toBeTruthy());
+    expect(await loadSnapshot(app, wide)).toBe(true);
+    expect(app.renderReference).toEqual({ width: 1280, height: 1280 / 2.4 });
+    expect(await loadSnapshot(app, wide)).toBe(true);
+    expect(app.renderReference).toEqual({ width: 1280, height: 1280 / 2.4 });
+    expect(await loadSnapshot(app, { ...wide, renderReference: { width: 900, height: 500 } })).toBe(true);
+    expect(app.renderReference).toEqual({ width: 900, height: 500 });
+  });
+
+  test('a project of one waypoint still clears the path the last route fed (DEF-06), and is fitted too', async () => {
+    const app = await routeOfTwo();
+    expect(app.pathPoints.length).toBeGreaterThan(0);
+    expect(app.routeStructure.trunk.waypoints).toHaveLength(2);
+    expect(await loadSnapshot(app, { ...wide, waypoints: [wide.waypoints[0]] })).toBe(true);
+    expect(app.pathPoints).toEqual([]);
+    // The route's structure is the one waypoint's, laid out by the path's own clearing pass, not the last route's.
+    expect(app.routeStructure.trunk.waypoints.map(waypoint => waypoint.id)).toEqual(['a']);
+    expect(aspect(app)).toBeCloseTo(2.4, 5);
+  });
+
+  test('during a video export the canvas is the export\'s: a project applied then is laid out on it, unfitted (the refit\'s own guard: a pin)', async () => {
+    const app = await routeOfTwo();
+    const canvas = [app.displayWidth, app.displayHeight];
+    app._isExportMode = true;
+    try {
+      const paths = recordPaths(app);
+      expect(await loadSnapshot(app, wide)).toBe(true);
+      expect([app.displayWidth, app.displayHeight]).toEqual(canvas);
+      expect(paths).toHaveLength(1);
+    } finally {
+      app._isExportMode = false;
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Round 4 (Codex r3 on bc2d3a4, its findings by number).
+// ---------------------------------------------------------------------------
+
+describe('round 4, finding 2: a claim the replacements suspend is checked again before it draws', () => {
+  test('through the real area entry: P\'s exit shows A, then draws an area; A\'s exit draws an area too, then shows C. The area claim A\'s exit outlived is refused: no area drawing while X holds the slot (Codex\'s case)', async () => {
+    const app = await routeOfTwo();
+    const banner = app.modeBanner;
+    const area = app.areaDrawingService;
+    const waypoint = app.waypoints[0];
+    const exits = [];
+    const c = { onReplaced: () => { exits.push('c'); banner.hide(c); } };
+    const a = {
+      onReplaced: () => {
+        exits.push('a');
+        banner.hide(a);
+        area.startDrawing(waypoint);
+        banner.show(c, { id: 'c' });
+      },
+    };
+    const p = {
+      onReplaced: () => {
+        exits.push('p');
+        banner.hide(p);
+        banner.show(a, { id: 'a' });
+        area.startDrawing(waypoint);
+      },
+    };
+    banner.show(p, { id: 'p' });
+    const areaExits = vi.spyOn(area, 'cancelDrawing');
+    const x = { onReplaced: vi.fn() };
+
+    expect(banner.show(x, { id: 'x' })).not.toBeNull();
+
+    expect(area.isDrawing).toBe(false);
+    expect(area._keyHandler).toBeNull();
+    expect(exits).toEqual(['p', 'a', 'c']);
+    // The area's own exit ran once: as C replaced the area A's exit drew.
+    expect(areaExits).toHaveBeenCalledTimes(1);
+    expect(x.onReplaced).not.toHaveBeenCalled();
+    expect(banner.holder).toBe(x);
+    expect(shown()).toEqual(['x']);
+  });
+
+  test('the outermost claimant the same: shown and replaced inside its own claim, it is refused at its end; the slot is free, its waiter told and its height told once', () => {
+    document.body.innerHTML = '<div id="mode-banner"></div>';
+    const heights = vi.fn();
+    const banner = new ModeBanner(slot(), { onHeightChange: heights });
+    const exits = [];
+    const x = { onReplaced: () => { exits.push('x'); banner.hide(x); } };
+    const y = { onReplaced: () => { exits.push('y'); banner.hide(y); } };
+    const p = {
+      onReplaced: () => {
+        exits.push('p');
+        banner.hide(p);
+        banner.show(x, { id: 'x-inside' });
+        banner.show(y, { id: 'y' });
+      },
+    };
+    banner.show(p, { id: 'p' });
+    heights.mockClear();
+    const waiter = vi.fn();
+    banner.whenFree(waiter);
+
+    expect(banner.show(x, { id: 'x' })).toBeNull();
+
+    expect(exits).toEqual(['p', 'x', 'y']);
+    expect(banner.holder).toBeNull();
+    expect(shown()).toEqual([]);
+    expect(waiter).toHaveBeenCalledTimes(1);
+    expect(heights).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('round 4, findings 3 and 4: a capped toast stack keeps the author\'s scrolling, and is capped with the controls out of view', () => {
+  const cleanups = [];
+  afterEach(() => { for (const cleanup of cleanups.splice(0).reverse()) cleanup(); });
+  function narrowViewport(height) {
+    const media = window.matchMedia;
+    window.matchMedia = vi.fn(query => ({ ...media(query), matches: /max-width:\s*64rem/.test(query) }));
+    const original = Object.getOwnPropertyDescriptor(window, 'innerHeight');
+    Object.defineProperty(window, 'innerHeight', { configurable: true, writable: true, value: height });
+    cleanups.push(() => {
+      window.matchMedia = media;
+      if (original) Object.defineProperty(window, 'innerHeight', original);
+      else delete window.innerHeight;
+    });
+  }
+  function controlsAt(top, bottom) {
+    const controls = document.querySelector('#canvas-area > .controls');
+    controls.getBoundingClientRect = () => ({ top, bottom, left: 0, right: 400, width: 400, height: bottom - top });
+  }
+  /**
+   * The stack as a browser lays it out: toasts `each` px tall, 8 px apart;
+   * its height theirs, or its cap's; its scroll clamped to what the cap
+   * shows. (jsdom lays nothing out; these stand in for the browser's
+   * geometry, not for its focus reveal, which the lead checks in Chromium.)
+   */
+  function stackOfToasts(each) {
+    const container = byId('toast-container');
+    const toasts = () => [...container.children].filter(child => child.classList.contains('toast'));
+    const content = () => Math.max(0, toasts().length * (each + 8) - 8);
+    const shownHeight = () => {
+      const room = container.style.getPropertyValue('--toast-room');
+      return room ? Math.min(content(), parseFloat(room)) : content();
+    };
+    Object.defineProperty(container, 'scrollHeight', { configurable: true, get: content });
+    Object.defineProperty(container, 'offsetHeight', { configurable: true, get: shownHeight });
+    Object.defineProperty(container, 'clientHeight', { configurable: true, get: shownHeight });
+    let scrolled = 0;
+    Object.defineProperty(container, 'scrollTop', {
+      configurable: true,
+      get: () => scrolled,
+      set: (value) => { scrolled = Math.max(0, Math.min(value, content() - shownHeight())); },
+    });
+    const offsetTop = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetTop');
+    const offsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    Object.defineProperty(HTMLElement.prototype, 'offsetTop', {
+      configurable: true,
+      get() { return this.parentElement === container ? toasts().indexOf(this) * (each + 8) : offsetTop.get.call(this); },
+    });
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+      configurable: true,
+      get() { return this.parentElement === container ? each : offsetHeight.get.call(this); },
+    });
+    cleanups.push(() => {
+      Object.defineProperty(HTMLElement.prototype, 'offsetTop', offsetTop);
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', offsetHeight);
+    });
+    return container;
+  }
+  /** Where the stack stands from what the app wrote: `--toast-lift` + 8 px above the viewport's bottom, its height capped to `--toast-room`. */
+  function placed(container) {
+    const lift = parseFloat(container.style.getPropertyValue('--toast-lift')) || 0;
+    const room = container.style.getPropertyValue('--toast-room');
+    const bottom = window.innerHeight - lift - 8;
+    return { top: bottom - container.offsetHeight, bottom, capped: Boolean(room) };
+  }
+  const overlap = (a, b) => Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+  /** The part of the stack its cap shows, in the stack's own coordinates. */
+  const inView = container => ({ top: container.scrollTop, bottom: container.scrollTop + container.clientHeight });
+  /** Whether a toast is wholly in that part. */
+  const wholly = (container, toast) => toast.offsetTop >= inView(container).top
+    && toast.offsetTop + toast.offsetHeight <= inView(container).bottom;
+  const scrolledByItself = (container, to) => {
+    container.scrollTop = to;
+    // An element's scroll does not bubble: the window's capturing listener hears it.
+    container.dispatchEvent(new Event('scroll'));
+  };
+  const MESSAGES = ['Deleted waypoint — press Ctrl+Z to undo', 'Deleted Crowd 1 — press Ctrl+Z to undo', 'Branch cancelled'];
+
+  test.each([
+    ['wholly below the viewport (Codex\'s case)', [900, 1100]],
+    ['wholly above it', [-300, -100]],
+    ['partly in view, below the fold (a pin: bc2d3a4 capped it above them)', [700, 900]],
+    ['partly in view, scrolled away above (a pin: bc2d3a4 capped it below them)', [-100, 100]],
+  ])('the transport\'s controls %s, a 900 px stack in an 800 px viewport: capped, in the viewport, over none of the controls (finding 4)', async (_, [top, bottom]) => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(top, bottom);
+    const container = stackOfToasts(900);
+    app.showToast(MESSAGES[0], 0);
+    const stack = placed(container);
+    expect(stack.capped).toBe(true);
+    expect(stack.top, 'in the viewport').toBeGreaterThanOrEqual(0);
+    expect(stack.bottom, 'in the viewport').toBeLessThanOrEqual(800);
+    expect(overlap(stack, { top: Math.max(top, 0), bottom: Math.min(bottom, 800) }), 'over the controls').toBe(0);
+  });
+
+  test('the controls out of view, a stack that fits: uncapped at the viewport\'s bottom (a pin: bc2d3a4 placed it so)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(900, 1100);
+    const container = stackOfToasts(400);
+    app.showToast(MESSAGES[0], 0);
+    expect(placed(container)).toEqual({ top: 392, bottom: 792, capped: false });
+  });
+
+  test('the stack scrolled by the author stays where they put it: its own scroll moves nothing, and a page scroll after it places the stack again without scrolling it (finding 3)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(300, 460);
+    const container = stackOfToasts(150);
+    for (const message of MESSAGES) app.showToast(message, 0);
+    // Capped below the controls (324 px), scrolled to the newest as each was added (a pin).
+    expect(placed(container)).toEqual({ top: 468, bottom: 792, capped: true });
+    expect(container.scrollTop).toBe(466 - 324);
+
+    const placements = vi.spyOn(app, '_placeToasts');
+    scrolledByItself(container, 0);
+    expect(container.scrollTop).toBe(0);
+    // Not a scroll of the page: nothing is placed again for it.
+    expect(placements).not.toHaveBeenCalled();
+
+    controlsAt(250, 410);
+    window.dispatchEvent(new Event('scroll'));
+    expect(placements).toHaveBeenCalledTimes(1);
+    // Placed again for the controls' new place (374 px below them), its scroll the author's.
+    expect(placed(container)).toEqual({ top: 418, bottom: 792, capped: true });
+    expect(container.scrollTop).toBe(0);
+    window.dispatchEvent(new Event('resize'));
+    expect(container.scrollTop).toBe(0);
+  });
+
+  test('a toast added scrolls the stack to it, the newest, where focus is in none of the toasts (a pin: bc2d3a4 did so)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(300, 460);
+    const container = stackOfToasts(150);
+    for (const message of MESSAGES) app.showToast(message, 0);
+    scrolledByItself(container, 0);
+    app.showToast('Selection cleared', 0);
+    const toasts = [...container.querySelectorAll('.toast')];
+    expect(wholly(container, toasts.at(-1))).toBe(true);
+  });
+
+  test('keyboard focus on an older toast\'s Dismiss: the browser\'s reveal of it is kept, and a toast added after keeps that toast in view, not the newest (finding 3)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(300, 460);
+    const container = stackOfToasts(150);
+    for (const message of MESSAGES) app.showToast(message, 0);
+    const oldest = container.querySelector('.toast');
+    oldest.querySelector('.toast-dismiss').focus();
+    expect(oldest.contains(document.activeElement)).toBe(true);
+    // What a browser does as focus lands there: the stack scrolls itself to show it.
+    scrolledByItself(container, 0);
+    expect(wholly(container, oldest)).toBe(true);
+
+    app.showToast('Selection cleared', 0);
+    expect(wholly(container, oldest)).toBe(true);
+    expect(oldest.contains(document.activeElement)).toBe(true);
+  });
+
+  test('keyboard focus on an older toast scrolled out of view by the author: a toast added scrolls the stack to the focused toast (finding 3)', async () => {
+    const app = await editor();
+    narrowViewport(800);
+    controlsAt(300, 460);
+    const container = stackOfToasts(150);
+    for (const message of MESSAGES) app.showToast(message, 0);
+    const oldest = container.querySelector('.toast');
+    oldest.querySelector('.toast-dismiss').focus();
+    expect(wholly(container, oldest)).toBe(false);
+    app.showToast('Selection cleared', 0);
+    expect(wholly(container, oldest)).toBe(true);
+  });
+});
+
+describe('round 4, finding 5 (advisory): opening a project supersedes the refit work held or due; its own fit is the one rebuild', () => {
+  /** Two waypoints in a wide export (2.4:1), as round 3's settlement opens. */
+  const wide = {
+    coordVersion: 9,
+    waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.8, imgY: 0.7, isMajor: true }],
+    exportSettings: { resolutionX: 2400, resolutionY: 1000 },
+    animationState: { mode: 'constant-speed', speed: 200, duration: 10000 },
+  };
+  const play = (app) => {
+    app.animationEngine.state.isPlaying = true;
+    app.animationEngine.state.isPaused = false;
+  };
+  /** A banner's refit held while playing: the slot's own report, its room changed. */
+  const bannerRefitHeld = async (app) => {
+    play(app);
+    slotTakes(48);
+    app.modeBanner.show({ onReplaced: () => {} }, { id: 'held-banner' });
+    expect(app._modeBannerRefitPending).toBe(true);
+  };
+  /** A refit's rebuild held: its debounce ran while playing. */
+  const rebuildHeld = async (app) => {
+    slotTakes(30);
+    window.dispatchEvent(new Event('resize'));
+    play(app);
+    await vi.advanceTimersByTimeAsync(200);
+    expect(app._fittedPathPending).toBe(true);
+  };
+  /** A refit's debounce still to run. */
+  const debounceDue = async (app) => {
+    slotTakes(30);
+    window.dispatchEvent(new Event('resize'));
+    expect(app._resizeTimeout).not.toBeNull();
+  };
+
+  test.each([
+    ['a banner refit held while playing (Codex\'s case)', [bannerRefitHeld]],
+    ['a refit\'s rebuild held while playing', [rebuildHeld]],
+    ['a refit\'s debounce still to run', [debounceDue]],
+    ['both held: a rebuild, then a banner refit', [rebuildHeld, bannerRefitHeld]],
+  ])('%s, then a project opened: its path laid out once, by its own fit, to the room as it is', async (_, holds) => {
+    const app = await routeOfTwo();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const frames = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0);
+    try {
+      for (const hold of holds) await hold(app);
+      const paths = recordPaths(app);
+      const loaded = loadSnapshot(app, wide);
+      await vi.advanceTimersByTimeAsync(50);
+      expect(await loaded).toBe(true);
+      await vi.advanceTimersByTimeAsync(500);
+      expect(paths).toHaveLength(1);
+      expect([app._modeBannerRefitPending, app._fittedPathPending, app._resizeTimeout]).toEqual([false, false, null]);
+      expect(app._fittedRoom).toEqual(app._canvasAreaRoom());
+      expect(app.displayWidth / app.displayHeight).toBeCloseTo(2.4, 5);
+    } finally {
+      frames.mockRestore();
+    }
+  });
+});

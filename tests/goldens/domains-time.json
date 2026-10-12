@@ -1,27 +1,27 @@
 {
   "hold.edges": {
-    "B": 12365.48081,
-    "F": 29322.426143,
+    "B": 14240.757665,
+    "F": 30037.670952,
     "parts": {
-      "routeMs": 12365.48081,
-      "crowdsMs": 27322.426143,
-      "beaconsMs": 11865.48081,
+      "routeMs": 14240.757665,
+      "crowdsMs": 28037.670952,
+      "beaconsMs": 13740.757665,
       "holdMs": 2000
     },
     "intro": 0,
     "tail": 0,
-    "pathMs": 3365.48081,
+    "pathMs": 5240.757665,
     "pausesMs": 9000,
     "instants": {
       "start": 0,
       "introEnd": 0,
-      "reachesFork": 1267.300754,
-      "tailStart": 12365.48081,
-      "B": 12365.48081,
-      "betweenBAndF": 20843.953476,
-      "concludes": 27322.426143,
-      "inHold": 28322.426143,
-      "F": 29322.426143
+      "reachesFork": 1973.452387,
+      "tailStart": 14240.757665,
+      "B": 14240.757665,
+      "betweenBAndF": 22139.214308,
+      "concludes": 28037.670952,
+      "inHold": 29037.670952,
+      "F": 30037.670952
     },
     "states": {
       "start": {
@@ -115,8 +115,8 @@
         }
       },
       "reachesFork": {
-        "ms": 1267.300754,
-        "progress": 0.04322,
+        "ms": 1973.452387,
+        "progress": 0.065699,
         "head": 0.376559,
         "waiting": 1,
         "inIntro": false,
@@ -128,7 +128,8 @@
           ["ex-uon-branch",0]
         ],
         "dots": {
-          "ex-uon-emitter": 8
+          "ex-uon-emitter": 13,
+          "walk-loop": 2
         },
         "visibleRanges": [
           [0,0,0],
@@ -164,8 +165,8 @@
         }
       },
       "tailStart": {
-        "ms": 12365.48081,
-        "progress": 0.421707,
+        "ms": 14240.757665,
+        "progress": 0.474097,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -177,7 +178,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 54,
+          "ex-uon-emitter": 44,
           "walk-anchored": 6,
           "walk-loop": 4
         },
@@ -213,8 +214,8 @@
         }
       },
       "B": {
-        "ms": 12365.48081,
-        "progress": 0.421707,
+        "ms": 14240.757665,
+        "progress": 0.474097,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -226,7 +227,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 54,
+          "ex-uon-emitter": 44,
           "walk-anchored": 6,
           "walk-loop": 4
         },
@@ -262,8 +263,8 @@
         }
       },
       "betweenBAndF": {
-        "ms": 20843.953476,
-        "progress": 0.710854,
+        "ms": 22139.214308,
+        "progress": 0.737048,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -275,7 +276,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 9,
+          "ex-uon-emitter": 7,
           "walk-anchored": 6,
           "walk-loop": 4
         },
@@ -311,8 +312,8 @@
         }
       },
       "concludes": {
-        "ms": 27322.426143,
-        "progress": 0.931793,
+        "ms": 28037.670952,
+        "progress": 0.933417,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -359,8 +360,8 @@
         }
       },
       "inHold": {
-        "ms": 28322.426143,
-        "progress": 0.965896,
+        "ms": 29037.670952,
+        "progress": 0.966708,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -407,7 +408,7 @@
         }
       },
       "F": {
-        "ms": 29322.426143,
+        "ms": 30037.670952,
         "progress": 1,
         "head": 1,
         "waiting": -1,
@@ -477,7 +478,7 @@
       "seekLandsAt": 0
     },
     "between": {
-      "ms": 20843.953476,
+      "ms": 22139.214308,
       "path": {
         "waitingIndex": -1,
         "waitElapsedMs": 0,
@@ -489,20 +490,20 @@
         "inEndHandle": false,
         "complete": false,
         "pathProgress": 1,
-        "adjustedMs": 20843.953476
+        "adjustedMs": 22139.214308
       },
       "dots": {
-        "ex-uon-emitter": 9,
+        "ex-uon-emitter": 7,
         "walk-anchored": 6,
         "walk-loop": 4
       },
       "branches": [
         ["ex-uon-branch",1]
       ],
-      "seekLandsAt": 20843.953476
+      "seekLandsAt": 22139.214308
     },
     "after": {
-      "ms": 29323.426143,
+      "ms": 30038.670952,
       "path": {
         "waitingIndex": -1,
         "waitElapsedMs": 0,
@@ -514,7 +515,7 @@
         "inEndHandle": false,
         "complete": true,
         "pathProgress": 1,
-        "adjustedMs": 29323.426143
+        "adjustedMs": 30038.670952
       },
       "dots": {
         "walk-anchored": 6,
@@ -523,7 +524,7 @@
       "branches": [
         ["ex-uon-branch",1]
       ],
-      "seekLandsAt": 29322.426143
+      "seekLandsAt": 30037.670952
     },
     "holdMotion": {
       "concludes": {
@@ -536,10 +537,10 @@
           [5,0.78,0.42]
         ],
         "walk-loop": [
-          [0,0.547583,0.575194],
-          [1,0.561087,0.571715],
-          [2,0.189075,0.609958],
-          [3,0.173055,0.621014]
+          [0,0.615363,0.555626],
+          [1,0.626466,0.551634],
+          [2,0.230895,0.581172],
+          [3,0.198169,0.603686]
         ]
       },
       "inHold": {
@@ -552,10 +553,10 @@
           [5,0.78,0.42]
         ],
         "walk-loop": [
-          [0,0.670198,0.516129],
-          [1,0.681665,0.506176],
-          [2,0.29191,0.539516],
-          [3,0.279984,0.547616]
+          [0,0.723386,0.469734],
+          [1,0.733207,0.461122],
+          [2,0.334026,0.511168],
+          [3,0.30524,0.530495]
         ]
       },
       "F": {
@@ -568,35 +569,35 @@
           [5,0.78,0.42]
         ],
         "walk-loop": [
-          [0,0.774916,0.424464],
-          [1,0.167957,0.624533],
-          [2,0.396224,0.471598],
-          [3,0.388176,0.476169]
+          [0,0.212542,0.593787],
+          [1,0.224324,0.585685],
+          [2,0.429227,0.492026],
+          [3,0.406708,0.47304]
         ]
       }
     }
   },
   "intro.edges": {
-    "B": 13365.48081,
-    "F": 27703.833724,
+    "B": 15240.757665,
+    "F": 28419.078533,
     "parts": {
-      "routeMs": 13365.48081,
-      "crowdsMs": 27703.833724,
-      "beaconsMs": 12865.48081,
+      "routeMs": 15240.757665,
+      "crowdsMs": 28419.078533,
+      "beaconsMs": 14740.757665,
       "holdMs": 0
     },
     "intro": 1000,
     "tail": 0,
-    "pathMs": 3365.48081,
+    "pathMs": 5240.757665,
     "pausesMs": 9000,
     "instants": {
       "start": 0,
       "introEnd": 1000,
-      "reachesFork": 2267.300754,
-      "tailStart": 13365.48081,
-      "B": 13365.48081,
-      "betweenBAndF": 20534.657267,
-      "F": 27703.833724
+      "reachesFork": 2973.452387,
+      "tailStart": 15240.757665,
+      "B": 15240.757665,
+      "betweenBAndF": 21829.918099,
+      "F": 28419.078533
     },
     "states": {
       "start": {
@@ -646,7 +647,7 @@
       },
       "introEnd": {
         "ms": 1000,
-        "progress": 0.036096,
+        "progress": 0.035188,
         "head": 0,
         "waiting": -1,
         "inIntro": false,
@@ -658,7 +659,7 @@
           ["ex-uon-branch",0]
         ],
         "dots": {
-          "ex-uon-emitter": 6
+          "ex-uon-emitter": 3
         },
         "visibleRanges": [
           [0,0,0],
@@ -692,37 +693,35 @@
         }
       },
       "reachesFork": {
-        "ms": 2267.300754,
-        "progress": 0.081841,
+        "ms": 2973.452387,
+        "progress": 0.104629,
         "head": 0.376559,
-        "waiting": 1,
+        "waiting": -1,
         "inIntro": false,
         "introProgress": 1,
         "inTail": false,
         "tailElapsed": 0,
         "complete": false,
         "branches": [
-          ["ex-uon-branch",0.36693]
+          ["ex-uon-branch",0.260083]
         ],
         "dots": {
-          "ex-uon-emitter": 18
+          "ex-uon-emitter": 24
         },
         "visibleRanges": [
-          [0,0.36693,0],
+          [0,0.260083,0],
           [0,0.376559,0]
         ],
         "beacons": {
           "ex-uon-2": {
-            "phase": "hold",
-            "active": true,
+            "phase": "inactive",
+            "active": false,
             "completed": false,
-            "started": true,
+            "started": false,
             "scale": null,
             "radius": null,
             "opacity": null,
-            "rings": [
-              [0,1]
-            ],
+            "rings": [],
             "subPhase": null,
             "loopTime": null
           },
@@ -741,8 +740,8 @@
         }
       },
       "tailStart": {
-        "ms": 13365.48081,
-        "progress": 0.482442,
+        "ms": 15240.757665,
+        "progress": 0.536286,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -754,7 +753,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 47,
+          "ex-uon-emitter": 39,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -789,8 +788,8 @@
         }
       },
       "B": {
-        "ms": 13365.48081,
-        "progress": 0.482442,
+        "ms": 15240.757665,
+        "progress": 0.536286,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -802,7 +801,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 47,
+          "ex-uon-emitter": 39,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -837,8 +836,8 @@
         }
       },
       "betweenBAndF": {
-        "ms": 20534.657267,
-        "progress": 0.741221,
+        "ms": 21829.918099,
+        "progress": 0.768143,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -850,7 +849,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 10,
+          "ex-uon-emitter": 9,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -885,7 +884,7 @@
         }
       },
       "F": {
-        "ms": 27703.833724,
+        "ms": 28419.078533,
         "progress": 1,
         "head": 1,
         "waiting": -1,
@@ -933,7 +932,7 @@
       },
       "introEndMinus1": {
         "ms": 999,
-        "progress": 0.03606,
+        "progress": 0.035152,
         "head": 0,
         "waiting": -1,
         "inIntro": true,
@@ -945,7 +944,7 @@
           ["ex-uon-branch",0]
         ],
         "dots": {
-          "ex-uon-emitter": 6
+          "ex-uon-emitter": 3
         },
         "visibleRanges": [
           [0,0,0],
@@ -1001,7 +1000,7 @@
       "seekLandsAt": 0
     },
     "between": {
-      "ms": 20534.657267,
+      "ms": 21829.918099,
       "path": {
         "waitingIndex": -1,
         "waitElapsedMs": 0,
@@ -1013,19 +1012,19 @@
         "inEndHandle": false,
         "complete": false,
         "pathProgress": 1,
-        "adjustedMs": 19534.657267
+        "adjustedMs": 20829.918099
       },
       "dots": {
-        "ex-uon-emitter": 10,
+        "ex-uon-emitter": 9,
         "walk-anchored": 6
       },
       "branches": [
         ["ex-uon-branch",1]
       ],
-      "seekLandsAt": 20534.657267
+      "seekLandsAt": 21829.918099
     },
     "after": {
-      "ms": 27704.833724,
+      "ms": 28420.078533,
       "path": {
         "waitingIndex": -1,
         "waitElapsedMs": 0,
@@ -1037,7 +1036,7 @@
         "inEndHandle": false,
         "complete": true,
         "pathProgress": 1,
-        "adjustedMs": 26704.833724
+        "adjustedMs": 27420.078533
       },
       "dots": {
         "walk-anchored": 6
@@ -1045,30 +1044,30 @@
       "branches": [
         ["ex-uon-branch",1]
       ],
-      "seekLandsAt": 27703.833724
+      "seekLandsAt": 28419.078533
     }
   },
   "introAndTail.edges": {
-    "B": 14538.576973,
-    "F": 28151.261494,
+    "B": 16788.909198,
+    "F": 29009.555265,
     "parts": {
-      "routeMs": 14538.576973,
-      "crowdsMs": 28151.261494,
-      "beaconsMs": 12865.48081,
+      "routeMs": 16788.909198,
+      "crowdsMs": 29009.555265,
+      "beaconsMs": 14740.757665,
       "holdMs": 0
     },
     "intro": 1000,
-    "tail": 1173.096162,
-    "pathMs": 3365.48081,
+    "tail": 1548.151533,
+    "pathMs": 5240.757665,
     "pausesMs": 9000,
     "instants": {
       "start": 0,
       "introEnd": 1000,
-      "reachesFork": 2267.300754,
-      "tailStart": 13365.48081,
-      "B": 14538.576973,
-      "betweenBAndF": 21344.919233,
-      "F": 28151.261494
+      "reachesFork": 2973.452387,
+      "tailStart": 15240.757665,
+      "B": 16788.909198,
+      "betweenBAndF": 22899.232231,
+      "F": 29009.555265
     },
     "states": {
       "start": {
@@ -1118,7 +1117,7 @@
       },
       "introEnd": {
         "ms": 1000,
-        "progress": 0.035522,
+        "progress": 0.034471,
         "head": 0,
         "waiting": -1,
         "inIntro": false,
@@ -1130,7 +1129,7 @@
           ["ex-uon-branch",0]
         ],
         "dots": {
-          "ex-uon-emitter": 3
+          "ex-uon-emitter": 2
         },
         "visibleRanges": [
           [0,0,0],
@@ -1164,37 +1163,35 @@
         }
       },
       "reachesFork": {
-        "ms": 2267.300754,
-        "progress": 0.08054,
+        "ms": 2973.452387,
+        "progress": 0.102499,
         "head": 0.376559,
-        "waiting": 1,
+        "waiting": -1,
         "inIntro": false,
         "introProgress": 1,
         "inTail": false,
         "tailElapsed": 0,
         "complete": false,
         "branches": [
-          ["ex-uon-branch",0.36693]
+          ["ex-uon-branch",0.260083]
         ],
         "dots": {
-          "ex-uon-emitter": 15
+          "ex-uon-emitter": 21
         },
         "visibleRanges": [
-          [0.176559,0.36693,0.176559],
+          [0.060083,0.260083,0.060083],
           [0.176559,0.376559,0.176559]
         ],
         "beacons": {
           "ex-uon-2": {
-            "phase": "hold",
-            "active": true,
+            "phase": "inactive",
+            "active": false,
             "completed": false,
-            "started": true,
+            "started": false,
             "scale": null,
             "radius": null,
             "opacity": null,
-            "rings": [
-              [0,1]
-            ],
+            "rings": [],
             "subPhase": null,
             "loopTime": null
           },
@@ -1213,8 +1210,8 @@
         }
       },
       "tailStart": {
-        "ms": 13365.48081,
-        "progress": 0.474774,
+        "ms": 15240.757665,
+        "progress": 0.52537,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -1226,7 +1223,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 47,
+          "ex-uon-emitter": 41,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -1261,8 +1258,8 @@
         }
       },
       "B": {
-        "ms": 14538.576973,
-        "progress": 0.516445,
+        "ms": 16788.909198,
+        "progress": 0.578737,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -1274,7 +1271,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 43,
+          "ex-uon-emitter": 31,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -1309,8 +1306,8 @@
         }
       },
       "betweenBAndF": {
-        "ms": 21344.919233,
-        "progress": 0.758222,
+        "ms": 22899.232231,
+        "progress": 0.789369,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -1322,7 +1319,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 9,
+          "ex-uon-emitter": 6,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -1357,7 +1354,7 @@
         }
       },
       "F": {
-        "ms": 28151.261494,
+        "ms": 29009.555265,
         "progress": 1,
         "head": 1,
         "waiting": -1,
@@ -1405,7 +1402,7 @@
       },
       "introEndMinus1": {
         "ms": 999,
-        "progress": 0.035487,
+        "progress": 0.034437,
         "head": 0,
         "waiting": -1,
         "inIntro": true,
@@ -1417,7 +1414,7 @@
           ["ex-uon-branch",0]
         ],
         "dots": {
-          "ex-uon-emitter": 3
+          "ex-uon-emitter": 2
         },
         "visibleRanges": [
           [0,0,0],
@@ -1451,8 +1448,8 @@
         }
       },
       "tailStartMinus1": {
-        "ms": 13364.48081,
-        "progress": 0.474738,
+        "ms": 15239.757665,
+        "progress": 0.525336,
         "head": 1,
         "waiting": 4,
         "inIntro": false,
@@ -1464,7 +1461,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 47,
+          "ex-uon-emitter": 41,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -1521,7 +1518,7 @@
       "seekLandsAt": 0
     },
     "between": {
-      "ms": 21344.919233,
+      "ms": 22899.232231,
       "path": {
         "waitingIndex": -1,
         "waitElapsedMs": 0,
@@ -1533,19 +1530,19 @@
         "inEndHandle": false,
         "complete": false,
         "pathProgress": 1,
-        "adjustedMs": 20344.919233
+        "adjustedMs": 21899.232231
       },
       "dots": {
-        "ex-uon-emitter": 9,
+        "ex-uon-emitter": 6,
         "walk-anchored": 6
       },
       "branches": [
         ["ex-uon-branch",1]
       ],
-      "seekLandsAt": 21344.919233
+      "seekLandsAt": 22899.232231
     },
     "after": {
-      "ms": 28152.261494,
+      "ms": 29010.555265,
       "path": {
         "waitingIndex": -1,
         "waitElapsedMs": 0,
@@ -1557,7 +1554,7 @@
         "inEndHandle": false,
         "complete": true,
         "pathProgress": 1,
-        "adjustedMs": 27152.261494
+        "adjustedMs": 28010.555265
       },
       "dots": {
         "walk-anchored": 6
@@ -1565,30 +1562,30 @@
       "branches": [
         ["ex-uon-branch",1]
       ],
-      "seekLandsAt": 28151.261494
+      "seekLandsAt": 29009.555265
     }
   },
   "plain.edges": {
-    "B": 12365.48081,
-    "F": 27322.426143,
+    "B": 14240.757665,
+    "F": 28037.670952,
     "parts": {
-      "routeMs": 12365.48081,
-      "crowdsMs": 27322.426143,
-      "beaconsMs": 11865.48081,
+      "routeMs": 14240.757665,
+      "crowdsMs": 28037.670952,
+      "beaconsMs": 13740.757665,
       "holdMs": 0
     },
     "intro": 0,
     "tail": 0,
-    "pathMs": 3365.48081,
+    "pathMs": 5240.757665,
     "pausesMs": 9000,
     "instants": {
       "start": 0,
       "introEnd": 0,
-      "reachesFork": 1267.300754,
-      "tailStart": 12365.48081,
-      "B": 12365.48081,
-      "betweenBAndF": 19843.953476,
-      "F": 27322.426143
+      "reachesFork": 1973.452387,
+      "tailStart": 14240.757665,
+      "B": 14240.757665,
+      "betweenBAndF": 21139.214308,
+      "F": 28037.670952
     },
     "states": {
       "start": {
@@ -1682,10 +1679,10 @@
         }
       },
       "reachesFork": {
-        "ms": 1267.300754,
-        "progress": 0.046383,
+        "ms": 1973.452387,
+        "progress": 0.070386,
         "head": 0.376559,
-        "waiting": 1,
+        "waiting": -1,
         "inIntro": false,
         "introProgress": 1,
         "inTail": false,
@@ -1695,7 +1692,7 @@
           ["ex-uon-branch",0]
         ],
         "dots": {
-          "ex-uon-emitter": 8
+          "ex-uon-emitter": 13
         },
         "visibleRanges": [
           [0,0,0],
@@ -1731,8 +1728,8 @@
         }
       },
       "tailStart": {
-        "ms": 12365.48081,
-        "progress": 0.452576,
+        "ms": 14240.757665,
+        "progress": 0.507915,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -1744,7 +1741,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 54,
+          "ex-uon-emitter": 44,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -1779,8 +1776,8 @@
         }
       },
       "B": {
-        "ms": 12365.48081,
-        "progress": 0.452576,
+        "ms": 14240.757665,
+        "progress": 0.507915,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -1792,7 +1789,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 54,
+          "ex-uon-emitter": 44,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -1827,8 +1824,8 @@
         }
       },
       "betweenBAndF": {
-        "ms": 19843.953476,
-        "progress": 0.726288,
+        "ms": 21139.214308,
+        "progress": 0.753958,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -1840,7 +1837,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 11,
+          "ex-uon-emitter": 9,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -1875,7 +1872,7 @@
         }
       },
       "F": {
-        "ms": 27322.426143,
+        "ms": 28037.670952,
         "progress": 1,
         "head": 1,
         "waiting": -1,
@@ -1944,7 +1941,7 @@
       "seekLandsAt": 0
     },
     "between": {
-      "ms": 19843.953476,
+      "ms": 21139.214308,
       "path": {
         "waitingIndex": -1,
         "waitElapsedMs": 0,
@@ -1956,19 +1953,19 @@
         "inEndHandle": false,
         "complete": false,
         "pathProgress": 1,
-        "adjustedMs": 19843.953476
+        "adjustedMs": 21139.214308
       },
       "dots": {
-        "ex-uon-emitter": 11,
+        "ex-uon-emitter": 9,
         "walk-anchored": 6
       },
       "branches": [
         ["ex-uon-branch",1]
       ],
-      "seekLandsAt": 19843.953476
+      "seekLandsAt": 21139.214308
     },
     "after": {
-      "ms": 27323.426143,
+      "ms": 28038.670952,
       "path": {
         "waitingIndex": -1,
         "waitElapsedMs": 0,
@@ -1980,7 +1977,7 @@
         "inEndHandle": false,
         "complete": true,
         "pathProgress": 1,
-        "adjustedMs": 27323.426143
+        "adjustedMs": 28038.670952
       },
       "dots": {
         "walk-anchored": 6
@@ -1988,30 +1985,30 @@
       "branches": [
         ["ex-uon-branch",1]
       ],
-      "seekLandsAt": 27322.426143
+      "seekLandsAt": 28037.670952
     }
   },
   "tail.edges": {
-    "B": 13538.576973,
-    "F": 27769.853912,
+    "B": 15788.909198,
+    "F": 28628.147683,
     "parts": {
-      "routeMs": 13538.576973,
-      "crowdsMs": 27769.853912,
-      "beaconsMs": 11865.48081,
+      "routeMs": 15788.909198,
+      "crowdsMs": 28628.147683,
+      "beaconsMs": 13740.757665,
       "holdMs": 0
     },
     "intro": 0,
-    "tail": 1173.096162,
-    "pathMs": 3365.48081,
+    "tail": 1548.151533,
+    "pathMs": 5240.757665,
     "pausesMs": 9000,
     "instants": {
       "start": 0,
       "introEnd": 0,
-      "reachesFork": 1267.300754,
-      "tailStart": 12365.48081,
-      "B": 13538.576973,
-      "betweenBAndF": 20654.215442,
-      "F": 27769.853912
+      "reachesFork": 1973.452387,
+      "tailStart": 14240.757665,
+      "B": 15788.909198,
+      "betweenBAndF": 22208.52844,
+      "F": 28628.147683
     },
     "states": {
       "start": {
@@ -2105,8 +2102,8 @@
         }
       },
       "reachesFork": {
-        "ms": 1267.300754,
-        "progress": 0.045636,
+        "ms": 1973.452387,
+        "progress": 0.068934,
         "head": 0.376559,
         "waiting": 1,
         "inIntro": false,
@@ -2118,7 +2115,7 @@
           ["ex-uon-branch",0]
         ],
         "dots": {
-          "ex-uon-emitter": 7
+          "ex-uon-emitter": 11
         },
         "visibleRanges": [
           [0.176559,0,0.176559],
@@ -2154,8 +2151,8 @@
         }
       },
       "tailStart": {
-        "ms": 12365.48081,
-        "progress": 0.445284,
+        "ms": 14240.757665,
+        "progress": 0.497439,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -2167,7 +2164,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 54,
+          "ex-uon-emitter": 45,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -2202,8 +2199,8 @@
         }
       },
       "B": {
-        "ms": 13538.576973,
-        "progress": 0.487528,
+        "ms": 15788.909198,
+        "progress": 0.551517,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -2215,7 +2212,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 47,
+          "ex-uon-emitter": 37,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -2250,8 +2247,8 @@
         }
       },
       "betweenBAndF": {
-        "ms": 20654.215442,
-        "progress": 0.743764,
+        "ms": 22208.52844,
+        "progress": 0.775758,
         "head": 1,
         "waiting": -1,
         "inIntro": false,
@@ -2263,7 +2260,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 10,
+          "ex-uon-emitter": 8,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -2298,7 +2295,7 @@
         }
       },
       "F": {
-        "ms": 27769.853912,
+        "ms": 28628.147683,
         "progress": 1,
         "head": 1,
         "waiting": -1,
@@ -2345,8 +2342,8 @@
         }
       },
       "tailStartMinus1": {
-        "ms": 12364.48081,
-        "progress": 0.445248,
+        "ms": 14239.757665,
+        "progress": 0.497404,
         "head": 1,
         "waiting": 4,
         "inIntro": false,
@@ -2358,7 +2355,7 @@
           ["ex-uon-branch",1]
         ],
         "dots": {
-          "ex-uon-emitter": 54,
+          "ex-uon-emitter": 45,
           "walk-anchored": 6
         },
         "visibleRanges": [
@@ -2415,7 +2412,7 @@
       "seekLandsAt": 0
     },
     "between": {
-      "ms": 20654.215442,
+      "ms": 22208.52844,
       "path": {
         "waitingIndex": -1,
         "waitElapsedMs": 0,
@@ -2427,19 +2424,19 @@
         "inEndHandle": false,
         "complete": false,
         "pathProgress": 1,
-        "adjustedMs": 20654.215442
+        "adjustedMs": 22208.52844
       },
       "dots": {
-        "ex-uon-emitter": 10,
+        "ex-uon-emitter": 8,
         "walk-anchored": 6
       },
       "branches": [
         ["ex-uon-branch",1]
       ],
-      "seekLandsAt": 20654.215442
+      "seekLandsAt": 22208.52844
     },
     "after": {
-      "ms": 27770.853912,
+      "ms": 28629.147683,
       "path": {
         "waitingIndex": -1,
         "waitElapsedMs": 0,
@@ -2451,7 +2448,7 @@
         "inEndHandle": false,
         "complete": true,
         "pathProgress": 1,
-        "adjustedMs": 27770.853912
+        "adjustedMs": 28629.147683
       },
       "dots": {
         "walk-anchored": 6
@@ -2459,7 +2456,7 @@
       "branches": [
         ["ex-uon-branch",1]
       ],
-      "seekLandsAt": 27769.853912
+      "seekLandsAt": 28628.147683
     }
   }
 }

@@ -829,6 +829,46 @@ describe('the card flash respects reduced motion (UI-06 B-22)', () => {
 });
 
 describe('one live region (UI-06 J-05, C-5)', () => {
+  /**
+   * UI-06 PR 6, item 6: beside `#announcer`, the scope chip, the empty-list
+   * row and the two mode banners were live regions PR 4 left for this PR.
+   * Every region a screen reader would read on its own — `aria-live`, or
+   * the roles that are live by default — is off, wherever the editor is.
+   */
+  function liveRegions() {
+    return [...document.querySelectorAll('[aria-live], [role="status"], [role="alert"], [role="log"]')]
+      .filter(region => region.id !== 'announcer' && region.getAttribute('aria-live') !== 'off')
+      .map(region => region.id || region.className || region.localName);
+  }
+
+  test('after boot, with the list empty, and in each mode, only the announcer is live (UI-06 PR 6, item 6)', async () => {
+    const app = await editor();
+    expect(document.querySelector('#waypoint-list .waypoint-list-empty')).not.toBeNull();
+    expect(liveRegions()).toEqual([]);
+    expect(id('scope-chip-text').getAttribute('aria-live')).toBe('off');
+    expect(id('mode-banner').getAttribute('aria-live')).toBe('off');
+
+    app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
+    app.areaDrawingService.startDrawing(app.waypoints[0]);
+    expect(id('area-draw-banner')).not.toBeNull();
+    expect(liveRegions()).toEqual([]);
+    app.areaDrawingService.cancelDrawing();
+
+    app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
+    expect(id('branch-banner')).not.toBeNull();
+    expect(liveRegions()).toEqual([]);
+    app.eventBus.emit('route:branch-cancel');
+
+    app.addCrowd();
+    app.selectedCrowd.setGuideType('graph');
+    app.syncCrowdEditor();
+    app.enterNetworkEditMode();
+    expect(id('network-edit-banner')).not.toBeNull();
+    expect(liveRegions()).toEqual([]);
+    app.networkEditService.exit();
+  });
+
   test('the toast container is not live; a toast is announced once, through the queue, at its priority', async () => {
     const app = await editor();
     expect(id('toast-container').getAttribute('aria-live')).toBe('off');
@@ -908,7 +948,8 @@ describe('one live region (UI-06 J-05, C-5)', () => {
     const { announced } = listen(app);
 
     app.eventBus.emit('route:branch-arm', { waypoint: app.waypoints[0] });
-    expect(announced()).toEqual([['Branch from this waypoint — click where it should go (Esc to cancel)', 'polite']]);
+    // The arm's sentence is its banner's now, said once (UI-06 PR 6, item 2): it was the toast's words.
+    expect(announced()).toEqual([['Branch from this waypoint — click where it should go. Escape to cancel.', 'polite']]);
     app.eventBus.emit('route:branch-cancel');
     expect(announced().at(-1)).toEqual(['Branch cancelled', 'polite']);
 

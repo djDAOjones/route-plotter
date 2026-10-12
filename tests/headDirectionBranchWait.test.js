@@ -105,7 +105,11 @@ describe('CON-09: the head direction baseline', () => {
   async function waitingApp(waypoints, motionSettings = {}) {
     const app = await bootApp();
     await app.ready;
-    expect(await loadSnapshot(app, { coordVersion: 9, waypoints, motionSettings })).toBe(true);
+    // A square export, so the canvas the project opens on is square, as these routes' arithmetic is: since UI-06 PR 6
+    // round 3 the canvas is the project's own fit as it opens, where it kept the start's square (the lead's settlement).
+    expect(await loadSnapshot(app, {
+      coordVersion: 9, waypoints, motionSettings, exportSettings: { resolutionX: 1000, resolutionY: 1000 },
+    })).toBe(true);
     // Where a branch's head is during the trunk's wait depends on the speed,
     // which the speed control rounds; set it exactly, and settle the timeline
     // a load debounces.

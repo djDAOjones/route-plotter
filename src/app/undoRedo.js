@@ -16,6 +16,7 @@ import {
   pathHeadStyleUsesImageControls,
   resolvePathHeadImage,
 } from '../utils/pathHeadPresets.js';
+import { regionOperation } from './regionLines.js';
 
 function updatePathHeadPreview(app, asset = null) {
   if (app.elements?.headPreview) app.elements.headPreview.style.display = asset ? 'block' : 'none';
@@ -237,10 +238,13 @@ export const undoRedoMixin = {
   undo() {
     this._flushPendingUndo();
     const state = this.undoService.undo();
-    if (state) {
+    if (!state) return;
+    // It says the change: the regions' lines the restore moves are not said again (UI-06 PR 6)
+    regionOperation(this, cover => {
       this._restoreState(state);
       this.announce('Undo');
-    }
+      cover();
+    });
   },
   
   /**
@@ -249,10 +253,12 @@ export const undoRedoMixin = {
   redo() {
     this._flushPendingUndo();
     const state = this.undoService.redo();
-    if (state) {
+    if (!state) return;
+    regionOperation(this, cover => {
       this._restoreState(state);
       this.announce('Redo');
-    }
+      cover();
+    });
   },
   
   /**

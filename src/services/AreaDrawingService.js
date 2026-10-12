@@ -15,13 +15,20 @@
  * - On completion, writes points to waypoint.areaHighlight and emits area:changed
  * 
  * ## Accessibility
- * - Banner announces draw mode with instructions
- * - ESC key always available to cancel
+ * - Its banner shows in the page's one slot (ModeBanner, UI-06 J-12); the
+ *   mode is announced once on entry and each corner's count as it is placed
+ *   (the banner is not a live region: UI-06 J-05)
+ * - ESC key always available to cancel; the banner's Cancel gives focus back
+ *   to Draw area
  * - Minimum 3 vertices enforced before closing
  */
 
 import { AREA_HIGHLIGHT } from '../config/constants.js';
 import { clampImageCoordinate } from '../utils/imageCoordinates.js';
+import { pageModeBanner, returnFocus, visibleFocusTarget } from '../components/ModeBanner.js';
+
+/** Said once as the draw starts: the banner's words, Esc read as Escape (the network's pattern). */
+const ENTRY_ANNOUNCEMENT = 'Drawing an area — Click to place corners. Click near the first point to close. Escape to cancel.';
 
 export class AreaDrawingService {
   /**
@@ -45,6 +52,12 @@ export class AreaDrawingService {
     
     /** @type {HTMLElement|null} Draw-mode banner element */
     this._banner = null;
+
+    /** @type {import('../components/ModeBanner.js').ModeBanner|null} The slot the banner shows in */
+    this._modeBanner = null;
+
+    /** Its owner in the slot: another mode's banner ends the draw as Escape does. */
+    this._bannerOwner = { onReplaced: () => this.cancelDrawing() };
     
     /** @type {Function|null} Bound keydown handler for cleanup */
     this._keyHandler = null;
@@ -96,14 +109,18 @@ export class AreaDrawingService {
     if (this.isDrawing) {
       this.cancelDrawing();
     }
+
+    // The slot first, before anything here changes: another mode's banner
+    // ends that mode, its Preview restore included, before this draw records
+    // the Preview it starts from (UI-06 PR 6; Codex on 9466a3f, blocking 1).
+    // A claim the slot refuses (made inside a replacement's exits, past its
+    // bound) starts no draw (Codex r2 on 753f93f, 6).
+    if (!this._showBanner()) return;
     
     this.isDrawing = true;
     this.targetWaypoint = waypoint;
     this.vertices = [];
     this.cursorPosition = null;
-    
-    // Show draw-mode banner
-    this._showBanner();
     
     // Listen for ESC key to cancel
     this._keyHandler = (e) => {
@@ -117,6 +134,8 @@ export class AreaDrawingService {
     
     // Notify InteractionHandler to intercept clicks
     this.eventBus.emit('area:draw-mode-changed', { active: true });
+    // Its banner was its voice: said once now, through the one announcer.
+    this.eventBus.emit('ui:announce', { message: ENTRY_ANNOUNCEMENT });
     
     console.log('[AreaDrawing] Entered polygon draw mode');
   }
@@ -226,7 +245,8 @@ export class AreaDrawingService {
     this.cursorPosition = null;
     this.targetWaypoint = null;
     
-    // Remove banner
+    // Remove banner. Focus in it (its Cancel pressed) would go with it.
+    const heldFocus = this._modeBanner?.holdsFocus(this._bannerOwner) ?? false;
     this._hideBanner();
     
     // Remove ESC listener
@@ -237,79 +257,51 @@ export class AreaDrawingService {
     
     // Notify InteractionHandler
     this.eventBus.emit('area:draw-mode-changed', { active: false });
+    // Back to Draw area, which opened the draw and kept focus through it, by
+    // Done's rule (its card's header when the card is collapsed); else the
+    // Route button (UI-06 PR 6, item 5).
+    if (heldFocus) {
+      const opener = document.getElementById('area-draw-btn');
+      returnFocus(opener && visibleFocusTarget(opener));
+    }
   }
   
   /**
-   * Show the draw-mode banner at the top of the canvas area
+   * Show the draw-mode banner in the page's banner slot, below the header
+   * (UI-06 J-12): another mode's banner there ends that mode first.
+   * @returns {boolean} Whether the slot took it (true on a page with no slot)
    * @private
    */
   _showBanner() {
-    this._hideBanner(); // Remove any existing banner
-    
-    this._banner = document.createElement('div');
-    this._banner.id = 'area-draw-banner';
-    this._banner.setAttribute('role', 'status');
-    this._banner.setAttribute('aria-live', 'polite');
-    this._banner.innerHTML = `
-      <span class="banner-text">
-        <strong>Drawing an area</strong> — Click to place corners. 
-        Click near the first point to close. 
-        <kbd>Esc</kbd> to cancel.
-        <span class="banner-count">0 corners</span>
-      </span>
-      <button class="banner-cancel" aria-label="Cancel drawing">Cancel</button>
-    `;
-    
-    // Style inline to avoid CSS dependency for this transient element
-    Object.assign(this._banner.style, {
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      right: '0',
-      zIndex: '1000',
-      padding: '8px 16px',
-      background: 'var(--cds-interactive-01, #0f62fe)',
-      color: '#fff',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      fontFamily: 'var(--font-ui, "IBM Plex Sans", sans-serif)',
-      fontSize: '14px',
-      boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+    this._modeBanner = pageModeBanner();
+    const shown = this._modeBanner?.show(this._bannerOwner, {
+      id: 'area-draw-banner',
+      title: 'Drawing an area',
+      text: [' — Click to place corners. Click near the first point to close. ', { kbd: 'Esc' }, ' to cancel.'],
+      count: '0 corners',
+      // Its visible word is its name (UI-06 F9/B-04, as Done's).
+      actions: [{ label: 'Cancel', className: 'banner-cancel', onClick: () => this.cancelDrawing() }],
     });
-    
-    const cancelBtn = this._banner.querySelector('.banner-cancel');
-    Object.assign(cancelBtn.style, {
-      background: 'transparent',
-      border: '1px solid #fff',
-      color: '#fff',
-      padding: '4px 12px',
-      borderRadius: '4px',
-      cursor: 'pointer',
-      fontFamily: 'inherit',
-      fontSize: '13px'
-    });
-    cancelBtn.addEventListener('click', () => this.cancelDrawing());
-    
-    document.body.appendChild(this._banner);
+    this._banner = shown?.root ?? null;
+    return !this._modeBanner || Boolean(shown);
   }
   
   /**
-   * Update vertex count display in banner
+   * Update vertex count display in banner, and say it: the banner was the
+   * only voice of each corner's count (UI-06 PR 6, item 6).
    * @private
    */
   _updateBannerCount() {
     if (!this._banner) return;
-    const countEl = this._banner.querySelector('.banner-count');
-    if (countEl) {
-      const n = this.vertices.length;
-      const remaining = Math.max(0, AREA_HIGHLIGHT.DRAW_MIN_VERTICES - n);
-      // The outline's words: an area and its corners (UI-06 low items, one word per concept)
-      const corners = `${n} ${n === 1 ? 'corner' : 'corners'}`;
-      countEl.textContent = remaining > 0
-        ? `${corners} (${remaining} more needed to close)`
-        : `${corners} (click near first to close)`;
-    }
+    const n = this.vertices.length;
+    const remaining = Math.max(0, AREA_HIGHLIGHT.DRAW_MIN_VERTICES - n);
+    // The outline's words: an area and its corners (UI-06 low items, one word per concept)
+    const corners = `${n} ${n === 1 ? 'corner' : 'corners'}`;
+    const line = remaining > 0
+      ? `${corners} (${remaining} more needed to close)`
+      : `${corners} (click near first to close)`;
+    this._modeBanner?.update(this._bannerOwner, { count: line });
+    this.eventBus.emit('ui:announce', { message: line });
   }
   
   /**
@@ -317,9 +309,7 @@ export class AreaDrawingService {
    * @private
    */
   _hideBanner() {
-    if (this._banner && this._banner.parentNode) {
-      this._banner.parentNode.removeChild(this._banner);
-    }
+    this._modeBanner?.hide(this._bannerOwner);
     this._banner = null;
   }
   

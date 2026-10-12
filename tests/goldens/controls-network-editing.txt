@@ -5,11 +5,12 @@ emit network:edit-mode-changed {active: false, layer: null}
 emit render:request
 app ~ focus: "#network-edit-banner>button[1]" → "#network-edit-btn"
 storage + routePlotter_lastSection: "guide"
+ui ~ #mode-banner: div aria-live="off" class="mode-banner is-showing" → div aria-live="off" class="mode-banner"
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" → div class="settings-section expanded" data-last="true" data-section="guide"
 ui ~ #network-edit-btn: button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" disabled="" type="button" :text="Edit network" → button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" type="button" :text="Edit network"
-ui - #network-edit-banner: div aria-live="polite" role="status" style="align-items: center; background: var(--scope-crowd-fg, #0E4A38); box-shadow: 0 2px 6px rgba(0,0,0,0.3); color: rgb(255, 255, 255); display: flex; font-family: …[383 chars, 0303c501]
+ui - #network-edit-banner: div class="mode-banner-item"
 ui - #network-edit-banner>span[0]: span class="banner-text" :text="— click places a linked node, click a node to continue from it, drag a path to bend it. lifts the pen."
 ui - #network-edit-banner>span[0]>strong[0]: strong :text="Editing the network"
 ui - #network-edit-banner>span[0]>kbd[1]: kbd :text="Esc"
 ui - #network-edit-banner>span[0]>span[2]: span class="banner-count" :text="4 nodes · 4 paths"
-ui - #network-edit-banner>button[1]: button class="banner-done" style="background-attachment: scroll; background-clip: border-box; background-color: transparent; background-image: none; background-origin: padding-box; background-p…[1119 chars, fa48a91a] type="button" :text="Done"
+ui - #network-edit-banner>button[1]: button class="mode-banner-action banner-done" type="button" :text="Done"

@@ -8,6 +8,15 @@
  */
 import { ANIMATION } from '../config/constants.js';
 import { setTimelineReadout } from '../utils/uiReadouts.js';
+import { isModalOpen, whenNoModalOpen } from '../utils/focusTrap.js';
+import { returnFocus } from '../components/ModeBanner.js';
+
+/** Whether the first-start tip has been shown, in this browser's storage. */
+const PREVIEW_TIP_KEY = 'routePlotter_previewTipDismissed';
+/** The tip, as it is said. */
+const PREVIEW_TIP = 'Tip: Check your sequence in Preview mode before exporting';
+/** How long the tip shows once it does: its 8 s as a toast. */
+const PREVIEW_TIP_MS = 8000;
 
 // ========== JKL PLAYBACK METHODS ==========
 // Video editor style playback controls (like Premiere Pro, Final Cut, etc.)
@@ -112,12 +121,19 @@ export const playbackMixin = {
   },
   
   /**
-   * Update the mode switch UI to reflect current preview mode state
+   * Update the mode switch UI to reflect current preview mode state, and
+   * Preview's badge on the canvas with it: at the start (`_syncInitialUIState`)
+   * and at every change, the switch's and an export's own (UI-06 J-12)
    * @private
    */
   _updateModeSwitch() {
     if (this.elements.modeToggleBtn) {
       this.elements.modeToggleBtn.setAttribute('aria-checked', this.previewMode);
+    }
+    // Its own `hidden`, which only its rule reads: the page's dormant
+    // `body[data-mode="preview"]` rules stay as they are (Codex r1 on 7a74755, 2).
+    if (this.elements.previewBadge) {
+      this.elements.previewBadge.hidden = !this.previewMode;
     }
     if (this.elements.modeLabelEdit) {
       this.elements.modeLabelEdit.classList.toggle('active', !this.previewMode);
@@ -151,38 +167,117 @@ export const playbackMixin = {
   },
   
   /**
-   * Show one-time preview tip as a toast (replaces old tip banner)
+   * The first start's one-time tip, shown in the banner slot below the
+   * header as an owner with no mode (UI-06 PR 6, item 7; AUDIT §B: "The tip
+   * belongs in the slot"): as a toast it painted over the welcome's
+   * backdrop, an × that could not be clicked. Once start-up has settled, it
+   * waits while a dialog is open (the welcome, on a first start) and while a
+   * mode's banner holds the slot: a tip replaces nothing (the lead's
+   * settlement, Codex on 9466a3f, blocking 3). It is marked seen when it
+   * shows, so waiting spends nothing; a mode's banner replaces it, and it
+   * does not come back.
    * @private
    */
-  _showPreviewTipToast() {
-    const STORAGE_KEY = 'routePlotter_previewTipDismissed';
+  _showPreviewTip() {
     // Storage a browser blocks or has filled throws. The tip then shows at
     // each visit, rather than stopping the app starting or throwing from its
     // timer (DEF-48).
     let seen = false;
     try {
-      seen = localStorage.getItem(STORAGE_KEY) === 'true';
+      seen = localStorage.getItem(PREVIEW_TIP_KEY) === 'true';
     } catch (error) {
       console.warn('Could not read whether the preview tip was seen:', error);
     }
     if (seen) return;
     
     // Show after a brief delay so UI settles first
-    setTimeout(() => {
-      const show = () => {
-        // Read politely, after what start-up says it restored and whatever
-        // else waits, so it never cuts in (UI-06; the owner, 2026-10-09)
-        this.showToast('Tip: Check your sequence in Preview mode before exporting', 8000, null, { whenIdle: true });
-        try {
-          localStorage.setItem(STORAGE_KEY, 'true');
-        } catch (error) {
-          console.warn('Could not remember that the preview tip was seen:', error);
-        }
-      };
+    const tip = { timer: null, stopWaiting: null, expiry: null, owner: null, over: false };
+    this._previewTip = tip;
+    tip.timer = setTimeout(() => {
+      tip.timer = null;
       // Not before start-up has finished saying what it restored (DEF-45).
-      if (this.ready) this.ready.then(show);
-      else show();
+      if (this.ready) this.ready.then(() => this._offerPreviewTip());
+      else this._offerPreviewTip();
     }, 1500);
+  },
+
+  /**
+   * Show the tip, or wait: for the dialog open to close, or for the mode
+   * whose banner holds the slot to end.
+   * @private
+   */
+  _offerPreviewTip() {
+    const tip = this._previewTip;
+    if (!tip || tip.over) return;
+    tip.stopWaiting?.();
+    tip.stopWaiting = null;
+    if (isModalOpen()) {
+      tip.stopWaiting = whenNoModalOpen(() => this._offerPreviewTip());
+      return;
+    }
+    const banner = this.modeBanner;
+    if (!banner) return;
+    if (banner.isShowing()) {
+      tip.stopWaiting = banner.whenFree(() => this._offerPreviewTip());
+      return;
+    }
+    tip.owner = { onReplaced: () => this._endPreviewTip() };
+    const shown = banner.show(tip.owner, {
+      id: 'preview-tip-banner',
+      title: 'Tip:',
+      text: ' Check your sequence in Preview mode before exporting',
+      actions: [{ label: 'Dismiss', className: 'banner-dismiss', onClick: () => this._endPreviewTip() }],
+    });
+    // Refused (offered inside a replacement's exits, past the slot's bound):
+    // it waits for the slot as it waits for a mode (Codex r2 on 753f93f, 6).
+    if (!shown) {
+      tip.owner = null;
+      tip.stopWaiting = banner.whenFree(() => this._offerPreviewTip());
+      return;
+    }
+    // Read politely, after what start-up says it restored and whatever
+    // else waits, so it never cuts in (UI-06; the owner, 2026-10-09)
+    this.announce(PREVIEW_TIP, 'polite', { whenIdle: true });
+    try {
+      localStorage.setItem(PREVIEW_TIP_KEY, 'true');
+    } catch (error) {
+      console.warn('Could not remember that the preview tip was seen:', error);
+    }
+    tip.expiry = setTimeout(() => this._endPreviewTip(), PREVIEW_TIP_MS);
+  },
+
+  /**
+   * Take the tip away: its Dismiss, its 8 s, or a mode's banner replacing
+   * it. Focus held in it goes back to the control focused before it entered
+   * the tip, PR 8's toast rule, else to the Route button (UI-06 PR 6, item 5).
+   * @private
+   */
+  _endPreviewTip() {
+    const tip = this._previewTip;
+    if (!tip?.owner || tip.over) return;
+    tip.over = true;
+    clearTimeout(tip.expiry);
+    tip.expiry = null;
+    const banner = this.modeBanner;
+    const heldFocus = banner?.holdsFocus(tip.owner) ?? false;
+    const before = banner?.focusBefore ?? null;
+    banner?.hide(tip.owner);
+    if (heldFocus) returnFocus(before);
+  },
+
+  /**
+   * Stop the tip: its delay, its waits and its 8 s (`_stopModeBannerWork`).
+   * @private
+   */
+  _stopPreviewTip() {
+    const tip = this._previewTip;
+    if (!tip) return;
+    tip.over = true;
+    clearTimeout(tip.timer);
+    clearTimeout(tip.expiry);
+    tip.stopWaiting?.();
+    tip.stopWaiting = null;
+    this._previewTip = null;
   },
   
   /**

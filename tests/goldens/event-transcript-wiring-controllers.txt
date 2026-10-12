@@ -636,6 +636,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       · path
       · queued render
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
+      ui:announce {message: "Editing · Waypoint 5 · major", region: "scope-chip", unlessSaid: true}
       · autosave
       · queued render
   scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}  (digest 8d96a69e)
@@ -707,6 +708,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
+  +0 ms said "Editing · Waypoint 5 · major"
   +50 ms · retime
   +50 ms animation:durationChange 29757.7624
   +51 ms animation:update AnimationState  (no listener)
@@ -840,6 +842,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       · path
       · queued render
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
+      ui:announce {message: "Editing · Waypoint 5 · major", region: "scope-chip", unlessSaid: true}
       · autosave
       · queued render
   scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 5, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+1], selectionKey: "waypoint:ex-uon-3"}  (digest 55737d0b)
@@ -911,6 +914,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
+  +0 ms said "Editing · Waypoint 5 · major"
   +50 ms · retime
   +50 ms animation:durationChange 29822.4712
   +51 ms animation:update AnimationState  (no listener)
@@ -943,6 +947,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       · path
       · queued render
       waypoint:list-updated [wp(wp#1)]
+      ui:announce {message: "Editing · Waypoint 1 · major", region: "scope-chip", unlessSaid: true}
       · autosave
       · queued render
   scene-outline:update {crowds: [], focusKey: null, majorCount: 1, minorCount: 0, route: [{…}], selectionKey: null}  (digest 19d45ffc)
@@ -1015,8 +1020,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1
   +0 ms · render
-  +50 ms animation:durationChange 0
-  +51 ms animation:update AnimationState  (no listener)
+  +0 ms said "Editing · Waypoint 1 · major"
   +1000 ms · autosave written
   model:
     (unchanged)
@@ -1043,6 +1047,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       · path
       · queued render
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
+      ui:announce {message: "Editing · Waypoint 2·B2", region: "scope-chip", unlessSaid: true}
       · autosave
       · queued render
   scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 6, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}, …+2], selectionKey: null}  (digest ccc0f021)
@@ -1117,6 +1122,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
+  +0 ms said "Editing · Waypoint 2·B2"
   +50 ms · retime
   +50 ms animation:durationChange 29134.747
   +51 ms animation:update AnimationState  (no listener)
@@ -1137,9 +1143,7 @@ undo, performed on the entry it saved, then redone:
 fixture: open day
 at once: nothing counted
   route:branch-arm {waypoint: wp(ex-uon-1)}
-    ui:toast {message: "Branch from Main entrance — click where …(68 chars)"}  (digest a51ed99b)
-      toast "Branch from Main entrance — click where it should go (Esc to cancel)"
-      said "Branch from Main entrance — click where it should go (Esc to cancel)"
+    said "Branch from Main entrance — click where it should go. Escape to cancel."
   model:
     ~ runtime.branchArmed: null -> "ex-uon-1"
   selection: none (unchanged)
@@ -1202,6 +1206,7 @@ at once: autosave 2, queued render 4, path 2, retime 1, undo saved 2
     · retime
     animation:durationChange 27692.672
     waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]  (digest d6157b5d)
+    ui:announce {message: "Editing · Waypoint 2 · major", region: "scope-chip", unlessSaid: true}
     waypoint:added wp(wp#1)
       · undo saved
           ~ selectedWaypointId: null -> "wp#1"
@@ -1210,6 +1215,7 @@ at once: autosave 2, queued render 4, path 2, retime 1, undo saved 2
       · path
       · queued render
       waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]  (digest d6157b5d)
+      ui:announce {message: "Editing · Waypoint 1·B1", region: "scope-chip", unlessSaid: true}
       · autosave
       · queued render
     · autosave
@@ -1287,6 +1293,7 @@ at once: autosave 2, queued render 4, path 2, retime 1, undo saved 2
   history: stack 1, redo 0 -> stack 3, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
+  +0 ms said "Editing · Waypoint 1·B1"
   +50 ms · retime
   +50 ms animation:durationChange 27692.672
   +51 ms animation:update AnimationState  (no listener)
@@ -1302,6 +1309,42 @@ undo, performed on the 2 entries it saved, then redone:
   before Undo 2, its entry against the project: the same
   after Undo 2, the entry under it against the project: the same
   after the Redos, the project as it stood against the project: the same
+
+## project:replaced
+fixture: open day
+given: a branch armed at ex-uon-1
+act: emitted alone, the project not replaced
+at once: nothing counted
+  project:replaced
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest fd0b29eb)
+  model:
+    (unchanged)
+  selection: none (unchanged)
+  history: stack 1, redo 0 (unchanged)
+later: nothing counted
+  model:
+    (unchanged)
+  selection: none (unchanged)
+  history: stack 1, redo 0 (unchanged)
+recovery: as the project stands
+
+## app:cleared
+fixture: open day
+given: a branch armed at ex-uon-1
+act: emitted alone, the project not cleared
+at once: nothing counted
+  app:cleared
+  scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest fd0b29eb)
+  model:
+    ~ runtime.ui.sections: "waypoints true selection false crowd false" -> "waypoints false selection false crowd false"
+  selection: none (unchanged)
+  history: stack 1, redo 0 (unchanged)
+later: nothing counted
+  model:
+    (unchanged)
+  selection: none (unchanged)
+  history: stack 1, redo 0 (unchanged)
+recovery: as the project stands
 
 ## route:branch-rejoin
 fixture: open day
@@ -1347,6 +1390,7 @@ undo, performed on the entry it saved, then redone:
 fixture: open day
 at once: queued render 1
   waypoint:selected wp(ex-uon-2)
+    ui:announce {message: "Editing · Waypoint 2 'Trent Building' · major", region: "scope-chip", unlessSaid: true}
     ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · queued render
@@ -1356,6 +1400,7 @@ at once: queued render 1
   selection: none -> [ex-uon-2] ex-uon-2
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · Waypoint 2 'Trent Building' · major"
   +0 ms · render
   model:
     (unchanged)
@@ -1367,6 +1412,7 @@ recovery: as the project stands
 fixture: open day
 at once: queued render 1
   waypoint:multi-selected {primary: wp(ex-uon-3), waypoints: [wp(ex-uon-3), wp(ex-uon-1)]}
+    ui:announce {message: "Editing · 2 waypoints", region: "scope-chip", unlessSaid: true}
     ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · queued render
@@ -1376,6 +1422,7 @@ at once: queued render 1
   selection: none -> [ex-uon-1 ex-uon-3] ex-uon-3
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · 2 waypoints"
   +0 ms · render
   model:
     (unchanged)
@@ -1389,6 +1436,7 @@ given: ex-uon-1 selected
 at once: queued render 1
   waypoint:toggle-select wp(ex-uon-3)
     waypoint:multi-selected {primary: wp(ex-uon-3), waypoints: [wp(ex-uon-1), wp(ex-uon-3)]}
+      ui:announce {message: "Editing · 2 waypoints", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -1398,6 +1446,7 @@ at once: queued render 1
   selection: [ex-uon-1] ex-uon-1 -> [ex-uon-1 ex-uon-3] ex-uon-3
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · 2 waypoints"
   +0 ms · render
   model:
     (unchanged)
@@ -1412,6 +1461,7 @@ act: ex-uon-3 toggled off: the reducer CON-02 merges promotes a survivor (here t
 at once: queued render 1
   waypoint:toggle-select wp(ex-uon-3)
     waypoint:multi-selected {primary: wp(ex-uon-2a), waypoints: [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a)]}
+      ui:announce {message: "Editing · 3 waypoints (1 minor)", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -1421,6 +1471,7 @@ at once: queued render 1
   selection: [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-3] ex-uon-3 -> [ex-uon-1 ex-uon-2 ex-uon-2a] ex-uon-2a
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · 3 waypoints (1 minor)"
   +0 ms · render
   model:
     (unchanged)
@@ -1435,6 +1486,7 @@ act: ex-uon-1 toggled off
 at once: queued render 1
   waypoint:toggle-select wp(ex-uon-1)
     waypoint:multi-selected {primary: wp(ex-uon-3), waypoints: [wp(ex-uon-2a), wp(ex-uon-3)]}
+      ui:announce {message: "Editing · 2 waypoints (1 minor)", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -1444,6 +1496,7 @@ at once: queued render 1
   selection: [ex-uon-1 ex-uon-2a ex-uon-3] ex-uon-3 -> [ex-uon-2a ex-uon-3] ex-uon-3
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · 2 waypoints (1 minor)"
   +0 ms · render
   model:
     (unchanged)
@@ -1458,6 +1511,7 @@ act: ex-uon-3 toggled off
 at once: queued render 1
   waypoint:toggle-select wp(ex-uon-3)
     waypoint:selected wp(ex-uon-1)
+      ui:announce {message: "Editing · Waypoint 1 'Main entrance' · major", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -1467,6 +1521,7 @@ at once: queued render 1
   selection: [ex-uon-1 ex-uon-3] ex-uon-3 -> [ex-uon-1] ex-uon-1
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · Waypoint 1 'Main entrance' · major"
   +0 ms · render
   model:
     (unchanged)
@@ -1481,6 +1536,7 @@ act: ex-uon-1 toggled off
 at once: queued render 1
   waypoint:toggle-select wp(ex-uon-1)
     waypoint:deselected
+      ui:announce {message: "Editing · Route", region: "scope-chip", unlessSaid: true}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
   scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest fd0b29eb)
@@ -1489,6 +1545,7 @@ at once: queued render 1
   selection: [ex-uon-1] ex-uon-1 -> none
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · Route"
   +0 ms · render
   model:
     (unchanged)
@@ -1501,6 +1558,7 @@ fixture: open day
 given: ex-uon-2 selected
 at once: queued render 1
   waypoint:deselected
+    ui:announce {message: "Editing · Route", region: "scope-chip", unlessSaid: true}
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
     · queued render
   scene-outline:update {crowds: [{…}], focusKey: null, majorCount: 4, minorCount: 2, route: [{…}, {…}, {…}, {…}, {…}, {…}], selectionKey: null}  (digest fd0b29eb)
@@ -1509,6 +1567,7 @@ at once: queued render 1
   selection: [ex-uon-2] ex-uon-2 -> none
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · Route"
   +0 ms · render
   model:
     (unchanged)
@@ -1532,6 +1591,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         said "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
       · queued render
       waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+      ui:announce {message: "Editing · Route", region: "scope-chip", unlessSaid: true}
       · autosave
       · queued render
     ui:toast {message: "Deleted Main entrance — press Ctrl+Z to undo"}
@@ -1584,6 +1644,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         said "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
       · queued render
       waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+      ui:announce {message: "Editing · 2 waypoints (1 minor)", region: "scope-chip", unlessSaid: true}
       · autosave
       · queued render
     ui:toast {message: "Deleted Main entrance — press Ctrl+Z to undo"}
@@ -1630,6 +1691,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
       · path
       · queued render
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+      ui:announce {message: "Editing · Route", region: "scope-chip", unlessSaid: true}
       · autosave
       · queued render
     ui:toast {message: "Deleted waypoint — press Ctrl+Z to undo"}
@@ -1679,6 +1741,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
         said "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
       · queued render
       waypoint:list-updated [wp(ex-uon-2), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+      ui:announce {message: "Editing · Route", region: "scope-chip", unlessSaid: true}
       · autosave
       · queued render
     waypoint:deselected
@@ -1730,6 +1793,7 @@ at once: render 1, queued render 1, path 1, retime 1
     animation:pause undefined
       said "Animation paused"
     waypoint:list-updated []
+    ui:announce {message: "No waypoints yet. Click on the map to add waypoints", region: "waypoint-list", unlessSaid: true}
     app:cleared
     · render
     undo:state-change {canRedo: false, canUndo: false, redoCount: 0, undoCount: 0}
@@ -1783,6 +1847,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         · path
         · queued render
         waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
+        ui:announce {message: "Editing · Waypoint 5 · major", region: "scope-chip", unlessSaid: true}
         · autosave
         · queued render
     said "Waypoint added at centre"
@@ -1855,6 +1920,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
+  +0 ms said "Editing · Waypoint 5 · major"
   +50 ms · retime
   +50 ms animation:durationChange 30087.3905
   +51 ms animation:update AnimationState  (no listener)
@@ -1904,6 +1970,7 @@ fixture: open day
 at once: queued render 1
   waypoint:show-context-menu {waypoint: wp(ex-uon-2), x: 400, y: 300}
     waypoint:selected wp(ex-uon-2)
+      ui:announce {message: "Editing · Waypoint 2 'Trent Building' · major", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -1914,6 +1981,7 @@ at once: queued render 1
   selection: none -> [ex-uon-2] ex-uon-2
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · Waypoint 2 'Trent Building' · major"
   +0 ms · render
   model:
     (unchanged)
@@ -1966,6 +2034,7 @@ at once: autosave 1, queued render 3, path 1, retime 1, undo saved 1
     · retime
     animation:durationChange 27692.672
     waypoint:selected wp(ex-uon-2a)
+      ui:announce {message: "Editing · Waypoint 2.1 · major", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -1982,6 +2051,7 @@ at once: autosave 1, queued render 3, path 1, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
+  +0 ms said "Editing · Waypoint 2.1 · major"
   +50 ms · retime
   +50 ms animation:durationChange 27692.672
   +51 ms animation:update AnimationState  (no listener)
@@ -2014,6 +2084,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       · autosave
       · queued render
     waypoint:selected wp(wp#1)
+      ui:announce {message: "Editing · Waypoint 2 · major", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(wp#1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), …+1]  (digest d6157b5d)
       · queued render
@@ -2088,6 +2159,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
+  +0 ms said "Editing · Waypoint 2 · major"
   +50 ms · retime
   +50 ms animation:durationChange 28264.2892
   +51 ms animation:update AnimationState  (no listener)
@@ -2122,6 +2194,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       · autosave
       · queued render
     waypoint:selected wp(wp#1)
+      ui:announce {message: "Editing · Waypoint 3 · major", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
       · queued render
@@ -2199,6 +2272,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
+  +0 ms said "Editing · Waypoint 3 · major"
   +50 ms · retime
   +50 ms animation:durationChange 29134.747
   +51 ms animation:update AnimationState  (no listener)
@@ -2233,6 +2307,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       · autosave
       · queued render
     waypoint:selected wp(wp#1)
+      ui:announce {message: "Editing · Waypoint 3 · major", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-b2), …+2]  (digest 73c14719)
       · queued render
@@ -2307,6 +2382,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
+  +0 ms said "Editing · Waypoint 3 · major"
   +50 ms · retime
   +50 ms animation:durationChange 28549.8329
   +51 ms animation:update AnimationState  (no listener)
@@ -2331,6 +2407,7 @@ fixture: open day
 at once: queued render 1
   waypoint:request-rename wp(ex-uon-2)
     waypoint:selected wp(ex-uon-2)
+      ui:announce {message: "Editing · Waypoint 2 'Trent Building' · major", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -2340,6 +2417,7 @@ at once: queued render 1
   selection: none -> [ex-uon-2] ex-uon-2
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · Waypoint 2 'Trent Building' · major"
   +0 ms · render
   +0 ms rename started for wp(ex-uon-2)
   model:
@@ -3054,6 +3132,7 @@ fixture: open day
 at once: queued render 1
   segment:clicked {waypoint: wp(ex-uon-2)}
     waypoint:selected wp(ex-uon-2)
+      ui:announce {message: "Editing · Waypoint 2 'Trent Building' · major", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -3064,6 +3143,7 @@ at once: queued render 1
   selection: none -> [ex-uon-2] ex-uon-2
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · Waypoint 2 'Trent Building' · major"
   +0 ms · render
   +0 ms scrolled <div> into view
   model:
@@ -3088,6 +3168,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       · autosave
       · queued render
     waypoint:selected wp(wp#1)
+      ui:announce {message: "Editing · minor waypoint", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-parm-1), wp(wp#1), wp(ex-parm-1a), wp(ex-parm-2), wp(ex-parm-3)]
       · queued render
@@ -3196,6 +3277,7 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
       · autosave
       · queued render
     waypoint:selected wp(wp#1)
+      ui:announce {message: "Editing · minor waypoint", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(wp#1), …+2]  (digest 303b020d)
       · queued render
@@ -3327,6 +3409,7 @@ given: ex-uon-2 selected
 at once: queued render 1
   waypoint:deselect
     waypoint:deselected
+      ui:announce {message: "Editing · Route", region: "scope-chip", unlessSaid: true}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
     said "Selection cleared"
@@ -3359,6 +3442,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
         · path
         · queued render
         waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3), …+1]  (digest fab976ad)
+        ui:announce {message: "Editing · Waypoint 5 · major", region: "scope-chip", unlessSaid: true}
         · autosave
         · queued render
     said "Waypoint duplicated"
@@ -3431,6 +3515,7 @@ at once: autosave 1, queued render 2, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
+  +0 ms said "Editing · Waypoint 5 · major"
   +50 ms · retime
   +50 ms animation:durationChange 30272.8002
   +51 ms animation:update AnimationState  (no listener)
@@ -3453,6 +3538,7 @@ fixture: open day
 at once: queued render 1
   waypoint:select-all
     waypoint:multi-selected {primary: wp(ex-uon-1), waypoints: [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]}
+      ui:announce {message: "Editing · 6 waypoints (2 minor)", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -3463,6 +3549,7 @@ at once: queued render 1
   selection: none -> [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3] ex-uon-1
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · 6 waypoints (2 minor)"
   +0 ms · render
   model:
     (unchanged)
@@ -3476,6 +3563,7 @@ given: ex-uon-3 selected
 at once: queued render 1
   waypoint:select-all
     waypoint:multi-selected {primary: wp(ex-uon-3), waypoints: [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]}
+      ui:announce {message: "Editing · 6 waypoints (2 minor)", region: "scope-chip", unlessSaid: true}
       ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
       waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
       · queued render
@@ -3486,6 +3574,7 @@ at once: queued render 1
   selection: [ex-uon-3] ex-uon-3 -> [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3] ex-uon-3
   history: stack 1, redo 0 (unchanged)
 later: render 1
+  +0 ms said "Editing · 6 waypoints (2 minor)"
   +0 ms · render
   model:
     (unchanged)
@@ -3622,6 +3711,7 @@ at once: autosave 1, render 1, queued render 1, path 1
     · path
     · queued render
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    ui:announce {message: "Editing · Route", region: "scope-chip", unlessSaid: true}
     · render
     · autosave
     said "Undo"
@@ -3655,6 +3745,8 @@ at once: autosave 1, render 1, queued render 1, path 1
     · path
     · queued render
     waypoint:list-updated [wp(ex-uon-1), wp(ex-uon-2), wp(ex-uon-2a), wp(ex-uon-2b), wp(ex-uon-b1), wp(ex-uon-3)]
+    ui:announce {message: "Editing · Waypoint 4 'Library' · major", region: "scope-chip", unlessSaid: true}
+    ui:announce {message: "Editing · Waypoint 3 'Library' · major", region: "scope-chip", unlessSaid: true}
     ui:refresh-swatches {targets: ["#area-fill-color", "#area-border-color"]}
     · render
     · autosave

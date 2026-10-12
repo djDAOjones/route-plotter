@@ -13,6 +13,7 @@ import { VideoExporter } from '../services/VideoExporter.js';
 import { pathWidthToSlider } from '../utils/pathWidthScale.js';
 import { buildRouteNumbering } from '../utils/waypointNaming.js';
 import { resolveRouteBranches } from '../utils/routeBranches.js';
+import { sceneOutlineKey } from '../utils/sceneSemantics.js';
 import {
   formatBackgroundOverlay,
   formatHoldAtEnd,
@@ -205,6 +206,14 @@ export class UIController {
   constructor(elements, eventBus) {
     this.elements = elements;
     this.eventBus = eventBus;
+
+    /**
+     * Whose a Layers strip control is, `{ layerId }` (null for the Route
+     * row), or undefined for any other element: the app builds the strip
+     * and sets this (UI-06 PR 6, the chip's line and focus).
+     * @type {(element: Element) => ({layerId: (string|null)}|undefined)}
+     */
+    this.stripControlOf = () => undefined;
     
     /** @type {Object|null} Currently selected waypoint (primary selection) */
     this.selectedWaypoint = null;
@@ -410,19 +419,29 @@ export class UIController {
 
     const isMultiSelect = multiSelect && multiSelect.length > 1;
     let scope, text;
+    // What the chip now names, as each region that can hold focus names it
+    // (`_scopeReachedByFocus`): a list row's waypoint, a strip row's layer
+    // (null the Route row), an outline entry's key.
+    const named = { waypoint: null, layerId: undefined, outlineKey: null };
     if (this._networkSelection) {
       // Network scopes wear the crowd family's tint — the node/edge
       // belongs to the selected crowd's network
       scope = 'crowd';
-      if (this._networkSelection.kind === 'node') {
-        const type = this._networkSelection.node?.type;
+      const layerId = this._selectedCrowd?.id;
+      const { kind, node, edge } = this._networkSelection;
+      if (kind === 'node') {
+        const type = node?.type;
         text = `Editing · Node · ${type === 'normal' ? 'pass-through' : type}`;
+        if (layerId && node) named.outlineKey = sceneOutlineKey('node', layerId, node.id);
       } else {
-        text = `Editing · Path · ${this._networkSelection.edge?.direction}`;
+        text = `Editing · Path · ${edge?.direction}`;
+        if (layerId && edge) named.outlineKey = sceneOutlineKey('edge', layerId, edge.id);
       }
     } else if (this._selectedCrowd) {
       scope = 'crowd';
       text = `Editing · ${this._selectedCrowd.name} · crowd`;
+      named.layerId = this._selectedCrowd.id;
+      named.outlineKey = sceneOutlineKey('crowd', this._selectedCrowd.id);
     } else if (isMultiSelect) {
       // The list shows majors only, so name any invisible minors in the
       // count ("5 waypoints (2 minor)") rather than leaving them silent
@@ -436,13 +455,27 @@ export class UIController {
       // A branch waypoint's number says which branch it is on (UI-06 J-02).
       const kind = chipEntry?.branchId ? '' : (waypoint.isMajor ? ' · major' : '');
       text = `Editing · ${this._waypointDisplayName(waypoint)}${kind}`;
+      named.waypoint = waypoint;
+      named.outlineKey = sceneOutlineKey('waypoint', waypoint.id);
     } else {
       scope = 'route';
       text = 'Editing · Route';
+      named.layerId = null;
+      named.outlineKey = sceneOutlineKey('route');
     }
 
     this._scopeChip.dataset.scope = scope;
-    if (this._scopeChipText) this._scopeChipText.textContent = text;
+    if (this._scopeChipText && this._scopeChipText.textContent !== text) {
+      this._scopeChipText.textContent = text;
+      // The chip is not a live region (UI-06 J-05): a change of scope is said
+      // once, unless focus is on the control that names it or the change's
+      // own message says it (a deletion's toast, "Undo": UI-06 PR 6, item 6).
+      // Named by focus, the change still cancels the chip's line waiting from
+      // a scope it passed through (Codex r2 on 753f93f, 4).
+      const line = { message: text, unlessSaid: true, region: 'scope-chip' };
+      if (this._scopeReachedByFocus(named)) line.heard = true;
+      this.eventBus.emit('ui:announce', line);
+    }
     if (this._scopeRouteBtn) {
       // The current scope is marked as such, never disabled (UI-06 J-08):
       // a greyed Route read as a control that was off, not as where you are.
@@ -463,6 +496,45 @@ export class UIController {
     if (this._scopeNextBtn) {
       this._scopeNextBtn.disabled = !steppable || (waypoint ? index >= waypoints.length - 1 : false);
     }
+  }
+
+  /**
+   * Whether focus already names what the chip moved to: the control focused
+   * belongs to it (Codex r1 on 7a74755, 5). A list row's controls name their
+   * waypoint (the row clicked or pressed; the canvas leaves focus on an old
+   * row, which names another); a Layers strip control its layer, the Route
+   * row the Route; a scene-outline entry's summary or Select button its
+   * entry. Focus left anywhere else in those regions names something else,
+   * so the change is said.
+   * @param {{waypoint: (Object|null), layerId: (string|null|undefined), outlineKey: (string|null)}} named
+   * @returns {boolean}
+   * @private
+   */
+  _scopeReachedByFocus(named) {
+    const active = document.activeElement;
+    if (!active || active === document.body) return false;
+    const item = active.closest?.('.waypoint-item[data-route-index]');
+    if (item && this.elements.waypointList?.contains(item)) {
+      return named.waypoint !== null && (this._listedWaypoints || [])[Number(item.dataset.routeIndex)] === named.waypoint;
+    }
+    const strip = this.stripControlOf(active);
+    if (strip) return named.layerId !== undefined && strip.layerId === named.layerId;
+    const key = active.closest?.('#scene-outline') ? active.dataset?.outlineKey : null;
+    if (key && named.outlineKey) return key === `${named.outlineKey}:summary` || key === `${named.outlineKey}:select`;
+    return false;
+  }
+
+  /**
+   * The list row's button for a listed waypoint, looked up afresh (a rebuild
+   * replaces every row), or null: where focus goes back to from a branch
+   * banner (UI-06 PR 6).
+   * @param {Object} waypoint
+   * @returns {HTMLButtonElement|null}
+   */
+  rowButtonFor(waypoint) {
+    const index = (this._listedWaypoints || []).indexOf(waypoint);
+    if (index === -1 || !this.elements.waypointList) return null;
+    return this.elements.waypointList.querySelector(`.waypoint-item[data-route-index="${index}"] .waypoint-row`);
   }
 
   /**
@@ -1696,14 +1768,23 @@ export class UIController {
 
     const majorWaypoints = this._listedMajors;
 
-    // When no waypoints exist, show empty state message
+    // When no waypoints exist, show empty state message. Not a live region
+    // (UI-06 J-05): the list emptying is said once, unless what emptied it
+    // says so ("Deleted …", "Undo", "Project cleared": UI-06 PR 6, item 6).
+    const wasEmpty = this._listWasEmpty;
+    this._listWasEmpty = routeWaypoints.length === 0;
     if (routeWaypoints.length === 0) {
       this.elements.waypointList.innerHTML = `
-        <li class="waypoint-list-empty" role="status" aria-live="polite">
+        <li class="waypoint-list-empty" role="status" aria-live="off">
           <p>No waypoints yet</p>
           <p class="hint">Click on the map to add waypoints</p>
         </li>
       `;
+      if (wasEmpty === false) {
+        this.eventBus.emit('ui:announce', {
+          message: 'No waypoints yet. Click on the map to add waypoints', unlessSaid: true, region: 'waypoint-list',
+        });
+      }
       return;
     }
 

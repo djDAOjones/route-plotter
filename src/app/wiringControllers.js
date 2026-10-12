@@ -18,6 +18,8 @@ import { boundEntryWaypointIds } from '../utils/routeAnchors.js';
 import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 import { loadBackgroundFile } from './backgroundLoading.js';
 import { refuseWhileExporting } from './exporting.js';
+import { returnFocus } from '../components/ModeBanner.js';
+import { regionOperation } from './regionLines.js';
 
 /**
  * Reorder waypoints to a new major order, each major carrying its
@@ -366,6 +368,10 @@ export const wiringControllersMixin = {
     /**
      * route:branch-arm — Alt+click landed on a waypoint. Arm the gesture and
      * say so; the next plain canvas click places the branch's first waypoint.
+     * Its banner shows in the slot below the header, with a Cancel, so a
+     * pointer leaves it as Escape does (UI-06 PR 6, item 2): another mode's
+     * banner there ends that mode first, before the gesture is armed. Focus
+     * stays where it is: the gesture is on the canvas.
      */
     this.eventBus.on('route:branch-arm', ({ waypoint }) => {
       const verdict = canForkFrom(waypoint);
@@ -373,19 +379,39 @@ export const wiringControllersMixin = {
         this.eventBus.emit('ui:toast', { message: verdict.reason });
         return;
       }
-      this.interactionHandler.branchArmed = waypoint;
       const label = waypoint.name || 'this waypoint';
-      // The toast is the announcement (UI-06 J-05): one message, heard once.
-      this.eventBus.emit('ui:toast', {
-        message: `Branch from ${label} — click where it should go (Esc to cancel)`
+      const owner = this._branchBannerOwner ??= { onReplaced: () => this.eventBus.emit('route:branch-cancel') };
+      // Armed again from another waypoint with focus in the banner: where
+      // focus goes back to is still where it was before the gesture.
+      const active = document.activeElement;
+      const focusAtArm = this.modeBanner?.holdsFocus(owner) ? this._branchGesture?.focusAtArm ?? null : active;
+      const cancel = () => this.eventBus.emit('route:branch-cancel');
+      const shown = this.modeBanner?.show(owner, {
+        id: 'branch-banner',
+        title: `Branch from ${label}`,
+        text: [' — click where it should go. ', { kbd: 'Esc' }, ' to cancel.'],
+        actions: [{ label: 'Cancel', className: 'banner-cancel', onClick: cancel }],
       });
+      // Refused (claimed inside a replacement's exits, past the slot's
+      // bound): no gesture is armed (Codex r2 on 753f93f, 6).
+      if (this.modeBanner && !shown) return;
+      this.interactionHandler.branchArmed = waypoint;
+      this._branchGesture = { forkId: waypoint.id, focusAtArm, owner };
+      // Said once (UI-06 J-05): the banner is not a live region.
+      this.announce(`Branch from ${label} — click where it should go. Escape to cancel.`);
     });
 
-    this.eventBus.on('route:branch-cancel', () => {
+    // The one cancel path: Escape, an off-image click, the banner's Cancel,
+    // another mode's banner, and a fork that has left the model
+    // (`followBranchFork`), whose focus waits for the list it rebuilds.
+    this.eventBus.on('route:branch-cancel', ({ deferFocus = false } = {}) => {
       if (!this.interactionHandler.branchArmed) return;
-      this.interactionHandler.branchArmed = null;
+      this._endBranchGesture({ deferFocus });
       this.eventBus.emit('ui:toast', { message: 'Branch cancelled' });
     });
+    // Opening a project or clearing it ends the gesture: its fork is gone (UI-06 PR 6).
+    this.eventBus.on('project:replaced', () => this.followBranchFork());
+    this.eventBus.on('app:cleared', () => this.followBranchFork());
 
     /**
      * route:branch-place — Place the branch's first waypoint.
@@ -397,8 +423,9 @@ export const wiringControllersMixin = {
      */
     this.eventBus.on('route:branch-place', ({ imgX, imgY }) => {
       const fork = this.interactionHandler.branchArmed;
-      this.interactionHandler.branchArmed = null;
-      if (!fork || !this.waypointsById?.has?.(fork.id)) {
+      this._endBranchGesture();
+      // The fork is the model's own object, as `followBranchFork` asks (Codex r1 on 7a74755, 8)
+      if (!fork || this.waypointsById?.get?.(fork.id) !== fork) {
         this.eventBus.emit('ui:toast', { message: 'That waypoint is no longer on the route' });
         return;
       }
@@ -582,29 +609,33 @@ export const wiringControllersMixin = {
       // goes in a single pass with a single undo entry (the per-waypoint
       // deleteWaypoint path would snapshot and recalc once per waypoint)
       if (this.selectedWaypoints.length > 1) {
-        const doomed = [...this.selectedWaypoints];
-        const firstIndex = this.waypoints.indexOf(doomed[0]);
-        for (const wp of doomed) {
-          const index = this.waypoints.indexOf(wp);
-          if (index > -1) {
-            this.waypoints.splice(index, 1);
-            this._removeWaypointFromMap(wp);
+        // Its message says the change: the chip and the list it moves are not said again (UI-06 PR 6)
+        regionOperation(this, cover => {
+          const doomed = [...this.selectedWaypoints];
+          const firstIndex = this.waypoints.indexOf(doomed[0]);
+          for (const wp of doomed) {
+            const index = this.waypoints.indexOf(wp);
+            if (index > -1) {
+              this.waypoints.splice(index, 1);
+              this._removeWaypointFromMap(wp);
+            }
           }
-        }
-        this.selectedWaypoint = null;
-        this.selectedWaypoints = [];
-        if (this.interactionHandler?.setSelection) {
-          this.interactionHandler.setSelection([], null);
-        } else {
-          this.interactionHandler?.setSelectedWaypoint?.(null);
-        }
-        this.uiController?.setSelection([], null);
-        // One pass through the shared deleted pipeline: one undo
-        // snapshot, one path recalc, one autosave. The deselected event
-        // then walks SectionController back to Route scope.
-        this.eventBus.emit('waypoint:deleted', firstIndex);
-        this.eventBus.emit('waypoint:deselected');
-        this.announce(`${doomed.length} waypoints deleted`);
+          this.selectedWaypoint = null;
+          this.selectedWaypoints = [];
+          if (this.interactionHandler?.setSelection) {
+            this.interactionHandler.setSelection([], null);
+          } else {
+            this.interactionHandler?.setSelectedWaypoint?.(null);
+          }
+          this.uiController?.setSelection([], null);
+          // One pass through the shared deleted pipeline: one undo
+          // snapshot, one path recalc, one autosave. The deselected event
+          // then walks SectionController back to Route scope.
+          this.eventBus.emit('waypoint:deleted', firstIndex);
+          this.eventBus.emit('waypoint:deselected');
+          this.announce(`${doomed.length} waypoints deleted`);
+          cover();
+        });
         return;
       }
 
@@ -1267,9 +1298,14 @@ export const wiringControllersMixin = {
       // Leg geometry changed under the pointer; next mousemove re-tests
       this.canvasHover = null;
 
-      this.eventBus.emit('waypoint:added', newWp);
-      this.eventBus.emit('waypoint:selected', newWp);
-      this.announce('Minor waypoint added to leg');
+      // Its message says the change: the chip's "Editing · minor waypoint"
+      // after it would add no number or count (Codex r2 on 753f93f, Q1)
+      regionOperation(this, cover => {
+        this.eventBus.emit('waypoint:added', newWp);
+        this.eventBus.emit('waypoint:selected', newWp);
+        this.announce('Minor waypoint added to leg');
+        cover();
+      });
     });
 
     // Help events: Help is a dialog of its own, its shortcuts grid open; the
@@ -1303,8 +1339,11 @@ export const wiringControllersMixin = {
       // error), so Escape never cleared waypoint selection through this
       // handler. Route through the canonical deselected pipeline.
       if (this.selectedWaypoint) {
-        this.eventBus.emit('waypoint:deselected');
-        this.announce('Selection cleared');
+        regionOperation(this, cover => {
+          this.eventBus.emit('waypoint:deselected');
+          this.announce('Selection cleared');
+          cover();
+        });
       }
     });
     
@@ -1357,8 +1396,14 @@ export const wiringControllersMixin = {
 
     // Announcement request from components (UIController's list reorders):
     // queued with the app's own, so it waits its turn too (DEF-45)
-    this.eventBus.on('ui:announce', ({ message }) => {
-      this.announce(message);
+    // `unlessSaid`: what a region that is no longer live said alone, said
+    // once unless the change's own message says it (UI-06 PR 6, item 6);
+    // `region`, whose line it is: a later one of the same turn replaces it;
+    // `heard`, focus names the change already: it cancels the region's line
+    // still waiting, and says none (Codex r2 on 753f93f, 4).
+    this.eventBus.on('ui:announce', ({ message, unlessSaid = false, region, heard = false }) => {
+      if (unlessSaid) this.announceUnlessSaid(message, region, { heard });
+      else this.announce(message);
     });
     
     // Path head (route-global) is wired directly in setupEventListeners;
@@ -1394,5 +1439,67 @@ export const wiringControllersMixin = {
     // Document commands have one EventBus-owned execution path. Both toolbar
     // buttons and InteractionHandler shortcuts emit these events exactly once.
     setupDocumentCommands(this);
+  },
+
+  /**
+   * End the armed branch gesture: disarm it and take its banner away. Focus
+   * held in the banner (its Cancel pressed) goes back to the element focused
+   * when it was armed, else to the fork's row, looked up afresh (a rebuild
+   * replaces rows), else to the Route button, each through `focusLands`
+   * (proposal (c), accepted by the owner; UI-06 PR 6). Where the model
+   * changed under the gesture, focus is placed once the list the change
+   * rebuilds has drawn, after the frames it queued (Codex's recheck).
+   * @param {{deferFocus?: boolean}} [options]
+   * @private
+   */
+  _endBranchGesture({ deferFocus = false } = {}) {
+    const gesture = this._branchGesture;
+    this._branchGesture = null;
+    if (this.interactionHandler) this.interactionHandler.branchArmed = null;
+    if (!gesture) return;
+    const heldFocus = this.modeBanner?.holdsFocus(gesture.owner) ?? false;
+    this.modeBanner?.hide(gesture.owner);
+    if (!heldFocus) return;
+    const place = () => {
+      const fork = this.waypointsById?.get(gesture.forkId);
+      returnFocus(gesture.focusAtArm, fork ? this.uiController?.rowButtonFor?.(fork) : null);
+    };
+    if (!deferFocus) {
+      place();
+      return;
+    }
+    const token = {};
+    this._branchFocusToken = token;
+    Promise.resolve().then(() => {
+      if (this._branchFocusToken !== token) return;
+      this._branchFocusFrame = requestAnimationFrame(() => {
+        this._branchFocusFrame = null;
+        if (this._branchFocusToken !== token) return;
+        this._branchFocusToken = null;
+        const active = document.activeElement;
+        // Unless the author has put focus somewhere since.
+        if (!active || active === document.body || active === document.documentElement || !active.isConnected) place();
+      });
+    });
+  },
+
+  /**
+   * An armed branch gesture follows the model as an area draw does: it is
+   * cancelled once its fork is no longer the model's own waypoint — deleted,
+   * or replaced by an Undo, a Redo, an Open or Clear All, which put copies
+   * back: it is never re-pointed by id, so a placement never copies from a
+   * stale waypoint (UI-06 PR 6, the lead's settlements 2 and 6).
+   */
+  followBranchFork() {
+    const fork = this.interactionHandler?.branchArmed;
+    if (!fork || this.waypointsById?.get(fork.id) === fork) return;
+    this.eventBus.emit('route:branch-cancel', { deferFocus: true });
+  },
+
+  /** Stop a branch's focus step still waiting for its frame (teardown). @private */
+  _stopBranchFocus() {
+    this._branchFocusToken = null;
+    if (this._branchFocusFrame) cancelAnimationFrame(this._branchFocusFrame);
+    this._branchFocusFrame = null;
   }
 };

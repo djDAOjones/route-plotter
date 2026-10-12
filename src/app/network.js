@@ -22,6 +22,7 @@ import {
   changedSinceShown, clearFieldError, draftOwner, formatFieldNumber, noteShownValue, setControlReason, setRangeReadout,
   shiftDecimal, showFieldError, SLIDER_REACH_REASON,
 } from '../utils/uiReadouts.js';
+import { regionOperation } from './regionLines.js';
 
 const NODE_TYPE_LABELS = {
   normal: 'pass-through',
@@ -296,6 +297,14 @@ export const networkMixin = {
     const from = document.activeElement;
     const focusToBanner = from === this._editNetworkBtn || !from || from === document.body
       || from === document.documentElement || !from.isConnected;
+    // Its own session on another crowd ends first; then the banner slot is
+    // claimed, so a mode whose banner is up has ended, an area's Preview
+    // restore included, before this entry leaves Preview (UI-06 PR 6; Codex
+    // on 9466a3f, blocking 1).
+    if (svc.active) svc.exit();
+    // Refused (claimed inside a replacement's exits, past the slot's bound),
+    // nothing here changes (Codex r2 on 753f93f, 6).
+    if (!svc.claimBanner(layer)) return;
     // Drawing a network is editing: leave Preview through the canonical
     // switch (flipping back to Preview later closes the mode)
     this._setPreviewMode(false);
@@ -312,9 +321,13 @@ export const networkMixin = {
    * @private
    */
   _deleteNetworkSelection(kind) {
-    this.networkEditService.deleteSelection();
-    this.eventBus.emit('ui:toast', {
-      message: `Deleted ${kind === 'edge' ? 'path' : kind} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+    // It says the change: the network's count and the chip are not said again (UI-06 PR 6)
+    regionOperation(this, cover => {
+      this.networkEditService.deleteSelection();
+      this.eventBus.emit('ui:toast', {
+        message: `Deleted ${kind === 'edge' ? 'path' : kind} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+      });
+      cover();
     });
   },
 
@@ -334,23 +347,34 @@ export const networkMixin = {
     if (!hit) {
       // Empty canvas: place a node (within the image, like waypoints)
       if (!this.isWithinImageBounds(x, y)) return;
-      if (svc.placeNode(this._networkImgPos(x, y), shiftKey)) this.announce('Node placed');
+      // It says the change: the network's count is not said again (UI-06 PR 6)
+      regionOperation(this, cover => {
+        if (!svc.placeNode(this._networkImgPos(x, y), shiftKey)) return;
+        this.announce('Node placed');
+        cover();
+      });
       return;
     }
 
     if (shiftKey) {
       // Shift-click deletes, with the standard undo toast
       if (hit.kind === 'node') {
-        svc.deleteNode(hit.node);
-        this.eventBus.emit('ui:toast', {
-          message: `Deleted node — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+        regionOperation(this, cover => {
+          svc.deleteNode(hit.node);
+          this.eventBus.emit('ui:toast', {
+            message: `Deleted node — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+          });
+          cover();
         });
       } else if (hit.kind === 'control') {
         svc.deleteControlPoint(hit.edge, hit.controlIndex);
       } else {
-        svc.deleteEdge(hit.edge);
-        this.eventBus.emit('ui:toast', {
-          message: `Deleted path — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+        regionOperation(this, cover => {
+          svc.deleteEdge(hit.edge);
+          this.eventBus.emit('ui:toast', {
+            message: `Deleted path — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
+          });
+          cover();
         });
       }
       return;
