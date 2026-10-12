@@ -154,7 +154,7 @@
       "format": "esm"
     },
     "src/utils/uiReadouts.js": {
-      "bytes": 3646,
+      "bytes": 9350,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -329,7 +329,7 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 114921,
+      "bytes": 115017,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2707,7 +2707,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 18034,
+      "bytes": 18028,
       "imports": [],
       "format": "esm"
     },
@@ -2749,7 +2749,7 @@
       "format": "esm"
     },
     "src/services/NetworkEditService.js": {
-      "bytes": 42589,
+      "bytes": 45699,
       "imports": [
         {
           "path": "src/utils/snapToAngle.js",
@@ -3546,7 +3546,7 @@
       "format": "esm"
     },
     "src/app/crowds.js": {
-      "bytes": 51774,
+      "bytes": 65627,
       "imports": [
         {
           "path": "src/config/keybindings.js",
@@ -3579,6 +3579,21 @@
           "original": "../models/GraphModel.js"
         },
         {
+          "path": "src/models/Emitter.js",
+          "kind": "import-statement",
+          "original": "../models/Emitter.js"
+        },
+        {
+          "path": "src/models/Scene.js",
+          "kind": "import-statement",
+          "original": "../models/Scene.js"
+        },
+        {
+          "path": "src/services/DotRenderer.js",
+          "kind": "import-statement",
+          "original": "../services/DotRenderer.js"
+        },
+        {
           "path": "src/app/persistence.js",
           "kind": "import-statement",
           "original": "./persistence.js"
@@ -3592,7 +3607,7 @@
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 28188,
+      "bytes": 33415,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3634,7 +3649,7 @@
       "format": "esm"
     },
     "src/controllers/SceneOutlineController.js": {
-      "bytes": 58512,
+      "bytes": 62112,
       "imports": [
         {
           "path": "src/utils/sceneSemantics.js",
@@ -3655,7 +3670,7 @@
       "format": "esm"
     },
     "src/app/sceneOutline.js": {
-      "bytes": 45683,
+      "bytes": 46415,
       "imports": [
         {
           "path": "src/controllers/SceneOutlineController.js",
@@ -4067,13 +4082,13 @@
     }
   },
   "outputs": {
-    ".docs-build-ffS2K6/app.js.map": {
+    ".docs-build-IQ6XMt/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3668915
+      "bytes": 3714004
     },
-    ".docs-build-ffS2K6/app.js": {
+    ".docs-build-IQ6XMt/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4124,7 +4139,7 @@
           "bytesInOutput": 429
         },
         "src/utils/uiReadouts.js": {
-          "bytesInOutput": 765
+          "bytesInOutput": 1905
         },
         "src/services/StorageService.js": {
           "bytesInOutput": 8260
@@ -4307,7 +4322,7 @@
           "bytesInOutput": 644
         },
         "src/services/NetworkEditService.js": {
-          "bytesInOutput": 17852
+          "bytesInOutput": 18890
         },
         "src/services/AreaEditService.js": {
           "bytesInOutput": 4525
@@ -4421,19 +4436,19 @@
           "bytesInOutput": 1871
         },
         "src/app/crowds.js": {
-          "bytesInOutput": 24296
+          "bytesInOutput": 26987
         },
         "src/app/network.js": {
-          "bytesInOutput": 12231
+          "bytesInOutput": 13740
         },
         "src/utils/sceneSemantics.js": {
           "bytesInOutput": 4440
         },
         "src/controllers/SceneOutlineController.js": {
-          "bytesInOutput": 33744
+          "bytesInOutput": 35028
         },
         "src/app/sceneOutline.js": {
-          "bytesInOutput": 26752
+          "bytesInOutput": 26985
         },
         "src/app/helpDialog.js": {
           "bytesInOutput": 1387
@@ -4451,7 +4466,7 @@
           "bytesInOutput": 24086
         }
       },
-      "bytes": 1135684
+      "bytes": 1143579
     }
   }
 }
