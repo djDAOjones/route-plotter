@@ -92,6 +92,30 @@ const leavingToasts = new WeakSet();
 /** The gap between the toasts and what they stand above: `--space-2`, the stylesheet's (UI-06 J-12). */
 const TOAST_GAP_PX = 8;
 
+/**
+ * Where the toast stack stands where the transport is in the page's flow
+ * (UI-06 J-12; Codex r2 on 753f93f, 2). Its bottom is `lift` px, plus the
+ * gap, above the viewport's: 0 is the viewport's bottom, the viewport's
+ * height less the controls' top just above them. It covers none of the
+ * controls in view: wholly above them where the room between their top and
+ * the viewport's takes it; else wholly below them, at the viewport's bottom,
+ * where the room under them does, or they are out of view; else capped
+ * (`room`) to the larger of the two rooms, below them where neither has any.
+ * @param {{top: number, bottom: number}} controls - Their edges, in the viewport
+ * @param {number} height - The stack's own height
+ * @param {number} viewport - The viewport's height
+ * @returns {{lift: number, room: (number|null)}} room: the cap, null for none
+ */
+function toastPlacement({ top, bottom }, height, viewport) {
+  if (bottom <= 0 || top >= viewport) return { lift: 0, room: null };
+  const above = { lift: viewport - top, room: Math.max(0, top - TOAST_GAP_PX) };
+  const below = { lift: 0, room: Math.max(0, viewport - bottom - 2 * TOAST_GAP_PX) };
+  if (height <= above.room) return { lift: above.lift, room: null };
+  if (height <= below.room) return { lift: below.lift, room: null };
+  const side = above.room > below.room ? above : below;
+  return { lift: side.lift, room: side.room };
+}
+
 // Main application class for Route Plotter v3
 class RoutePlotter {
   constructor() {
@@ -694,6 +718,10 @@ class RoutePlotter {
   _refitCanvasToArea() {
     // Recalculate canvas size with contain-fit for new viewport
     this.updateCanvasAspectRatio();
+    // A rebuild held back for an earlier fit is this one's now: the fit has
+    // rebuilt the path, and its debounce below is the one to follow (Codex r2
+    // on 753f93f, 7: a pause ran both, three rebuilds to a resize's two).
+    this._fittedPathPending = false;
 
     // Debounce path recalculation (expensive operation)
     if (this._resizeTimeout) {
@@ -986,14 +1014,16 @@ class RoutePlotter {
 
   /**
    * Keep the toasts in view where the transport is in the page's flow (at
-   * 64 rem and below it scrolls with the page, UI-06 J-12): the container is
-   * fixed to the viewport's bottom centre there, lifted clear of the
-   * transport's controls while their top is in view with room above it for
-   * the toasts, else at the viewport's bottom, where the controls are not
-   * (scrolled away above, or not reached yet below). Measured as a toast
-   * shows, and on each scroll and resize while one shows (the lead's Q5,
-   * Codex's check of the round-2 brief). At full width the container stands
-   * on the sticky transport, as built, and nothing is written.
+   * 64 rem and below it scrolls with the page, UI-06 J-12), and over none of
+   * its controls: the container is fixed to the viewport there, and stands
+   * wholly above the controls where the room between their top and the
+   * viewport's takes the stack, else wholly below them, at the viewport's
+   * bottom, where that room does (or the controls are out of view); where
+   * neither does, the stack is capped to the larger room and scrolls inside
+   * itself, its newest toast in view (Codex r2 on 753f93f, 2). Measured as a
+   * toast shows, and on each scroll and resize while one shows (the lead's
+   * Q5). At full width the container stands on the sticky transport, as
+   * built, and nothing is written.
    * @private
    */
   _placeToasts() {
@@ -1003,13 +1033,33 @@ class RoutePlotter {
     const inFlow = window.matchMedia?.('(max-width: 64rem)').matches ?? false;
     if (!inFlow) {
       if (container.style.getPropertyValue('--toast-lift')) container.style.removeProperty('--toast-lift');
+      this._capToasts(container, null);
       return;
     }
-    const { top } = controls.getBoundingClientRect();
-    const viewport = window.innerHeight;
-    const roomAbove = top - container.offsetHeight - TOAST_GAP_PX;
-    const lift = top < viewport && roomAbove >= 0 ? viewport - top : 0;
+    const { top, bottom } = controls.getBoundingClientRect();
+    // The stack's own height: a capped one's content (scrollHeight), not its cap.
+    const { lift, room } = toastPlacement({ top, bottom }, Math.max(container.offsetHeight, container.scrollHeight),
+      window.innerHeight);
     container.style.setProperty('--toast-lift', `${Math.round(lift)}px`);
+    this._capToasts(container, room);
+  }
+
+  /**
+   * Cap the toast stack to `room` px, scrolled to its newest toast, or lift
+   * the cap (null).
+   * @param {HTMLElement} container
+   * @param {number|null} room
+   * @private
+   */
+  _capToasts(container, room) {
+    if (room === null) {
+      if (container.style.getPropertyValue('--toast-room')) container.style.removeProperty('--toast-room');
+      container.classList.remove('is-capped');
+      return;
+    }
+    container.style.setProperty('--toast-room', `${Math.floor(room)}px`);
+    container.classList.add('is-capped');
+    container.scrollTop = container.scrollHeight;
   }
 
   /**
@@ -1065,7 +1115,9 @@ class RoutePlotter {
 
   deleteWaypoint(waypoint) {
     const index = this.waypoints.indexOf(waypoint);
-    if (index > -1) {
+    if (index === -1) return;
+    // One operation, its toast the message that says it (UI-06 PR 6)
+    this.regionOperation(cover => {
       // Remove from array
       this.waypoints.splice(index, 1);
       
@@ -1098,8 +1150,8 @@ class RoutePlotter {
         message: `Deleted ${waypoint.name || 'waypoint'} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
       });
       // It says the change: the chip and the empty list it moves are not said again (UI-06 PR 6)
-      this.coverRegionLines();
-    }
+      cover();
+    });
   }
   
   /**
@@ -1151,46 +1203,78 @@ class RoutePlotter {
   /**
    * Say `message`, what a region that was live used to say alone (the scope
    * chip's words, the network's count, the empty list), once the turn that
-   * changed it is over: the task it ran in, every continuation that task
-   * awaited included. It is not said when the operation of that turn says
-   * the change in its own message (`coverRegionLines`). Nothing else covers
-   * it — not the status line ("Unsaved changes"), a notice, or the start's
-   * tip waiting its turn — so the count, the scope and the type are still
-   * heard beside them, and two such lines of one turn are both said (UI-06
-   * PR 6, item 6; Codex r1 on 7a74755, 4). A region's line written again in
-   * the same turn replaces its first: what the region shows at the turn's
-   * end is what is said, not a state it passed through.
+   * changed it is over (a timer's: the task, and what it awaited in
+   * microtasks). It is not said when the operation that changed the region
+   * says the change in its own message (`regionOperation`), nor when focus
+   * already names what the region now shows (`heard`). Nothing else covers
+   * it — not the status line ("Unsaved changes"), a notice, the start's tip
+   * waiting its turn, or another operation near it — so the count, the scope
+   * and the type are still heard beside them, and two such lines of one turn
+   * are both said (UI-06 PR 6, item 6; Codex r1 on 7a74755, 4; Codex r2 on
+   * 753f93f, 3). A region's later change in the same turn replaces its line,
+   * or cancels it where that change is covered or heard: what the region
+   * shows at the turn's end is what is said, or nothing, never a state it
+   * passed through (Q2; Codex r2 on 753f93f, 4).
    * @param {string} message
    * @param {string} [region] - Whose line it is (`scope-chip`, …); each message its own by default
+   * @param {{heard?: boolean}} [options] - heard: focus names the change already
    */
-  announceUnlessSaid(message, region = message) {
-    this._regionLineTurn()?.add(message, region);
+  announceUnlessSaid(message, region = message, { heard = false } = {}) {
+    const operation = this._regionOperations?.at(-1);
+    if (operation) operation.lines.set(region, heard ? null : message);
+    else this._regionLineTurn()?.set(region, heard ? null : message);
   }
 
   /**
-   * This turn's operation says its change in its own message, as it says
-   * it: "Undo", "Redo", a deletion's toast, "Selection cleared", "Node
-   * placed", a crowd added, a project opened, cleared or restored. The
-   * regions' lines of the turn, before it or after, say that change again,
-   * and are not said (`announceUnlessSaid`).
+   * Run `work`, one operation that changes regions, synchronously, and keep
+   * the region lines it writes as its own. Where it says its change in its
+   * own message ("Undo", "Redo", a deletion's toast, "Selection cleared",
+   * "Node placed", a crowd added, a minor waypoint added to a leg, a project
+   * opened, cleared or restored), it calls the `cover` it is handed beside
+   * that message: then none of its lines is said, and each cancels its
+   * region's line still waiting, the message having said what the region
+   * now shows. Otherwise they wait for the turn's end as any other. The
+   * operation is over when `work` returns, never across an await: an
+   * asynchronous continuation of the same change runs `regionOperation`
+   * again around what it changes, and anything else meanwhile (a selection
+   * made while a load waits) is said (Codex r2 on 753f93f, 3).
+   * @param {function(Function): *} work - Handed `cover`
+   * @returns {*} What `work` returns
    */
-  coverRegionLines() {
-    this._regionLineTurn()?.cover();
+  regionOperation(work) {
+    const operation = { lines: new Map(), covered: false };
+    const operations = (this._regionOperations ??= []);
+    operations.push(operation);
+    try {
+      return work(() => { operation.covered = true; });
+    } finally {
+      operations.splice(operations.lastIndexOf(operation), 1);
+      // Into the operation it ran inside, if any, else into the turn.
+      const outer = operations.at(-1);
+      for (const [region, line] of operation.lines) {
+        const next = operation.covered ? null : line;
+        if (outer) outer.lines.set(region, next);
+        else this._regionLineTurn()?.set(region, next);
+      }
+    }
   }
 
   /**
-   * This turn's region lines, made as its first line or covering message
-   * comes, and ended by a timer once the task is over: a promise its work
-   * awaits settles first. None after `_stopRegionLines`.
-   * @returns {{add: Function, cover: Function}|null}
+   * This turn's region lines, made as its first one comes, and ended by a
+   * timer once the task is over: each region's last line is said, a region
+   * whose last change was covered or heard says none. None after
+   * `_stopRegionLines`.
+   * @returns {{set: Function}|null}
    * @private
    */
   _regionLineTurn() {
     if (this._regionLinesStopped) return null;
     if (!this._regionLines) {
-      const turn = { lines: new Map(), covered: false, timer: null };
-      turn.add = (line, region) => { if (!turn.covered) turn.lines.set(region, line); };
-      turn.cover = () => { turn.covered = true; turn.lines.clear(); };
+      const turn = { lines: new Map(), timer: null };
+      turn.set = (region, line) => {
+        if (line === null) turn.lines.delete(region);
+        else turn.lines.set(region, line);
+      };
       turn.timer = setTimeout(() => {
         if (this._regionLines !== turn) return;
         this._regionLines = null;

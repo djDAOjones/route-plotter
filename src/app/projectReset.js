@@ -5,6 +5,7 @@ import { resolveRenderReference } from '../utils/renderReference.js';
 import { isBuiltInPathHeadStyle } from '../utils/pathHeadPresets.js';
 import { discardForClearAll } from './unrestoredAutosave.js';
 import { ANIMATION } from '../config/constants.js';
+import { regionOperation } from './regionLines.js';
 
 /**
  * Establish a new, empty, non-undoable project baseline.
@@ -13,6 +14,20 @@ import { ANIMATION } from '../config/constants.js';
  * @param {Object} app
  */
 export function clearProject(app) {
+  // One operation: "Project cleared" says the change, so the chip and the
+  // empty list it moves are not said again; the warning that recovery could
+  // not be cleared does not say it, and they are (UI-06 PR 6; Codex r2 on
+  // 753f93f, 3).
+  regionOperation(app, cover => clearProjectSaying(app, cover));
+}
+
+/**
+ * Clear All's work and its message, `cover` called beside a message that
+ * says the clear (`clearProject`).
+ * @param {Object} app
+ * @param {Function} cover
+ */
+function clearProjectSaying(app, cover) {
   // Clear establishes a new project baseline. Any background/custom-image
   // decode or Open Project operation started against the prior baseline is
   // no longer allowed to commit when it eventually resolves.
@@ -113,8 +128,7 @@ export function clearProject(app) {
     } else {
       app.announce('Project cleared');
     }
-    // It says the change: the chip and the empty list it moves are not said again (UI-06 PR 6)
-    app.coverRegionLines?.();
+    cover();
   }
 
   console.log('Cleared all waypoints and path');

@@ -13,7 +13,7 @@ ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, 3c7d9c23)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
@@ -40,7 +40,7 @@ ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, 3c7d9c23)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
@@ -186,7 +186,7 @@ ui + #marker-apply-reason: span data-card-reason="apply-onward" data-card="marke
 settled:
   announced "Marker applied to 4 later waypoints. Undo is available."
   announced "Saved to browser recovery"
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9724 chars, cd4265f3]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9754 chars, c6bc19ee]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
@@ -212,7 +212,7 @@ ui ~ #ripple-thickness-value: span class="range-readout" :text="5 reference px" 
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   announced "Saved to browser recovery"
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, ba9e7e1e]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, d97b71fb]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
@@ -225,7 +225,7 @@ ui ~ #ripple-controls>div[1]>button[0]: button aria-describedby="ripple-max-scal
 ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Maximum expansion radius of the ripple effect"
 
 ## #ripple-max-scale · set 1700
-emit animation:durationChange 30779.455541
+emit animation:durationChange 30923.834135
 emit waypoint:style-changed waypoint[0]
 announced "Unsaved changes"
 model ~ waypoints[0].rippleMaxScale: 2400 → 1700
@@ -238,16 +238,16 @@ ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section=
 ui ~ #ripple-max-scale: input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" aria-valuetext="2400%" max="4000" min="500" step="100" type="range" value="1000" :value="2400" → input aria-describedby="ripple-max-scale-value ripple-max-scale-tip" aria-valuetext="1700%" max="4000" min="500" step="100" type="range" value="1000" :value="1700"
 ui ~ #ripple-max-scale-value: span class="range-readout" :text="2400%" → span class="range-readout" :text="1700%"
 settled:
-  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30923.834135, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   announced "Saved to browser recovery"
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, dbb1d3e9]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, 9b92dc2c]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
 
 ## #ripple-wait · click
-emit animation:durationChange 30779.455541
+emit animation:durationChange 30923.834135
 emit waypoint:path-property-changed waypoint[0]
 announced "Unsaved changes"
 model ~ waypoints[0].rippleWait: false → true
@@ -263,10 +263,10 @@ ui ~ #waypoint-pause-time: input aria-describedby="waypoint-pause-time-value way
 ui ~ #waypoint-pause-time-value: span class="range-readout" :text="2.8s" → span class="range-readout" :text="9.6s"
 ui ~ #ripple-wait: input aria-describedby="ripple-wait-tip" checked="" type="checkbox" :unchecked → input aria-describedby="ripple-wait-tip" checked="" type="checkbox" :checked
 settled:
-  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30923.834135, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   announced "Saved to browser recovery"
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, c8349d00]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, f857e34d]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"

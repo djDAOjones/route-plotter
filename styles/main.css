@@ -205,15 +205,17 @@ select{
   box-shadow:inset 0 0 0 1px currentColor;
 }
 
-/* Focused, under the pointer too: a 3 px ring inside the button, in its
-   words' colour (white on the banner, 11.7:1 and ≥ 10:1), told apart from
-   hover's 1 px. Inside, because the slot clips what is drawn outside its
-   3 rem, so the page's two-layer ring would be cut (WCAG 2.4.12, 2.4.13;
-   Codex r1 on 7a74755, 6). */
+/* Focused, under the pointer too: a 4 px ring inside the button, in its
+   words' colour (white on the banner, 11.7:1 and ≥ 10:1). Inside, because
+   the slot clips what is drawn outside its 3 rem, so the page's two-layer
+   ring would be cut. 4 px, so the pixels it changes from hover's 1 px, as
+   from no ring, are at least a 2 px perimeter's area at any size the button
+   takes (WCAG 2.4.12, 2.4.13; Codex r1 on 7a74755, 6; Codex r2 on 753f93f,
+   5). */
 .mode-banner-action:focus-visible,
 .mode-banner-action:hover:focus-visible{
   outline:none;
-  box-shadow:inset 0 0 0 3px currentColor;
+  box-shadow:inset 0 0 0 4px currentColor;
 }
 
 .header-title{
@@ -433,6 +435,9 @@ select{
   /* How far above the viewport's bottom the toasts stand where the
      transport scrolls with the page, measured by the app (≤ 64 rem, below) */
   --toast-lift:0px;
+  /* The stack's cap there, where neither the room above the transport's
+     controls nor the room below them takes it (the app's; none otherwise) */
+  --toast-room:none;
   position:absolute;
   left:var(--space-3);
   right:var(--space-3);
@@ -4117,13 +4122,19 @@ a.btn-primary:visited{
   }
 
   /* The transport scrolls with the page here, so the toasts are fixed to
-     the viewport's bottom centre, in view however far it scrolls, and
-     lifted clear of the transport's controls while those are in view
-     (`--toast-lift`, measured by the app on scroll and resize: UI-06 J-12,
-     the lead's Q5). */
+     the viewport, in view however far it scrolls, and over none of the
+     transport's controls: wholly above them or wholly below them, or, where
+     neither room takes the stack, capped to the larger and scrolling inside
+     itself (`--toast-lift`, `--toast-room`, measured by the app on scroll
+     and resize: UI-06 J-12, the lead's Q5; Codex r2 on 753f93f, 2). */
   .toast-container{
     position:fixed;
     bottom:calc(var(--toast-lift) + var(--space-2));
+    max-height:var(--toast-room);
+  }
+
+  .toast-container.is-capped{
+    overflow-y:auto;
   }
 
   .timeline{

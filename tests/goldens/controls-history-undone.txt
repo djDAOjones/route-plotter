@@ -32,13 +32,13 @@ ui ~ #route-scope: div class="scope-group" → div (not shown)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 ui - #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
-ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui - #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, 3c7d9c23)
 ui - #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui - #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
 ui - #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
 ui - #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
 settled:
-  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30779.455541, baseDuration: 21429.352554, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, a7ce24d7] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9697 chars, b3d50e8f]
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30923.834135, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9730 chars, 5d07191a] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9727 chars, 8c251872]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Redo" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"

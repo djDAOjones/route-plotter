@@ -364,9 +364,12 @@ for (const variant of Object.keys(VARIANTS)) {
       expect(exported.length).toBeGreaterThan(5);
       expect(exported.at(-1)).toMatchObject({ head: 1, complete: true });
 
+      // The editor placed as the export places its frames, by progress (`renderFrame`): by time, the progress is
+      // recomputed through the duration and can differ in its last bit, as the durations of a project opened on its
+      // own fit do (UI-06 PR 6 round 3); the time is still compared, exactly.
       const editor = await openProject(fixture(variant));
       for (const state of exported) {
-        expect(sceneAt(editor, state.ms), `${state.ms} ms`).toEqual(state);
+        expect(sceneAfter(editor, () => editor.animationEngine.seekToProgress(state.progress)), `${state.ms} ms`).toEqual(state);
       }
     });
   });

@@ -38,14 +38,16 @@ export const viewportMixin = {
   /**
    * Update canvas size to match export aspect ratio using contain-fit.
    * Maximizes canvas within available space while maintaining aspect ratio.
-   * Called on export resolution change and window resize.
+   * Called on export resolution change and window resize, and as a project
+   * is opened (UI-06 PR 6).
+   * @returns {boolean} Whether it fitted: false in a video export, whose canvas is its own
    */
   updateCanvasAspectRatio() {
     // A video export draws on a canvas of its own size. A size or layout
     // change meanwhile (the export size fields, a preset, Native, a resize)
     // applies when the export ends, when `_exitExportMode` calls this again,
     // not to its remaining frames (DEF-53).
-    if (this._isExportMode) return;
+    if (this._isExportMode) return false;
     const targetAspect = this.exportSettings.resolutionX / this.exportSettings.resolutionY;
     
     // Get available space in canvas-area
@@ -125,6 +127,59 @@ export const viewportMixin = {
     this.render();
     
     console.debug(`📐 [AspectRatio] Canvas set to ${Math.round(canvasWidth)}×${Math.round(canvasHeight)} (${targetAspect.toFixed(2)}:1)`);
+    return true;
+  },
+
+  /**
+   * What a fit set (`updateCanvasAspectRatio`): the canvas's display and
+   * backing sizes, its scale, the room it was fitted to and the transport's
+   * width. A project load that fails after its commit fitted the canvas puts
+   * them back (UI-06 PR 6; Codex's check of the round-3 brief).
+   * @returns {Object|null} null with no canvas
+   * @private
+   */
+  _canvasFit() {
+    if (!this.canvas) return null;
+    const playbar = canvasAreaOf(this.canvas)?.querySelector('.controls');
+    return {
+      styleWidth: this.canvas.style.width,
+      styleHeight: this.canvas.style.height,
+      width: this.canvas.width,
+      height: this.canvas.height,
+      displayWidth: this.displayWidth,
+      displayHeight: this.displayHeight,
+      canvasScale: this.canvasScale,
+      fittedRoom: this._fittedRoom ? { ...this._fittedRoom } : this._fittedRoom,
+      playbarWidth: playbar ? playbar.style.width : null,
+    };
+  },
+
+  /**
+   * Put back a fit `_canvasFit` read, with the context's scale and the
+   * coordinate transform's canvas as that fit set them.
+   * @param {Object|null} fit
+   * @private
+   */
+  _restoreCanvasFit(fit) {
+    if (!fit || !this.canvas) return;
+    this.canvas.style.width = fit.styleWidth;
+    this.canvas.style.height = fit.styleHeight;
+    const playbar = canvasAreaOf(this.canvas)?.querySelector('.controls');
+    if (playbar && fit.playbarWidth !== null) playbar.style.width = fit.playbarWidth;
+    // A backing size set resets the context, so its scale is set again.
+    this.canvas.width = fit.width;
+    this.canvas.height = fit.height;
+    this.canvasScale = fit.canvasScale;
+    if (this.ctx && fit.canvasScale) {
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      this.ctx.scale(fit.canvasScale, fit.canvasScale);
+      this.ctx.imageSmoothingEnabled = true;
+      this.ctx.imageSmoothingQuality = 'high';
+    }
+    this.displayWidth = fit.displayWidth;
+    this.displayHeight = fit.displayHeight;
+    this._fittedRoom = fit.fittedRoom;
+    this.coordinateTransform?.setCanvasDimensions(fit.displayWidth, fit.displayHeight);
   },
   
   /**

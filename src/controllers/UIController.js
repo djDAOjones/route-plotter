@@ -470,9 +470,11 @@ export class UIController {
       // The chip is not a live region (UI-06 J-05): a change of scope is said
       // once, unless focus is on the control that names it or the change's
       // own message says it (a deletion's toast, "Undo": UI-06 PR 6, item 6).
-      if (!this._scopeReachedByFocus(named)) {
-        this.eventBus.emit('ui:announce', { message: text, unlessSaid: true, region: 'scope-chip' });
-      }
+      // Named by focus, the change still cancels the chip's line waiting from
+      // a scope it passed through (Codex r2 on 753f93f, 4).
+      const line = { message: text, unlessSaid: true, region: 'scope-chip' };
+      if (this._scopeReachedByFocus(named)) line.heard = true;
+      this.eventBus.emit('ui:announce', line);
     }
     if (this._scopeRouteBtn) {
       // The current scope is marked as such, never disabled (UI-06 J-08):

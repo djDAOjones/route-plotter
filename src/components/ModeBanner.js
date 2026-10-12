@@ -39,6 +39,11 @@
  * its own, as a waiting owner may) is reconciled, never overwritten: every
  * holder the incoming owner meets leaves by its own exit, once, and an exit
  * already running further up is not run again (Codex r1 on 7a74755, 3).
+ * Such claims are bounded by refusing them, never by dropping a holder: one
+ * from an owner whose exit has run, or is running, in the same claim, and
+ * any past `MAX_HANDOVERS`, is refused before its owner is active — `show`
+ * returns null, and the owner does not enter its mode — so every owner the
+ * slot accepted exits once (Codex r2 on 753f93f, 6).
  *
  * @module ModeBanner
  */
@@ -54,8 +59,8 @@ const bannerOf = new WeakMap();
 /** The properties that bound the slot's height: what an entry or an exit eases. */
 const HEIGHT_PROPERTIES = ['min-height', 'max-height', 'height'];
 
-/** How many holders one claim meets before it stops asking them to leave (exits that keep handing the slot on). */
-const MAX_HANDOVERS = 8;
+/** How many claims made inside one claim's exits it accepts (exits that keep handing the slot on); a further one is refused. */
+export const MAX_HANDOVERS = 8;
 
 /**
  * The slot's height-bearing transitions and how long each takes, delay
@@ -157,8 +162,10 @@ export class ModeBanner {
     this._holder = null;
     /** How deep in `show` calls this is: above 0, a claim is replacing its holders. */
     this._claims = 0;
-    /** The owners whose exit is running (`onReplaced`): none is asked twice. */
-    this._exiting = new Set();
+    /** The owners whose exit has run or is running in this claim (`onReplaced`): none is asked twice, and none claims again in it. */
+    this._leaving = new Set();
+    /** The claims made inside this claim's exits so far, up to `MAX_HANDOVERS`. */
+    this._handovers = 0;
     this._destroyed = false;
     /** @type {{timer: *, listener: Function, reported: boolean}|null} A settle waiting for the height transitions */
     this._settle = null;
@@ -177,7 +184,9 @@ export class ModeBanner {
    * Show `owner`'s banner. Every other owner holding the slot is replaced
    * first: its `onReplaced()` runs to its end, leaving its mode, and so does
    * that of any owner its exit hands the slot to, each once. The same
-   * owner's is redrawn, replacing nothing.
+   * owner's is redrawn, replacing nothing. Inside a claim's exits, a claim
+   * by an owner leaving in it, or one past `MAX_HANDOVERS`, is refused: null,
+   * and its owner must not enter its mode.
    * @param {{onReplaced?: Function}} owner
    * @param {Object} spec
    * @param {string} spec.id - The banner's own id (`network-edit-banner`, …)
@@ -185,13 +194,17 @@ export class ModeBanner {
    * @param {Array<string|{kbd: string}>|string} [spec.text] - What follows, a key named as `{kbd}`
    * @param {string|null} [spec.count] - The line `update` rewrites; null for none
    * @param {Array<{label: string, className?: string, onClick: Function}>} [spec.actions] - Its buttons
-   * @returns {{root: HTMLElement, actions: HTMLButtonElement[], count: HTMLElement|null}|null}
+   * @returns {{root: HTMLElement, actions: HTMLButtonElement[], count: HTMLElement|null}|null} null when refused
    */
   show(owner, { id, title = '', text = [], count = null, actions = [] } = {}) {
     if (this._destroyed || !this.slot) return null;
     // Only the outermost claim tells the height: a banner shown and replaced
     // inside it is gone before anything is laid out.
     const outermost = this._claims === 0;
+    if (!outermost) {
+      if (this._leaving.has(owner) || this._handovers >= MAX_HANDOVERS) return null;
+      this._handovers += 1;
+    }
     const heightBefore = outermost ? this.slot.offsetHeight : 0;
     const wasEmpty = !this._holder;
     this._claims += 1;
@@ -201,6 +214,10 @@ export class ModeBanner {
       drawn = this._draw(owner, { id, title, text, count, actions });
     } finally {
       this._claims -= 1;
+      if (outermost) {
+        this._leaving.clear();
+        this._handovers = 0;
+      }
     }
     if (outermost) {
       if (wasEmpty) this._heightChanged(true);
@@ -212,25 +229,20 @@ export class ModeBanner {
   /**
    * Ask every holder other than `owner` to leave, by its own exit, each once:
    * one whose exit shows another owner's banner (a claim inside the exit)
-   * leaves first, then that owner leaves in turn. A holder whose exit is
-   * already running further up (it claimed again before it hid) loses its
-   * banner, not a second exit. An owner that leaves its banner up loses it
-   * all the same.
+   * leaves first, then that owner leaves in turn. A holder whose exit has
+   * already run or is running further up (it claimed for another before it
+   * hid) loses its banner, not a second exit. An owner that leaves its banner
+   * up loses it all the same. It ends: an owner leaves once, and the claims
+   * its exits make are bounded (`show`).
    * @param {Object} owner
    * @private
    */
   _replaceHolders(owner) {
-    for (let handovers = 0; this._holder && this._holder.owner !== owner; handovers += 1) {
+    while (this._holder && this._holder.owner !== owner) {
       const current = this._holder;
-      if (this._exiting.has(current.owner) || handovers >= MAX_HANDOVERS) {
-        this._clear();
-        return;
-      }
-      this._exiting.add(current.owner);
-      try {
+      if (!this._leaving.has(current.owner)) {
+        this._leaving.add(current.owner);
         current.owner.onReplaced?.();
-      } finally {
-        this._exiting.delete(current.owner);
       }
       if (this._holder === current) this._clear();
     }
@@ -388,13 +400,19 @@ export class ModeBanner {
    * its fallback timer. An ease the fallback outran still reports its end:
    * the room is final only then (a throttled pane). A change that eases
    * nothing (a replacement, a count line) while an ease runs is told at that
-   * ease's end, never mid-way (the lead's settlement on 7a74755).
+   * ease's end, never mid-way (the lead's settlement on 7a74755); one after
+   * a fallback that outran the ease is told at once, and the late end is
+   * still waited for and told after it, the final height (Codex r2 on
+   * 753f93f, 1).
    * @param {boolean} animated - Whether the change runs the slot's height transition
    * @private
    */
   _heightChanged(animated) {
     if (this._destroyed) return;
-    if (!animated && this._settle && !this._settle.reported) return;
+    if (!animated && this._settle) {
+      if (this._settle.reported) this.onHeightChange?.();
+      return;
+    }
     this._cancelSettle();
     const waits = animated ? heightTransitions(this.slot) : new Map();
     if (waits.size === 0) {

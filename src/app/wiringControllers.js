@@ -19,6 +19,7 @@ import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 import { loadBackgroundFile } from './backgroundLoading.js';
 import { refuseWhileExporting } from './exporting.js';
 import { returnFocus } from '../components/ModeBanner.js';
+import { regionOperation } from './regionLines.js';
 
 /**
  * Reorder waypoints to a new major order, each major carrying its
@@ -385,12 +386,15 @@ export const wiringControllersMixin = {
       const active = document.activeElement;
       const focusAtArm = this.modeBanner?.holdsFocus(owner) ? this._branchGesture?.focusAtArm ?? null : active;
       const cancel = () => this.eventBus.emit('route:branch-cancel');
-      this.modeBanner?.show(owner, {
+      const shown = this.modeBanner?.show(owner, {
         id: 'branch-banner',
         title: `Branch from ${label}`,
         text: [' — click where it should go. ', { kbd: 'Esc' }, ' to cancel.'],
         actions: [{ label: 'Cancel', className: 'banner-cancel', onClick: cancel }],
       });
+      // Refused (claimed inside a replacement's exits, past the slot's
+      // bound): no gesture is armed (Codex r2 on 753f93f, 6).
+      if (this.modeBanner && !shown) return;
       this.interactionHandler.branchArmed = waypoint;
       this._branchGesture = { forkId: waypoint.id, focusAtArm, owner };
       // Said once (UI-06 J-05): the banner is not a live region.
@@ -605,30 +609,33 @@ export const wiringControllersMixin = {
       // goes in a single pass with a single undo entry (the per-waypoint
       // deleteWaypoint path would snapshot and recalc once per waypoint)
       if (this.selectedWaypoints.length > 1) {
-        const doomed = [...this.selectedWaypoints];
-        const firstIndex = this.waypoints.indexOf(doomed[0]);
-        for (const wp of doomed) {
-          const index = this.waypoints.indexOf(wp);
-          if (index > -1) {
-            this.waypoints.splice(index, 1);
-            this._removeWaypointFromMap(wp);
+        // Its message says the change: the chip and the list it moves are not said again (UI-06 PR 6)
+        regionOperation(this, cover => {
+          const doomed = [...this.selectedWaypoints];
+          const firstIndex = this.waypoints.indexOf(doomed[0]);
+          for (const wp of doomed) {
+            const index = this.waypoints.indexOf(wp);
+            if (index > -1) {
+              this.waypoints.splice(index, 1);
+              this._removeWaypointFromMap(wp);
+            }
           }
-        }
-        this.selectedWaypoint = null;
-        this.selectedWaypoints = [];
-        if (this.interactionHandler?.setSelection) {
-          this.interactionHandler.setSelection([], null);
-        } else {
-          this.interactionHandler?.setSelectedWaypoint?.(null);
-        }
-        this.uiController?.setSelection([], null);
-        // One pass through the shared deleted pipeline: one undo
-        // snapshot, one path recalc, one autosave. The deselected event
-        // then walks SectionController back to Route scope.
-        this.eventBus.emit('waypoint:deleted', firstIndex);
-        this.eventBus.emit('waypoint:deselected');
-        this.announce(`${doomed.length} waypoints deleted`);
-        this.coverRegionLines?.();
+          this.selectedWaypoint = null;
+          this.selectedWaypoints = [];
+          if (this.interactionHandler?.setSelection) {
+            this.interactionHandler.setSelection([], null);
+          } else {
+            this.interactionHandler?.setSelectedWaypoint?.(null);
+          }
+          this.uiController?.setSelection([], null);
+          // One pass through the shared deleted pipeline: one undo
+          // snapshot, one path recalc, one autosave. The deselected event
+          // then walks SectionController back to Route scope.
+          this.eventBus.emit('waypoint:deleted', firstIndex);
+          this.eventBus.emit('waypoint:deselected');
+          this.announce(`${doomed.length} waypoints deleted`);
+          cover();
+        });
         return;
       }
 
@@ -1291,9 +1298,14 @@ export const wiringControllersMixin = {
       // Leg geometry changed under the pointer; next mousemove re-tests
       this.canvasHover = null;
 
-      this.eventBus.emit('waypoint:added', newWp);
-      this.eventBus.emit('waypoint:selected', newWp);
-      this.announce('Minor waypoint added to leg');
+      // Its message says the change: the chip's "Editing · minor waypoint"
+      // after it would add no number or count (Codex r2 on 753f93f, Q1)
+      regionOperation(this, cover => {
+        this.eventBus.emit('waypoint:added', newWp);
+        this.eventBus.emit('waypoint:selected', newWp);
+        this.announce('Minor waypoint added to leg');
+        cover();
+      });
     });
 
     // Help events: Help is a dialog of its own, its shortcuts grid open; the
@@ -1327,9 +1339,11 @@ export const wiringControllersMixin = {
       // error), so Escape never cleared waypoint selection through this
       // handler. Route through the canonical deselected pipeline.
       if (this.selectedWaypoint) {
-        this.eventBus.emit('waypoint:deselected');
-        this.announce('Selection cleared');
-        this.coverRegionLines?.();
+        regionOperation(this, cover => {
+          this.eventBus.emit('waypoint:deselected');
+          this.announce('Selection cleared');
+          cover();
+        });
       }
     });
     
@@ -1384,9 +1398,11 @@ export const wiringControllersMixin = {
     // queued with the app's own, so it waits its turn too (DEF-45)
     // `unlessSaid`: what a region that is no longer live said alone, said
     // once unless the change's own message says it (UI-06 PR 6, item 6);
-    // `region`, whose line it is: a later one of the same turn replaces it.
-    this.eventBus.on('ui:announce', ({ message, unlessSaid = false, region }) => {
-      if (unlessSaid) this.announceUnlessSaid(message, region);
+    // `region`, whose line it is: a later one of the same turn replaces it;
+    // `heard`, focus names the change already: it cancels the region's line
+    // still waiting, and says none (Codex r2 on 753f93f, 4).
+    this.eventBus.on('ui:announce', ({ message, unlessSaid = false, region, heard = false }) => {
+      if (unlessSaid) this.announceUnlessSaid(message, region, { heard });
       else this.announce(message);
     });
     

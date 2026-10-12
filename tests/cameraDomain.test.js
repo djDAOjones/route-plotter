@@ -65,7 +65,10 @@ const FIXTURES = {
   linear: {
     id: 'parm-aerial-walk',
     zooms: { 'ex-parm-1': 1, 'ex-parm-2': 3, 'ex-parm-3': 1 },
-    instants: { start: 0, climb: 960, held: 4000, lastLeg: 8000, end: 9600 },
+    // The same domains, on its timeline as the project opens on its own 16:9 fit (UI-06 PR 6 round 3, the lead's
+    // settlement; it kept the start's square): 2's wait 3,615–8,115 ms, the last leg to 10,878, the end's wait to
+    // 12,378 (8,000 and 9,600 were the last leg and the end's wait on the square).
+    instants: { start: 0, climb: 960, held: 4000, lastLeg: 10000, end: 12000 },
   },
 };
 

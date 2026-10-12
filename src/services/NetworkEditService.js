@@ -142,7 +142,8 @@ export class NetworkEditService {
     // The slot first, before anything else here changes: another mode's
     // banner ends that mode (an area's Preview restore among what it does)
     // before this one is active (UI-06 PR 6; Codex on 9466a3f, blocking 1).
-    this.claimBanner(layer);
+    // A claim the slot refuses enters nothing (Codex r2 on 753f93f, 6).
+    if (!this.claimBanner(layer)) return;
     if (this.layer) this.clearInspection();
 
     this.active = true;
@@ -170,11 +171,13 @@ export class NetworkEditService {
    * Preview, and `enter` before it is active. Another mode's banner is
    * replaced, that mode ended; this service's own, for this layer, stays.
    * @param {import('../models/FlowLayer.js').FlowLayer} layer
+   * @returns {boolean} Whether the slot is this mode's (true on a page with
+   *   no slot); false, refused, the mode is not entered
    */
   claimBanner(layer) {
-    if (!layer) return;
+    if (!layer) return false;
     this._modeBanner = pageModeBanner();
-    if (this._bannerLayer === layer && this._modeBanner?.isShowing(this._bannerOwner)) return;
+    if (this._bannerLayer === layer && this._modeBanner?.isShowing(this._bannerOwner)) return true;
     this._countLine = countLine(layer);
     const shown = this._modeBanner?.show(this._bannerOwner, {
       id: 'network-edit-banner',
@@ -187,6 +190,7 @@ export class NetworkEditService {
     });
     this._banner = shown?.root ?? null;
     this._bannerLayer = shown ? layer : null;
+    return !this._modeBanner || Boolean(shown);
   }
 
   /**

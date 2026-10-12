@@ -7,19 +7,19 @@ main fillRect 0 0 660 660
 main save
 main translate 330 330
 main scale 1.75 1.75
-main translate -188.571 -428.111
+main translate -302.779 -428.111
 main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -247.5 1155 1155
 main restore
 main set:globalCompositeOperation destination-in
 main translate 330 330
 main scale 1.75 1.75
-main translate -188.571 -428.111
+main translate -302.779 -428.111
 main drawImage [canvas mask] 0 0 660 660
 main restore
 main save
 main translate 330 330
 main scale 1.75 1.75
-main translate -188.571 -428.111
+main translate -302.779 -428.111
 main set:globalAlpha 0.005
 main set:fillStyle #fff
 main fillRect -247.5 -247.5 1155 1155
@@ -30,7 +30,7 @@ vector set:lineJoin round
 vector save
 vector translate 330 330
 vector scale 1.75 1.75
-vector translate -188.571 -428.111
+vector translate -302.779 -428.111
 vector save
 vector set:globalAlpha 1
 vector beginPath
@@ -116,19 +116,19 @@ main fillRect 0 0 660 660
 main save
 main translate 330 330
 main scale 1.75 1.75
-main translate -188.571 -431.577
+main translate -293.642 -431.577
 main drawImage [image image/png base64 1586916 bytes iVBORw0KGgoA…] -247.5 -247.5 1155 1155
 main restore
 main set:globalCompositeOperation destination-in
 main translate 330 330
 main scale 1.75 1.75
-main translate -188.571 -431.577
+main translate -293.642 -431.577
 main drawImage [canvas mask] 0 0 660 660
 main restore
 main save
 main translate 330 330
 main scale 1.75 1.75
-main translate -188.571 -431.577
+main translate -293.642 -431.577
 main set:globalAlpha 0.005
 main set:fillStyle #fff
 main fillRect -247.5 -247.5 1155 1155
@@ -139,7 +139,7 @@ vector set:lineJoin round
 vector save
 vector translate 330 330
 vector scale 1.75 1.75
-vector translate -188.571 -431.577
+vector translate -293.642 -431.577
 vector save
 vector set:globalAlpha 1
 vector beginPath

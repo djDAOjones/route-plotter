@@ -45,9 +45,10 @@ function stateOf(app) {
 /**
  * An app with a project of its own (custom images; two edits, one undone, so
  * there is history to undo and to redo), and a project file that differs
- * from it in each surface `stateOf` compares.
+ * from it in each surface `stateOf` compares, its export size `exportSize`
+ * where given.
  */
-async function appAndIncomingProject() {
+async function appAndIncomingProject({ exportSize = null } = {}) {
   const app = await bootApp();
   await app.ready;
   expect(await loadSnapshot(app, authoredExtrasProject())).toBe(true);
@@ -73,6 +74,7 @@ async function appAndIncomingProject() {
     ...incoming.animationState,
     mode: before.mode === 'constant-time' ? 'constant-speed' : 'constant-time',
   };
+  if (exportSize) incoming.exportSettings = { ...incoming.exportSettings, ...exportSize };
   vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({
     projectData: incoming, imageAssets: [], backgroundBase64: null,
   });
@@ -143,4 +145,41 @@ test('a rollback whose undo step fails still restores the rest: model, assets, t
   const after = stateOf(app);
   expect({ ...after, history: before.history }).toEqual(before);
   expect(recordedConsole()).toContainEqual(expect.stringMatching(/Project rollback could not restore the undo history/));
+});
+
+/**
+ * The canvas as a fit leaves it — its display and backing sizes, the room it
+ * was fitted to, the coordinate transform's canvas and the image's place on
+ * it — and the timing and transport.
+ */
+function geometryOf(app) {
+  const state = app.animationEngine.state;
+  return {
+    display: [app.displayWidth, app.displayHeight],
+    backing: [app.canvas.width, app.canvas.height],
+    style: [app.canvas.style.width, app.canvas.style.height],
+    fittedRoom: { ...app._fittedRoom },
+    coordinateCanvas: [app.coordinateTransform.canvasWidth, app.coordinateTransform.canvasHeight],
+    image: [app.imageToCanvas(0, 0), app.imageToCanvas(1, 1)],
+    duration: state.duration,
+    transport: { progress: state.progress, currentTime: state.currentTime, isPlaying: state.isPlaying, isPaused: state.isPaused },
+  };
+}
+
+test('a failed load whose project has another export aspect puts back the canvas its commit fitted: sizes, transform, timing and transport (UI-06 PR 6 round 3: the commit fits the canvas to the project\'s export size now)', async () => {
+  allowConsole(/Failed to load project/);
+  const { app, before } = await appAndIncomingProject({ exportSize: { resolutionX: 1000, resolutionY: 1000 } });
+  app.updateCanvasAspectRatio();
+  app.animationEngine.seekToProgress(0.4);
+  const geometry = geometryOf(app);
+  expect(geometry.display[0] / geometry.display[1]).not.toBeCloseTo(1, 3);
+  failLate(app);
+  const fitted = vi.spyOn(app, 'updateCanvasAspectRatio');
+
+  expect(await app.loadProject(new File([''], 'incoming.zip'))).toBe(false);
+
+  // The commit fitted the canvas to the incoming square before it failed.
+  expect(fitted).toHaveBeenCalled();
+  expect(geometryOf(app)).toEqual(geometry);
+  expect(stateOf(app)).toEqual(before);
 });

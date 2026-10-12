@@ -3245,7 +3245,6 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
-  +0 ms said "Editing · minor waypoint"
   +50 ms · retime
   +50 ms animation:durationChange 10827.6803
   +51 ms animation:update AnimationState  (no listener)
@@ -3358,7 +3357,6 @@ at once: autosave 1, queued render 3, path 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 later: autosave written 1, render 1, retime 1
   +0 ms · render
-  +0 ms said "Editing · minor waypoint"
   +50 ms · retime
   +50 ms animation:durationChange 28562.6356
   +51 ms animation:update AnimationState  (no listener)

@@ -11,7 +11,7 @@ ui ~ #path-glow-intensity: input aria-describedby="path-glow-value path-glow-int
 ui ~ #path-glow-value: span class="range-readout slider-value" :text="65%" → span class="range-readout slider-value" :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, de1e0b98] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, a36d834f]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9729 chars, 3063dfc5] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9729 chars, a7ff6532]
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
 ## #path-glow-intensity · double-click
@@ -25,5 +25,5 @@ ui ~ #path-glow-intensity: input aria-describedby="path-glow-value path-glow-int
 ui ~ #path-glow-value: span class="range-readout slider-value" :text="65%" → span class="range-readout slider-value" :text="50%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, de1e0b98] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9698 chars, fc276e16]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9729 chars, 3063dfc5] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9728 chars, 7681cf53]
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"

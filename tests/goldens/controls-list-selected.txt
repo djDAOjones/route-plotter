@@ -688,7 +688,7 @@ ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, 3c7d9c23)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
@@ -715,7 +715,7 @@ ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status
 ui ~ #waypoint-scope: div class="scope-group" data-mixed-reset-bound="true" → div (not shown)
 ui ~ #route-scope: div (not shown) → div class="scope-group"
 ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 27 inside, f989a6ad)
-ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, ad6e1c1d)
+ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, 3c7d9c23)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
 ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)

@@ -222,12 +222,19 @@ export const playbackMixin = {
       return;
     }
     tip.owner = { onReplaced: () => this._endPreviewTip() };
-    banner.show(tip.owner, {
+    const shown = banner.show(tip.owner, {
       id: 'preview-tip-banner',
       title: 'Tip:',
       text: ' Check your sequence in Preview mode before exporting',
       actions: [{ label: 'Dismiss', className: 'banner-dismiss', onClick: () => this._endPreviewTip() }],
     });
+    // Refused (offered inside a replacement's exits, past the slot's bound):
+    // it waits for the slot as it waits for a mode (Codex r2 on 753f93f, 6).
+    if (!shown) {
+      tip.owner = null;
+      tip.stopWaiting = banner.whenFree(() => this._offerPreviewTip());
+      return;
+    }
     // Read politely, after what start-up says it restored and whatever
     // else waits, so it never cuts in (UI-06; the owner, 2026-10-09)
     this.announce(PREVIEW_TIP, 'polite', { whenIdle: true });

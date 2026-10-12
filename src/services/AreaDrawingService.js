@@ -113,7 +113,9 @@ export class AreaDrawingService {
     // The slot first, before anything here changes: another mode's banner
     // ends that mode, its Preview restore included, before this draw records
     // the Preview it starts from (UI-06 PR 6; Codex on 9466a3f, blocking 1).
-    this._showBanner();
+    // A claim the slot refuses (made inside a replacement's exits, past its
+    // bound) starts no draw (Codex r2 on 753f93f, 6).
+    if (!this._showBanner()) return;
     
     this.isDrawing = true;
     this.targetWaypoint = waypoint;
@@ -267,6 +269,7 @@ export class AreaDrawingService {
   /**
    * Show the draw-mode banner in the page's banner slot, below the header
    * (UI-06 J-12): another mode's banner there ends that mode first.
+   * @returns {boolean} Whether the slot took it (true on a page with no slot)
    * @private
    */
   _showBanner() {
@@ -280,6 +283,7 @@ export class AreaDrawingService {
       actions: [{ label: 'Cancel', className: 'banner-cancel', onClick: () => this.cancelDrawing() }],
     });
     this._banner = shown?.root ?? null;
+    return !this._modeBanner || Boolean(shown);
   }
   
   /**
