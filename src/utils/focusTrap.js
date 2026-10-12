@@ -99,6 +99,12 @@ const noModalWaiters = new Set();
  * closes, once the close has finished (a dialog's Escape hides it after its
  * trap lets go). The first-start tip waits for the welcome this way (UI-06
  * PR 6, item 7): closing a dialog says nothing on the bus.
+ *
+ * Its contract: trapped dialogs only. Every dialog the app opens does so
+ * through `createFocusTrap` (the welcome, Help, the codec, Clear All,
+ * Discard, the share disclosure, diagnostics), so a close is a trap's
+ * `deactivate`. A dialog shown and hidden without a trap is not watched: a
+ * waiter it held wakes at the next trap's close (Codex r1 on 7a74755, 8).
  * @param {Function} callback
  * @returns {Function} Stop waiting
  */

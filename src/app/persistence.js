@@ -1253,6 +1253,8 @@ export const persistenceMixin = {
       } else {
         this.announce('Project loaded');
       }
+      // It says the change: the regions' lines the open moves are not said again (UI-06 PR 6)
+      this.coverRegionLines?.();
       console.log(`📦 Project loaded: ${file.name} (${this.waypoints.length} waypoints, ${this.imageAssetService.getAssetCount()} assets)`);
       return true;
     } catch (err) {
@@ -1503,6 +1505,8 @@ export const persistenceMixin = {
         this.announce(earlier ? `Previous session restored.${earlier}` : 'Previous session restored',
           earlier ? 'assertive' : 'polite', RECOVERY_NOTICE);
       }
+      // It says the change: the regions' lines the restore moves are not said again (UI-06 PR 6)
+      this.coverRegionLines?.();
       return true;
     } catch (error) {
       // After the commit: the project is live, so there is no record to keep.

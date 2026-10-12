@@ -105,12 +105,16 @@ export function clearProject(app) {
       'Browser recovery could not be cleared; reload may restore old work.',
       'assertive'
     );
-  } else if (unrestored.discarded > 1) {
-    app.announce(`Project cleared, and the ${unrestored.discarded} sessions that couldn't be restored were discarded`);
-  } else if (unrestored.discarded === 1) {
-    app.announce("Project cleared, and the session that couldn't be restored was discarded");
   } else {
-    app.announce('Project cleared');
+    if (unrestored.discarded > 1) {
+      app.announce(`Project cleared, and the ${unrestored.discarded} sessions that couldn't be restored were discarded`);
+    } else if (unrestored.discarded === 1) {
+      app.announce("Project cleared, and the session that couldn't be restored was discarded");
+    } else {
+      app.announce('Project cleared');
+    }
+    // It says the change: the chip and the empty list it moves are not said again (UI-06 PR 6)
+    app.coverRegionLines?.();
   }
 
   console.log('Cleared all waypoints and path');

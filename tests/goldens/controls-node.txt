@@ -31,6 +31,7 @@ ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="nod
 ui ~ #node-section-title: span :text="Node · Main entrance · entry" → span :text="Node · Main entrance · pass-through"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="normal"
 settled:
+  announced "Editing · Node · pass-through"
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9701 chars, f9a13038]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -53,6 +54,7 @@ ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="nod
 ui ~ #node-section-title: span :text="Node · Main entrance · entry" → span :text="Node · Main entrance · exit"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="exit"
 settled:
+  announced "Editing · Node · exit"
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9699 chars, 32791779]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

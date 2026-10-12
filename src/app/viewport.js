@@ -10,13 +10,24 @@ import { resolveRenderReference } from '../utils/renderReference.js';
  */
 
 /**
+ * The canvas area holding `canvas`: its frame's parent since the Preview
+ * badge stands in the canvas's own box (UI-06 J-12); the canvas's parent on
+ * a page with no frame.
+ * @param {HTMLCanvasElement} canvas
+ * @returns {HTMLElement}
+ */
+function canvasAreaOf(canvas) {
+  return canvas.closest('.canvas-area') ?? canvas.parentElement;
+}
+
+/**
  * The room the canvas area gives `canvas`: its width, and its height less
  * the transport's (UI-06 PR 6: the banner slot compares it with the last fit).
  * @param {HTMLCanvasElement} canvas
  * @returns {{width: number, height: number}}
  */
 function canvasAreaRoom(canvas) {
-  const container = canvas.parentElement;
+  const container = canvasAreaOf(canvas);
   const playbar = container.querySelector('.controls');
   const playbarHeight = playbar ? playbar.offsetHeight : 60;
   return { width: container.clientWidth, height: container.clientHeight - playbarHeight };
@@ -38,7 +49,7 @@ export const viewportMixin = {
     const targetAspect = this.exportSettings.resolutionX / this.exportSettings.resolutionY;
     
     // Get available space in canvas-area
-    const container = this.canvas.parentElement;
+    const container = canvasAreaOf(this.canvas);
     const playbar = container.querySelector('.controls');
     const { width: availableWidth, height: availableHeight } = canvasAreaRoom(this.canvas);
     // The room this fit used: the banner slot refits only when it has changed (UI-06 PR 6)

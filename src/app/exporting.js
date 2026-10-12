@@ -113,6 +113,12 @@ export const exportingMixin = {
     height = height & ~1;
 
     this._isExportMode = true;
+    // A refit's path recalculation still to come (a banner shown or gone, a
+    // resize, just before) would rebuild the path inside the export, which
+    // the note below rules out: it is dropped, and the exit's refit, which
+    // rebuilds the path for the display, stands for it (UI-06 PR 6, Codex r1
+    // on 7a74755, 1).
+    this._cancelFittedPathRecalculation?.();
 
     // Resize backing store to export resolution
     this.canvas.width = width;
@@ -152,8 +158,9 @@ export const exportingMixin = {
 
     // updateCanvasAspectRatio resets canvas.width/height, ctx transform,
     // displayWidth/Height, coordinate transform, image bounds, and re-renders.
-    // It is the refit a banner shown or hidden meanwhile waited for, so none
-    // is left held for later (UI-06 PR 6).
+    // It is the refit a banner shown or hidden meanwhile waited for, and the
+    // path rebuild the export's start dropped, so none is left held for later
+    // (UI-06 PR 6).
     this._modeBannerRefitPending = false;
     this.updateCanvasAspectRatio();
 

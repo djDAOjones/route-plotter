@@ -89,6 +89,9 @@ import { focusLands } from './utils/focusTrap.js';
 /** Toasts on their way out, which focus is never given to (UI-06 B-35). */
 const leavingToasts = new WeakSet();
 
+/** The gap between the toasts and what they stand above: `--space-2`, the stylesheet's (UI-06 J-12). */
+const TOAST_GAP_PX = 8;
+
 // Main application class for Route Plotter v3
 class RoutePlotter {
   constructor() {
@@ -362,6 +365,8 @@ class RoutePlotter {
       toastContainer: document.getElementById('toast-container'),
       // The one banner slot below the header (UI-06 J-12)
       modeBanner: document.getElementById('mode-banner'),
+      // Preview mode's badge, on the canvas's own corner: shown in Preview alone (UI-06 J-12, Codex r1 2)
+      previewBadge: document.getElementById('preview-badge'),
       // Ripple controls
       rippleControls: document.getElementById('ripple-controls'),
       rippleThickness: document.getElementById('ripple-thickness'),
@@ -561,6 +566,9 @@ class RoutePlotter {
     
     // Initialize UI Controller and Interaction Handler
     this.uiController = new UIController(this.elements, this.eventBus);
+    // Whose a control of the Layers strip is, which this app builds (crowds.js): the chip's
+    // line is not said where focus is on the row of what it now names (UI-06 PR 6, Codex r1 5).
+    this.uiController.stripControlOf = element => this._stripControls?.().get(element);
     this.interactionHandler = new InteractionHandler(this.canvas, this.eventBus);
     this.interactionHandler.setEnabled(false);
     
@@ -580,6 +588,8 @@ class RoutePlotter {
     
     // Where a toast that goes gives focus back (UI-06 B-35)
     this._trackFocusBeforeToasts();
+    // Toasts kept in view, clear of the transport, where it is in the page's flow (UI-06 J-12, Q5)
+    this._placeToastsOnScroll();
 
     // Event delegation for data-action buttons (help, shortcuts, etc.)
     document.addEventListener('click', (e) => {
@@ -691,14 +701,43 @@ class RoutePlotter {
     }
     this._resizeTimeout = setTimeout(() => {
       this._resizeTimeout = null;
-      // Recalculate path since pathPoints are in canvas coordinates
-      // Waypoints use normalized coords (0-1) so they scale automatically,
-      // but pathPoints need recalculation for the new canvas dimensions
-      if (this.waypoints?.length >= 2) {
-        this.calculatePath();
-        this.render(); // Re-render with correct path
-      }
+      this._recalculateFittedPath();
     }, 100); // 100ms debounce
+  }
+
+  /**
+   * The refit's path recalculation, once its debounce has run: pathPoints
+   * are in canvas coordinates, so the new canvas size needs them rebuilt
+   * (waypoints are normalised and scale by themselves). Never inside a video
+   * export: it draws at its own size, and its exit refits and rebuilds the
+   * path for the display (`_exitExportMode`; an export cancels the debounce
+   * as it starts). Not while playback runs, which a rebuild would retime: it
+   * is held and runs once playback pauses, completes or resets (Codex r1 on
+   * 7a74755, 1).
+   * @private
+   */
+  _recalculateFittedPath() {
+    if (this._isExportMode) return;
+    if (this.animationEngine?.state?.isActivelyPlaying?.()) {
+      this._fittedPathPending = true;
+      return;
+    }
+    this._fittedPathPending = false;
+    if (this.waypoints?.length >= 2) {
+      this.calculatePath();
+      this.render(); // Re-render with correct path
+    }
+  }
+
+  /**
+   * An export starts: the refit's recalculation still to come is dropped,
+   * its exit's refit standing for it (UI-06 PR 6, Codex r1 on 7a74755, 1).
+   * @private
+   */
+  _cancelFittedPathRecalculation() {
+    if (this._resizeTimeout) clearTimeout(this._resizeTimeout);
+    this._resizeTimeout = null;
+    this._fittedPathPending = false;
   }
 
   /**
@@ -727,16 +766,24 @@ class RoutePlotter {
     this._refitCanvasToArea();
   }
 
-  /** Run a refit the slot held back while playing (`_refitAfterModeBanner`). @private */
+  /**
+   * Run a refit the slot held back while playing (`_refitAfterModeBanner`),
+   * and a refit's path recalculation held back the same way
+   * (`_recalculateFittedPath`).
+   * @private
+   */
   _drainModeBannerRefit() {
     if (this._modeBannerRefitPending) this._refitAfterModeBanner();
+    if (this._fittedPathPending) this._recalculateFittedPath();
   }
 
   /**
    * Stop what the banner slot and its owners wait on or keep running: the
    * first-start tip's timers and waits, the slot's settle, an armed branch's
-   * focus step, the refit held back and the resize's debounce. `destroy()`
-   * runs it, and so does a test's teardown (UI-06 PR 6).
+   * focus step, the refit and its path recalculation held back, the resize's
+   * debounce, and the regions' lines waiting for their turn's end, none of
+   * which is said after this (Codex r1 on 7a74755, 7). `destroy()` runs it,
+   * and so does a test's teardown (UI-06 PR 6).
    * @private
    */
   _stopModeBannerWork() {
@@ -744,8 +791,8 @@ class RoutePlotter {
     this._stopBranchFocus?.();
     this.modeBanner?.destroy();
     this._modeBannerRefitPending = false;
-    if (this._resizeTimeout) clearTimeout(this._resizeTimeout);
-    this._resizeTimeout = null;
+    this._cancelFittedPathRecalculation();
+    this._stopRegionLines();
   }
 
   /**
@@ -902,6 +949,7 @@ class RoutePlotter {
     toast.appendChild(dismiss);
     
     container.appendChild(toast);
+    this._placeToasts();
     
     // Trigger enter animation on next frame
     requestAnimationFrame(() => toast.classList.add('is-visible'));
@@ -934,6 +982,57 @@ class RoutePlotter {
       if (!container.contains(event.target)) this._focusBeforeToast = event.target;
     };
     document.addEventListener('focusin', this._toastFocusListener);
+  }
+
+  /**
+   * Keep the toasts in view where the transport is in the page's flow (at
+   * 64 rem and below it scrolls with the page, UI-06 J-12): the container is
+   * fixed to the viewport's bottom centre there, lifted clear of the
+   * transport's controls while their top is in view with room above it for
+   * the toasts, else at the viewport's bottom, where the controls are not
+   * (scrolled away above, or not reached yet below). Measured as a toast
+   * shows, and on each scroll and resize while one shows (the lead's Q5,
+   * Codex's check of the round-2 brief). At full width the container stands
+   * on the sticky transport, as built, and nothing is written.
+   * @private
+   */
+  _placeToasts() {
+    const container = this.elements.toastContainer;
+    const controls = container?.parentElement;
+    if (!container || !controls) return;
+    const inFlow = window.matchMedia?.('(max-width: 64rem)').matches ?? false;
+    if (!inFlow) {
+      if (container.style.getPropertyValue('--toast-lift')) container.style.removeProperty('--toast-lift');
+      return;
+    }
+    const { top } = controls.getBoundingClientRect();
+    const viewport = window.innerHeight;
+    const roomAbove = top - container.offsetHeight - TOAST_GAP_PX;
+    const lift = top < viewport && roomAbove >= 0 ? viewport - top : 0;
+    container.style.setProperty('--toast-lift', `${Math.round(lift)}px`);
+  }
+
+  /**
+   * Place the toasts again on every scroll, of the page or of any part of
+   * it, and every resize, while one shows (`_placeToasts`); `destroy()`
+   * stops it.
+   * @private
+   */
+  _placeToastsOnScroll() {
+    if (this._toastPlacement) return;
+    this._toastPlacement = () => {
+      if (this.elements.toastContainer?.querySelector('.toast')) this._placeToasts();
+    };
+    window.addEventListener('scroll', this._toastPlacement, { capture: true, passive: true });
+    window.addEventListener('resize', this._toastPlacement);
+  }
+
+  /** Stop placing the toasts on scroll and resize. @private */
+  _stopPlacingToasts() {
+    if (!this._toastPlacement) return;
+    window.removeEventListener('scroll', this._toastPlacement, { capture: true });
+    window.removeEventListener('resize', this._toastPlacement);
+    this._toastPlacement = null;
   }
 
   /** Stop remembering where focus was before the toasts. @private */
@@ -998,6 +1097,8 @@ class RoutePlotter {
       this.eventBus.emit('ui:toast', {
         message: `Deleted ${waypoint.name || 'waypoint'} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
       });
+      // It says the change: the chip and the empty list it moves are not said again (UI-06 PR 6)
+      this.coverRegionLines();
     }
   }
   
@@ -1045,39 +1146,66 @@ class RoutePlotter {
    */
   announce(message, priority = 'polite', options) {
     this._announcements.announce(message, priority, options);
-    this._noteSaid();
   }
 
   /**
-   * Say `message` once this turn's work is done, unless something else was
-   * said in it: what a region that was live used to say alone (the scope
-   * chip's words, the network's count, the empty list), now said through the
-   * one announcer, once per change, and not twice where the change's own
-   * message already says it ("Deleted …", "Undo", "Node placed": UI-06 PR 6,
-   * item 6). Two such messages of one turn are both said.
+   * Say `message`, what a region that was live used to say alone (the scope
+   * chip's words, the network's count, the empty list), once the turn that
+   * changed it is over: the task it ran in, every continuation that task
+   * awaited included. It is not said when the operation of that turn says
+   * the change in its own message (`coverRegionLines`). Nothing else covers
+   * it — not the status line ("Unsaved changes"), a notice, or the start's
+   * tip waiting its turn — so the count, the scope and the type are still
+   * heard beside them, and two such lines of one turn are both said (UI-06
+   * PR 6, item 6; Codex r1 on 7a74755, 4). A region's line written again in
+   * the same turn replaces its first: what the region shows at the turn's
+   * end is what is said, not a state it passed through.
    * @param {string} message
+   * @param {string} [region] - Whose line it is (`scope-chip`, …); each message its own by default
    */
-  announceUnlessSaid(message) {
-    if (this._saidThisTurn) return;
-    const said = this._saidSerial ?? 0;
-    queueMicrotask(() => {
-      if (!this._announcements || (this._saidSerial ?? 0) !== said) return;
-      this._sayingUnlessSaid = true;
-      try {
-        this.announce(message);
-      } finally {
-        this._sayingUnlessSaid = false;
-      }
-    });
+  announceUnlessSaid(message, region = message) {
+    this._regionLineTurn()?.add(message, region);
   }
 
-  /** Something was said this turn (`announceUnlessSaid`). @private */
-  _noteSaid() {
-    if (this._sayingUnlessSaid) return;
-    this._saidSerial = (this._saidSerial ?? 0) + 1;
-    if (this._saidThisTurn) return;
-    this._saidThisTurn = true;
-    queueMicrotask(() => { this._saidThisTurn = false; });
+  /**
+   * This turn's operation says its change in its own message, as it says
+   * it: "Undo", "Redo", a deletion's toast, "Selection cleared", "Node
+   * placed", a crowd added, a project opened, cleared or restored. The
+   * regions' lines of the turn, before it or after, say that change again,
+   * and are not said (`announceUnlessSaid`).
+   */
+  coverRegionLines() {
+    this._regionLineTurn()?.cover();
+  }
+
+  /**
+   * This turn's region lines, made as its first line or covering message
+   * comes, and ended by a timer once the task is over: a promise its work
+   * awaits settles first. None after `_stopRegionLines`.
+   * @returns {{add: Function, cover: Function}|null}
+   * @private
+   */
+  _regionLineTurn() {
+    if (this._regionLinesStopped) return null;
+    if (!this._regionLines) {
+      const turn = { lines: new Map(), covered: false, timer: null };
+      turn.add = (line, region) => { if (!turn.covered) turn.lines.set(region, line); };
+      turn.cover = () => { turn.covered = true; turn.lines.clear(); };
+      turn.timer = setTimeout(() => {
+        if (this._regionLines !== turn) return;
+        this._regionLines = null;
+        for (const line of turn.lines.values()) this.announce(line);
+      }, 0);
+      this._regionLines = turn;
+    }
+    return this._regionLines;
+  }
+
+  /** No region line waiting is said, and none is taken from now on (`_stopModeBannerWork`). @private */
+  _stopRegionLines() {
+    this._regionLinesStopped = true;
+    if (this._regionLines) clearTimeout(this._regionLines.timer);
+    this._regionLines = null;
   }
 
   /**
@@ -1230,6 +1358,7 @@ class RoutePlotter {
     this.animationEngine?.stop();
     this.storageService?.detachLifecycle();
     this._stopTrackingFocusBeforeToasts();
+    this._stopPlacingToasts();
     
     // Clean up controllers
     this.interactionHandler?.destroy();

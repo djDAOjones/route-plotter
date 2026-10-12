@@ -3,11 +3,9 @@
 ## #scope-route-btn · click
 emit waypoint:deselected
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
-announced "Editing · Route"
 app ~ selected: "waypoint[5]" → null
 app ~ selection: "waypoint[5]" → ""
 app ~ focus: "body" → "#scope-route-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
@@ -29,16 +27,14 @@ ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section=
 ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 103 inside, 198e5b3b)
 ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 197 inside, a3fc164e)
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Editing · Route"
 
 ## #scope-prev-btn · click
 emit waypoint:selected waypoint[4]
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
-announced "Editing · Waypoint 1.1·B1 'Extras 5'"
 app ~ selected: "waypoint[5]" → "waypoint[4]"
 app ~ selection: "waypoint[5]" → "waypoint[4]"
 app ~ focus: "body" → "#scope-prev-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Waypoint 1.1·B1 'Extras 5'"
 ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 4 'Extras 6' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 1.1·B1 'Extras 5'"
 ui ~ #scope-next-btn: button aria-label="Edit next waypoint" class="scope-nav-btn" disabled="" type="button" → button aria-label="Edit next waypoint" class="scope-nav-btn" type="button"
 ui ~ #marker-apply-reason: span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: no later applicable waypoint." → span data-card-reason="apply-onward" data-card="marker" :text="Apply onward: later waypoints already match."
@@ -108,7 +104,7 @@ ui - #on-arrival-apply-reason: span data-card-reason="apply-onward" data-card="o
 ui - #label-reset-reason: span data-card-reason="reset" data-card="label"
 ui - #label-apply-reason: span data-card-reason="apply-onward" data-card="label" :text="Apply onward: no later applicable waypoint."
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Waypoint 1.1·B1 'Extras 5'" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Editing · Waypoint 1.1·B1 'Extras 5'"
 
 ## #scope-next-btn · disabled, not operated
 

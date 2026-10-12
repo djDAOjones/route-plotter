@@ -148,7 +148,10 @@ select{
 }
 
 /* A banner: its words, then its actions (44 px buttons). White on UoN blue
-   is 11.7:1; the network's keeps the crowd scope's green (≥ 10:1). */
+   is 11.7:1; the network's keeps the crowd scope's green (≥ 10:1).
+   The banner takes its owner's scope colour, as the scope chip does: the
+   route's modes and the tip UoN blue, network editing the crowd's green
+   (the owner, 2026-10-12). */
 .mode-banner-item{
   display:flex;
   align-items:center;
@@ -200,6 +203,17 @@ select{
 
 .mode-banner-action:hover{
   box-shadow:inset 0 0 0 1px currentColor;
+}
+
+/* Focused, under the pointer too: a 3 px ring inside the button, in its
+   words' colour (white on the banner, 11.7:1 and ≥ 10:1), told apart from
+   hover's 1 px. Inside, because the slot clips what is drawn outside its
+   3 rem, so the page's two-layer ring would be cut (WCAG 2.4.12, 2.4.13;
+   Codex r1 on 7a74755, 6). */
+.mode-banner-action:focus-visible,
+.mode-banner-action:hover:focus-visible{
+  outline:none;
+  box-shadow:inset 0 0 0 3px currentColor;
 }
 
 .header-title{
@@ -416,6 +430,9 @@ select{
    controls at any height the transport takes; under .modal's 999, so a
    dialog's backdrop covers it. */
 .toast-container{
+  /* How far above the viewport's bottom the toasts stand where the
+     transport scrolls with the page, measured by the app (≤ 64 rem, below) */
+  --toast-lift:0px;
   position:absolute;
   left:var(--space-3);
   right:var(--space-3);
@@ -3540,10 +3557,8 @@ kbd{
   color:var(--text-02);
 }
 
-/* Canvas wrapper - scrollable container for canvas + sticky playbar; the
-   Preview badge's containing block (UI-06 J-12) */
+/* Canvas wrapper - scrollable container for canvas + sticky playbar */
 .canvas-area{
-  position:relative;
   grid-column: 2;
   display:flex;
   flex-direction:column;
@@ -3555,6 +3570,14 @@ kbd{
   background:#FAFAFA;
   border-left:1px solid var(--border-subtle);
   border-right:1px solid var(--border-subtle);
+}
+
+/* The canvas's own box, as large as the canvas: the Preview badge stands in
+   its top-right corner, on the canvas however it is letterboxed in the
+   canvas area (UI-06 J-12, the lead's Q5). */
+.canvas-frame{
+  position:relative;
+  flex:0 0 auto;
 }
 
 /* Canvas - fills width, height determined by aspect-ratio (set via JS) */
@@ -4073,8 +4096,6 @@ a.btn-primary:visited{
   }
 
   .canvas-area{
-    /* The Preview badge's containing block, as at full width (UI-06 J-12) */
-    position:relative;
     min-height:22rem;
     justify-content:flex-start;
     border-left:none;
@@ -4088,11 +4109,21 @@ a.btn-primary:visited{
   }
 
   .controls{
-    /* In flow here, not sticky; still the toasts' containing block (UI-06 J-12) */
+    /* In flow here, not sticky (UI-06 J-12) */
     position:relative;
     width:100%;
     align-self:stretch;
     flex-wrap:wrap;
+  }
+
+  /* The transport scrolls with the page here, so the toasts are fixed to
+     the viewport's bottom centre, in view however far it scrolls, and
+     lifted clear of the transport's controls while those are in view
+     (`--toast-lift`, measured by the app on scroll and resize: UI-06 J-12,
+     the lead's Q5). */
+  .toast-container{
+    position:fixed;
+    bottom:calc(var(--toast-lift) + var(--space-2));
   }
 
   .timeline{
@@ -4222,13 +4253,15 @@ body[data-mode="preview"] .canvas-area {
 }
 
 /* Preview mode badge (UI-06 J-12): a real element, top-right of the canvas
-   area, where no toast stands (they are bottom-centre); white on UoN blue,
-   11.7:1. It was a pseudo-element fixed over the header. */
-.preview-badge {
+   itself (its frame), where no toast stands (they are bottom-centre); white
+   on UoN blue, 11.7:1. It was a pseudo-element fixed over the header. Shown
+   in Preview alone, by its own `hidden`, which the mode switch keeps true
+   (Codex r1 on 7a74755, 2). */
+.preview-badge[hidden] {
   display: none;
 }
 
-body[data-mode="preview"] .preview-badge {
+.preview-badge {
   display: block;
   position: absolute;
   top: var(--space-3);
@@ -4310,6 +4343,12 @@ body[data-mode="preview"] .preview-badge {
   /* A card header's ring is drawn inside its box (B-02), and so is its
      outline here: the card clips what its header draws outside itself. */
   .section-header:focus-visible{
+    outline-offset:-5px !important;
+  }
+
+  /* A banner's action likewise: the slot clips what is drawn outside its
+     3 rem (UI-06 J-12; Codex r1 on 7a74755, 6). */
+  .mode-banner-action:focus-visible{
     outline-offset:-5px !important;
   }
 

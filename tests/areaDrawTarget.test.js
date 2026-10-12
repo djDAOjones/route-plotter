@@ -16,7 +16,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, expect, test, vi } from 'vitest';
-import { bootApp } from './helpers/bootApp.js';
+import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { ANNOUNCEMENTS } from '../src/config/constants.js';
@@ -48,6 +48,10 @@ let toasts = null;
 let announced = null;
 
 async function openDay() {
+  // The start's tip seen before the boot: its 1.5 s runs on the real clock
+  // from the boot, and a test that hears what is said, switching clocks only
+  // later, would have it land mid-test on a slow runner (Codex r1 on PR 6).
+  localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   await app.ready;
   toasts = vi.spyOn(Object.getPrototypeOf(app), 'showToast');
@@ -76,6 +80,7 @@ function drawFor(app, waypoint) {
 
 afterEach(() => {
   vi.useRealTimers();
+  localStorage.getItem.mockImplementation(() => null);
   // The spy is on the class, shared by every app: each test's own
   toasts?.mockRestore();
   toasts = null;

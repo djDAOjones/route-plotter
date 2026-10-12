@@ -731,6 +731,8 @@ export const sceneOutlineMixin = {
       : previousOutlineSelection;
     this._queueSceneOutlineRefresh(`${sceneOutlineKey('network', layer.id)}:summary`);
     this.announce(`Node deleted${cascaded ? ` with ${plural(cascaded, 'connected path')}` : ''}. Undo available.`);
+    // It says the change: the network's count and the chip are not said again (UI-06 PR 6)
+    this.coverRegionLines?.();
   },
 
   _outlineConnectNodes(command) {
@@ -804,6 +806,7 @@ export const sceneOutlineMixin = {
       : previousOutlineSelection;
     this._queueSceneOutlineRefresh(`${sceneOutlineKey('network', layer.id)}:summary`);
     this.announce('Path deleted. Undo available.');
+    this.coverRegionLines?.();
   },
 
   _outlineAddControl(command) {

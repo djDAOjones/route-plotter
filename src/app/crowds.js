@@ -1144,6 +1144,8 @@ export const crowdsMixin = {
     this.announce(hasRoute
       ? `${layer.name} added — dots follow the route`
       : `${layer.name} added — press Edit network to draw the network its dots will follow`);
+    // It says the change: the chip moving to the new crowd is not said again (UI-06 PR 6)
+    this.coverRegionLines?.();
   },
 
   /**
@@ -1216,6 +1218,7 @@ export const crowdsMixin = {
     this.eventBus.emit('ui:toast', {
       message: `Deleted ${layer.name} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
     });
+    this.coverRegionLines?.();
   },
 
   /**

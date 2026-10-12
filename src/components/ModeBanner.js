@@ -28,9 +28,17 @@
  * Its height changes when a banner shows or goes, or when a replacement or a
  * new count line changes how many lines it takes: `onHeightChange` is told
  * once the height has settled, at once when the slot does not animate (no
- * transition, or reduced motion), at the end of its height transition
- * otherwise, with a fallback timer, so the canvas is refitted to the room it
- * has (Codex on 9466a3f: the canvas keeps explicit sizes).
+ * transition, or reduced motion), otherwise once each of its height-bearing
+ * transitions (`min-height`, `max-height`) has ended, with a fallback timer,
+ * so the canvas is refitted to the room it has (Codex on 9466a3f: the canvas
+ * keeps explicit sizes). A replacement or a count line while an entry or an
+ * exit still eases is told at that ease's end, the final height (the lead's
+ * settlement on 7a74755: the refit measured a room read mid-ease).
+ *
+ * A claim made inside another's exit (an `onReplaced` that shows a banner of
+ * its own, as a waiting owner may) is reconciled, never overwritten: every
+ * holder the incoming owner meets leaves by its own exit, once, and an exit
+ * already running further up is not run again (Codex r1 on 7a74755, 3).
  *
  * @module ModeBanner
  */
@@ -43,26 +51,44 @@ const SETTLE_MARGIN_MS = 100;
 /** The banner for each slot element, so every owner on the page shares one. */
 const bannerOf = new WeakMap();
 
+/** The properties that bound the slot's height: what an entry or an exit eases. */
+const HEIGHT_PROPERTIES = ['min-height', 'max-height', 'height'];
+
+/** How many holders one claim meets before it stops asking them to leave (exits that keep handing the slot on). */
+const MAX_HANDOVERS = 8;
+
 /**
- * The longest transition the element runs, delay included, in ms: what its
- * computed style says, so reduced motion (`transition: none`, whatever the
- * page's 0.01 ms rule leaves of the duration) and a page with no stylesheet
- * both read 0.
+ * The slot's height-bearing transitions and how long each takes, delay
+ * included, in ms: what its computed style says, its lists matched as CSS
+ * matches them (the property list leads; a shorter duration or delay list
+ * repeats). Reduced motion (`transition: none`, whatever the page's 0.01 ms
+ * rule leaves of the duration) and a page with no stylesheet both have none.
  * @param {Element} element
- * @returns {number}
+ * @returns {Map<string, number>} Property → ms, for each that runs 1 ms or more
  */
-function transitionMs(element) {
+function heightTransitions(element) {
   const style = window.getComputedStyle(element);
-  if (/^\s*none\s*$/.test(style.transitionProperty || '')) return 0;
-  const times = text => String(text || '0s').split(',').map(part => {
+  const list = text => String(text || '').split(',').map(part => part.trim()).filter(Boolean);
+  const times = text => list(text || '0s').map(part => {
     const value = parseFloat(part);
     if (!Number.isFinite(value)) return 0;
-    return /ms\s*$/.test(part) ? value : value * 1000;
+    return /ms$/.test(part) ? value : value * 1000;
   });
+  const properties = list(style.transitionProperty);
   const durations = times(style.transitionDuration);
   const delays = times(style.transitionDelay);
-  const longest = Math.max(0, ...durations.map((duration, index) => duration + (delays[index % delays.length] ?? 0)));
-  return longest < 1 ? 0 : longest;
+  const waits = new Map();
+  properties.forEach((property, index) => {
+    const ms = durations[index % durations.length] + delays[index % delays.length];
+    const named = property === 'all' ? ['min-height', 'max-height'] : [property];
+    for (const name of named) {
+      if (!HEIGHT_PROPERTIES.includes(name)) continue;
+      // A later entry for the same property is the one in force, as in CSS.
+      if (ms >= 1) waits.set(name, ms);
+      else waits.delete(name);
+    }
+  });
+  return waits;
 }
 
 /**
@@ -129,9 +155,12 @@ export class ModeBanner {
     this.onHeightChange = onHeightChange;
     /** @type {{owner: Object, root: HTMLElement, count: HTMLElement|null}|null} */
     this._holder = null;
-    this._replacing = false;
+    /** How deep in `show` calls this is: above 0, a claim is replacing its holders. */
+    this._claims = 0;
+    /** The owners whose exit is running (`onReplaced`): none is asked twice. */
+    this._exiting = new Set();
     this._destroyed = false;
-    /** @type {{timer: *, listener: Function}|null} A settle waiting for the height transition */
+    /** @type {{timer: *, listener: Function, reported: boolean}|null} A settle waiting for the height transitions */
     this._settle = null;
     /** @type {Set<Function>} Waiting for the slot to be free (the first-start tip) */
     this._freeWaiters = new Set();
@@ -145,9 +174,10 @@ export class ModeBanner {
   }
 
   /**
-   * Show `owner`'s banner. Another owner's is replaced first: its
-   * `onReplaced()` runs to its end, leaving its mode. The same owner's is
-   * redrawn, replacing nothing.
+   * Show `owner`'s banner. Every other owner holding the slot is replaced
+   * first: its `onReplaced()` runs to its end, leaving its mode, and so does
+   * that of any owner its exit hands the slot to, each once. The same
+   * owner's is redrawn, replacing nothing.
    * @param {{onReplaced?: Function}} owner
    * @param {Object} spec
    * @param {string} spec.id - The banner's own id (`network-edit-banner`, …)
@@ -159,19 +189,59 @@ export class ModeBanner {
    */
   show(owner, { id, title = '', text = [], count = null, actions = [] } = {}) {
     if (this._destroyed || !this.slot) return null;
-    const heightBefore = this.slot.offsetHeight;
-    const before = this._holder;
-    if (before && before.owner !== owner) {
-      this._replacing = true;
-      try {
-        before.owner.onReplaced?.();
-      } finally {
-        this._replacing = false;
-      }
-      // An owner that left its banner up loses it all the same.
-      if (this._holder === before) this._clear();
+    // Only the outermost claim tells the height: a banner shown and replaced
+    // inside it is gone before anything is laid out.
+    const outermost = this._claims === 0;
+    const heightBefore = outermost ? this.slot.offsetHeight : 0;
+    const wasEmpty = !this._holder;
+    this._claims += 1;
+    let drawn;
+    try {
+      this._replaceHolders(owner);
+      drawn = this._draw(owner, { id, title, text, count, actions });
+    } finally {
+      this._claims -= 1;
     }
+    if (outermost) {
+      if (wasEmpty) this._heightChanged(true);
+      else if (this.slot.offsetHeight !== heightBefore) this._heightChanged(false);
+    }
+    return drawn;
+  }
 
+  /**
+   * Ask every holder other than `owner` to leave, by its own exit, each once:
+   * one whose exit shows another owner's banner (a claim inside the exit)
+   * leaves first, then that owner leaves in turn. A holder whose exit is
+   * already running further up (it claimed again before it hid) loses its
+   * banner, not a second exit. An owner that leaves its banner up loses it
+   * all the same.
+   * @param {Object} owner
+   * @private
+   */
+  _replaceHolders(owner) {
+    for (let handovers = 0; this._holder && this._holder.owner !== owner; handovers += 1) {
+      const current = this._holder;
+      if (this._exiting.has(current.owner) || handovers >= MAX_HANDOVERS) {
+        this._clear();
+        return;
+      }
+      this._exiting.add(current.owner);
+      try {
+        current.owner.onReplaced?.();
+      } finally {
+        this._exiting.delete(current.owner);
+      }
+      if (this._holder === current) this._clear();
+    }
+  }
+
+  /**
+   * Draw `owner`'s banner in the slot.
+   * @returns {{root: HTMLElement, actions: HTMLButtonElement[], count: HTMLElement|null}}
+   * @private
+   */
+  _draw(owner, { id, title, text, count, actions }) {
     const root = document.createElement('div');
     root.id = id;
     root.className = 'mode-banner-item';
@@ -213,8 +283,6 @@ export class ModeBanner {
     this.slot.replaceChildren(root);
     this.slot.classList.add('is-showing');
     this._holder = { owner, root, count: countEl };
-    if (!before) this._heightChanged(true);
-    else if (this.slot.offsetHeight !== heightBefore) this._heightChanged(false);
     return { root, actions: buttons, count: countEl };
   }
 
@@ -243,7 +311,7 @@ export class ModeBanner {
     this._clear();
     // Replaced: the incoming banner takes the slot in the same call, so the
     // slot is not free and its height is told once, by `show`.
-    if (this._replacing) return true;
+    if (this._claims > 0) return true;
     for (const waiter of [...this._freeWaiters]) {
       this._freeWaiters.delete(waiter);
       waiter();
@@ -316,27 +384,40 @@ export class ModeBanner {
 
   /**
    * Tell `onHeightChange` once the height has settled: at once with no
-   * transition, else at its end, with a fallback timer.
+   * transition; else once each height-bearing transition has ended, or at
+   * its fallback timer. An ease the fallback outran still reports its end:
+   * the room is final only then (a throttled pane). A change that eases
+   * nothing (a replacement, a count line) while an ease runs is told at that
+   * ease's end, never mid-way (the lead's settlement on 7a74755).
    * @param {boolean} animated - Whether the change runs the slot's height transition
    * @private
    */
   _heightChanged(animated) {
-    this._cancelSettle();
     if (this._destroyed) return;
-    const duration = animated ? transitionMs(this.slot) : 0;
-    if (duration <= 0) {
+    if (!animated && this._settle && !this._settle.reported) return;
+    this._cancelSettle();
+    const waits = animated ? heightTransitions(this.slot) : new Map();
+    if (waits.size === 0) {
       this.onHeightChange?.();
       return;
     }
-    const settled = () => {
-      this._cancelSettle();
+    const ending = new Set(waits.keys());
+    const settle = { timer: null, listener: null, reported: false };
+    const report = () => {
       if (!this._destroyed) this.onHeightChange?.();
     };
-    const listener = (event) => {
-      if (event.target === this.slot) settled();
+    settle.listener = (event) => {
+      if (event.target !== this.slot || !ending.delete(event.propertyName) || ending.size > 0) return;
+      this._cancelSettle();
+      report();
     };
-    this.slot.addEventListener('transitionend', listener);
-    this._settle = { listener, timer: setTimeout(settled, duration + SETTLE_MARGIN_MS) };
+    settle.timer = setTimeout(() => {
+      settle.timer = null;
+      settle.reported = true;
+      report();
+    }, Math.max(...waits.values()) + SETTLE_MARGIN_MS);
+    this.slot.addEventListener('transitionend', settle.listener);
+    this._settle = settle;
   }
 
   /** @private */

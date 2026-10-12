@@ -420,7 +420,8 @@ export const wiringControllersMixin = {
     this.eventBus.on('route:branch-place', ({ imgX, imgY }) => {
       const fork = this.interactionHandler.branchArmed;
       this._endBranchGesture();
-      if (!fork || !this.waypointsById?.has?.(fork.id)) {
+      // The fork is the model's own object, as `followBranchFork` asks (Codex r1 on 7a74755, 8)
+      if (!fork || this.waypointsById?.get?.(fork.id) !== fork) {
         this.eventBus.emit('ui:toast', { message: 'That waypoint is no longer on the route' });
         return;
       }
@@ -627,6 +628,7 @@ export const wiringControllersMixin = {
         this.eventBus.emit('waypoint:deleted', firstIndex);
         this.eventBus.emit('waypoint:deselected');
         this.announce(`${doomed.length} waypoints deleted`);
+        this.coverRegionLines?.();
         return;
       }
 
@@ -1327,6 +1329,7 @@ export const wiringControllersMixin = {
       if (this.selectedWaypoint) {
         this.eventBus.emit('waypoint:deselected');
         this.announce('Selection cleared');
+        this.coverRegionLines?.();
       }
     });
     
@@ -1380,9 +1383,10 @@ export const wiringControllersMixin = {
     // Announcement request from components (UIController's list reorders):
     // queued with the app's own, so it waits its turn too (DEF-45)
     // `unlessSaid`: what a region that is no longer live said alone, said
-    // once unless the change's own message says it (UI-06 PR 6, item 6).
-    this.eventBus.on('ui:announce', ({ message, unlessSaid = false }) => {
-      if (unlessSaid) this.announceUnlessSaid(message);
+    // once unless the change's own message says it (UI-06 PR 6, item 6);
+    // `region`, whose line it is: a later one of the same turn replaces it.
+    this.eventBus.on('ui:announce', ({ message, unlessSaid = false, region }) => {
+      if (unlessSaid) this.announceUnlessSaid(message, region);
       else this.announce(message);
     });
     

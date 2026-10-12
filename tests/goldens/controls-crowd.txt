@@ -3,10 +3,8 @@
 ## #scope-route-btn · click
 emit crowd:deselected
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
-announced "Editing · Route"
 app ~ crowd: "layer[0]" → null
 app ~ focus: "body" → "#scope-route-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route"
 ui ~ #scope-chip: div class="scope-chip" data-scope="crowd" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Visitors · crowd" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Route"
@@ -29,7 +27,7 @@ ui - #crowd-scope>div[2]: div class="settings-section expanded" data-section="do
 ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, fd5af58c)
 ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Editing · Route"
 
 ## #scope-prev-btn · disabled, not operated
 

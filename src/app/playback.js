@@ -121,12 +121,19 @@ export const playbackMixin = {
   },
   
   /**
-   * Update the mode switch UI to reflect current preview mode state
+   * Update the mode switch UI to reflect current preview mode state, and
+   * Preview's badge on the canvas with it: at the start (`_syncInitialUIState`)
+   * and at every change, the switch's and an export's own (UI-06 J-12)
    * @private
    */
   _updateModeSwitch() {
     if (this.elements.modeToggleBtn) {
       this.elements.modeToggleBtn.setAttribute('aria-checked', this.previewMode);
+    }
+    // Its own `hidden`, which only its rule reads: the page's dormant
+    // `body[data-mode="preview"]` rules stay as they are (Codex r1 on 7a74755, 2).
+    if (this.elements.previewBadge) {
+      this.elements.previewBadge.hidden = !this.previewMode;
     }
     if (this.elements.modeLabelEdit) {
       this.elements.modeLabelEdit.classList.toggle('active', !this.previewMode);

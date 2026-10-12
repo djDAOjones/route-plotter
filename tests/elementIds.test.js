@@ -240,7 +240,8 @@ const LOOKED_UP = {
     scope-chip-text scope-next-btn scope-prev-btn scope-route-btn spotlight-controls
     spotlight-controls
   `),
-  // UI-06 PR 6: the banner slot, in the elements bag (`mode-banner`).
+  // UI-06 PR 6: the banner slot, in the elements bag (`mode-banner`); round 2: the Preview badge, whose
+  // `hidden` the mode switch keeps true to the mode (`preview-badge`, Codex r1 on 7a74755, 2).
   'src/main.js': words(`
     animation-speed animation-speed-right animation-speed-value animation-speed-value-right announcer
     aov-angle aov-angle-value aov-distance aov-distance-value aov-dropoff aov-dropoff-value app
@@ -268,7 +269,7 @@ const LOOKED_UP = {
     pacing-duration-breakdown path-casing-toggle path-glow-intensity path-glow-toggle
     path-glow-value path-head-color path-head-size path-head-size-value path-head-style path-shape
     path-trail path-trail-value path-visibility pause-btn pause-time-control play-btn preset-1-1 preset-16-9
-    preset-9-16 preset-native pulse-amplitude pulse-amplitude-value pulse-controls pulse-cycle-speed
+    preset-9-16 preset-native preview-badge pulse-amplitude pulse-amplitude-value pulse-controls pulse-cycle-speed
     pulse-cycle-speed-value redo-btn reveal-feather reveal-feather-value reveal-size reveal-size-value
     reveal-trail reveal-trail-value ripple-controls ripple-max-scale ripple-max-scale-value ripple-thickness
     ripple-thickness-value ripple-wait save-project-btn segment-color segment-speed-control segment-style

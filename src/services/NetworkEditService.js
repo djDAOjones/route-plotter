@@ -850,7 +850,7 @@ export class NetworkEditService {
     if (line === this._countLine) return;
     this._countLine = line;
     if (this._modeBanner?.update(this._bannerOwner, { count: line })) {
-      this.eventBus.emit('ui:announce', { message: line, unlessSaid: true });
+      this.eventBus.emit('ui:announce', { message: line, unlessSaid: true, region: 'network-count' });
     }
   }
 

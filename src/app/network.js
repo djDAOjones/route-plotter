@@ -322,6 +322,8 @@ export const networkMixin = {
     this.eventBus.emit('ui:toast', {
       message: `Deleted ${kind === 'edge' ? 'path' : kind} — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
     });
+    // It says the change: the network's count and the chip are not said again (UI-06 PR 6)
+    this.coverRegionLines?.();
   },
 
   // ── pointer routing ───────────────────────────────────────
@@ -340,7 +342,11 @@ export const networkMixin = {
     if (!hit) {
       // Empty canvas: place a node (within the image, like waypoints)
       if (!this.isWithinImageBounds(x, y)) return;
-      if (svc.placeNode(this._networkImgPos(x, y), shiftKey)) this.announce('Node placed');
+      if (svc.placeNode(this._networkImgPos(x, y), shiftKey)) {
+        this.announce('Node placed');
+        // It says the change: the network's count is not said again (UI-06 PR 6)
+        this.coverRegionLines?.();
+      }
       return;
     }
 
@@ -351,6 +357,7 @@ export const networkMixin = {
         this.eventBus.emit('ui:toast', {
           message: `Deleted node — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
         });
+        this.coverRegionLines?.();
       } else if (hit.kind === 'control') {
         svc.deleteControlPoint(hit.edge, hit.controlIndex);
       } else {
@@ -358,6 +365,7 @@ export const networkMixin = {
         this.eventBus.emit('ui:toast', {
           message: `Deleted path — press ${isMac ? 'Cmd' : 'Ctrl'}+Z to undo`
         });
+        this.coverRegionLines?.();
       }
       return;
     }

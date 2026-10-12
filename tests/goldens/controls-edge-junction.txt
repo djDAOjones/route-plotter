@@ -33,6 +33,7 @@ ui ~ #network-edge-swap: button aria-describedby="network-edge-swap-tip" class="
 ui ~ #network-edge-weight: input aria-describedby="network-edge-weight-value network-edge-weight-tip" aria-valuetext="50% of departures" max="50" min="1" step="1" type="range" value="10" :value="10" → input aria-describedby="network-edge-weight-value network-edge-weight-tip" aria-valuetext="50% · 50% of departures" max="50" min="1" step="1" type="range" value="10" :value="10"
 ui ~ #network-edge-weight-value: span class="range-readout" :text="50% of departures" → span class="range-readout" :text="50% · 50% of departures"
 settled:
+  announced "Editing · Path · two-way"
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9687 chars, 569bb63f] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9700 chars, a2a45e25]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

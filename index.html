@@ -1360,10 +1360,14 @@
       
       <!-- Canvas Area (center column) - contains canvas + controls -->
       <div id="canvas-area" class="canvas-area" aria-busy="false">
-        <canvas id="canvas" role="img" aria-label="Route animation canvas"></canvas>
-        <!-- UI-06 J-12: Preview mode's badge, top-right of the canvas area;
-             drawn, not read: the mode switch says the mode -->
-        <span id="preview-badge" class="preview-badge" aria-hidden="true">Preview</span>
+        <!-- The canvas's own box: Preview mode's badge stands in its top-right
+             corner, on the canvas however it is letterboxed (UI-06 J-12);
+             drawn, not read: the mode switch says the mode. Shown in Preview
+             alone, its `hidden` kept by the switch -->
+        <div class="canvas-frame">
+          <canvas id="canvas" role="img" aria-label="Route animation canvas"></canvas>
+          <span id="preview-badge" class="preview-badge" aria-hidden="true" hidden>Preview</span>
+        </div>
         
         <!-- Controls Panel -->
         <div class="controls">

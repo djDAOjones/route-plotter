@@ -3,11 +3,9 @@
 ## #scope-route-btn · click
 emit waypoint:deselected
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
-announced "Editing · Route"
 app ~ selected: "waypoint[3]" → null
 app ~ selection: "waypoint[3]" → ""
 app ~ focus: "body" → "#scope-route-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
@@ -28,16 +26,14 @@ ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section=
 ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 103 inside, ba71e782)
 ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 197 inside, a3fc164e)
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Editing · Route"
 
 ## #scope-prev-btn · click
 emit waypoint:selected waypoint[2]
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
-announced "Editing · Waypoint 2 'Extras 3' · major"
 app ~ selected: "waypoint[3]" → "waypoint[2]"
 app ~ selection: "waypoint[3]" → "waypoint[2]"
 app ~ focus: "body" → "#scope-prev-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Waypoint 2 'Extras 3' · major"
 ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 2 'Extras 3' · major"
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" :value="glow"
 ui ~ #camera-prev-zoom-value: span class="slider-value slider-value-readonly" :text="1.9x" → span class="slider-value slider-value-readonly" :text="1.8x"
@@ -55,16 +51,14 @@ ui ~ #waypoint-list>li[3]>button[0]: button aria-pressed="false" class="waypoint
 ui ~ #waypoint-list>li[4]: li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Waypoint 2 'Extras 3' · major" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Editing · Waypoint 2 'Extras 3' · major"
 
 ## #scope-next-btn · click
 emit waypoint:selected waypoint[4]
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
-announced "Editing · Waypoint 1.1·B1 'Extras 5'"
 app ~ selected: "waypoint[3]" → "waypoint[4]"
 app ~ selection: "waypoint[3]" → "waypoint[4]"
 app ~ focus: "body" → "#scope-next-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Waypoint 1.1·B1 'Extras 5'"
 ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 3 'Extras 4' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 1.1·B1 'Extras 5'"
 ui ~ #editor-beacon-style: select aria-describedby="editor-beacon-style-tip" :value="grow" → select aria-describedby="editor-beacon-style-tip" :value="ripple"
 ui ~ #camera-prev-zoom-value: span class="slider-value slider-value-readonly" :text="1.9x" → span class="slider-value slider-value-readonly" :text="2.0x"
@@ -105,7 +99,7 @@ ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-
 ui ~ #waypoint-list>li[5]: li class="waypoint-item waypoint-item-minor waypoint-item-branch" data-route-index="4" draggable="false" → li class="waypoint-item waypoint-item-minor waypoint-item-branch selected is-selected" data-route-index="4" draggable="false"
 ui ~ #waypoint-list>li[5]>button[0]: button aria-pressed="false" class="waypoint-row" type="button" → button aria-pressed="true" class="waypoint-row" type="button"
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Waypoint 1.1·B1 'Extras 5'" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Editing · Waypoint 1.1·B1 'Extras 5'"
 
 ## #waypoint-scope>div[0]>h2[0]>button[0] · click
 app ~ focus: "body" → "#waypoint-scope>div[0]>h2[0]>button[0]"

@@ -3,11 +3,9 @@
 ## #scope-route-btn · click
 emit waypoint:deselected
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
-announced "Editing · Route"
 app ~ selected: "waypoint[0]" → null
 app ~ selection: "waypoint[0]" → ""
 app ~ focus: "body" → "#scope-route-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
@@ -28,15 +26,13 @@ ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section=
 ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 103 inside, 5eb94273)
 ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 183 inside, 9d0fe3e7)
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Editing · Route"
 
 ## #scope-prev-btn · click
 emit waypoint:deselected
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
-announced "Editing · Route"
 app ~ selected: "waypoint[0]" → null
 app ~ selection: "waypoint[0]" → ""
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
 ui ~ #scope-route-btn: button class="scope-route-btn" type="button" :text="Route" → button aria-current="true" class="scope-route-btn" type="button" :text="Route"
 ui ~ #scope-prev-btn: button aria-label="Edit previous waypoint" class="scope-nav-btn" type="button" → button aria-label="Edit previous waypoint" class="scope-nav-btn" disabled="" type="button"
@@ -57,16 +53,14 @@ ui - #waypoint-scope>div[2]: div class="settings-section expanded" data-section=
 ui - #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" (and 103 inside, 5eb94273)
 ui - #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" (and 183 inside, 9d0fe3e7)
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · Route" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Editing · Route"
 
 ## #scope-next-btn · click
 emit waypoint:selected waypoint[1]
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
-announced "Editing · minor 'Extras 2'"
 app ~ selected: "waypoint[0]" → "waypoint[1]"
 app ~ selection: "waypoint[0]" → "waypoint[1]"
 app ~ focus: "body" → "#scope-next-btn"
-ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · minor 'Extras 2'"
 ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status" :text="Editing · Waypoint 1 'Extras 1' · major" → span aria-live="off" class="scope-chip-text" role="status" :text="Editing · minor 'Extras 2'"
 ui ~ #dot-color: input type="hidden" value="#CC79A7" :value="#CC79A7" → input disabled="" type="hidden" value="#CC79A7" :value="#CC79A7"
 ui ~ #section-marker-content>div[1]>fieldset[1]: fieldset aria-describedby="{#section-marker-content>div[1]>fieldset[1]>span[1]}" class="swatch-fieldset" → fieldset aria-describedby="{#section-marker-content>div[1]>fieldset[1]>span[1]}" class="swatch-fieldset" disabled=""
@@ -170,7 +164,7 @@ ui - #waypoint-segment-speed-value: span class="range-readout" :text="2.5x"
 ui - #area-draw-btn: button aria-describedby="area-draw-reason" class="btn btn-secondary" style="width: 100%;" :text="Draw area"
 ui - #area-draw-reason: p (not shown)
 settled:
-  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Editing · minor 'Extras 2'" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  announced "Editing · minor 'Extras 2'"
 
 ## #section-marker-content>div[7]>button[1] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}

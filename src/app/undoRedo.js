@@ -240,6 +240,8 @@ export const undoRedoMixin = {
     if (state) {
       this._restoreState(state);
       this.announce('Undo');
+      // It says the change: the regions' lines the restore moves are not said again (UI-06 PR 6)
+      this.coverRegionLines?.();
     }
   },
   
@@ -252,6 +254,7 @@ export const undoRedoMixin = {
     if (state) {
       this._restoreState(state);
       this.announce('Redo');
+      this.coverRegionLines?.();
     }
   },
   
