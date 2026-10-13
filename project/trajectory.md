@@ -7,6 +7,12 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Ahead of Phase 2's last defects — the owner's word of 2026-10-13
+
+- RECALL — 7/8 (2026-10-13) — scores: 2,2,1,2 — local — see decisions
+- RECALL — 8/8 (2026-10-13) — scores: 2,2,2,2 — local — see decisions
+- DEF-98 — a session browser recovery restores comes back with every image the project uses, the background, custom markers and the custom path head, each with its file name; an image recovery cannot keep is named with the reason in a warning, and a background that cannot come back is offered again by name, never replaced (2026-10-13) — see decisions
+
 ## Phase 3 — Design reviews
 
 - DEF-94 — the scene outline's validation errors show their accent bar and red field border again, because the five tokens the stylesheets used without a definition are defined (2026-10-08) — see decisions

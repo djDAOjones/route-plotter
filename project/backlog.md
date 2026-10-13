@@ -20,9 +20,7 @@
 
 ### Phase 1 — Land the big run's open pull requests — CLOSED 2026-10-06
 
-### Ahead of Phase 2's last defects — the owner's word of 2026-10-13
-
-- [ ] DEF-98 — Restore drops the background and custom images — since 2026-10-13
+### Ahead of Phase 2's last defects — the owner's word of 2026-10-13 — CLOSED 2026-10-13
 
 ### MVP — football crowds and mobs — the owner's word of 2026-10-13
 
