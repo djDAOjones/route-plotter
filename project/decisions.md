@@ -28,7 +28,7 @@ The session then put six questions to him in two rounds; his picks, labels verba
 - On the deadline, "Within a week", whose option text read "Cut the MVP to the essentials: items 1–5, groups simplified, presets later." Items 1–5 were crowds without a route, start areas, finish areas, entry shares and duplicating a crowd.
 - On extras, "Final whistle", unpicked: "Camera follows a crowd", "Vehicles as decoration" and "Milling in areas".
 - On recording, "I write a plan PR (Recommended)".
-- On a session filing transit presets at the same time, "distant wish list, ignore". That session's wish line is in PR #134, awaiting his merge, so this record adds none.
+- On a session filing transit presets at the same time, "distant wish list, ignore". That session's wish line, transit presets by mode and era, is PR #134, still open. This record is pushed once #134 has merged, so that line is in `main` beside it; if #134 closes unmerged, this record carries the line instead.
 - On areas, "Simple shapes (Recommended)": "An Entry or Exit node gets an area: rectangle or ellipse, set by width, height and turn, drawn on the map."
 - On review depth for the MVP's pull requests, in his own words: "max codex, got loads of compute".
 
@@ -37,6 +37,7 @@ The filing session's readings and proposals, for the owner to confirm:
 - "specialised … at the expense of being generally useful" as cutting breadth, not the quality bars: the brief's mandate, loadable saves, exports and the player, the outline and the profile's standards, tests, and no new dependency.
 - His word as lifting, for CROWD-08 alone, GATELESS-1's "no new feature work" (its condition 2), so the run builds it under the grant's other conditions.
 - "max codex, got loads of compute" as changing GATELESS-1's condition 5 for CROWD-08's pull requests: Codex at its highest reasoning setting, `xhigh` in place of `high`, and rounds until it approves in place of one review and a short pass on a large fix.
+- Confirmed, those two readings replace GATELESS-1's conditions 2 and 5 for CROWD-08's pull requests alone, hence the Supersedes line; every other condition, and both conditions for all other work, stand.
 - "next minor versions" as v3.3, with `package.json` set to 3.3.0 by CROWD-08's first release.
 - CROWD-08 under a heading of its own after DEF-98, which merged as #133 with its release pending, and ahead of Phase 2; Phase 2's and Phase 3's items wait.
 - The parts' design within his picks, A to G, with the supported combinations in the item file; "groups simplified" as a size and a width only, and "Final whistle" as part G. If the week runs short, A to E (the football scene) come before F and G.
@@ -56,7 +57,7 @@ The session advised against merging the models in v3: the route sets the base ti
 
 v4 departs from the founding decision of 2026-08-17 (the frozen canon log; `project/history.md`) and from the brief's Direction. Direction also names the big run as the current work. The brief is the owner's to sign, so it is left unedited: this entry governs where they differ, as GATELESS-1 did, and MERGE-01's plan brings the amendment. The criteria are in the item files (`project/items/CROWD-08.md`, `project/items/MERGE-01.md`); ready-made presets are a wish line.
 
-**Supersedes:** none
+**Supersedes:** 2026-10-05 — GATELESS-1 — The run goes gateless: each merge lands and ships as it goes, with Codex reviewing
 
 **Deferred:** MERGE-01
 

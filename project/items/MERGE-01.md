@@ -6,14 +6,15 @@ The owner wants the next major version, v4, to merge routes and crowds. In his w
 
 ## Acceptance criteria
 
-- A written plan in `reviews/` settles:
-  - the one layer model, and what each v3 route and crowd becomes in it;
-  - what sets the scene's two durations when every layer is equal. Today the base timeline comes from the route (its legs, speeds, pauses, intro and longest branch), or from the author's Duration with no route clock, and crowd releases, anchors, label fades and camera transitions are fractions of it. The playback duration then adds what finishes after it (crowds that finish, beacons still changing) and Hold at end (`src/utils/sceneEnd.js`);
-  - camera targets: any layer can carry the camera, including a crowd, by a group's centre, a lead dot or a vehicle;
-  - one pen and one line model for drawing, with the route's line styles available to every layer;
-  - the features pop-up: which features exist at v4.0, which come later, and how each appears in the scene outline;
+- A written plan in `reviews/` weighs options and recommends one for each of these, for the owner to decide:
+  - the merged model: what kind of layer or layers v4 has, and what each v3 route and crowd becomes;
+  - what sets the scene's two durations once routes and crowds merge. Today the base timeline comes from the route (its legs, speeds, pauses, intro and longest branch), or from the author's Duration with no route clock, and crowd releases, anchors, label fades and camera transitions are fractions of it. The playback duration then adds what finishes after it (crowds that finish, beacons still changing) and Hold at end (`src/utils/sceneEnd.js`);
+  - how a crowd's path can carry the camera, as the owner asked;
+  - how lines are drawn and styled across what are routes and crowds today;
+  - how options and their controls are added, the owner's question having pictured a features pop-up; which exist at v4.0, which come later, and how each appears in the scene outline;
   - how v3 projects, exports and the HTML player carry over;
   - which candidate features in the Notes join, and in what order.
+- The filing session's proposals in the Notes (one pen and line model, camera targets by a group's centre, a lead dot or a vehicle, and converging in steps) are inputs to weigh, not requirements.
 - The plan checks itself against the abstraction plan's decision framework (`reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md`, §16) and its target direction (§11).
 - The plan states where it departs from the v3 founding decision of 2026-08-17 (the frozen canon log; `project/history.md`) and from the brief's Direction. It brings the brief's amendment for the owner to sign.
 - The owner answers one question round on the plan before any code.
