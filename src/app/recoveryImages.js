@@ -854,7 +854,8 @@ function describeReferences(data, assetId) {
  * image bytes restores them as before (`kind: 'inline'`); one without kept no
  * images, and says so (`kind: 'legacy'`), naming none.
  *
- * Never rejects. Every image the manifest names is pinned before the first
+ * Rejects only on a record it cannot read (a malformed one), having let go
+ * of what it took. Every image the manifest names is pinned before the first
  * read (`pins`), and the whole restore is an operation of the store's
  * (`life`): the caller lets go of both with `releaseRestoredImages`, once
  * the project that replaces this one has pinned its own, or as it abandons
@@ -896,102 +897,112 @@ export async function readRecoveryImages(app, data) {
   // let go of them (round 2, 3): at its commit, or as it is abandoned.
   const pins = [];
   const life = store?.beginOperation() ?? null;
-  if (store && understood) {
-    const assets = Array.isArray(manifest.assets) ? manifest.assets : [];
-    const named = [manifest.background?.key, ...assets.map(each => each?.key)];
-    for (const key of new Set(named.filter(validKey))) {
-      const pin = store.pin(key);
-      if (pin) pins.push(pin);
+  // What it takes passes to the caller only with a successful return: a
+  // record that throws part way (a malformed one) lets go of every pin and
+  // ends its operation here, or a Clear All would wait on it for good
+  // (Codex, code review round 3).
+  try {
+    if (store && understood) {
+      const assets = Array.isArray(manifest.assets) ? manifest.assets : [];
+      const named = [manifest.background?.key, ...assets.map(each => each?.key)];
+      for (const key of new Set(named.filter(validKey))) {
+        const pin = store.pin(key);
+        if (pin) pins.push(pin);
+      }
     }
-  }
 
-  let backgroundBase64 = null;
-  let backgroundName = null;
-  const background = understood ? manifest.background : null;
-  if (background && typeof background === 'object') {
-    const name = validName(background.name);
-    const read = await readImage(store, background.key, {
-      name,
-      maxBytes: Math.min(limits.MAX_BYTES, limits.MAX_BACKGROUND_BYTES),
-    });
-    if (read.ok) {
-      backgroundBase64 = read.dataURL;
-      backgroundName = name;
-    } else {
-      omitted.unshift({ role: 'background', name, reason: read.reason });
-    }
-  } else if (!understood && manifest.background) {
-    omitted.unshift({ role: 'background', name: null, reason: R.UNREADABLE });
-  }
-
-  const listed = understood && Array.isArray(manifest.assets) ? manifest.assets : [];
-  const idCounts = new Map();
-  for (const asset of listed) {
-    if (typeof asset?.id === 'string') idCounts.set(asset.id, (idCounts.get(asset.id) || 0) + 1);
-  }
-  const imageAssets = [];
-  const available = new Set();
-  const lost = new Map();
-  let count = 0;
-  let bytes = 0;
-  let pixels = 0;
-  for (const asset of listed) {
-    const assetId = typeof asset?.id === 'string' ? asset.id : null;
-    if (!assetId) continue;
-    const name = validName(asset.name);
-    // Ids must be unique: an id listed twice cannot say which bytes it means.
-    if (idCounts.get(assetId) > 1) {
-      if (!lost.has(assetId)) lost.set(assetId, { name, reason: R.UNREADABLE });
-      continue;
-    }
-    const read = await readImage(store, asset.key, { name, maxBytes: limits.MAX_BYTES });
-    if (!read.ok) {
-      lost.set(assetId, { name, reason: read.reason });
-      continue;
-    }
-    const imagePixels = read.width * read.height;
-    if (count + 1 > limits.MAX_ASSETS || bytes + read.byteLength > limits.MAX_ASSET_BYTES_TOTAL ||
-        pixels + imagePixels > limits.MAX_IMAGE_PIXELS_TOTAL) {
-      lost.set(assetId, { name, reason: R.OVER_TOTAL });
-      continue;
-    }
-    try {
-      const restored = new ImageAsset({
-        id: assetId,
-        base64: read.dataURL,
-        name: name ?? '',
-        width: read.width,
-        height: read.height,
-        mimeType: read.mimeType,
-        size: read.byteLength,
+    let backgroundBase64 = null;
+    let backgroundName = null;
+    const background = understood ? manifest.background : null;
+    if (background && typeof background === 'object') {
+      const name = validName(background.name);
+      const read = await readImage(store, background.key, {
+        name,
+        maxBytes: Math.min(limits.MAX_BYTES, limits.MAX_BACKGROUND_BYTES),
       });
-      ImageAsset.assertValidSerialized(restored);
-      restored._imageElement = read.image;
-      imageAssets.push(restored);
-      available.add(assetId);
-      count += 1;
-      bytes += read.byteLength;
-      pixels += imagePixels;
-    } catch (error) {
-      console.warn('A recovery image could not be read:', error);
-      lost.set(assetId, { name, reason: R.UNREADABLE });
+      if (read.ok) {
+        backgroundBase64 = read.dataURL;
+        backgroundName = name;
+      } else {
+        omitted.unshift({ role: 'background', name, reason: read.reason });
+      }
+    } else if (!understood && manifest.background) {
+      omitted.unshift({ role: 'background', name: null, reason: R.UNREADABLE });
     }
-  }
 
-  // Every reference the model makes to an image that is not here takes the
-  // fallback, and is named in the warning: one the manifest lists and could
-  // not be read, or one it never listed.
-  const referenced = collectImageAssetReferences({ ...data, imageAssets: [] });
-  const dropped = new Set();
-  for (const assetId of referenced) {
-    if (available.has(assetId)) continue;
-    dropped.add(assetId);
-    const reason = lost.get(assetId) ?? { name: null, reason: R.UNREADABLE };
-    omitted.push(omissionOf({ ...describeReferences(data, assetId), name: reason.name }, reason.reason));
+    const listed = understood && Array.isArray(manifest.assets) ? manifest.assets : [];
+    const idCounts = new Map();
+    for (const asset of listed) {
+      if (typeof asset?.id === 'string') idCounts.set(asset.id, (idCounts.get(asset.id) || 0) + 1);
+    }
+    const imageAssets = [];
+    const available = new Set();
+    const lost = new Map();
+    let count = 0;
+    let bytes = 0;
+    let pixels = 0;
+    for (const asset of listed) {
+      const assetId = typeof asset?.id === 'string' ? asset.id : null;
+      if (!assetId) continue;
+      const name = validName(asset.name);
+      // Ids must be unique: an id listed twice cannot say which bytes it means.
+      if (idCounts.get(assetId) > 1) {
+        if (!lost.has(assetId)) lost.set(assetId, { name, reason: R.UNREADABLE });
+        continue;
+      }
+      const read = await readImage(store, asset.key, { name, maxBytes: limits.MAX_BYTES });
+      if (!read.ok) {
+        lost.set(assetId, { name, reason: read.reason });
+        continue;
+      }
+      const imagePixels = read.width * read.height;
+      if (count + 1 > limits.MAX_ASSETS || bytes + read.byteLength > limits.MAX_ASSET_BYTES_TOTAL ||
+          pixels + imagePixels > limits.MAX_IMAGE_PIXELS_TOTAL) {
+        lost.set(assetId, { name, reason: R.OVER_TOTAL });
+        continue;
+      }
+      try {
+        const restored = new ImageAsset({
+          id: assetId,
+          base64: read.dataURL,
+          name: name ?? '',
+          width: read.width,
+          height: read.height,
+          mimeType: read.mimeType,
+          size: read.byteLength,
+        });
+        ImageAsset.assertValidSerialized(restored);
+        restored._imageElement = read.image;
+        imageAssets.push(restored);
+        available.add(assetId);
+        count += 1;
+        bytes += read.byteLength;
+        pixels += imagePixels;
+      } catch (error) {
+        console.warn('A recovery image could not be read:', error);
+        lost.set(assetId, { name, reason: R.UNREADABLE });
+      }
+    }
+
+    // Every reference the model makes to an image that is not here takes the
+    // fallback, and is named in the warning: one the manifest lists and could
+    // not be read, or one it never listed.
+    const referenced = collectImageAssetReferences({ ...data, imageAssets: [] });
+    const dropped = new Set();
+    for (const assetId of referenced) {
+      if (available.has(assetId)) continue;
+      dropped.add(assetId);
+      const reason = lost.get(assetId) ?? { name: null, reason: R.UNREADABLE };
+      omitted.push(omissionOf({ ...describeReferences(data, assetId), name: reason.name }, reason.reason));
+    }
+    const restoredData = { ...stripAssetReferences(data, dropped), imageAssets: [] };
+    delete restoredData.recoveryImages;
+    return { kind: 'manifest', data: restoredData, backgroundBase64, backgroundName, imageAssets, omitted, pins, life };
+  } catch (error) {
+    for (const pin of pins.splice(0)) pin.release();
+    life?.end();
+    throw error;
   }
-  const restoredData = { ...stripAssetReferences(data, dropped), imageAssets: [] };
-  delete restoredData.recoveryImages;
-  return { kind: 'manifest', data: restoredData, backgroundBase64, backgroundName, imageAssets, omitted, pins, life };
 }
 
 /**

@@ -1448,3 +1448,83 @@ describe('round 3: the code review round 2 (DEF-98)', () => {
     expect(environment.backend.entries.size).toBe(0);
   });
 });
+
+describe('round 4: the code review round 3 (DEF-98)', () => {
+  /** Settles, or fails the test after `ms`: a Clear All that waits for good is a failure, not a hang. */
+  function within(promise, ms = 3000) {
+    let timer;
+    return Promise.race([
+      promise,
+      new Promise((_resolve, reject) => {
+        timer = setTimeout(() => reject(new Error(`still waiting after ${ms} ms`)), ms);
+      }),
+    ]).finally(() => clearTimeout(timer));
+  }
+
+  /** The pins the store holds beyond those of the live project's images. */
+  function strayPins(app) {
+    const live = new Set([...app._recoveryLive.values()].map(entry => entry.key));
+    return [...app.recoveryImageStore._pins.values()]
+      .filter(pin => !pin.ended && pin.count > 0 && !live.has(pin.key))
+      .map(pin => pin.key);
+  }
+
+  /** A record written with a background, then edited by the test before the next boot. */
+  async function recordWithBackground(environment) {
+    decodeByHeader();
+    const writer = await bootWithRecovery(environment);
+    await loadBackgroundFile(writer, fileOf(pngDataURL({ width: 18, height: 9, tag: 'round-4' }), 'round-4.png'));
+    placeRoute(writer);
+    await writeRecovery(writer);
+    await closeApp(writer);
+    return recoveryRecord(environment.storage);
+  }
+
+  /** Boot over the record, then Clear All: it must finish, and leave the restore holding nothing. */
+  async function bootThenClear(environment) {
+    const app = await bootWithRecovery(environment);
+    await within(recoveryImagesIdle(app));
+    const stray = strayPins(app);
+    const outstanding = app.recoveryImageStore._operations.size;
+    const announce = vi.spyOn(app, 'announce');
+    app.clearAll();
+    await within(recoveryImagesIdle(app));
+    const said = announce.mock.calls.map(([message]) => message);
+    return { app, stray, outstanding, said };
+  }
+
+  test.each([
+    ['naming an image', record => ({ ...record, waypoints: [null] })],
+    ['naming none', record => ({
+      ...record, waypoints: [null], recoveryImages: { version: 2, background: null, assets: [], omitted: [] },
+    })],
+    ['naming an image no longer stored', (record, environment) => {
+      environment.backend.lose(record.recoveryImages.background.key);
+      return { ...record, waypoints: [null] };
+    }],
+  ])('a malformed record %s is refused, lets go of every pin and its operation, and Clear All then finishes (Codex, code review round 3)', async (_, malform) => {
+    allowConsole(/Autosave was not restored/);
+    const environment = recoveryEnvironment();
+    const record = await recordWithBackground(environment);
+    environment.storage.set('routePlotter_autosave', JSON.stringify(malform(record, environment)));
+    const { app, stray, outstanding, said } = await bootThenClear(environment);
+    expect(stray).toEqual([]);
+    expect(outstanding).toBe(0);
+    // Refused, it was kept for the author (DEF-28); Clear All discarded it and finished.
+    expect(said.some(message => message.startsWith('Project cleared'))).toBe(true);
+    expect(app.recoveryImageStore._operations.size).toBe(0);
+    expect(environment.backend.entries.size).toBe(0);
+  });
+
+  test('a manifest naming an image no longer stored restores without it, lets go of its pin, and Clear All then finishes', async () => {
+    const environment = recoveryEnvironment();
+    const record = await recordWithBackground(environment);
+    environment.backend.lose(record.recoveryImages.background.key);
+    const { app, stray, outstanding, said } = await bootThenClear(environment);
+    expect(app.waypoints).toHaveLength(0);
+    expect(stray).toEqual([]);
+    expect(outstanding).toBe(0);
+    expect(said).toContain('Project cleared');
+    expect(environment.backend.entries.size).toBe(0);
+  });
+});
