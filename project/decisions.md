@@ -18,6 +18,41 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-13 — REL-718 — v3.2.718 ships DEF-98's recovery images; DEF-98 closes, and its heading with it
+
+**Decision:** v3.2.718 is live from deploy `9864efc` (tag `v3.2.718`), released on the owner's word for DEF-98's merge (`e8c361c`, PR #133). DEF-98 closes with its heading, and Phase 2 resumes at DEF-15. The player changed only by minifier renames, so its disk save is waived.
+
+**Rationale:**
+- **Release** (`release.sh`): rollback tag `rollback-v3.2.717-e8c361c`; gate green (137 files, 3,484 tests, 2 todo); dry run, then push; deploy `9864efc`; report-build-status, deploy, test-and-build and build all succeeded; Pages built `9864efc`; all 22 live files SHA-256-identical.
+- **Live smoke** (the lead's observation in the pane, 2026-10-13 ~18:37 BST, storage and the image store cleared):
+  - the Open day route loads 6 waypoints, plays to 3,002 ms of 26,763 ms, then to its end in 1,426 frames with none queued;
+  - MP4 9,910,489 bytes, ftypisom, 1920×1080, 28.8 s;
+  - HTML 2,037,331 bytes, with the project, its CSP and the live `player.js` embedded;
+  - no non-200 resource.
+- **DEF-98 on the live site** (the lead's observation): before storage was cleared, the pane held a recovery record in v3.2.717's format, left by earlier smokes. v3.2.718 restored its 6 waypoints and offered "Background not restored: recovery before this release kept no images. Choose the image this route was made on." with Choose image and Dismiss.
+- **The player:** `docs/player.js` differs from v3.2.717's only by the minifier's renames. It has the same length, 435,031 bytes, though the raw bytes differ, and it is the same text once every one- and two-character identifier is masked (`perl -pe 's/\b[A-Za-z_\$][A-Za-z0-9_\$]?\b/X/g'`, both SHA-1 `d5b5ac7a5009…`). Masked equality shows the renames are all that changed; it is not, on its own, a proof of identical behaviour. By the owner's export rule (GATELESS-1), a release that changes `player.js` has its exports saved to disk. Asked, the owner waived it for this release only: "Waive this one (Recommended)".
+- **What DEF-98 delivers:**
+  - Recovery keeps the background, bundled or uploaded, custom markers and the custom path head, each with its file name, size and custom style.
+  - Images live in IndexedDB, keyed by SHA-256, and the record carries a version-2 manifest.
+  - Each tab holds a shared Web Lock per image it shows, saves or reads, and a deletion needs that image's lock exclusively. Without Web Locks nothing is deleted.
+  - A toast names any image not kept, and why. A background that cannot come back is offered by name in the banner slot, never replaced.
+  - Clear All removes the images only once nothing needs them, and says so only then.
+  - `coordVersion`, the project file format and the player's behaviour are unchanged. No package was added.
+- **The owner's words on the PR**, 2026-10-13 (labels verbatim):
+  - "Merge and release (Recommended)", whose option text was: "I squash-merge #133 and release v3.2.718 with the usual release script from your OneDrive copy, after checking no other chat is busy. Then I run the live smoke test and file the release record that closes DEF-98."
+  - On its six open questions, "Keep all six (Recommended)": (1) the keeping order, background, then the path head, then the markers; (2) no background name in Save Project yet; (3) Choose image keeps the prompt until a background is set; (4) Dismiss is final; (5) the warning toasts stay until dismissed; (6) a browser that cannot store images warns as built.
+  - The filing's other readings stand as proposals, tracked by a wish line. "Markers in waypoint order" is the implementation's detail; his option said "then markers".
+- **Before releasing** (the lead's observation): two other chats were busy, but neither was in `route-plotter/`. One worked in the PM-Skills Lab folder; the other had just gone idle.
+- **The pull request's own record:** five lead rounds (`ab4592a` → `b797a79`). Codex reviewed the brief twice and the code four times (r1: 1 blocking and 7 real; r2: 1 blocking and 3 real; r3: 1 real; r4: approve). The lead checked it in Chromium: real IndexedDB and Web Locks, two tabs, Clear All across tabs.
+- **Recall, local** (verbs/recall.md). The lead first scored it 8/8; Codex r1 on the record found answer 3 partial, so the original result is 7/8 (2,2,1,2). After the repair below, a local recheck is 8/8, stored as its own trajectory line:
+  1. The last four shipped: DEF-98, DEF-89, DEF-86, DEF-96 (`project/trajectory.md`).
+  2. One decision of this heading: DEF-98's, that recovery keeps every image, because a restored session came back with dots on a blank canvas.
+  3. What is deferred: the original answer, "every Deferred line below is none", missed the backlog's deferred items (score 1). The repaired answer: EX-01, DEF-78, DEF-79 and DEF-80 (from CROWD-05), DEF-84, 85, 87, 88, 90, 92, 93, 95 and 97 (from CROWD-07), each a `— (from: …)` line in `project/backlog.md`, and the open ideas in `project/wish-list.md`. DEF-98's remaining readings are a new wish line there.
+  4. The next item: DEF-15, in Phase 2 (the DEF-98 decision's placement, "before DEF-15").
+
+**Supersedes:** none
+
+**Deferred:** none
 ## 2026-10-13 — PLAN-4 — A football crowd and mob MVP comes first; v4 merges routes and crowds
 
 **Decision:** On the owner's word, CROWD-08, a football crowd and mob MVP specialised for his client's task, comes first in Current after DEF-98, due by 2026-10-20 and released as v3.3; the run builds it, Codex reviewing at its highest setting until it approves. Once it ships, the bulk of the work goes to v4, which merges routes and crowds (MERGE-01).
