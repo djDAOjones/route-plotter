@@ -20,7 +20,7 @@
 
 ## 2026-10-13 — PLAN-4 — A football crowd and mob MVP comes first; v4 merges routes and crowds
 
-**Decision:** On the owner's word, the next minor versions build CROWD-08, a football crowd and mob MVP specialised for his client's task, due within a week; once it ships, the bulk of the work goes to v4, which merges routes and crowds (MERGE-01). Its placement, version number, parts and review depth are the filing session's proposals, below.
+**Decision:** On the owner's word, CROWD-08, a football crowd and mob MVP specialised for his client's task, comes first in Current after DEF-98, due by 2026-10-20 and released as v3.3; the run builds it, Codex reviewing at its highest setting until it approves. Once it ships, the bulk of the work goes to v4, which merges routes and crowds (MERGE-01).
 
 **Rationale:** The owner, 2026-10-13, in a read-only analysis session, asked how crowds would show "a mob moving from one area to another" and "attendees of a football match arriving by various routes … then converging on an area (probably one for each of the four sides of the stadium)". He then asked for "the ability to define areas, not just paths". Next: "the top features I need for my client are football crowd; and mob moving from market square, down a road, and to another open space. I also want to be able to have trains / buses / cars on transit routes, as decoration (so running in parralel to other things going on). is there a case to merge routes and crowds with extra settings and features that are selectable … having routes and crowds separately does confuse things a little from a user point of view. one thing with options might feel more cognitively coherent... but maybe I'm misjudging. what do you think?" After the session advised converging in steps: "but crowd paths should be able to act as the camera. what are the pros and cons of unifying the system vs keep seperate?" Then the decision: "I want the next major version to be a merge. but for now, we do MVP for football crowds and mobs - app development can be specialised towards this for next minor versions at the expense of being generally useful so the client can complete their upcoming task. But the bulk of development work will go into the next major version as soon as mvp football crowd and mob have shipped".
 
@@ -28,21 +28,29 @@ The session then put six questions to him in two rounds; his picks, labels verba
 - On "When does your client need the football crowd and mob features working?", "Within a week", whose option text read "Cut the MVP to the essentials: items 1–5, groups simplified, presets later." Items 1–5 were crowds without a route, start areas, finish areas, entry shares and duplicating a crowd.
 - On extras, "Final whistle", unpicked: "Camera follows a crowd", "Vehicles as decoration" and "Milling in areas".
 - On recording, "I write a plan PR (Recommended)".
-- On a session filing transit presets at the same time, "distant wish list, ignore". That session's wish line, transit presets by mode and era, is PR #134, still open. This record is pushed once #134 has merged, so that line is in `main` beside it; if #134 closes unmerged, this record carries the line instead.
+- On a session filing transit presets at the same time, "distant wish list, ignore". That session's wish line, transit presets by mode and era, was PR #134.
 - On areas, "Simple shapes (Recommended)": "An Entry or Exit node gets an area: rectangle or ellipse, set by width, height and turn, drawn on the map."
 - On review depth for the MVP's pull requests, in his own words: "max codex, got loads of compute".
 
-The filing session's readings and proposals, for the owner to confirm:
-- "Within a week" as by 2026-10-20.
+After Codex approved the draft, the session asked him four more questions; his answers, verbatim:
+- On "The run's standing grant says "no new feature work" and one Codex review at 'high'. For CROWD-08 only, do you confirm these changes?", "Confirm both (Recommended)", whose option text read "The run may build the MVP. Its PRs get Codex at xhigh, round after round until it approves. Everything else in the grant stays as it is."
+- On "Do these readings stand: deadline 2026-10-20, released as v3.3, placed after DEF-98 and ahead of Phase 2 (Phase 2 and 3 wait), and MERGE-01 first in Next once the MVP ships?", "All stand (Recommended)".
+- On how PR #134 and this record should land, "you take charge and resolve". The session merged #134 as it stood, its CI green, as `d0382c8`, so the transit line sits in `main` once, beside this record's lines.
+- On pushing this record and opening its pull request, "Yes, push and open it".
+
+Confirmed by the owner, then:
+- the deadline, by 2026-10-20, his "Within a week";
+- his word lifting GATELESS-1's "no new feature work" (its condition 2) for CROWD-08 alone, so the run builds it under the grant's other conditions;
+- "max codex, got loads of compute" changing GATELESS-1's condition 5 for CROWD-08's pull requests: Codex at its highest reasoning setting, `xhigh` in place of `high`, and rounds until it approves in place of one review and a short pass on a large fix;
+- those two replacing GATELESS-1's conditions 2 and 5 for CROWD-08's pull requests alone, hence the Supersedes line; every other condition, and both conditions for all other work, stand;
+- v3.3, with `package.json` set to 3.3.0 by CROWD-08's first release;
+- CROWD-08 under a heading of its own after DEF-98 (#133, deployed as v3.2.718) and ahead of Phase 2, whose items and Phase 3's wait;
+- MERGE-01 first in Next once CROWD-08 ships.
+
+The filing session's readings and proposals still for him to confirm:
 - "specialised … at the expense of being generally useful" as cutting breadth, not the quality bars: the brief's mandate, loadable saves, exports and the player, the outline and the profile's standards, tests, and no new dependency.
-- His word as lifting, for CROWD-08 alone, GATELESS-1's "no new feature work" (its condition 2), so the run builds it under the grant's other conditions.
-- "max codex, got loads of compute" as changing GATELESS-1's condition 5 for CROWD-08's pull requests: Codex at its highest reasoning setting, `xhigh` in place of `high`, and rounds until it approves in place of one review and a short pass on a large fix.
-- Confirmed, those two readings replace GATELESS-1's conditions 2 and 5 for CROWD-08's pull requests alone, hence the Supersedes line; every other condition, and both conditions for all other work, stand.
-- "next minor versions" as v3.3, with `package.json` set to 3.3.0 by CROWD-08's first release.
-- CROWD-08 under a heading of its own after DEF-98, which merged as #133 with its release pending, and ahead of Phase 2; Phase 2's and Phase 3's items wait.
-- The parts' design within his picks, A to G, with the supported combinations in the item file; "groups simplified" as a size and a width only, and "Final whistle" as part G. If the week runs short, A to E (the football scene) come before F and G.
+- The parts' design within his picks, A to G, with the supported combinations in the item file; "groups simplified" as a size and a width only, and "Final whistle" as part G. If the week runs short, the parts done ship first, A to E (the football scene) leading, and the run asks him about F and G.
 - DEF-84 closed by playing, since its criteria left disabling or playing to the run.
-- "the bulk of development work" as MERGE-01 first in Next once CROWD-08 ships.
 - One backlog line with seven parts in its item file, since the backlog had 930 of its 1,000 words.
 
 The analysis ran on a scratch clone of main at `86ad88a`. A probe of `SwarmEngine` on a match-day network (four entries, a two-way ring road, four stand Exits, 2,000 dots set to Collect) found:
