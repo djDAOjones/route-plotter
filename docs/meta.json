@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 19036,
+      "bytes": 19275,
       "imports": [],
       "format": "esm"
     },
@@ -170,7 +170,7 @@
       "format": "esm"
     },
     "src/services/StorageService.js": {
-      "bytes": 23552,
+      "bytes": 28345,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -2891,7 +2891,7 @@
       "format": "esm"
     },
     "src/services/ImageAssetService.js": {
-      "bytes": 32686,
+      "bytes": 32975,
       "imports": [
         {
           "path": "src/models/ImageAsset.js",
@@ -3112,8 +3112,60 @@
       "imports": [],
       "format": "esm"
     },
+    "src/services/RecoveryImageStore.js": {
+      "bytes": 31636,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/models/ImageAsset.js",
+          "kind": "import-statement",
+          "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "src/services/ImageAssetService.js",
+          "kind": "import-statement",
+          "original": "./ImageAssetService.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/recoveryImages.js": {
+      "bytes": 51807,
+      "imports": [
+        {
+          "path": "src/models/ImageAsset.js",
+          "kind": "import-statement",
+          "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "src/utils/assetReferences.js",
+          "kind": "import-statement",
+          "original": "../utils/assetReferences.js"
+        },
+        {
+          "path": "src/services/RecoveryImageStore.js",
+          "kind": "import-statement",
+          "original": "../services/RecoveryImageStore.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/components/ModeBanner.js",
+          "kind": "import-statement",
+          "original": "../components/ModeBanner.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/app/backgroundLoading.js": {
-      "bytes": 6679,
+      "bytes": 7600,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
@@ -3124,6 +3176,11 @@
           "path": "src/models/ImageAsset.js",
           "kind": "import-statement",
           "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "src/app/recoveryImages.js",
+          "kind": "import-statement",
+          "original": "./recoveryImages.js"
         }
       ],
       "format": "esm"
@@ -3243,7 +3300,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 67519,
+      "bytes": 72423,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3339,6 +3396,11 @@
           "path": "src/app/regionLines.js",
           "kind": "import-statement",
           "original": "./regionLines.js"
+        },
+        {
+          "path": "src/app/recoveryImages.js",
+          "kind": "import-statement",
+          "original": "./recoveryImages.js"
         }
       ],
       "format": "esm"
@@ -3370,7 +3432,7 @@
       "format": "esm"
     },
     "src/app/wiringControllers.js": {
-      "bytes": 62055,
+      "bytes": 62178,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3436,7 +3498,7 @@
       "format": "esm"
     },
     "src/app/undoRedo.js": {
-      "bytes": 19485,
+      "bytes": 19885,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -3477,6 +3539,11 @@
           "path": "src/app/regionLines.js",
           "kind": "import-statement",
           "original": "./regionLines.js"
+        },
+        {
+          "path": "src/app/recoveryImages.js",
+          "kind": "import-statement",
+          "original": "./recoveryImages.js"
         }
       ],
       "format": "esm"
@@ -3818,7 +3885,7 @@
       "format": "esm"
     },
     "src/app/startup.js": {
-      "bytes": 722,
+      "bytes": 1122,
       "imports": [
         {
           "path": "src/app/unrestoredAutosave.js",
@@ -3829,7 +3896,7 @@
       "format": "esm"
     },
     "src/app/projectReset.js": {
-      "bytes": 5766,
+      "bytes": 6492,
       "imports": [
         {
           "path": "src/app/operationGeneration.js",
@@ -3870,6 +3937,11 @@
           "path": "src/app/regionLines.js",
           "kind": "import-statement",
           "original": "./regionLines.js"
+        },
+        {
+          "path": "src/app/recoveryImages.js",
+          "kind": "import-statement",
+          "original": "./recoveryImages.js"
         }
       ],
       "format": "esm"
@@ -3886,7 +3958,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 70139,
+      "bytes": 70954,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -4162,19 +4234,29 @@
           "path": "src/utils/focusTrap.js",
           "kind": "import-statement",
           "original": "./utils/focusTrap.js"
+        },
+        {
+          "path": "src/services/RecoveryImageStore.js",
+          "kind": "import-statement",
+          "original": "./services/RecoveryImageStore.js"
+        },
+        {
+          "path": "src/app/recoveryImages.js",
+          "kind": "import-statement",
+          "original": "./app/recoveryImages.js"
         }
       ],
       "format": "esm"
     }
   },
   "outputs": {
-    ".docs-build-tVNWrp/app.js.map": {
+    ".docs-build-Rn4Rh7/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3797383
+      "bytes": 3942376
     },
-    ".docs-build-tVNWrp/app.js": {
+    ".docs-build-Rn4Rh7/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4183,7 +4265,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 4266
+          "bytesInOutput": 4366
         },
         "src/utils/imageCoordinates.js": {
           "bytesInOutput": 141
@@ -4228,7 +4310,7 @@
           "bytesInOutput": 1905
         },
         "src/services/StorageService.js": {
-          "bytesInOutput": 8260
+          "bytesInOutput": 10096
         },
         "src/services/CoordinateTransform.js": {
           "bytesInOutput": 3754
@@ -4441,7 +4523,7 @@
           "bytesInOutput": 5069
         },
         "src/services/ImageAssetService.js": {
-          "bytesInOutput": 14024
+          "bytesInOutput": 14071
         },
         "src/utils/assetReferences.js": {
           "bytesInOutput": 2653
@@ -4479,8 +4561,14 @@
         "src/components/ContextMenu.js": {
           "bytesInOutput": 3342
         },
+        "src/services/RecoveryImageStore.js": {
+          "bytesInOutput": 9877
+        },
+        "src/app/recoveryImages.js": {
+          "bytesInOutput": 18197
+        },
         "src/app/backgroundLoading.js": {
-          "bytesInOutput": 2582
+          "bytesInOutput": 2783
         },
         "src/services/DiagnosticsService.js": {
           "bytesInOutput": 2176
@@ -4501,16 +4589,16 @@
           "bytesInOutput": 93
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 31689
+          "bytesInOutput": 32118
         },
         "src/app/exporting.js": {
           "bytesInOutput": 7313
         },
         "src/app/wiringControllers.js": {
-          "bytesInOutput": 24154
+          "bytesInOutput": 24196
         },
         "src/app/undoRedo.js": {
-          "bytesInOutput": 8514
+          "bytesInOutput": 8532
         },
         "src/app/playback.js": {
           "bytesInOutput": 5154
@@ -4546,19 +4634,19 @@
           "bytesInOutput": 1387
         },
         "src/app/startup.js": {
-          "bytesInOutput": 116
+          "bytesInOutput": 173
         },
         "src/app/projectReset.js": {
-          "bytesInOutput": 2183
+          "bytesInOutput": 2285
         },
         "src/utils/announcementQueue.js": {
           "bytesInOutput": 1089
         },
         "src/main.js": {
-          "bytesInOutput": 28680
+          "bytesInOutput": 28778
         }
       },
-      "bytes": 1158934
+      "bytes": 1189938
     }
   }
 }
