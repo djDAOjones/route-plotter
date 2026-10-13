@@ -20,6 +20,10 @@
 
 ### Phase 1 — Land the big run's open pull requests — CLOSED 2026-10-06
 
+### Ahead of Phase 2's last defects — the owner's word of 2026-10-13
+
+- [ ] DEF-98 — Restore drops the background and custom images — since 2026-10-13
+
 ### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
 - [!] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01 — blocked: the owner's word to retire the source-text assertions its new tests cover (GATELESS-1 bars deleting a test)
