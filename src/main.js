@@ -85,6 +85,8 @@ import { pathHeadStyleUsesImageControls } from './utils/pathHeadPresets.js';
 import { boundEntryWaypointIds } from './utils/routeAnchors.js';
 import { createAnnouncementQueue } from './utils/announcementQueue.js';
 import { focusLands } from './utils/focusTrap.js';
+import { createRecoveryImageStore } from './services/RecoveryImageStore.js';
+import { endBackgroundPrompt } from './app/recoveryImages.js';
 
 /** Toasts on their way out, which focus is never given to (UI-06 B-35). */
 const leavingToasts = new WeakSet();
@@ -129,6 +131,9 @@ class RoutePlotter {
     // Services
     this.storageService = new StorageService();
     this.storageService.attachLifecycle(window);
+    // The images browser recovery keeps (DEF-98): made before start-up, whose
+    // restore reads them.
+    this.recoveryImageStore = createRecoveryImageStore();
     this.coordinateTransform = new CoordinateTransform();
     this.pathCalculator = new PathCalculator(); // Catmull-Rom + corner-slowing reparam, main thread
     this.renderingService = new RenderingService();
@@ -833,6 +838,7 @@ class RoutePlotter {
    */
   _stopModeBannerWork() {
     this._stopPreviewTip?.();
+    endBackgroundPrompt(this);
     this._stopBranchFocus?.();
     this.modeBanner?.destroy();
     this._modeBannerRefitPending = false;
@@ -959,14 +965,18 @@ class RoutePlotter {
    * @param {{label: string, onClick: Function}} [action] - Optional offer the
    *   toast carries (LABEL-01). It is only ever an offer: the same action must
    *   remain reachable elsewhere, because a toast fades and can be missed.
-   * @param {{priority?: 'polite'|'assertive', whenIdle?: boolean}} [options] -
+   * @param {{priority?: 'polite'|'assertive', whenIdle?: boolean, essential?: boolean}} [options] -
    *   assertive for an error the author must hear; `whenIdle` for the start's
    *   tip, read once nothing else shows or waits, so it never cuts in on what
-   *   the author must hear (DEF-45; the owner, 2026-10-09)
+   *   the author must hear (DEF-45; the owner, 2026-10-09); `essential` for
+   *   a message routine ones never displace, what browser recovery could not
+   *   keep (DEF-98), announced once, here
+   * @returns {Function|undefined} Take the toast away, as its × does
    */
-  showToast(message, duration, action = null, { priority = 'polite', whenIdle = false } = {}) {
+  showToast(message, duration, action = null, { priority = 'polite', whenIdle = false, essential = false } = {}) {
     const lifetime = duration ?? (priority === 'assertive' ? 0 : 5000);
     if (whenIdle) this.announce(message, priority, { whenIdle });
+    else if (essential) this.announce(message, priority, { essential: true });
     else this.announce(message, priority);
     const container = this.elements.toastContainer;
     if (!container) return;
@@ -1012,6 +1022,7 @@ class RoutePlotter {
     
     dismiss.addEventListener('click', remove);
     if (lifetime > 0) setTimeout(remove, lifetime);
+    return remove;
   }
   
   /**

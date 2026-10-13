@@ -918,14 +918,20 @@ describe('one live region (UI-06 J-05, C-5)', () => {
     const app = await routeOfTwo();
     const [, second] = app.waypoints;
     const { toasts, announced } = listen(app);
+    // DEF-98: the route's first recovery write, before the delete, warned on
+    // screen that this browser (jsdom has no IndexedDB) cannot keep its
+    // background; that toast stays until dismissed. The delete adds one.
+    const onScreen = () => [...document.querySelectorAll('#toast-container .toast')]
+      .map(toast => toast.firstChild.textContent);
+    const before = onScreen();
+    expect(before).toEqual([expect.stringMatching(/^Browser recovery could not keep the background, UoN_map\.png: /)]);
 
     await remove(app);
 
     expect(app.waypoints).toEqual([second]);
     expect(toasts).toEqual([{ message: `Deleted waypoint — ${UNDO}` }]);
     expect(announced()).toEqual([[`Deleted waypoint — ${UNDO}`, 'polite']]);
-    expect([...document.querySelectorAll('#toast-container .toast')].map(toast => toast.firstChild.textContent))
-      .toEqual([`Deleted waypoint — ${UNDO}`]);
+    expect(onScreen()).toEqual([...before, `Deleted waypoint — ${UNDO}`]);
   });
 
   test('deleting several waypoints at once with the Delete key keeps its own count message, with no toast for each (the owner, 2026-10-09)', async () => {

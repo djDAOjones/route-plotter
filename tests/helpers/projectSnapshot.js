@@ -46,8 +46,19 @@ export function freezeClock(at = FIXED_NOW) {
  */
 export function loadSnapshot(app, snapshot) {
   // The record as the browser would hold it: the loader parses its own copy
-  // of the text, so a load cannot mutate the source.
-  const text = JSON.stringify(snapshot);
+  // of the text, so a load cannot mutate the source. A snapshot with no image
+  // in it is written as this release writes recovery, its manifest naming no
+  // image (DEF-98): without one it would be a record from before the release,
+  // which says that it kept no images and offers the background again.
+  // One that carries images, or names one, is left as it is.
+  const inline = typeof snapshot?.backgroundImage === 'string' ||
+    (Array.isArray(snapshot?.imageAssets) && snapshot.imageAssets.length > 0) ||
+    /"(customImageAssetId|imageAssetId)":"/.test(JSON.stringify(snapshot ?? null));
+  const record = snapshot && typeof snapshot === 'object' && !Array.isArray(snapshot) &&
+    !('recoveryImages' in snapshot) && !inline
+    ? { ...snapshot, recoveryImages: { version: 2, background: null, assets: [], omitted: [] } }
+    : snapshot;
+  const text = JSON.stringify(record);
   app.storageService.loadAutoSaveText = () => text;
   return app.loadAutosave();
 }

@@ -17,6 +17,7 @@ import {
   resolvePathHeadImage,
 } from '../utils/pathHeadPresets.js';
 import { regionOperation } from './regionLines.js';
+import { primeRecoveryImages } from './recoveryImages.js';
 
 function updatePathHeadPreview(app, asset = null) {
   if (app.elements?.headPreview) app.elements.headPreview.style.display = asset ? 'block' : 'none';
@@ -224,6 +225,10 @@ export const undoRedoMixin = {
       throw error;
     }
 
+    // Admitted, by either path (a new asset, or the replacement the plan
+    // made): browser recovery stores it at once (DEF-98).
+    primeRecoveryImages(this);
+
     if (outcome.historyShortenedBy > 0) {
       const count = outcome.historyShortenedBy;
       const message = `Image added. Undo history was shortened by ${count} additional ${count === 1 ? 'step' : 'steps'} to stay within project image limits.`;
@@ -411,6 +416,9 @@ export const undoRedoMixin = {
     
     this.render();
     pruneUnreferencedImageAssets(this);
+    // An image Undo or Redo makes live again is stored again, should
+    // recovery have let it go (DEF-98); its pruning is the service's own.
+    primeRecoveryImages(this);
     this.autoSave();
   },
   

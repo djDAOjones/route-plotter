@@ -71,7 +71,14 @@ describe('the whole app boots (TST-01)', () => {
       const app = await bootApp();
       await app.ready;
       expect(app.waypoints).toHaveLength(2);
-      expect(announce.mock.calls.map(([message]) => message)).toEqual(['Previous session restored']);
+      // DEF-98: jsdom has no IndexedDB, so the record could not keep the
+      // default map; the restore offers it again, said once, before it says
+      // the session is back.
+      expect(announce.mock.calls.map(([message]) => message)).toEqual([
+        'Background not restored: UoN_map.png — this browser cannot store images for recovery. '
+          + 'Choose the image this route was made on.',
+        'Previous session restored',
+      ]);
     } finally {
       localStorage.getItem.mockImplementation(() => null);
       announce.mockRestore();

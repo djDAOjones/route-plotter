@@ -58,10 +58,10 @@ ui ~ body>a[1]: a class="skip-link skip-link-outline" href="#scene-outline-title
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Tip: Switch to Preview mode to see exactly how the export will look"
 ui ~ #app: div inert="" → div
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Export failed"
-ui + #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
-ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
-ui + #toast-container>div[1]: div class="toast" :text="Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
+ui + #toast-container>div[1]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look"
 ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui + #toast-container>div[2]: div class="toast" :text="Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
+ui + #toast-container>div[2]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui ~ #codec-unsupported-modal: div aria-labelledby="modal-title-codec" aria-modal="true" class="modal" role="dialog" style="display: flex;" → div (not shown)
 ui - #codec-unsupported-modal>div[0]: div class="modal-content"
 ui - #codec-unsupported-modal>div[0]>button[0]: button aria-label="Close" class="modal-close-x" data-modal-close="" title="Close" :text="×"
@@ -76,6 +76,6 @@ settled:
   announced "Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
   announced "Starting video export — press Esc to cancel"
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Tip: Switch to Preview mode to see exactly how the export will look" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
-  ui ~ #toast-container>div[0]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look" → div class="toast is-visible" :text="Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
-  ui - #toast-container>div[1]: div class="toast" :text="Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
-  ui - #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+  ui ~ #toast-container>div[1]: div class="toast" :text="Tip: Switch to Preview mode to see exactly how the export will look" → div class="toast is-visible" :text="Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
+  ui - #toast-container>div[2]: div class="toast" :text="Export failed: Video export not supported: WebM export requires WebCodecs or MediaRecorder support"
+  ui - #toast-container>div[2]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

@@ -38,9 +38,19 @@ import { VideoExporter } from '../src/services/VideoExporter.js';
 
 const HOLD = ANNOUNCEMENTS.HOLD_MS;
 const PIXEL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
-const BACKGROUND_WARNING = 'Browser recovery excludes the background. Save a project file to preserve it.';
-const IMAGES_WARNING = 'Browser recovery excludes custom images. Save a project file to preserve them.';
-const BOTH_WARNING = 'Browser recovery excludes the background and custom images. Save a project file to preserve them.';
+// What browser recovery says of the images it does not keep. DEF-98 replaced
+// the three "Browser recovery excludes …" messages with one that names each
+// file and why; jsdom has no IndexedDB, so here nothing can be stored.
+const NOT_STORED = 'this browser cannot store images for recovery';
+const BACKGROUND_WARNING = `Browser recovery could not keep the background, background.png: ${NOT_STORED}. Save a project file to keep it.`;
+// A recovery point from before the model-only rule carries no file name for its background.
+const LEGACY_BACKGROUND_WARNING = 'Browser recovery could not keep the background, its file name not kept: '
+  + `${NOT_STORED}. Save a project file to keep it.`;
+const SITE_WALK_WARNING = `Browser recovery could not keep the background, PARM_Aerial.jpg: ${NOT_STORED}. Save a project file to keep it.`;
+const IMAGES_WARNING = 'Browser recovery could not keep the marker image for waypoint 1, marker.png, shown as a dot: '
+  + `${NOT_STORED}. Save a project file to keep it.`;
+const BOTH_WARNING = `Browser recovery could not keep 2 images. The background, background.png: ${NOT_STORED}. `
+  + `The marker image for waypoint 1, marker.png, shown as a dot: ${NOT_STORED}. Save a project file to keep them.`;
 const AUTOSAVE_FAILED = 'Auto-save failed. Save a project file to keep your work.';
 const BOOT_TIP = 'Tip: Check your sequence in Preview mode before exporting';
 
@@ -178,7 +188,7 @@ describe('announcements are written to the region in turn (DEF-45)', () => {
 
     // The start's tip follows, once both have had their time (the owner, 2026-10-09).
     expect(since(shown)).toEqual([
-      [0, BACKGROUND_WARNING],
+      [0, LEGACY_BACKGROUND_WARNING],
       [HOLD, 'Previous session restored'],
       [2 * HOLD, BOOT_TIP],
       [3 * HOLD, ''],
@@ -791,7 +801,7 @@ describe('what browser recovery did or could not do reaches the region, whatever
 
     // The start's tip follows all of it, and displaces none of it (the owner, 2026-10-09).
     expect(since(shown)).toEqual([
-      [0, BACKGROUND_WARNING],
+      [0, LEGACY_BACKGROUND_WARNING],
       [HOLD, outcome],
       [2 * HOLD, 'Animation paused'],
       [3 * HOLD, 'Playing animation'],
@@ -823,7 +833,7 @@ describe('what browser recovery did or could not do reaches the region, whatever
     await playOut();
 
     expect(since(shown)).toEqual([
-      [0, BACKGROUND_WARNING],
+      [0, LEGACY_BACKGROUND_WARNING],
       [HOLD, 'Previous session restored'],
       [2 * HOLD, 'Animation paused'],
       [3 * HOLD, 'Playing animation'],
@@ -925,7 +935,7 @@ describe('what browser recovery did or could not do reaches the region, whatever
 
     // Every opening asked for the warning; one copy waited for them all, and
     // is read after the last.
-    const warnings = shown.filter(([, text]) => text === BACKGROUND_WARNING).map(([at]) => at);
+    const warnings = shown.filter(([, text]) => text === SITE_WALK_WARNING).map(([at]) => at);
     expect(warnings.filter(at => at > stopped)).toHaveLength(1);
     // The region is clear within a hold for the message showing and one for each that may wait.
     const [clearedAt, cleared] = shown.at(-1);
@@ -956,7 +966,7 @@ describe('what browser recovery did or could not do reaches the region, whatever
     await playOut();
 
     // The warning still waits once for all the openings, and is read after the last;
-    const warnings = shown.filter(([, text]) => text === BACKGROUND_WARNING).map(([at]) => at);
+    const warnings = shown.filter(([, text]) => text === SITE_WALK_WARNING).map(([at]) => at);
     expect(warnings.filter(at => at > stopped)).toHaveLength(1);
     // the tip is read once, after it, last;
     const tips = shown.filter(([, text]) => text === BOOT_TIP).map(([at]) => at);

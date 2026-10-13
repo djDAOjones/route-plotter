@@ -135,12 +135,39 @@ export class StorageService {
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
-    
+
+    this._dropPending();
     this._pendingAutoSave = { serialized: newSerialized, onResult };
 
     // Set new timer
     this.debounceTimer = setTimeout(() => {
       this.flushAutoSave();
+    }, STORAGE.AUTOSAVE_INTERVAL);
+    return { ok: true, pending: true };
+  }
+
+  /**
+   * Save application state whose images are still being stored (DEF-98),
+   * debounced as `autoSave` is. `source.snapshot()` gives, at any moment, the
+   * record as it may be written then: naming only images already stored, so a
+   * record never names one the image store does not hold. `source.settle()`
+   * is null once that record is final, else a promise that settles when it
+   * may be. The debounced write waits for it, then writes what `snapshot()`
+   * gives; `flushAutoSave` (the page closing) cannot wait, and writes it at
+   * once, then the final record once it settles, should the page live on.
+   * @param {{snapshot: Function, settle: Function}} source
+   * @param {Function|null} onResult - Called after each write; `provisional`
+   *   when it was written before its images were stored
+   * @returns {{ok: boolean, pending: boolean}}
+   */
+  autoSaveDeferred(source, onResult = null) {
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    const pending = { source, onResult };
+    this._dropPending();
+    this._pendingAutoSave = pending;
+    this.debounceTimer = setTimeout(() => {
+      this.debounceTimer = null;
+      if (this._pendingAutoSave === pending) this._writeWhenSettled(pending);
     }, STORAGE.AUTOSAVE_INTERVAL);
     return { ok: true, pending: true };
   }
@@ -155,6 +182,13 @@ export class StorageService {
     this.debounceTimer = null;
 
     const pending = this._pendingAutoSave;
+    if (pending.source) {
+      // The page may be closing: what is stored now is written now.
+      if (!pending.source.settle()) return this._writeDeferred(pending).ok;
+      const result = this._writeDeferred(pending, { provisional: true });
+      this._writeWhenSettled(pending);
+      return result.ok;
+    }
     this._pendingAutoSave = null;
     const result = this._writeSerialized(STORAGE.AUTOSAVE_KEY, pending.serialized);
     if (result.ok) {
@@ -166,6 +200,91 @@ export class StorageService {
   }
 
   /**
+   * Persist a deferred state at once, replacing any pending write (DEF-98's
+   * form of `saveAutoSave`): what is stored now, and, if its images are still
+   * being stored, the final record once they are.
+   * @param {{snapshot: Function, settle: Function}} source
+   * @param {Function|null} [onResult] - Called after the final write, if one follows
+   * @returns {boolean} Whether the immediate write worked
+   */
+  saveAutoSaveDeferred(source, onResult = null) {
+    this.cancelAutoSave();
+    const pending = { source, onResult: null };
+    const settled = !source.settle();
+    if (!settled) this._pendingAutoSave = pending;
+    const result = this._writeDeferred(pending, { provisional: !settled, keepPending: !settled });
+    if (settled) {
+      source.release?.();
+    } else if (this._pendingAutoSave === pending) {
+      pending.onResult = onResult;
+      this._writeWhenSettled(pending);
+    }
+    return result.ok;
+  }
+
+  /**
+   * @private The pending write is dropped (replaced, cancelled or written
+   * final): a deferred one's source lets go of what it held for it.
+   */
+  _dropPending(pending = this._pendingAutoSave) {
+    if (pending?.source && !pending.released) {
+      pending.released = true;
+      pending.source.release?.();
+    }
+  }
+
+  /**
+   * @private Write `pending` once its source has settled, if it is still the
+   * pending write then.
+   */
+  _writeWhenSettled(pending) {
+    if (this._pendingAutoSave !== pending || pending.waiting) return;
+    const settling = pending.source.settle();
+    if (!settling) {
+      this._writeDeferred(pending);
+      return;
+    }
+    pending.waiting = true;
+    const next = () => {
+      pending.waiting = false;
+      if (this._pendingAutoSave === pending) this._writeWhenSettled(pending);
+    };
+    Promise.resolve(settling).then(next, next);
+  }
+
+  /**
+   * @private Serialise and write a deferred state as it stands; unless
+   * `provisional`, it is no longer pending.
+   */
+  _writeDeferred(pending, { provisional = false, keepPending = provisional } = {}) {
+    if (!keepPending && this._pendingAutoSave === pending) this._pendingAutoSave = null;
+    const finish = (outcome) => {
+      if (!keepPending) this._dropPending(pending);
+      pending.onResult?.(outcome);
+      return outcome;
+    };
+    let serialized;
+    try {
+      serialized = JSON.stringify(pending.source.snapshot());
+      if (new TextEncoder().encode(serialized).length > STORAGE_LIMITS.AUTOSAVE_SERIALIZED_MAX) {
+        throw new Error('Autosave exceeds the 4 MB local-storage safety limit');
+      }
+    } catch (error) {
+      console.error('Failed to prepare autosave:', error);
+      return finish({ ok: false, error, provisional });
+    }
+    if (serialized === this._lastSerialized && this._readText(STORAGE.AUTOSAVE_KEY) === serialized) {
+      return finish({ ok: true, unchanged: true, provisional });
+    }
+    const result = { ...this._writeSerialized(STORAGE.AUTOSAVE_KEY, serialized), provisional };
+    if (result.ok) {
+      this._lastSerialized = serialized;
+      console.debug('Auto-saved state');
+    }
+    return finish(result);
+  }
+
+  /**
    * Cancel a pending write so stale state cannot be written after Clear All or
    * a project replacement.
    * @returns {boolean} True if a pending write was cancelled.
@@ -174,6 +293,7 @@ export class StorageService {
     const hadPending = Boolean(this._pendingAutoSave || this.debounceTimer);
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = null;
+    this._dropPending();
     this._pendingAutoSave = null;
     return hadPending;
   }

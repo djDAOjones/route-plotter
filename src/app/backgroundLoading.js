@@ -3,6 +3,7 @@ import {
   isAsyncProjectOperationCurrent,
 } from './operationGeneration.js';
 import { ImageAsset } from '../models/ImageAsset.js';
+import { primeRecoveryImages, resolveBackgroundPrompt } from './recoveryImages.js';
 
 const MIME_BY_EXTENSION = Object.freeze({
   png: 'image/png',
@@ -98,11 +99,14 @@ export async function loadBackgroundFile(app, file) {
     if (!isAsyncProjectOperationCurrent(app, token)) return false;
 
     app.background.image = img;
-    // Historical field name: this retains the validated original source data
-    // URL for explicit ZIP/HTML export. Browser autosave never serialises it.
+    // Historical field name: this holds the validated original source data
+    // URL, for explicit ZIP/HTML export and for browser recovery, which keeps
+    // those bytes in its image store and its record names them (DEF-98).
     app._autosaveBackgroundCache = asset?.base64
       ? { image: img, dataURL: asset.base64 }
       : null;
+    // Its file name, kept with it in recovery (DEF-98).
+    app._backgroundName = typeof file?.name === 'string' && file.name ? file.name : null;
     app.updateImageTransform(img);
     app.exportSettings.resolutionX = img.naturalWidth;
     app.exportSettings.resolutionY = img.naturalHeight;
@@ -113,6 +117,10 @@ export async function loadBackgroundFile(app, file) {
     app.updateCanvasAspectRatio();
     if (app.waypoints.length >= 2) app.calculatePath();
     app.updateExportAvailability?.();
+    // A background that did not come back is no longer missing; and this
+    // one is stored at once, so the record seldom finds it in flight (DEF-98).
+    resolveBackgroundPrompt(app);
+    primeRecoveryImages(app);
     app.autoSave();
     return true;
   } catch (error) {
@@ -142,12 +150,20 @@ export async function loadExampleBackground(app, imagePath, {
     if (!isAsyncProjectOperationCurrent(app, token)) return false;
 
     app.background.image = img;
-    // See loadBackgroundFile: source bytes are export-only, not recovery data.
+    // See loadBackgroundFile: the source bytes, for export and recovery alike.
     app._autosaveBackgroundCache = { image: img, dataURL: asset.base64 };
+    // A bundled image's file name (DEF-98).
+    app._backgroundName = typeof asset.name === 'string' && asset.name
+      ? asset.name
+      : decodeURIComponent(String(imagePath).split('/').pop() || '') || null;
     app.updateImageTransform(img);
     app.eventBus.emit('video:resolution-native');
     if (app.waypoints.length >= 2) app.calculatePath();
     app.updateExportAvailability?.();
+    // As loadBackgroundFile: the prompt is answered, and the image stored at
+    // once, the default map's too (DEF-98).
+    resolveBackgroundPrompt(app);
+    primeRecoveryImages(app);
     app.render();
     if (autoSave) app.autoSave();
     console.log(`Example image loaded: ${imagePath}`);

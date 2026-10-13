@@ -6,6 +6,7 @@ import { isBuiltInPathHeadStyle } from '../utils/pathHeadPresets.js';
 import { discardForClearAll } from './unrestoredAutosave.js';
 import { ANIMATION } from '../config/constants.js';
 import { regionOperation } from './regionLines.js';
+import { clearRecoveryImages } from './recoveryImages.js';
 
 /**
  * Establish a new, empty, non-undoable project baseline.
@@ -50,8 +51,6 @@ function clearProjectSaying(app, cover) {
   app.background.image = null;
   app.updateImageTransform(null);
   app._autosaveBackgroundCache = null;
-  app._autosaveAssetWarningShown = false;
-  app._autosaveBackgroundWarningShown = false;
   app._autosaveFailureWarningShown = false;
   if (app.styles.pathHead) {
     // Bundled presets are not part of the asset service being cleared. Keep
@@ -111,6 +110,10 @@ function clearProjectSaying(app, cover) {
   // First: a record held in the recovery key keeps it from being cleared.
   const unrestored = discardForClearAll(app);
   const recoveryCleared = app.storageService.clearAutoSave();
+  // The images recovery kept go with the record, their names, the prompt for
+  // a background and every write of them still pending: after the writes
+  // already issued, before any of the new project's (DEF-98).
+  const imagesCleared = clearRecoveryImages(app);
   app._isDirty = false;
   app.updateTitleIndicator();
   // A new project: its first change is heard (UI-06 B-17).
@@ -121,12 +124,26 @@ function clearProjectSaying(app, cover) {
       'assertive'
     );
   } else {
+    let message = 'Project cleared';
     if (unrestored.discarded > 1) {
-      app.announce(`Project cleared, and the ${unrestored.discarded} sessions that couldn't be restored were discarded`);
+      message = `Project cleared, and the ${unrestored.discarded} sessions that couldn't be restored were discarded`;
     } else if (unrestored.discarded === 1) {
-      app.announce("Project cleared, and the session that couldn't be restored was discarded");
+      message = "Project cleared, and the session that couldn't be restored was discarded";
+    }
+    if (imagesCleared) {
+      // Said once the images are gone, never before (Codex, brief round 1,
+      // 3); a removal that fails is said, and how to try again.
+      imagesCleared.then(result => {
+        if (result.ok) app.announce(message);
+        else {
+          app.announce(
+            'Project cleared, but browser recovery could not remove its images. Choose Clear all again to remove them.',
+            'assertive'
+          );
+        }
+      });
     } else {
-      app.announce('Project cleared');
+      app.announce(message);
     }
     cover();
   }

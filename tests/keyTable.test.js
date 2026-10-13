@@ -1629,6 +1629,8 @@ const KEY_LISTENER = {
   busyness: 'src/app/crowds.js: input keydown #2',
   crowdRow: 'src/app/crowds.js: row keydown',
   exportEscape: 'src/app/exporting.js: window keydown (capture)',
+  // DEF-98: the banner slot's prompt for a background recovery could not bring back
+  backgroundPrompt: 'src/app/recoveryImages.js: shown.root keydown',
   contextMenu: 'src/components/ContextMenu.js: document keydown (capture)',
   menuButton: 'src/components/Dropdown.js: trigger keydown',
   menu: 'src/components/Dropdown.js: menu keydown',
@@ -1683,6 +1685,11 @@ const KEY_LISTENERS = {
   [KEY_LISTENER.exportEscape]: {
     what: 'Escape during a video export cancels it, ahead of every other listener',
     keys: ['Escape'], reads: ['preventDefault', 'stopImmediatePropagation'] },
+  [KEY_LISTENER.backgroundPrompt]: {
+    what: 'the prompt for a background browser recovery could not bring back (DEF-98): Escape with focus in it ' +
+      'dismisses it, as its Dismiss does, and goes no further',
+    keys: ['Escape'], reads: ['preventDefault', 'stopPropagation'],
+    suite: 'tests/recoveryImages.test.js' },
   [KEY_LISTENER.contextMenu]: {
     what: 'an open context menu: arrows, Home and End move, Escape and Tab close it; it holds every other key back',
     keys: ['ArrowDown', 'ArrowUp', 'End', 'Escape', 'Home', 'Tab'], reads: ['preventDefault', 'stopPropagation'] },

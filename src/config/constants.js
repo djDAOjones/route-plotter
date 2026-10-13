@@ -148,6 +148,10 @@ export const STORAGE = {
   // The mark of a record held in the recovery key because no copy of it could
   // be written, so no tab writes over it (DEF-28)
   HELD_AUTOSAVE_KEY: 'routePlotter_heldAutosave',
+  // The images browser recovery keeps, in IndexedDB, and the Web Lock every
+  // tab takes to store, read or remove them (DEF-98)
+  RECOVERY_IMAGES_DB: 'routePlotter_recoveryImages',
+  RECOVERY_IMAGES_LOCK: 'routePlotter_recoveryImages',
   PREFERENCES_KEY: 'routePlotter_preferences',
   SPLASH_SHOWN_KEY: 'routePlotter_splashShown',
   AUTOSAVE_INTERVAL: 1000         // Debounce time for autosave
