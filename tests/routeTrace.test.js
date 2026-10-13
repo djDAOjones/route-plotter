@@ -105,6 +105,13 @@ describe('traceRouteIntoGraph', () => {
     expect(problems[0].code).toBe(TRACE_PROBLEM.TOO_SHORT);
   });
 
+  // CROWD-08 part A (§3.7): where a route is still required, the owner's 2026-10-11 phrasing, "at least two
+  // route waypoints", word for word, so a later edit cannot split it from Trace's own reason again.
+  test('the refusal\'s words: "Add at least two route waypoints before tracing the route into a crowd."', () => {
+    expect(traceRouteIntoGraph([major('a', 0, 0)]).problems[0].detail)
+      .toBe('Add at least two route waypoints before tracing the route into a crowd.');
+  });
+
   test('a broken branch structure is refused rather than half-traced', () => {
     const broken = [major('a', 0, 0), major('b1', 1, 1, { branchId: 'B', branchFrom: 'gone' })];
     const { nodes, problems } = traceRouteIntoGraph(broken);

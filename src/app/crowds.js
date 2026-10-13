@@ -1139,6 +1139,9 @@ export const crowdsMixin = {
           releaseDuration: NEW_CROWD_RELEASE_DURATION,
         }],
       });
+      // Its timeline, if the project has none and no route to give it one, in
+      // the add's undo step: one undo takes both back (CROWD-08 part A).
+      this.applyRoutelessTimelineDefault?.();
       this.saveUndoState();
       this.autoSave();
       this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-added', layerId: layer.id });

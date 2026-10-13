@@ -234,9 +234,10 @@ export const viewportMixin = {
     }
     
     if (clampedCount > 0) {
-      if (this.waypoints.length >= 2) {
-        this.calculatePath();
-      }
+      // Always: a lone waypoint moved here moves the crowd nodes anchored to
+      // it, and what can play with them (CROWD-08 part A; the rebuild clears
+      // what a route fed when there is none).
+      this.calculatePath();
       this.showToast(`${clampedCount} waypoint(s) moved to fit within the image at this zoom level`, 4000);
     }
   },

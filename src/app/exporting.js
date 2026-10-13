@@ -82,8 +82,25 @@ function refuseExport(app, message, status = 'Export not started') {
   app.eventBus.emit('ui:toast', { message, priority: 'assertive' });
 }
 
-const VIDEO_REASON = 'Export MP4 and WebM need at least 2 waypoints.';
+// Why an export is off with nothing to play, in the owner's words of 2026-10-13 (CROWD-08 part A).
+const VIDEO_REASON = 'Export MP4 and WebM need at least two route waypoints, or a crowd\'s network.';
+const HTML_REASON = 'Export HTML needs at least two route waypoints, or a crowd\'s network.';
+const HTML_AND_BACKGROUND_REASON =
+  'Export HTML needs at least two route waypoints, or a crowd\'s network, and a background image.';
+const BACKGROUND_REASON = 'Export HTML needs a background image.';
 const FORMAT_LABELS = { mp4: 'MP4', webm: 'WebM' };
+
+/**
+ * Whether the project has anything to export: the app's own test of what can
+ * play (`canPlayScene`, CROWD-08 part A), so the export items, their reasons
+ * and Play never disagree. A module helper, so a host that borrows
+ * `exportVideo` alone, with no such test, keeps the route's rule.
+ * @param {Object} app
+ * @returns {boolean}
+ */
+function hasSomethingToExport(app) {
+  return typeof app.canPlayScene === 'function' ? app.canPlayScene() : app.waypoints.length >= 2;
+}
 
 /** Write a reason span's words: the author is reading them. */
 function setReason(span, text) {
@@ -209,11 +226,15 @@ export const exportingMixin = {
       if (format) this.exportSettings.format = format;
 
       // Validate we have something to export (the items are disabled meanwhile;
-      // a request by another route is refused the same way, UI-06 B-18)
-      if (this.waypoints.length < 2) {
+      // a request by another route is refused the same way, UI-06 B-18): a
+      // route, or a crowd that can be drawn (CROWD-08 part A)
+      if (!hasSomethingToExport(this)) {
         refuseExport(this, VIDEO_REASON);
         return;
       }
+      // With no route, a scene end an edit has just queued is measured first
+      // (its 50 ms debounce): there is no route timing below to rebuild it.
+      if (this.waypoints.length < 2 && this._sceneEndTimeout) this.refreshSceneEnd?.();
 
       // Initialize exporter if needed
       if (!this.videoExporter) {
@@ -417,17 +438,21 @@ export const exportingMixin = {
    */
   async exportHTML() {
     // Validate we have something to export (the item is disabled meanwhile;
-    // a request by another route is refused the same way, UI-06 B-18)
-    if (this.waypoints.length < 2) {
-      refuseExport(this, 'Export HTML needs at least 2 waypoints.');
+    // a request by another route is refused the same way, UI-06 B-18): a
+    // route, or a crowd that can be drawn (CROWD-08 part A)
+    if (!hasSomethingToExport(this)) {
+      refuseExport(this, HTML_REASON);
       return;
     }
     
     if (!this.background.image) {
-      refuseExport(this, 'Export HTML needs a background image.');
+      refuseExport(this, BACKGROUND_REASON);
       return;
     }
     
+    // With no route, a scene end an edit has just queued is measured first
+    // (its 50 ms debounce), so the duration read is the scene's as it stands.
+    if (this.waypoints.length < 2 && this._sceneEndTimeout) this.refreshSceneEnd?.();
     const duration = this.animationEngine.state.duration;
     if (duration <= 0) {
       refuseExport(this, 'Nothing to export: the animation has no duration.');
@@ -488,25 +513,27 @@ export const exportingMixin = {
 
   /**
    * Disable the export items that cannot work, each described by a reason
-   * line under them (UI-06 B-18): MP4 and WebM need a route of two; HTML a
+   * line under them (UI-06 B-18): MP4 and WebM need a route of two, or a
+   * crowd that can be drawn (CROWD-08 part A, `canPlayScene`); HTML a
    * background as well. Called on every route change and background change,
-   * and once an export has let the controls go. The names never change with
-   * the state (J-21): the reason is the description. Disabled by
-   * `aria-disabled`, so each stays focusable with its reason.
+   * on every change to what can play (`refreshPlayAvailability`), and once an
+   * export has let the controls go. The names never change with the state
+   * (J-21): the reason is the description. Disabled by `aria-disabled`, so
+   * each stays focusable with its reason.
    */
   updateExportAvailability() {
     const { exportMp4Btn, exportWebmBtn, exportHtmlBtn } = this.elements ?? {};
-    const few = this.waypoints.length < 2;
+    const nothing = !hasSomethingToExport(this);
     const noBackground = !this.background?.image;
     const running = Boolean(this._videoExportRunning);
-    for (const item of [exportMp4Btn, exportWebmBtn]) setItemDisabled(item, running || few);
-    setItemDisabled(exportHtmlBtn, running || few || noBackground);
+    for (const item of [exportMp4Btn, exportWebmBtn]) setItemDisabled(item, running || nothing);
+    setItemDisabled(exportHtmlBtn, running || nothing || noBackground);
     const videoReason = document.getElementById('export-video-reason');
     const htmlReason = document.getElementById('export-html-reason');
-    setReason(videoReason, few ? VIDEO_REASON : '');
-    setReason(htmlReason, few && noBackground ? 'Export HTML needs at least 2 waypoints and a background image.'
-      : few ? 'Export HTML needs at least 2 waypoints.'
-        : noBackground ? 'Export HTML needs a background image.' : '');
+    setReason(videoReason, nothing ? VIDEO_REASON : '');
+    setReason(htmlReason, nothing && noBackground ? HTML_AND_BACKGROUND_REASON
+      : nothing ? HTML_REASON
+        : noBackground ? BACKGROUND_REASON : '');
     const line = document.getElementById('export-menu-reason');
     if (line) line.hidden = !(videoReason?.textContent || htmlReason?.textContent);
   },

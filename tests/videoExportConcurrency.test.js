@@ -94,7 +94,10 @@ async function exportingApp() {
 }
 
 /** The toast a video export refused for its route is (UI-06 B-18). */
-const VIDEO_REFUSED = { message: 'Export MP4 and WebM need at least 2 waypoints.', priority: 'assertive' };
+// (Reason for the change, CROWD-08 part A: the export reasons take the owner's words of 2026-10-13.)
+const VIDEO_REFUSED = {
+  message: 'Export MP4 and WebM need at least two route waypoints, or a crowd\'s network.', priority: 'assertive',
+};
 
 /**
  * Whether each export control is disabled: MP4, WebM, HTML and the menu. The
@@ -427,6 +430,9 @@ test.each([
   // are disabled from here, UI-06 B-18; the snapshot of one the test loaded
   // before would have disabled Export MP4 too, and started no probe).
   while (app.waypoints.length > 1) app.eventBus.emit('waypoint:delete', app.waypoints.at(-1));
+  // Its crowd's network would still play and export with no route (CROWD-08 part A): it goes too, so nothing
+  // can play and the export still cannot start (reason for the added line).
+  for (const layer of [...app.scene.getFlowLayers()]) app.deleteCrowd(layer);
   request(app);
   expect(refused()).toHaveLength(refusedAtOnce);
   answer({ codec: 'avc1' });
@@ -861,6 +867,8 @@ test('Export MP4 clicked while its codec dialog is open, whose closing asks for 
   // for it: the click, asked for before it, is no longer the latest
   const nested = onNextFocus(() => {
     while (app.waypoints.length > 1) app.eventBus.emit('waypoint:delete', app.waypoints.at(-1));
+    // Its crowd would still export with no route (CROWD-08 part A): it goes too (reason for the added line).
+    for (const layer of [...app.scene.getFlowLayers()]) app.deleteCrowd(layer);
     return app.exportVideo();
   });
   const probed = VideoExporter._testWebCodecsConfig.mock.calls.length;

@@ -426,6 +426,11 @@ describe('export progress in the status line (UI-06 J-18)', () => {
 });
 
 describe('export validation (UI-06 B-18)', () => {
+  // The export reasons in the owner's words of 2026-10-13 (CROWD-08 part A).
+  const VIDEO_REASON = 'Export MP4 and WebM need at least two route waypoints, or a crowd\'s network.';
+  const HTML_REASON = 'Export HTML needs at least two route waypoints, or a crowd\'s network.';
+  const HTML_AND_BACKGROUND_REASON =
+    'Export HTML needs at least two route waypoints, or a crowd\'s network, and a background image.';
   test('the export items are disabled, with a described reason, until the route has two waypoints and, for HTML, a background', async () => {
     const app = await editor();
     const mp4 = id('export-mp4-btn');
@@ -438,9 +443,10 @@ describe('export validation (UI-06 B-18)', () => {
     expect(app.background.image).not.toBeNull();
 
     expect([off(mp4), off(webm), off(html)]).toEqual([true, true, true]);
-    expect(describedBy(mp4)).toBe('Export MP4 and WebM need at least 2 waypoints.');
-    expect(describedBy(webm)).toBe('Export MP4 and WebM need at least 2 waypoints.');
-    expect(describedBy(html)).toBe('Export HTML needs at least 2 waypoints.');
+    // (Reason for the change, CROWD-08 part A: the export reasons take the owner's words of 2026-10-13.)
+    expect(describedBy(mp4)).toBe(VIDEO_REASON);
+    expect(describedBy(webm)).toBe(VIDEO_REASON);
+    expect(describedBy(html)).toBe(HTML_REASON);
     expect(line.hidden).toBe(false);
     // The toggle stays: the diagnostics items behind it still work.
     expect(id('export-dropdown-btn').disabled).toBe(false);
@@ -467,7 +473,8 @@ describe('export validation (UI-06 B-18)', () => {
     // And with neither.
     app.eventBus.emit('waypoint:delete', app.waypoints[1]);
     expect([off(mp4), off(webm), off(html)]).toEqual([true, true, true]);
-    expect(describedBy(html)).toBe('Export HTML needs at least 2 waypoints and a background image.');
+    // (Reason for the change, CROWD-08 part A: the export reasons take the owner's words of 2026-10-13.)
+    expect(describedBy(html)).toBe(HTML_AND_BACKGROUND_REASON);
     expect(native()).toEqual([]);
   });
 
@@ -486,7 +493,8 @@ describe('export validation (UI-06 B-18)', () => {
     toggle.click();
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(document.activeElement).toBe(id('export-mp4-btn'));
-    expect(describedBy(document.activeElement)).toBe('Export MP4 and WebM need at least 2 waypoints.');
+    // (Reason for the change, CROWD-08 part A: the export reasons take the owner's words of 2026-10-13.)
+    expect(describedBy(document.activeElement)).toBe(VIDEO_REASON);
     key(document.activeElement, 'Escape');
     expect(document.activeElement).toBe(toggle);
     key(toggle, 'ArrowDown');
@@ -507,7 +515,8 @@ describe('export validation (UI-06 B-18)', () => {
     const toggle = id('export-dropdown-btn');
     const [mp4, webm, html] = ['export-mp4-btn', 'export-webm-btn', 'export-html-btn'].map(id);
     const key = (target, name) => target.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true }));
-    const VIDEO = 'Export MP4 and WebM need at least 2 waypoints.';
+    // (Reason for the change, CROWD-08 part A: the export reasons take the owner's words of 2026-10-13.)
+    const VIDEO = VIDEO_REASON;
     toggle.focus();
     key(toggle, 'ArrowDown');
     const reached = [];
@@ -519,7 +528,7 @@ describe('export validation (UI-06 B-18)', () => {
     expect(reached).toEqual([
       ['export-mp4-btn', true, false, VIDEO],
       ['export-webm-btn', true, false, VIDEO],
-      ['export-html-btn', true, false, 'Export HTML needs at least 2 waypoints.'],
+      ['export-html-btn', true, false, HTML_REASON],
     ]);
     expect(document.activeElement).toBe(id('download-debug-btn'));
     key(document.activeElement, 'End');
@@ -565,8 +574,9 @@ describe('export validation (UI-06 B-18)', () => {
     const { toasts, announced } = listen(app);
 
     await app.exportVideo({ format: 'mp4' });
-    expect(toasts).toEqual([{ message: 'Export MP4 and WebM need at least 2 waypoints.', priority: 'assertive' }]);
-    expect(announced()).toContainEqual(['Export MP4 and WebM need at least 2 waypoints.', 'assertive']);
+    // (Reason for the change, CROWD-08 part A: the export reasons take the owner's words of 2026-10-13.)
+    expect(toasts).toEqual([{ message: VIDEO_REASON, priority: 'assertive' }]);
+    expect(announced()).toContainEqual([VIDEO_REASON, 'assertive']);
 
     app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
     app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });

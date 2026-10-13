@@ -3619,6 +3619,18 @@ kbd{
   box-sizing:border-box;
   margin-top:0;
   border-top:1px solid var(--border-subtle);
+  /* Play's reason takes a row of its own under the transport (CROWD-08 part A) */
+  flex-wrap:wrap;
+}
+
+/* Why Play is off (CROWD-08 part A): ordinary helper text, never the
+   disabled grey, on the playbar's row below its controls. */
+.playbar-reason{
+  flex:1 0 100%;
+  margin:0;
+  font-size:var(--type-caption);
+  line-height:var(--lh-caption);
+  color:var(--text-02);
 }
 
 .transport-controls{

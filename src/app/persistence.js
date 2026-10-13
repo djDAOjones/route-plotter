@@ -545,6 +545,17 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
     projectData.timingReference
   );
 
+  // The saved base timeline. A project with a crowd, fewer than two route
+  // waypoints and none opens with the default, so its crowds can play
+  // (CROWD-08 part A): by a file, browser recovery or an example, which all
+  // stage here. A positive one opens as saved, however far past the Duration
+  // slider's reach. Opening alone changes nothing the author made, so it does
+  // not mark the project changed.
+  let duration = Number(projectData.animationState?.duration ?? 0);
+  if (duration === 0 && waypoints.length < 2 && scene.getFlowLayers().length > 0) {
+    duration = ANIMATION.DEFAULT_DURATION;
+  }
+
   return {
     waypoints,
     scene,
@@ -561,13 +572,13 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
     animationState: {
       mode: projectData.animationState?.mode || 'constant-speed',
       speed: Number(projectData.animationState?.speed ?? ANIMATION.DEFAULT_SPEED),
-      duration: Number(projectData.animationState?.duration ?? 0),
+      duration,
     },
   };
 }
 
 function getUndoBaseline(staged) {
-  return {
+  const baseline = {
     waypoints: staged.waypoints.map(waypoint => waypoint.toJSON()),
     selectedWaypointId: null,
     selectedWaypointIds: [],
@@ -577,6 +588,10 @@ function getUndoBaseline(staged) {
     },
     scene: staged.scene.toJSON(),
   };
+  // As every undo entry with no route keeps it (`_getUndoableState`, CROWD-08
+  // part A): undoing back to the opened project restores its timeline.
+  if (staged.waypoints.length < 2) baseline.baseDurationMs = staged.animationState.duration;
+  return baseline;
 }
 
 /**
@@ -964,6 +979,8 @@ function restoreLiveState(app, previous) {
     app.updateTimeDisplay?.(previous.animation.currentTime, previous.animation.duration);
     app.updateDurationReadout?.();
   });
+  // Play, the export items and the Guide card, as the restored project allows (CROWD-08 part A).
+  runRollbackStep('the play availability', () => app.refreshPlayAvailability?.());
   runRollbackStep('the selection controls', () => {
     app.uiController?.setSelection?.(previous.selectedWaypoints || [], previous.selectedWaypoint);
     if (app.interactionHandler?.setSelection) {
@@ -1032,7 +1049,10 @@ function syncLoadedProjectControls(app, staged) {
   app.uiController?.syncRevealControls?.(staged.motionSettings);
   app.uiController?.syncAngleOfViewControls?.(staged.motionSettings);
   if (app.elements?.animationSpeedRight) {
-    app.eventBus?.emit('ui:slider:update-speed', staged.animationState.speed);
+    // With no route the thumb is the base timeline's (CROWD-08 part A); the
+    // route's payload is as it was.
+    if ((app.waypoints?.length || 0) >= 2) app.eventBus?.emit('ui:slider:update-speed', staged.animationState.speed);
+    else app.syncDurationThumb?.();
   }
 }
 

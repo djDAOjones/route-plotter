@@ -27,7 +27,115 @@ const PREVIEW_TIP_MS = 8000;
 /** @constant {number} Maximum JKL speed multiplier (4 doublings from 1x) */
 const JKL_MAX_SPEED = 16;
 
+/**
+ * Why Play is off with nothing to play (CROWD-08 part A, the owner's words of
+ * 2026-10-13): the playbar's reason line, and what a refused press says.
+ */
+const PLAY_REASON = 'Add at least two route waypoints, or draw a crowd\'s network, to play.';
+
 export const playbackMixin = {
+
+  /**
+   * Whether the scene has anything to play (CROWD-08 part A): a route of two
+   * or more waypoints, or a crowd whose dots the engine draws at some
+   * instant of the playback (`SwarmEngine.canRelease`), visible or not, as a
+   * hidden route still plays (the lead's settlement, §4.1). Play, Space, J,
+   * K, L, both exports, their reasons and the Guide card's sentence all ask
+   * this, so none can contradict another. Read live, never cached: a press
+   * just after an edit is answered for the scene as it now stands.
+   * @returns {boolean}
+   */
+  canPlayScene() {
+    if ((this.waypoints?.length || 0) >= 2) return true;
+    const engine = this.animationEngine;
+    const context = {
+      durationMs: engine.state.baseDuration ?? engine.state.duration,
+      routePathPoints: this.pathPoints,
+      routeAnchors: this.getRouteArrivalMap?.() || null,
+    };
+    return (this.scene?.getFlowLayers?.() || []).some(layer => this.swarmEngine.canRelease(layer, context));
+  },
+
+  /**
+   * The one guard on a start (CROWD-08 part A), first in each transport
+   * listener that starts the engine (Play, Space and K, J and L), before any
+   * direction or speed is written: with nothing to play it refuses, says why
+   * once and changes nothing. A pause is never refused. A start with no
+   * route measures a scene end an edit has just queued (its 50 ms debounce),
+   * so it plays to the end as it now stands.
+   * @returns {boolean} Whether the start may go ahead
+   */
+  _admitPlayStart() {
+    if (this.animationEngine.isPlaying()) return true;
+    if (!this.canPlayScene()) {
+      this.announce(PLAY_REASON);
+      return false;
+    }
+    if (this.waypoints.length < 2 && this._sceneEndTimeout) this.refreshSceneEnd();
+    return true;
+  },
+
+  /**
+   * Keep what depends on whether the scene can play in step with it
+   * (CROWD-08 part A): Play and its reason line, the export items and their
+   * reasons, and the Guide card's sentence; and, as the route crosses two
+   * waypoints, the Duration control's meaning. Called where every change
+   * that can alter it already passes: the path rebuild, which resolves
+   * anchored nodes (`calculatePath`), and the scene end's measure
+   * (`measureSceneEnd`), which every crowd, network, seed, lifecycle and
+   * timeline edit queues; never per frame. Writes only on a change.
+   */
+  refreshPlayAvailability() {
+    const routeless = (this.waypoints?.length || 0) < 2;
+    if (routeless !== this._durationRouteless) {
+      this._durationRouteless = routeless;
+      this.uiController?.setDurationRouteless?.(routeless);
+      this.syncDurationThumb();
+    }
+    const playable = this.canPlayScene();
+    if (playable === this._scenePlayable) return;
+    this._scenePlayable = playable;
+    this.uiController?.setPlayAvailability?.(playable ? '' : PLAY_REASON);
+    this.updateExportAvailability?.();
+    this.updateGuideCard?.();
+    // The reason line takes a row under the playbar, so the canvas is refitted to the room left.
+    this._refitAfterModeBanner?.();
+  },
+
+  /**
+   * A project left with at least one crowd, fewer than two route waypoints
+   * and no base timeline takes `ANIMATION.DEFAULT_DURATION` (CROWD-08 part
+   * A), so its crowds have a timeline to release across. The authored edits
+   * that can leave one call it before their undo snapshot, so the default is
+   * in that edit's undo step: adding a crowd and deleting route waypoints
+   * below two (opening applies it as it stages the project). A positive
+   * base is never touched; Clear All leaves no crowd, so it keeps 0; undo
+   * and redo restore what they captured and never call it. Only the base is
+   * set: the scene end the edit queues measures the end against it.
+   * @returns {boolean} Whether the default was applied
+   */
+  applyRoutelessTimelineDefault() {
+    const state = this.animationEngine.state;
+    if (this.waypoints.length >= 2 || !(this.scene?.getFlowLayers?.().length > 0)) return false;
+    if (state.baseDuration > 0) return false;
+    state.baseDuration = ANIMATION.DEFAULT_DURATION;
+    this.syncDurationThumb();
+    return true;
+  },
+
+  /**
+   * Put the Duration thumb where the project's timing is, through the one
+   * event that moves it (`ui:slider:update-speed`): the route's speed with a
+   * route, its payload exactly as before; with fewer than two route
+   * waypoints the base timeline (CROWD-08 part A), `{baseDurationMs}`.
+   */
+  syncDurationThumb() {
+    if (this.waypoints.length >= 2) {
+      this.eventBus.emit('ui:slider:update-speed', this.animationEngine.state.speed);
+    } else {
+      this.eventBus.emit('ui:slider:update-speed', { baseDurationMs: this.animationEngine.state.baseDuration });
+    }
+  },
 
   /**
    * Reset JKL playback state to defaults
@@ -285,7 +393,8 @@ export const playbackMixin = {
    * Delegates to AnimationEngine for state management
    */
   play() {
-    if (this.waypoints.length < 2) return;
+    // Dead (its callers are commented out, DEL-05), but held to the live routes' guard.
+    if (!this.canPlayScene()) return;
     
     // If animation is finished (at 100%), reset to beginning
     if (this.animationEngine.state.progress >= 1.0) {

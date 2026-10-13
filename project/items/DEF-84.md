@@ -22,3 +22,4 @@ With a custom-network crowd and fewer than two route waypoints, Play is enabled 
 ## Notes
 
 - 2026-10-08 — Filed from the design reviews' defect candidates on the owner's acceptance of the twelve proposed rows ("Accept all as proposed (Recommended)", 2026-10-08). Found by CROWD-07's novice pre-analysis; Codex: CONFIRMED, not DEF-62's end-of-playback case. The priority is the reviewing session's proposal, accepted with the row.
+- 2026-10-14 — The shape chosen, by the owner's pick of 2026-10-13 "Play, as part A says (Recommended)", which replaces his 2026-10-09 pick ("Disable Play with a visible reason (Recommended)") for a project with no route and a crowd that can set off: it plays (CROWD-08 part A). With nothing to play, Play stays disabled with a visible reason, "Add at least two route waypoints, or draw a crowd's network, to play.", which a refused Space, K, J or L says once. Built with CROWD-08 part A; to close in its release record.

@@ -1096,13 +1096,16 @@ function projectNow(app) {
  * function: an entry is compared with the project, not with itself.
  */
 function projectAsUndoEntry(app) {
-  const { waypoints, styles, scene } = app._buildProjectSnapshot({ includeAssets: false });
+  const { waypoints, styles, scene, animationState } = app._buildProjectSnapshot({ includeAssets: false });
   return flattened({
     waypoints,
     selectedWaypointId: app.selectedWaypoint?.id || null,
     selectedWaypointIds: (app.selectedWaypoints || []).map(each => each.id),
     styles,
     scene,
+    // CROWD-08 part A (reason for the change): with fewer than two route waypoints an entry keeps the base
+    // timeline, which the saved project holds as its duration; with a route it keeps none.
+    ...(waypoints.length < 2 ? { baseDurationMs: animationState.duration } : {}),
   });
 }
 
@@ -1394,6 +1397,19 @@ const CONTROLLER_ROWS = [
     event: 'animation:hold-at-end-change', fixture: 'open day', given: HALF_WAY,
     setup: app => seekHalfWayThroughRoute(app),
     act: app => emit(app, 'animation:hold-at-end-change', { holdMs: 3500, commit: true }),
+  },
+  {
+    // CROWD-08 part A: with no route the Duration slider sets the base timeline, 25 s here, and commits it,
+    // as the slider's `change` does.
+    event: 'animation:base-duration-change', fixture: 'empty route',
+    act: app => emit(app, 'animation:base-duration-change', { baseDurationMs: 25000, commit: true }),
+  },
+  {
+    // With a route the slider sends the route speed instead; this event, sent anyway, changes nothing.
+    event: 'animation:base-duration-change', title: 'animation:base-duration-change with a route',
+    fixture: 'open day', given: HALF_WAY,
+    setup: app => seekHalfWayThroughRoute(app),
+    act: app => emit(app, 'animation:base-duration-change', { baseDurationMs: 25000, commit: true }),
   },
   {
     event: 'animation:jkl-reverse', fixture: 'open day', given: HALF_WAY,

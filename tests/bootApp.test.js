@@ -194,7 +194,9 @@ describe('the harness lets a stopped app go, and only that (UI-06)', () => {
     document.getElementById('animation-speed-right').focus();
     const tooltip = document.getElementById('param-tooltip');
     expect(tooltip?.style.display).toBe('block');
-    expect(tooltip.textContent).toMatch(/^Total animation playback time/);
+    // (Reason for the change, CROWD-08 part A: a project started blank has no route, so Duration's hint is the
+    // no-route one; which hint opened is what is checked.)
+    expect(tooltip.textContent).toMatch(/^Sets the timeline the crowds release across/);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(tooltip.style.display).toBe('none');
   });

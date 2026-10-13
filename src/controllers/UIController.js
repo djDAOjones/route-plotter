@@ -101,6 +101,56 @@ function speedToSlider(speed) {
   return Math.round(MIN_SLIDER + (1 - normalized) * (MAX_SLIDER - MIN_SLIDER));
 }
 
+/**
+ * Duration with fewer than two route waypoints (CROWD-08 part A; the owner's
+ * "1 s to 5 min (Recommended)", 2026-10-13): the same slider sets the base
+ * timeline directly, left short and right long, on a log scale. Its reachable
+ * positions run from 1 to 3996 (`min=1 max=4000 step=5`: 4000 is off the
+ * step), which map to 1.0 s and 300.0 s.
+ */
+const ROUTELESS_DURATION = {
+  MIN_SLIDER: 1,
+  MAX_SLIDER: 3996,
+  STEP: 5,
+  MIN_MS: 1000,
+  MAX_MS: 300000,
+};
+
+/**
+ * A slider position's base timeline, logarithmic from 1 s to 5 min, rounded
+ * to 0.1 s (CROWD-08 part A).
+ * @param {number} sliderValue - Slider position (1–3996 reachable)
+ * @returns {number} Base timeline in ms
+ */
+function sliderToBaseDuration(sliderValue) {
+  const { MIN_SLIDER, MAX_SLIDER, MIN_MS, MAX_MS } = ROUTELESS_DURATION;
+  const position = Math.max(MIN_SLIDER, Math.min(MAX_SLIDER, sliderValue));
+  const normalized = (position - MIN_SLIDER) / (MAX_SLIDER - MIN_SLIDER);
+  return Math.round((MIN_MS * Math.pow(MAX_MS / MIN_MS, normalized)) / 100) * 100;
+}
+
+/**
+ * The slider position for a base timeline: the inverse, at the nearest
+ * position the native slider can take (1 + 5k). One past the slider's reach
+ * sits at its nearer end; the value itself is never rewritten by this.
+ * @param {number} baseDurationMs
+ * @returns {number} Slider position
+ */
+function baseDurationToSlider(baseDurationMs) {
+  const { MIN_SLIDER, MAX_SLIDER, STEP, MIN_MS, MAX_MS } = ROUTELESS_DURATION;
+  const ms = Math.max(MIN_MS, Math.min(MAX_MS, Number(baseDurationMs) || 0));
+  const normalized = Math.log(ms / MIN_MS) / Math.log(MAX_MS / MIN_MS);
+  const steps = Math.round((normalized * (MAX_SLIDER - MIN_SLIDER)) / STEP);
+  return Math.max(MIN_SLIDER, Math.min(MAX_SLIDER, MIN_SLIDER + steps * STEP));
+}
+
+/**
+ * Duration's hint with fewer than two route waypoints (CROWD-08 part A, the
+ * lead's settlement): no final full stop, as the route's has none.
+ */
+const ROUTELESS_DURATION_TIP = 'Sets the timeline the crowds release across. Dots keep their own speed. '
+  + 'The time shown includes crowds still finishing and Hold at end';
+
 // ============================================================================
 // CONDITIONAL VISIBILITY UTILITIES
 // ============================================================================
@@ -927,6 +977,15 @@ export class UIController {
     // Helper to handle speed slider input (shared by both sliders)
     const handleSpeedSliderInput = (e) => {
       const currentValue = parseInt(e.target.value);
+
+      // With fewer than two route waypoints the slider is the base timeline
+      // (CROWD-08 part A): each value shown as it moves, committed at `change`.
+      if (this._durationRouteless) {
+        this.eventBus.emit('animation:base-duration-change', {
+          baseDurationMs: sliderToBaseDuration(currentValue), commit: false,
+        });
+        return;
+      }
       
       // Apply logarithmic curve for perceptually uniform speed control
       const speed = sliderToSpeed(currentValue);
@@ -946,6 +1005,15 @@ export class UIController {
     
     this.elements.animationSpeed?.addEventListener('input', handleSpeedSliderInput);
     this.elements.animationSpeedRight?.addEventListener('input', handleSpeedSliderInput);
+    // The no-route Duration's gesture ends (the pointer let go, or one keyboard
+    // step) and is committed to history, as Hold at end's is (CROWD-08 part A).
+    // With a route a change commits nothing, as before.
+    this.elements.animationSpeedRight?.addEventListener('change', (e) => {
+      if (!this._durationRouteless) return;
+      this.eventBus.emit('animation:base-duration-change', {
+        baseDurationMs: sliderToBaseDuration(parseInt(e.target.value)), commit: true,
+      });
+    });
 
     // Hold at end (CROWD-06): the slider's value is the hold in ms; the app
     // lengthens the playback duration by it. `input` shows each value as the
@@ -965,8 +1033,11 @@ export class UIController {
      * @param {number} speed - The speed value to set on the slider
      */
     this.eventBus.on('ui:slider:update-speed', (speed) => {
-      // Convert speed back to slider position using inverse log curve
-      const sliderValue = speedToSlider(speed);
+      // Convert speed back to slider position using inverse log curve; with
+      // no route the payload is the base timeline (CROWD-08 part A)
+      const sliderValue = speed !== null && typeof speed === 'object' && 'baseDurationMs' in speed
+        ? baseDurationToSlider(speed.baseDurationMs)
+        : speedToSlider(speed);
       
       // Update both sliders (setting .value fires no input event)
       if (this.elements.animationSpeed) this.elements.animationSpeed.value = sliderValue;
@@ -1296,6 +1367,7 @@ export class UIController {
    * @param {string} pathVisibility - Current path visibility mode
    */
   updateTrailControlVisibility(pathVisibility) {
+    this._pathVisibility = pathVisibility;
     const trailControl = document.getElementById('path-trail-control');
     const pacingHint = document.getElementById('pacing-comet-hint');
     const showTrail = pathVisibility === PATH_VISIBILITY.INSTANTANEOUS;
@@ -1307,7 +1379,54 @@ export class UIController {
         input.disabled = !showTrail;
       }
     }
-    if (pacingHint) pacingHint.hidden = !showTrail;
+    // With no route no Comet trail extends Duration (CROWD-08 part A).
+    if (pacingHint) pacingHint.hidden = !showTrail || Boolean(this._durationRouteless);
+  }
+
+  /**
+   * Play with nothing to play (CROWD-08 part A): disabled, and described by
+   * the visible line under the playbar that says what to add; with something
+   * to play, enabled, the line emptied as well as hidden (a description is
+   * read even from a hidden element) and the description taken off, so a
+   * Play with a route is exactly as before.
+   * @param {string} reason - Why it is off, or '' when it can play
+   */
+  setPlayAvailability(reason) {
+    const button = this.elements.playBtn;
+    const line = document.getElementById('play-reason');
+    if (button) {
+      button.disabled = Boolean(reason);
+      if (reason) button.setAttribute('aria-describedby', 'play-reason');
+      else button.removeAttribute('aria-describedby');
+    }
+    if (line) {
+      line.textContent = reason || '';
+      line.hidden = !reason;
+    }
+  }
+
+  /**
+   * What Duration sets (CROWD-08 part A): with fewer than two route waypoints
+   * the base timeline, from 1 s to 5 min, and its hint says so; with a route
+   * the route's speed, as before, its hint as it was. The Comet trail line,
+   * which says a trail extends Duration, shows only with a route. The thumb
+   * is the app's to place (`ui:slider:update-speed`).
+   * @param {boolean} routeless
+   */
+  setDurationRouteless(routeless) {
+    this._durationRouteless = routeless;
+    const tip = document.querySelector('label[for="animation-speed-right"] [data-tip]');
+    if (tip) {
+      // The route's hint is the shell's own, kept as it was written.
+      this._routedDurationTip ??= tip.getAttribute('data-tip');
+      const text = routeless ? ROUTELESS_DURATION_TIP : this._routedDurationTip;
+      if (tip.getAttribute('data-tip') !== text) tip.setAttribute('data-tip', text);
+    }
+    const pacingHint = document.getElementById('pacing-comet-hint');
+    if (pacingHint && routeless) pacingHint.hidden = true;
+    else if (pacingHint && this._pathVisibility !== undefined) {
+      pacingHint.hidden = this._pathVisibility !== PATH_VISIBILITY.INSTANTANEOUS;
+    }
   }
 
   /**

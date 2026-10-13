@@ -32,6 +32,7 @@ import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { lex, lexedFiles, lineAt } from './helpers/sourceScan.js';
 import { TOOLTIPS } from '../src/config/tooltips.js';
+import { clearProject } from '../src/app/projectReset.js';
 
 /**
  * Words the glossary retired (UI-06 §A, §C): none may come back, in a label,
@@ -227,7 +228,9 @@ function stringsIn(root) {
     '.scene-outline-hint', '.scene-outline-empty', '[role="alert"]', '.modal-content > p', '.waypoint-card-actions-reason',
     '.network-path-weight-error', '.context-menu-item-reason', '.toast', '.splash-intro', '.help-section li',
     // UI-06 PR 4: the header's status line, the export menu's reason line, the crowd's empty-state line.
-    '.header-status', '.dropdown-item-reason', '.crowd-no-emitter'];
+    '.header-status', '.dropdown-item-reason', '.crowd-no-emitter',
+    // CROWD-08 part A: Play's reason line under the playbar.
+    '.playbar-reason'];
   for (const node of root.querySelectorAll(PROSE.join(', '))) {
     // Its own sentences: a button, link or address nested in it is read on its own.
     const copy = node.cloneNode(true);
@@ -830,6 +833,51 @@ describe('the words PR 5b adds keep the rules (CROWD-07)', () => {
       // Nine crowd fields' errors and the weight's, each in its line and said once.
       expect(new Set(texts.filter(text => /^Enter .+ until you do\.$/.test(text))).size).toBe(10);
       expect(texts).toContain('Release bias amount (%)');
+      expect(faultsIn(strings)).toEqual([]);
+    } finally {
+      app.interactionHandler.destroy();
+    }
+  });
+});
+
+/**
+ * CROWD-08 part A: with nothing to play, Play's reason line, the export
+ * reasons, the Guide card's sentence, Duration's no-route hint and what a
+ * refused press says, each read where it shows, keep the rules.
+ */
+describe('the words CROWD-08 part A adds keep the rules', () => {
+  let reader = null;
+  afterEach(() => {
+    if (reader) localStorage.getItem.mockImplementation(reader);
+    reader = null;
+  });
+
+  test('a blank project with a crowd that cannot play yet: sentence case, glossary words', async () => {
+    reader = localStorage.getItem.getMockImplementation() ?? (() => null);
+    localStorage.getItem.mockImplementation(tipSeen(reader));
+    const app = await bootApp();
+    try {
+      await app.ready;
+      const announced = [];
+      vi.spyOn(app, 'announce').mockImplementation((message) => { announced.push(message); });
+      document.getElementById('splash-close').click();
+      clearProject(app);
+      app.addCrowd();
+      // A start refused: what it says.
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+      const strings = stringsIn(document.body);
+      for (const message of announced) strings.push({ what: 'announcement', text: message, hint: 'prose' });
+      const prose = strings.filter(string => string.hint === 'prose').map(string => string.text);
+      // Read where they show, not vacuous.
+      expect(prose).toContain("Add at least two route waypoints, or draw a crowd's network, to play.");
+      expect(prose).toContain("Export MP4 and WebM need at least two route waypoints, or a crowd's network. "
+        + "Export HTML needs at least two route waypoints, or a crowd's network, and a background image.");
+      expect(prose.some(text => text.endsWith(
+        "It takes at least two route waypoints, or a crowd's network, before previewing or exporting."))).toBe(true);
+      expect(strings.filter(string => string.what === 'hint').map(string => string.text)).toContain(
+        'Sets the timeline the crowds release across. Dots keep their own speed. '
+        + 'The time shown includes crowds still finishing and Hold at end');
+      expect(announced).toContain("Add at least two route waypoints, or draw a crowd's network, to play.");
       expect(faultsIn(strings)).toEqual([]);
     } finally {
       app.interactionHandler.destroy();
