@@ -24,7 +24,7 @@
 
 - [ ] DEF-98 — Restore drops the background and custom images — since 2026-10-13
 
-### MVP — football crowds and mobs, as v3.3 — the owner's word of 2026-10-13
+### MVP — football crowds and mobs — the owner's word of 2026-10-13
 
 - [ ] CROWD-08 — Football crowd and mob MVP — since 2026-10-13
 

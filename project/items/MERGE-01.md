@@ -2,13 +2,13 @@
 
 ## Intent
 
-The owner wants the next major version, v4, to merge routes and crowds. In his words: "having routes and crowds separately does confuse things a little from a user point of view. one thing with options might feel more cognitively coherent"; "crowd paths should be able to act as the camera"; "I want the next major version to be a merge". Today an author meets two ways to draw a line, two vocabularies (waypoints and legs; nodes, paths, Entry and Exit), and bridges between them (Follow route, Trace route into network, anchored nodes). Only the route can carry the camera, labels, beacons, areas and pauses. This item is the plan for v4: one kind of layer whose features are added as needed, kept simple, with a features pop-up that adds options and their controls. It settles the model and the steps and comes back to the owner before any code is written. It starts once CROWD-08 ships, when the bulk of the work moves to v4 (the decisions: PLAN-4).
+The owner wants the next major version, v4, to merge routes and crowds. In his words: "having routes and crowds separately does confuse things a little from a user point of view. one thing with options might feel more cognitively coherent"; "crowd paths should be able to act as the camera"; "I want the next major version to be a merge". Today an author meets two ways to draw a line, two vocabularies (waypoints and legs; nodes, paths, Entry and Exit), and bridges between them (Follow route, Trace route into network, anchored nodes). Only the route can carry the camera, labels, beacons, areas and pauses. This item is the plan for v4. The owner's question pictured one kind of layer, kept simple, with "a features pop up to add options and corresponding interface controls"; the plan decides the model and the steps and comes back to the owner before any code is written. It starts once CROWD-08 ships, when the bulk of the work moves to v4 (the decisions: PLAN-4).
 
 ## Acceptance criteria
 
 - A written plan in `reviews/` settles:
   - the one layer model, and what each v3 route and crowd becomes in it;
-  - what sets the scene's length when every layer is equal: today the route's legs, speeds and pauses set it, and crowd releases are fractions of it;
+  - what sets the scene's two durations when every layer is equal. Today the base timeline comes from the route (its legs, speeds, pauses, intro and longest branch), or from the author's Duration with no route clock, and crowd releases, anchors, label fades and camera transitions are fractions of it. The playback duration then adds what finishes after it (crowds that finish, beacons still changing) and Hold at end (`src/utils/sceneEnd.js`);
   - camera targets: any layer can carry the camera, including a crowd, by a group's centre, a lead dot or a vehicle;
   - one pen and one line model for drawing, with the route's line styles available to every layer;
   - the features pop-up: which features exist at v4.0, which come later, and how each appears in the scene outline;
@@ -17,7 +17,7 @@ The owner wants the next major version, v4, to merge routes and crowds. In his w
 - The plan checks itself against the abstraction plan's decision framework (`reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md`, §16) and its target direction (§11).
 - The plan states where it departs from the v3 founding decision of 2026-08-17 (the frozen canon log; `project/history.md`) and from the brief's Direction. It brings the brief's amendment for the owner to sign.
 - The owner answers one question round on the plan before any code.
-- Codex reviews the plan until it approves.
+- Codex reviews the plan before the owner's question round.
 
 ## Context and sources
 
@@ -28,6 +28,7 @@ The owner wants the next major version, v4, to merge routes and crowds. In his w
 - `pm_skills/project/archive/decision-log-2026-08-17-to-2026-08-26.md`: the founding decision (:1558) and the "one inspector, explicit scopes" review (:1165)
 - [CROWD-08](./CROWD-08.md): the MVP that ships first
 - `src/services/CameraService.js`: the follow camera centres on the route head
+- `src/utils/sceneEnd.js`: the base timeline and the playback duration
 - `src/services/RenderingService.js` (:1342–1349): a crowd's network is drawn only while editing
 
 ## Notes
@@ -40,4 +41,4 @@ The owner wants the next major version, v4, to merge routes and crowds. In his w
   - Groups and patterns: a wave through still dots, formation and morph, combine and split.
   - How dots look: trails and shaped dots.
   - Uses: ready-made presets; vehicles on transit routes as decoration (the owner's "trains / buses / cars on transit routes, as decoration (so running in parralel to other things going on)"), which also needs a crowd's line drawn in exports.
-  - Not proposed: dots that react to each other (collisions, congestion, flocking), since that breaks the pure-function rule. Baking a simulation into stored frames was raised as an option.
+  - Not proposed: dots that react to each other (collisions, congestion, flocking) simulated live, frame by frame, since state carried from frame to frame breaks the pure-function rule. Worked out in advance or baked into stored positions, such motion could keep the rule; baking was raised as an option.

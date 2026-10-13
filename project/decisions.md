@@ -18,28 +18,31 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
-## 2026-10-13 — PLAN-4 — A football crowd and mob MVP leads Current as v3.3; v4 merges routes and crowds
+## 2026-10-13 — PLAN-4 — A football crowd and mob MVP comes first; v4 merges routes and crowds
 
-**Decision:** On the owner's word, CROWD-08 leads Current after DEF-98 and ships as v3.3. It is a football crowd and mob MVP for his client's task, due within a week, specialised for those scenes. Its seven parts are crowds without a route (closing DEF-84), start and finish areas, entry shares, duplicating a crowd, groups and leaving. Once it ships, the bulk of the work goes to v4, which merges routes and crowds (MERGE-01).
+**Decision:** On the owner's word, the next minor versions build CROWD-08, a football crowd and mob MVP specialised for his client's task, due within a week; once it ships, the bulk of the work goes to v4, which merges routes and crowds (MERGE-01). Its placement, version number, parts and review depth are the filing session's proposals, below.
 
-**Rationale:** The owner, 2026-10-13, in a read-only analysis session, asked how crowds would show "a mob moving from one area to another" and "attendees of a football match arriving by various routes … then converging on an area (probably one for each of the four sides of the stadium)". He then asked for "the ability to define areas, not just paths". Next: "the top features I need for my client are football crowd; and mob moving from market square, down a road, and to another open space. I also want to be able to have trains / buses / cars on transit routes, as decoration (so running in parralel to other things going on). is there a case to merge routes and crowds with extra settings and features that are selectable … having routes and crowds separately does confuse things a little from a user point of view. one thing with options might feel more cognitively coherent... but maybe I'm misjudging. what do you think?" After the session advised converging in steps: "but crowd paths should be able to act as the camera. what are the pros and cons of unifying the system vs keep seperate?" Then the decision: "I want the next major version to be a merge. but for now, we do MVP for football crowds and mobs - app development can be specialised towards this for next minor versions at the expense of being generally useful so the client can complete their upcoming task. But the bulk of development work will go into the next major version as soon as mvp football crowd and mob have shipped". The session then put six questions to him in two rounds; his picks, labels verbatim:
+**Rationale:** The owner, 2026-10-13, in a read-only analysis session, asked how crowds would show "a mob moving from one area to another" and "attendees of a football match arriving by various routes … then converging on an area (probably one for each of the four sides of the stadium)". He then asked for "the ability to define areas, not just paths". Next: "the top features I need for my client are football crowd; and mob moving from market square, down a road, and to another open space. I also want to be able to have trains / buses / cars on transit routes, as decoration (so running in parralel to other things going on). is there a case to merge routes and crowds with extra settings and features that are selectable … having routes and crowds separately does confuse things a little from a user point of view. one thing with options might feel more cognitively coherent... but maybe I'm misjudging. what do you think?" After the session advised converging in steps: "but crowd paths should be able to act as the camera. what are the pros and cons of unifying the system vs keep seperate?" Then the decision: "I want the next major version to be a merge. but for now, we do MVP for football crowds and mobs - app development can be specialised towards this for next minor versions at the expense of being generally useful so the client can complete their upcoming task. But the bulk of development work will go into the next major version as soon as mvp football crowd and mob have shipped".
+
+The session then put six questions to him in two rounds; his picks, labels verbatim:
 - On the deadline, "Within a week", whose option text read "Cut the MVP to the essentials: items 1–5, groups simplified, presets later." Items 1–5 were crowds without a route, start areas, finish areas, entry shares and duplicating a crowd.
 - On extras, "Final whistle", unpicked: "Camera follows a crowd", "Vehicles as decoration" and "Milling in areas".
 - On recording, "I write a plan PR (Recommended)".
-- On a session filing transit presets at the same time, "distant wish list, ignore".
+- On a session filing transit presets at the same time, "distant wish list, ignore". That session's wish line is in PR #134, awaiting his merge, so this record adds none.
 - On areas, "Simple shapes (Recommended)": "An Entry or Exit node gets an area: rectangle or ellipse, set by width, height and turn, drawn on the map."
 - On review depth for the MVP's pull requests, in his own words: "max codex, got loads of compute".
 
-The filing session's readings, for the owner to confirm:
-- "within a week" as by 2026-10-20;
-- "specialised … at the expense of being generally useful" as cutting breadth, not the quality bars: the brief's mandate, loadable saves, exports and the player, the outline and the profile's standards, tests, and no new dependency;
-- "max codex, got loads of compute" as GATELESS-1's review condition unchanged for CROWD-08: rounds until Codex approves, at its highest reasoning setting;
-- "next minor versions" as v3.3, `package.json` set to 3.3.0 by CROWD-08's first release;
-- the placement after DEF-98, which merged as #133 with its release pending, and ahead of Phase 2, whose items and Phase 3's wait;
-- DEF-84 closed by playing, since its criteria left disabling or playing to the run;
-- "groups simplified" as a size and a width only, and "Final whistle" as part G;
-- "the bulk of development work" as MERGE-01 first in Next once CROWD-08 ships;
-- one backlog line with seven parts in its item file, since the backlog had 930 of its 1,000 words.
+The filing session's readings and proposals, for the owner to confirm:
+- "Within a week" as by 2026-10-20.
+- "specialised … at the expense of being generally useful" as cutting breadth, not the quality bars: the brief's mandate, loadable saves, exports and the player, the outline and the profile's standards, tests, and no new dependency.
+- His word as lifting, for CROWD-08 alone, GATELESS-1's "no new feature work" (its condition 2), so the run builds it under the grant's other conditions.
+- "max codex, got loads of compute" as changing GATELESS-1's condition 5 for CROWD-08's pull requests: Codex at its highest reasoning setting, `xhigh` in place of `high`, and rounds until it approves in place of one review and a short pass on a large fix.
+- "next minor versions" as v3.3, with `package.json` set to 3.3.0 by CROWD-08's first release.
+- CROWD-08 under a heading of its own after DEF-98, which merged as #133 with its release pending, and ahead of Phase 2; Phase 2's and Phase 3's items wait.
+- The parts' design within his picks, A to G, with the supported combinations in the item file; "groups simplified" as a size and a width only, and "Final whistle" as part G. If the week runs short, A to E (the football scene) come before F and G.
+- DEF-84 closed by playing, since its criteria left disabling or playing to the run.
+- "the bulk of development work" as MERGE-01 first in Next once CROWD-08 ships.
+- One backlog line with seven parts in its item file, since the backlog had 930 of its 1,000 words.
 
 The analysis ran on a scratch clone of main at `86ad88a`. A probe of `SwarmEngine` on a match-day network (four entries, a two-way ring road, four stand Exits, 2,000 dots set to Collect) found:
 - each entry sending about a quarter of the dots (482, 509, 510, 499), since entries are picked evenly (`src/services/SwarmEngine.js` (:868));
@@ -47,9 +50,11 @@ The analysis ran on a scratch clone of main at `86ad88a`. A probe of `SwarmEngin
 - journeys from 1.3 s to 12.7 s, median 2.7 s, as dots lapped the ring;
 - the 2,000 collected dots on 4 points (CROWD-07's X-16).
 
-`play()` returns without a route (`src/app/playback.js` (:288); DEF-84), and both exports refuse fewer than two waypoints (`src/app/exporting.js` (:212), (:421)).
+`play()` returns without a route (`src/app/playback.js` (:288); DEF-84). Both exports refuse fewer than two waypoints (`src/app/exporting.js` (:213), (:421)), and Clear All leaves a zero base timeline (`src/app/projectReset.js` (:76)).
 
-The session advised against merging the models in v3: the route sets the scene's length and carries the camera, labels, beacons and pauses, and a merged object would need a mode switch the abstraction plan's §16 rejects. It proposed converging in steps instead. After the owner's point that crowd paths should be able to carry the camera, it set out both sides; MERGE-01's item file keeps them, with the session's catalogue of movement types as candidate features. That catalogue is a page private to the owner (<https://claude.ai/artifact/Dn8NTvrNok2HMufMtPfsE8>); the item file carries its content. v4 departs from the founding decision of 2026-08-17 (the frozen canon log; `project/history.md`) and from the brief's Direction. The brief is the owner's to sign, so it stays as it is until MERGE-01's plan brings the amendment. The criteria are in the item files (`project/items/CROWD-08.md`, `project/items/MERGE-01.md`); ready-made presets are a wish line.
+The session advised against merging the models in v3: the route sets the base timeline and carries the camera, labels, beacons and pauses, and a merged object would need a mode switch the abstraction plan's §16 rejects. It proposed converging in steps instead. After the owner's point that crowd paths should be able to carry the camera, it set out both sides; MERGE-01's item file keeps them, with the session's catalogue of movement types as candidate features. That catalogue is a page private to the owner (<https://claude.ai/artifact/Dn8NTvrNok2HMufMtPfsE8>); the item file carries its content.
+
+v4 departs from the founding decision of 2026-08-17 (the frozen canon log; `project/history.md`) and from the brief's Direction. Direction also names the big run as the current work. The brief is the owner's to sign, so it is left unedited: this entry governs where they differ, as GATELESS-1 did, and MERGE-01's plan brings the amendment. The criteria are in the item files (`project/items/CROWD-08.md`, `project/items/MERGE-01.md`); ready-made presets are a wish line.
 
 **Supersedes:** none
 
