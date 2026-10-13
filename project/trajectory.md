@@ -11,6 +11,7 @@
 
 - RECALL — 7/8 (2026-10-13) — scores: 2,2,1,2 — local — see decisions
 - RECALL — 8/8 (2026-10-13) — scores: 2,2,2,2 — local — see decisions
+- RECALL — 8/8 (2026-10-13) — scores: 2,2,2,2 — local — see decisions
 - DEF-98 — a session browser recovery restores comes back with every image the project uses, the background, custom markers and the custom path head, each with its file name; an image recovery cannot keep is named with the reason in a warning, and a background that cannot come back is offered again by name, never replaced (2026-10-13) — see decisions
 
 ## Phase 3 — Design reviews
