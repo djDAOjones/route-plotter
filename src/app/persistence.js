@@ -1527,6 +1527,8 @@ export const persistenceMixin = {
       console.warn('Autosave was not restored; current state was left unchanged:', error);
       return keepUnrestoredAutosave(this, text);
     };
+    // What the restore pinned, let go of on every way out (DEF-98).
+    let restoring = null;
     try {
       let data;
       try {
@@ -1547,10 +1549,16 @@ export const persistenceMixin = {
       // newer project opened, or the project cleared, while they are read
       // supersedes this restore.
       const operation = beginAsyncProjectOperation(this, 'recovery-restore');
+      // A failure after an await is this restore's only while it is still
+      // current: one a Clear All or a newer Open superseded keeps no record and
+      // says nothing, since the project it would restore is gone (Codex, code
+      // review round 2, 4). Either way what it pinned is let go.
       let images;
       try {
         images = await readRecoveryImages(this, data);
+        restoring = images;
       } catch (error) {
+        if (!isAsyncProjectOperationCurrent(this, operation)) return false;
         return refuse(error);
       }
       const abandon = (result) => {
@@ -1565,6 +1573,7 @@ export const persistenceMixin = {
           ? { backgroundBase64: images.backgroundBase64, imageAssets: images.imageAssets }
           : {});
       } catch (error) {
+        if (!isAsyncProjectOperationCurrent(this, operation)) return abandon(false);
         return abandon(refuse(error));
       }
       if (!isAsyncProjectOperationCurrent(this, operation)) return abandon(false);
@@ -1627,6 +1636,8 @@ export const persistenceMixin = {
       // After the commit: the project is live, so there is no record to keep.
       console.warn('Restoring the autosave did not finish after it was loaded:', error);
       return false;
+    } finally {
+      releaseRestoredImages(restoring);
     }
   },
 };

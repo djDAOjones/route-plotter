@@ -460,7 +460,8 @@ export class RecoveryImageStore {
     this._pins = new Map();
     /** Every put and read under way, so a clear can wait for them. */
     this._operations = new Set();
-    this._sweeping = null;
+    /** Every sweep under way: a clear waits for each before its own. */
+    this._sweeps = new Set();
   }
 
   /** Whether images can be kept at all: a backend and a digest. */
@@ -666,6 +667,26 @@ export class RecoveryImageStore {
   }
 
   /**
+   * An operation of the caller's own that a clear must wait for, as it waits
+   * for a put or a read: a restore, from its first read until it has let go
+   * of every pin it took (Codex, code review round 2, 3).
+   * @returns {{end: Function}} Call once it has let go
+   */
+  beginOperation() {
+    let end;
+    const operation = new Promise(resolve => { end = resolve; });
+    this._track(operation);
+    let ended = false;
+    return {
+      end: () => {
+        if (ended) return;
+        ended = true;
+        end();
+      },
+    };
+  }
+
+  /**
    * Delete every entry no tab pins and no record names: the one sweep that
    * garbage collection and Clear All share. Only where the lock reaches every
    * writer (`crossWriter`). Each entry goes only under its own lock taken
@@ -721,10 +742,8 @@ export class RecoveryImageStore {
       }
       return { ok: true, deleted };
     })();
-    this._sweeping = sweeping;
-    sweeping.finally(() => {
-      if (this._sweeping === sweeping) this._sweeping = null;
-    });
+    this._sweeps.add(sweeping);
+    sweeping.finally(() => this._sweeps.delete(sweeping));
     return sweeping;
   }
 
@@ -734,31 +753,35 @@ export class RecoveryImageStore {
   }
 
   /**
-   * Clear All's part: once every put and read this tab has under way has
-   * settled (the project being cleared let go of its images first), the
-   * sweep, with the records that remain to protect what they name. An image
-   * another tab still shows stays: it is that tab's live project's.
+   * Clear All's part: once every put, read and restore this tab has under
+   * way has settled and let go of its pins (the project being cleared let go
+   * of its images first), and every sweep of this tab's already issued has
+   * finished its deletions (Codex, code review round 2, 2), the sweep, with
+   * the records that remain to protect what they name. So what it reports is
+   * so when it reports it. An image another tab still shows stays: it is
+   * that tab's live project's.
    * @param {(key: string) => (boolean|null)} isProtected
    * @returns {Promise<{ok: boolean, deleted: string[], skipped?: string}>}
    */
   async clear(isProtected) {
     if (!this.backend) return { ok: true, deleted: [] };
-    while (this._operations.size > 0) await Promise.allSettled([...this._operations]);
-    // What those operations' callers let go of is let go a microtask later.
-    await Promise.resolve();
+    while (this._operations.size > 0 || this._sweeps.size > 0) {
+      await Promise.allSettled([...this._operations, ...this._sweeps]);
+      // What those operations' callers let go of is let go a microtask later.
+      await Promise.resolve();
+    }
     return this.sweep(isProtected);
   }
 
   /** Whether a sweep is under way. */
   get sweeping() {
-    return this._sweeping !== null;
+    return this._sweeps.size > 0;
   }
 
-  /** Settles once no put, read or sweep of this tab's is under way. */
+  /** Settles once no put, read, restore or sweep of this tab's is under way. */
   async idle() {
     for (let round = 0; round < 20; round += 1) {
-      const waits = [...this._operations];
-      if (this._sweeping) waits.push(this._sweeping);
+      const waits = [...this._operations, ...this._sweeps];
       if (waits.length === 0) return;
       await Promise.allSettled(waits);
     }

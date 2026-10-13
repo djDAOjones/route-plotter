@@ -787,10 +787,10 @@ function sanitiseOmitted(list) {
 /**
  * Read one stored image and check it as an import does, strictly: its key
  * and digest (the store's), its actual byte length, its signature and MIME
- * type, a decode with its actual dimensions matching those stored. It comes
- * back pinned; the pin is the caller's to release.
+ * type, a decode with its actual dimensions matching those stored. The
+ * restore pinned it before its first read; the read's own pin goes here.
  * @returns {Promise<{ok: boolean, reason?: string, dataURL?: string, image?: Object,
- *   width?: number, height?: number, mimeType?: string, byteLength?: number, pin?: Object}>}
+ *   width?: number, height?: number, mimeType?: string, byteLength?: number}>}
  */
 async function readImage(store, key, { name, maxBytes }) {
   if (!store) return { ok: false, reason: R.MISSING };
@@ -798,6 +798,7 @@ async function readImage(store, key, { name, maxBytes }) {
   const read = await store.read(key);
   if (!read.ok) return { ok: false, reason: read.reason === R.CANCELLED ? R.MISSING : read.reason };
   const { record, pin } = read;
+  pin.release();
   try {
     ImageAsset.assertValidSerialized({
       id: 'recovery-image',
@@ -811,10 +812,7 @@ async function readImage(store, key, { name, maxBytes }) {
     const image = await ImageAsset.decodeDataURL(record.dataURL, name ?? 'image');
     const width = Number(image.naturalWidth || image.width);
     const height = Number(image.naturalHeight || image.height);
-    if (width !== record.width || height !== record.height) {
-      pin.release();
-      return { ok: false, reason: R.UNREADABLE };
-    }
+    if (width !== record.width || height !== record.height) return { ok: false, reason: R.UNREADABLE };
     return {
       ok: true,
       dataURL: record.dataURL,
@@ -823,11 +821,9 @@ async function readImage(store, key, { name, maxBytes }) {
       height,
       mimeType: record.mimeType,
       byteLength: record.byteLength,
-      pin,
     };
   } catch (error) {
     console.warn('A recovery image could not be read:', error);
-    pin.release();
     return { ok: false, reason: R.UNREADABLE };
   }
 }
@@ -858,13 +854,16 @@ function describeReferences(data, assetId) {
  * image bytes restores them as before (`kind: 'inline'`); one without kept no
  * images, and says so (`kind: 'legacy'`), naming none.
  *
- * Never rejects. The images it read come back pinned (`pins`), which the
- * caller releases once the project that replaces this one has pinned its own.
+ * Never rejects. Every image the manifest names is pinned before the first
+ * read (`pins`), and the whole restore is an operation of the store's
+ * (`life`): the caller lets go of both with `releaseRestoredImages`, once
+ * the project that replaces this one has pinned its own, or as it abandons
+ * the restore.
  * @param {Object} app
  * @param {Object} data - The parsed record
  * @returns {Promise<{kind: string, data: Object, backgroundBase64: string|null,
  *   backgroundName: string|null, imageAssets: Array<ImageAsset>|null,
- *   omitted: Array<Object>, pins: Array<Object>}>}
+ *   omitted: Array<Object>, pins: Array<Object>, life: Object|null}>}
  */
 export async function readRecoveryImages(app, data) {
   const manifest = data?.recoveryImages;
@@ -889,9 +888,22 @@ export async function readRecoveryImages(app, data) {
 
   const store = storeOf(app);
   const limits = store?.limits ?? RECOVERY_IMAGE_LIMITS;
-  const pins = [];
   const understood = typeof manifest === 'object' && manifest.version === RECOVERY_MANIFEST_VERSION;
   const omitted = understood ? sanitiseOmitted(manifest.omitted) : [];
+  // Every image the record names is pinned before the first read, so no
+  // tab's sweep can take one while another is read (Codex, code review round
+  // 2, 1), and the restore is an operation a clear waits for until it has
+  // let go of them (round 2, 3): at its commit, or as it is abandoned.
+  const pins = [];
+  const life = store?.beginOperation() ?? null;
+  if (store && understood) {
+    const assets = Array.isArray(manifest.assets) ? manifest.assets : [];
+    const named = [manifest.background?.key, ...assets.map(each => each?.key)];
+    for (const key of new Set(named.filter(validKey))) {
+      const pin = store.pin(key);
+      if (pin) pins.push(pin);
+    }
+  }
 
   let backgroundBase64 = null;
   let backgroundName = null;
@@ -903,7 +915,6 @@ export async function readRecoveryImages(app, data) {
       maxBytes: Math.min(limits.MAX_BYTES, limits.MAX_BACKGROUND_BYTES),
     });
     if (read.ok) {
-      pins.push(read.pin);
       backgroundBase64 = read.dataURL;
       backgroundName = name;
     } else {
@@ -941,7 +952,6 @@ export async function readRecoveryImages(app, data) {
     const imagePixels = read.width * read.height;
     if (count + 1 > limits.MAX_ASSETS || bytes + read.byteLength > limits.MAX_ASSET_BYTES_TOTAL ||
         pixels + imagePixels > limits.MAX_IMAGE_PIXELS_TOTAL) {
-      read.pin.release();
       lost.set(assetId, { name, reason: R.OVER_TOTAL });
       continue;
     }
@@ -959,13 +969,11 @@ export async function readRecoveryImages(app, data) {
       restored._imageElement = read.image;
       imageAssets.push(restored);
       available.add(assetId);
-      pins.push(read.pin);
       count += 1;
       bytes += read.byteLength;
       pixels += imagePixels;
     } catch (error) {
       console.warn('A recovery image could not be read:', error);
-      read.pin.release();
       lost.set(assetId, { name, reason: R.UNREADABLE });
     }
   }
@@ -983,12 +991,17 @@ export async function readRecoveryImages(app, data) {
   }
   const restoredData = { ...stripAssetReferences(data, dropped), imageAssets: [] };
   delete restoredData.recoveryImages;
-  return { kind: 'manifest', data: restoredData, backgroundBase64, backgroundName, imageAssets, omitted, pins };
+  return { kind: 'manifest', data: restoredData, backgroundBase64, backgroundName, imageAssets, omitted, pins, life };
 }
 
-/** Let go of what a restore read, once the project's own images are pinned. */
+/**
+ * Let go of what a restore pinned, once the project's own images are pinned
+ * (its commit) or it is abandoned; then a clear waiting on it may sweep.
+ * Safe to call more than once.
+ */
 export function releaseRestoredImages(restored) {
   for (const pin of restored?.pins?.splice(0) ?? []) pin.release();
+  restored?.life?.end();
 }
 
 /**

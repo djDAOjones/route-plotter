@@ -33,6 +33,7 @@ import {
   writeRecovery,
 } from './helpers/recoveryHarness.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
+import { ImageAsset } from '../src/models/ImageAsset.js';
 import { getRetainedBackgroundDataURL } from '../src/app/persistence.js';
 import { recoveryImagesIdle } from '../src/app/recoveryImages.js';
 import { setRecoveryImageStoreFactory } from '../src/services/RecoveryImageStore.js';
@@ -100,6 +101,42 @@ function expectRecordHeld(environment) {
   const named = [manifest?.background?.key, ...(manifest?.assets ?? []).map(asset => asset.key)].filter(Boolean);
   for (const key of named) expect(environment.backend.entries.has(key)).toBe(true);
   return named;
+}
+
+/**
+ * Hold the first deletion the backend is asked for, and only that one; told
+ * when it has been asked for.
+ */
+function holdFirstDeletion(backend) {
+  const remove = backend.delete;
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  let told;
+  const issued = new Promise(resolve => { told = resolve; });
+  let first = true;
+  backend.delete = async key => {
+    if (first) {
+      first = false;
+      told();
+      await gate;
+    }
+    return remove.call(backend, key);
+  };
+  return { issued, release };
+}
+
+/** The app's announcements, and how many images the store held as each was made. */
+function sayingWhatIsStored(app, environment) {
+  const real = app.announce;
+  const calls = [];
+  vi.spyOn(app, 'announce').mockImplementation(function announced(message, ...rest) {
+    calls.push([message, environment.backend.entries.size]);
+    return real.call(this, message, ...rest);
+  });
+  return {
+    said: () => calls.map(([message]) => message),
+    storedWhen: message => calls.filter(([each]) => each === message).map(([, size]) => size),
+  };
 }
 
 describe('browser recovery keeps every image the live project references (DEF-98)', () => {
@@ -759,33 +796,47 @@ describe('what recovery tidies away, and what it never may (DEF-98)', () => {
     placeRoute(first);
     await writeRecovery(first);
     await first.loadExampleImage('images/Court.png');
-    const releaseDelete = environment.backend.pause('delete');
-    // Told when the tidy's deletion has been issued, and waits.
-    const remove = environment.backend.delete;
-    const issued = new Promise(resolve => {
-      environment.backend.delete = key => {
-        resolve();
-        return remove.call(environment.backend, key);
-      };
-    });
+    // The tidy's deletion alone waits (Codex, code review round 2, 2: pausing
+    // the clear's own as well hid that the clear did not wait for it).
+    const held = holdFirstDeletion(environment.backend);
     await recoveryImagesIdle(first);
     first.storageService.flushAutoSave();
-    await issued;
-    const announce = vi.spyOn(first, 'announce');
+    await held.issued;
+    const announce = sayingWhatIsStored(first, environment);
     first.clearAll();
-    await new Promise(resolve => setTimeout(resolve, 0));
-    expect(announce.mock.calls.map(([message]) => message)).not.toContain('Project cleared');
-    releaseDelete();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(announce.said()).not.toContain('Project cleared');
+    expect(environment.backend.entries.size).toBeGreaterThan(0);
+    held.release();
     await recoveryImagesIdle(first);
-    // The tidy's deletion, then the clear's, which waited for it.
-    expect(environment.backend.log.slice(-2)).toEqual([
-      expect.stringMatching(/^delete sha256-/), expect.stringMatching(/^delete sha256-/),
-    ]);
-    expect(announce.mock.calls.map(([message]) => message)).toContain('Project cleared');
     expect(environment.backend.entries.size).toBe(0);
+    // Said once it was so.
+    expect(announce.storedWhen('Project cleared')).toEqual([0]);
     await closeApp(first);
     const app = await bootWithRecovery(environment);
     expect(app.waypoints).toHaveLength(0);
+  });
+
+  test('an image-free project opened, its old image\'s deletion held, then Clear All: "Project cleared" only once that image is gone (Codex, code review round 2, 2)', async () => {
+    const environment = recoveryEnvironment();
+    const first = await bootWithRecovery(environment);
+    placeRoute(first);
+    await writeRecovery(first);
+    const oldKey = recoveryRecord(environment.storage).recoveryImages.background.key;
+    const held = holdFirstDeletion(environment.backend);
+    const archive = await first.imageAssetService.exportZip(
+      { ...first._buildProjectSnapshot({ includeAssets: false }), waypoints: [] }, null);
+    expect(await first.loadProject(new File([archive], 'plain.zip', { type: 'application/zip' }))).toBe(true);
+    await held.issued;
+    const announce = sayingWhatIsStored(first, environment);
+    first.clearAll();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(announce.said()).not.toContain('Project cleared');
+    expect(environment.backend.entries.has(oldKey)).toBe(true);
+    held.release();
+    await recoveryImagesIdle(first);
+    expect(environment.backend.entries.size).toBe(0);
+    expect(announce.storedWhen('Project cleared')).toEqual([0]);
   });
 
   test('undo keeps its images in the asset service, and an image undo makes live again is stored again', async () => {
@@ -1024,7 +1075,13 @@ describe('the restore (DEF-98)', () => {
     await closeApp(first);
 
     const releaseGet = environment.backend.pause('get');
-    const announce = vi.spyOn(Object.getPrototypeOf(first), 'announce');
+    const prototype = Object.getPrototypeOf(first);
+    const real = prototype.announce;
+    const calls = [];
+    vi.spyOn(prototype, 'announce').mockImplementation(function announced(message, ...rest) {
+      calls.push([message, environment.backend.entries.size]);
+      return real.call(this, message, ...rest);
+    });
     setRecoveryImageStoreFactory(() => environment.makeStore());
     const app = await bootApp();
     setRecoveryImageStoreFactory(null);
@@ -1035,9 +1092,14 @@ describe('the restore (DEF-98)', () => {
     expect(app.waypoints).toHaveLength(0);
     // Superseded, it said nothing of a restore, and the cleared project keeps
     // no background: no default map goes in under it (Codex, code review round 1, 5).
-    expect(announce.mock.calls.map(([message]) => message)).not.toContain('Previous session restored');
+    expect(calls.map(([message]) => message)).not.toContain('Previous session restored');
     expect(app.background.image).toBeNull();
     expect(app._backgroundName).toBeNull();
+    // The clear waited for the abandoned restore to let go of its image, then
+    // removed it, and said so only then (Codex, code review round 2, 3).
+    await recoveryImagesIdle(app);
+    expect(environment.backend.entries.size).toBe(0);
+    expect(calls.filter(([message]) => message === 'Project cleared').map(([, size]) => size)).toEqual([0]);
   });
 
   test('a newer Open while recovery\'s images are read wins: its project, with no background, and no default map under it', async () => {
@@ -1298,5 +1360,91 @@ describe('round 2: the code review and the lead\'s pane check (DEF-98)', () => {
     expect(prompt()?.textContent).toContain('recovery before this release kept no images');
     await expect(loadCurrentSnapshot(app, modelOnly)).resolves.toBe(true);
     expect(prompt()).toBeNull();
+  });
+});
+
+describe('round 3: the code review round 2 (DEF-98)', () => {
+  test('a restore pins every image its record names before its first read: another tab\'s Clear All takes none meanwhile, and its pagehide record names them all (Codex, code review round 2, 1)', async () => {
+    decodeByHeader();
+    const environment = recoveryEnvironment();
+    const writer = await bootWithRecovery(environment);
+    await loadBackgroundFile(writer, fileOf(pngDataURL({ width: 24, height: 12, tag: 'two-tab-campus' }), 'campus.png'));
+    placeRoute(writer);
+    const marker = await chooseMarker(writer, 0, fileOf(pngDataURL({ width: 8, height: 8, tag: 'two-tab-flag' }), 'flag.png'));
+    await writeRecovery(writer);
+    await closeApp(writer);
+
+    // Tab A restores the record and shows both images.
+    const tabA = await bootWithRecovery(environment);
+    expect(tabA.waypoints[0].customImageAssetId).toBe(marker.id);
+    // Tab B opens and restores it too; its first read waits.
+    const releaseGet = environment.backend.pause('get');
+    const get = environment.backend.get;
+    const reading = new Promise(resolve => {
+      environment.backend.get = key => {
+        resolve();
+        return get.call(environment.backend, key);
+      };
+    });
+    setRecoveryImageStoreFactory(() => environment.makeStore());
+    const tabB = await bootApp();
+    setRecoveryImageStoreFactory(null);
+    await reading;
+    // A clears: it lets go of its images, removes recovery and sweeps.
+    tabA.clearAll();
+    await recoveryImagesIdle(tabA);
+    expect(environment.backend.entries.size).toBe(2);
+    releaseGet();
+    await tabB.ready;
+    expect(tabB.waypoints[0]).toMatchObject({ markerStyle: 'custom', customImageAssetId: marker.id });
+    expect(tabB._backgroundName).toBe('campus.png');
+    // B edits and closes at once: its pagehide record names both, stored.
+    tabB.eventBus.emit('background:overlay-change', 10);
+    tabB.storageService.flushAutoSave();
+    expect(expectRecordHeld(environment)).toHaveLength(2);
+    expect(recoveryRecord(environment.storage).recoveryImages.omitted).toEqual([]);
+  });
+
+  test.each([
+    ['a Clear All', async app => {
+      app.clearAll();
+    }],
+    ['a newer Open', async (app, archive) => {
+      expect(await app.loadProject(new File([archive], 'plain.zip', { type: 'application/zip' }))).toBe(true);
+    }],
+  ])('a restore that %s superseded, whose staging then fails, keeps no record of the project it would have restored, and says nothing of it (Codex, code review round 2, 4)', async (_, supersede) => {
+    allowConsole(/could not be read|Failed to load image/);
+    decodeByHeader();
+    const environment = recoveryEnvironment();
+    const writer = await bootWithRecovery(environment);
+    await loadBackgroundFile(writer, fileOf(pngDataURL({ width: 30, height: 15, tag: 'staged' }), 'staged.png'));
+    placeRoute(writer);
+    await writeRecovery(writer);
+    const archive = await writer.imageAssetService.exportZip(
+      { ...writer._buildProjectSnapshot({ includeAssets: false }), waypoints: [] }, null);
+    await closeApp(writer);
+
+    // The staging's decode of the background is held, to fail later.
+    const decode = ImageAsset.decodeDataURL;
+    let fail;
+    const reached = new Promise(resolve => {
+      vi.spyOn(ImageAsset, 'decodeDataURL').mockImplementation((dataURL, name) => {
+        if (name !== 'project background') return decode.call(ImageAsset, dataURL, name);
+        resolve();
+        return new Promise((_resolve, reject) => { fail = () => reject(new Error('Failed to load image: held')); });
+      });
+    });
+    setRecoveryImageStoreFactory(() => environment.makeStore());
+    const app = await bootApp();
+    setRecoveryImageStoreFactory(null);
+    await reached;
+    await supersede(app, archive);
+    fail();
+    await app.ready;
+    await recoveryImagesIdle(app);
+    expect([...environment.storage.keys()].filter(key => key.startsWith('routePlotter_keptAutosave:'))).toEqual([]);
+    expect(document.getElementById('unrestored-notice').hidden).toBe(true);
+    expect(app.waypoints).toHaveLength(0);
+    expect(environment.backend.entries.size).toBe(0);
   });
 });
