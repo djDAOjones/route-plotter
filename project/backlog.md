@@ -24,6 +24,10 @@
 
 - [ ] DEF-98 — Restore drops the background and custom images — since 2026-10-13
 
+### MVP — football crowds and mobs, as v3.3 — the owner's word of 2026-10-13
+
+- [ ] CROWD-08 — Football crowd and mob MVP — since 2026-10-13
+
 ### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
 - [!] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01 — blocked: the owner's word to retire the source-text assertions its new tests cover (GATELESS-1 bars deleting a test)
@@ -43,6 +47,10 @@
 - [!] REV-05 — Accessibility assurance · Accessibility assurance — since 2026-10-01 — blocked: owner evidence — NVDA/VoiceOver + forced-colours + reduced-motion emulation
 
 ## Next
+
+**v4 — merge routes and crowds — the owner's word of 2026-10-13, once CROWD-08 ships**
+
+- [ ] MERGE-01 — Plan v4's merge of routes and crowds — since 2026-10-13 — (from: PLAN-4, 2026-10-13)
 
 **The built-in examples — the owner's word of 2026-10-05**
 
