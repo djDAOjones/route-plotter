@@ -20,7 +20,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, test, expect } from 'vitest';
 import { withRoute, major } from './helpers/traceProject.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 
 const indexHtml = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
 
@@ -167,7 +167,7 @@ describe('every range keeps its readout as the app writes it', () => {
 
     // And so does opening a project.
     const saved = app._buildProjectSnapshot();
-    expect(await loadSnapshot(app, saved)).toBe(true);
+    expect(await loadCurrentSnapshot(app, saved)).toBe(true);
     app.eventBus.emit('waypoint:selected', app.waypoints[2]);
     await settle();
     expect(readoutFaults(document)).toEqual([]);

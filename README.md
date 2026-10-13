@@ -179,10 +179,13 @@ before this release kept no images, and offers the background.
 name stay in this browser's storage until **Clear All**, which matters on a
 shared computer. Pending recovery is flushed on `pagehide`, naming the images
 stored by then, and **Clear All** removes the recovery point and its images,
-after any write already under way and before the new project's, so cleared
-work cannot return on reload. Every tab of the app shares the image store; an
-image no record names is deleted only under a Web Lock that no other tab
-holds while it stores or relies on one. The serialized snapshot is capped at
+once any write already under way has landed, so cleared work cannot return on
+reload; an image another open tab shows stays, as that tab's, and where the
+recovery point or a kept record cannot be removed, the images it names stay
+with it, and the app says so. Every tab of the app shares the image store,
+and holds a Web Lock on each image of its live project: an image is deleted
+only when no record names it and no open tab shows it (in a browser without
+Web Locks, never). The serialized snapshot is capped at
 4 MiB (`STORAGE_LIMITS` in `StorageService.js`): above it, an ordinary autosave
 cancels its pending write, warns, and keeps the previous recovery point, while
 the immediate replacement after opening a project file or restoring recovery

@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, expect } from 'vitest';
 import { bootApp } from './bootApp.js';
 import { holdAnimationFrames } from '../setup.js';
-import { loadSnapshot } from './projectSnapshot.js';
+import { loadCurrentSnapshot } from './projectSnapshot.js';
 import { buildExampleProjects } from '../../src/examples/index.js';
 
 const goldenDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'goldens');
@@ -137,7 +137,7 @@ export async function openProject(project, { preview = true } = {}) {
   try {
     app = await bootApp();
     await app.ready;
-    expect(await loadSnapshot(app, project)).toBe(true);
+    expect(await loadCurrentSnapshot(app, project)).toBe(true);
     await settled();
     let count = 0;
     do {

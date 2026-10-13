@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { MAX_HISTORY, UndoService } from '../src/services/UndoService.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 
 function stateValue(serialized) {
@@ -350,7 +350,7 @@ describe('CON-04: the baseline a load stores is the state the app saves next', (
     test(`CON-04: after loading ${id}, the first undoable state is byte-equal to the baseline`, async () => {
       const app = await bootApp();
       await app.ready;
-      expect(await loadSnapshot(app, project)).toBe(true);
+      expect(await loadCurrentSnapshot(app, project)).toBe(true);
 
       expect(app.undoService.getRetainedSerializedStates()).toEqual([JSON.stringify(app._getUndoableState())]);
       // So saving straight after the load records nothing, and there is still

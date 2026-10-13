@@ -59,7 +59,7 @@ import {
 } from '../src/utils/sliderScales.js';
 import { sliderToPathWidth } from '../src/utils/pathWidthScale.js';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -1193,7 +1193,7 @@ describe('index.html ranges against the code (TST-13)', () => {
       running.push(app);
       await app.ready;
       document.getElementById('splash-close').click();
-      expect(await loadSnapshot(app, project)).toBe(true);
+      expect(await loadCurrentSnapshot(app, project)).toBe(true);
       app.eventBus.emit('waypoint:selected', app.waypoints[0]);
       // The strip's first row is the route; the crowd's row carries its name.
       const crowd = project.scene.flowLayers[0].name;

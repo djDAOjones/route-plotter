@@ -32,7 +32,7 @@ import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { allRules, borderColourOf, cascade, colourIn, hex, paintOf, resolveValue, tokensFor } from './helpers/cssTokens.js';
 import { callsOf, lex, lexedFiles, lineAt } from './helpers/sourceScan.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 import { isMac } from '../src/config/keybindings.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
@@ -455,7 +455,7 @@ describe('export validation (UI-06 B-18)', () => {
     expect([mp4.textContent, webm.textContent, html.textContent]).toEqual(['Export MP4…', 'Export WebM…', 'Export HTML…']);
 
     // A project with a route but no background: only HTML is refused.
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
     })).toBe(true);
@@ -1049,7 +1049,7 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
 
   test('disables the Dots, Release and Motion cards with a line that says so; a crowd with an emitter has them back', async () => {
     const app = await editor();
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
       scene: { flowLayers: [{ id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] }] },
@@ -1162,7 +1162,7 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
 
   test('its disabled cards look disabled: ranges, the select and the swatches in the disabled tokens with a not-allowed cursor, through the cascade (the lead\'s pane finding, round 2)', async () => {
     const app = await editor();
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
       scene: { flowLayers: [{ id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] }] },

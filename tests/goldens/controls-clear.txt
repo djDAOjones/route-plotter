@@ -80,6 +80,7 @@ ui ~ #hold-at-end: input aria-describedby="hold-at-end-value hold-at-end-tip" ar
 ui ~ #hold-at-end-value: span class="range-readout slider-value" :text="0s" → span class="range-readout slider-value" :text="2s"
 ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:00" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
 ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:00"
+ui ~ #toast-container>div[0]: div class="toast is-visible" :text="Browser recovery could not keep 2 images. The path head image, asset-extras-head.png: this browser cannot store images for recovery. The marker image for Extra…[269 chars, 7b42e728] → div class="toast" :text="Browser recovery could not keep 2 images. The path head image, asset-extras-head.png: this browser cannot store images for recovery. The marker image for Extra…[269 chars, 7b42e728]
 ui ~ #add-crowd-btn: button aria-describedby="add-crowd-btn-tip" class="btn btn-secondary add-crowd-btn" data-tip-desc="add-crowd-btn-tip" data-tip="Add a crowd of dots that follows the route" type="button" :text="+ Add crowd" → button aria-describedby="add-crowd-btn-tip" class="btn btn-secondary add-crowd-btn" data-tip-desc="add-crowd-btn-tip" data-tip="Add a crowd and draw the network it follows" type="button" :text="+ Add crowd"
 ui ~ #add-crowd-btn-tip: span class="sr-only" :text="Add a crowd of dots that follows the route" → span class="sr-only" :text="Add a crowd and draw the network it follows"
 ui ~ #waypoint-list>li[0]: li class="waypoint-item waypoint-item-add" → li aria-live="off" class="waypoint-list-empty" role="status"
@@ -166,3 +167,5 @@ settled:
   announced "Animation paused"
   announced "Project cleared"
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Animation reset" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui - #toast-container>div[0]: div class="toast" :text="Browser recovery could not keep 2 images. The path head image, asset-extras-head.png: this browser cannot store images for recovery. The marker image for Extra…[269 chars, 7b42e728]
+  ui - #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

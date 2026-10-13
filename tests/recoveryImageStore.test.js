@@ -77,15 +77,14 @@ describe('the image store (DEF-98)', () => {
     expect(createIndexedDBBackend({ factory: undefined })).toBeNull();
     const store = new RecoveryImageStore({ backend: null, digest: nodeDigest });
     expect(store.available).toBe(false);
-    expect(store.lease()).toBeNull();
+    expect(store.pin('sha256-x')).toBeNull();
   });
 
   test('an entry is keyed by the SHA-256 of its bytes, and holds its type, dimensions, length and bytes, no name', async () => {
     const { store, backend } = storeWith();
     const fixture = image('keyed', { width: 7, height: 5 });
-    const lease = store.lease();
-    const result = await store.ensureStored(lease, fixture);
-    lease.release();
+    const result = await store.ensureStored(fixture);
+    result.pin.release();
 
     expect(result.ok).toBe(true);
     expect(result.key).toBe(`sha256-${await nodeDigest(dataURLToBytes(fixture.dataURL))}`);
@@ -95,117 +94,132 @@ describe('the image store (DEF-98)', () => {
     expect(entry.byteLength).toBe(dataURLToBytes(fixture.dataURL).byteLength);
   });
 
-  test('an image is stored only once its put has completed', async () => {
+  test('an image is stored only once its put has completed, and only while it is pinned', async () => {
     const { store, backend } = storeWith();
     const fixture = image('slow');
     const releasePut = backend.pause('put');
-    const lease = store.lease();
-    const storing = store.ensureStored(lease, fixture);
+    const storing = store.ensureStored(fixture);
     const { key } = await store.keyFor(fixture.dataURL);
     await tick();
-    expect(store.verified(lease, key)).toBe(false);
+    expect(store.isStoredNow(key)).toBe(false);
     releasePut();
-    expect((await storing).ok).toBe(true);
-    expect(store.verified(lease, key)).toBe(true);
-    lease.release();
+    const result = await storing;
+    expect(result.ok).toBe(true);
+    expect(store.isStoredNow(key)).toBe(true);
+    result.pin.release();
+    await tick();
+    await tick();
+    // Let go, it is no longer this tab's to vouch for.
+    expect(store.isStoredNow(key)).toBe(false);
   });
 
   test('a refused put resolves to a reason and never throws', async () => {
     allowConsole(/could not store an image/);
     const { store, backend } = storeWith();
     backend.failWhen('put', () => new DOMException('The quota has been exceeded.', 'QuotaExceededError'));
-    const lease = store.lease();
-    await expect(store.ensureStored(lease, image('refused'))).resolves.toMatchObject({ ok: false, reason: 'refused' });
-    lease.release();
+    await expect(store.ensureStored(image('refused'))).resolves.toMatchObject({ ok: false, reason: 'refused' });
   });
 
-  test('a clear is ordered after the puts issued before it and before those asked for after it; nothing it removes is trusted', async () => {
+  test('a clear waits for the puts issued before it, then deletes what no record names and no tab pins', async () => {
     const { store, backend } = storeWith();
     const releasePut = backend.pause('put');
-    const before = store.lease();
-    const first = store.ensureStored(before, image('before'));
+    const first = store.ensureStored(image('before'));
     await tick();
-    const clearing = store.clear();
-    const after = store.lease();
-    const second = store.ensureStored(after, image('after'));
+    const clearing = first.then(result => {
+      // The project being cleared lets go of its image as its put lands.
+      result.pin.release();
+      return result;
+    });
+    const cleared = store.clear(() => false);
     await tick();
     releasePut();
-    const [firstResult, cleared, secondResult] = await Promise.all([first, clearing, second]);
-    before.release();
-    after.release();
-
-    expect(firstResult).toMatchObject({ ok: false, reason: 'cancelled' });
-    expect(cleared).toEqual({ ok: true });
-    expect(secondResult.ok).toBe(true);
-    expect(backend.log).toEqual([
-      'keys', `put ${firstResult.key}`, 'clear', 'keys', `put ${secondResult.key}`,
-    ]);
-    expect([...backend.entries.keys()]).toEqual([secondResult.key]);
+    const [firstResult, outcome] = await Promise.all([clearing, cleared]);
+    expect(firstResult.ok).toBe(true);
+    expect(outcome).toEqual({ ok: true, deleted: [firstResult.key] });
+    expect(backend.log).toEqual([`has ${firstResult.key}`, `put ${firstResult.key}`, 'keys', `delete ${firstResult.key}`]);
+    // A put asked for after the clear lands, and stays.
+    const second = await store.ensureStored(image('after'));
+    expect(second.ok).toBe(true);
+    expect([...backend.entries.keys()]).toEqual([second.key]);
   });
 
   test('a clear that fails says so', async () => {
-    allowConsole(/could not remove its images/);
+    allowConsole(/could not tidy its images/);
     const { store, backend } = storeWith();
-    backend.failWhen('clear', () => new Error('disk gone'));
-    await expect(store.clear()).resolves.toMatchObject({ ok: false });
+    const stored = await store.ensureStored(image('stays'));
+    stored.pin.release();
+    backend.failWhen('delete', () => new Error('disk gone'));
+    await expect(store.clear(() => false)).resolves.toMatchObject({ ok: false, skipped: 'failed' });
+    backend.failWhen('delete', null);
+    backend.failWhen('keys', () => new Error('disk gone'));
+    await expect(store.clear(() => false)).resolves.toMatchObject({ ok: false, skipped: 'failed' });
+    expect(backend.entries.has(stored.key)).toBe(true);
   });
 
-  test('an unreferenced entry is deleted only where the lock reaches every writer, and only while no hold exists', async () => {
+  test('an image a tab pins is deleted by no tab, and one no tab pins only where the lock reaches every writer', async () => {
     const backend = createMemoryRecoveryBackend();
     const locks = createLocalLockManager();
-    const writer = new RecoveryImageStore({ backend, locks, crossWriter: true, digest: nodeDigest });
-    const lease = writer.lease();
-    const kept = await writer.ensureStored(lease, image('kept'));
-    const orphan = await writer.ensureStored(lease, image('orphan'));
-
-    // A tab of its own sees the store's lock: no deletion while a hold lasts.
-    const other = new RecoveryImageStore({ backend, locks, crossWriter: true, digest: nodeDigest });
-    expect(await other.collectGarbage(() => false)).toMatchObject({ ok: false, skipped: 'busy' });
-    // Where the lock reaches only this tab, nothing is ever deleted.
-    const alone = new RecoveryImageStore({ backend, crossWriter: false, digest: nodeDigest });
-    expect(await alone.collectGarbage(() => false)).toMatchObject({ ok: false, skipped: 'uncoordinated' });
-
-    lease.release();
+    const tabA = new RecoveryImageStore({ backend, locks, crossWriter: true, digest: nodeDigest });
+    const kept = await tabA.ensureStored(image('kept'));
+    const orphan = await tabA.ensureStored(image('orphan'));
+    orphan.pin.release();
     await tick();
     await tick();
+
+    // Tab B sees tab A's pin on the image A still shows, and leaves it.
+    const tabB = new RecoveryImageStore({ backend, locks, crossWriter: true, digest: nodeDigest });
     const asked = [];
-    const result = await other.collectGarbage(key => {
+    const result = await tabB.collectGarbage(key => {
       asked.push(key);
-      return key === kept.key;
+      return false;
     });
     expect(result).toEqual({ ok: true, deleted: [orphan.key] });
-    expect(asked.sort()).toEqual([kept.key, orphan.key].sort());
+    expect([...backend.entries.keys()]).toEqual([kept.key]);
+    // Where the lock reaches only this tab, nothing is ever deleted.
+    kept.pin.release();
+    await tick();
+    await tick();
+    const alone = new RecoveryImageStore({ backend, crossWriter: false, digest: nodeDigest });
+    expect(await alone.collectGarbage(() => false)).toMatchObject({ ok: false, skipped: 'uncoordinated' });
     expect([...backend.entries.keys()]).toEqual([kept.key]);
   });
 
-  test('a record that cannot be read or understood stops every deletion', async () => {
+  test('a record that names an entry protects it, asked again under the entry\'s own lock; one that cannot be understood stops every deletion', async () => {
     const { store, backend } = storeWith();
-    const lease = store.lease();
-    await store.ensureStored(lease, image('one'));
-    await store.ensureStored(lease, image('two'));
-    lease.release();
+    const one = await store.ensureStored(image('one'));
+    const two = await store.ensureStored(image('two'));
+    one.pin.release();
+    two.pin.release();
     await tick();
     await tick();
     expect(await store.collectGarbage(() => null)).toMatchObject({ ok: false, skipped: 'unknown', deleted: [] });
     expect(backend.entries.size).toBe(2);
+    // Named when asked under the lock, though not before it: left.
+    const asked = new Map();
+    const result = await store.collectGarbage(key => {
+      asked.set(key, (asked.get(key) || 0) + 1);
+      return key === one.key && asked.get(key) > 1;
+    });
+    expect(result.deleted).toEqual([two.key]);
+    expect([...backend.entries.keys()]).toEqual([one.key]);
   });
 
   test('a read checks the entry is what its key says: its byte length and its digest', async () => {
     allowConsole(/could not read an image/);
     const { store, backend } = storeWith();
-    const lease = store.lease();
-    const good = await store.ensureStored(lease, image('good'));
-    const lengthWrong = await store.ensureStored(lease, image('length'));
-    const digestWrong = await store.ensureStored(lease, image('digest'));
+    const good = await store.ensureStored(image('good'));
+    const lengthWrong = await store.ensureStored(image('length'));
+    const digestWrong = await store.ensureStored(image('digest'));
     backend.entries.get(lengthWrong.key).byteLength += 1;
     new Uint8Array(backend.entries.get(digestWrong.key).bytes)[30] ^= 0xFF;
 
-    expect((await store.read(lease, good.key)).record).toMatchObject({ mimeType: 'image/png', width: 4, height: 3 });
-    expect(await store.read(lease, lengthWrong.key)).toMatchObject({ ok: false, reason: 'unreadable' });
-    expect(await store.read(lease, digestWrong.key)).toMatchObject({ ok: false, reason: 'unreadable' });
-    expect(await store.read(lease, `sha256-${'0'.repeat(64)}`)).toMatchObject({ ok: false, reason: 'missing' });
+    const read = await store.read(good.key);
+    expect(read.record).toMatchObject({ mimeType: 'image/png', width: 4, height: 3 });
+    read.pin.release();
+    expect(await store.read(lengthWrong.key)).toMatchObject({ ok: false, reason: 'unreadable' });
+    expect(await store.read(digestWrong.key)).toMatchObject({ ok: false, reason: 'unreadable' });
+    expect(await store.read(`sha256-${'0'.repeat(64)}`)).toMatchObject({ ok: false, reason: 'missing' });
     backend.failWhen('get', () => new Error('read failed'));
-    expect(await store.read(lease, good.key)).toMatchObject({ ok: false, reason: 'unreadable' });
-    lease.release();
+    expect(await store.read(good.key)).toMatchObject({ ok: false, reason: 'unreadable' });
   });
 });

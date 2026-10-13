@@ -20,7 +20,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { RenderingService } from '../src/services/RenderingService.js';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 
 /** A minimal engine stub: only what getHeadDirection reads. */
 function engineStub({ progress, waitingIndex }) {
@@ -107,7 +107,7 @@ describe('CON-09: the head direction baseline', () => {
     await app.ready;
     // A square export, so the canvas the project opens on is square, as these routes' arithmetic is: since UI-06 PR 6
     // round 3 the canvas is the project's own fit as it opens, where it kept the start's square (the lead's settlement).
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9, waypoints, motionSettings, exportSettings: { resolutionX: 1000, resolutionY: 1000 },
     })).toBe(true);
     // Where a branch's head is during the trunk's wait depends on the speed,

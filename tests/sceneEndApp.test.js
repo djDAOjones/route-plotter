@@ -14,7 +14,7 @@
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { clearProject } from '../src/app/projectReset.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
@@ -326,7 +326,7 @@ async function openedProject({ mode = 'constant-time', extras = false } = {}) {
       areaHighlight: { enabled: true, shape: 'circle', centerX: imgX, centerY: imgY, fadeInMs: 800, fadeOutMs: 800 },
     } : {}),
   }));
-  expect(await loadSnapshot(app, {
+  expect(await loadCurrentSnapshot(app, {
     coordVersion: 9,
     waypoints,
     scene: scene.toJSON(),
@@ -417,7 +417,7 @@ describe('B and F across saving, reopening, undo and reset', () => {
     expect(autoSave.mock.calls.at(-1)[0].animationState.duration).toBe(first.B);
 
     for (let round = 0; round < 2; round++) {
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(true);
       await settled();
       expect(durations(app)).toEqual(first);
     }
@@ -463,7 +463,7 @@ describe('B and F across saving, reopening, undo and reset', () => {
     layer.addEmitter({ ...SLOW_CROWD, dotCount: 12, lifecycleMode: 'disappear' });
     const app = await bootApp();
     await app.ready;
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [
         { id: 'one', imgX: 0.1, imgY: 0.5, isMajor: true, pauseMode: 'none', pauseTime: 0 },
@@ -541,7 +541,7 @@ describe('the route\'s own part is the base timeline, whatever composes it', () 
     const stop = (id, imgX, imgY, extra = {}) => ({
       id, imgX, imgY, isMajor: true, pauseMode: 'timed', pauseTime: 1000, ...extra,
     });
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [
         stop('wp-1', 0.1, 0.1, { pauseMode: 'none', pauseTime: 0 }),
@@ -568,7 +568,7 @@ describe('the route\'s own part is the base timeline, whatever composes it', () 
     const example = buildExampleProjects().find(each => each.id === 'uon-open-day');
     const app = await bootApp();
     await app.ready;
-    expect(await loadSnapshot(app, example.project)).toBe(true);
+    expect(await loadCurrentSnapshot(app, example.project)).toBe(true);
     await settled();
     const engine = app.animationEngine;
     const { B, F, parts } = durations(app);
@@ -658,7 +658,7 @@ describe('the "At journey end" hint\'s cases', () => {
     const scene = new Scene();
     const layer = scene.addFlowLayer({ name: 'Crowd 1', guideType: 'graph' });
     build(layer);
-    expect(await loadSnapshot(app, { coordVersion: 9, waypoints: [], scene: scene.toJSON() })).toBe(true);
+    expect(await loadCurrentSnapshot(app, { coordVersion: 9, waypoints: [], scene: scene.toJSON() })).toBe(true);
     app.eventBus.emit('crowd:selected', app.scene.getFlowLayers()[0]);
     return { app, hint: document.getElementById('crowd-lifecycle-hint') };
   }

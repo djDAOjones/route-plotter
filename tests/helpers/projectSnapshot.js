@@ -45,22 +45,44 @@ export function freezeClock(at = FIXED_NOW) {
  * @returns {Promise<boolean>} True when the project loaded
  */
 export function loadSnapshot(app, snapshot) {
-  // The record as the browser would hold it: the loader parses its own copy
-  // of the text, so a load cannot mutate the source. A snapshot with no image
-  // in it is written as this release writes recovery, its manifest naming no
-  // image (DEF-98): without one it would be a record from before the release,
-  // which says that it kept no images and offers the background again.
-  // One that carries images, or names one, is left as it is.
+  // The record as the browser would hold it, exactly as given: the loader
+  // parses its own copy of the text, so a load cannot mutate the source.
+  const text = JSON.stringify(snapshot);
+  app.storageService.loadAutoSaveText = () => text;
+  return app.loadAutosave();
+}
+
+/**
+ * The snapshot as this release writes browser recovery (DEF-98): a snapshot
+ * that carries no image and names none gains the manifest of a record that
+ * keeps no image (`background: null`, no assets, nothing left out). As given,
+ * with no manifest, it is a record from before the release, which says that
+ * recovery kept no images and offers the background again. One that carries
+ * or names an image, or has a manifest, is returned as it is.
+ * @param {Object} snapshot
+ * @returns {Object}
+ */
+export function asCurrentRecord(snapshot) {
   const inline = typeof snapshot?.backgroundImage === 'string' ||
     (Array.isArray(snapshot?.imageAssets) && snapshot.imageAssets.length > 0) ||
     /"(customImageAssetId|imageAssetId)":"/.test(JSON.stringify(snapshot ?? null));
-  const record = snapshot && typeof snapshot === 'object' && !Array.isArray(snapshot) &&
-    !('recoveryImages' in snapshot) && !inline
-    ? { ...snapshot, recoveryImages: { version: 2, background: null, assets: [], omitted: [] } }
-    : snapshot;
-  const text = JSON.stringify(record);
-  app.storageService.loadAutoSaveText = () => text;
-  return app.loadAutosave();
+  if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot) ||
+      'recoveryImages' in snapshot || inline) {
+    return snapshot;
+  }
+  return { ...snapshot, recoveryImages: { version: 2, background: null, assets: [], omitted: [] } };
+}
+
+/**
+ * `loadSnapshot` of the snapshot as this release's record (`asCurrentRecord`):
+ * the project opened through the recovery path as a current record would
+ * open, with no notice that an older record's restore gives.
+ * @param {Object} app - A booted RoutePlotter
+ * @param {Object} snapshot - A project snapshot
+ * @returns {Promise<boolean>} True when the project loaded
+ */
+export function loadCurrentSnapshot(app, snapshot) {
+  return loadSnapshot(app, asCurrentRecord(snapshot));
 }
 
 /** The warning `loadAutosave` prints when it refuses a project. */

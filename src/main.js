@@ -86,7 +86,7 @@ import { boundEntryWaypointIds } from './utils/routeAnchors.js';
 import { createAnnouncementQueue } from './utils/announcementQueue.js';
 import { focusLands } from './utils/focusTrap.js';
 import { createRecoveryImageStore } from './services/RecoveryImageStore.js';
-import { endBackgroundPrompt } from './app/recoveryImages.js';
+import { stopRecoveryImages } from './app/recoveryImages.js';
 
 /** Toasts on their way out, which focus is never given to (UI-06 B-35). */
 const leavingToasts = new WeakSet();
@@ -838,7 +838,9 @@ class RoutePlotter {
    */
   _stopModeBannerWork() {
     this._stopPreviewTip?.();
-    endBackgroundPrompt(this);
+    // The background prompt's wait, and the pins on the live project's
+    // images, which a page lets go of as it unloads (DEF-98).
+    stopRecoveryImages(this);
     this._stopBranchFocus?.();
     this.modeBanner?.destroy();
     this._modeBannerRefitPending = false;

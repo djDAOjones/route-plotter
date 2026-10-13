@@ -27,7 +27,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, test, expect, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
-import { comparableSnapshot, freezeClock, loadSnapshot, FIXED_NOW } from './helpers/projectSnapshot.js';
+import { comparableSnapshot, freezeClock, loadCurrentSnapshot, FIXED_NOW } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { Waypoint } from '../src/models/Waypoint.js';
@@ -47,7 +47,7 @@ function goldenProjects() {
 async function appWithProject(project) {
   const app = await bootApp();
   await app.ready;
-  const loaded = await loadSnapshot(app, project);
+  const loaded = await loadCurrentSnapshot(app, project);
   expect(loaded).toBe(true);
   return app;
 }
@@ -84,7 +84,7 @@ describe('the project snapshot shape (TST-06)', () => {
         const app = await appWithProject(project);
         const saved = app._buildProjectSnapshot();
 
-        expect(await loadSnapshot(app, saved)).toBe(true);
+        expect(await loadCurrentSnapshot(app, saved)).toBe(true);
 
         // `load(save(x)) == save(x)`: a reload must not move the model. With
         // the clock frozen this holds exactly, restamped `modified` included.
@@ -124,7 +124,7 @@ describe('the project snapshot shape (TST-06)', () => {
 
     const later = FIXED_NOW + 60_000;
     vi.setSystemTime(later);
-    expect(await loadSnapshot(app, saved)).toBe(true);
+    expect(await loadCurrentSnapshot(app, saved)).toBe(true);
     const reloaded = app._buildProjectSnapshot();
 
     expect(reloaded.waypoints.map(waypoint => waypoint.modified))

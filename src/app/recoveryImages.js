@@ -8,22 +8,22 @@
  * gains one field, `recoveryImages`, its manifest (format 2): the background
  * kept (its key in the image store, file name, type and size) or null; each
  * kept custom image (its asset id, key and file name); and each image not
- * kept (its role, file name and why). The model keeps its custom marker and
+ * kept (its roles, file name and why). The model keeps its custom marker and
  * path-head references for images kept; an image not kept gets the built-in
  * fallback it always had (a dot, an arrow). A record without the field is
  * from before this release: one with inline image bytes (older still)
  * restores them, one without kept no images and says so.
  *
- * The order of writes. Each write is one revision: the model, the images it
- * references and their names, captured at once. Its images are put into the
- * store (`src/services/RecoveryImageStore.js`) before a record naming them
- * is written: the record names an image only while the store holds it, as a
- * hold of the store's lock has seen it (`verified`), or as the record now in
- * `localStorage` names it (no deletion can take an entry that record names,
- * and Clear All removes the record before the images). So a record written
- * at any moment, the `pagehide` flush's included, names only images stored;
- * one written before an image's put has landed lists it as not kept, the
- * page having closed first.
+ * The order of writes. Each write is one revision: the model, detached from
+ * the live one, the images it references and their names, captured at once.
+ * Every image of the live project is pinned (`src/services/RecoveryImageStore.js`):
+ * while it is, no tab can delete it, and it is put into the store if it is
+ * not there. A record names an image only while it is pinned and seen stored
+ * (`isStoredNow`), so a record written at any moment, the `pagehide` flush's
+ * included, names only images stored, and they stay stored while the tab
+ * shows them; one written before an image's put has landed lists it as not
+ * kept, the page having closed first. An image leaves its pin when it leaves
+ * the live project, and when the page goes.
  *
  * Images reachable only through undo history are not kept, as exports drop
  * them (DEF-23): the revision collects references from the live model only,
@@ -48,6 +48,9 @@ const R = RECOVERY_REASONS;
 const RECOVERY_NOTICE = Object.freeze({ essential: true });
 
 const KEY_PATTERN = /^sha256-[0-9a-f]{64}$/;
+
+/** The roles an image plays, in keeping order. */
+const ROLES = Object.freeze(['background', 'path-head', 'marker', 'image']);
 
 /** Why an image was not kept, in the author's words. */
 const REASON_WORDS = Object.freeze({
@@ -88,12 +91,26 @@ function describeImage(image) {
   return { ...image, dataURL: null, mimeType: null, byteLength: 0 };
 }
 
+/** Add a role an image plays, and the fallback shown in its place there, in keeping order. */
+function addRole(image, role, fallback = null) {
+  if (!image.roles.includes(role)) {
+    image.roles.push(role);
+    image.roles.sort((a, b) => ROLES.indexOf(a) - ROLES.indexOf(b));
+    image.role = image.roles[0];
+  }
+  if (fallback && !image.fallbacks.includes(fallback)) {
+    image.fallbacks.push(fallback);
+    image.fallbacks.sort((a, b) => ['arrow', 'dot'].indexOf(a) - ['arrow', 'dot'].indexOf(b));
+  }
+}
+
 /**
  * The images a model references, in the order recovery keeps them when not
  * all fit (the lead's proposal, for the owner to confirm): the background,
  * then the path head's image, then each waypoint's marker image in waypoint
- * order, then any other reference. One entry per image, in the first role it
- * plays; an image several waypoints share lists them all.
+ * order, then any other reference. One entry per image, with every role it
+ * plays (an image both the path head and a marker show is both), every
+ * waypoint that shows it, and the fallback each role would show.
  * @param {Object} app
  * @param {{waypoints: Array<Object>, styles: Object}} model - Serialised, or the live objects
  * @param {Object} [snapshot] - The serialised model, for references held elsewhere
@@ -106,6 +123,8 @@ function liveImages(app, model, snapshot = null) {
     const cache = app._autosaveBackgroundCache;
     images.push(describeImage({
       role: 'background',
+      roles: ['background'],
+      fallbacks: [],
       name: validName(app._backgroundName),
       dataURL: cache?.image === background && typeof cache.dataURL === 'string' ? cache.dataURL : null,
       width: Number(background.naturalWidth || background.width) || 0,
@@ -120,21 +139,25 @@ function liveImages(app, model, snapshot = null) {
       const asset = app.imageAssetService?.getAsset?.(assetId) ?? null;
       image = describeImage({
         role,
+        roles: [],
+        fallbacks: [],
         assetId,
         name: validName(asset?.name),
         dataURL: asset?.base64 || null,
         width: Number(asset?.width) || 0,
         height: Number(asset?.height) || 0,
         waypoints: [],
-        fallback: null,
       });
       byAsset.set(assetId, image);
       images.push(image);
     }
-    if (role === 'path-head' && model.styles?.pathHead?.style === 'custom') image.fallback ??= 'arrow';
-    if (waypoint) {
+    if (role === 'path-head') {
+      addRole(image, role, model.styles?.pathHead?.style === 'custom' ? 'arrow' : null);
+    } else if (role === 'marker') {
+      addRole(image, role, waypoint.markerStyle === 'custom' ? 'dot' : null);
       image.waypoints.push({ id: waypoint.id, label: waypointLabel(waypoint, index) });
-      if (waypoint.markerStyle === 'custom') image.fallback ??= 'dot';
+    } else if (image.roles.length === 0) {
+      addRole(image, role);
     }
   };
   claim(model.styles?.pathHead?.imageAssetId, 'path-head');
@@ -145,13 +168,28 @@ function liveImages(app, model, snapshot = null) {
   return images;
 }
 
-/** An image not kept, as the manifest and the warnings carry it. */
+/**
+ * An image not kept, as the manifest and the warnings carry it: its first
+ * role, every role where it plays more than one, its waypoints, and the
+ * fallback, or fallbacks, shown in its place.
+ */
 function omissionOf(image, reason) {
   const entry = { role: image.role, name: validName(image.name), reason };
+  if (image.roles?.length > 1) entry.roles = [...image.roles];
   if (image.assetId) entry.assetId = image.assetId;
   if (image.waypoints?.length) entry.waypoints = image.waypoints.map(({ id, label }) => ({ id, label }));
-  if (image.fallback) entry.fallback = image.fallback;
+  if (image.fallbacks?.length === 1) [entry.fallback] = image.fallbacks;
+  else if (image.fallbacks?.length > 1) entry.fallbacks = [...image.fallbacks];
   return entry;
+}
+
+/** Every role an omission speaks for. */
+const rolesOf = entry => (Array.isArray(entry.roles) && entry.roles.length ? entry.roles : [entry.role]);
+
+/** Every fallback an omission names. */
+function fallbacksOf(entry) {
+  if (Array.isArray(entry.fallbacks)) return entry.fallbacks;
+  return entry.fallback ? [entry.fallback] : [];
 }
 
 /**
@@ -237,24 +275,38 @@ export function stripAssetReferences(modelSnapshot, omittedAssetIds = null) {
   };
 }
 
-/** The image-store keys a record names (its manifest's), or null if it cannot be understood. */
+/** A manifest entry's key, if it is one this release writes. */
+const validKey = key => typeof key === 'string' && KEY_PATTERN.test(key);
+
+/**
+ * The image-store keys a record names, or null where the record's manifest
+ * is not one this release understands: another version, or a shape it does
+ * not write (Codex, code review round 1, 4). A record with no manifest, from
+ * before this release, names none. Null stops every deletion.
+ */
 function manifestKeys(data) {
   const keys = new Set();
-  const manifest = data?.recoveryImages;
-  if (manifest == null) return keys;
-  if (typeof manifest !== 'object') return null;
-  if (typeof manifest.background?.key === 'string') keys.add(manifest.background.key);
-  if (Array.isArray(manifest.assets)) {
-    for (const asset of manifest.assets) {
-      if (typeof asset?.key === 'string') keys.add(asset.key);
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+  if (!('recoveryImages' in data) || data.recoveryImages === undefined) return keys;
+  const manifest = data.recoveryImages;
+  if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) return null;
+  if (manifest.version !== RECOVERY_MANIFEST_VERSION) return null;
+  if (manifest.background !== null) {
+    if (!manifest.background || typeof manifest.background !== 'object' || !validKey(manifest.background.key)) {
+      return null;
     }
-  } else if (manifest.assets != null) {
-    return null;
+    keys.add(manifest.background.key);
   }
+  if (!Array.isArray(manifest.assets)) return null;
+  for (const asset of manifest.assets) {
+    if (!asset || typeof asset !== 'object' || typeof asset.id !== 'string' || !validKey(asset.key)) return null;
+    keys.add(asset.key);
+  }
+  if (manifest.omitted !== undefined && !Array.isArray(manifest.omitted)) return null;
   return keys;
 }
 
-/** The keys a record's text names, or null if it cannot be read as one. */
+/** The keys a record's text names, or null if it cannot be read as one this release understands. */
 function recordTextKeys(text) {
   if (text == null) return new Set();
   try {
@@ -264,51 +316,48 @@ function recordTextKeys(text) {
   }
 }
 
-/** The last record text read for its keys, and those keys: a record is read on every write. */
-let lastRecord = { text: null, keys: new Set() };
-
-/** The keys the recovery record in `localStorage` names now (an unreadable one names none). */
-function durableRecordKeys(app) {
-  const read = app.storageService?.readKept?.(STORAGE.AUTOSAVE_KEY);
-  const text = read ? (read.ok ? read.text : null) : app.storageService?.loadAutoSaveText?.() ?? null;
-  if (text !== lastRecord.text) lastRecord = { text, keys: recordTextKeys(text) ?? new Set() };
-  return lastRecord.keys;
+/**
+ * The records that remain, and every key they name: the recovery record, the
+ * records kept because they could not be restored and a held one (DEF-28).
+ * Null when any of them cannot be read or understood.
+ * @param {Object} app
+ * @returns {Set<string>|null}
+ */
+function remainingRecordKeys(app) {
+  const storage = app.storageService;
+  if (!storage?.readKept || !storage.listKept || !storage.holdState) return null;
+  const keys = new Set();
+  const add = text => {
+    const named = recordTextKeys(text);
+    if (!named) return false;
+    for (const key of named) keys.add(key);
+    return true;
+  };
+  const current = storage.readKept(STORAGE.AUTOSAVE_KEY);
+  if (!current.ok || !add(current.text)) return null;
+  const kept = storage.listKept();
+  if (!kept.ok) return null;
+  for (const record of kept.records) {
+    if (record.text === null || !add(record.text)) return null;
+  }
+  const hold = storage.holdState();
+  if (hold.state === 'unknown') return null;
+  if (hold.state === 'held' && !add(hold.text)) return null;
+  return keys;
 }
 
 /**
  * Whether an entry may be deleted: false only when no record names it, the
- * recovery record, a kept record or a held one (DEF-28), and no revision of
- * this tab's does; null when a record that may name it cannot be read or
- * understood, and then nothing is deleted. Read afresh for each key.
+ * recovery record, a kept record or a held one (DEF-28); null when a record
+ * that may name it cannot be read or understood, and then nothing is
+ * deleted. Read afresh for each key. What a tab shows, its pins protect.
  * @param {Object} app
  * @param {string} key
  * @returns {boolean|null}
  */
 function isProtected(app, key) {
-  const storage = app.storageService;
-  if (!storage?.readKept || !storage.listKept || !storage.holdState) return null;
-  const current = storage.readKept(STORAGE.AUTOSAVE_KEY);
-  if (!current.ok) return null;
-  const named = recordTextKeys(current.text);
-  if (!named) return null;
-  if (named.has(key)) return true;
-  const kept = storage.listKept();
-  if (!kept.ok) return null;
-  for (const record of kept.records) {
-    const keys = recordTextKeys(record.text);
-    if (record.text === null || !keys) return null;
-    if (keys.has(key)) return true;
-  }
-  const hold = storage.holdState();
-  if (hold.state === 'unknown') return null;
-  if (hold.state === 'held') {
-    const keys = recordTextKeys(hold.text);
-    if (!keys) return null;
-    if (keys.has(key)) return true;
-  }
-  const revision = app._recoveryRevision;
-  if (revision && !revision.done && revision.entries.some(entry => entry.key === key)) return true;
-  return false;
+  const keys = remainingRecordKeys(app);
+  return keys ? keys.has(key) : null;
 }
 
 /**
@@ -316,34 +365,96 @@ function isProtected(app, key) {
  * written after it, so a later reload still explains the loss (Codex, brief
  * round 1, 8). The background's goes once a background is set or its prompt
  * is dismissed; a marker's once none of its waypoints is left without a
- * custom image; the path head's once it has one again.
+ * custom image; the path head's once it has one again; one that plays both
+ * once both are.
  */
 function carriedOmissions(app, model) {
   const waypoints = new Map((model.waypoints || []).map(waypoint => [waypoint.id, waypoint]));
-  const carried = (app._recoveryCarried || []).filter(entry => {
-    if (entry.role === 'background') return !app.background?.image;
-    if (entry.role === 'path-head') return !model.styles?.pathHead?.imageAssetId;
-    if (entry.role === 'marker') {
+  const unresolved = (entry, role) => {
+    if (role === 'background') return !app.background?.image;
+    if (role === 'path-head') return !model.styles?.pathHead?.imageAssetId;
+    if (role === 'marker') {
       return (entry.waypoints || []).some(({ id }) => waypoints.has(id) && !waypoints.get(id).customImageAssetId);
     }
     return true;
-  });
+  };
+  const carried = (app._recoveryCarried || []).filter(entry => rolesOf(entry).some(role => unresolved(entry, role)));
   app._recoveryCarried = carried;
   return carried;
+}
+
+// ---------------------------------------------------------------------------
+// The live project's images
+
+/**
+ * Pin every image of the live project, within the limits, and let go of
+ * those that left it (Codex, code review round 1, 9: while an image is in a
+ * tab's live project, no tab's sweep may delete it). An image is put into the
+ * store, if it is not there, under its pin; one whose put failed is tried
+ * again at the next write.
+ * @param {Object} app
+ * @param {Array<Object>} images - Within the limits, each with its data URL
+ * @returns {Map<string, Object>} The live entries, by data URL
+ */
+function syncLiveImages(app, images) {
+  const store = storeOf(app);
+  const previous = app._recoveryLive ?? new Map();
+  const next = new Map();
+  if (store) {
+    for (const image of images) {
+      if (!image.dataURL) continue;
+      const entry = previous.get(image.dataURL) ?? { image, key: store.cachedKey(image.dataURL), pin: null,
+        work: null, failed: null, dropped: false };
+      entry.image = image;
+      next.set(image.dataURL, entry);
+      if (entry.failed) entry.failed = null;
+      if (!entry.pin && !entry.work) startLive(store, entry);
+    }
+    store.forgetKeysExcept([...next.keys()]);
+  }
+  for (const [dataURL, entry] of previous) {
+    if (next.has(dataURL)) continue;
+    entry.dropped = true;
+    entry.pin?.release();
+    entry.pin = null;
+  }
+  app._recoveryLive = next;
+  return next;
+}
+
+function startLive(store, entry) {
+  entry.work = store.ensureStored(entry.image).then(result => {
+    entry.work = null;
+    if (result.key) entry.key = result.key;
+    if (!result.ok) {
+      result.pin?.release();
+      entry.failed = result.reason;
+      return;
+    }
+    if (entry.dropped) result.pin.release();
+    else entry.pin = result.pin;
+  });
+}
+
+/** Let go of every image the live project holds: a Clear All, or the app stopping. */
+function releaseLiveImages(app) {
+  syncLiveImages(app, []);
 }
 
 let revisionSerial = 0;
 
 /**
- * Capture one revision of the project for browser recovery: the model, the
- * images it references and their names, at once, so the record written from
- * it never pairs the route with images from another state. Its images'
- * puts start now. Throws as building the model throws.
+ * Capture one revision of the project for browser recovery: the model,
+ * detached from the live one, the images it references and their names, at
+ * once, so the record written from it never pairs the route with images from
+ * another state, nor changes when the live project does (Codex, code review
+ * round 1, 3). Its images are pinned and stored now. Throws as building the
+ * model throws.
  * @param {Object} app
  * @returns {Object} The revision
  */
 export function captureRecoveryRevision(app) {
-  const model = app._buildProjectSnapshot({ includeAssets: false });
+  const model = JSON.parse(JSON.stringify(app._buildProjectSnapshot({ includeAssets: false })));
   const store = storeOf(app);
   const images = liveImages(app, model, model);
   const carried = carriedOmissions(app, model);
@@ -354,7 +465,7 @@ export function captureRecoveryRevision(app) {
     entries: [],
     omitted: [],
     carried,
-    lease: null,
+    pins: [],
     done: false,
     lastSnapshot: null,
   };
@@ -364,59 +475,59 @@ export function captureRecoveryRevision(app) {
   }
   const { kept, omitted } = selectWithinLimits(images, store.limits);
   revision.omitted = omitted;
-  revision.entries = kept.map(image => ({ image, key: store.cachedKey(image.dataURL), work: null, failed: null }));
-  store.forgetKeysExcept(images.map(image => image.dataURL).filter(Boolean));
-  if (revision.entries.length > 0) {
-    // A lease joins the hold an earlier publication or restore still has, so
-    // what that hold has seen stored is stored for this one too; one this
-    // revision does not rely on goes at once.
-    revision.lease = store.lease();
-    const named = durableRecordKeys(app);
-    let relies = false;
-    for (const entry of revision.entries) {
-      if (entry.key && named.has(entry.key)) continue;
-      relies = true;
-      if (!isStoredNow(revision, entry, named)) startStoring(revision, entry);
-    }
-    if (!relies) {
-      revision.lease.release();
-      revision.lease = null;
-    }
-  }
+  const live = syncLiveImages(app, kept);
+  revision.entries = kept.map(image => ({ image, live: live.get(image.dataURL), attempts: 0 }));
   return revision;
 }
 
-function isStoredNow(revision, entry, named) {
-  if (entry.failed || !entry.key) return false;
-  return named.has(entry.key) || revision.store.verified(revision.lease, entry.key);
+/** The key an entry's image has: its live entry's, else the store's for its data URL. */
+function keyOf(revision, entry) {
+  return entry.live?.key ?? revision.store.cachedKey(entry.image.dataURL);
 }
 
+function isStoredNow(revision, entry) {
+  const key = keyOf(revision, entry);
+  return Boolean(key) && revision.store.isStoredNow(key);
+}
+
+function failureOf(entry) {
+  return entry.failed ?? entry.live?.failed ?? null;
+}
+
+/**
+ * Store an entry's image again where its live entry has let it go or never
+ * held it: an image dropped from the live project since is still the
+ * revision's to name until the revision is replaced. Bounded.
+ */
 function startStoring(revision, entry) {
-  if (entry.work || entry.failed || revision.done) return;
-  // Stored, and then not stored when written (another tab's record no longer
-  // names it, and no hold vouches for it): stored again, a bounded number of
-  // times.
-  entry.attempts = (entry.attempts || 0) + 1;
+  if (revision.done || entry.work) return;
+  entry.attempts += 1;
   if (entry.attempts > 3) {
     entry.failed = R.REFUSED;
     return;
   }
-  revision.lease ??= revision.store.lease();
-  entry.work = revision.store.ensureStored(revision.lease, entry.image).then(result => {
+  entry.work = revision.store.ensureStored(entry.image).then(result => {
     entry.work = null;
-    if (result.key) entry.key = result.key;
-    if (!result.ok) entry.failed = result.reason === R.CANCELLED ? R.PENDING : result.reason;
+    if (result.ok && !revision.done) revision.pins.push(result.pin);
+    else result.pin?.release();
+    if (!result.ok) entry.failed = result.reason;
   });
 }
 
 /** Whether every image of the revision has its outcome: stored now, or failed. */
 export function settleRecoveryRevision(app, revision) {
   if (revision.done || revision.entries.length === 0) return null;
-  const named = durableRecordKeys(app);
   const waiting = [];
   for (const entry of revision.entries) {
+    if (isStoredNow(revision, entry)) continue;
     if (entry.failed) continue;
-    if (!entry.work && !isStoredNow(revision, entry, named)) startStoring(revision, entry);
+    const liveWork = entry.live && !entry.live.dropped ? entry.live.work : null;
+    if (liveWork) {
+      waiting.push(liveWork);
+      continue;
+    }
+    if (entry.live?.failed && !entry.live.dropped) continue;
+    startStoring(revision, entry);
     if (entry.work) waiting.push(entry.work);
   }
   return waiting.length > 0 ? Promise.allSettled(waiting) : null;
@@ -426,16 +537,16 @@ export function settleRecoveryRevision(app, revision) {
  * The record a revision gives now: its images stored now are named; any
  * other is not kept, for its failure, or because it is still being stored
  * (the page closing first).
+ * @param {Object} app
  * @param {Object} revision
  * @returns {Object} The record
  */
 export function recoveryRevisionSnapshot(app, revision) {
-  const named = revision.store ? durableRecordKeys(app) : new Set();
   const kept = [];
   const omitted = [...revision.omitted];
   for (const entry of revision.entries) {
-    if (isStoredNow(revision, entry, named)) kept.push(entry);
-    else omitted.push(omissionOf(entry.image, entry.failed || R.PENDING));
+    if (isStoredNow(revision, entry)) kept.push(entry);
+    else omitted.push(omissionOf(entry.image, failureOf(entry) || R.PENDING));
   }
   omitted.push(...revision.carried);
   const strippedIds = new Set(omitted.filter(entry => entry.assetId).map(entry => entry.assetId));
@@ -450,14 +561,14 @@ export function recoveryRevisionSnapshot(app, revision) {
       version: RECOVERY_MANIFEST_VERSION,
       background: background
         ? {
-            key: background.key,
+            key: keyOf(revision, background),
             name: background.image.name,
             mimeType: background.image.mimeType,
             byteLength: background.image.byteLength,
           }
         : null,
       assets: kept.filter(entry => entry.image.assetId)
-        .map(entry => ({ id: entry.image.assetId, key: entry.key, name: entry.image.name })),
+        .map(entry => ({ id: entry.image.assetId, key: keyOf(revision, entry), name: entry.image.name })),
       omitted,
     },
   };
@@ -465,12 +576,11 @@ export function recoveryRevisionSnapshot(app, revision) {
   return snapshot;
 }
 
-/** The revision is written or dropped: its lease goes. */
+/** The revision is written or dropped: what it pinned of its own goes. */
 export function finishRecoveryRevision(app, revision) {
   if (!revision || revision.done) return;
   revision.done = true;
-  revision.lease?.release();
-  revision.lease = null;
+  for (const pin of revision.pins.splice(0)) pin.release();
   if (app._recoveryRevision === revision) app._recoveryRevision = null;
 }
 
@@ -484,7 +594,7 @@ export function revisionIsDeferred(revision) {
 
 /**
  * The source StorageService writes a deferred revision from: what it gives
- * now, whether it is final, and the lease to let go once it is written or
+ * now, whether it is final, and what to let go once it is written or
  * dropped.
  */
 export function recoveryRevisionSource(app, revision) {
@@ -505,13 +615,13 @@ export function revisionOmissions(revision) {
 
 function signatureOf(omitted) {
   return JSON.stringify(omitted
-    .map(entry => [entry.role, entry.name ?? '', entry.reason, entry.assetId ?? ''])
+    .map(entry => [rolesOf(entry).join('+'), entry.name ?? '', entry.reason, entry.assetId ?? ''])
     .sort((a, b) => a.join('\u0000').localeCompare(b.join('\u0000'))));
 }
 
 const EMPTY_SIGNATURE = signatureOf([]);
 
-/** "the marker image for Main gate and 2 other waypoints" */
+/** " for Main gate and 2 other waypoints" */
 function waypointsPhrase(entry) {
   const labels = (entry.waypoints || []).map(each => each.label).filter(Boolean);
   if (labels.length === 0) return '';
@@ -520,21 +630,28 @@ function waypointsPhrase(entry) {
   return ` for ${labels[0]} and ${others} other ${others === 1 ? 'waypoint' : 'waypoints'}`;
 }
 
+/** ", shown as an arrow and a dot" */
+function fallbackPhrase(entry) {
+  const shapes = fallbacksOf(entry).map(fallback => (fallback === 'arrow' ? 'an arrow' : 'a dot'));
+  return shapes.length ? `, shown as ${shapes.join(' and ')}` : '';
+}
+
 /**
  * What an omission is called, with its file name and the fallback shown in
  * its place: "the background, campus-map.png"; "the marker image for Main
- * gate, flag.png, shown as a dot"; a name never recorded or lost is said so.
+ * gate, flag.png, shown as a dot"; "the path head image and the marker image
+ * for Main gate, flag.png, shown as an arrow and a dot"; a name never
+ * recorded or lost is said so.
  */
 function subjectOf(entry) {
   const name = entry.name ? entry.name : 'its file name not kept';
-  if (entry.role === 'background') return `the background, ${name}`;
-  if (entry.role === 'path-head') {
-    return `the path head image, ${name}${entry.fallback === 'arrow' ? ', shown as an arrow' : ''}`;
-  }
-  if (entry.role === 'marker') {
-    return `the marker image${waypointsPhrase(entry)}, ${name}${entry.fallback === 'dot' ? ', shown as a dot' : ''}`;
-  }
-  return `a custom image, ${name}`;
+  const roles = rolesOf(entry);
+  if (roles.includes('background')) return `the background, ${name}`;
+  const parts = [];
+  if (roles.includes('path-head')) parts.push('the path head image');
+  if (roles.includes('marker')) parts.push(`the marker image${waypointsPhrase(entry)}`);
+  if (parts.length === 0) parts.push('a custom image');
+  return `${parts.join(' and ')}, ${name}${fallbackPhrase(entry)}`;
 }
 
 function reasonOf(entry) {
@@ -576,10 +693,10 @@ export function restoreWarningText(omitted) {
 }
 
 /**
- * Say a recovery warning: a toast on screen, which stays until dismissed,
- * announced once through the queue as a message the author must hear
- * (`showToast` forwards `essential`; Codex, brief round 1, 8). A host with no
- * toast hears the announcement alone.
+ * Say a recovery warning: a toast on screen, which stays until dismissed or
+ * no longer true, announced once through the queue as a message the author
+ * must hear (`showToast` forwards `essential`; Codex, brief round 1, 8). A
+ * host with no toast hears the announcement alone.
  */
 function sayRecoveryWarning(app, message) {
   if (typeof app.showToast !== 'function') {
@@ -588,15 +705,27 @@ function sayRecoveryWarning(app, message) {
   }
   // One recovery warning on screen at a time: the newest says all that is
   // not kept now, so the one it follows goes.
-  app._recoveryWarningToast?.();
+  withdrawRecoveryWarning(app);
   const remove = app.showToast(message, 0, null, { essential: true });
   if (typeof remove === 'function') app._recoveryWarningToast = () => remove();
 }
 
 /**
+ * Take the recovery warning off the screen, once what it said is no longer
+ * so (Codex, code review round 1, 6): every image is kept now, another
+ * project is open, or the project is cleared.
+ */
+function withdrawRecoveryWarning(app) {
+  const remove = app._recoveryWarningToast;
+  app._recoveryWarningToast = () => {};
+  remove?.();
+}
+
+/**
  * When recovery is written: warn of the images it did not keep, only when
  * that set has changed since it was last said (the same warning is not
- * repeated on every autosave), once per project opened, restored or cleared.
+ * repeated on every autosave), once per project opened, restored or cleared;
+ * with every image kept again, the warning goes.
  * @param {Object} app
  * @param {Array<Object>} omitted
  */
@@ -609,13 +738,18 @@ export function reportRecoveryWrite(app, omitted) {
   if (signature === said) return;
   app._recoveryOmissionSignature = signature;
   if (omitted.length > 0) sayRecoveryWarning(app, writeWarningText(omitted));
+  else withdrawRecoveryWarning(app);
 }
 
-/** A new project (opened, restored or cleared): what it leaves out is said afresh. */
+/**
+ * A new project (opened, restored or cleared): what it leaves out is said
+ * afresh, and the last project's warning goes.
+ */
 export function resetRecoveryWarnings(app) {
   app._recoveryOmissionSignature = EMPTY_SIGNATURE;
   app._autosaveAssetWarningShown = false;
   app._autosaveBackgroundWarningShown = false;
+  withdrawRecoveryWarning(app);
 }
 
 // ---------------------------------------------------------------------------
@@ -623,14 +757,17 @@ export function resetRecoveryWarnings(app) {
 
 function sanitiseOmitted(list) {
   if (!Array.isArray(list)) return [];
-  const roles = new Set(['background', 'path-head', 'marker', 'image']);
   const reasons = new Set(Object.keys(REASON_WORDS));
-  return list.filter(entry => entry && typeof entry === 'object' && roles.has(entry.role)).map(entry => {
+  return list.filter(entry => entry && typeof entry === 'object' && ROLES.includes(entry.role)).map(entry => {
     const clean = {
       role: entry.role,
       name: validName(entry.name),
       reason: reasons.has(entry.reason) ? entry.reason : R.UNREADABLE,
     };
+    if (Array.isArray(entry.roles)) {
+      const roles = ROLES.filter(role => entry.roles.includes(role));
+      if (roles.length > 1) clean.roles = roles;
+    }
     if (typeof entry.assetId === 'string') clean.assetId = entry.assetId;
     if (Array.isArray(entry.waypoints)) {
       clean.waypoints = entry.waypoints
@@ -638,6 +775,11 @@ function sanitiseOmitted(list) {
         .map(each => ({ id: each.id, label: typeof each.label === 'string' ? each.label.slice(0, 200) : '' }));
     }
     if (entry.fallback === 'dot' || entry.fallback === 'arrow') clean.fallback = entry.fallback;
+    if (Array.isArray(entry.fallbacks)) {
+      const fallbacks = ['arrow', 'dot'].filter(fallback => entry.fallbacks.includes(fallback));
+      if (fallbacks.length > 1) clean.fallbacks = fallbacks;
+      else if (fallbacks.length === 1) [clean.fallback] = fallbacks;
+    }
     return clean;
   });
 }
@@ -645,16 +787,17 @@ function sanitiseOmitted(list) {
 /**
  * Read one stored image and check it as an import does, strictly: its key
  * and digest (the store's), its actual byte length, its signature and MIME
- * type, a decode with its actual dimensions matching those stored.
+ * type, a decode with its actual dimensions matching those stored. It comes
+ * back pinned; the pin is the caller's to release.
  * @returns {Promise<{ok: boolean, reason?: string, dataURL?: string, image?: Object,
- *   width?: number, height?: number, mimeType?: string, byteLength?: number}>}
+ *   width?: number, height?: number, mimeType?: string, byteLength?: number, pin?: Object}>}
  */
-async function readImage(store, lease, key, { name, maxBytes }) {
+async function readImage(store, key, { name, maxBytes }) {
   if (!store) return { ok: false, reason: R.MISSING };
-  if (typeof key !== 'string' || !KEY_PATTERN.test(key)) return { ok: false, reason: R.UNREADABLE };
-  const read = await store.read(lease, key);
+  if (!validKey(key)) return { ok: false, reason: R.UNREADABLE };
+  const read = await store.read(key);
   if (!read.ok) return { ok: false, reason: read.reason === R.CANCELLED ? R.MISSING : read.reason };
-  const record = read.record;
+  const { record, pin } = read;
   try {
     ImageAsset.assertValidSerialized({
       id: 'recovery-image',
@@ -668,7 +811,10 @@ async function readImage(store, lease, key, { name, maxBytes }) {
     const image = await ImageAsset.decodeDataURL(record.dataURL, name ?? 'image');
     const width = Number(image.naturalWidth || image.width);
     const height = Number(image.naturalHeight || image.height);
-    if (width !== record.width || height !== record.height) return { ok: false, reason: R.UNREADABLE };
+    if (width !== record.width || height !== record.height) {
+      pin.release();
+      return { ok: false, reason: R.UNREADABLE };
+    }
     return {
       ok: true,
       dataURL: record.dataURL,
@@ -677,26 +823,27 @@ async function readImage(store, lease, key, { name, maxBytes }) {
       height,
       mimeType: record.mimeType,
       byteLength: record.byteLength,
+      pin,
     };
   } catch (error) {
     console.warn('A recovery image could not be read:', error);
+    pin.release();
     return { ok: false, reason: R.UNREADABLE };
   }
 }
 
 /** Every waypoint and path head referencing `assetId`, as an omission describes them. */
 function describeReferences(data, assetId) {
-  const image = { role: 'image', assetId, name: null, waypoints: [], fallback: null };
+  const image = { role: 'image', roles: [], fallbacks: [], assetId, name: null, waypoints: [] };
   if (data.styles?.pathHead?.imageAssetId === assetId) {
-    image.role = 'path-head';
-    if (data.styles.pathHead.style === 'custom') image.fallback = 'arrow';
+    addRole(image, 'path-head', data.styles.pathHead.style === 'custom' ? 'arrow' : null);
   }
   (data.waypoints || []).forEach((waypoint, index) => {
     if (waypoint?.customImageAssetId !== assetId) return;
-    if (image.role === 'image') image.role = 'marker';
+    addRole(image, 'marker', waypoint.markerStyle === 'custom' ? 'dot' : null);
     image.waypoints.push({ id: waypoint.id, label: waypointLabel(waypoint, index) });
-    if (waypoint.markerStyle === 'custom') image.fallback ??= 'dot';
   });
+  if (image.roles.length === 0) addRole(image, 'image');
   return image;
 }
 
@@ -711,13 +858,13 @@ function describeReferences(data, assetId) {
  * image bytes restores them as before (`kind: 'inline'`); one without kept no
  * images, and says so (`kind: 'legacy'`), naming none.
  *
- * Never rejects. The lease it took is the caller's to release, once the
- * record that replaces this one has been captured.
+ * Never rejects. The images it read come back pinned (`pins`), which the
+ * caller releases once the project that replaces this one has pinned its own.
  * @param {Object} app
  * @param {Object} data - The parsed record
  * @returns {Promise<{kind: string, data: Object, backgroundBase64: string|null,
  *   backgroundName: string|null, imageAssets: Array<ImageAsset>|null,
- *   omitted: Array<Object>, lease: Object|null}>}
+ *   omitted: Array<Object>, pins: Array<Object>}>}
  */
 export async function readRecoveryImages(app, data) {
   const manifest = data?.recoveryImages;
@@ -726,7 +873,7 @@ export async function readRecoveryImages(app, data) {
       (Array.isArray(data?.imageAssets) && data.imageAssets.some(asset => typeof asset?.base64 === 'string'));
     if (inline) {
       return {
-        kind: 'inline', data, backgroundBase64: null, backgroundName: null, imageAssets: null, omitted: [], lease: null,
+        kind: 'inline', data, backgroundBase64: null, backgroundName: null, imageAssets: null, omitted: [], pins: [],
       };
     }
     return {
@@ -736,13 +883,13 @@ export async function readRecoveryImages(app, data) {
       backgroundName: null,
       imageAssets: [],
       omitted: [{ role: 'background', name: null, reason: R.LEGACY }],
-      lease: null,
+      pins: [],
     };
   }
 
   const store = storeOf(app);
   const limits = store?.limits ?? RECOVERY_IMAGE_LIMITS;
-  const lease = store?.lease() ?? null;
+  const pins = [];
   const understood = typeof manifest === 'object' && manifest.version === RECOVERY_MANIFEST_VERSION;
   const omitted = understood ? sanitiseOmitted(manifest.omitted) : [];
 
@@ -751,11 +898,12 @@ export async function readRecoveryImages(app, data) {
   const background = understood ? manifest.background : null;
   if (background && typeof background === 'object') {
     const name = validName(background.name);
-    const read = await readImage(store, lease, background.key, {
+    const read = await readImage(store, background.key, {
       name,
       maxBytes: Math.min(limits.MAX_BYTES, limits.MAX_BACKGROUND_BYTES),
     });
     if (read.ok) {
+      pins.push(read.pin);
       backgroundBase64 = read.dataURL;
       backgroundName = name;
     } else {
@@ -785,7 +933,7 @@ export async function readRecoveryImages(app, data) {
       if (!lost.has(assetId)) lost.set(assetId, { name, reason: R.UNREADABLE });
       continue;
     }
-    const read = await readImage(store, lease, asset.key, { name, maxBytes: limits.MAX_BYTES });
+    const read = await readImage(store, asset.key, { name, maxBytes: limits.MAX_BYTES });
     if (!read.ok) {
       lost.set(assetId, { name, reason: read.reason });
       continue;
@@ -793,6 +941,7 @@ export async function readRecoveryImages(app, data) {
     const imagePixels = read.width * read.height;
     if (count + 1 > limits.MAX_ASSETS || bytes + read.byteLength > limits.MAX_ASSET_BYTES_TOTAL ||
         pixels + imagePixels > limits.MAX_IMAGE_PIXELS_TOTAL) {
+      read.pin.release();
       lost.set(assetId, { name, reason: R.OVER_TOTAL });
       continue;
     }
@@ -810,11 +959,13 @@ export async function readRecoveryImages(app, data) {
       restored._imageElement = read.image;
       imageAssets.push(restored);
       available.add(assetId);
+      pins.push(read.pin);
       count += 1;
       bytes += read.byteLength;
       pixels += imagePixels;
     } catch (error) {
       console.warn('A recovery image could not be read:', error);
+      read.pin.release();
       lost.set(assetId, { name, reason: R.UNREADABLE });
     }
   }
@@ -832,7 +983,12 @@ export async function readRecoveryImages(app, data) {
   }
   const restoredData = { ...stripAssetReferences(data, dropped), imageAssets: [] };
   delete restoredData.recoveryImages;
-  return { kind: 'manifest', data: restoredData, backgroundBase64, backgroundName, imageAssets, omitted, lease };
+  return { kind: 'manifest', data: restoredData, backgroundBase64, backgroundName, imageAssets, omitted, pins };
+}
+
+/** Let go of what a restore read, once the project's own images are pinned. */
+export function releaseRestoredImages(restored) {
+  for (const pin of restored?.pins?.splice(0) ?? []) pin.release();
 }
 
 /**
@@ -840,8 +996,9 @@ export async function readRecoveryImages(app, data) {
  * and offer a background that did not. The background's prompt, shown in the
  * banner slot, is its warning: on screen, announced once, its name and why;
  * the toast names the rest, or the background too where the prompt cannot
- * show now. What is said is then what the first record written says, so it
- * is not said again.
+ * show now, and then the prompt, when it shows, is not announced again
+ * (Codex, code review round 1, 7). What is said is then what the first
+ * record written says, so it is not said again.
  * @param {Object} app
  * @param {{kind: string, omitted: Array<Object>}} restored
  */
@@ -859,6 +1016,8 @@ export function reportRecoveryRestore(app, restored) {
   }
   const listed = prompted || background?.reason === R.LEGACY ? others : omitted;
   if (listed.length > 0) sayRecoveryWarning(app, restoreWarningText(listed));
+  // The prompt waits for the slot: the toast has said the loss already.
+  if (background && !prompted && app._backgroundPrompt) app._backgroundPrompt.announced = true;
 }
 
 // ---------------------------------------------------------------------------
@@ -891,7 +1050,8 @@ function promptWords(omission) {
  * - a mode that replaces it leaves it waiting: it comes back once the slot
  *   is free again, unannounced, its one announcement made already; focus
  *   held in it goes where it was before;
- * - it is announced once, when it first shows;
+ * - the loss is announced once: when the prompt first shows, unless a toast
+ *   said it while the prompt waited;
  * - Escape with focus in it dismisses it, as Dismiss does, and focus goes
  *   back to where it was before it entered the prompt, else the Route
  *   button; Escape elsewhere is the modes' own, never the prompt's;
@@ -1005,13 +1165,13 @@ export function endBackgroundPrompt(app) {
 }
 
 // ---------------------------------------------------------------------------
-// Early puts, garbage collection, Clear All
+// Early puts, garbage collection, Clear All, stopping
 
 /**
- * Start storing the live project's images now, so a record written soon
+ * Pin and store the live project's images now, so a record written soon
  * after rarely finds one still in flight: a background loaded or opened, an
  * image admitted, a project opened or restored, or an image Undo makes live
- * again. Its work holds a lease until it settles.
+ * again; and let go of those that left it.
  * @param {Object} app
  * @returns {Promise|null}
  */
@@ -1020,27 +1180,14 @@ export function primeRecoveryImages(app) {
   if (!store) return null;
   const view = { waypoints: app.waypoints || [], styles: app.styles || {} };
   const { kept } = selectWithinLimits(liveImages(app, view), store.limits);
-  const named = durableRecordKeys(app);
-  const pending = kept.filter(image => {
-    const key = store.cachedKey(image.dataURL);
-    return !(key && named.has(key));
-  });
-  if (pending.length === 0) return null;
-  const lease = store.lease();
-  const work = Promise.allSettled(pending.map(image => store.ensureStored(lease, image)))
-    .finally(() => lease.release());
-  app._recoveryPriming = work;
-  work.finally(() => {
-    if (app._recoveryPriming === work) app._recoveryPriming = null;
-  });
-  return work;
+  const live = syncLiveImages(app, kept);
+  const works = [...live.values()].map(entry => entry.work).filter(Boolean);
+  return works.length > 0 ? Promise.allSettled(works) : null;
 }
 
 /**
- * After a record is written: delete the entries no record names, when no
- * tab is storing or relying on one (`RecoveryImageStore.collectGarbage`).
- * Coalesced; a run the lock does not allow now is tried a few times, then
- * waits for the next write.
+ * After a record is written: delete the entries no record names and no tab
+ * pins (`RecoveryImageStore.sweep`). Coalesced.
  * @param {Object} app
  * @returns {Promise|null}
  */
@@ -1053,16 +1200,11 @@ export function scheduleRecoveryGarbage(app) {
   }
   const run = { again: false, promise: null };
   app._recoveryGarbage = run;
-  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
   run.promise = (async () => {
-    let result = { ok: false, deleted: [] };
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      await wait(attempt === 0 ? 0 : 50);
-      if (app._recoveryGarbage !== run) return result;
-      result = await store.collectGarbage(key => isProtected(app, key));
-      if (result.skipped !== 'busy') break;
-    }
-    return result;
+    // After this turn: what the write let go of is let go first.
+    await new Promise(resolve => setTimeout(resolve, 0));
+    if (app._recoveryGarbage !== run) return { ok: false, deleted: [] };
+    return store.collectGarbage(key => isProtected(app, key));
   })().finally(() => {
     if (app._recoveryGarbage !== run) return;
     app._recoveryGarbage = null;
@@ -1072,11 +1214,16 @@ export function scheduleRecoveryGarbage(app) {
 }
 
 /**
- * Clear All's part: the prompt, the carried losses and the background's
- * name go, and the store is emptied, after its writes already issued and
- * before any new project's (`RecoveryImageStore.clear`).
+ * Clear All's part: the prompt, the warning, the carried losses and the
+ * background's name go; the cleared project lets go of its images; then,
+ * once its puts and reads still under way have settled, every entry no
+ * record that remains names and no tab pins is deleted: what a record whose
+ * removal failed, a kept or a held record names stays, and where any record
+ * that remains cannot be read, nothing is deleted (Codex, code review round
+ * 1, 2). An image another tab still shows stays: its pin protects it.
  * @param {Object} app
- * @returns {Promise<{ok: boolean}>|null} null where nothing can be stored
+ * @returns {Promise<{ok: boolean}>|null} null where nothing can be stored;
+ *   `ok` false where the images could not all be removed
  */
 export function clearRecoveryImages(app) {
   endBackgroundPrompt(app);
@@ -1084,29 +1231,49 @@ export function clearRecoveryImages(app) {
   app._backgroundName = null;
   resetRecoveryWarnings(app);
   finishRecoveryRevision(app, app._recoveryRevision);
+  releaseLiveImages(app);
   app._recoveryGarbage = null;
   const store = app.recoveryImageStore;
   if (!store?.backend) return null;
-  return store.clear();
+  const clearing = store.clear(key => isProtected(app, key)).then(result => ({ ok: result.ok }));
+  app._recoveryClearing = clearing;
+  clearing.finally(() => {
+    if (app._recoveryClearing === clearing) app._recoveryClearing = null;
+  });
+  return clearing;
+}
+
+/**
+ * The app stops (a reload in the tests; the page itself lets its locks go
+ * when it unloads): the prompt's wait and every pin it holds go.
+ * @param {Object} app
+ */
+export function stopRecoveryImages(app) {
+  endBackgroundPrompt(app);
+  finishRecoveryRevision(app, app._recoveryRevision);
+  releaseLiveImages(app);
+  app._recoveryGarbage = null;
 }
 
 /**
  * Settles once no work of recovery's images is under way in this app: the
- * current revision's puts, early puts, a collection, a clear. For tests,
- * and for anything that must not race them.
+ * live images' puts, the current revision's, a sweep. For tests, and for
+ * anything that must not race them.
  * @param {Object} app
  * @returns {Promise<void>}
  */
 export async function recoveryImagesIdle(app) {
   for (let round = 0; round < 20; round += 1) {
     const waits = [];
+    for (const entry of app._recoveryLive?.values() ?? []) if (entry.work) waits.push(entry.work);
     const revision = app._recoveryRevision;
     if (revision && !revision.done) {
       for (const entry of revision.entries) if (entry.work) waits.push(entry.work);
     }
-    if (app._recoveryPriming) waits.push(app._recoveryPriming);
     if (app._recoveryGarbage?.promise) waits.push(app._recoveryGarbage.promise);
-    if (app.recoveryImageStore?._clearing) waits.push(app.recoveryImageStore._clearing);
+    if (app._recoveryClearing) waits.push(app._recoveryClearing);
+    const store = app.recoveryImageStore;
+    if (store?.available && (store._operations?.size || store.sweeping)) waits.push(store.idle());
     if (waits.length === 0) return;
     await Promise.allSettled(waits);
   }

@@ -132,7 +132,7 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { bootApp, retireApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
-import { FIXED_NOW, loadSnapshot } from './helpers/projectSnapshot.js';
+import { FIXED_NOW, loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import {
   applyMapPalette, appState, changedLines, keyFor, modelChanges, modelState, quote, recordEmits,
   uiChanges, uiState, watchUi,
@@ -1624,7 +1624,7 @@ const UNRESTORABLE_RECORD = '{"coordVersion":9,"waypoints":[{"id":"ex-uon-1","im
 /**
  * Browser recovery finds that record where it keeps one and tries it, as a
  * start does (DEF-28): the app reads it from storage itself, in place of the
- * reader `loadSnapshot` gave it for the fixture, keeps it under a key of
+ * reader `loadCurrentSnapshot` gave it for the fixture, keeps it under a key of
  * its own and offers it.
  */
 async function recoverUnrestorable(app) {
@@ -2094,7 +2094,7 @@ function openCards(context) {
 
 async function establish(app, context, selections = null, lastFrame = undefined) {
   vi.setSystemTime(FIXED_NOW);
-  expect(await drive(loadSnapshot(app, project))).toBe(true);
+  expect(await drive(loadCurrentSnapshot(app, project))).toBe(true);
   const splash = document.getElementById('splash');
   if (!context.firstRun && splash.style.display !== 'none') document.getElementById('splash-close').click();
   // A dialog a row opened outlives the reload: Escape closes it, as it would

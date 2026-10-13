@@ -12,7 +12,7 @@
 
 import { expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { networkRoom } from '../src/utils/networkBudget.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 import { EventBus } from '../src/core/EventBus.js';
@@ -63,7 +63,7 @@ async function undrawn() {
 async function editing(crowds, { draws = false } = {}) {
   const app = draws ? await bootApp() : await undrawn();
   if (draws) await app.ready;
-  expect(await loadSnapshot(app, { coordVersion: 9, waypoints: [], scene: { flowLayers: crowds } })).toBe(true);
+  expect(await loadCurrentSnapshot(app, { coordVersion: 9, waypoints: [], scene: { flowLayers: crowds } })).toBe(true);
   const layer = app.scene.flowLayers.at(-1);
   app.eventBus.emit('crowd:selected', layer);
   app.enterNetworkEditMode();
@@ -83,7 +83,7 @@ async function withImage(app) {
 
 /** A fresh app opens `snapshot`. */
 async function reopens(snapshot) {
-  return loadSnapshot(await undrawn(), snapshot);
+  return loadCurrentSnapshot(await undrawn(), snapshot);
 }
 
 /** What a refusal leaves as it was: the network, the history, the pen (the node it is at, its selection, drag, hover and cursor) and the banner's counts. */
@@ -431,7 +431,7 @@ test('after another project is opened, the pen counts its scene, not the one it 
   // The pen asks for the scene's crowds, and places a node
   expect(pen.placeNode({ x: 0.8, y: 0.8 })).not.toBeNull();
 
-  expect(await loadSnapshot(app, { coordVersion: 9, waypoints: [], scene: { flowLayers: tenThousandNodes() } })).toBe(true);
+  expect(await loadCurrentSnapshot(app, { coordVersion: 9, waypoints: [], scene: { flowLayers: tenThousandNodes() } })).toBe(true);
   const layer = app.scene.getFlowLayers().at(-1);
   app.eventBus.emit('crowd:selected', layer);
   app.enterNetworkEditMode();

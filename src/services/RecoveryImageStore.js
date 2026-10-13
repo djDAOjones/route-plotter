@@ -16,15 +16,19 @@
  * warned of by name, never the app its start or its save.
  *
  * Who may write, and when an entry may go. Every tab of the app shares the
- * store and the one recovery record, and an entry no record names is deleted
- * only under an exclusive Web Lock (`STORAGE.RECOVERY_IMAGES_LOCK`). Every
- * put and read holds the same lock shared, through a hold that lasts while a
- * publication needs it, so no deletion, and no Clear All, can run in any tab
- * while another tab is storing or relying on an entry. What a hold has seen
- * stored (`verified`) is trusted only while that hold lasts. With no Web
- * Locks (a browser without them, or a test's jsdom), the store coordinates
- * its own tab only, and so never deletes an unreferenced entry: a leaked
- * entry is better than a lost one (Codex, brief round 2, 13).
+ * store and the one recovery record. While an image is in a tab's live
+ * project, or that tab is storing or reading it, the tab pins it: it holds a
+ * shared Web Lock of that image's own (`STORAGE.RECOVERY_IMAGES_LOCK:<key>`).
+ * An entry is deleted only under that lock taken exclusive, so only while no
+ * tab pins it, and only when no record names it (the recovery record, a kept
+ * or a held one). What a pin has seen stored (`isStoredNow`) stays stored
+ * while the pin is held, so a record written at any moment, the `pagehide`
+ * flush's included, names an image only while it is pinned and seen stored.
+ * Garbage collection and Clear All are the one sweep, so the same barrier
+ * covers both (Codex, code review round 1, 1 and 9). With no Web Locks (a
+ * browser without them, or a test's jsdom), the store coordinates its own tab
+ * only, and so never deletes: a leaked entry is better than a lost one (Codex,
+ * brief round 2, 13).
  *
  * Kept out of the exported player: nothing under `src/player` imports it.
  *
@@ -51,13 +55,6 @@ export const RECOVERY_IMAGE_LIMITS = Object.freeze({
   MAX_ASSET_BYTES_TOTAL: PROJECT_ARCHIVE_LIMITS.MAX_ASSET_BYTES_TOTAL,
   MAX_IMAGE_PIXELS_TOTAL: PROJECT_ARCHIVE_LIMITS.MAX_IMAGE_PIXELS_TOTAL,
 });
-
-/**
- * How long a hold takes new publications before it is renewed: a tab editing
- * without pause never keeps another tab's Clear All waiting longer than this
- * and its own debounce.
- */
-export const RECOVERY_HOLD_MAX_AGE_MS = 5000;
 
 const KEY_PREFIX = 'sha256-';
 const OBJECT_STORE = 'images';
@@ -182,8 +179,8 @@ export function createIndexedDBBackend({ name = STORAGE.RECOVERY_IMAGES_DB, fact
     put: record => run('readwrite', store => store.put(record), 'strict').then(() => undefined),
     get: key => run('readonly', store => store.get(key)),
     delete: key => run('readwrite', store => store.delete(key)).then(() => undefined),
+    has: key => run('readonly', store => store.getKey(key)).then(found => found !== undefined),
     keys: () => run('readonly', store => store.getAllKeys()).then(keys => (keys || []).map(String)),
-    clear: () => run('readwrite', store => store.clear(), 'strict').then(() => undefined),
   };
 }
 
@@ -216,7 +213,7 @@ export function createMemoryRecoveryBackend() {
     log,
     /**
      * Fail each `operation` for which `rule(argument)` returns an error.
-     * @param {'put'|'get'|'delete'|'keys'|'clear'} operation
+     * @param {'put'|'get'|'has'|'delete'|'keys'} operation
      * @param {Function|null} rule - Return an Error to fail; null removes the rule
      */
     failWhen(operation, rule) {
@@ -259,17 +256,17 @@ export function createMemoryRecoveryBackend() {
       entries.delete(key);
       log.push(`delete ${key}`);
     },
+    async has(key) {
+      await gate('has');
+      fail('has', key);
+      log.push(`has ${key}`);
+      return entries.has(key);
+    },
     async keys() {
       await gate('keys');
       fail('keys');
       log.push('keys');
       return [...entries.keys()];
-    },
-    async clear() {
-      await gate('clear');
-      fail('clear');
-      entries.clear();
-      log.push('clear');
     },
   };
 }
@@ -307,9 +304,18 @@ export function createLocalLockManager() {
     } catch (error) {
       outcome = Promise.reject(error);
     }
-    outcome.then(entry.resolve, entry.reject).finally(() => {
+    // Released first, then settled, as the browser does: whoever waits on the
+    // request finds the lock free.
+    const release = () => {
       queue.held.splice(queue.held.indexOf(entry), 1);
       pump(queue);
+    };
+    outcome.then(value => {
+      release();
+      entry.resolve(value);
+    }, error => {
+      release();
+      entry.reject(error);
     });
   };
   const pump = queue => {
@@ -348,35 +354,36 @@ export function createLocalLockManager() {
 }
 
 /**
- * One shared hold of the store's lock: while it lasts no deletion and no
- * clear can run in any tab, so what it has seen stored stays stored. Leases
- * keep it; the last released ends it, once its operations have drained.
+ * One image pinned by this tab: a shared Web Lock of its own, held while any
+ * handle to it is (its place in the live project, a put, a read). While it is
+ * held no tab can delete the entry, so what this pin has seen stored
+ * (`present`) stays stored. The last handle released ends it, once what was
+ * issued under it has settled.
  * @private
  */
-class Hold {
-  constructor(store) {
+class Pin {
+  constructor(store, key) {
     this.store = store;
-    this.users = 0;
-    this.createdAt = store._now();
-    /** Keys this hold has seen stored, by its own put or its own listing. */
-    this.verified = new Set();
-    /** The store's keys as this hold first listed them, a promise. */
+    this.key = key;
+    this.count = 0;
+    /** Whether the entry is in the store, as seen under this pin: null until looked. */
     this.present = null;
-    /** Puts under way, by key. */
-    this.storing = new Map();
-    /** Every backend operation issued under this hold, until it settles. */
+    /** The look or the put under way, a promise. */
+    this.storing = null;
+    /** Backend operations issued under it, until they settle. */
     this.inflight = new Set();
-    /** No new lease joins it. */
-    this.closing = false;
-    /** A clear was asked for: nothing it saw is trusted, nothing more is put. */
-    this.invalidated = false;
-    this.ended = false;
     this.isGranted = false;
+    this.ending = false;
+    this.ended = false;
     this._end = null;
+    /** Told when the pin ends or is taken again: a sweep waiting on it. */
+    this._watchers = [];
+    /** Settles once the lock is let go (or was never taken). */
+    this.lockSettled = Promise.resolve();
     this.granted = new Promise(resolve => {
       let request;
       try {
-        request = store.locks.request(STORAGE.RECOVERY_IMAGES_LOCK, { mode: 'shared' }, () => {
+        request = store.locks.request(`${STORAGE.RECOVERY_IMAGES_LOCK}:${key}`, { mode: 'shared' }, () => {
           this.isGranted = true;
           resolve(true);
           return new Promise(end => { this._end = end; });
@@ -385,13 +392,13 @@ class Hold {
         this._uncoordinated(error, resolve);
         return;
       }
-      Promise.resolve(request).catch(error => this._uncoordinated(error, resolve));
+      this.lockSettled = Promise.resolve(request).catch(error => this._uncoordinated(error, resolve));
     });
   }
 
   /**
-   * The lock could not be taken: the hold works for this tab alone, as with
-   * no Web Locks (no deletion relies on it: `collectGarbage` needs the lock).
+   * The lock could not be taken: the pin works for this tab alone, as with no
+   * Web Locks (no deletion relies on it: a sweep needs the lock).
    * @private
    */
   _uncoordinated(error, resolve) {
@@ -401,16 +408,22 @@ class Hold {
     resolve(false);
   }
 
-  /** Track a backend operation so the hold ends only once it has settled. */
+  /** Settles once the pin has ended, or is held again. */
+  settled() {
+    if (this.ended || (this.count > 0 && !this.ending)) return Promise.resolve();
+    return new Promise(resolve => this._watchers.push(resolve));
+  }
+
+  /** @private */
+  _notify() {
+    for (const resolve of this._watchers.splice(0)) resolve();
+  }
+
+  /** Track a backend operation so the pin ends only once it has settled. */
   track(promise) {
     this.inflight.add(promise);
     promise.then(() => this.inflight.delete(promise), () => this.inflight.delete(promise));
     return promise;
-  }
-
-  /** Whether what it has seen stored may be trusted now. */
-  get trusted() {
-    return this.isGranted && !this.invalidated && !this.ended;
   }
 }
 
@@ -423,11 +436,9 @@ export class RecoveryImageStore {
    * @param {Object|null} [options.backend] - The IndexedDB backend by default; null for none
    * @param {Object} [options.locks] - A Web Locks manager; the browser's, else this tab's own
    * @param {boolean} [options.crossWriter] - Whether `locks` reaches every writer sharing the
-   *   backend (every tab); only then are unreferenced entries ever deleted
+   *   backend (every tab); only then is an entry ever deleted
    * @param {Function} [options.digest] - bytes → Promise<hex>; WebCrypto's SHA-256 by default
    * @param {Object} [options.limits] - What recovery keeps; `RECOVERY_IMAGE_LIMITS` by default
-   * @param {number} [options.holdMaxAgeMs]
-   * @param {Function} [options.now]
    */
   constructor({
     backend = createIndexedDBBackend(),
@@ -435,8 +446,6 @@ export class RecoveryImageStore {
     crossWriter,
     digest = globalThis.crypto?.subtle ? sha256Hex : null,
     limits = RECOVERY_IMAGE_LIMITS,
-    holdMaxAgeMs = RECOVERY_HOLD_MAX_AGE_MS,
-    now = () => Date.now(),
   } = {}) {
     const browserLocks = globalThis.navigator?.locks;
     this.backend = backend ?? null;
@@ -444,15 +453,14 @@ export class RecoveryImageStore {
     this.crossWriter = crossWriter ?? Boolean(!locks && browserLocks);
     this.digest = typeof digest === 'function' ? digest : null;
     this.limits = Object.freeze({ ...RECOVERY_IMAGE_LIMITS, ...(limits || {}) });
-    this.holdMaxAgeMs = holdMaxAgeMs;
-    this._now = now;
-    /** Each data URL's key, once hashed: a content hash, so a clear leaves it true. */
+    /** Each data URL's key, once hashed: a content hash, so a deletion leaves it true. */
     this._keys = new Map();
     this._hashing = new Map();
-    this._hold = null;
-    this._holds = new Set();
-    this._generation = 0;
-    this._clearing = null;
+    /** This tab's pins, by key. */
+    this._pins = new Map();
+    /** Every put and read under way, so a clear can wait for them. */
+    this._operations = new Set();
+    this._sweeping = null;
   }
 
   /** Whether images can be kept at all: a backend and a digest. */
@@ -500,75 +508,80 @@ export class RecoveryImageStore {
   }
 
   /**
-   * A lease on a shared hold of the store's lock, for one publication or
-   * restore: it joins the current hold while that is young, else opens one.
-   * @returns {{hold: Hold, release: Function}|null} null with no store
+   * Pin an image: no tab can delete it while a handle is held. Handles are
+   * counted; each is released once.
+   * @param {string} key
+   * @returns {{key: string, release: Function}|null} null with no store
    */
-  lease() {
-    if (!this.available) return null;
-    let hold = this._hold;
-    if (!hold || hold.closing || this._now() - hold.createdAt > this.holdMaxAgeMs) {
-      if (hold) hold.closing = true;
-      hold = new Hold(this);
-      this._hold = hold;
-      this._holds.add(hold);
+  pin(key) {
+    if (!this.available || typeof key !== 'string') return null;
+    let pin = this._pins.get(key);
+    if (!pin || pin.ended || pin.ending) {
+      pin = new Pin(this, key);
+      this._pins.set(key, pin);
     }
-    hold.users += 1;
+    pin.count += 1;
+    if (pin.count === 1) pin._notify();
     let released = false;
     return {
-      hold,
+      key,
       release: () => {
         if (released) return;
         released = true;
-        hold.users -= 1;
-        // A microtask later, so a publication superseded in the same turn
-        // hands its hold to the one that replaces it.
-        if (hold.users <= 0) Promise.resolve().then(() => this._endIfIdle(hold));
+        pin.count -= 1;
+        // A microtask later, so a handle let go and taken again in the same
+        // turn (a revision superseded by the next) keeps the lock.
+        if (pin.count <= 0) Promise.resolve().then(() => this._endIfIdle(pin));
       },
     };
   }
 
   /**
-   * Whether `key` is stored, as `lease`'s hold has seen and still vouches for.
+   * Whether `key` is stored, as a pin of this tab has seen it and still holds
+   * it: no tab can delete it meanwhile.
    * @returns {boolean}
    */
-  verified(lease, key) {
-    return Boolean(lease && key && lease.hold.trusted && lease.hold.verified.has(key));
+  isStoredNow(key) {
+    const pin = key ? this._pins.get(key) : null;
+    return Boolean(pin && !pin.ended && !pin.ending && pin.count > 0 && pin.isGranted && pin.present === true);
   }
 
   /**
-   * Make sure an image is in the store under `lease`: listed already, or put.
-   * Stored only once its transaction has completed.
-   * @param {{hold: Hold}} lease
+   * Make sure an image is in the store, pinned: looked for under its pin, and
+   * put if it is not there. Stored only once its transaction has completed.
+   * The caller keeps the returned handle while it relies on the image, and
+   * releases it after.
    * @param {{dataURL: string, mimeType: string, width: number, height: number}} image
-   * @returns {Promise<{ok: boolean, key?: string, reason?: string}>}
+   * @returns {Promise<{ok: boolean, key?: string, reason?: string, pin: Object|null}>}
    */
-  async ensureStored(lease, image) {
-    if (!lease) return { ok: false, reason: RECOVERY_REASONS.UNAVAILABLE };
-    const { hold } = lease;
-    const keyed = await this.keyFor(image.dataURL);
-    if (!keyed.ok) return keyed;
-    const { key } = keyed;
-    await hold.granted;
-    if (hold.invalidated || hold.ended) return { ok: false, key, reason: RECOVERY_REASONS.CANCELLED };
-    if (hold.verified.has(key)) return { ok: true, key };
-    let storing = hold.storing.get(key);
-    if (!storing) {
-      storing = this._store(hold, key, image);
-      hold.storing.set(key, storing);
-      storing.finally(() => hold.storing.delete(key));
-    }
-    return storing;
+  ensureStored(image) {
+    // Pinned at once where the key is known, so a handle given up in this
+    // same turn hands the lock over rather than letting it go.
+    const cached = this.cachedKey(image.dataURL);
+    const early = cached ? this.pin(cached) : null;
+    const operation = (async () => {
+      const keyed = cached ? { ok: true, key: cached } : await this.keyFor(image.dataURL);
+      if (!keyed.ok) return { ...keyed, pin: null };
+      const handle = early ?? this.pin(keyed.key);
+      if (!handle) return { ok: false, key: keyed.key, reason: RECOVERY_REASONS.UNAVAILABLE, pin: null };
+      const pin = this._pins.get(keyed.key);
+      await pin.granted;
+      if (pin.present === true) return { ok: true, key: keyed.key, pin: handle };
+      pin.storing ??= this._store(pin, image).finally(() => { pin.storing = null; });
+      const result = await pin.storing;
+      return { ...result, pin: handle };
+    })();
+    return this._track(operation);
   }
 
   /** @private */
-  async _store(hold, key, image) {
+  async _store(pin, image) {
+    const { key } = pin;
     try {
-      const present = await this._present(hold);
-      if (hold.invalidated) return { ok: false, key, reason: RECOVERY_REASONS.CANCELLED };
-      if (!present.has(key)) {
+      const present = await pin.track(this.backend.has(key));
+      if (!present) {
         const bytes = dataURLToBytes(image.dataURL);
-        await hold.track(this.backend.put({
+        await pin.track(this.backend.put({
           key,
           mimeType: image.mimeType,
           width: image.width,
@@ -576,11 +589,8 @@ export class RecoveryImageStore {
           byteLength: bytes.byteLength,
           bytes: bytes.buffer,
         }));
-        present.add(key);
       }
-      // A clear asked for meanwhile removes it once this hold ends.
-      if (hold.invalidated) return { ok: false, key, reason: RECOVERY_REASONS.CANCELLED };
-      hold.verified.add(key);
+      pin.present = true;
       return { ok: true, key };
     } catch (error) {
       console.warn('Browser recovery could not store an image:', error);
@@ -588,146 +598,188 @@ export class RecoveryImageStore {
     }
   }
 
-  /** @private The store's keys as `hold` first listed them. */
-  _present(hold) {
-    hold.present ??= hold.track(this.backend.keys()).then(keys => new Set(keys));
-    return hold.present;
-  }
-
   /**
-   * Read one entry under `lease`, checking it is what its key says: the
-   * bytes' length as stored and their digest the key. The caller validates
-   * the image itself (`ImageAsset`).
-   * @returns {Promise<{ok: boolean, record?: Object, reason?: string}>}
+   * Read one entry, pinned, checking it is what its key says: the bytes'
+   * length as stored and their digest the key. The caller validates the
+   * image itself (`ImageAsset`) and releases the handle once the image is
+   * pinned as live.
+   * @returns {Promise<{ok: boolean, record?: Object, reason?: string, pin: Object|null}>}
    */
-  async read(lease, key) {
-    if (!lease) return { ok: false, reason: RECOVERY_REASONS.UNAVAILABLE };
-    const { hold } = lease;
-    await hold.granted;
-    if (hold.invalidated) return { ok: false, reason: RECOVERY_REASONS.CANCELLED };
-    let record;
-    try {
-      record = await hold.track(this.backend.get(key));
-    } catch (error) {
-      console.warn('Browser recovery could not read an image:', error);
-      return { ok: false, reason: error?.recoveryReason === RECOVERY_REASONS.UNAVAILABLE
-        ? RECOVERY_REASONS.MISSING : RECOVERY_REASONS.UNREADABLE };
-    }
-    if (!record) return { ok: false, reason: RECOVERY_REASONS.MISSING };
-    try {
-      const buffer = asArrayBuffer(record.bytes);
-      if (!buffer || record.key !== key || typeof record.mimeType !== 'string' ||
-          Number(record.byteLength) !== buffer.byteLength) {
-        return { ok: false, reason: RECOVERY_REASONS.UNREADABLE };
-      }
-      const digest = `${KEY_PREFIX}${await this.digest(buffer)}`;
-      if (digest !== key) return { ok: false, reason: RECOVERY_REASONS.UNREADABLE };
-      const dataURL = bytesToDataURL(buffer, record.mimeType);
-      this._keys.set(dataURL, key);
-      if (hold.trusted) hold.verified.add(key);
-      return {
-        ok: true,
-        record: {
-          key,
-          mimeType: record.mimeType,
-          width: Number(record.width),
-          height: Number(record.height),
-          byteLength: buffer.byteLength,
-          dataURL,
-        },
+  read(key) {
+    const operation = (async () => {
+      const handle = this.pin(key);
+      if (!handle) return { ok: false, reason: RECOVERY_REASONS.UNAVAILABLE, pin: null };
+      const pin = this._pins.get(key);
+      await pin.granted;
+      const fail = reason => {
+        handle.release();
+        return { ok: false, reason, pin: null };
       };
-    } catch (error) {
-      console.warn('Browser recovery could not read an image:', error);
-      return { ok: false, reason: RECOVERY_REASONS.UNREADABLE };
-    }
-  }
-
-  /**
-   * Clear All's part: remove every entry, after every write already issued
-   * and before any write asked for after this call. Every hold is
-   * invalidated at once, so nothing more is put under it and nothing it saw
-   * is trusted; its writes already issued drain, it ends, and the exclusive
-   * lock is granted only then, in every tab; a hold opened after this call
-   * waits for the clear.
-   * @returns {Promise<{ok: boolean, reason?: string}>}
-   */
-  clear() {
-    if (!this.backend) return Promise.resolve({ ok: true });
-    this._generation += 1;
-    for (const hold of this._holds) {
-      hold.invalidated = true;
-      hold.closing = true;
-      Promise.resolve().then(() => this._endIfIdle(hold));
-    }
-    this._hold = null;
-    const clearing = (async () => {
+      let record;
       try {
-        await this.locks.request(STORAGE.RECOVERY_IMAGES_LOCK, { mode: 'exclusive' }, () => this.backend.clear());
-        return { ok: true };
+        record = await pin.track(this.backend.get(key));
       } catch (error) {
-        console.error('Browser recovery could not remove its images:', error);
-        return { ok: false, reason: RECOVERY_REASONS.REFUSED };
+        console.warn('Browser recovery could not read an image:', error);
+        return fail(error?.recoveryReason === RECOVERY_REASONS.UNAVAILABLE
+          ? RECOVERY_REASONS.MISSING : RECOVERY_REASONS.UNREADABLE);
+      }
+      if (!record) {
+        pin.present = false;
+        return fail(RECOVERY_REASONS.MISSING);
+      }
+      try {
+        const buffer = asArrayBuffer(record.bytes);
+        if (!buffer || record.key !== key || typeof record.mimeType !== 'string' ||
+            Number(record.byteLength) !== buffer.byteLength) {
+          return fail(RECOVERY_REASONS.UNREADABLE);
+        }
+        const digest = `${KEY_PREFIX}${await this.digest(buffer)}`;
+        if (digest !== key) return fail(RECOVERY_REASONS.UNREADABLE);
+        const dataURL = bytesToDataURL(buffer, record.mimeType);
+        this._keys.set(dataURL, key);
+        pin.present = true;
+        return {
+          ok: true,
+          pin: handle,
+          record: {
+            key,
+            mimeType: record.mimeType,
+            width: Number(record.width),
+            height: Number(record.height),
+            byteLength: buffer.byteLength,
+            dataURL,
+          },
+        };
+      } catch (error) {
+        console.warn('Browser recovery could not read an image:', error);
+        return fail(RECOVERY_REASONS.UNREADABLE);
       }
     })();
-    this._clearing = clearing;
-    clearing.finally(() => {
-      if (this._clearing === clearing) this._clearing = null;
-    });
-    return clearing;
+    return this._track(operation);
   }
 
-  /** Whether a clear is still under way. */
-  get clearing() {
-    return this._clearing !== null;
+  /** @private Track a put or read until it settles. */
+  _track(operation) {
+    this._operations.add(operation);
+    operation.finally(() => this._operations.delete(operation));
+    return operation;
   }
 
   /**
-   * Delete every entry no record protects. Only where the lock reaches every
-   * writer (`crossWriter`), and only while no hold exists anywhere (the lock
-   * taken exclusive, if available at once): so no tab is storing an entry or
-   * relying on one it has seen. `isProtected(key)` is asked again just before
-   * each deletion; it answers true, false, or null when a record that may
-   * protect it cannot be read or understood, and then nothing more is deleted.
+   * Delete every entry no tab pins and no record names: the one sweep that
+   * garbage collection and Clear All share. Only where the lock reaches every
+   * writer (`crossWriter`). Each entry goes only under its own lock taken
+   * exclusive, if that is free at once (no tab pins it), and only if
+   * `isProtected(key)`, asked again under that lock, says no record names
+   * it; null there (a record that cannot be read or understood) stops the
+   * sweep. An entry this tab still pins is left.
    * @param {(key: string) => (boolean|null)} isProtected
    * @returns {Promise<{ok: boolean, deleted: string[], skipped?: string}>}
    */
-  async collectGarbage(isProtected) {
-    if (!this.available || !this.crossWriter) return { ok: false, deleted: [], skipped: 'uncoordinated' };
-    const generation = this._generation;
-    try {
-      return await this.locks.request(STORAGE.RECOVERY_IMAGES_LOCK, { mode: 'exclusive', ifAvailable: true },
-        async lock => {
-          if (!lock) return { ok: false, deleted: [], skipped: 'busy' };
-          const deleted = [];
-          const keys = await this.backend.keys();
-          for (const key of keys) {
-            if (generation !== this._generation) return { ok: false, deleted, skipped: 'cleared' };
-            const verdict = isProtected(key);
-            if (verdict === null) return { ok: false, deleted, skipped: 'unknown' };
-            if (verdict) continue;
-            await this.backend.delete(key);
-            deleted.push(key);
-          }
-          return { ok: true, deleted };
-        });
-    } catch (error) {
-      console.warn('Browser recovery could not tidy its images:', error);
-      return { ok: false, deleted: [], skipped: 'failed' };
+  sweep(isProtected) {
+    if (!this.available || !this.crossWriter) {
+      return Promise.resolve({ ok: false, deleted: [], skipped: 'uncoordinated' });
+    }
+    const sweeping = (async () => {
+      const deleted = [];
+      let keys;
+      try {
+        keys = await this.backend.keys();
+      } catch (error) {
+        console.warn('Browser recovery could not tidy its images:', error);
+        return { ok: false, deleted, skipped: 'failed' };
+      }
+      for (const key of keys) {
+        const own = this._pins.get(key);
+        if (own && !own.ended) {
+          // Relied on here; or let go, and its lock not yet: wait for that.
+          if (own.count > 0 && !own.ending) continue;
+          await own.settled();
+        }
+        const again = this._pins.get(key);
+        if (again && !again.ended && !again.ending && again.count > 0) continue;
+        const before = isProtected(key);
+        if (before === null) return { ok: false, deleted, skipped: 'unknown' };
+        if (before) continue;
+        let outcome;
+        try {
+          outcome = await this.locks.request(`${STORAGE.RECOVERY_IMAGES_LOCK}:${key}`,
+            { mode: 'exclusive', ifAvailable: true }, async lock => {
+              if (!lock) return 'pinned';
+              const verdict = isProtected(key);
+              if (verdict === null) return 'unknown';
+              if (verdict) return 'named';
+              await this.backend.delete(key);
+              return 'deleted';
+            });
+        } catch (error) {
+          console.warn('Browser recovery could not tidy its images:', error);
+          return { ok: false, deleted, skipped: 'failed' };
+        }
+        if (outcome === 'unknown') return { ok: false, deleted, skipped: 'unknown' };
+        if (outcome === 'deleted') deleted.push(key);
+      }
+      return { ok: true, deleted };
+    })();
+    this._sweeping = sweeping;
+    sweeping.finally(() => {
+      if (this._sweeping === sweeping) this._sweeping = null;
+    });
+    return sweeping;
+  }
+
+  /** Garbage collection: the sweep. */
+  collectGarbage(isProtected) {
+    return this.sweep(isProtected);
+  }
+
+  /**
+   * Clear All's part: once every put and read this tab has under way has
+   * settled (the project being cleared let go of its images first), the
+   * sweep, with the records that remain to protect what they name. An image
+   * another tab still shows stays: it is that tab's live project's.
+   * @param {(key: string) => (boolean|null)} isProtected
+   * @returns {Promise<{ok: boolean, deleted: string[], skipped?: string}>}
+   */
+  async clear(isProtected) {
+    if (!this.backend) return { ok: true, deleted: [] };
+    while (this._operations.size > 0) await Promise.allSettled([...this._operations]);
+    // What those operations' callers let go of is let go a microtask later.
+    await Promise.resolve();
+    return this.sweep(isProtected);
+  }
+
+  /** Whether a sweep is under way. */
+  get sweeping() {
+    return this._sweeping !== null;
+  }
+
+  /** Settles once no put, read or sweep of this tab's is under way. */
+  async idle() {
+    for (let round = 0; round < 20; round += 1) {
+      const waits = [...this._operations];
+      if (this._sweeping) waits.push(this._sweeping);
+      if (waits.length === 0) return;
+      await Promise.allSettled(waits);
     }
   }
 
-  /** @private End a hold no lease keeps, once what it issued has settled. */
-  async _endIfIdle(hold) {
-    if (hold.ended || (hold.users > 0 && !hold.invalidated)) return;
-    hold.closing = true;
-    if (this._hold === hold) this._hold = null;
-    while (hold.inflight.size > 0) await Promise.allSettled([...hold.inflight]);
-    if (hold.ended || (hold.users > 0 && !hold.invalidated)) return;
-    await hold.granted;
-    if (hold.ended) return;
-    hold.ended = true;
-    this._holds.delete(hold);
-    hold._end?.();
+  /** @private End a pin no handle keeps, once what it issued has settled. */
+  async _endIfIdle(pin) {
+    if (pin.ended || pin.ending || pin.count > 0) return;
+    while (pin.inflight.size > 0) await Promise.allSettled([...pin.inflight]);
+    if (pin.storing) await pin.storing.catch(() => {});
+    if (pin.ended || pin.ending || pin.count > 0) return;
+    await pin.granted;
+    if (pin.ended || pin.ending || pin.count > 0) return;
+    // Ending: no handle joins it now (`pin` makes a new one), and a sweep
+    // waits until its lock is free.
+    pin.ending = true;
+    pin._end?.();
+    await pin.lockSettled;
+    pin.ended = true;
+    if (this._pins.get(pin.key) === pin) this._pins.delete(pin.key);
+    pin._notify();
   }
 }
 

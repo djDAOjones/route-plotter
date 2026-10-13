@@ -18,7 +18,7 @@ import { resolve } from 'node:path';
 import { afterEach, expect, test, vi } from 'vitest';
 import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
-import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { ANNOUNCEMENTS } from '../src/config/constants.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 
@@ -61,7 +61,7 @@ async function openDay() {
   // The welcome dialog, open at start, makes the page behind it inert.
   document.getElementById('splash-close').click();
   const project = structuredClone(buildExampleProjects().find(each => each.id === 'uon-open-day').project);
-  expect(await loadSnapshot(app, project)).toBe(true);
+  expect(await loadCurrentSnapshot(app, project)).toBe(true);
   return app;
 }
 
@@ -482,7 +482,7 @@ test('a draw goes on, unannounced, when a project fails to open over it, and its
   vi.spyOn(app, 'pruneImageAssets').mockImplementationOnce(() => { throw new Error('late failure'); });
 
   await expectNothingTold(app, async () => {
-    expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(false);
+    expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(false);
   });
 
   // Still drawn on the canvas: a tap there adds the last vertex, and one on the first closes it
@@ -658,7 +658,7 @@ test('a draw ends, and is not carried over, when a project with the same waypoin
   placeTriangle(app);
 
   await expectNothingTold(app, async () => {
-    expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+    expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(true);
   });
 
   expect(drawing(app)).toEqual(ENDED);

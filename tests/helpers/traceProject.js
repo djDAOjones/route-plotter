@@ -7,7 +7,7 @@
 
 import { expect, vi } from 'vitest';
 import { bootApp } from './bootApp.js';
-import { loadSnapshot } from './projectSnapshot.js';
+import { loadCurrentSnapshot } from './projectSnapshot.js';
 import { loadBackgroundFile } from '../../src/app/backgroundLoading.js';
 import { applyTraceToLayer, traceRouteIntoGraph } from '../../src/utils/routeTrace.js';
 import { ImageAsset } from '../../src/models/ImageAsset.js';
@@ -33,7 +33,7 @@ export async function undrawn() {
 /** An app with `waypoints` open, and a crowd added, as the author adds one, unless `scene` has crowds. */
 export async function withRoute(waypoints, scene = null) {
   const app = await undrawn();
-  expect(await loadSnapshot(app, { coordVersion: 9, waypoints, ...(scene ? { scene } : {}) })).toBe(true);
+  expect(await loadCurrentSnapshot(app, { coordVersion: 9, waypoints, ...(scene ? { scene } : {}) })).toBe(true);
   if (!scene) app.addCrowd();
   return app;
 }
@@ -41,7 +41,7 @@ export async function withRoute(waypoints, scene = null) {
 /** A fresh app with `snapshot` open as saved, or null when the loader refuses it. */
 export async function reopened(snapshot) {
   const fresh = await undrawn();
-  return (await loadSnapshot(fresh, snapshot)) ? fresh : null;
+  return (await loadCurrentSnapshot(fresh, snapshot)) ? fresh : null;
 }
 
 /** Trace the route into `layer`, and hear what the author is told. */

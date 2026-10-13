@@ -25,7 +25,7 @@ import { Waypoint } from '../src/models/Waypoint.js';
 import { pointerMixin } from '../src/app/pointer.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 
 const major = (id, extra = {}) => Object.assign(Waypoint.createMajor(0.5, 0.5), { id }, extra);
 const minor = (id, extra = {}) => Object.assign(Waypoint.createMinor(0.5, 0.5), { id }, extra);
@@ -435,7 +435,7 @@ describe('DEF-22: an inserted waypoint never joins a branch', () => {
   async function insertInto(emit) {
     const app = await bootApp();
     await app.ready;
-    expect(await loadSnapshot(app, BRANCHED)).toBe(true);
+    expect(await loadCurrentSnapshot(app, BRANCHED)).toBe(true);
     const before = new Set(app.waypoints);
     emit(app);
     const added = app.waypoints.filter(waypoint => !before.has(waypoint));

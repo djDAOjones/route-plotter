@@ -48,6 +48,7 @@ import {
   finishRecoveryRevision,
   readRecoveryImages,
   recoveryRevisionSnapshot,
+  releaseRestoredImages,
   recoveryRevisionSource,
   reportRecoveryRestore,
   reportRecoveryWrite,
@@ -1553,7 +1554,7 @@ export const persistenceMixin = {
         return refuse(error);
       }
       const abandon = (result) => {
-        images.lease?.release();
+        releaseRestoredImages(images);
         return result;
       };
       if (!isAsyncProjectOperationCurrent(this, operation)) return abandon(false);
@@ -1600,7 +1601,8 @@ export const persistenceMixin = {
             console.warn('Browser recovery could not be rewritten after the restore:', error);
           }
         } finally {
-          images.lease?.release();
+          // The project's own images are pinned now: the read's pins go.
+          releaseRestoredImages(images);
         }
         console.debug(`📷 Loaded ${staged.assets.length} image assets`);
         console.debug('Loaded waypoints:', staged.waypoints.length);
@@ -1617,7 +1619,7 @@ export const persistenceMixin = {
         cover();
         return null;
       });
-      if (failedCommit) images.lease?.release();
+      if (failedCommit) releaseRestoredImages(images);
       // The commit rolled back, so this record was not restored either.
       if (failedCommit) return refuse(failedCommit);
       return true;
