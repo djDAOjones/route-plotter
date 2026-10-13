@@ -18,6 +18,19 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-13 — REL-718 — After DEF-98 the next item is CROWD-08, not DEF-15
+
+**Decision:** REL-718 named DEF-15 as the next item. It is CROWD-08, because PLAN-4, merged first, put its MVP heading ahead of Phase 2. REL-718's release facts stand.
+
+**Rationale:**
+- **What happened:** REL-718 was written before #135 (PLAN-4) landed. It was rebased onto `5ad50cb` to resolve conflicts, but its next-item sentence and its recall answer 4 were not re-read against PLAN-4's placement ("comes first in Current after DEF-98").
+- **The backlog order:** the closed DEF-98 heading, then "MVP — football crowds and mobs — the owner's word of 2026-10-13" with CROWD-08, then Phase 2, where DEF-15 now waits behind CROWD-08.
+- **Recall:** the recheck stored as 8/8 had answer 4 wrong, so it should have scored 1 (7/8). After this correction a local recheck answers 4 with CROWD-08 in the MVP heading (PLAN-4's placement), 8/8, stored as its own trajectory line.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-13 — REL-718 — v3.2.718 ships DEF-98's recovery images; DEF-98 closes, and its heading with it
 
 **Decision:** v3.2.718 is live from deploy `9864efc` (tag `v3.2.718`), released on the owner's word for DEF-98's merge (`e8c361c`, PR #133). DEF-98 closes with its heading, and Phase 2 resumes at DEF-15. The player changed only by minifier renames, so its disk save is waived.
