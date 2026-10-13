@@ -28,7 +28,7 @@ import { describe, test, expect, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole, recordedConsole } from './helpers/consoleGuard.js';
 import {
-  comparableSnapshot, freezeClock, loadSnapshot, LOAD_REFUSED,
+  comparableSnapshot, freezeClock, loadCurrentSnapshot, LOAD_REFUSED,
 } from './helpers/projectSnapshot.js';
 import { PROJECT_MODEL_LIMITS } from '../src/app/persistence.js';
 import { IMAGE_COORDINATES } from '../src/config/constants.js';
@@ -152,7 +152,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
         applyValue(control, bound);
       }
 
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(true);
     });
   }
 
@@ -172,7 +172,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
         applyValue(control, control.options[Math.floor(random() * control.options.length)].value);
       }
 
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(true);
     });
   }
 
@@ -233,7 +233,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
 
       // Was refused: "Invalid waypoint at index 1".
       const saved = app._buildProjectSnapshot();
-      expect(await loadSnapshot(app, saved)).toBe(true);
+      expect(await loadCurrentSnapshot(app, saved)).toBe(true);
       expect(app.waypoints.map(waypoint => [waypoint.imgX, waypoint.imgY])).toEqual([[0.2, 0.35], [1.35, -0.2]]);
       expect(comparableSnapshot(app._buildProjectSnapshot())).toEqual(comparableSnapshot(saved));
     });
@@ -251,7 +251,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       expect(app.waypoints[0].areaHighlight.points).toEqual(drawn);
 
       // Was refused: "Invalid waypoint polygon point at index 0".
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(true);
       expect(app.waypoints[0].areaHighlight.points).toEqual(drawn);
     });
 
@@ -268,7 +268,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       applyValue(document.getElementById('area-shape'), 'circle');
       expect([offImage.areaHighlight.centerX, offImage.areaHighlight.centerY]).toEqual([1.35, -0.2]);
 
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(true);
       const reloaded = app.waypoints.find(waypoint => waypoint.id === offImage.id);
       expect([reloaded.areaHighlight.centerX, reloaded.areaHighlight.centerY]).toEqual([1.35, -0.2]);
     });
@@ -299,9 +299,9 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
         return project;
       };
 
-      expect(await loadSnapshot(app, withFirstAt(MIN, MAX))).toBe(true);
-      expect(await loadSnapshot(app, withFirstAt(MAX, MIN))).toBe(true);
-      expect(await loadSnapshot(app, withFirstAt(MIN - 0.001, 0.5))).toBe(false);
+      expect(await loadCurrentSnapshot(app, withFirstAt(MIN, MAX))).toBe(true);
+      expect(await loadCurrentSnapshot(app, withFirstAt(MAX, MIN))).toBe(true);
+      expect(await loadCurrentSnapshot(app, withFirstAt(MIN - 0.001, 0.5))).toBe(false);
       expect(refusalReason()).toContain('Invalid waypoint at index 0');
     });
 
@@ -360,7 +360,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       app.areaDrawingService._completePolygon();
       expect(first.areaHighlight.points).toEqual([{ x: MIN, y: 0.5 }, { x: 0.5, y: MAX }, { x: MAX, y: MIN }]);
 
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(true);
     });
 
     test('a group dragged to the edge stops exactly on it', async () => {
@@ -378,7 +378,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       });
       app.eventBus.emit('waypoint:drag-ended', { waypoint: first, dragGroup: group });
       expect(first.imgX).toBe(IMAGE_COORDINATES.MAX);
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(true);
     });
 
     test('the range covers the whole canvas at 50% zoom, every preset, images up to 5:1', () => {
@@ -434,7 +434,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       drawing._completePolygon();
       expect(app.waypoints[0].areaHighlight.points).toHaveLength(300);
 
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(false);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(false);
       expect(refusalReason()).toContain('Waypoint polygon-point limit is 256');
     });
 
@@ -453,7 +453,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       applyValue(label, 'x'.repeat(PROJECT_MODEL_LIMITS.MAX_STRING_LENGTH + 1));
       expect(app.selectedWaypoint.label.length).toBe(PROJECT_MODEL_LIMITS.MAX_STRING_LENGTH + 1);
 
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(false);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(false);
       expect(refusalReason()).toContain('Project contains an oversized text value');
     });
 
@@ -478,7 +478,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
           { id: `wp_${'b'.repeat(250)}`, imgX: 0.8, imgY: 0.5, isMajor: true },
         ],
       };
-      expect(await loadSnapshot(app, project)).toBe(true);
+      expect(await loadCurrentSnapshot(app, project)).toBe(true);
       expect(app.waypoints.map(waypoint => waypoint.id.length)).toEqual([253, 253]);
 
       app.addCrowd();
@@ -489,7 +489,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       expect(ids.every(id => id.length <= PROJECT_MODEL_LIMITS.MAX_ENTITY_ID_LENGTH)).toBe(true);
 
       // Was refused: "Invalid graph node id".
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(true);
       // The mapping survives: each node still follows its own waypoint, and
       // the leg between them is still there.
       const reloaded = app.scene.getFlowLayers()[0].graph;
@@ -513,7 +513,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
           { id: 'wp-b', imgX: 1.6, imgY: 0.5, isMajor: true },
         ],
       };
-      expect(await loadSnapshot(app, project)).toBe(true);
+      expect(await loadCurrentSnapshot(app, project)).toBe(true);
 
       app.addCrowd();
       expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
@@ -521,7 +521,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       expect(saved.scene.flowLayers[0].graph.edges[0].controlPoints).toEqual([{ x: 1.25, y: 0.15 }]);
 
       // Widening the model alone would have saved a project load refuses.
-      expect(await loadSnapshot(app, saved)).toBe(true);
+      expect(await loadCurrentSnapshot(app, saved)).toBe(true);
       expect(app.scene.getFlowLayers()[0].graph.getEdges()[0].controlPoints).toEqual([{ x: 1.25, y: 0.15 }]);
     });
 
@@ -548,7 +548,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
           { id: 'wp-b', imgX: 0.6, imgY: 0.5, isMajor: true },
         ],
       };
-      expect(await loadSnapshot(app, project)).toBe(true);
+      expect(await loadCurrentSnapshot(app, project)).toBe(true);
       app.addCrowd();
       expect(app.traceRouteIntoCrowd(app.selectedCrowd)).toBe(true);
       const saved = app._buildProjectSnapshot();
@@ -561,17 +561,17 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       allowConsole(LOAD_REFUSED);
       for (const point of [{ x: -10.5, y: 0.5 }, { x: 11.5, y: 0.5 }, { x: 0.5, y: -10.5 }, { x: 0.5, y: 11.5 }]) {
         const before = recordedConsole().length;
-        expect(await loadSnapshot(app, withBend(point))).toBe(false);
+        expect(await loadCurrentSnapshot(app, withBend(point))).toBe(false);
         expect(recordedConsole().slice(before).some(line => line.includes('Invalid graph control point: expected coordinates from -10 to 11'))).toBe(true);
       }
       // The boundary is exact: one representable step past either end is
       // refused, and each end, and one step inside it, loads as it was.
       const step = 2 ** -49;
       for (const point of [{ x: -10 - step, y: 0.5 }, { x: 11 + step, y: 0.5 }, { x: 0.5, y: -10 - step }, { x: 0.5, y: 11 + step }]) {
-        expect(await loadSnapshot(app, withBend(point))).toBe(false);
+        expect(await loadCurrentSnapshot(app, withBend(point))).toBe(false);
       }
       for (const point of [{ x: 11, y: -10 }, { x: -10, y: 11 }, { x: 11 - step, y: -10 + step }, { x: -10 + step, y: 11 - step }]) {
-        expect(await loadSnapshot(app, withBend(point))).toBe(true);
+        expect(await loadCurrentSnapshot(app, withBend(point))).toBe(true);
         expect(app._buildProjectSnapshot().scene.flowLayers[0].graph.edges[0].controlPoints).toEqual([point]);
       }
     });
@@ -579,7 +579,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
     /** A crowd traced from a route that bends through `bend`. */
     async function tracedThrough(bend, end = { x: 0.8, y: 0.5 }) {
       const app = await bootWithRoute({ waypoints: 0 });
-      expect(await loadSnapshot(app, {
+      expect(await loadCurrentSnapshot(app, {
         coordVersion: 9,
         waypoints: [
           { id: 'wp-a', imgX: 0.3, imgY: 0.5, isMajor: true },
@@ -672,7 +672,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       // Its fields show where it is; left as they are, the app keeps it, and a
       // new value is held to the image, as a bend drawn by hand is.
       const app = await bootWithRoute({ waypoints: 0 });
-      expect(await loadSnapshot(app, {
+      expect(await loadCurrentSnapshot(app, {
         coordVersion: 9,
         waypoints: [
           { id: 'wp-a', imgX: 0.3, imgY: 0.5, isMajor: true },
@@ -750,14 +750,14 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       // which load refuses ("Invalid graphics scale").
       const project = app._buildProjectSnapshot();
       project.styles.graphicsScale = null;
-      expect(await loadSnapshot(app, project)).toBe(true);
+      expect(await loadCurrentSnapshot(app, project)).toBe(true);
       expect(app.styles.graphicsScale).toBe(1);
       expect(app.renderingService._graphicsScale).toBe(1);
       expect(app.elements.graphicsScaleValue.textContent).toBe('1×');
 
       const saved = app._buildProjectSnapshot();
       expect(saved.styles.graphicsScale).toBe(1);
-      expect(await loadSnapshot(app, saved)).toBe(true);
+      expect(await loadCurrentSnapshot(app, saved)).toBe(true);
     });
 
     test('a project file whose Graphics scale is null opens at 1× through Open Project', async () => {
@@ -783,10 +783,10 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       Object.assign(project.styles, { pathThickness: null, dotSize: null });
       Object.assign(project.styles.pathHead, { size: null, rotationOffset: null });
       project.styles.pathGlow = { ...project.styles.pathGlow, intensity: null };
-      expect(await loadSnapshot(app, project)).toBe(true);
+      expect(await loadCurrentSnapshot(app, project)).toBe(true);
       expect([app.styles.pathThickness, app.styles.dotSize, app.styles.pathHead.size,
         app.styles.pathHead.rotationOffset, app.styles.pathGlow.intensity]).toEqual([0, 0, 0, 0, 0]);
-      expect(await loadSnapshot(app, app._buildProjectSnapshot())).toBe(true);
+      expect(await loadCurrentSnapshot(app, app._buildProjectSnapshot())).toBe(true);
     });
 
     test('a Graphics scale of 0 is still refused', async () => {
@@ -795,7 +795,7 @@ describe('what the UI can author, a load must accept (TST-06)', () => {
       const app = await bootWithRoute({ waypoints: 2 });
       const project = app._buildProjectSnapshot();
       project.styles.graphicsScale = 0;
-      expect(await loadSnapshot(app, project)).toBe(false);
+      expect(await loadCurrentSnapshot(app, project)).toBe(false);
       expect(refusalReason()).toContain('Invalid graphics scale');
     });
 

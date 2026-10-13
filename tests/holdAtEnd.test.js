@@ -16,7 +16,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { cascade, declaration, readStyle, resolveValue, tokensFor } from './helpers/cssTokens.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { clearProject } from '../src/app/projectReset.js';
 import { PlayerApp } from '../src/player/PlayerApp.js';
 import { VideoExporter, createVideoFramePlan } from '../src/services/VideoExporter.js';
@@ -371,7 +371,7 @@ describe('the HTML player honours the hold', () => {
       await app.ready;
       document.getElementById('splash-close').click();
       const example = buildExampleProjects().find(each => each.id === 'uon-open-day');
-      expect(await loadSnapshot(app, structuredClone(example.project))).toBe(true);
+      expect(await loadCurrentSnapshot(app, structuredClone(example.project))).toBe(true);
       await settled();
       const [crowd] = app.scene.getFlowLayers();
       crowd.emitters[0].update({ lifecycleMode: 'respawn' });
@@ -431,7 +431,7 @@ describe('the hold is the project\'s', () => {
     expect(autoSave.mock.calls.at(-1)[0].styles.holdAtEndMs).toBe(4500);
 
     setHold(0);
-    expect(await loadSnapshot(app, saved)).toBe(true);
+    expect(await loadCurrentSnapshot(app, saved)).toBe(true);
     await settled();
     expect(durations(app)).toEqual(first);
     expect(app.styles.holdAtEndMs).toBe(4500);
@@ -448,7 +448,7 @@ describe('the hold is the project\'s', () => {
     const scene = new Scene();
     scene.addFlowLayer({ name: 'Crowd 1', guideType: 'route' })
       .addEmitter({ ...SLOW_CROWD, dotCount: 30, lifecycleMode: 'disappear' });
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [
         { id: 'one', imgX: 0.1, imgY: 0.5, isMajor: true, pauseMode: 'none', pauseTime: 0 },
@@ -480,7 +480,7 @@ describe('the hold is the project\'s', () => {
     await app.ready;
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     for (const holdAtEndMs of [-1, 10001, 'soon']) {
-      expect(await loadSnapshot(app, { coordVersion: 9, waypoints: [], styles: { holdAtEndMs } }), String(holdAtEndMs))
+      expect(await loadCurrentSnapshot(app, { coordVersion: 9, waypoints: [], styles: { holdAtEndMs } }), String(holdAtEndMs))
         .toBe(false);
     }
     expect(warn).toHaveBeenCalled();
@@ -569,7 +569,7 @@ describe('"Wait here for this crowd" is retired', () => {
     expect(document.getElementById('crowd-fit-wait-btn')).toBeNull();
     expect(app.fitRouteWaitToCrowd).toBeUndefined();
 
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [
         { id: 'one', imgX: 0.1, imgY: 0.5, isMajor: true, pauseMode: 'none', pauseTime: 0 },

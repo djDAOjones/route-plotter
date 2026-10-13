@@ -1389,9 +1389,10 @@ export const wiringControllersMixin = {
     });
 
     // Generic toast request from components (e.g. shift-delete undo hint);
-    // `priority` is the announcement's (assertive for an error, UI-06 J-05)
-    this.eventBus.on('ui:toast', ({ message, duration, priority }) => {
-      this.showToast(message, duration, null, { priority });
+    // `priority` is the announcement's (assertive for an error, UI-06 J-05);
+    // `essential`, one routine messages never displace (DEF-98)
+    this.eventBus.on('ui:toast', ({ message, duration, priority, essential = false }) => {
+      this.showToast(message, duration, null, essential ? { priority, essential } : { priority });
     });
 
     // Announcement request from components (UIController's list reorders):

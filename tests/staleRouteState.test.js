@@ -16,7 +16,7 @@
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp, tipSeen } from './helpers/bootApp.js';
-import { loadSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot, LOAD_REFUSED } from './helpers/projectSnapshot.js';
 import { allowConsole } from './helpers/consoleGuard.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { trunkWaypoints } from '../src/utils/routeBranches.js';
@@ -45,7 +45,7 @@ async function openDayMidGrow() {
     // A leg at its own speed, so the route has speed segments to leave behind.
     if (waypoint.id === 'ex-uon-2') waypoint.segmentSpeed = 2;
   }
-  expect(await loadSnapshot(app, project)).toBe(true);
+  expect(await loadCurrentSnapshot(app, project)).toBe(true);
   app.invalidateAnimationTiming();
   const engine = app.animationEngine;
   const grow = engine.beaconSchedules.find(each => each.style === 'grow');
@@ -238,7 +238,7 @@ test('undo back to one waypoint, and redo to two, each leave only what their rou
 test('a constant-time project keeps its duration with no route, and plays when a second waypoint is added', async () => {
   const app = await bootApp();
   await app.ready;
-  expect(await loadSnapshot(app, {
+  expect(await loadCurrentSnapshot(app, {
     coordVersion: 9,
     waypoints: [{ id: 'first', imgX: 0.2, imgY: 0.2, isMajor: true }],
     animationState: { mode: 'constant-time', speed: 200, duration: 12000 },
@@ -300,7 +300,7 @@ test('Clear All leaves nothing of the route: no branch, structure, anchors, time
 test('a project of one waypoint, opened over a route, leaves nothing of that route', async () => {
   const { app } = await openDayMidGrow();
 
-  expect(await loadSnapshot(app, {
+  expect(await loadCurrentSnapshot(app, {
     coordVersion: 9,
     waypoints: [{ id: 'only', imgX: 0.5, imgY: 0.5, isMajor: true, beaconStyle: 'grow' }],
   })).toBe(true);
@@ -313,7 +313,7 @@ test('a project of one waypoint, opened over a route, leaves nothing of that rou
 test.each([['in one turn', false], ['a moment apart', true]])('a constant-time route deleted down to one and undone (the undos %s) gets back its timeline, as it had it', async (_, apart) => {
   const app = await bootApp();
   await app.ready;
-  expect(await loadSnapshot(app, {
+  expect(await loadCurrentSnapshot(app, {
     coordVersion: 9,
     animationState: { mode: 'constant-time', speed: 200, duration: 12000 },
     waypoints: [
@@ -364,7 +364,7 @@ test('an outline edit to the one waypoint left moves the crowd node anchored to 
   const app = await bootApp();
   await app.ready;
   const project = structuredClone(buildExampleProjects().find(each => each.id === 'uon-open-day').project);
-  expect(await loadSnapshot(app, project)).toBe(true);
+  expect(await loadCurrentSnapshot(app, project)).toBe(true);
   const layer = app.scene.getFlowLayers().find(each => each.graph.getNodes().some(node => node.anchorWaypointId));
   const node = layer.graph.getNodes().find(each => each.anchorWaypointId);
   const anchor = app.getWaypointById(node.anchorWaypointId);
@@ -407,7 +407,7 @@ test.each(OPENED_OVER)('a constant-time project of one waypoint, opened %s, keep
   const { app } = await openDayMidGrow();
   await before(app);
 
-  expect(await loadSnapshot(app, authoredConstantTime([{ id: 'first', imgX: 0.2, imgY: 0.2, isMajor: true }]))).toBe(true);
+  expect(await loadCurrentSnapshot(app, authoredConstantTime([{ id: 'first', imgX: 0.2, imgY: 0.2, isMajor: true }]))).toBe(true);
   app.eventBus.emit('waypoint:add', { imgX: 0.8, imgY: 0.8, isMajor: true });
   await timingSettled();
 
@@ -419,7 +419,7 @@ test.each(OPENED_OVER)('a constant-time project of two waypoints, opened %s, kee
   const { app } = await openDayMidGrow();
   await before(app);
 
-  expect(await loadSnapshot(app, authoredConstantTime([
+  expect(await loadCurrentSnapshot(app, authoredConstantTime([
     { id: 'first', imgX: 0.2, imgY: 0.2, isMajor: true },
     { id: 'second', imgX: 0.8, imgY: 0.8, isMajor: true },
   ]))).toBe(true);
@@ -445,7 +445,7 @@ async function opened(project, { preview = true } = {}) {
   localStorage.getItem.mockImplementation(tipSeen());
   const app = await bootApp();
   await app.ready;
-  expect(await loadSnapshot(app, project)).toBe(true);
+  expect(await loadCurrentSnapshot(app, project)).toBe(true);
   if (!preview) app.eventBus.emit('motion:preview-mode-change', false);
   expect(app.previewMode).toBe(preview);
   return app;
@@ -476,7 +476,7 @@ function recoveryOnLeaving() {
 async function reopenedDuration(recovery) {
   const app = await bootApp();
   await app.ready;
-  expect(await loadSnapshot(app, recovery)).toBe(true);
+  expect(await loadCurrentSnapshot(app, recovery)).toBe(true);
   await timingSettled();
   return app.animationEngine.state.duration;
 }
@@ -554,7 +554,7 @@ test.each([
     { id: 'second', imgX: 0.8, imgY: 0.8, isMajor: true },
   ]);
   incoming.motionSettings = { backgroundVisibility: 'always-show', pathVisibility: 'always-show' };
-  expect(await loadSnapshot(app, incoming)).toBe(true);
+  expect(await loadCurrentSnapshot(app, incoming)).toBe(true);
   await timingSettled();
 
   const fresh = await opened(incoming);
@@ -573,7 +573,7 @@ test('after an open that failed and was rolled back, the next move of a derived 
   const before = app.animationEngine.state.duration;
   allowConsole(LOAD_REFUSED);
   vi.spyOn(app, 'pruneImageAssets').mockImplementationOnce(() => { throw new Error('late failure'); });
-  expect(await loadSnapshot(app, authoredConstantTime([{ id: 'only', imgX: 0.5, imgY: 0.5, isMajor: true }]))).toBe(false);
+  expect(await loadCurrentSnapshot(app, authoredConstantTime([{ id: 'only', imgX: 0.5, imgY: 0.5, isMajor: true }]))).toBe(false);
   expect(app.waypoints.map(each => each.id)).toEqual(['a', 'b', 'c']);
 
   move(app, 'b', 0.25, 0.7);
@@ -755,7 +755,7 @@ test.each([
   await timingSettled();
   const incoming = authoredConstantTime([{ id: 'first', imgX: 0.2, imgY: 0.2, isMajor: true }]);
   incoming.motionSettings = { backgroundVisibility: 'always-show', pathVisibility: 'always-show' };
-  expect(await loadSnapshot(app, incoming)).toBe(true);
+  expect(await loadCurrentSnapshot(app, incoming)).toBe(true);
   app.eventBus.emit('waypoint:add', { imgX: 0.8, imgY: 0.8, isMajor: true });
   await timingSettled();
 

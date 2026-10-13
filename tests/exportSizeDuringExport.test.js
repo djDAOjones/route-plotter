@@ -36,7 +36,7 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 import { loadBackgroundFile } from '../src/app/backgroundLoading.js';
 import { VideoExporter } from '../src/services/VideoExporter.js';
@@ -84,7 +84,7 @@ async function withBackground(pathOnly) {
   const app = await bootApp();
   await app.ready;
   document.getElementById('splash-close').click();
-  expect(await loadSnapshot(app, authoredExtrasProject())).toBe(true);
+  expect(await loadCurrentSnapshot(app, authoredExtrasProject())).toBe(true);
   const image = Object.assign(new Image(), { naturalWidth: IMAGE.width, naturalHeight: IMAGE.height, ...IMAGE, src: BACKGROUND });
   vi.spyOn(app, 'loadImageFileAsset').mockResolvedValue({ base64: 'data:image/png;base64,AA==', getImageElement: async () => image });
   expect(await loadBackgroundFile(app, new File(['x'], 'landscape.png', { type: 'image/png' }))).toBe(true);

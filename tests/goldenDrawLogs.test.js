@@ -43,7 +43,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, test, expect, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
-import { freezeClock, loadSnapshot } from './helpers/projectSnapshot.js';
+import { freezeClock, loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { differingLines, discardFrame, frameAt, setUpFrame, takeFrame } from './helpers/drawLog.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 import { buildExampleProjects } from '../src/examples/index.js';
@@ -94,7 +94,7 @@ function fixtures() {
 async function appWithFixture(fixture) {
   const app = await bootApp();
   await app.ready;
-  expect(await loadSnapshot(app, fixture.project)).toBe(true);
+  expect(await loadCurrentSnapshot(app, fixture.project)).toBe(true);
   expect(await loadExampleBackground(app, `./${fixture.background}`, { autoSave: false })).toBe(true);
   expect(app.background.image).not.toBeNull();
 

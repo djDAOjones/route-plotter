@@ -42,6 +42,22 @@ import {
 } from './unrestoredAutosave.js';
 import { clearRouteSchedules, settleSavedTiming } from './pathTiming.js';
 import { regionOperation } from './regionLines.js';
+import {
+  captureRecoveryRevision,
+  endBackgroundPrompt,
+  finishRecoveryRevision,
+  readRecoveryImages,
+  recoveryRevisionSnapshot,
+  releaseRestoredImages,
+  recoveryRevisionSource,
+  reportRecoveryRestore,
+  reportRecoveryWrite,
+  resetRecoveryWarnings,
+  revisionIsDeferred,
+  revisionOmissions,
+  scheduleRecoveryGarbage,
+  settleRecoveryRevision,
+} from './recoveryImages.js';
 
 export const PROJECT_MODEL_LIMITS = Object.freeze({
   MAX_ENTITY_ID_LENGTH: ENTITY_ID_LIMITS.MAX_LENGTH,
@@ -568,8 +584,9 @@ function getUndoBaseline(staged) {
  *
  * The historical `_autosaveBackgroundCache` field is actually a short-lived
  * source-byte cache. It must never be populated by drawing the image to a
- * canvas: ZIP and HTML exports preserve the user's PNG/JPEG/WebP bytes, while
- * browser recovery deliberately excludes them.
+ * canvas: ZIP and HTML exports preserve the user's PNG/JPEG/WebP bytes, and
+ * browser recovery keeps those same bytes in its image store (DEF-98), so a
+ * restored background is exported as it was chosen.
  *
  * @param {Object} app
  * @param {string} [action]
@@ -610,60 +627,29 @@ function getSerializedByteLength(value) {
   return new TextEncoder().encode(serialized).length;
 }
 
-function stripAssetReferences(modelSnapshot) {
-  return {
-    ...modelSnapshot,
-    waypoints: modelSnapshot.waypoints.map(waypoint => ({
-      ...waypoint,
-      customImage: null,
-      customImageAssetId: null,
-      markerStyle: waypoint.markerStyle === 'custom' ? 'dot' : waypoint.markerStyle,
-    })),
-    styles: {
-      ...modelSnapshot.styles,
-      pathHead: modelSnapshot.styles?.pathHead
-        ? {
-            ...modelSnapshot.styles.pathHead,
-            style: modelSnapshot.styles.pathHead.style === 'custom' ? 'arrow' : modelSnapshot.styles.pathHead.style,
-            image: null,
-            imageAssetId: null,
-          }
-        : modelSnapshot.styles?.pathHead,
-    },
-  };
-}
-
 /**
- * Build a privacy-bounded browser recovery snapshot. Recovery keeps the route
- * model but never original bitmap bytes, original image filenames, or custom
- * image references that cannot be hydrated without those bytes.
+ * Capture the project for browser recovery: one revision, the model, the
+ * images it references and their names at once (DEF-98,
+ * `src/app/recoveryImages.js`). Recovery keeps each image the live project
+ * references, its bytes in the browser's image store and its file name in
+ * the record, within limits no larger than a project file's; an image not
+ * kept takes the built-in fallback it always had in the record and is
+ * warned of by name. The record as it stands now must fit the 4 MiB limit.
+ * @returns {{revision: Object|null, snapshot: Object|null, error: Error|null}}
  */
-function prepareAutosaveSnapshot(app) {
+function prepareRecoveryWrite(app) {
   settleSavedTiming(app);
-  const hasAssets = app.imageAssetService?.getAssetCount?.() > 0;
-  const hasBackground = Boolean(app.background?.image);
+  let revision = null;
   try {
-    const modelSnapshot = app._buildProjectSnapshot({ includeAssets: false });
-    const snapshot = {
-      ...stripAssetReferences(modelSnapshot),
-      imageAssets: [],
-    };
+    revision = captureRecoveryRevision(app);
+    const snapshot = recoveryRevisionSnapshot(app, revision);
     if (getSerializedByteLength(snapshot) > STORAGE_LIMITS.AUTOSAVE_SERIALIZED_MAX) {
       throw new Error('Project model exceeds the autosave storage limit');
     }
-    return {
-      snapshot,
-      error: null,
-      omittedAssets: hasAssets,
-      omittedBackground: hasBackground,
-    };
+    return { revision, snapshot, error: null };
   } catch (error) {
-    return {
-      snapshot: null,
-      error,
-      omittedAssets: hasAssets,
-      omittedBackground: hasBackground,
-    };
+    finishRecoveryRevision(app, revision);
+    return { revision: null, snapshot: null, error };
   }
 }
 
@@ -675,38 +661,54 @@ function prepareAutosaveSnapshot(app) {
 // before the first one's warning was read) is read once, after both.
 const RECOVERY_NOTICE = Object.freeze({ essential: true });
 
-function reportAutosaveOmissions(app, { omittedAssets, omittedBackground }) {
-  const newlyOmittedAssets = omittedAssets && !app._autosaveAssetWarningShown;
-  const newlyOmittedBackground = omittedBackground && !app._autosaveBackgroundWarningShown;
-  app._autosaveAssetWarningShown = omittedAssets;
-  app._autosaveBackgroundWarningShown = omittedBackground;
-
-  if (newlyOmittedAssets && newlyOmittedBackground) {
-    app.announce('Browser recovery excludes the background and custom images. Save a project file to preserve them.',
-      'polite', RECOVERY_NOTICE);
-  } else if (newlyOmittedAssets) {
-    app.announce('Browser recovery excludes custom images. Save a project file to preserve them.',
-      'polite', RECOVERY_NOTICE);
-  } else if (newlyOmittedBackground) {
-    app.announce('Browser recovery excludes the background. Save a project file to preserve it.',
-      'polite', RECOVERY_NOTICE);
+/**
+ * A deferred record was written final: the status line, the images it did
+ * not keep, and a tidy of the image store (DEF-98).
+ */
+function recoveryWritten(app, revision, outcome) {
+  if (outcome?.provisional) {
+    if (outcome.ok === false) reportAutosaveFailure(app);
+    return;
+  }
+  if (outcome?.ok) {
+    app._autosaveFailureWarningShown = false;
+    app.setStatus?.(STATUS_RECOVERED);
+    speakRecovered(app);
+    reportRecoveryWrite(app, revisionOmissions(revision));
+    scheduleRecoveryGarbage(app);
+  } else {
+    reportAutosaveFailure(app);
   }
 }
 
 function replaceImmediateRecovery(app) {
   if (!app.storageService.saveAutoSave) return { attempted: false, saved: false };
 
-  const prepared = prepareAutosaveSnapshot(app);
-  reportAutosaveOmissions(app, prepared);
+  const prepared = prepareRecoveryWrite(app);
   if (prepared.error) console.warn('Browser recovery snapshot could not be prepared:', prepared.error);
 
   let saved = false;
-  if (prepared.snapshot) {
+  const { revision } = prepared;
+  if (revision) {
+    // Images still being stored: the record is written at once, naming those
+    // stored, so the previous session cannot come back; the final record
+    // follows once they are (DEF-98). Otherwise it is final now.
+    const deferred = revisionIsDeferred(revision) && settleRecoveryRevision(app, revision) !== null &&
+      typeof app.storageService.saveAutoSaveDeferred === 'function';
+    if (!deferred) reportRecoveryWrite(app, revisionOmissions(revision));
     try {
-      saved = app.storageService.saveAutoSave(prepared.snapshot);
+      if (deferred) {
+        app._recoveryRevision = revision;
+        saved = app.storageService.saveAutoSaveDeferred(recoveryRevisionSource(app, revision),
+          outcome => recoveryWritten(app, revision, outcome));
+      } else {
+        saved = app.storageService.saveAutoSave(prepared.snapshot);
+        if (saved) scheduleRecoveryGarbage(app);
+      }
     } catch (error) {
       console.error('Failed to write browser recovery:', error);
     }
+    if (!deferred || !saved) finishRecoveryRevision(app, revision);
   }
   if (!saved) app.storageService.clearAutoSave?.();
   return { attempted: true, saved };
@@ -781,14 +783,25 @@ function speakRecovered(app) {
  */
 function writeRecovery(app) {
   try {
-    const prepared = prepareAutosaveSnapshot(app);
-    reportAutosaveOmissions(app, prepared);
+    const prepared = prepareRecoveryWrite(app);
     if (prepared.error) console.warn('Auto-save recovery was reduced:', prepared.error);
-    if (!prepared.snapshot) {
+    if (!prepared.revision) {
       app.storageService.cancelAutoSave?.();
       reportAutosaveFailure(app);
       return { ok: false, error: prepared.error };
     }
+
+    const { revision } = prepared;
+    if (revisionIsDeferred(revision) && typeof app.storageService.autoSaveDeferred === 'function') {
+      // It names images: what it may name is decided as it is written, once
+      // they are stored, and the `pagehide` flush writes what is stored by
+      // then (DEF-98). What it left out is said once it is written.
+      app._recoveryRevision = revision;
+      return app.storageService.autoSaveDeferred(recoveryRevisionSource(app, revision),
+        outcome => recoveryWritten(app, revision, outcome));
+    }
+    finishRecoveryRevision(app, revision);
+    reportRecoveryWrite(app, revisionOmissions(revision));
 
     // StorageService reports the outcome of the actual delayed write. A
     // quota/security failure must never be presented or cached as success.
@@ -797,6 +810,7 @@ function writeRecovery(app) {
         app._autosaveFailureWarningShown = false;
         app.setStatus?.(STATUS_RECOVERED);
         speakRecovered(app);
+        scheduleRecoveryGarbage(app);
       } else {
         reportAutosaveFailure(app);
       }
@@ -847,6 +861,10 @@ function captureLiveState(app) {
     undo: app.undoService?.createSnapshot?.() || null,
     isDirty: app._isDirty,
     backgroundCache: app._autosaveBackgroundCache,
+    // What browser recovery keeps of the background and what a restore left
+    // out: staged with the project, put back with it (DEF-98).
+    backgroundName: app._backgroundName ?? null,
+    recoveryCarried: app._recoveryCarried ?? [],
     majorWaypointsCache: app._majorWaypointsCache,
     waypointProgressCache: app._waypointProgressCache,
     timingDerived: app._timingDerived,
@@ -889,6 +907,8 @@ function restoreLiveState(app, previous) {
   app.renderReference = previous.renderReference;
   app._isDirty = previous.isDirty;
   app._autosaveBackgroundCache = previous.backgroundCache;
+  app._backgroundName = previous.backgroundName;
+  app._recoveryCarried = previous.recoveryCarried;
   app._majorWaypointsCache = previous.majorWaypointsCache;
   app._waypointProgressCache = previous.waypointProgressCache;
   app._timingDerived = previous.timingDerived;
@@ -1050,6 +1070,10 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     app._autosaveBackgroundCache = staged.background.image && staged.backgroundSourceDataURL
       ? { image: staged.background.image, dataURL: staged.backgroundSourceDataURL }
       : null;
+    // The background's file name, kept with it in browser recovery, and
+    // what the record being restored left out (DEF-98).
+    app._backgroundName = staged.background.image ? (staged.backgroundName ?? null) : null;
+    app._recoveryCarried = staged.recoveryCarried ?? [];
 
     app.updateImageTransform?.(staged.background.image ?? null);
     // The previous project's schedules and timeline (its intro, comet tail
@@ -1126,9 +1150,10 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
 function completeProjectReplacement(app) {
   // Warnings are once-per-project, not once per browser session. A freshly
   // opened/recovered baseline must be able to warn about its own omissions.
-  app._autosaveAssetWarningShown = false;
-  app._autosaveBackgroundWarningShown = false;
+  resetRecoveryWarnings(app);
   app._autosaveFailureWarningShown = false;
+  // The last project's prompt for its background is not this one's (DEF-98).
+  endBackgroundPrompt(app);
   // And its first change is heard (UI-06 B-17).
   beginStatusEpisode(app);
 
@@ -1229,7 +1254,10 @@ export const persistenceMixin = {
       const file = typeof File === 'function'
         ? new File([blob], `${example.id}.zip`, { type: 'application/zip' })
         : Object.assign(blob, { name: `${example.id}.zip` });
-      return await this.loadProject(file);
+      // Its background is the bundled image, by that image's file name, never
+      // the archive's (DEF-98).
+      const backgroundName = decodeURIComponent(String(example.backgroundSource || '').split('/').pop() || '') || null;
+      return await this.loadProject(file, { backgroundName });
     } catch (err) {
       console.error('Failed to open example project:', err);
       // One message, with the reason, heard once as the toast it is (UI-06 J-05).
@@ -1245,8 +1273,10 @@ export const persistenceMixin = {
   /**
    * Load project from ZIP file
    * @param {File} file - ZIP file to load
+   * @param {{backgroundName?: string|null}} [options] - The background's file
+   *   name, where the caller knows it better than the archive does (an example)
    */
-  async loadProject(file) {
+  async loadProject(file, { backgroundName = null } = {}) {
     const operation = beginAsyncProjectOperation(this, 'project-load', { replaceProject: true });
     // No background request made for the project this replaces can commit now.
     releaseBackgroundBusy();
@@ -1264,6 +1294,9 @@ export const persistenceMixin = {
       });
       if (!isAsyncProjectOperationCurrent(this, operation)) return false;
       staged.backgroundSourceDataURL = imported.backgroundBase64 || null;
+      // The background's file name as the project file carries it, never the
+      // project file's own name (DEF-98; Codex, brief round 1, 7).
+      staged.backgroundName = backgroundName ?? imported.backgroundName ?? null;
       // The commit and its message, one operation after the awaits above: the
       // message says the change, so the regions' lines the open moves are not
       // said again; a selection made while it waited is (UI-06 PR 6; Codex r2
@@ -1377,8 +1410,9 @@ export const persistenceMixin = {
    * Build the canonical coordVersion-9 project snapshot.
    *
    * Single source of the project model shape. Explicit exports can include
-   * custom image assets; browser recovery calls this with includeAssets=false
-   * and then strips unusable custom-image references.
+   * custom image assets; browser recovery calls this with includeAssets=false,
+   * keeps the images it references in its own store, and strips only the
+   * references to images it could not keep (DEF-98, recoveryImages.js).
    *
    * @param {Object} [options]
    * @param {boolean} [options.includeAssets=true] - Include custom image assets.
@@ -1493,6 +1527,8 @@ export const persistenceMixin = {
       console.warn('Autosave was not restored; current state was left unchanged:', error);
       return keepUnrestoredAutosave(this, text);
     };
+    // What the restore pinned, let go of on every way out (DEF-98).
+    let restoring = null;
     try {
       let data;
       try {
@@ -1507,13 +1543,45 @@ export const persistenceMixin = {
         return keepUnrestoredAutosave(this, text);
       }
 
-      let staged;
+      // The images its manifest names, read from the browser's image store
+      // and checked as an import checks them; an image that cannot come back
+      // is isolated, its references alone taking the fallback (DEF-98). A
+      // newer project opened, or the project cleared, while they are read
+      // supersedes this restore.
+      const operation = beginAsyncProjectOperation(this, 'recovery-restore');
+      // A failure after an await is this restore's only while it is still
+      // current: one a Clear All or a newer Open superseded keeps no record and
+      // says nothing, since the project it would restore is gone (Codex, code
+      // review round 2, 4). Either way what it pinned is let go.
+      let images;
       try {
-        staged = await stageProject(this, data);
+        images = await readRecoveryImages(this, data);
+        restoring = images;
       } catch (error) {
+        if (!isAsyncProjectOperationCurrent(this, operation)) return false;
         return refuse(error);
       }
-      staged.backgroundSourceDataURL = data.backgroundImage || null;
+      const abandon = (result) => {
+        releaseRestoredImages(images);
+        return result;
+      };
+      if (!isAsyncProjectOperationCurrent(this, operation)) return abandon(false);
+
+      let staged;
+      try {
+        staged = await stageProject(this, images.data, images.kind === 'manifest'
+          ? { backgroundBase64: images.backgroundBase64, imageAssets: images.imageAssets }
+          : {});
+      } catch (error) {
+        if (!isAsyncProjectOperationCurrent(this, operation)) return abandon(false);
+        return abandon(refuse(error));
+      }
+      if (!isAsyncProjectOperationCurrent(this, operation)) return abandon(false);
+      staged.backgroundSourceDataURL = images.kind === 'manifest'
+        ? images.backgroundBase64
+        : (data.backgroundImage || null);
+      staged.backgroundName = images.backgroundName;
+      staged.recoveryCarried = images.omitted;
       // The commit and its message, one operation: the message says the
       // change, so the regions' lines the restore moves are not said again; a
       // commit that rolled back says no such message (UI-06 PR 6; Codex r2 on
@@ -1524,11 +1592,27 @@ export const persistenceMixin = {
         } catch (error) {
           return error;
         }
-        completeProjectReplacement(this);
-        // Legacy recovery points may contain image bytes and original filenames.
-        // Restore them once, then immediately replace or clear the local record
-        // so browser storage conforms to the model-only policy going forward.
-        const recovery = replaceImmediateRecovery(this);
+        let recovery = { attempted: false, saved: false };
+        try {
+          completeProjectReplacement(this);
+          // The project is live: recovery's own warnings and writes never
+          // turn this restore into a failure (DEF-98).
+          try {
+            // What did not come back is said, and a background that did not
+            // is offered again.
+            reportRecoveryRestore(this, images);
+            // Legacy recovery points may contain image bytes and original
+            // filenames: the record is rewritten at once in this release's
+            // form, naming them in the image store, so a second reload keeps
+            // them.
+            recovery = replaceImmediateRecovery(this);
+          } catch (error) {
+            console.warn('Browser recovery could not be rewritten after the restore:', error);
+          }
+        } finally {
+          // The project's own images are pinned now: the read's pins go.
+          releaseRestoredImages(images);
+        }
         console.debug(`📷 Loaded ${staged.assets.length} image assets`);
         console.debug('Loaded waypoints:', staged.waypoints.length);
         console.debug('Loaded flow layers:', staged.scene.getFlowLayers().length);
@@ -1544,6 +1628,7 @@ export const persistenceMixin = {
         cover();
         return null;
       });
+      if (failedCommit) releaseRestoredImages(images);
       // The commit rolled back, so this record was not restored either.
       if (failedCommit) return refuse(failedCommit);
       return true;
@@ -1551,6 +1636,8 @@ export const persistenceMixin = {
       // After the commit: the project is live, so there is no record to keep.
       console.warn('Restoring the autosave did not finish after it was loaded:', error);
       return false;
+    } finally {
+      releaseRestoredImages(restoring);
     }
   },
 };

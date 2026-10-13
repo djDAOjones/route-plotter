@@ -106,7 +106,7 @@ import { setTimeout as realDelay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { bootApp, retireApp } from './helpers/bootApp.js';
-import { FIXED_NOW, freezeClock, loadSnapshot } from './helpers/projectSnapshot.js';
+import { FIXED_NOW, freezeClock, loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject, PIXEL_DATA_URL } from './fixtures/authoredExtras.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { loadExampleBackground } from '../src/app/backgroundLoading.js';
@@ -390,7 +390,7 @@ async function bootReturning() {
 /**
  * A booted app with a fixture loaded, its map in place, and nothing pending.
  *
- * The fixture is loaded through the recovery path (`loadSnapshot`), which
+ * The fixture is loaded through the recovery path (`loadCurrentSnapshot`), which
  * leaves the transport paused at the start. Recovery never holds the map, so
  * a stub of the real one's size is given through `loadExampleBackground`'s
  * own `loadAsset` seam. Loading it sets the export resolution to its native
@@ -406,7 +406,7 @@ async function bootWith(fixtureName, hooks = {}) {
   const app = await bootReturning();
   oneFramePerRequest(app);
   hooks.booted?.(app);
-  expect(await loadSnapshot(app, fixture.project)).toBe(true);
+  expect(await loadCurrentSnapshot(app, fixture.project)).toBe(true);
 
   const image = stubImage(fixture.image);
   const loaded = await loadExampleBackground(app, './images/fixture-map.png', {

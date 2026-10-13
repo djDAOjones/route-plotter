@@ -11,6 +11,7 @@ ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="he
 ## #head-upload · choose picked.png
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+  announced "Browser recovery could not keep 2 images. The path head image, picked.png, shown as an arrow: this browser cannot store images for recovery. The marker image f…[277 chars, c23fd5d8]
   model ~ styles.pathHead.imageAssetId: "asset-extras-head" → "9a30e678948ebf32"
   model + imageAssets[2].id: "9a30e678948ebf32"
   model + imageAssets[2].base64: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
@@ -19,8 +20,10 @@ settled:
   model + imageAssets[2].height: 100
   model + imageAssets[2].mimeType: "image/png"
   model + imageAssets[2].size: 68
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10077 chars, dbc29ff1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10065 chars, 97459d89]
   ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
   ui ~ #head-filename: p :text="asset-extras-head.png" → p :text="picked.png"
+  ui ~ #toast-container>div[0]: div class="toast is-visible" :text="Browser recovery could not keep 2 images. The path head image, asset-extras-head.png: this browser cannot store images for recovery. The marker image for Extra…[269 chars, 7b42e728] → div class="toast is-visible" :text="Browser recovery could not keep 2 images. The path head image, picked.png, shown as an arrow: this browser cannot store images for recovery. The marker image f…[277 chars, c23fd5d8]
 
 ## #custom-head-controls>button[1] · click
 app ~ focus: "body" → "#custom-head-controls>button[1]"
@@ -39,7 +42,7 @@ ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="he
 ui ~ #head-rotation-mode: select aria-describedby="head-rotation-mode-tip" :value="auto" → select aria-describedby="head-rotation-mode-tip" :value="fixed"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9723 chars, a6b44444] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9724 chars, fbc36da9]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10077 chars, dbc29ff1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10078 chars, 67e11eac]
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
 ## #head-rotation-offset-control>button[0] · click
@@ -60,7 +63,7 @@ ui ~ #head-rotation-offset: input aria-describedby="head-rotation-offset-value h
 ui ~ #head-rotation-offset-value: span class="range-readout" :text="45°" → span class="range-readout" :text="-60°"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9723 chars, a6b44444] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9724 chars, c72981a0]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10077 chars, dbc29ff1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10078 chars, 9adcbafd]
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
 ## #path-glow-intensity · disabled, not operated

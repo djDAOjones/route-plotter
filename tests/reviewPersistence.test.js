@@ -10,6 +10,13 @@ import { UndoService } from '../src/services/UndoService.js';
 import { invalidateProjectOperations } from '../src/app/operationGeneration.js';
 import { localStorageMock } from './setup.js';
 import { allowConsole } from './helpers/consoleGuard.js';
+import {
+  RecoveryImageStore,
+  createLocalLockManager,
+  createMemoryRecoveryBackend,
+} from '../src/services/RecoveryImageStore.js';
+import { recoveryImagesIdle } from '../src/app/recoveryImages.js';
+import { nodeDigest, releaseStatefulStorage, useStatefulStorage } from './helpers/recoveryHarness.js';
 
 const PIXEL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
@@ -26,6 +33,16 @@ function makeAsset(id, name = `${id}.png`) {
   });
   asset._imageElement = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
   return asset;
+}
+
+/**
+ * The record without its recovery manifest (DEF-98): the model, which still
+ * carries no image bytes or file names where no image store can keep them.
+ * The manifest is where a file name now lives, with why it was not kept.
+ */
+function modelOf(record) {
+  const { recoveryImages: _manifest, ...model } = record;
+  return model;
 }
 
 function makeApp() {
@@ -604,7 +621,11 @@ describe('transactional project loading', () => {
     expect(recovery.styles.pathHead).toMatchObject({
       style: 'arrow', image: null, imageAssetId: null,
     });
-    expect(JSON.stringify(recovery)).not.toContain('marker.png');
+    // DEF-98: the file name is kept, in the manifest, with why the image was not.
+    expect(JSON.stringify(modelOf(recovery))).not.toContain('marker.png');
+    expect(recovery.recoveryImages.omitted).toEqual([
+      expect.objectContaining({ name: 'marker.png', reason: 'unavailable', assetId: 'new-asset' }),
+    ]);
   });
 
   test('a prune failure during commit restores the prior model, assets and history', async () => {
@@ -841,7 +862,12 @@ describe('transactional project loading', () => {
     });
     const serialized = JSON.stringify(saved.snapshot);
     expect(serialized).not.toContain(PIXEL_PNG);
-    expect(serialized).not.toContain('private-original-filename.png');
+    // DEF-98: with no image store, the file name is kept in the manifest alone, with why.
+    expect(JSON.stringify(modelOf(saved.snapshot))).not.toContain('private-original-filename.png');
+    expect(saved.snapshot.recoveryImages.omitted.map(({ role, name, reason }) => [role, name, reason])).toEqual([
+      ['background', null, 'unavailable'],
+      ['path-head', 'private-original-filename.png', 'unavailable'],
+    ]);
     expect(canvasEncoding).not.toHaveBeenCalled();
     expect(assetSerialization).not.toHaveBeenCalled();
   });
@@ -889,7 +915,8 @@ describe('transactional project loading', () => {
     expect(saved.snapshot.styles.pathHead).toMatchObject({
       style: 'arrow', image: null, imageAssetId: null,
     });
-    expect(app.announce.mock.calls.filter(([message]) => message.includes('custom images'))).toHaveLength(1);
+    // DEF-98: the warning names the file (the live asset's name), once for the two writes.
+    expect(app.announce.mock.calls.filter(([message]) => message.includes('large-asset.png'))).toHaveLength(1);
 
     const restoreApp = makeApp();
     restoreApp.storageService.loadAutoSaveText.mockReturnValue(JSON.stringify(saved.snapshot));
@@ -940,7 +967,10 @@ describe('transactional project loading', () => {
       style: 'arrow', image: null, imageAssetId: null,
     });
     expect(serialized).not.toContain(PIXEL_PNG);
-    expect(serialized).not.toContain('legacy-private-name.png');
+    // DEF-98: with no image store, the name is kept in the manifest alone.
+    expect(JSON.stringify(modelOf(replacement))).not.toContain('legacy-private-name.png');
+    expect(replacement.recoveryImages.omitted.map(({ role, name }) => [role, name]))
+      .toEqual([['background', null], ['path-head', 'legacy-private-name.png']]);
   });
 
   test('legacy image bytes use image budgets instead of the metadata text-field cap', async () => {
@@ -981,7 +1011,125 @@ describe('transactional project loading', () => {
     expect(replacement.imageAssets).toEqual([]);
     expect(replacement).not.toHaveProperty('backgroundImage');
     expect(serialized).not.toContain(largeDataURL);
-    expect(serialized).not.toContain('legacy-large-private-name.png');
+    // DEF-98: with no image store, the name is kept in the manifest alone.
+    expect(JSON.stringify(modelOf(replacement))).not.toContain('legacy-large-private-name.png');
+    expect(replacement.recoveryImages.omitted.map(({ name }) => name)).toContain('legacy-large-private-name.png');
+  });
+
+  // DEF-98: the cases above are the fallback where no image store can be had
+  // (a browser without IndexedDB); these are the same cases with one.
+  describe('with an image store (DEF-98)', () => {
+    afterEach(() => releaseStatefulStorage());
+
+    /** makeApp's app, with the real StorageService over a stateful localStorage, and an image store. */
+    function withStore(backend = createMemoryRecoveryBackend()) {
+      const storage = useStatefulStorage();
+      const app = makeApp();
+      app.storageService = new StorageService();
+      app.recoveryImageStore = new RecoveryImageStore({
+        backend, locks: createLocalLockManager(), crossWriter: true, digest: nodeDigest,
+      });
+      return { app, storage, backend };
+    }
+
+    test('autosave keeps the custom assets and the background, the bytes in the store and the names in the record', async () => {
+      const { app, storage, backend } = withStore();
+      app.markDirty = vi.fn();
+      app.imageAssetService.clear();
+      app.imageAssetService.addAsset(makeAsset('marker', 'private-original-filename.png'));
+      app.waypoints = [Waypoint.fromJSON({
+        id: 'custom-wp', imgX: 0.4, imgY: 0.6,
+        markerStyle: 'custom', customImageAssetId: 'marker',
+      })];
+      app.styles.pathHead = {
+        ...app.styles.pathHead,
+        style: 'custom', image: { id: 'head-image' }, imageAssetId: 'marker',
+      };
+      app.background.image = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
+      app._autosaveBackgroundCache = { image: app.background.image, dataURL: PIXEL_PNG };
+      app._backgroundName = 'pixel.png';
+
+      persistenceMixin.autoSave.call(app);
+      await recoveryImagesIdle(app);
+      app.storageService.flushAutoSave();
+
+      const record = JSON.parse(storage.get('routePlotter_autosave'));
+      expect(record.waypoints[0]).toMatchObject({ markerStyle: 'custom', customImageAssetId: 'marker' });
+      expect(record.styles.pathHead).toMatchObject({ style: 'custom', image: null, imageAssetId: 'marker' });
+      // The same bytes, one entry: the names are the references', the background's and the marker's.
+      expect(backend.entries.size).toBe(1);
+      const [key] = backend.entries.keys();
+      expect(record.recoveryImages).toEqual({
+        version: 2,
+        background: { key, name: 'pixel.png', mimeType: 'image/png', byteLength: ImageAsset.inspectDataURL(PIXEL_PNG).byteLength },
+        assets: [{ id: 'marker', key, name: 'private-original-filename.png' }],
+        omitted: [],
+      });
+      expect(record.imageAssets).toEqual([]);
+      expect(JSON.stringify(record)).not.toContain(PIXEL_PNG.split(',')[1]);
+      expect(app.announce.mock.calls.filter(([message]) => /^Browser recovery could not/.test(message))).toEqual([]);
+    });
+
+    test('legacy rich recovery is restored, then rewritten naming its images in the store, so a second restore keeps them', async () => {
+      const backend = createMemoryRecoveryBackend();
+      const { app, storage } = withStore(backend);
+      const privateAsset = makeAsset('legacy-asset', 'legacy-private-name.png');
+      const decodedImage = { width: 1, height: 1, naturalWidth: 1, naturalHeight: 1 };
+      vi.spyOn(ImageAsset, 'decodeDataURL').mockResolvedValue(decodedImage);
+      storage.set('routePlotter_autosave', JSON.stringify({
+        ...validProject({
+          waypoints: [{
+            id: 'legacy-wp', imgX: 0.2, imgY: 0.3,
+            markerStyle: 'custom', customImageAssetId: 'legacy-asset',
+          }],
+          styles: {
+            pathHead: { style: 'custom', imageAssetId: 'legacy-asset', size: 8 },
+          },
+        }),
+        imageAssets: [privateAsset.toJSON()],
+        backgroundImage: PIXEL_PNG,
+      }));
+
+      await expect(persistenceMixin.loadAutosave.call(app)).resolves.toBe(true);
+      await recoveryImagesIdle(app);
+      const rewritten = JSON.parse(storage.get('routePlotter_autosave'));
+      expect(rewritten).not.toHaveProperty('backgroundImage');
+      expect(rewritten.imageAssets).toEqual([]);
+      expect(rewritten.waypoints[0]).toMatchObject({ markerStyle: 'custom', customImageAssetId: 'legacy-asset' });
+      expect(rewritten.recoveryImages.assets.map(({ id, name }) => [id, name])).toEqual([['legacy-asset', 'legacy-private-name.png']]);
+      expect(rewritten.recoveryImages.background).toMatchObject({ name: null, mimeType: 'image/png' });
+
+      const second = makeApp();
+      second.storageService = new StorageService();
+      second.recoveryImageStore = new RecoveryImageStore({ backend, digest: nodeDigest });
+      await expect(persistenceMixin.loadAutosave.call(second)).resolves.toBe(true);
+      expect(second.imageAssetService.getAsset('legacy-asset')?.name).toBe('legacy-private-name.png');
+      expect(second._autosaveBackgroundCache?.dataURL).toBe(PIXEL_PNG);
+      expect(second.waypoints[0]).toMatchObject({ markerStyle: 'custom', customImageAssetId: 'legacy-asset' });
+    });
+
+    test('a refused image is warned of by name, once for an unchanged refusal, and only it takes the fallback', async () => {
+      allowConsole(/could not store an image/);
+      const { app, storage, backend } = withStore();
+      backend.failWhen('put', () => new DOMException('The quota has been exceeded.', 'QuotaExceededError'));
+      app.markDirty = vi.fn();
+      app.imageAssetService.clear();
+      app.imageAssetService.addAsset(makeAsset('marker', 'refused.png'));
+      app.waypoints = [Waypoint.fromJSON({ id: 'custom-wp', imgX: 0.4, imgY: 0.6, markerStyle: 'custom', customImageAssetId: 'marker' })];
+
+      for (let write = 0; write < 2; write += 1) {
+        persistenceMixin.autoSave.call(app);
+        await recoveryImagesIdle(app);
+        app.storageService.flushAutoSave();
+      }
+
+      const record = JSON.parse(storage.get('routePlotter_autosave'));
+      expect(record.waypoints[0]).toMatchObject({ markerStyle: 'dot', customImageAssetId: null });
+      expect(record.recoveryImages.omitted).toEqual([
+        expect.objectContaining({ role: 'marker', name: 'refused.png', reason: 'refused' }),
+      ]);
+      expect(app.announce.mock.calls.filter(([message]) => message.includes('refused.png'))).toHaveLength(1);
+    });
   });
 
   test('recovery exclusion is size-independent and warns once per image category', () => {
@@ -992,6 +1140,9 @@ describe('transactional project loading', () => {
     app.markDirty = vi.fn();
     app.imageAssetService.clear();
     app.imageAssetService.addAsset(makeAsset('marker'));
+    // DEF-98: recovery speaks of the images the live project references, so
+    // the marker is one a waypoint shows.
+    Object.assign(app.waypoints[0], { customImageAssetId: 'marker', markerStyle: 'custom' });
     const assetSerialization = vi.spyOn(app.imageAssetService, 'toJSON').mockReturnValue([{
       id: 'marker', base64: largeDataURL, name: 'marker.png',
       width: 1, height: 1, mimeType: 'image/png', size: payloadLength * 3 / 4,
@@ -1011,7 +1162,8 @@ describe('transactional project loading', () => {
     expect(new TextEncoder().encode(JSON.stringify(saved.snapshot)).length)
       .toBeLessThanOrEqual(STORAGE_LIMITS.AUTOSAVE_SERIALIZED_MAX);
     expect(app.announce.mock.calls.filter(([message]) => message.includes('background'))).toHaveLength(1);
-    expect(app.announce.mock.calls.filter(([message]) => message.includes('custom images'))).toHaveLength(1);
+    // DEF-98: one warning names both, by name, once for the two writes.
+    expect(app.announce.mock.calls.filter(([message]) => message.includes('marker.png'))).toHaveLength(1);
     expect(assetSerialization).not.toHaveBeenCalled();
     expect(canvasEncoding).not.toHaveBeenCalled();
   });

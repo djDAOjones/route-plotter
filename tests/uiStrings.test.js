@@ -29,7 +29,7 @@ import { resolve } from 'node:path';
 import { afterEach, describe, test, expect, vi } from 'vitest';
 import { HTMLExportService } from '../src/services/HTMLExportService.js';
 import { bootApp, tipSeen } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { lex, lexedFiles, lineAt } from './helpers/sourceScan.js';
 import { TOOLTIPS } from '../src/config/tooltips.js';
 
@@ -763,7 +763,7 @@ describe('the words PR 5b adds keep the rules (CROWD-07)', () => {
       prose('Guide helper', document.getElementById('crowd-guide-hint').textContent);
       expect(announced.some(text => /^Crowd 1 added — press Edit network/.test(text))).toBe(true);
 
-      expect(await loadSnapshot(app, {
+      expect(await loadCurrentSnapshot(app, {
         coordVersion: 9,
         waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true, name: 'Main entrance' },
           { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],

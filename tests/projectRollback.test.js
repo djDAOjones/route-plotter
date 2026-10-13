@@ -18,7 +18,7 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole, recordedConsole } from './helpers/consoleGuard.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 import { contextIdFor, recordCallOrder, takeOrderedCalls } from './setup.js';
 import { VideoExporter } from '../src/services/VideoExporter.js';
@@ -53,7 +53,7 @@ function stateOf(app) {
 async function appAndIncomingProject({ exportSize = null } = {}) {
   const app = await bootApp();
   await app.ready;
-  expect(await loadSnapshot(app, authoredExtrasProject())).toBe(true);
+  expect(await loadCurrentSnapshot(app, authoredExtrasProject())).toBe(true);
   app.eventBus.emit('waypoint:add', { imgX: 0.4, imgY: 0.5, isMajor: true });
   app.eventBus.emit('waypoint:add', { imgX: 0.6, imgY: 0.5, isMajor: true });
   const redone = app.waypoints.map(waypoint => waypoint.id);

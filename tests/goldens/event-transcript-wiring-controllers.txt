@@ -29,6 +29,8 @@ at once: autosave 1, render 1, queued render 2, path 2
   · path
   · queued render
   · autosave
+  toast "Browser recovery could not keep the background, campus.png: this browser cannot store images for recovery. Save a project file to keep it." for 0 ms
+  said "Browser recovery could not keep the background, campus.png: this browser cannot store images for recovery. Save a project file to keep it."
   model:
     ~ exportSettings.resolutionX: 1920 -> 1600
     ~ exportSettings.resolutionY: 1080 -> 900
@@ -47,6 +49,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 1, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 14240.7577
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## background:overlay-change
 fixture: open day
@@ -65,7 +71,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## background:mode-change
 fixture: open day
@@ -84,7 +94,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## ui:animation:play
 fixture: open day
@@ -109,7 +123,11 @@ later: render 1
     ~ runtime.transport.timeMs: 0 -> 16.6768
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## ui:animation:play at the end
 fixture: open day
@@ -142,7 +160,11 @@ later: render 1
     ~ runtime.transport.timeMs: 0 -> 16.6768
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## ui:animation:pause
 fixture: open day
@@ -163,7 +185,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## ui:animation:skip-start
 fixture: open day
@@ -188,7 +214,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## ui:animation:skip-end
 fixture: open day
@@ -207,7 +237,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## ui:animation:seek
 fixture: open day
@@ -225,7 +259,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## animation:speed-change
 fixture: open day
@@ -252,7 +290,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## animation:hold-at-end-change
 fixture: open day
@@ -280,7 +322,11 @@ later: autosave written 1, render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 2, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -312,7 +358,11 @@ later: render 1
     ~ runtime.transport.timeMs: 6668.1082 -> 6651.4314
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## animation:jkl-forward
 fixture: open day
@@ -339,7 +389,11 @@ later: render 1
     ~ runtime.transport.timeMs: 0 -> 16.6768
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## animation:jkl-forward after L, L and a pause (DEF-15)
 fixture: open day
@@ -367,7 +421,11 @@ later: render 1
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
 kept runtime.jkl.unused = "0 x1"
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## ui:animation:toggle
 fixture: open day
@@ -394,7 +452,11 @@ later: render 1
     ~ runtime.transport.timeMs: 6668.1082 -> 6684.7849
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## ui:animation:toggle while playing at 2x
 fixture: open day
@@ -418,7 +480,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:nudge
 fixture: open day
@@ -453,6 +519,10 @@ later: autosave written 1, render 1, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13369.7251
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -495,6 +565,10 @@ later: autosave written 1, render 1, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 14203.6662
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -535,6 +609,10 @@ later: autosave written 1, render 1, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13348.9913
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -575,6 +653,10 @@ later: autosave written 1, render 1, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 14613.076
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -616,6 +698,10 @@ later: autosave written 1, render 1, retime 1, undo saved 1
   history: stack 1, redo 0 -> stack 2, redo 0
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13448.3816
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -721,6 +807,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 18750.609
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -822,6 +912,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13338.9065
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -927,6 +1021,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 18920.2669
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -1026,7 +1124,11 @@ later: autosave written 1, render 1
     (unchanged)
   selection: [wp#1] wp#1 (unchanged)
   history: stack 2, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -1134,6 +1236,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 17117.1452
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -1153,7 +1259,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## route:branch-arm on a minor waypoint
 fixture: open day
@@ -1171,7 +1281,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## route:branch-cancel
 fixture: open day
@@ -1190,7 +1304,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## route:branch-place
 fixture: open day
@@ -1302,7 +1420,11 @@ later: autosave written 1, render 1, retime 1
     (unchanged)
   selection: [wp#1] wp#1 (unchanged)
   history: stack 3, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the 2 entries it saved, then redone:
   before Undo 1, its entry against the project: the same
   after Undo 1, the entry under it against the project: the same
@@ -1326,7 +1448,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## app:cleared
 fixture: open day
@@ -1344,7 +1470,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## route:branch-rejoin
 fixture: open day
@@ -1380,7 +1510,11 @@ later: autosave written 1, render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 2, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -1406,7 +1540,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-2] ex-uon-2 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:multi-selected
 fixture: open day
@@ -1428,7 +1566,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-1 ex-uon-3] ex-uon-3 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:toggle-select
 fixture: open day
@@ -1452,7 +1594,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-1 ex-uon-3] ex-uon-3 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:toggle-select, the primary out of four
 fixture: open day
@@ -1477,7 +1623,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-1 ex-uon-2 ex-uon-2a] ex-uon-2a (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:toggle-select, another out of three
 fixture: open day
@@ -1502,7 +1652,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-2a ex-uon-3] ex-uon-3 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:toggle-select, two down to one
 fixture: open day
@@ -1527,7 +1681,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-1] ex-uon-1 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:toggle-select, the only one
 fixture: open day
@@ -1551,7 +1709,11 @@ later: render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:deselected
 fixture: open day
@@ -1573,7 +1735,11 @@ later: render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:delete
 fixture: open day
@@ -1620,6 +1786,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 9008.8918
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -1673,6 +1843,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 9008.8918
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -1719,6 +1893,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13221.8933
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -1773,6 +1951,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 9008.8918
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -1933,6 +2115,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 19614.8499
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -1959,7 +2145,11 @@ later: autosave written 1, undo saved 1
     ~ runtime.ui.undoDisabled: true -> false
   selection: none (unchanged)
   history: stack 1, redo 0 -> stack 2, redo 0
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -1987,7 +2177,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-2] ex-uon-2 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## canvas:show-context-menu
 fixture: open day
@@ -2003,7 +2197,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## canvas:show-context-menu in the margin, zoomed out to 50%
 fixture: open day
@@ -2020,7 +2218,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:toggle-type
 fixture: open day
@@ -2060,7 +2262,11 @@ later: autosave written 1, render 1, retime 1
     (unchanged)
   selection: [ex-uon-2a] ex-uon-2a (unchanged)
   history: stack 2, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project:
     ~ selectedWaypointId: null -> "ex-uon-2a"
@@ -2171,6 +2377,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 14834.9207
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project:
     ~ selectedWaypointId: null -> "wp#1"
@@ -2284,6 +2494,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 17117.1452
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project:
     ~ selectedWaypointId: null -> "wp#1"
@@ -2394,6 +2608,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 15583.5784
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project:
     ~ selectedWaypointId: null -> "wp#1"
@@ -2424,7 +2642,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-2] ex-uon-2 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## video:frame-rate-change
 fixture: open day
@@ -2441,6 +2663,10 @@ later: nothing counted
   history: stack 1, redo 0 (unchanged)
 recovery (stored -> project):
   ~ exportSettings.frameRate: 30 -> 25
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## video:layers-change
 fixture: open day
@@ -2458,7 +2684,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## video:camera-change
 fixture: open day
@@ -2479,7 +2709,11 @@ later: autosave written 1, render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## video:text-change
 fixture: open day
@@ -2500,7 +2734,11 @@ later: autosave written 1, render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## video:resolution-change
 fixture: open day
@@ -2527,6 +2765,10 @@ later: render 1, retime 1
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 12634.8425
   ~ exportSettings.resolutionX: 1920 -> 1280
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
   ~ timingReference.width: 1173.3333 -> 782.2222
 
 ## video:resolution-change, a new height
@@ -2555,6 +2797,10 @@ later: render 1, retime 1
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 12153.6119
   ~ exportSettings.resolutionY: 1080 -> 720
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
   ~ timingReference.height: 660 -> 480
   ~ timingReference.width: 1173.3333 -> 1280
 
@@ -2584,6 +2830,10 @@ later: render 1, retime 1
 recovery (stored -> project):
   ~ exportSettings.resolutionX: 1920 -> 2914
   ~ exportSettings.resolutionY: 1080 -> 2061
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
   ~ timingReference.width: 1173.3333 -> 933.1587
 
 ## background:zoom-change
@@ -2603,7 +2853,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## video:export-request
 fixture: open day
@@ -2622,7 +2876,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## html:export-request
 fixture: open day
@@ -2639,7 +2897,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:preview-mode-change
 fixture: open day
@@ -2658,7 +2920,11 @@ later: render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:path-visibility-change
 fixture: open day
@@ -2681,7 +2947,11 @@ later: autosave written 1, render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:path-trail-change
 fixture: open day
@@ -2704,7 +2974,11 @@ later: autosave written 1, render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:waypoint-visibility-change
 fixture: open day
@@ -2724,7 +2998,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:background-visibility-change
 fixture: open day
@@ -2749,7 +3027,11 @@ later: autosave written 1, render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:reveal-size-change
 fixture: open day
@@ -2769,7 +3051,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:reveal-feather-change
 fixture: open day
@@ -2789,7 +3075,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:reveal-trail-change
 fixture: open day
@@ -2809,7 +3099,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:aov-angle-change
 fixture: open day
@@ -2829,7 +3123,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:aov-distance-change
 fixture: open day
@@ -2847,7 +3145,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## motion:aov-dropoff-change
 fixture: open day
@@ -2867,7 +3169,11 @@ later: autosave written 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoints:reordered
 fixture: PARM walk
@@ -2903,6 +3209,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 10827.6795 -> 10247.7011
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -2923,7 +3233,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## coordinate:image-to-canvas
 fixture: open day
@@ -2939,7 +3253,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## coordinate:check-bounds
 fixture: open day
@@ -2958,7 +3276,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## coordinate:check-bounds, zoomed out to 50%
 fixture: open day
@@ -2978,7 +3300,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:check-branch-handle
 fixture: open day
@@ -2997,7 +3323,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:check-at-position
 fixture: open day
@@ -3014,7 +3344,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## area:check-handle
 fixture: authored extras
@@ -3034,6 +3368,12 @@ later: nothing counted
   selection: [ex-uon-2] ex-uon-2 (unchanged)
   history: stack 1, redo 0 (unchanged)
 recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.omitted[1]
+  - recoveryImages.omitted[2]
+  - recoveryImages.version = 2
   ~ styles.pathHead.imageAssetId: null -> "asset-extras-head"
   ~ waypoints[ex-uon-1].customImageAssetId: null -> "asset-extras-marker"
 
@@ -3054,7 +3394,11 @@ later: render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## canvas:hover-move over a leg's "+"
 fixture: PARM walk
@@ -3073,7 +3417,11 @@ later: render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## canvas:hover-clear
 fixture: open day
@@ -3091,7 +3439,11 @@ later: render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## segment:check-at-position
 fixture: PARM walk
@@ -3108,7 +3460,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## segment:check-at-position on a branched route
 fixture: open day
@@ -3125,7 +3481,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## segment:clicked
 fixture: open day
@@ -3150,7 +3510,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-2] ex-uon-2 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:insert-on-leg
 fixture: PARM walk
@@ -3253,6 +3617,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 10827.6795 -> 10827.6803
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project:
     ~ selectedWaypointId: null -> "wp#1"
@@ -3365,6 +3733,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 15617.1452
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project:
     ~ selectedWaypointId: null -> "wp#1"
@@ -3386,7 +3758,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## help:show-shortcuts
 fixture: open day
@@ -3401,7 +3777,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:deselect
 fixture: open day
@@ -3424,7 +3804,11 @@ later: render 1
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:duplicate
 fixture: open day
@@ -3528,6 +3912,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 20100.9696
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 undo, performed on the entry it saved, then redone:
   before the Undo, its entry against the project: the same
   after the Undo, the entry under it against the project: the same
@@ -3555,7 +3943,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3] ex-uon-1 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## waypoint:select-all, keeping the selected waypoint as primary
 fixture: open day
@@ -3580,7 +3972,11 @@ later: render 1
     (unchanged)
   selection: [ex-uon-1 ex-uon-2 ex-uon-2a ex-uon-2b ex-uon-b1 ex-uon-3] ex-uon-3 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## ui:toast
 fixture: open day
@@ -3597,7 +3993,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## ui:announce
 fixture: open day
@@ -3617,7 +4017,11 @@ later: nothing counted
     ~ row.announcer: ["0 ms \"Waypoint 2 moved up\" (polite)"] -> ["0 ms \"Waypoint 2 moved up\" (polite)", "2000 ms \"Waypoint 2 moved down\" (polite)", "4000 ms \"\" (polite)"]
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## canvas:zoom-in
 fixture: open day
@@ -3634,7 +4038,11 @@ later: nothing counted
     (unchanged)
   selection: [ex-uon-2] ex-uon-2 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## canvas:zoom-in with nothing selected
 fixture: open day
@@ -3650,7 +4058,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## canvas:zoom-out
 fixture: open day
@@ -3667,7 +4079,11 @@ later: nothing counted
     (unchanged)
   selection: [ex-uon-2] ex-uon-2 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## canvas:zoom-reset
 fixture: open day
@@ -3684,7 +4100,11 @@ later: nothing counted
     (unchanged)
   selection: [ex-uon-2] ex-uon-2 (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## undo:state-change
 fixture: open day
@@ -3700,7 +4120,11 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## history:undo
 fixture: open day
@@ -3735,6 +4159,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 1, redo 1 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13472.2206 -> 13336.2163
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## history:redo
 fixture: open day
@@ -3771,6 +4199,10 @@ later: autosave written 1, render 1, retime 1
   history: stack 2, redo 0 (unchanged)
 recovery (stored -> project):
   ~ animationState.duration: 13336.2163 -> 13472.2206
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2
 
 ## file:save
 fixture: open day
@@ -3785,4 +4217,8 @@ later: nothing counted
     (unchanged)
   selection: none (unchanged)
   history: stack 1, redo 0 (unchanged)
-recovery: as the project stands
+recovery (stored -> project):
+  - recoveryImages.assets = []
+  - recoveryImages.background = null
+  - recoveryImages.omitted[0]
+  - recoveryImages.version = 2

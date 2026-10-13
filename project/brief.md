@@ -95,8 +95,10 @@ frozen v2 line remains served from
   unchanged. Interactive label clamps protect editor legibility; exports use
   the exact reference scale.
 - Public/share/support boundaries retain original project image bytes only in
-  explicit saves/exports, use previewable redacted diagnostics, and publish
-  under MIT with third-party notices and best-effort GitHub support.
+  explicit saves/exports and in this browser's own recovery (its image store,
+  with each file name, until Clear All; DEF-98), use previewable redacted
+  diagnostics, and publish under MIT with third-party notices and best-effort
+  GitHub support.
 
 ## Open questions
 

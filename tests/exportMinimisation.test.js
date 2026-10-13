@@ -17,7 +17,7 @@ import { bootApp } from './helpers/bootApp.js';
 import { ImageAsset } from '../src/models/ImageAsset.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { loadExampleBackground } from '../src/app/backgroundLoading.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 
 const PIXEL_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
@@ -41,7 +41,7 @@ async function projectWithAReplacedImage() {
   const example = buildExampleProjects().find(each => each.id === 'uon-open-day');
   const app = await bootApp();
   await app.ready;
-  expect(await loadSnapshot(app, {
+  expect(await loadCurrentSnapshot(app, {
     coordVersion: 9,
     waypoints: [
       { id: 'wp-a', imgX: 0.2, imgY: 0.5, isMajor: true },

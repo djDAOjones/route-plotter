@@ -17,7 +17,7 @@
 
 import { expect, test } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 
 /** The open day example, its waypoints given `beacons` settings by id. */
@@ -37,7 +37,7 @@ const timingSettled = () => new Promise(resolve => setTimeout(resolve, 100));
 async function opened(project, { edit = false } = {}) {
   const app = await bootApp();
   await app.ready;
-  expect(await loadSnapshot(app, project)).toBe(true);
+  expect(await loadCurrentSnapshot(app, project)).toBe(true);
   if (edit) document.getElementById('mode-toggle-btn').click();
   await timingSettled();
   expect(app.previewMode).toBe(!edit);

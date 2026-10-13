@@ -21,7 +21,7 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { bootApp } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { PIXEL_DATA_URL } from './fixtures/authoredExtras.js';
 import { contextFor } from './setup.js';
 import { buildExampleProjects } from '../src/examples/index.js';
@@ -185,7 +185,7 @@ async function open(name) {
   const app = await bootApp();
   await app.ready;
   document.getElementById('splash-close').click();
-  expect(await loadSnapshot(app, fixture.project)).toBe(true);
+  expect(await loadCurrentSnapshot(app, fixture.project)).toBe(true);
 
   const [width, height] = fixture.image;
   const image = new Image();
@@ -653,7 +653,7 @@ describe('DEF-64: only the route\'s own legs are hit', () => {
     allowConsole(/Failed to load project/);
     const app = await open('open day');
     const refused = app.branchPaths.find(each => each.id === BRANCH).pathPoints.map(({ x, y }) => ({ x, y }));
-    expect(await loadSnapshot(app, example('parm-aerial-walk'))).toBe(true);
+    expect(await loadCurrentSnapshot(app, example('parm-aerial-walk'))).toBe(true);
     const route = ids(app);
 
     vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValue({

@@ -19,7 +19,7 @@ import {
 import { SwarmEngine } from '../src/services/SwarmEngine.js';
 import { Scene } from '../src/models/Scene.js';
 import { bootApp } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { fitWaitWithWaitForCrowdMs } from './helpers/fitCrowdWait.js';
 
 const flat = value => value;
@@ -296,7 +296,7 @@ describe('DEF-12: route time read as engine time', () => {
     // A square export, so the canvas the project opens on is square, as this route's arithmetic is (a branch a fifth
     // of the way along at its fork): since UI-06 PR 6 round 3 the canvas is the project's own fit as it opens, where it
     // kept the start's square (the lead's settlement).
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9, waypoints, motionSettings, exportSettings: { resolutionX: 1000, resolutionY: 1000 },
       ...(scene ? { scene } : {}),
     })).toBe(true);

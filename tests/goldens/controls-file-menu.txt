@@ -41,12 +41,12 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Could not open Site walk"
 ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾" → button aria-controls="file-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾"
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
-ui + #toast-container>div[0]: div class="toast" :text="Could not open Site walk (HTTP 404). Check your connection and try again."
-ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui + #toast-container>div[1]: div class="toast" :text="Could not open Site walk (HTTP 404). Check your connection and try again."
+ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 settled:
   announced "Could not open Site walk (HTTP 404). Check your connection and try again."
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Site walk…" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
-  ui ~ #toast-container>div[0]: div class="toast" :text="Could not open Site walk (HTTP 404). Check your connection and try again." → div class="toast is-visible" :text="Could not open Site walk (HTTP 404). Check your connection and try again."
+  ui ~ #toast-container>div[1]: div class="toast" :text="Could not open Site walk (HTTP 404). Check your connection and try again." → div class="toast is-visible" :text="Could not open Site walk (HTTP 404). Check your connection and try again."
 
 ## #example-projects-menu>button[2] · click
 emit ui:toast {message: "Could not open Open day route (HTTP 404). Check your connection and try again.", priority: "assertive"}
@@ -56,12 +56,12 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Could not open Open day route"
 ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾" → button aria-controls="file-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾"
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
-ui + #toast-container>div[0]: div class="toast" :text="Could not open Open day route (HTTP 404). Check your connection and try again."
-ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui + #toast-container>div[1]: div class="toast" :text="Could not open Open day route (HTTP 404). Check your connection and try again."
+ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 settled:
   announced "Could not open Open day route (HTTP 404). Check your connection and try again."
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Open day route…" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
-  ui ~ #toast-container>div[0]: div class="toast" :text="Could not open Open day route (HTTP 404). Check your connection and try again." → div class="toast is-visible" :text="Could not open Open day route (HTTP 404). Check your connection and try again."
+  ui ~ #toast-container>div[1]: div class="toast" :text="Could not open Open day route (HTTP 404). Check your connection and try again." → div class="toast is-visible" :text="Could not open Open day route (HTTP 404). Check your connection and try again."
 
 ## #example-projects-menu>button[4] · click
 emit ui:toast {message: "Could not open Signal flow (HTTP 404). Check your connection and try again.", priority: "assertive"}
@@ -71,12 +71,12 @@ ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role=
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Could not open Signal flow"
 ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾" → button aria-controls="file-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾"
 ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
-ui + #toast-container>div[0]: div class="toast" :text="Could not open Signal flow (HTTP 404). Check your connection and try again."
-ui + #toast-container>div[0]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+ui + #toast-container>div[1]: div class="toast" :text="Could not open Signal flow (HTTP 404). Check your connection and try again."
+ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 settled:
   announced "Could not open Signal flow (HTTP 404). Check your connection and try again."
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Signal flow…" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
-  ui ~ #toast-container>div[0]: div class="toast" :text="Could not open Signal flow (HTTP 404). Check your connection and try again." → div class="toast is-visible" :text="Could not open Signal flow (HTTP 404). Check your connection and try again."
+  ui ~ #toast-container>div[1]: div class="toast" :text="Could not open Signal flow (HTTP 404). Check your connection and try again." → div class="toast is-visible" :text="Could not open Signal flow (HTTP 404). Check your connection and try again."
 
 ## #example-backgrounds-menu>button[0] · click
 app ~ focus: "#save-project-btn" → "#file-dropdown-btn"
@@ -88,13 +88,13 @@ settled:
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
-  announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Browser recovery could not keep 3 images. The background, Court.png: this browser cannot store images for recovery. The path head image, asset-extras-head.png:…[343 chars, 57c18834]
   announced "Saved to browser recovery"
   model ~ animationState.duration: 21807.894043 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
   model ~ timingReference.width: 1173.333333 → 660
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9713 chars, 707b8a7d]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10112 chars, 0373d6a4]
   ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #export-html-btn: button aria-describedby="export-html-reason" aria-disabled="true" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…" → button aria-describedby="export-html-reason" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…"
@@ -106,6 +106,7 @@ settled:
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
   ui ~ #canvas-area: div aria-busy="true" class="canvas-area" → div aria-busy="false" class="canvas-area"
   ui ~ #canvas-area>div[1]: div class="controls" style="width: 1173.3333333333333px;" → div class="controls" style="width: 660px;"
+  ui ~ #toast-container>div[0]: div class="toast is-visible" :text="Browser recovery could not keep 2 images. The path head image, asset-extras-head.png: this browser cannot store images for recovery. The marker image for Extra…[269 chars, 7b42e728] → div class="toast is-visible" :text="Browser recovery could not keep 3 images. The background, Court.png: this browser cannot store images for recovery. The path head image, asset-extras-head.png:…[343 chars, 57c18834]
   ui - #export-video-reason: span
   ui - #export-html-reason: span :text="Export HTML needs a background image."
 
@@ -119,13 +120,13 @@ settled:
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
-  announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Browser recovery could not keep 3 images. The background, Garlic.jpg: this browser cannot store images for recovery. The path head image, asset-extras-head.png…[344 chars, 05b885e7]
   announced "Saved to browser recovery"
   model ~ animationState.duration: 21807.894043 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
   model ~ timingReference.width: 1173.333333 → 660
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9713 chars, 707b8a7d]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10113 chars, b5f055ef]
   ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #export-html-btn: button aria-describedby="export-html-reason" aria-disabled="true" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…" → button aria-describedby="export-html-reason" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…"
@@ -137,6 +138,7 @@ settled:
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
   ui ~ #canvas-area: div aria-busy="true" class="canvas-area" → div aria-busy="false" class="canvas-area"
   ui ~ #canvas-area>div[1]: div class="controls" style="width: 1173.3333333333333px;" → div class="controls" style="width: 660px;"
+  ui ~ #toast-container>div[0]: div class="toast is-visible" :text="Browser recovery could not keep 2 images. The path head image, asset-extras-head.png: this browser cannot store images for recovery. The marker image for Extra…[269 chars, 7b42e728] → div class="toast is-visible" :text="Browser recovery could not keep 3 images. The background, Garlic.jpg: this browser cannot store images for recovery. The path head image, asset-extras-head.png…[344 chars, 05b885e7]
   ui - #export-video-reason: span
   ui - #export-html-reason: span :text="Export HTML needs a background image."
 
@@ -150,13 +152,13 @@ settled:
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
-  announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Browser recovery could not keep 3 images. The background, Nervous_System.jpg: this browser cannot store images for recovery. The path head image, asset-extras-…[352 chars, ecf15f13]
   announced "Saved to browser recovery"
   model ~ animationState.duration: 21807.894043 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
   model ~ timingReference.width: 1173.333333 → 660
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9713 chars, 707b8a7d]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10121 chars, 4a8d873b]
   ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #export-html-btn: button aria-describedby="export-html-reason" aria-disabled="true" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…" → button aria-describedby="export-html-reason" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…"
@@ -168,6 +170,7 @@ settled:
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
   ui ~ #canvas-area: div aria-busy="true" class="canvas-area" → div aria-busy="false" class="canvas-area"
   ui ~ #canvas-area>div[1]: div class="controls" style="width: 1173.3333333333333px;" → div class="controls" style="width: 660px;"
+  ui ~ #toast-container>div[0]: div class="toast is-visible" :text="Browser recovery could not keep 2 images. The path head image, asset-extras-head.png: this browser cannot store images for recovery. The marker image for Extra…[269 chars, 7b42e728] → div class="toast is-visible" :text="Browser recovery could not keep 3 images. The background, Nervous_System.jpg: this browser cannot store images for recovery. The path head image, asset-extras-…[352 chars, ecf15f13]
   ui - #export-video-reason: span
   ui - #export-html-reason: span :text="Export HTML needs a background image."
 
@@ -181,13 +184,13 @@ settled:
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
-  announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Browser recovery could not keep 3 images. The background, PARM_Aerial.jpg: this browser cannot store images for recovery. The path head image, asset-extras-hea…[349 chars, e514be72]
   announced "Saved to browser recovery"
   model ~ animationState.duration: 21807.894043 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
   model ~ timingReference.width: 1173.333333 → 660
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9713 chars, 707b8a7d]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10118 chars, e6727446]
   ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #export-html-btn: button aria-describedby="export-html-reason" aria-disabled="true" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…" → button aria-describedby="export-html-reason" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…"
@@ -199,6 +202,7 @@ settled:
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
   ui ~ #canvas-area: div aria-busy="true" class="canvas-area" → div aria-busy="false" class="canvas-area"
   ui ~ #canvas-area>div[1]: div class="controls" style="width: 1173.3333333333333px;" → div class="controls" style="width: 660px;"
+  ui ~ #toast-container>div[0]: div class="toast is-visible" :text="Browser recovery could not keep 2 images. The path head image, asset-extras-head.png: this browser cannot store images for recovery. The marker image for Extra…[269 chars, 7b42e728] → div class="toast is-visible" :text="Browser recovery could not keep 3 images. The background, PARM_Aerial.jpg: this browser cannot store images for recovery. The path head image, asset-extras-hea…[349 chars, e514be72]
   ui - #export-video-reason: span
   ui - #export-html-reason: span :text="Export HTML needs a background image."
 
@@ -212,13 +216,13 @@ settled:
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
-  announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Browser recovery could not keep 3 images. The background, Rocketry.jpg: this browser cannot store images for recovery. The path head image, asset-extras-head.p…[346 chars, 12b6a25c]
   announced "Saved to browser recovery"
   model ~ animationState.duration: 21807.894043 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
   model ~ timingReference.width: 1173.333333 → 660
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9713 chars, 707b8a7d]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10115 chars, d8f6854c]
   ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #export-html-btn: button aria-describedby="export-html-reason" aria-disabled="true" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…" → button aria-describedby="export-html-reason" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…"
@@ -230,6 +234,7 @@ settled:
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
   ui ~ #canvas-area: div aria-busy="true" class="canvas-area" → div aria-busy="false" class="canvas-area"
   ui ~ #canvas-area>div[1]: div class="controls" style="width: 1173.3333333333333px;" → div class="controls" style="width: 660px;"
+  ui ~ #toast-container>div[0]: div class="toast is-visible" :text="Browser recovery could not keep 2 images. The path head image, asset-extras-head.png: this browser cannot store images for recovery. The marker image for Extra…[269 chars, 7b42e728] → div class="toast is-visible" :text="Browser recovery could not keep 3 images. The background, Rocketry.jpg: this browser cannot store images for recovery. The path head image, asset-extras-head.p…[346 chars, 12b6a25c]
   ui - #export-video-reason: span
   ui - #export-html-reason: span :text="Export HTML needs a background image."
 
@@ -243,13 +248,13 @@ settled:
   emit animation:durationChange 30973.788202
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
-  announced "Browser recovery excludes the background. Save a project file to preserve it."
+  announced "Browser recovery could not keep 3 images. The background, UoN_map.png: this browser cannot store images for recovery. The path head image, asset-extras-head.pn…[345 chars, ff8e2640]
   announced "Saved to browser recovery"
   model ~ animationState.duration: 21807.894043 → 21938.866969
   model ~ exportSettings.resolutionX: 1280 → 100
   model ~ exportSettings.resolutionY: 720 → 100
   model ~ timingReference.width: 1173.333333 → 660
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9717 chars, 5d139683] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[9713 chars, 707b8a7d]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10114 chars, 13e33870]
   ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui ~ #export-html-btn: button aria-describedby="export-html-reason" aria-disabled="true" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…" → button aria-describedby="export-html-reason" class="dropdown-item" role="menuitem" type="button" :text="Export HTML…"
@@ -261,6 +266,7 @@ settled:
   ui ~ #export-res-y: input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="720" → input aria-describedby="export-res-y-tip" max="4320" min="100" step="1" type="number" value="1080" :value="100"
   ui ~ #canvas-area: div aria-busy="true" class="canvas-area" → div aria-busy="false" class="canvas-area"
   ui ~ #canvas-area>div[1]: div class="controls" style="width: 1173.3333333333333px;" → div class="controls" style="width: 660px;"
+  ui ~ #toast-container>div[0]: div class="toast is-visible" :text="Browser recovery could not keep 2 images. The path head image, asset-extras-head.png: this browser cannot store images for recovery. The marker image for Extra…[269 chars, 7b42e728] → div class="toast is-visible" :text="Browser recovery could not keep 3 images. The background, UoN_map.png: this browser cannot store images for recovery. The path head image, asset-extras-head.pn…[345 chars, ff8e2640]
   ui - #export-video-reason: span
   ui - #export-html-reason: span :text="Export HTML needs a background image."
 

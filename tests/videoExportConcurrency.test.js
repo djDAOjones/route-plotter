@@ -24,7 +24,7 @@ import { setTimeout as realDelay } from 'node:timers/promises';
 import { afterEach, expect, test, vi } from 'vitest';
 import { bootApp, tipSeen } from './helpers/bootApp.js';
 import { allowConsole } from './helpers/consoleGuard.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
 import { frameAt } from './helpers/drawLog.js';
 import { VideoExporter } from '../src/services/VideoExporter.js';
@@ -47,7 +47,7 @@ async function exportingApp() {
   await app.ready;
   // The welcome dialog's focus trap would take the Escape a test presses.
   document.getElementById('splash-close').click();
-  expect(await loadSnapshot(app, authoredExtrasProject())).toBe(true);
+  expect(await loadCurrentSnapshot(app, authoredExtrasProject())).toBe(true);
   vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
   // No export opens a browser dialog (UI-06 B-18): what the author is told is a toast.
   vi.stubGlobal('alert', vi.fn());

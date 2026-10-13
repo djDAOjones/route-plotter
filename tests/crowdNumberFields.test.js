@@ -23,7 +23,7 @@
 
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { bootApp, tipSeen } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { SLIDER_REACH_REASON } from '../src/utils/uiReadouts.js';
 import { EMITTER_LIMITS } from '../src/models/Emitter.js';
 import { SCENE_LIMITS } from '../src/models/Scene.js';
@@ -65,7 +65,7 @@ async function editorWith(flowLayers) {
   const app = await bootApp();
   await app.ready;
   byId('splash-close').click();
-  expect(await loadSnapshot(app, {
+  expect(await loadCurrentSnapshot(app, {
     coordVersion: 9,
     waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
     scene: { flowLayers },

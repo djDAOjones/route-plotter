@@ -28,7 +28,7 @@ import { MAX_BUSYNESS_HANDLES } from '../src/utils/busynessEnvelope.js';
 import { Emitter, EMITTER_LIMITS } from '../src/models/Emitter.js';
 import { buildExampleProjects } from '../src/examples/index.js';
 import { bootApp, tipSeen } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { cascade } from './helpers/cssTokens.js';
 
 function makeApp({ hasRoute = true } = {}) {
@@ -1030,7 +1030,7 @@ describe('the "At journey end" hint (DEF-77)', () => {
       // An opened project starts with no crowd selected, so no hint; selecting
       // its endless crowd shows it again.
       const project = app._buildProjectSnapshot();
-      expect(await loadSnapshot(app, project)).toBe(true);
+      expect(await loadCurrentSnapshot(app, project)).toBe(true);
       expect(app.selectedCrowd).toBeNull();
       expect(hint.hidden).toBe(true);
       expect(hint.textContent).toBe('');
@@ -1110,7 +1110,7 @@ describe('the Size readout reads reference px (CROWD-07 F1)', () => {
     const app = await bootApp();
     await app.ready;
     document.getElementById('splash-close').click();
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
       scene: { flowLayers: [{ id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] }] },
@@ -1184,7 +1184,7 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
 
   async function withEmptyCrowd() {
     const app = await editor();
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
       scene: { flowLayers: [{ id: 'empty', name: 'Empty crowd', guideType: 'graph', graph: { nodes: [], edges: [] }, emitters: [] }] },
@@ -1463,7 +1463,7 @@ describe('the pattern seed has its hint, and Reset to even its reason (CROWD-07 
     expect([reason.hidden, reason.textContent]).toEqual([false, 'Busyness is already even.']);
 
     // A crowd with no emitter: every control is off under the card's own line, and this reason is not shown.
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
       scene: { flowLayers: [
@@ -1679,7 +1679,7 @@ describe('a node\'s name heads the Node card (CROWD-07 X-05)', () => {
     await app.ready;
     document.getElementById('splash-close').click();
     const { project } = buildExampleProjects().find(each => each.id === 'uon-open-day');
-    expect(await loadSnapshot(app, structuredClone(project))).toBe(true);
+    expect(await loadCurrentSnapshot(app, structuredClone(project))).toBe(true);
     const layer = app.scene.getFlowLayer('ex-uon-crowd');
     // A node selected as the outline's Select node does it: inspected, no drawing.
     const select = node => app.eventBus.emit('scene-outline:command', {

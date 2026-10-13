@@ -720,7 +720,8 @@ export class ImageAssetService {
    * Import project from ZIP file
    * 
    * @param {File|Blob} zipFile - ZIP file to import
-   * @returns {Promise<{projectData: Object, backgroundBase64: string|null, imageAssets: ImageAsset[]}>}
+   * @returns {Promise<{projectData: Object, backgroundBase64: string|null, imageAssets: ImageAsset[],
+   *   backgroundName: string|null}>}
    */
   async importZip(zipFile) {
     const compressedSize = getInputByteLength(zipFile);
@@ -857,11 +858,15 @@ export class ImageAssetService {
       }
     }
     
+    // The background's file name as the project file carries it, kept before
+    // the manifest goes: browser recovery keeps it with the image (DEF-98).
+    const backgroundName = backgroundBase64 ? projectData.backgroundFile : null;
+
     // Clean up manifest from project data (not needed after import)
     delete projectData.assetManifest;
     delete projectData.backgroundFile;
     
-    return { projectData, backgroundBase64, imageAssets };
+    return { projectData, backgroundBase64, imageAssets, backgroundName };
   }
   
   /**

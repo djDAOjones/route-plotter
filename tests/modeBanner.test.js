@@ -25,7 +25,7 @@ import { resolve } from 'node:path';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { MAX_HANDOVERS, ModeBanner } from '../src/components/ModeBanner.js';
 import { bootApp, retireApp, tipSeen } from './helpers/bootApp.js';
-import { loadSnapshot } from './helpers/projectSnapshot.js';
+import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { FORCED_COLOURS, cascade, contrast, hex, resolveValue, textPair, tokensFor } from './helpers/cssTokens.js';
 import { VideoExporter } from '../src/services/VideoExporter.js';
 import { createFocusTrap, whenNoModalOpen } from '../src/utils/focusTrap.js';
@@ -433,7 +433,7 @@ describe('a mode replaces the one whose banner is up, and is active once it has 
 
   test('a weight typed in network editing and not committed goes to its path when an area draw takes the slot (m20)', async () => {
     const app = await editor();
-    expect(await loadSnapshot(app, {
+    expect(await loadCurrentSnapshot(app, {
       coordVersion: 9,
       waypoints: [{ id: 'a', imgX: 0.2, imgY: 0.3, isMajor: true }, { id: 'b', imgX: 0.7, imgY: 0.6, isMajor: true }],
       scene: {
@@ -604,7 +604,7 @@ describe('the branch gesture: a banner with a Cancel (item 2)', () => {
   test.each([
     ['deleted', (app, fork) => app.eventBus.emit('waypoint:delete', fork)],
     ['undone away', app => app.eventBus.emit('history:undo')],
-    ['replaced by an Open', app => loadSnapshot(app, {
+    ['replaced by an Open', app => loadCurrentSnapshot(app, {
       coordVersion: 9, waypoints: [{ id: 'z1', imgX: 0.3, imgY: 0.3, isMajor: true }, { id: 'z2', imgX: 0.6, imgY: 0.6, isMajor: true }],
     })],
   ])('its fork %s, with focus on Cancel: the gesture ends at once, said once, and focus goes to the Route button (m14, m15)', async (_, remove) => {
@@ -1338,7 +1338,7 @@ describe('round 2, finding 4: a region\'s line is left unsaid only where its cha
 
   test('a link drawn between two nodes of a project just opened says its count and "Unsaved changes", both new', async () => {
     const app = await editor();
-    expect(await loadSnapshot(app, twoNodes)).toBe(true);
+    expect(await loadCurrentSnapshot(app, twoNodes)).toBe(true);
     app.eventBus.emit('crowd:selected', app.scene.getFlowLayers()[0]);
     byId('network-edit-btn').click();
     const network = app.networkEditService;
@@ -1368,7 +1368,7 @@ describe('round 2, finding 4: a region\'s line is left unsaid only where its cha
 
   test('an area\'s corner on a project just opened says its count line (a pin: its line was never a region\'s alone)', async () => {
     const app = await editor();
-    expect(await loadSnapshot(app, { coordVersion: 9, waypoints: twoNodes.waypoints })).toBe(true);
+    expect(await loadCurrentSnapshot(app, { coordVersion: 9, waypoints: twoNodes.waypoints })).toBe(true);
     app.areaDrawingService.startDrawing(app.waypoints[0]);
     await turn();
     const { said } = listen(app);
@@ -2238,7 +2238,7 @@ describe('round 3, finding 4: a scope change conveyed by focus cancels the chip\
 
   test('the outline\'s node Select: the crowd it passes through is not said, nor the node its focus names (Codex\'s case)', async () => {
     const app = await editor();
-    expect(await loadSnapshot(app, twoCrowds)).toBe(true);
+    expect(await loadCurrentSnapshot(app, twoCrowds)).toBe(true);
     for (const key of ['crowd:net:summary', 'network:net:summary', 'nodes:net:summary', 'node:net:n1:summary']) {
       outline(key).click();
       await frames();
@@ -2254,7 +2254,7 @@ describe('round 3, finding 4: a scope change conveyed by focus cancels the chip\
 
   test('the Layers strip: a crowd chosen from its own row, a line for another crowd still waiting in the turn, says neither', async () => {
     const app = await editor();
-    expect(await loadSnapshot(app, twoCrowds)).toBe(true);
+    expect(await loadCurrentSnapshot(app, twoCrowds)).toBe(true);
     await turn();
     const [net, two] = app.scene.getFlowLayers();
     const rowOf = layer => app._crowdRowOf(layer);
@@ -2269,7 +2269,7 @@ describe('round 3, finding 4: a scope change conveyed by focus cancels the chip\
 
   test('the Layers strip\'s Route row the same, the waiting line a waypoint\'s', async () => {
     const app = await editor();
-    expect(await loadSnapshot(app, twoCrowds)).toBe(true);
+    expect(await loadCurrentSnapshot(app, twoCrowds)).toBe(true);
     const [net] = app.scene.getFlowLayers();
     app.eventBus.emit('crowd:selected', net);
     await turn();
@@ -2517,7 +2517,7 @@ describe('round 3, the lead\'s settlement: opening a project refits the canvas t
       fitted.push(paths.length);
       return result;
     });
-    expect(await loadSnapshot(app, wide)).toBe(true);
+    expect(await loadCurrentSnapshot(app, wide)).toBe(true);
     expect(aspect(app)).toBeCloseTo(2.4, 5);
     // bootApp's room: 1280 × 660; width-bound at 2.4:1.
     expect([app.displayWidth, app.displayHeight]).toEqual([1280, 1280 / 2.4]);
@@ -2537,7 +2537,7 @@ describe('round 3, the lead\'s settlement: opening a project refits the canvas t
   test('then a banner shown and hidden on that width-bound canvas changes neither the canvas nor the duration', async () => {
     const app = await editor();
     await vi.waitFor(() => expect(app.background.image).toBeTruthy());
-    expect(await loadSnapshot(app, wide)).toBe(true);
+    expect(await loadCurrentSnapshot(app, wide)).toBe(true);
     app._setPreviewMode(false);
     await settle();
     const canvas = [app.displayWidth, app.displayHeight, app.canvas.width, app.canvas.height];
@@ -2558,11 +2558,11 @@ describe('round 3, the lead\'s settlement: opening a project refits the canvas t
   test('a project with no visual reference of its own adopts the canvas it is fitted to, opened once or twice; one with its own keeps it', async () => {
     const app = await editor();
     await vi.waitFor(() => expect(app.background.image).toBeTruthy());
-    expect(await loadSnapshot(app, wide)).toBe(true);
+    expect(await loadCurrentSnapshot(app, wide)).toBe(true);
     expect(app.renderReference).toEqual({ width: 1280, height: 1280 / 2.4 });
-    expect(await loadSnapshot(app, wide)).toBe(true);
+    expect(await loadCurrentSnapshot(app, wide)).toBe(true);
     expect(app.renderReference).toEqual({ width: 1280, height: 1280 / 2.4 });
-    expect(await loadSnapshot(app, { ...wide, renderReference: { width: 900, height: 500 } })).toBe(true);
+    expect(await loadCurrentSnapshot(app, { ...wide, renderReference: { width: 900, height: 500 } })).toBe(true);
     expect(app.renderReference).toEqual({ width: 900, height: 500 });
   });
 
@@ -2570,7 +2570,7 @@ describe('round 3, the lead\'s settlement: opening a project refits the canvas t
     const app = await routeOfTwo();
     expect(app.pathPoints.length).toBeGreaterThan(0);
     expect(app.routeStructure.trunk.waypoints).toHaveLength(2);
-    expect(await loadSnapshot(app, { ...wide, waypoints: [wide.waypoints[0]] })).toBe(true);
+    expect(await loadCurrentSnapshot(app, { ...wide, waypoints: [wide.waypoints[0]] })).toBe(true);
     expect(app.pathPoints).toEqual([]);
     // The route's structure is the one waypoint's, laid out by the path's own clearing pass, not the last route's.
     expect(app.routeStructure.trunk.waypoints.map(waypoint => waypoint.id)).toEqual(['a']);
@@ -2583,7 +2583,7 @@ describe('round 3, the lead\'s settlement: opening a project refits the canvas t
     app._isExportMode = true;
     try {
       const paths = recordPaths(app);
-      expect(await loadSnapshot(app, wide)).toBe(true);
+      expect(await loadCurrentSnapshot(app, wide)).toBe(true);
       expect([app.displayWidth, app.displayHeight]).toEqual(canvas);
       expect(paths).toHaveLength(1);
     } finally {
@@ -2886,7 +2886,7 @@ describe('round 4, finding 5 (advisory): opening a project supersedes the refit 
     try {
       for (const hold of holds) await hold(app);
       const paths = recordPaths(app);
-      const loaded = loadSnapshot(app, wide);
+      const loaded = loadCurrentSnapshot(app, wide);
       await vi.advanceTimersByTimeAsync(50);
       expect(await loaded).toBe(true);
       await vi.advanceTimersByTimeAsync(500);
