@@ -22,7 +22,7 @@
 
 ### Ahead of Phase 2's last defects — the owner's word of 2026-10-13
 
-- [ ] DEF-98 — Restore drops the background — since 2026-10-13
+- [ ] DEF-98 — Restore drops the background and custom images — since 2026-10-13
 
 ### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
