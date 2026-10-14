@@ -23,6 +23,7 @@
  * assets hydrate through the bare ImageAsset model instead.
  */
 
+import { getFinishContexts, finishRenderReference } from '../app/finishContexts.js';
 import { EventBus } from '../core/EventBus.js';
 import { AnimationEngine } from '../services/AnimationEngine.js';
 import { PathCalculator } from '../services/PathCalculator.js';
@@ -172,8 +173,8 @@ export class PlayerApp {
     // Legacy snapshots inherit the authored timing canvas. Current snapshots
     // carry an independent visual reference so appearance and timing can evolve
     // without coupling either model to the export resolution.
-    this.renderReference = resolveRenderReference(
-      data.renderReference,
+    this.renderReference = finishRenderReference(
+      this.scene, data.renderReference,
       data.timingReference,
       { width: this.exportSettings.resolutionX, height: this.exportSettings.resolutionY }
     );
@@ -380,6 +381,7 @@ export class PlayerApp {
       branchTimeline: this.getBranchTimeline(),
       // Route moments a bound crowd reads (COMPOSE-01), one way only.
       routeAnchors: this.getRouteArrivalMap?.() || null,
+      ...getFinishContexts(this),
       styles: this.styles,
       selectedWaypoint: null,
       selectedWaypoints: [],

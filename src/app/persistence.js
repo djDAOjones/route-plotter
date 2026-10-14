@@ -6,6 +6,7 @@
  * RoutePlotter instance; main.js attaches the group via
  * Object.assign(RoutePlotter.prototype, persistenceMixin).
  */
+import { finishRenderReference, hasFinishAreas } from './finishContexts.js';
 import {
   ANIMATION,
   BACKGROUND_VISIBILITY,
@@ -540,8 +541,8 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
   // The project's own visual reference, or null: one with none adopts the
   // canvas it is shown on as the commit fits it, not the canvas before the
   // load (`commitStagedProject`; UI-06 PR 6).
-  const renderReference = resolveRenderReference(
-    projectData.renderReference,
+  const renderReference = finishRenderReference(
+    scene, projectData.renderReference,
     projectData.timingReference
   );
 
@@ -959,6 +960,9 @@ function restoreLiveState(app, previous) {
   // size (UI-06 PR 6), and the image's transform is measured on it.
   runRollbackStep('the canvas size', () => app._restoreCanvasFit?.(previous.canvasFit));
   runRollbackStep('the background transform', () => {
+    if (hasFinishAreas(app.scene)) {
+      app.coordinateTransform?.setBackgroundZoom?.(previous.exportSettings.backgroundZoom / 100);
+    }
     app.updateImageTransform?.(previous.background.image ?? null);
   });
   runRollbackStep('the animation transport', () => {
@@ -1065,6 +1069,7 @@ function syncLoadedProjectUI(app, staged) {
 function commitStagedProject(app, staged, { markClean = false } = {}) {
   const previous = captureLiveState(app);
   try {
+    app._installingFinishContext = hasFinishAreas(staged.scene);
     if (app.imageAssetService.replaceAssets) {
       app.imageAssetService.replaceAssets(staged.assets);
     } else if (staged.assets.length > 0) {
@@ -1095,6 +1100,9 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     app._backgroundName = staged.background.image ? (staged.backgroundName ?? null) : null;
     app._recoveryCarried = staged.recoveryCarried ?? [];
 
+    if (app._installingFinishContext) {
+      app.coordinateTransform?.setBackgroundZoom?.(staged.exportSettings.backgroundZoom / 100);
+    }
     app.updateImageTransform?.(staged.background.image ?? null);
     // The previous project's schedules and timeline (its intro, comet tail
     // and path travel time), and whether its duration was a rebuild's, are
@@ -1131,6 +1139,7 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     // out a route of two or more waypoints; a video export keeps its own
     // canvas (the fit's guard). Always: a project of fewer than two
     // waypoints clears what the last route fed (DEF-06).
+    app._installingFinishContext = false;
     const fitted = app.updateCanvasAspectRatio?.() === true;
     if (!fitted || app.waypoints.length < 2) app.calculatePath?.();
     // A project with no visual reference of its own has adopted the canvas
@@ -1153,6 +1162,7 @@ function commitStagedProject(app, staged, { markClean = false } = {}) {
     app.updateTitleIndicator?.();
   } catch (error) {
     try {
+      app._installingFinishContext = false;
       restoreLiveState(app, previous);
     } catch (rollbackError) {
       console.error('Project rollback failed:', rollbackError);

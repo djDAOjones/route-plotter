@@ -57,6 +57,7 @@ export function dotJourneyMs(journeyLength, speed, speedMultiplier) {
 /**
  * @typedef {Object} DotSchedule
  * @property {number} onsetFraction When the dot is released, 0–1 of the timeline
+ * @property {number} [onsetMs] Authoritative active finish-area release instant
  * @property {number} journeyMs How long it then travels
  * @property {boolean} finishes False for a dot that never arrives (loop/respawn)
  * @property {boolean} ends Whether the dot's first journey reaches its end (an
@@ -80,7 +81,7 @@ export function lastArrivalMs(schedules = [], durationMs = 0) {
   for (const dot of schedules) {
     if (!dot.finishes) { allFinish = false; continue; }
     finishingDots += 1;
-    ms = Math.max(ms, dot.onsetFraction * durationMs + dot.journeyMs);
+    ms = Math.max(ms, (dot.onsetMs ?? dot.onsetFraction * durationMs) + dot.journeyMs);
   }
   return { ms, allFinish, finishingDots };
 }
@@ -99,7 +100,7 @@ export function lastArrivalMs(schedules = [], durationMs = 0) {
 export function dotsReachingJourneyEnd(schedules = [], durationMs = 0) {
   let count = 0;
   for (const dot of schedules) {
-    if (dot.ends && dot.onsetFraction * durationMs + dot.journeyMs <= durationMs) count += 1;
+    if (dot.ends && (dot.onsetMs ?? dot.onsetFraction * durationMs) + dot.journeyMs <= durationMs) count += 1;
   }
   return count;
 }

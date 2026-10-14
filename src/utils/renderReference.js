@@ -1,7 +1,8 @@
 /**
  * Resolve and apply the project's visual sizing reference.
  *
- * Geometry and timeline calculations deliberately do not use this value.
+ * CROWD-08 finish areas also use this reference for packing and their derived
+ * release clock. Other geometry and timeline calculations do not use it.
  * Persisted reference-pixel sizes are converted to render pixels from the
  * short-edge ratio so landscape, portrait and custom exports share one model.
  */

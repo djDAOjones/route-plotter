@@ -1295,12 +1295,14 @@ export class RenderingService {
         // duration that waits for these very dots to finish (CROWD-05).
         const engineState = state.animationEngine.state;
         const durationMs = engineState.baseDuration ?? engineState.duration;
-        if (!(durationMs > 0)) return;
+        if (!(durationMs > 0) && !state.finishReleaseContext) return;
         const timelineMs = state.animationEngine.getTime();
         for (const layer of layers) {
           if (!layer.visible) continue;
           const dots = state.swarmEngine.evaluate(timelineMs, layer, {
             imageAspect: areaImageAspect(state.coordinateTransform),
+            finishPackingContext: state.finishPackingContext,
+            finishReleaseContext: state.finishReleaseContext,
             durationMs,
             routePathPoints: state.pathPoints,
             routeAnchors: state.routeAnchors,

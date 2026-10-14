@@ -1864,6 +1864,19 @@ const CONTEXTS = [
     },
   },
   {
+    name: 'node-finish-area',
+    about: 'an Exit with a rectangle finish area, Collect enabled and Turn revealed',
+    roots: ['#network-node-area-card'],
+    enter: app => {
+      selectCrowd(app);
+      choose('crowd-lifecycle', 'collect');
+      inspectNetwork(app, (service, graph) => service.selectNode(graph.getNodes().at(-1)));
+      choose('network-node-type', 'exit');
+      choose('network-node-area-shape', 'rectangle');
+      document.getElementById('network-node-area-more').open = true;
+    },
+  },
+  {
     name: 'edge-junction',
     about: 'a path leaving that junction inspected',
     roots: ['#edge-scope'],

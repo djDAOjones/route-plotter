@@ -14,6 +14,7 @@
  * networkMixin). Method names must stay unique across mixins
  * (tests/mixins.test.js).
  */
+import { getNodeAreaDescription } from './finishContexts.js';
 import { INTERACTION } from '../config/constants.js';
 import { isMac } from '../config/keybindings.js';
 import { getGraphDepartureShares } from '../utils/graphRouting.js';
@@ -215,7 +216,7 @@ export const networkMixin = {
     areaControl('shape')?.addEventListener('change', () => {
       const node = draftOwner(areaControl('shape'));
       const layer = this._nodeAreaLayer(node);
-      if (!layer || node.type !== 'entry') return;
+      if (!layer || !['entry', 'exit'].includes(node.type)) return;
       const shape = areaControl('shape').value;
       this._commitNodeAreaDrafts();
       const area = shape === 'none' ? null : { ...(node.area || createCrowdArea()), shape };
@@ -613,8 +614,8 @@ export const networkMixin = {
 
   /** The one durable owner for both authoring surfaces, outside the pen's legacy exception. */
   _setNodeArea(layer, node, area) {
-    if (this._nodeAreaLayer(node) !== layer || node.type !== 'entry') {
-      throw new Error('Choose Entry in Type to edit a start area.');
+    if (this._nodeAreaLayer(node) !== layer || !['entry', 'exit'].includes(node.type)) {
+      throw new Error('Choose Entry or Exit in Type to edit a node area.');
     }
     const next = copyCrowdArea(area);
     if (JSON.stringify(next) === JSON.stringify(node.area ?? null)) return false;
@@ -636,7 +637,7 @@ export const networkMixin = {
     }
     const node = draftOwner(control);
     const layer = this._nodeAreaLayer(node);
-    if (!layer || node.type !== 'entry' || !node.area) return;
+    if (!layer || !['entry', 'exit'].includes(node.type) || !node.area) return;
     const number = Number(control.value);
     if (!control.value.trim() || !Number.isFinite(number)
         || number < Number(control.min) || number > Number(control.max)) {
@@ -666,14 +667,20 @@ export const networkMixin = {
     if (!card) return;
     const node = this.networkEditService?.selectedNode();
     if (this._shownNodeAreaNode !== node) this._commitNodeAreaDrafts();
-    card.hidden = !node || (node.type !== 'entry' && !node.area);
+    card.hidden = !node || (!['entry', 'exit'].includes(node.type) && !node.area);
     const area = node?.area;
-    const inactive = node && node.type !== 'entry';
+    const inactive = node && !['entry', 'exit'].includes(node.type);
     const shape = areaControl('shape');
     shape.value = area?.shape || 'none';
     shape.disabled = !node || inactive;
     noteShownValue(shape, node);
-    const reason = inactive ? 'Choose Entry in Type to edit and use this start area.' : '';
+    const description = getNodeAreaDescription(this, this._nodeAreaLayer(node), node);
+    card.querySelector('.section-header').firstChild.textContent = description.label;
+    areaControl('label').textContent = description.label;
+    card.querySelector('.param-hint-trigger[aria-describedby~="network-node-area-shape-tip"]')
+      ?.setAttribute('aria-label', `Help: ${description.label}`);
+    areaControl('hint').textContent = description.hint;
+    const reason = description.reason;
     setControlReason(shape, areaControl('reason'), reason);
     areaControl('size').hidden = !area;
     areaControl('more').hidden = !area;
@@ -693,9 +700,12 @@ export const networkMixin = {
     }
     this._shownNodeArea = area;
     this._shownNodeAreaNode = node;
-    const noImage = !(this.coordinateTransform?.imageWidth > 0 && this.coordinateTransform?.imageHeight > 0);
-    setControlReason(areaControl('turn'), areaControl('image-hint'), noImage
-      ? 'Add a background image to keep the area’s shape when you turn it.' : '');
+    setControlReason(areaControl('turn'), areaControl('image-hint'), description.imageHint);
+    for (const control of [shape, ...AREA_FIELDS.map(areaControl)]) {
+      const ids = new Set((control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+      ids.add('network-node-area-hint');
+      control.setAttribute('aria-describedby', [...ids].join(' '));
+    }
   },
 
   /**

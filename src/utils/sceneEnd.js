@@ -181,7 +181,7 @@ export function computeSceneEnd({
 }) {
   const routeMs = Number.isFinite(baseMs) && baseMs > 0 ? baseMs : 0;
   let crowdsMs = 0;
-  if (routeMs > 0 && swarmEngine) {
+  if (swarmEngine && (routeMs > 0 || swarmContext.finishReleaseContext)) {
     const context = { ...swarmContext, durationMs: routeMs };
     for (const layer of layers) {
       // A hidden crowd is not drawn, so nothing of it is left to wait for.

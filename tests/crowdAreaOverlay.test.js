@@ -61,7 +61,7 @@ describe('start area guide overlay', () => {
     net.renderGuide(svc, ctx, state, layer);
     expect(ctx.clip).not.toHaveBeenCalled();
     node.area = { shape: 'rectangle', width: 0.1, height: 0.1, turn: 0 };
-    node.type = 'exit';
+    node.type = 'normal'; // C activates Exit areas; Pass-through remains inactive.
     net.renderGuide(svc, ctx, state, layer);
     expect(ctx.clip).not.toHaveBeenCalled();
     node.type = 'entry';
@@ -73,4 +73,19 @@ describe('start area guide overlay', () => {
     expect(spy).toHaveBeenCalledOnce();
     expect(ctx.clip).toHaveBeenCalledOnce();
   });
+  test('C labels Finish areas and uses the no-image reference plane without changing Entry axes', () => {
+    const { layer, node, net, ctx, svc, state } = fixture('ellipse');
+    node.type = 'exit';
+    state.coordinateTransform = { imageWidth: 0, imageHeight: 0 };
+    state.renderReference = { width: 200, height: 100 };
+    net.renderGuide(svc, ctx, state, layer);
+    expect(ctx.transform.mock.calls[0][1]).toBeCloseTo(40, 12);
+    expect(ctx.transform.mock.calls[0][2]).toBeCloseTo(-10, 12);
+    expect(ctx.strokeText).toHaveBeenCalledWith('Finish area', expect.any(Number), expect.any(Number));
+    const guide = RenderingService.VECTOR_LAYERS.find(each => each.name === 'network-guide');
+    const spy = vi.spyOn(net, 'renderGuide');
+    guide.draw(svc, ctx, { ...state, previewMode: true }, {});
+    expect(spy).not.toHaveBeenCalled();
+  });
+
 });
