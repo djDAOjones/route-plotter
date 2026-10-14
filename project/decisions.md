@@ -18,6 +18,27 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-14 — REFACTOR-01 — After CROWD-08, a refactor in light of PM-Skills 3.1 comes before v4's merge
+
+**Decision:** On the owner's word, REFACTOR-01, a major refactor in light of PM-Skills 3.1's code-management frameworks, follows CROWD-08 and comes before MERGE-01, so that v4's merge of routes and crowds lands on more modular code. It replaces PLAN-4's "MERGE-01 first in Next"; the rest of PLAN-4 stands.
+
+**Rationale:** The owner, 2026-10-14, after CROWD-08's part A was built, verbatim: "my intention is that we will get the MVP out, then do a major refactor in light of pm-skills 3.1 where various code management frameworks (e.g. for encapsulation, dead code, etc) are coming into play that should make dev work more manageable going forwards, then we will do the major work of consolidating paths and crowds and introducing new features where everything is more modular. so things like duration setting values can hopefully be fixed then."
+
+The lead then asked: "shall I record it in part A's record as your stated sequence, with the refactor as an item in Next ahead of MERGE-01? Or leave the record alone until CROWD-08 ships?" He answered "leave until crowd 8 ships". Later the same day he asked: "is the following in the backlog? if not, add it in:", followed by the sequence above, from "my intention" to "more modular." That request supersedes his earlier answer.
+
+It was not in the backlog: Next held MERGE-01 alone, first, under PLAN-4's heading. REFACTOR-01 is filed ahead of it, under one heading for both.
+
+The filing session's readings, for the owner to confirm:
+- the refactor changes no behaviour;
+- its scope, the frameworks it applies, and their fit with the adopted abstraction plan of 2026-09-22 (whose W4 dead-code items are in Next) are for a plan he decides;
+- "encapsulation, dead code, etc" are his examples, not a list.
+
+CROWD-08, its parts and its deadline of 2026-10-20 are unchanged. The item file holds the proposed criteria (`project/items/REFACTOR-01.md`).
+
+**Supersedes:** 2026-10-13 — PLAN-4 — A football crowd and mob MVP comes first; v4 merges routes and crowds
+
+**Deferred:** REFACTOR-01
+
 ## 2026-10-14 — CROWD-08 — Part A: crowds play and export without a route; DEF-84 closes by playing
 
 **Decision:** With fewer than two route waypoints, a crowd the engine draws now plays and exports over a base timeline that starts at 10 s and that Duration sets from 1 s to 5 min, while with nothing to play Play and both exports stay off with the owner's reasons, so DEF-84 closes by playing.
@@ -539,14 +560,4 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Supersedes:** none
 
 **Deferred:** CROWD-06, DEF-78, DEF-79, DEF-80
-
-## 2026-10-05 — DEF-64 — Branch legs are hit along their own runs
-
-**Decision:** DEF-64 lands (PR #77): each leg of a branched route is hovered and clicked along its own run, the trunk or its branch; a click selects the waypoint the leg leaves, and only a trunk leg offers the "+", so a canvas insert never splits a branch (DEF-22's menu and bus inserts still do).
-
-**Rationale:** Codex review r1 of `9d3563e` found two blocking gaps, both closed in the tests. F1: P10, called equivalent, is reachable: after a waypoint move, a late failed load leaves the refused route's five-entry trunk beside four waypoints; a regression now pins no owner there, and dropping the pairing guard fails it. F2: four branch shapes (two branches, a terminal one, a nested one, branches stored ahead of the trunk) and an identical-ID rollback kill N1–N4 and N6. Each mutant applied in place and restored. Two of these tests check what DEF-51 leaves after a failed load, so DEF-51's fix reworks them. The claim is narrowed to plain canvas clicks; DEF-05's note cites `RenderingService.js:1351`, seen once b1 is recoloured. Its record moved from `pm_skills/` to `project/` (GATELESS-1). Digest rule applied: house conventions → Testing and persistence. DEF-73 no longer waits on it.
-
-**Supersedes:** none
-
-**Deferred:** none
 

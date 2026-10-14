@@ -172,13 +172,12 @@ export class SwarmEngine {
     /** @private — shared calculator for route-guide length/interpolation. */
     this._routeCalc = new PathCalculator();
     /**
-     * Each finishing emitter's first journeys on its network, by layer and
-     * emitter id (`_cachedJourneys`, CROWD-05): an emitter id is unique only
-     * within its layer, so two crowds whose emitters share one would evict
-     * each other's walks (CROWD-08 part A).
-     * @private @type {Map<string, {key: string, lengths: Float64Array, ends: Uint8Array, multiLeg: Uint8Array}>}
+     * Each emitter's first journeys on its network, by model identity. IDs
+     * can repeat across layers or loaded projects; each instance keeps its
+     * own walks, and replaced models can be collected (CROWD-08 part A).
+     * @private @type {WeakMap<Object, WeakMap<Object, Object>>}
      */
-    this._journeyCache = new Map();
+    this._journeyCache = new WeakMap();
   }
 
   /**
@@ -359,8 +358,9 @@ export class SwarmEngine {
    * directions, weights and order (`graphSignature`), the emitter's seed and
    * its dot count. Speed, pace variation and releases are not in the walk, so
    * an edit to them is answered from here. Cached geometry only: a cold call
-   * and a warm one return the same lengths. Kept per layer and emitter, so
-   * crowds whose emitters share an id keep their own (CROWD-08 part A).
+   * and a warm one return the same lengths. Kept per layer and emitter
+   * instance, so loading a project with reused ids cannot inherit another
+   * model's journeys (CROWD-08 part A).
    * `multiLeg` marks a journey of more than one path with length, which the
    * evaluator draws at its onset whatever its finish (`canRelease`).
    * @private
@@ -368,8 +368,12 @@ export class SwarmEngine {
    */
   _cachedJourneys(layer, emitter, guide, signature) {
     const key = `${signature}|${emitter.seed}|${emitter.dotCount}`;
-    const slot = JSON.stringify([layer.id, emitter.id]);
-    const cached = this._journeyCache.get(slot);
+    let byEmitter = this._journeyCache.get(layer);
+    if (!byEmitter) {
+      byEmitter = new WeakMap();
+      this._journeyCache.set(layer, byEmitter);
+    }
+    const cached = byEmitter.get(emitter);
     if (cached && cached.key === key) return cached;
     const reaching = this._nodesReachingEnd(guide);
     const lengths = new Float64Array(emitter.dotCount);
@@ -382,7 +386,7 @@ export class SwarmEngine {
       multiLeg[i] = journey.legs > 1 ? 1 : 0;
     }
     const entry = { key, lengths, ends, multiLeg };
-    this._journeyCache.set(slot, entry);
+    byEmitter.set(emitter, entry);
     return entry;
   }
 

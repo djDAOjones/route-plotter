@@ -1,9 +1,10 @@
-/** CROWD-08 part A: regressions from the first independent code review. */
+/** CROWD-08 part A: regressions from the independent code reviews. */
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { Scene } from '../src/models/Scene.js';
 import { SwarmEngine } from '../src/services/SwarmEngine.js';
 import {
-  PLAY_OFF, PLAY_ON, blankProject, byId, drawCrowd, playState, press, settled,
+  HTML_AND_BACKGROUND_REASON, PLAY_OFF, PLAY_ON, VIDEO_REASON,
+  blankProject, byId, drawCrowd, exportState, playState, press, settled,
 } from './helpers/noRouteScene.js';
 
 afterEach(() => {
@@ -56,6 +57,84 @@ describe('accepted ids cannot alias another crowd\'s cached journeys', () => {
   });
 });
 
+/** Accepted graphs with the same signature, but different entry choices at seed 2. */
+function sameIdProjects() {
+  const common = [
+    { id: 'in', type: 'entry', x: 0.1, y: 0.5 },
+    { id: 'out', type: 'exit', x: 0.8, y: 0.5 },
+  ];
+  return [
+    [...common, { id: 'blocked:entry:0.4,0.5;extra', type: 'normal', x: 0.2, y: 0.5 }],
+    [...common, { id: 'blocked', type: 'entry', x: 0.4, y: 0.5 },
+      { id: 'extra', type: 'normal', x: 0.2, y: 0.5 }],
+  ].map(nodes => ({
+    coordVersion: 9, waypoints: [],
+    animationState: { mode: 'constant-speed', speed: 200, duration: 10000 },
+    scene: { flowLayers: [{
+      id: 'same-crowd', guideType: 'graph',
+      graph: { nodes, edges: [{ id: 'path', sourceId: 'in', targetId: 'out', direction: 'one-way' }] },
+      emitters: [{ id: 'same-emitter', seed: 2, dotCount: 1, lifecycleMode: 'disappear',
+        speed: 0.2, speedVariance: 0, releaseStart: 0.5, releaseDuration: 0 }],
+    }] },
+  }));
+}
+
+describe('same-id project replacements do not inherit another model\'s journeys', () => {
+  test.each([false, true])('instances remain cold-correct and warm, reversed: %s', reversed => {
+    const layers = sameIdProjects().map(project => Scene.fromJSON(project.scene).getFlowLayers()[0]);
+    const context = { durationMs: 10000 };
+    const read = (engine, layer) => [engine.canRelease(layer, context),
+      engine.crowdFinishMs(layer, context), engine.evaluate(5000, layer, context).length];
+    const cold = layers.map(layer => read(new SwarmEngine(), layer));
+    expect(cold.map(row => [row[0], row[2]])).toEqual([[true, 1], [false, 0]]);
+    expect(cold[0][1]).toBeCloseTo(8500, 8);
+    expect(cold[1][1]).toBe(5000);
+    const order = reversed ? [1, 0] : [0, 1];
+    const engine = new SwarmEngine();
+    const walk = vi.spyOn(engine, '_journeyLength');
+    expect(order.map(i => read(engine, layers[i]))).toEqual(order.map(i => cold[i]));
+    expect(walk).toHaveBeenCalledTimes(2);
+    walk.mockClear();
+    expect([...order].reverse().map(i => read(engine, layers[i])))
+      .toEqual([...order].reverse().map(i => cold[i]));
+    expect(walk).not.toHaveBeenCalled();
+  });
+
+  test.each([false, true])('file loads refresh Play and export reasons, reversed: %s', async reversed => {
+    const app = await blankProject();
+    const engine = app.swarmEngine;
+    const projects = sameIdProjects();
+    const order = reversed ? [1, 0, 1] : [0, 1, 0];
+    for (const i of order) {
+      vi.spyOn(app.imageAssetService, 'importZip').mockResolvedValueOnce({
+        projectData: projects[i], imageAssets: [], backgroundBase64: null,
+      });
+      expect(await app.loadProject(new File([''], 'same-ids.zip'))).toBe(true);
+      await settled();
+      expect(app.swarmEngine).toBe(engine); // replacement keeps the host engine
+      const layer = app.scene.getFlowLayers()[0];
+      const cold = new SwarmEngine();
+      const context = { durationMs: 10000 };
+      const playable = i === 0;
+      expect(cold.evaluate(5000, layer, context)).toHaveLength(playable ? 1 : 0);
+      expect(engine.canRelease(layer, context)).toBe(playable);
+      expect(engine.crowdFinishMs(layer, context)).toBe(cold.crowdFinishMs(layer, context));
+      expect(playState()).toEqual(playable ? PLAY_ON : PLAY_OFF);
+      expect(exportState()).toEqual({
+        mp4: !playable, webm: !playable, html: true,
+        video: playable ? '' : VIDEO_REASON,
+        htmlReason: playable ? 'Export HTML needs a background image.' : HTML_AND_BACKGROUND_REASON,
+        lineHidden: false,
+      });
+      const walk = vi.spyOn(engine, '_journeyLength');
+      expect(engine.canRelease(layer, context)).toBe(playable);
+      expect(engine.crowdFinishMs(layer, context)).toBe(cold.crowdFinishMs(layer, context));
+      expect(walk).not.toHaveBeenCalled();
+      walk.mockRestore();
+    }
+  });
+});
+
 async function editableCrowd(kind, playable) {
   const app = await blankProject();
   const { layer, entry, path } = drawCrowd(app, {
@@ -84,7 +163,7 @@ function expectAvailability(app, playable) {
 }
 
 describe('network drags refresh provisional geometry without committing it', () => {
-  test.each(['node', 'control'])('%s drag: both eligibility directions and cancellation after measurement', async kind => {
+  test.each(['node', 'control'])('%s drag: both directions and cancellation after measurement', async kind => {
     for (const initiallyPlayable of [false, true]) {
       const fixture = await editableCrowd(kind, initiallyPlayable);
       const { app, pen } = fixture;
