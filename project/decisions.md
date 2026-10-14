@@ -18,6 +18,27 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-14 — REFACTOR-01 — After CROWD-08, a refactor in light of PM-Skills 3.1 comes before v4's merge
+
+**Decision:** On the owner's word, REFACTOR-01, a major refactor in light of PM-Skills 3.1's code-management frameworks, follows CROWD-08 and comes before MERGE-01, so that v4's merge of routes and crowds lands on more modular code. It replaces PLAN-4's "MERGE-01 first in Next"; the rest of PLAN-4 stands.
+
+**Rationale:** The owner, 2026-10-14, after CROWD-08's part A was built, verbatim: "my intention is that we will get the MVP out, then do a major refactor in light of pm-skills 3.1 where various code management frameworks (e.g. for encapsulation, dead code, etc) are coming into play that should make dev work more manageable going forwards, then we will do the major work of consolidating paths and crowds and introducing new features where everything is more modular. so things like duration setting values can hopefully be fixed then."
+
+The lead then asked: "shall I record it in part A's record as your stated sequence, with the refactor as an item in Next ahead of MERGE-01? Or leave the record alone until CROWD-08 ships?" He answered "leave until crowd 8 ships". Later the same day he asked: "is the following in the backlog? if not, add it in:", followed by the sequence above, from "my intention" to "more modular." That request supersedes his earlier answer.
+
+It was not in the backlog: Next held MERGE-01 alone, first, under PLAN-4's heading. REFACTOR-01 is filed ahead of it, under one heading for both.
+
+The filing session's readings, for the owner to confirm:
+- the refactor changes no behaviour;
+- its scope, the frameworks it applies, and their fit with the adopted abstraction plan of 2026-09-22 (whose W4 dead-code items are in Next) are for a plan he decides;
+- "encapsulation, dead code, etc" are his examples, not a list.
+
+CROWD-08, its parts and its deadline of 2026-10-20 are unchanged. The item file holds the proposed criteria (`project/items/REFACTOR-01.md`).
+
+**Supersedes:** 2026-10-13 — PLAN-4 — A football crowd and mob MVP comes first; v4 merges routes and crowds
+
+**Deferred:** REFACTOR-01
+
 ## 2026-10-13 — REL-718 — After DEF-98 the next item is CROWD-08, not DEF-15
 
 **Decision:** REL-718 named DEF-15 as the next item. It is CROWD-08, because PLAN-4, merged first, put its MVP heading ahead of Phase 2. REL-718's release facts stand.
