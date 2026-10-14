@@ -46,8 +46,9 @@
 
 ## Next
 
-**v4 — merge routes and crowds — the owner's word of 2026-10-13, once CROWD-08 ships**
+**After CROWD-08: a refactor, then v4 — the owner's words of 2026-10-13 and 2026-10-14**
 
+- [ ] REFACTOR-01 — Refactor in light of PM-Skills 3.1's frameworks — since 2026-10-14
 - [ ] MERGE-01 — Plan v4's merge of routes and crowds — since 2026-10-13 — (from: PLAN-4, 2026-10-13)
 
 **The built-in examples — the owner's word of 2026-10-05**
