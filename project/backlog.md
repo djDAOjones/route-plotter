@@ -24,7 +24,7 @@
 
 ### MVP — football crowds and mobs — the owner's word of 2026-10-13
 
-- [ ] CROWD-08 — Football crowd and mob MVP — since 2026-10-13
+- [~] CROWD-08 — Football crowd and mob MVP — since 2026-10-13
 
 ### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 

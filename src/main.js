@@ -695,6 +695,9 @@ class RoutePlotter {
     
     // Sync UI with initial preview mode and path visibility settings
     this._syncInitialUIState();
+    // Play, the export items and Duration as the project at start allows: a
+    // blank one has nothing to play (CROWD-08 part A).
+    this.refreshPlayAvailability();
     
     // Initial render
     this.render();

@@ -320,8 +320,8 @@ export const crowdsMixin = {
     // deleted or traced.
     this.eventBus.on('animation:durationChange', () => this._syncCrowdLifecycleHint());
     this.eventBus.on('network:changed', ({ commit } = {}) => {
-      if (!commit) return;
-      this._syncCrowdLifecycleHint();
+      if (commit) this._syncCrowdLifecycleHint();
+      // Provisional geometry and its cancellation also change what can play and when it ends.
       this.scheduleSceneEnd?.();
     });
     this.eventBus.on('scene:semantic-changed', () => this.scheduleSceneEnd?.());
@@ -1139,6 +1139,9 @@ export const crowdsMixin = {
           releaseDuration: NEW_CROWD_RELEASE_DURATION,
         }],
       });
+      // Its timeline, if the project has none and no route to give it one, in
+      // the add's undo step: one undo takes both back (CROWD-08 part A).
+      this.applyRoutelessTimelineDefault?.();
       this.saveUndoState();
       this.autoSave();
       this.eventBus.emit('scene:semantic-changed', { kind: 'crowd-added', layerId: layer.id });

@@ -53,36 +53,35 @@ export const viewportMixin = {
     // Get available space in canvas-area
     const container = canvasAreaOf(this.canvas);
     const playbar = container.querySelector('.controls');
-    const { width: availableWidth, height: availableHeight } = canvasAreaRoom(this.canvas);
-    // The room this fit used: the banner slot refits only when it has changed (UI-06 PR 6)
-    this._fittedRoom = { width: availableWidth, height: availableHeight };
-    const containerAspect = availableWidth / availableHeight;
-    
-    // Contain fit: use whichever dimension is the constraint
+    const isReflowLayout = window.matchMedia?.('(max-width: 64rem)').matches ?? false;
+    // Start at the column's full width (the least wrapping), then only shrink.
+    // A portrait fit can wrap both the transport and Play's reason again, so
+    // settle their height before resizing the canvas or rebuilding its path.
+    if (playbar) playbar.style.width = isReflowLayout ? '' : `${container.clientWidth}px`;
+    let { width: availableWidth, height: availableHeight } = canvasAreaRoom(this.canvas);
     let canvasWidth, canvasHeight;
-    if (targetAspect > containerAspect) {
-      // Width-constrained (canvas is wider than container)
-      canvasWidth = availableWidth;
-      canvasHeight = availableWidth / targetAspect;
-    } else {
-      // Height-constrained (canvas is taller than container)
-      canvasHeight = availableHeight;
-      canvasWidth = availableHeight * targetAspect;
+    while (true) {
+      if (targetAspect > availableWidth / availableHeight) {
+        canvasWidth = availableWidth;
+        canvasHeight = availableWidth / targetAspect;
+      } else {
+        canvasHeight = availableHeight;
+        canvasWidth = availableHeight * targetAspect;
+      }
+      // Reflow controls span the viewport column; desktop controls follow the canvas.
+      if (playbar) playbar.style.width = isReflowLayout ? '' : `${canvasWidth}px`;
+      const height = canvasAreaRoom(this.canvas).height;
+      if (height >= availableHeight) break;
+      availableHeight = height;
     }
+    // The room this fit used: the banner slot refits only when it has changed (UI-06 PR 6).
+    this._fittedRoom = { width: availableWidth, height: availableHeight };
     
     // Apply explicit dimensions
     this.canvas.style.width = `${canvasWidth}px`;
     this.canvas.style.height = `${canvasHeight}px`;
     this.canvas.style.aspectRatio = '';
     this.canvas.style.margin = '0';
-    
-    // Match playbar width to canvas for clean layout
-    if (playbar) {
-      const isReflowLayout = window.matchMedia?.('(max-width: 64rem)').matches ?? false;
-      // The reflow stylesheet makes the controls span the viewport column.
-      // Clear the desktop canvas-width override so its width:100% can apply.
-      playbar.style.width = isReflowLayout ? '' : `${canvasWidth}px`;
-    }
     
     // Update backing store for HiDPI
     const dpr = window.devicePixelRatio || 1;
@@ -234,9 +233,10 @@ export const viewportMixin = {
     }
     
     if (clampedCount > 0) {
-      if (this.waypoints.length >= 2) {
-        this.calculatePath();
-      }
+      // Always: a lone waypoint moved here moves the crowd nodes anchored to
+      // it, and what can play with them (CROWD-08 part A; the rebuild clears
+      // what a route fed when there is none).
+      this.calculatePath();
       this.showToast(`${clampedCount} waypoint(s) moved to fit within the image at this zoom level`, 4000);
     }
   },

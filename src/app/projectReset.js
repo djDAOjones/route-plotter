@@ -79,6 +79,10 @@ function clearProjectSaying(app, cover) {
     app._sceneEndTimeout = null;
   }
   app.updateDurationReadout?.();
+  // The Duration thumb where the empty timeline is, and what can play: nothing
+  // (CROWD-08 part A).
+  app.syncDurationThumb?.();
+  app.refreshPlayAvailability?.();
   // A new project's Hold at end (CROWD-06), once the cleared timeline is in
   // place: an empty project has no end to hold after, so it stays at nothing.
   app.styles.holdAtEndMs = ANIMATION.HOLD_AT_END_DEFAULT_MS;

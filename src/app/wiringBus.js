@@ -131,6 +131,9 @@ export const wiringBusMixin = {
       // Invalidate major waypoints cache
       this._majorWaypointsCache = null;
       this.followAreaDrawTarget();
+      // A route deleted below two waypoints with no timeline left gives its
+      // crowds the default one, in this deletion's undo step (CROWD-08 part A).
+      this.applyRoutelessTimelineDefault?.();
       
       // Save state for undo (after waypoint is deleted)
       this.saveUndoState();
@@ -458,8 +461,10 @@ export const wiringBusMixin = {
       // concludes after it, a crowd on a network (CROWD-05).
       if (this.updateAnimationDuration(preservedSpeed) === undefined) this.refreshSceneEnd?.();
       
-      // Use event to avoid feedback loop
-      this.eventBus.emit('ui:slider:update-speed', preservedSpeed);
+      // Use event to avoid feedback loop. With no route the thumb is the base
+      // timeline's (CROWD-08 part A).
+      if (this.waypoints.length >= 2) this.eventBus.emit('ui:slider:update-speed', preservedSpeed);
+      else this.syncDurationThumb?.();
     });
     
     // Waypoint wait events

@@ -767,6 +767,7 @@ export class NetworkEditService {
       }
     }
     this.drag = null;
+    this.eventBus.emit('network:changed', { commit: false });
     this.eventBus.emit('render:request');
   }
 

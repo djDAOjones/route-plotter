@@ -107,7 +107,7 @@ export function traceRouteIntoGraph(waypoints = []) {
   if (nodes.length < 2) {
     problems.push({
       code: TRACE_PROBLEM.TOO_SHORT,
-      detail: 'Add at least two waypoints before tracing the route into a crowd',
+      detail: 'Add at least two route waypoints before tracing the route into a crowd.',
     });
     return { nodes: [], edges: [], problems };
   }

@@ -143,6 +143,8 @@ export const wiringControllersMixin = {
     // AnimationEngine emits 'play', 'pause', etc. internally - we listen to those in setupAnimationEngineListeners()
     // These listeners are for UI button clicks, keyboard shortcuts, etc.
     this.eventBus.on('ui:animation:play', () => {
+      // Nothing to play: refused with its reason, before anything moves (CROWD-08 part A).
+      if (this._admitPlayStart?.() === false) return;
       // If animation is at 100%, restart from beginning
       if (this.animationEngine.getProgress() >= 1.0) {
         this.animationEngine.reset();
@@ -194,6 +196,25 @@ export const wiringControllersMixin = {
       }
       if (commit) this.saveUndoState();
     });
+
+    // Duration with fewer than two route waypoints (CROWD-08 part A): the
+    // slider sets the base timeline the crowds release across, and the end is
+    // measured again where it stands. With a route the slider sends the route
+    // speed instead (`animation:speed-change`). History follows the gesture,
+    // as Hold at end's does: one entry when it commits (the pointer let go, or
+    // a keyboard step).
+    this.eventBus.on('animation:base-duration-change', ({ baseDurationMs, commit }) => {
+      if (this.waypoints.length >= 2) return;
+      if (this.animationEngine.state.baseDuration !== baseDurationMs) {
+        // Another control's pending entry is its own, kept before this one moves.
+        this._flushPendingUndo();
+        this.animationEngine.state.baseDuration = baseDurationMs;
+        this.refreshSceneEnd();
+        this.queueRender();
+        this.autoSave();
+      }
+      if (commit) this.saveUndoState();
+    });
     
     /**
      * JKL Video Editor Style Playback Controls
@@ -208,6 +229,7 @@ export const wiringControllersMixin = {
     this.jklSpeed = 1;     // Current JKL speed multiplier (1, 2, 4)
     
     this.eventBus.on('animation:jkl-reverse', () => {
+      if (this._admitPlayStart?.() === false) return;
       if (this.jklDirection === -1) {
         // Already reversing: double speed (max 4x)
         this.jklSpeed = Math.min(4, this.jklSpeed * 2);
@@ -224,6 +246,7 @@ export const wiringControllersMixin = {
     });
     
     this.eventBus.on('animation:jkl-forward', () => {
+      if (this._admitPlayStart?.() === false) return;
       if (this.jklDirection === 1) {
         // Already forward: double speed (max 4x)
         this.jklSpeed = Math.min(4, this.jklSpeed * 2);
@@ -241,6 +264,8 @@ export const wiringControllersMixin = {
     
     // Reset JKL state when animation is toggled via K or space
     this.eventBus.on('ui:animation:toggle', () => {
+      // A pause is never refused; a start with nothing to play is (CROWD-08 part A).
+      if (this._admitPlayStart?.() === false) return;
       if (this.animationEngine.isPlaying()) {
         this.animationEngine.pause();
         this.jklDirection = 0;

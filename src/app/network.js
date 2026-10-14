@@ -139,9 +139,9 @@ export const networkMixin = {
     this.eventBus.on('network:edit-mode-changed', () => this.updateGuideCard());
 
     // ── Central change pipeline ─────────────────────────────
-    // Gesture commits snapshot immediately (like waypoint edits); mid-drag
-    // frames only render. Slider-y card edits use crowd:param-changed for
-    // its debounced undo instead.
+    // Gesture commits snapshot immediately (like waypoint edits); provisional
+    // edits render here and retime through the crowds mixin. Slider-y card
+    // edits use crowd:param-changed for its debounced undo instead.
     this.eventBus.on('network:changed', ({ commit } = {}) => {
       if (commit) {
         this.saveUndoState();
@@ -537,8 +537,12 @@ export const networkMixin = {
           : `Dots walk this crowd's own network (${nodes} node${nodes === 1 ? '' : 's'}, `
             + `${edges} path${edges === 1 ? '' : 's'}).`;
         // The Trace reason above asks for the waypoints (UI-06 B-07); this says what needs them, so the ask is said once.
-        const timingHint = this.waypoints?.length < 2
-          ? ' It takes at least two route waypoints before previewing or exporting.'
+        // Only while nothing can play: a crowd that can be drawn plays and exports with no route (CROWD-08 part A).
+        const playable = typeof this.canPlayScene === 'function'
+          ? this.canPlayScene()
+          : (this.waypoints?.length || 0) >= 2;
+        const timingHint = !playable
+          ? ' It takes at least two route waypoints, or a crowd\'s network, before previewing or exporting.'
           : '';
         this._guideHintEl.textContent = `${networkHint} ${GUIDE_JOURNEY_HINT}${timingHint}`;
       }

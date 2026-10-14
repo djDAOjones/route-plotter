@@ -230,6 +230,9 @@ describe('after Open, every pacing and reveal control stands where the project i
 describe('the Duration slider takes every move a user makes (DEF-20)', () => {
   test('a move straight after the app has moved the thumb is sent, not dropped for 50 ms', async () => {
     const app = await openEditor();
+    // A route, so the slider is the route speed it pins (CROWD-08 part A: with no route it sets the timeline).
+    app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.3, isMajor: true });
+    app.eventBus.emit('waypoint:add', { imgX: 0.7, imgY: 0.6, isMajor: true });
     app.eventBus.emit('ui:slider:update-speed', 150);
     expect(durationSlider().value).toBe(String(thumbFor(150)));
 

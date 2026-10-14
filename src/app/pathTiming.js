@@ -192,6 +192,9 @@ function queueSceneEnd(app) {
     app._sceneEndTimeout = null;
     measureSceneEnd(app);
   }, 50);
+  // What can play is read from the model as the edit left it, so Play and the
+  // export items follow at once, not 50 ms on (CROWD-08 part A).
+  app.refreshPlayAvailability?.();
 }
 
 /**
@@ -222,6 +225,9 @@ export function measureSceneEnd(app) {
     writeDurationReadout(app);
     app.updateTimeDisplay?.();
   }
+  // What can play follows the base timeline measured against (the no-route
+  // Duration, an undo), as it follows every edit that queues this measure (CROWD-08 part A).
+  app.refreshPlayAvailability?.();
   return engine.state.duration;
 }
 
@@ -240,7 +246,9 @@ function writeDurationReadout(app) {
   setRangeReadout(elements.animationSpeedRight, elements.animationSpeedValueRight, durationSec + 's');
   const breakdown = elements.durationBreakdown;
   if (breakdown) {
-    const text = describeSceneEnd(engine.sceneEndParts, engine.state.duration);
+    // With no route the base is the crowds' timeline, not a route's (CROWD-08 part A).
+    const text = describeSceneEnd(engine.sceneEndParts, engine.state.duration,
+      { routeless: (app.waypoints?.length || 0) < 2 });
     breakdown.textContent = text;
     breakdown.hidden = !text;
   }
@@ -290,6 +298,8 @@ export const pathTimingMixin = {
     announceBrokenAnchors(this, this.anchorReport);
 
     if (this.waypoints.length < 2) {
+      // Its queued scene end refreshes what can play, with the anchors just
+      // resolved (CROWD-08 part A).
       clearRouteTiming(this);
       return;
     }
@@ -349,6 +359,8 @@ export const pathTimingMixin = {
       // waits for after it is still the scene's (CROWD-05).
       if (!retimeRoute(this)) measureSceneEnd(this);
     }, 50); // Wait 50ms for batch changes
+    // A route of two or more plays; crossing to it changes Duration's meaning (CROWD-08 part A).
+    this.refreshPlayAvailability?.();
   },
 
   /** Queue a fresh scene end (`queueSceneEnd`, CROWD-05). */

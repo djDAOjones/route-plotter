@@ -211,11 +211,14 @@ export class PlayerApp {
     if (this.background.image) {
       this.updateImageTransform(this.background.image);
     }
+    // pathTimingMixin — same spline + caches as the app. Whatever the route:
+    // a lone waypoint still binds the crowd nodes anchored to it, and the
+    // editor resolves them before its short-route return (CROWD-08 part A).
+    this.calculatePath();
+    // Kill calculatePath's debounced duration recompute: timing must never
+    // be re-derived after the render-space switch below.
+    clearTimeout(this._durationUpdateTimeout);
     if (this.waypoints.length >= 2) {
-      this.calculatePath();          // pathTimingMixin — same spline + caches as the app
-      // Kill calculatePath's debounced duration recompute: timing must never
-      // be re-derived after the render-space switch below.
-      clearTimeout(this._durationUpdateTimeout);
       this.updateAnimationDuration(); // markers, pauses, intro, tail, duration
       clearTimeout(this._durationUpdateTimeout);
     }
@@ -246,6 +249,13 @@ export class PlayerApp {
     this._restoreAuthoredTimeline();
     this.resize();
   }
+
+  /**
+   * The path rebuild's hook for what can play (CROWD-08 part A), part of the
+   * pathTiming contract (TST-07). The player plays what was exported: it has
+   * no Play reason, export items or Duration control to keep, so nothing.
+   */
+  refreshPlayAvailability() {}
 
   /**
    * Reset playback to the start. Mirrors the app's `animation:reset` bus

@@ -1237,16 +1237,18 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
     expect(guideHint()).toBe(`Dots walk this crowd's own network (2 nodes, 1 path). ${F14}`);
 
     // After the network sentence, before the timing one (a route of fewer than two).
+    // (Reason for the changed sentence, CROWD-08 part A: the owner's export phrasing; it shows
+    // here because the opened route's timing is not rebuilt yet, so no base timeline, and nothing can play.)
     const route = app.waypoints;
     app.waypoints = route.slice(0, 1);
     app.updateGuideCard();
     expect(guideHint()).toBe(`Dots walk this crowd's own network (2 nodes, 1 path). ${F14} `
-      + 'It takes at least two route waypoints before previewing or exporting.');
+      + 'It takes at least two route waypoints, or a crowd\'s network, before previewing or exporting.');
 
     // On an emitterless crowd too: the Guide card is the crowd's, emitter or not.
     app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
     expect(guideHint()).toBe(`No network yet — press Edit network to draw one, or Trace route into network. ${F14} `
-      + 'It takes at least two route waypoints before previewing or exporting.');
+      + 'It takes at least two route waypoints, or a crowd\'s network, before previewing or exporting.');
 
     // Back on Follow route, it goes.
     app.waypoints = route;
@@ -1274,7 +1276,9 @@ describe('the crowd hints (CROWD-07 F6, F14, F20)', () => {
       expect(lines()).toHaveLength(2);
       expect([reason.hidden, reason.textContent]).toEqual([false, 'Add at least two route waypoints first.']);
       expect(asked()).toHaveLength(1);
-      expect(guideHint()).toMatch(/It takes at least two route waypoints before previewing or exporting\.$/);
+      // (Reason for the change, CROWD-08 part A: the sentence takes the owner's export phrasing.)
+      expect(guideHint())
+        .toMatch(/It takes at least two route waypoints, or a crowd's network, before previewing or exporting\.$/);
     }
   });
 
@@ -1541,7 +1545,9 @@ describe('Custom network is a setting, not a mode (CROWD-07 X-02)', () => {
     expect(document.getElementById('network-edit-banner')).toBeNull();
     const added = () => said.mock.calls.map(([message]) => message).filter(message => / added\b/.test(message));
     expect(added()).toEqual(['Crowd 1 added — press Edit network to draw the network its dots will follow']);
-    expect(guideHint()).toBe(`${EMPTY_HELP} ${F14} It takes at least two route waypoints before previewing or exporting.`);
+    // (Reason for the change, CROWD-08 part A: the sentence takes the owner's export phrasing; nothing can play yet.)
+    expect(guideHint()).toBe(`${EMPTY_HELP} ${F14} It takes at least two route waypoints, or a crowd's network, `
+      + 'before previewing or exporting.');
 
     // Its own name, renamed or not: the next one is Crowd 2.
     said.mockClear();

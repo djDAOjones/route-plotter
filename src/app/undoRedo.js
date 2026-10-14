@@ -56,13 +56,20 @@ export const undoRedoMixin = {
     if (stylesCopy.pathHead) {
       stylesCopy.pathHead = { ...stylesCopy.pathHead, image: null };
     }
-    return {
+    const state = {
       waypoints: this.waypoints.map(wp => wp.toJSON()),
       selectedWaypointId: this.selectedWaypoint?.id || null,
       selectedWaypointIds: (this.selectedWaypoints || []).map(wp => wp.id),
       styles: stylesCopy,
       scene: this.scene.toJSON()
     };
+    // With fewer than two route waypoints the base timeline is the author's
+    // (its default, or the Duration slider's), so an entry keeps it (CROWD-08
+    // part A). With a route the route's timing rebuilds it, and an entry is as
+    // it was.
+    const base = this.animationEngine?.state?.baseDuration;
+    if (this.waypoints.length < 2 && base !== undefined) state.baseDurationMs = base;
+    return state;
   },
   
   /**
@@ -396,10 +403,23 @@ export const undoRedoMixin = {
     
     // Invalidate caches
     this._majorWaypointsCache = null;
+
+    // The base timeline an entry with no route kept (CROWD-08 part A), put
+    // back before the path rebuild reads what can play; never the default
+    // again. An entry with a route keeps none, and its timing rebuilds.
+    const engine = this.animationEngine;
+    const restoredBase = this.waypoints.length < 2 && Number.isFinite(state.baseDurationMs)
+      && state.baseDurationMs >= 0 && engine?.state && engine.state.baseDuration !== state.baseDurationMs;
+    if (restoredBase) engine.state.baseDuration = state.baseDurationMs;
     
     // Recalculate and render; with fewer than two waypoints this clears what
     // the last route fed (DEF-06).
     this.calculatePath();
+    if (restoredBase) {
+      // The end measured against it now, and the Duration thumb with it.
+      this.refreshSceneEnd?.();
+      this.syncDurationThumb?.();
+    }
     this.updateWaypointList();
     this.uiController?.updateWaypointEditor?.(
       this.selectedWaypoint,

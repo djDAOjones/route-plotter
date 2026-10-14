@@ -211,16 +211,21 @@ const seconds = ms => `${(ms / 1000).toFixed(1)} s`;
  * crowds finish +4.5 s, hold at end +2.0 s", or '' when the route alone sets
  * the end: the Duration value is then the full length and the line would
  * repeat it. Crowds and beacons are measured from the route's end; the hold
- * comes after the last of them, and is named as its control is.
+ * comes after the last of them, and is named as its control is. With fewer
+ * than two route waypoints the base is no route's, so it is the "timeline",
+ * the crowd cards' word for what releases measure against (CROWD-08 part A):
+ * "Ends at 14.5 s — timeline 10.0 s, crowds finish +2.5 s, hold at end +2.0 s".
  * @param {SceneEndParts|null} parts
  * @param {number} endMs F
+ * @param {{routeless?: boolean}} [options]
  * @returns {string}
  */
-export function describeSceneEnd(parts, endMs) {
+export function describeSceneEnd(parts, endMs, { routeless = false } = {}) {
   if (!parts || !(endMs > parts.routeMs)) return '';
   const past = [];
   if (parts.crowdsMs > parts.routeMs) past.push(`crowds finish +${seconds(parts.crowdsMs - parts.routeMs)}`);
   if (parts.beaconsMs > parts.routeMs) past.push(`beacon ends +${seconds(parts.beaconsMs - parts.routeMs)}`);
   if (parts.holdMs > 0) past.push(`hold at end +${seconds(parts.holdMs)}`);
-  return `Ends at ${seconds(endMs)} — route ${seconds(parts.routeMs)}, ${past.join(', ')}`;
+  const base = routeless ? 'timeline' : 'route';
+  return `Ends at ${seconds(endMs)} — ${base} ${seconds(parts.routeMs)}, ${past.join(', ')}`;
 }

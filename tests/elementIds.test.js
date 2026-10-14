@@ -233,12 +233,14 @@ const LOOKED_UP = {
   'src/controllers/SectionController.js': words(`
     crowd-scope edge-scope node-scope route-scope settings-help-placeholder settings-sections waypoint-scope
   `),
+  // CROWD-08 part A: Play's reason line under the playbar (`play-reason`, `setPlayAvailability`), and the Comet
+  // trail line a second time (`pacing-comet-hint`, `setDurationRouteless`), hidden below two route waypoints.
   'src/controllers/UIController.js': words(`
     aov-controls aov-controls clear-cancel clear-confirm clear-confirm-modal codec-cancel
     codec-modal-message codec-mp4-reduced codec-unsupported-modal codec-webm file-dropdown-btn
-    leg-section-title modal-title-codec pacing-comet-hint path-trail-control reveal-trail-control scope-chip
-    scope-chip-text scope-next-btn scope-prev-btn scope-route-btn spotlight-controls
-    spotlight-controls
+    leg-section-title modal-title-codec pacing-comet-hint pacing-comet-hint path-trail-control play-reason
+    reveal-trail-control scope-chip scope-chip-text scope-next-btn scope-prev-btn scope-route-btn
+    spotlight-controls spotlight-controls
   `),
   // UI-06 PR 6: the banner slot, in the elements bag (`mode-banner`); round 2: the Preview badge, whose
   // `hidden` the mode switch keeps true to the mode (`preview-badge`, Codex r1 on 7a74755, 2).

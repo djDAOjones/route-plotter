@@ -122,6 +122,23 @@ function finishesJourneys(emitter) {
 }
 
 /**
+ * Whether a finishing dot's journey of `length` is over at `timelineMs`, by
+ * the sum the scene's end is measured with (CROWD-05). The one comparison the
+ * evaluator ends such a dot with and `canRelease` admits a Disappear dot by
+ * (CROWD-08 part A), so the two cannot drift: at its onset a dot whose finish
+ * rounds to the onset is over before it is drawn.
+ * @param {number} timelineMs
+ * @param {number} onsetMs
+ * @param {number} length Normalised distance walked to the end in question
+ * @param {Object} emitter Its `speed`
+ * @param {number} pace The dot's speed multiplier on its first journey
+ * @returns {boolean}
+ */
+function journeyOverAt(timelineMs, onsetMs, length, emitter, pace) {
+  return timelineMs >= onsetMs + dotJourneyMs(length, emitter.speed, pace);
+}
+
+/**
  * Everything a network walk reads, as one string (CROWD-05): each node's
  * type and resolved position, and each path's ends, direction, weight and
  * bends, in the order the walk meets them.
@@ -155,11 +172,12 @@ export class SwarmEngine {
     /** @private — shared calculator for route-guide length/interpolation. */
     this._routeCalc = new PathCalculator();
     /**
-     * Each finishing emitter's first journeys on its network, by emitter id
-     * (`_cachedJourneys`, CROWD-05).
-     * @private @type {Map<string, {key: string, lengths: Float64Array, ends: Uint8Array}>}
+     * Each emitter's first journeys on its network, by model identity. IDs
+     * can repeat across layers or loaded projects; each instance keeps its
+     * own walks, and replaced models can be collected (CROWD-08 part A).
+     * @private @type {WeakMap<Object, WeakMap<Object, Object>>}
      */
-    this._journeyCache = new Map();
+    this._journeyCache = new WeakMap();
   }
 
   /**
@@ -321,7 +339,7 @@ export class SwarmEngine {
 
     let latest = 0;
     for (const emitter of finishing) {
-      const journeys = signature === null ? null : this._cachedJourneys(emitter, guide, signature);
+      const journeys = signature === null ? null : this._cachedJourneys(layer, emitter, guide, signature);
       const window = this._releaseWindow(emitter, context.routeAnchors);
       for (let i = 0; i < emitter.dotCount; i++) {
         const length = journeys ? journeys.lengths[i] : guide.length;
@@ -340,25 +358,89 @@ export class SwarmEngine {
    * directions, weights and order (`graphSignature`), the emitter's seed and
    * its dot count. Speed, pace variation and releases are not in the walk, so
    * an edit to them is answered from here. Cached geometry only: a cold call
-   * and a warm one return the same lengths.
+   * and a warm one return the same lengths. Kept per layer and emitter
+   * instance, so loading a project with reused ids cannot inherit another
+   * model's journeys (CROWD-08 part A).
+   * `multiLeg` marks a journey of more than one path with length, which the
+   * evaluator draws at its onset whatever its finish (`canRelease`).
    * @private
-   * @returns {{lengths: Float64Array, ends: Uint8Array}}
+   * @returns {{lengths: Float64Array, ends: Uint8Array, multiLeg: Uint8Array}}
    */
-  _cachedJourneys(emitter, guide, signature) {
+  _cachedJourneys(layer, emitter, guide, signature) {
     const key = `${signature}|${emitter.seed}|${emitter.dotCount}`;
-    const cached = this._journeyCache.get(emitter.id);
+    let byEmitter = this._journeyCache.get(layer);
+    if (!byEmitter) {
+      byEmitter = new WeakMap();
+      this._journeyCache.set(layer, byEmitter);
+    }
+    const cached = byEmitter.get(emitter);
     if (cached && cached.key === key) return cached;
     const reaching = this._nodesReachingEnd(guide);
     const lengths = new Float64Array(emitter.dotCount);
     const ends = new Uint8Array(emitter.dotCount);
+    const multiLeg = new Uint8Array(emitter.dotCount);
     for (let i = 0; i < emitter.dotCount; i++) {
       const journey = this._journeyLength(emitter, i, guide, reaching);
       lengths[i] = journey.length;
       ends[i] = journey.ends ? 1 : 0;
+      multiLeg[i] = journey.legs > 1 ? 1 : 0;
     }
-    const entry = { key, lengths, ends };
-    this._journeyCache.set(emitter.id, entry);
+    const entry = { key, lengths, ends, multiLeg };
+    byEmitter.set(emitter, entry);
     return entry;
+  }
+
+  /**
+   * Whether the layer's dots can be drawn: whether `evaluate` returns at
+   * least one dot at some finite instant of the playback, whatever the
+   * layer's visibility (CROWD-08 part A; the lead's settlement of "can
+   * release dots"). Play and both exports admit a project with no route by
+   * it, so it reads the engine's own guide, walks and arithmetic rather than
+   * restate them: a dot is drawn, if ever, at its exact onset (the onset is
+   * within the base timeline, and every later instant of a dot not drawn
+   * then finds its journey over too).
+   *
+   * - No base timeline, no guide (`_guideFor`: no route, or a network with
+   *   no path or entry), or no emitter with a dot: none.
+   * - Collect at the end, Respawn and Repeat journey: every released dot is
+   *   drawn, parked where its journey ends or re-entering.
+   * - Disappear: a dot whose walk runs out of hops (`!ends`) is parked and
+   *   drawn; one whose journey holds more than one path with length is drawn
+   *   on its first at its onset, where `_journeyEndAfter` finds more to walk;
+   *   one with a single such path is drawn unless its finish is its onset
+   *   (`journeyOverAt`, the evaluator's comparison); one with none is not.
+   *
+   * Walks come from the scene end's cache (`_cachedJourneys`), so a repeated
+   * call walks nothing; releases and paces are recomputed from the context,
+   * as `crowdFinishMs` does.
+   * @param {FlowLayer} layer
+   * @param {Object} context Same shape as evaluate()'s
+   * @returns {boolean}
+   */
+  canRelease(layer, context = {}) {
+    const durationMs = context.durationMs;
+    if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return false;
+    const emitters = (layer.emitters || []).filter(emitter => emitter.dotCount > 0);
+    if (emitters.length === 0) return false;
+    const guide = this._guideFor(layer, context);
+    if (!guide) return false;
+    const signature = guide.type === 'graph' ? graphSignature(guide.graph) : null;
+
+    for (const emitter of emitters) {
+      if (emitter.lifecycleMode !== 'disappear') return true;
+      const journeys = signature === null ? null : this._cachedJourneys(layer, emitter, guide, signature);
+      const window = this._releaseWindow(emitter, context.routeAnchors);
+      for (let i = 0; i < emitter.dotCount; i++) {
+        if (journeys) {
+          if (!journeys.ends[i] || journeys.multiLeg[i]) return true;
+          if (!(journeys.lengths[i] > 0)) continue;
+        }
+        const length = journeys ? journeys.lengths[i] : guide.length;
+        const onsetMs = this._onsetFraction(emitter, i, window) * durationMs;
+        if (!journeyOverAt(onsetMs, onsetMs, length, emitter, this._journeyPace(emitter, i, 0))) return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -367,9 +449,10 @@ export class SwarmEngine {
    * the distance it walked and `ends: false` (DEF-77). Mirrors the walk in
    * `_walkGraph`, summing lengths instead of stopping at a distance. Given
    * `reaching` (`_nodesReachingEnd`), a walk that stands anywhere else stops
-   * there, its length Infinity, since it could only run out of hops.
+   * there, its length Infinity, since it could only run out of hops. `legs`
+   * counts the paths with length it walked (CROWD-08 part A, `canRelease`).
    * @private
-   * @returns {{length: number, ends: boolean}}
+   * @returns {{length: number, ends: boolean, legs: number}}
    */
   _journeyLength(emitter, dotIndex, guide, reaching = null) {
     const { graph, entries } = guide;
@@ -379,20 +462,23 @@ export class SwarmEngine {
     let node = this._pickEntry(entries, seed, dotIndex, hop++);
     let cameFromEdgeId = null;
     let total = 0;
+    let legs = 0;
 
     for (let step = 0; step < MAX_HOPS; step++) {
-      if (reaching && !reaching.has(node.id)) return { length: Infinity, ends: false };
+      if (reaching && !reaching.has(node.id)) return { length: Infinity, ends: false, legs };
       const atExit = this._endsJourney(node, guide, step, step > 0);
       const candidates = atExit ? [] : this._traversableEdges(graph, node.id, cameFromEdgeId);
-      if (atExit || candidates.length === 0) return { length: total, ends: true };
+      if (atExit || candidates.length === 0) return { length: total, ends: true, legs };
 
       const traversal = this._pickWeighted(candidates, seed, dotIndex, hop++);
-      total += this.edgeGeometry(graph, traversal.edge).length;
+      const edgeLength = this.edgeGeometry(graph, traversal.edge).length;
+      total += edgeLength;
+      if (edgeLength > 0) legs += 1;
       node = graph.getNode(traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId);
       cameFromEdgeId = traversal.edge.id;
       if (!node) break;
     }
-    return { length: total, ends: false };
+    return { length: total, ends: false, legs };
   }
 
   /**
@@ -598,7 +684,7 @@ export class SwarmEngine {
     // A journey that ends is over at its own finish, by the sum the scene's
     // end is measured with (CROWD-05), whatever rounding left of `distance`.
     if (distance >= length || (finishesJourneys(emitter)
-        && timelineMs >= onsetMs + dotJourneyMs(length, emitter.speed, speedMultiplier))) {
+        && journeyOverAt(timelineMs, onsetMs, length, emitter, speedMultiplier))) {
       if (mode === 'disappear') return null;
       if (mode === 'collect') {
         return this._sampleAt(points, 1, false, length);
@@ -769,7 +855,7 @@ export class SwarmEngine {
         // Only a dot at the end of its path is checked for being on its last.
         const journeyLength = travelled + edgeGeom.length;
         if (finishesJourneys(emitter)
-            && timelineMs >= onsetMs + dotJourneyMs(journeyLength, emitter.speed, speedMultiplier)) {
+            && journeyOverAt(timelineMs, onsetMs, journeyLength, emitter, speedMultiplier)) {
           const end = this._journeyEndAfter(
             guide, traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId,
             traversal.edge.id, step + 1, emitter, dotIndex, hop
