@@ -1708,6 +1708,15 @@ kbd{
   color:var(--text-01);
 }
 
+/* Keep the area fields inside the inspector beside its fixed label/help column. */
+#network-node-area-card input[type="number"]{
+  flex:1 1 0;
+  width:5rem;
+  min-width:var(--touch-target-min);
+  box-sizing:border-box;
+  background:var(--ui-00);
+}
+
 /* Control row stacked - per spec v3.1.256 §B */
 .control-row{
   margin-bottom:var(--row-gap); /* 0.5rem per spec §B */

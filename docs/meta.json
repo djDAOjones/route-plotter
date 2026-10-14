@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 19275,
+      "bytes": 19486,
       "imports": [],
       "format": "esm"
     },
@@ -16,13 +16,34 @@
       ],
       "format": "esm"
     },
+    "src/utils/crowdArea.js": {
+      "bytes": 3779,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "./imageCoordinates.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/models/GraphNode.js": {
-      "bytes": 4970,
+      "bytes": 5240,
       "imports": [
         {
           "path": "src/utils/imageCoordinates.js",
           "kind": "import-statement",
           "original": "../utils/imageCoordinates.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
         }
       ],
       "format": "esm"
@@ -96,7 +117,7 @@
       "format": "esm"
     },
     "src/models/FlowLayer.js": {
-      "bytes": 10009,
+      "bytes": 10100,
       "imports": [
         {
           "path": "src/models/GraphModel.js",
@@ -122,6 +143,11 @@
           "path": "src/config/constants.js",
           "kind": "import-statement",
           "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
         }
       ],
       "format": "esm"
@@ -329,8 +355,13 @@
       "format": "esm"
     },
     "src/services/RenderingService.js": {
-      "bytes": 115017,
+      "bytes": 115143,
       "imports": [
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        },
         {
           "path": "src/config/constants.js",
           "kind": "import-statement",
@@ -395,7 +426,7 @@
       "format": "esm"
     },
     "src/services/SwarmEngine.js": {
-      "bytes": 45809,
+      "bytes": 49671,
       "imports": [
         {
           "path": "src/services/PathCalculator.js",
@@ -426,6 +457,11 @@
           "path": "src/utils/imageCoordinates.js",
           "kind": "import-statement",
           "original": "../utils/imageCoordinates.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
         }
       ],
       "format": "esm"
@@ -2630,7 +2666,7 @@
       "format": "esm"
     },
     "src/utils/sceneSemantics.js": {
-      "bytes": 10845,
+      "bytes": 11035,
       "imports": [
         {
           "path": "src/utils/waypointNaming.js",
@@ -2723,7 +2759,7 @@
       "format": "esm"
     },
     "src/controllers/SectionController.js": {
-      "bytes": 18028,
+      "bytes": 18014,
       "imports": [],
       "format": "esm"
     },
@@ -2781,7 +2817,7 @@
       "format": "esm"
     },
     "src/services/NetworkEditService.js": {
-      "bytes": 45901,
+      "bytes": 48447,
       "imports": [
         {
           "path": "src/utils/snapToAngle.js",
@@ -2807,6 +2843,16 @@
           "path": "src/components/ModeBanner.js",
           "kind": "import-statement",
           "original": "../components/ModeBanner.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
         }
       ],
       "format": "esm"
@@ -3244,7 +3290,7 @@
       "format": "esm"
     },
     "src/app/pathTiming.js": {
-      "bytes": 37297,
+      "bytes": 37415,
       "imports": [
         {
           "path": "src/utils/Easing.js",
@@ -3290,6 +3336,11 @@
           "path": "src/utils/uiReadouts.js",
           "kind": "import-statement",
           "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
         }
       ],
       "format": "esm"
@@ -3549,7 +3600,7 @@
       "format": "esm"
     },
     "src/app/playback.js": {
-      "bytes": 20062,
+      "bytes": 20181,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3570,6 +3621,11 @@
           "path": "src/components/ModeBanner.js",
           "kind": "import-statement",
           "original": "../components/ModeBanner.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
         }
       ],
       "format": "esm"
@@ -3591,12 +3647,17 @@
       "format": "esm"
     },
     "src/app/viewport.js": {
-      "bytes": 21725,
+      "bytes": 22778,
       "imports": [
         {
           "path": "src/utils/renderReference.js",
           "kind": "import-statement",
           "original": "../utils/renderReference.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
         }
       ],
       "format": "esm"
@@ -3751,7 +3812,7 @@
       "format": "esm"
     },
     "src/app/network.js": {
-      "bytes": 34723,
+      "bytes": 39809,
       "imports": [
         {
           "path": "src/config/constants.js",
@@ -3782,12 +3843,17 @@
           "path": "src/app/regionLines.js",
           "kind": "import-statement",
           "original": "./regionLines.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
         }
       ],
       "format": "esm"
     },
     "src/controllers/SceneOutlineController.js": {
-      "bytes": 62112,
+      "bytes": 65388,
       "imports": [
         {
           "path": "src/utils/sceneSemantics.js",
@@ -3803,12 +3869,17 @@
           "path": "src/utils/uiReadouts.js",
           "kind": "import-statement",
           "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
         }
       ],
       "format": "esm"
     },
     "src/app/sceneOutline.js": {
-      "bytes": 46719,
+      "bytes": 47717,
       "imports": [
         {
           "path": "src/controllers/SceneOutlineController.js",
@@ -4250,13 +4321,13 @@
     }
   },
   "outputs": {
-    ".docs-build-mkVkf9/app.js.map": {
+    ".docs-build-EGDP06/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 3971940
+      "bytes": 4008056
     },
-    ".docs-build-mkVkf9/app.js": {
+    ".docs-build-EGDP06/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4265,13 +4336,16 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 4366
+          "bytesInOutput": 4454
         },
         "src/utils/imageCoordinates.js": {
           "bytesInOutput": 141
         },
+        "src/utils/crowdArea.js": {
+          "bytesInOutput": 1386
+        },
         "src/models/GraphNode.js": {
-          "bytesInOutput": 1238
+          "bytesInOutput": 1312
         },
         "src/models/GraphEdge.js": {
           "bytesInOutput": 1302
@@ -4295,7 +4369,7 @@
           "bytesInOutput": 694
         },
         "src/models/FlowLayer.js": {
-          "bytesInOutput": 4268
+          "bytesInOutput": 4279
         },
         "src/models/Scene.js": {
           "bytesInOutput": 2238
@@ -4355,7 +4429,7 @@
           "bytesInOutput": 342
         },
         "src/services/RenderingService.js": {
-          "bytesInOutput": 29210
+          "bytesInOutput": 29248
         },
         "src/utils/crowdArrival.js": {
           "bytesInOutput": 280
@@ -4364,7 +4438,7 @@
           "bytesInOutput": 797
         },
         "src/services/SwarmEngine.js": {
-          "bytesInOutput": 10862
+          "bytesInOutput": 12258
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 1297
@@ -4469,7 +4543,7 @@
           "bytesInOutput": 1370
         },
         "src/utils/sceneSemantics.js": {
-          "bytesInOutput": 4440
+          "bytesInOutput": 4551
         },
         "src/controllers/UIController.js": {
           "bytesInOutput": 45058
@@ -4481,7 +4555,7 @@
           "bytesInOutput": 2379
         },
         "src/controllers/SectionController.js": {
-          "bytesInOutput": 7066
+          "bytesInOutput": 7081
         },
         "src/components/ModeBanner.js": {
           "bytesInOutput": 5034
@@ -4496,7 +4570,7 @@
           "bytesInOutput": 644
         },
         "src/services/NetworkEditService.js": {
-          "bytesInOutput": 18296
+          "bytesInOutput": 19503
         },
         "src/services/AreaEditService.js": {
           "bytesInOutput": 4525
@@ -4583,7 +4657,7 @@
           "bytesInOutput": 2204
         },
         "src/app/pathTiming.js": {
-          "bytesInOutput": 10149
+          "bytesInOutput": 10187
         },
         "src/app/regionLines.js": {
           "bytesInOutput": 93
@@ -4601,13 +4675,13 @@
           "bytesInOutput": 8902
         },
         "src/app/playback.js": {
-          "bytesInOutput": 6598
+          "bytesInOutput": 6639
         },
         "src/app/camera.js": {
           "bytesInOutput": 4383
         },
         "src/app/viewport.js": {
-          "bytesInOutput": 5803
+          "bytesInOutput": 6348
         },
         "src/utils/waypointCardActions.js": {
           "bytesInOutput": 4621
@@ -4622,13 +4696,13 @@
           "bytesInOutput": 27064
         },
         "src/app/network.js": {
-          "bytesInOutput": 13937
+          "bytesInOutput": 16446
         },
         "src/controllers/SceneOutlineController.js": {
-          "bytesInOutput": 35028
+          "bytesInOutput": 37165
         },
         "src/app/sceneOutline.js": {
-          "bytesInOutput": 27021
+          "bytesInOutput": 27681
         },
         "src/app/helpDialog.js": {
           "bytesInOutput": 1387
@@ -4646,7 +4720,7 @@
           "bytesInOutput": 28809
         }
       },
-      "bytes": 1195767
+      "bytes": 1206023
     }
   }
 }
