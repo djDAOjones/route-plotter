@@ -18,6 +18,24 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-14 — REL-719 — v3.3.719 ships CROWD-08 Part A; Codex takes over implementation
+
+**Decision:** v3.3.719 ships CROWD-08 Part A, closing DEF-84, and Codex takes over implementation under the run's grant while a separate read-only Codex reviews each CROWD-08 PR at xhigh until approval.
+
+**Rationale:** Released under GATELESS-1 and PLAN-4 after PR #139 merged as 5e03a4caeea87a707270f922ed10d6bc23c2aa96, with final PR head 681aef1417f003add144735bbd6cfe1e2b88c391, independent gpt-6-astra xhigh approval in round 3, and successful pull_request Verify 38564372857. Deploy 457ead0c82e0c0466d514c19a029e9e3488812f0: 142 test files, 3579 passing tests and 2 existing todos; shell/build/check passed, zero unhandled errors, push succeeded, main-branch Verify 38573554808 and Pages deploy succeeded, github-pages deployment 7066952839 reached that exact SHA, published SHA-256 comparison match 22, mismatch 0, errors 0. Live readiness and Open day playback/MP4/HTML smoke passed after clearing localStorage, sessionStorage and IndexedDB: six-waypoint Open day played to 3002 ms, then the end in 1442 further frames with zero queued; MP4 9,819,817 bytes, ftypisom, 1920×1080, 29.033333 s; HTML 2,038,373 bytes with CSP, embedded project and exact live player; no unexpected console/JS errors or failed application resources. The first wrapper run flagged the pre-existing root-site favicon 404, documented before publication, in its raw resource list while already classifying it as known in the console list; the lead corrected that harness inconsistency using exact resource URLs and retaining the first evidence, then reran the full live smoke successfully with no failed resource entries or JavaScript errors. No production test or release code was changed for that correction. Annotated tag v3.3.719 pushed at the deploy SHA. The release changes export admission and the HTML player, so its MP4 and HTML saved-file check is owed pending the owner's completion or an explicit waiver for this release; v3.3.720 will independently owe the tenth-build check.
+
+The owner's 14 October words, recorded verbatim by the handing-over lead: "I would like to handover development to codex, where I have 80% of usage left, as I need to use claude usage for other projects. can you write a handover prompt? it has directory access"; later "close out here, codex at large". The implementing lead initially read this as transferring the existing build, gate, commit, push, merge and release authority to Codex. At ~13:21 BST the owner directly instructed this Codex session: "when you have a moment, can you factor this in: Read and follow ~/route-plotter-bigrun/CODEX-MERGE-PROMPT.md". That prompt explicitly directs those steps through the reviewed REL-719 record and says, "After REL-719, carry on with part B as the handover prompt says." This confirms implementation authority and continuation for this session; every PR still receives the recorded independent review, and the implementing session never approves its own work. No numeric session budget is changed. The profile's Handoff line is updated to that division of work. This replaces only the implementing harness in GATELESS-1; the grant's other conditions and PLAN-4's CROWD-08 review bar stand. On "autojazz or run gateless as possible - mvp decisions err on the side of easiness", the lead's reading is to choose the easier safe MVP option under GATELESS-1 condition 2 and report that as its own call, asking only where a safe choice is unavailable; review and release conditions stand.
+
+The owner chose "Keep the row (Recommended)" for Play's reason after seeing the 1280×800 shots; the lead keeps the row and corrects portrait fitting around its wrapped height. His area-placement answer was "as per your reccomendation, but the full feature in v4": MVP areas stay centred on the node, with width, height and turn only. Reading "full feature" as an off-node area dragged or offset is lead #12's proposal, now a wish line, not an owner decision. His "yes, but provide a prompt to start in fresh chat" authorized Part A's complete cycle. His "ok" acknowledged being asked at release about saved-file checks. The pause and resume were local to lead #13 and are finished.
+
+GATELESS-1 condition 9: Part A already records lead #12's one-off 500k context and 98% stop. For lead #13 the owner picked "500k, as chat #12 (Recommended)" and "99%; agents after reset (Recommended)": 500k for that chat alone, no new agents past about 460k, weekly stop 99%, and Opus agents waiting until the 15 October 02:00 BST reset. These Claude-chat limits do not enlarge the Codex session's standing context budget.
+
+Standards: house event ownership and regression/mutation checks; nielsen 1 and 9, Carbon helper text/disabled state, and WCAG 4.1.2/1.3.1. Chromium exposes Play's computed description; screen-reader speech remains REV-05's owner evidence. Required archival before the Part A close preserved all previous decision text verbatim.
+
+**Supersedes:** 2026-10-05 — GATELESS-1 — The run goes gateless: each merge lands and ships as it goes, with Codex reviewing
+
+**Deferred:** none
+
 ## 2026-10-14 — REFACTOR-01 — After CROWD-08, a refactor in light of PM-Skills 3.1 comes before v4's merge
 
 **Decision:** On the owner's word, REFACTOR-01, a major refactor in light of PM-Skills 3.1's code-management frameworks, follows CROWD-08 and comes before MERGE-01, so that v4's merge of routes and crowds lands on more modular code. It replaces PLAN-4's "MERGE-01 first in Next"; the rest of PLAN-4 stands.
@@ -550,14 +568,4 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Supersedes:** none
 
 **Deferred:** EX-01
-
-## 2026-10-05 — CROWD-05 — The animation runs until everything that finishes has finished
-
-**Decision:** CROWD-05 lands: the playback duration is the latest of the route's own timeline (the base) and every end after it, crowd dots that finish and beacons that settle, while everything timed as a fraction keeps the base; Duration shows the full length and, when something past the route sets it, what does. Its group closes; Phase 1 goes on with TST-14 (DEF-64 landed first).
-
-**Rationale:** the owner: "animations never end before any animation that will end does end". The plan (the item's notes) followed Codex's design consult and took every change from its check. The run's calls, for the owner to confirm: the base keeps each mode's composition, so with a comet trail Preview is longer than Edit by the tail, as before, and crowds release against each mode's base (DEF-78); play, scrub, export and the player agree within a mode, apart from two inherited drifts each measured where it renders, so none cuts a crowd off (anchors resolved in render space, DEF-79; the player retiming constant-time projects, DEF-80); the breakdown line shows only when the end passes the route; labels, areas, reveals and the camera's ease are not counted (nothing about them concludes); a hidden crowd does not count; the saved duration stays the base, so files open as before and never drift; "Wait here for this crowd" reads the base until CROWD-06. Exact ends: a Disappear dot is gone and a Collect dot parked at its finish. Built-in examples lengthen (Open day 27.3 s, Nervous system 126.5 s): retuning is the owner's call, a wish line. 65 new tests; 21 mutants applied, each failing; six goldens regenerated, their frames at the old instants byte-identical. Recall, local: CROWD-05, DEF-64, DEF-72, TST-16 (`project/trajectory.md`); DEF-72's decision; CROWD-06, DEF-78, DEF-79, DEF-80 (`project/backlog.md`); TST-14, Phase 1. Digest rules applied: house conventions → Testing and persistence; Nielsen → status visible; WCAG 2.2 AAA → a described control.
-
-**Supersedes:** none
-
-**Deferred:** CROWD-06, DEF-78, DEF-79, DEF-80
 
