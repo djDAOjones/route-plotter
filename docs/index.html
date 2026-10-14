@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.2.718</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.2.718">
-  <link rel="stylesheet" href="styles/main.css?v=3.2.718">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.2.718">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.2.718">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.2.718">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.2.718">
+  <title>Route Plotter v3.3.719</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.3.719">
+  <link rel="stylesheet" href="styles/main.css?v=3.3.719">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.3.719">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.3.719">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.3.719">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.3.719">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -1387,6 +1387,10 @@
             <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="1000" value="0" step="1" aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:00">
             <span id="total-time" class="time">0:00</span>
           </div>
+          <!-- Why Play is off when there is nothing to play (CROWD-08 part A):
+               a line of its own under the transport, which Play is described
+               by while it is disabled; empty and hidden otherwise -->
+          <p id="play-reason" class="playbar-reason" hidden></p>
           <!-- Toast notifications, bottom-centre of the canvas area, just above
                the transport so they cover none of its controls (UI-06 J-12).
                Not a live region: every toast is announced once through the
@@ -1569,6 +1573,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.2.718"></script>
+  <script src="app.js?v=3.3.719"></script>
 </body>
 </html>
