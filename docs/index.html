@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.3.720</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.3.720">
-  <link rel="stylesheet" href="styles/main.css?v=3.3.720">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.3.720">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.3.720">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.3.720">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.3.720">
+  <title>Route Plotter v3.3.721</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.3.721">
+  <link rel="stylesheet" href="styles/main.css?v=3.3.721">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.3.721">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.3.721">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.3.721">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.3.721">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -1322,13 +1322,14 @@
             <div id="section-node-area-content" class="section-content">
               <div class="section-primary">
                 <label for="network-node-area-shape">
-                  <span data-tip="Centred on this node. Dots start inside the area and walk straight to the node before joining the network">Start area</span>
+                  <span id="network-node-area-label" data-tip="Centred on this node. Entry dots walk to the node; collecting Exit dots walk into places">Start area</span>
                   <select id="network-node-area-shape" aria-describedby="network-node-area-hint">
                     <option value="none">None</option>
                     <option value="rectangle">Rectangle</option>
                     <option value="ellipse">Ellipse</option>
                   </select>
                 </label>
+                <p id="network-node-area-shape-error" class="range-field-error" hidden></p>
                 <p id="network-node-area-reason" class="section-hint" hidden></p>
                 <div id="network-node-area-size" hidden>
                   <label for="network-node-area-width">
@@ -1615,6 +1616,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.3.720"></script>
+  <script src="app.js?v=3.3.721"></script>
 </body>
 </html>
