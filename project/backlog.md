@@ -90,7 +90,6 @@
 - [ ] DEF-78 — Comet tail retimes crowds — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-79 — Render space moves crowd anchors — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
 - [ ] DEF-80 — Player retimes constant-time projects — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
-- [ ] DEF-84 — Play silent without route — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-85 — Anchored window start misreads — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-87 — Traced node drag no-op — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
 - [ ] DEF-88 — Branch keeps crowd inspector — since 2026-10-08 — (from: CROWD-07, 2026-10-08)

@@ -7,6 +7,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## MVP — football crowds and mobs
+
+- DEF-84 — crowds with a drawable network play and export without a route; empty scenes explain what to add (2026-10-14) — see decisions
+
 ## Ahead of Phase 2's last defects — the owner's word of 2026-10-13
 
 - RECALL — 7/8 (2026-10-13) — scores: 2,2,1,2 — local — see decisions
