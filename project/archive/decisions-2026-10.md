@@ -398,3 +398,13 @@ The session's calls, for the owner to confirm: the grant holds for the run, whic
 
 **Deferred:** EX-01
 
+## 2026-10-05 — REL-702 — v3.2.702 ships DEF-64; v3.2.701's exports saved and opened from disk
+
+**Decision:** v3.2.702 is live from deploy commit `aa53419` (tag `v3.2.702`), released under GATELESS-1 because DEF-64's merge (`8b969cc`, PR #77) changed `src/`; v3.2.701's export check is done, and v3.2.700's is superseded by it.
+
+**Rationale:** Releasing, in full: Pages' builds of `8b969cc` were cancelled twice in the queue (this account runs one job at a time) and a third request built; tagged `rollback-v3.2.701-8b969cc`; gate green; `npm run push` committed `aa53419`; all checks green; 22 files identical. Live smoke: 3,002 ms of 11,594, its end with no frame queued, MP4 1920×1080 13.6 s `ftypisom`, HTML embedded; two earlier runs read a stale session's 12,262 ms after the pane's example fetch timed out. Export save, through the owner's Chrome with his "please go ahead": `route-animation-2026-10-05T21-25-47.mp4` (5,090,666 bytes; `isom`, 1920×1080, 13.133 s) and `route-animation (1).html` (2,028,978 bytes; project, CSP and the live `player.js` byte for byte), opened from disk in Chrome: it loads the map, labels and controls with no console error, and the owner, watching it play: "it looks good to me". v3.2.700 is no longer live, so its save is superseded by 701's: the run's call, for the owner to confirm.
+
+**Supersedes:** none
+
+**Deferred:** none
+
