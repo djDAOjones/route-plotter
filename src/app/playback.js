@@ -6,6 +6,7 @@
  * RoutePlotter instance; main.js attaches the group via
  * Object.assign(RoutePlotter.prototype, playbackMixin).
  */
+import { getFinishContexts } from './finishContexts.js';
 import { ANIMATION } from '../config/constants.js';
 import { setTimelineReadout } from '../utils/uiReadouts.js';
 import { isModalOpen, whenNoModalOpen } from '../utils/focusTrap.js';
@@ -51,6 +52,7 @@ export const playbackMixin = {
     const engine = this.animationEngine;
     const context = {
       imageAspect: areaImageAspect(this.coordinateTransform),
+      ...getFinishContexts(this),
       durationMs: engine.state.baseDuration ?? engine.state.duration,
       routePathPoints: this.pathPoints,
       routeAnchors: this.getRouteArrivalMap?.() || null,

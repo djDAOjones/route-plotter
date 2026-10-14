@@ -6,6 +6,7 @@
  * stable-ID commands through EventBus.
  */
 
+import { crowdAreaDescription } from '../utils/crowdAreaDescription.js';
 import { sceneOutlineKey } from '../utils/sceneSemantics.js';
 import { IMAGE_COORDINATES } from '../config/constants.js';
 import { formatCrowdDotSize } from '../utils/uiReadouts.js';
@@ -618,7 +619,7 @@ export class SceneOutlineController {
       if (crowd.graph.nodes.length >= 2) valid.add(`${crowd.graph.key}:connect`);
       for (const node of crowd.graph.nodes) {
         valid.add(`${node.key}:apply`);
-        if (node.type === 'entry' || node.area) valid.add(`${node.key}:area-apply`);
+        if (['entry', 'exit'].includes(node.type) || node.area) valid.add(`${node.key}:area-apply`);
       }
       for (const edge of crowd.graph.edges) {
         valid.add(`${edge.key}:apply`);
@@ -1259,7 +1260,7 @@ export class SceneOutlineController {
         key: `${node.key}:label`, canonicalValue: node.label, tip: FIELD_HINTS.nodeLabel,
       }),
     ], 'Apply node', `${node.key}:apply`));
-    if (node.type === 'entry' || node.area) content.appendChild(this._renderNodeArea(crowd, node));
+    if (['entry', 'exit'].includes(node.type) || node.area) content.appendChild(this._renderNodeArea(crowd, node));
     content.appendChild(button(
       `Delete node${node.connectedEdges ? ` and ${plural(node.connectedEdges, 'connected path')}` : ''}`,
       'delete-node',
@@ -1272,6 +1273,8 @@ export class SceneOutlineController {
 
   _renderNodeArea(crowd, node) {
     const area = node.area || createCrowdArea();
+    const description = node.areaDescription
+      || crowdAreaDescription({ type: node.type, hasImage: node.hasBackgroundImage });
     const moreKey = `${node.key}:area-more`;
     const more = detailsBlock(moreKey, 'More', this._isOpen(moreKey), 'section-more');
     more.appendChild(labelledInput('turn', 'Turn (°)', area.turn, {
@@ -1279,24 +1282,21 @@ export class SceneOutlineController {
       tip: 'Clockwise turn in the image’s plane; a negative value turns anticlockwise',
     }));
     const formEl = form('update-node-area', {
-      layerId: crowd.id, nodeId: node.id, areaInactive: node.type !== 'entry',
+      layerId: crowd.id, nodeId: node.id, areaInactive: !['entry', 'exit'].includes(node.type),
     }, [
-      labelledSelect('shape', 'Start area', node.area?.shape || 'none', [
+      labelledSelect('shape', description.label, node.area?.shape || 'none', [
         { value: 'none', label: 'None' }, { value: 'rectangle', label: 'Rectangle' },
         { value: 'ellipse', label: 'Ellipse' },
       ], { key: `${node.key}:area-shape`,
-        tip: 'Centred on this node. Dots start inside the area and walk straight to the node '
-          + 'before joining the network' }),
+        tip: 'Centred on this node. Entry dots walk to the node; collecting Exit dots walk into places' }),
       ...['width', 'height'].map(key => labelledInput(key,
         key === 'width' ? 'Width (%)' : 'Height (%)', area[key] * 100, {
         min: 1, max: 80, step: 'any', key: `${node.key}:area-${key}`, canonicalValue: area[key],
         tip: `${key === 'width' ? 'Width' : 'Height'} before turning, as a percentage of the image’s ${key}`,
       })),
       more,
-    ], 'Apply start area', `${node.key}:area-apply`, JSON.stringify([node.type, node.area]));
-    const hints = ['Only Disappear and Collect at the end use the area. Respawn and Repeat journey start at the node.'];
-    if (node.type !== 'entry') hints.push('Choose Entry in Type to edit and use this start area.');
-    if (!node.hasBackgroundImage) hints.push('Add a background image to keep the area’s shape when you turn it.');
+    ], `Apply ${description.label.toLowerCase()}`, `${node.key}:area-apply`, JSON.stringify([node.type, node.area]));
+    const hints = [description.hint, description.reason, description.imageHint].filter(Boolean);
     const hint = el('p', { className: 'scene-outline-hint', text: hints.join(' '),
       attrs: { id: `${OUTLINE_REASON_ID_PREFIX}${++outlineReasonSerial}` } });
     formEl.appendChild(hint);

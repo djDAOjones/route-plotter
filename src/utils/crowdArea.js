@@ -1,7 +1,8 @@
 /**
  * CROWD-08: shared node-area data and image-plane geometry. Width and height
  * are image fractions; turns use the bitmap's proportions, never a viewport
- * or the visual renderReference. The engine and editing guide use this path.
+ * or visual scaling. Finish packing supplies its own reference plane (C);
+ * Entry sampling keeps its square no-image fallback (B).
  */
 import { CROWD_AREA, IMAGE_COORDINATES } from '../config/constants.js';
 import { clampImageCoordinate } from './imageCoordinates.js';

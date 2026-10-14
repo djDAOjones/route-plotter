@@ -1,3 +1,4 @@
+import { getFinishContexts } from './finishContexts.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { areaImageAspect } from '../utils/crowdArea.js';
 
@@ -277,6 +278,13 @@ export const viewportMixin = {
       const height = img.naturalHeight || img.height;
       // Always use 'fit' mode for contain rendering (full image visible with letterboxing)
       this.coordinateTransform.setImageDimensions(width, height, 'fit');
+    }
+    if (this._installingFinishContext) return;
+    const finishContexts = getFinishContexts(this);
+    if (finishContexts.finishPackingContext && this._lastFinishTransformContext !== finishContexts) {
+      this._lastFinishTransformContext = finishContexts;
+      this.refreshSceneEnd?.();
+      this._queueSceneOutlineRefresh?.();
     }
     // Fitting and PlayerApp call this repeatedly. Only a changed intrinsic
     // aspect can alter the approach; canvas/output sizes must never retime it.

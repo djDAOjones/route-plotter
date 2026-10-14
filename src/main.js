@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Import modular utilities
+import { getFinishContexts } from './app/finishContexts.js';
 import { RENDERING, ANIMATION, VIDEO_EXPORT, MOTION, PATH_VISIBILITY, WAYPOINT_VISIBILITY, BACKGROUND_VISIBILITY } from './config/constants.js';
 import { Scene } from './models/Scene.js';
 import { MotionVisibilityService } from './services/MotionVisibilityService.js';
@@ -1382,6 +1383,7 @@ class RoutePlotter {
       branchTimeline: this.getBranchTimeline?.() || null,
       // Route moments a bound crowd reads (COMPOSE-01), one way only.
       routeAnchors: this.getRouteArrivalMap?.() || null,
+      ...getFinishContexts(this),
       // Waypoints a bound crowd enters from carry a branch handle (COMPOSE-04)
       branchHandleWaypoints: boundEntryWaypointIds(this.scene),
       branchHandleAt: (waypoint) => this.waypointBranchHandleAt(waypoint),

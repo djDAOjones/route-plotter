@@ -18,6 +18,20 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-14 — CROWD-08 — Part C: arrival-ranked places in centred finish areas
+
+**Decision:** Collect dots reaching an area Exit take reference-sized grid places in arrival order, using a derived reference clock so their places and finishing times survive changes of output.
+
+**Rationale:** The lead adopts the independently approved Part C brief under GATELESS-1 condition 2 and the owner's easier-MVP preference; these are implementation calls, not new owner words. All emitters compete at each reached explicit Exit, ranked by unextended arrival, then emitter order and dot index. The largest size among all emitters sets a diameter-plus-quarter grid. A whole disc must fit: ellipses use their true inward parallel curve, including its cusp, rather than subtracting radii from axes. Stored-coordinate bounds filter centres without clamping them. Bounded integer intervals and a lazy merge materialise only the requested prefix; capacity is exact when counted, otherwise a truthful lower bound. Overflow repeats places and zero capacity collects at the node. The final straight walk suppresses walking variation. Terminal time wins over Exit, then Entry, using one seconds-to-milliseconds sum; the lead accepts the possible sideways step from the old network sway at the exact Exit, as in Part B.
+
+Packing uses the persisted render reference, intrinsic image and authored background zoom. Without an image, Finish uses the reference rectangle while Start retains B's square plane; both surfaces explain the difference. An eligible dot's release uses reference-space route geometry, editor-canonical speed, pauses, reveal intro and positive Comet tail, or A's authored base without a route. Arbitrary saved constant-time route duration does not set that span; the hints state this and its possible difference from other dots and the visible route. Only Collect dots actually reaching an area Exit use this clock, including zero-capacity areas; mixed journeys keep per-dot clocks. The release span is never written into the legacy animation duration. Missing references migrate through timingReference, then 1920×1080, consistently in both hosts. DEF-78/79/80 remain open.
+
+Fresh calculators on complete authored tuples isolate eligible route and network geometry from the legacy incomplete curvature key. Warm edits, cancellation and same-id reloads agree with cold results; legacy curvature goldens remain unchanged. The broader cache defect remains a wish line. Geometry and arrival allocations have separate caches with weak model ownership. App-owned context is installed coherently during load and rollback and frozen through path-only export suppression. Both authoring surfaces share one description and durable area setter, preserve drafts and refresh capacity after relevant edits. Standards: carbon native fields and More disclosure; nielsen 1, 3, 4 and 9 for truthful capacity, reversible edits and matching reasons; wcag-2.2-aaa 2.5.5, 2.1.3 and 2.4.12 for targets, keyboard and focus; house-conventions for ownership, additive persistence and regression tests. Physical-device and screen-reader assurance remain REV-03/REV-05. The source PR owns checks and review evidence; publication belongs to its release record. CROWD-08 remains open for D–G.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-14 — REL-720 — v3.3.720 ships CROWD-08 Part B's start areas
 
 **Decision:** v3.3.720 ships CROWD-08 Part B's centred Entry start areas, while the item remains in progress for C–G.
@@ -554,16 +568,6 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Decision:** Gateless chat 11 runs to 650k tokens of context, no new agents past about 610k; later chats keep the profile's 200k.
 
 **Rationale:** the owner, at chat 11's start on 2026-10-05: "run this chat to 650kb up from 200kb, as a one off". Reading "kb" as thousand tokens of context and "one off" as this chat only is the run's call, for him to confirm.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-05 — REL-703 — v3.2.703 ships CROWD-05
-
-**Decision:** v3.2.703 is live from deploy commit `56c2367` (tag `v3.2.703`), released under GATELESS-1 because CROWD-05's merge (`5e9e660`, PR #98) changed `src/` and `index.html`.
-
-**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full: clean `main` at `5e9e660`, Pages built there, tagged `rollback-v3.2.702-5e9e660`; fsck and the conflict-copy check clean; gate green; dry run clean; `npm run push` committed `56c2367`; Verify, the Pages build and deploy green (duplicate queued runs cancelled); all 22 files SHA-256-identical. Live, at 1280×800 after cleared storage: Open day played 3,002 ms, then ran to its end at 27,283 ms with no frame queued; the readout "Ends at 27.0 s — route 11.6 s, crowds finish +15.4 s"; MP4 1920×1080 29.3 s `ftypisom`; HTML with its CSP, the project and the live `player.js`; no failed resource. CROWD-05 changes export, so its save to disk is owed (a wish line).
 
 **Supersedes:** none
 

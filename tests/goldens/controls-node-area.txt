@@ -10,7 +10,7 @@ ui ~ #network-node-area-card>h2[0]>button[0]: button aria-controls="section-node
 app ~ focus: "body" → "#section-node-area-content>div[0]>button[0]"
 ui ~ #network-node-area-card: div class="settings-section expanded" data-section="node-area" → div class="settings-section expanded" data-last="true" data-section="node-area"
 ui ~ #section-node-area-content>div[0]>button[0]: button aria-describedby="network-node-area-shape-tip" aria-expanded="false" aria-label="Help: Start area" class="param-hint-trigger" style="position-anchor: --network-node-area-shape-tip;" type="button" → button aria-describedby="network-node-area-shape-tip" aria-expanded="true" aria-label="Help: Start area" class="param-hint-trigger" style="position-anchor: --network-node-area-shape-tip;" type="button"
-ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Centred on this node. Dots start inside the area and walk straight to the node before joining the network"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Centred on this node. Entry dots walk to the node; collecting Exit dots walk into places"
 
 ## #network-node-area-shape · choose "none"
 emit network:changed {commit: true}
@@ -30,14 +30,14 @@ ui - #network-node-area-size>button[0]: button aria-describedby="network-node-ar
 ui - #network-node-area-size>button[0]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #network-node-area-size>label[1]: label for="network-node-area-width"
 ui - #network-node-area-size>label[1]>span[0]: span data-tip-desc="network-node-area-width-tip" data-tip="Width before turning, as a percentage of the image’s width" style="anchor-name: --network-node-area-width-tip;" :text="Width (%)"
-ui - #network-node-area-width: input aria-describedby="network-node-area-width-tip" max="80" min="1" step="any" type="number" value="10" :value="10"
+ui - #network-node-area-width: input aria-describedby="network-node-area-width-tip network-node-area-hint" max="80" min="1" step="any" type="number" value="10" :value="10"
 ui - #network-node-area-width-tip: span class="sr-only" :text="Width before turning, as a percentage of the image’s width"
 ui - #network-node-area-width-error: p (not shown)
 ui - #network-node-area-size>button[4]: button aria-describedby="network-node-area-height-tip" aria-expanded="false" aria-label="Help: Height (%)" class="param-hint-trigger" style="position-anchor: --network-node-area-height-tip;" type="button"
 ui - #network-node-area-size>button[4]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #network-node-area-size>label[5]: label for="network-node-area-height"
 ui - #network-node-area-size>label[5]>span[0]: span data-tip-desc="network-node-area-height-tip" data-tip="Height before turning, as a percentage of the image’s height" style="anchor-name: --network-node-area-height-tip;" :text="Height (%)"
-ui - #network-node-area-height: input aria-describedby="network-node-area-height-tip" max="80" min="1" step="any" type="number" value="10" :value="10"
+ui - #network-node-area-height: input aria-describedby="network-node-area-height-tip network-node-area-hint" max="80" min="1" step="any" type="number" value="10" :value="10"
 ui - #network-node-area-height-tip: span class="sr-only" :text="Height before turning, as a percentage of the image’s height"
 ui - #network-node-area-height-error: p (not shown)
 ui - #network-node-area-more>summary[0]: summary :text="More"
@@ -45,7 +45,7 @@ ui - #network-node-area-more>button[1]: button aria-describedby="network-node-ar
 ui - #network-node-area-more>button[1]>span[0]: span aria-hidden="true" class="param-hint-glyph" :text="?"
 ui - #network-node-area-more>label[2]: label for="network-node-area-turn"
 ui - #network-node-area-more>label[2]>span[0]: span data-tip-desc="network-node-area-turn-tip" data-tip="Clockwise turn in the image’s plane; a negative value turns anticlockwise" style="anchor-name: --network-node-area-turn-tip;" :text="Turn (°)"
-ui - #network-node-area-turn: input aria-describedby="network-node-area-turn-tip network-node-area-image-hint" max="180" min="-180" step="any" type="number" value="0" :value="0"
+ui - #network-node-area-turn: input aria-describedby="network-node-area-turn-tip network-node-area-hint network-node-area-image-hint" max="180" min="-180" step="any" type="number" value="0" :value="0"
 ui - #network-node-area-turn-tip: span class="sr-only" :text="Clockwise turn in the image’s plane; a negative value turns anticlockwise"
 ui - #network-node-area-turn-error: p (not shown)
 settled:
@@ -85,7 +85,7 @@ app ~ focus: "body" → "#network-node-area-width"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #network-node-area-card: div class="settings-section expanded" data-section="node-area" → div class="settings-section expanded" data-last="true" data-section="node-area"
-ui ~ #network-node-area-width: input aria-describedby="network-node-area-width-tip" max="80" min="1" step="any" type="number" value="10" :value="10" → input aria-describedby="network-node-area-width-tip" max="80" min="1" step="any" type="number" value="10" :value="24"
+ui ~ #network-node-area-width: input aria-describedby="network-node-area-width-tip network-node-area-hint" max="80" min="1" step="any" type="number" value="10" :value="10" → input aria-describedby="network-node-area-width-tip network-node-area-hint" max="80" min="1" step="any" type="number" value="10" :value="24"
 settled:
   emit animation:durationChange 33718.676616
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 33718.676616, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -99,7 +99,7 @@ announced "Enter a size from 1 to 80%."
 app ~ focus: "body" → "#network-node-area-width"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a size from 1 to 80%."
 ui ~ #network-node-area-card: div class="settings-section expanded" data-section="node-area" → div class="settings-section expanded" data-last="true" data-section="node-area"
-ui ~ #network-node-area-width: input aria-describedby="network-node-area-width-tip" max="80" min="1" step="any" type="number" value="10" :value="10" → input aria-describedby="network-node-area-width-error network-node-area-width-tip" aria-invalid="true" max="80" min="1" step="any" type="number" value="10" :value="99999"
+ui ~ #network-node-area-width: input aria-describedby="network-node-area-width-tip network-node-area-hint" max="80" min="1" step="any" type="number" value="10" :value="10" → input aria-describedby="network-node-area-width-error network-node-area-width-tip network-node-area-hint" aria-invalid="true" max="80" min="1" step="any" type="number" value="10" :value="99999"
 ui ~ #network-node-area-width-error: p (not shown) → p class="range-field-error" :text="Enter a size from 1 to 80%."
 settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a size from 1 to 80%." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -118,7 +118,7 @@ app ~ focus: "body" → "#network-node-area-height"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #network-node-area-card: div class="settings-section expanded" data-section="node-area" → div class="settings-section expanded" data-last="true" data-section="node-area"
-ui ~ #network-node-area-height: input aria-describedby="network-node-area-height-tip" max="80" min="1" step="any" type="number" value="10" :value="10" → input aria-describedby="network-node-area-height-tip" max="80" min="1" step="any" type="number" value="10" :value="24"
+ui ~ #network-node-area-height: input aria-describedby="network-node-area-height-tip network-node-area-hint" max="80" min="1" step="any" type="number" value="10" :value="10" → input aria-describedby="network-node-area-height-tip network-node-area-hint" max="80" min="1" step="any" type="number" value="10" :value="24"
 settled:
   emit animation:durationChange 34039.797549
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 34039.797549, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
@@ -132,7 +132,7 @@ announced "Enter a size from 1 to 80%."
 app ~ focus: "body" → "#network-node-area-height"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a size from 1 to 80%."
 ui ~ #network-node-area-card: div class="settings-section expanded" data-section="node-area" → div class="settings-section expanded" data-last="true" data-section="node-area"
-ui ~ #network-node-area-height: input aria-describedby="network-node-area-height-tip" max="80" min="1" step="any" type="number" value="10" :value="10" → input aria-describedby="network-node-area-height-error network-node-area-height-tip" aria-invalid="true" max="80" min="1" step="any" type="number" value="10" :value="99999"
+ui ~ #network-node-area-height: input aria-describedby="network-node-area-height-tip network-node-area-hint" max="80" min="1" step="any" type="number" value="10" :value="10" → input aria-describedby="network-node-area-height-error network-node-area-height-tip network-node-area-hint" aria-invalid="true" max="80" min="1" step="any" type="number" value="10" :value="99999"
 ui ~ #network-node-area-height-error: p (not shown) → p class="range-field-error" :text="Enter a size from 1 to 80%."
 settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a size from 1 to 80%." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -156,7 +156,7 @@ app ~ focus: "body" → "#network-node-area-turn"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #network-node-area-card: div class="settings-section expanded" data-section="node-area" → div class="settings-section expanded" data-last="true" data-section="node-area"
-ui ~ #network-node-area-turn: input aria-describedby="network-node-area-turn-tip network-node-area-image-hint" max="180" min="-180" step="any" type="number" value="0" :value="0" → input aria-describedby="network-node-area-turn-tip network-node-area-image-hint" max="180" min="-180" step="any" type="number" value="0" :value="24"
+ui ~ #network-node-area-turn: input aria-describedby="network-node-area-turn-tip network-node-area-hint network-node-area-image-hint" max="180" min="-180" step="any" type="number" value="0" :value="0" → input aria-describedby="network-node-area-turn-tip network-node-area-hint network-node-area-image-hint" max="180" min="-180" step="any" type="number" value="0" :value="24"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10128 chars, f138a1b1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10129 chars, fb00a3b5]
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
@@ -166,7 +166,7 @@ announced "Enter a turn from -180 to 180 degrees."
 app ~ focus: "body" → "#network-node-area-turn"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a turn from -180 to 180 degrees."
 ui ~ #network-node-area-card: div class="settings-section expanded" data-section="node-area" → div class="settings-section expanded" data-last="true" data-section="node-area"
-ui ~ #network-node-area-turn: input aria-describedby="network-node-area-turn-tip network-node-area-image-hint" max="180" min="-180" step="any" type="number" value="0" :value="0" → input aria-describedby="network-node-area-turn-error network-node-area-turn-tip network-node-area-image-hint" aria-invalid="true" max="180" min="-180" step="any" type="number" value="0" :value="99999"
+ui ~ #network-node-area-turn: input aria-describedby="network-node-area-turn-tip network-node-area-hint network-node-area-image-hint" max="180" min="-180" step="any" type="number" value="0" :value="0" → input aria-describedby="network-node-area-turn-error network-node-area-turn-tip network-node-area-hint network-node-area-image-hint" aria-invalid="true" max="180" min="-180" step="any" type="number" value="0" :value="99999"
 ui ~ #network-node-area-turn-error: p (not shown) → p class="range-field-error" :text="Enter a turn from -180 to 180 degrees."
 settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a turn from -180 to 180 degrees." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

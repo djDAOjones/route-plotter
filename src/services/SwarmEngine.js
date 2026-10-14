@@ -8,6 +8,7 @@ import {
 } from '../utils/busynessEnvelope.js';
 import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 import { sampleCrowdArea } from '../utils/crowdArea.js';
+import { createFinishPackingContext, packFinishArea } from '../utils/finishArea.js';
 
 /**
  * Deterministic swarm evaluator for flow layers (Phase 3).
@@ -190,6 +191,11 @@ export class SwarmEngine {
      * @private @type {WeakMap<Object, WeakMap<Object, Object>>}
      */
     this._journeyCache = new WeakMap();
+    // C isolates full-input network geometry from the historical partial
+    // PathCalculator key. Geometry survives release/pace edits; allocations do not.
+    this._finishGeometryCache = new WeakMap();
+    this._finishAllocationCache = new WeakMap();
+    this._canonicalEdgeCache = new WeakMap();
   }
 
   /**
@@ -231,17 +237,19 @@ export class SwarmEngine {
    */
   evaluate(timelineMs, layer, context = {}) {
     const durationMs = context.durationMs;
-    if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return [];
+    if (!layer) return [];
 
     const guide = this._guideFor(layer, context);
     if (!guide) return [];
 
+    const finish = this._finishPlans(layer, guide, context);
+    if (!(durationMs > 0 && Number.isFinite(durationMs)) && !finish) return [];
     const dots = [];
     const signature = guide.imageAspect === undefined ? null : graphSignature(guide.graph);
     for (const emitter of layer.emitters) {
       const journeys = signature !== null && finishesJourneys(emitter)
         ? this._cachedJourneys(layer, emitter, guide, signature) : null;
-      this._evaluateEmitter(timelineMs, durationMs, emitter, guide, dots, context.routeAnchors, journeys);
+      this._evaluateEmitter(timelineMs, durationMs, emitter, guide, dots, context.routeAnchors, journeys, finish);
     }
     return dots;
   }
@@ -271,11 +279,14 @@ export class SwarmEngine {
    */
   scheduleDots(layer, context = {}, { endsOnly = false } = {}) {
     const durationMs = context.durationMs;
-    if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return [];
+    if (!layer) return [];
 
     const guide = this._guideFor(layer, context);
     if (!guide) return [];
 
+    const finish = this._finishPlans(layer, guide, context);
+    const legacy = durationMs > 0 && Number.isFinite(durationMs);
+    if (!legacy && !finish) return [];
     const reaching = endsOnly && guide.type === 'graph' ? this._nodesReachingEnd(guide) : null;
     const schedules = [];
     for (const emitter of layer.emitters) {
@@ -286,6 +297,13 @@ export class SwarmEngine {
       const finishes = finishesJourneys(emitter);
 
       for (let i = 0; i < dotCount; i++) {
+        const plan = finish?.byEmitter.get(emitter)?.[i];
+        if (plan) {
+          schedules.push({ onsetFraction: plan.onsetFraction, onsetMs: plan.onsetMs,
+            journeyMs: plan.journeyMs, finishes: true, ends: true });
+          continue;
+        }
+        if (!legacy) continue;
         const onsetFraction = this._onsetFraction(emitter, i, window);
         const speedMultiplier = this._journeyPace(emitter, i, 0);
         const { length, ends } = guide.type === 'route'
@@ -346,18 +364,21 @@ export class SwarmEngine {
    */
   crowdFinishMs(layer, context = {}) {
     const durationMs = context.durationMs;
-    if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return 0;
+    if (!layer) return 0;
     const finishing = layer.emitters.filter(finishesJourneys);
     if (finishing.length === 0) return 0;
     const guide = this._guideFor(layer, context);
     if (!guide) return 0;
     const signature = guide.type === 'graph' ? graphSignature(guide.graph) : null;
 
-    let latest = 0;
+    const finish = this._finishPlans(layer, guide, context);
+    let latest = finish?.latest || 0;
+    if (!(durationMs > 0 && Number.isFinite(durationMs))) return latest;
     for (const emitter of finishing) {
       const journeys = signature === null ? null : this._cachedJourneys(layer, emitter, guide, signature);
       const window = this._releaseWindow(emitter, context.routeAnchors);
       for (let i = 0; i < emitter.dotCount; i++) {
+        if (finish?.byEmitter.get(emitter)?.[i]) continue;
         const length = journeys ? journeys.lengths[i] : guide.length;
         if (!(journeys ? journeys.ends[i] : length > 0)) continue;
         const finishMs = this._onsetFraction(emitter, i, window) * durationMs
@@ -440,11 +461,13 @@ export class SwarmEngine {
    */
   canRelease(layer, context = {}) {
     const durationMs = context.durationMs;
-    if (!layer || !Number.isFinite(durationMs) || durationMs <= 0) return false;
+    if (!layer) return false;
     const emitters = (layer.emitters || []).filter(emitter => emitter.dotCount > 0);
     if (emitters.length === 0) return false;
     const guide = this._guideFor(layer, context);
     if (!guide) return false;
+    if (this._finishPlans(layer, guide, context)?.active) return true;
+    if (!(durationMs > 0 && Number.isFinite(durationMs))) return false;
     const signature = guide.type === 'graph' ? graphSignature(guide.graph) : null;
 
     for (const emitter of emitters) {
@@ -485,7 +508,7 @@ export class SwarmEngine {
     let node = this._pickEntry(entries, seed, dotIndex, hop++);
     let cameFromEdgeId = null;
     const area = this._startArea(node, emitter, dotIndex, guide);
-    let total = area ? area.length : 0;
+    let total = guide.canonicalGeometry ? 0 : area ? area.length : 0;
     let legs = total > 0 ? 1 : 0;
 
     for (let step = 0; step < MAX_HOPS; step++) {
@@ -495,11 +518,12 @@ export class SwarmEngine {
       const atExit = this._endsJourney(node, guide, step, step > 0);
       const candidates = atExit ? [] : this._traversableEdges(graph, node.id, cameFromEdgeId);
       if (atExit || candidates.length === 0) {
-        return { length: total, ends: true, legs, ...(area ? { area: { ...area, endId: node.id } } : {}) };
+        return { length: guide.canonicalGeometry ? (area?.length || 0) + total : total,
+          ends: true, endId: node.id, legs, ...(area ? { area: { ...area, endId: node.id } } : {}) };
       }
 
       const traversal = this._pickWeighted(candidates, seed, dotIndex, hop++);
-      const edgeLength = this.edgeGeometry(graph, traversal.edge).length;
+      const edgeLength = this._geometryFor(guide, traversal.edge).length;
       total += edgeLength;
       if (edgeLength > 0) legs += 1;
       node = graph.getNode(traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId);
@@ -507,6 +531,141 @@ export class SwarmEngine {
       if (!node) break;
     }
     return { length: total, ends: false, legs, ...(area ? { area } : {}) };
+  }
+
+  /** The topology-only first journey chooses C eligibility without warming geometry. */
+  _firstTerminal(emitter, dotIndex, guide) {
+    let hop = 0, node = this._pickEntry(guide.entries, emitter.seed, dotIndex, hop++), from = null;
+    for (let step = 0; node && step < MAX_HOPS; step++) {
+      const atExit = this._endsJourney(node, guide, step, step > 0);
+      const choices = atExit ? [] : this._traversableEdges(guide.graph, node.id, from);
+      if (!choices.length) return node;
+      const walk = this._pickWeighted(choices, emitter.seed, dotIndex, hop++);
+      from = walk.edge.id;
+      node = guide.graph.getNode(walk.reversed ? walk.edge.sourceId : walk.edge.targetId);
+    }
+    return null;
+  }
+
+  _geometryFor(guide, edge) {
+    if (!guide.canonicalGeometry) return this.edgeGeometry(guide.graph, edge);
+    let byEdge = this._canonicalEdgeCache.get(guide.graph);
+    if (!byEdge) { byEdge = new WeakMap(); this._canonicalEdgeCache.set(guide.graph, byEdge); }
+    const from = guide.graph.getNode(edge.sourceId).position(), to = guide.graph.getNode(edge.targetId).position();
+    const points = [from, ...edge.controlPoints, to];
+    const key = JSON.stringify(points.map(p => [p.x, p.y]));
+    const cached = byEdge.get(edge);
+    if (cached?.key === key) return cached;
+    // A fresh calculator per changed FULL tuple prevents old curvature results
+    // surviving an edit/cancel. Ineligible dots deliberately keep the old cache.
+    const calculator = new PathCalculator();
+    const path = calculator.calculatePath(points.map(p => ({ x: p.x, y: p.y })));
+    const result = { key, points: path, length: calculator.calculatePathLength(path) };
+    byEdge.set(edge, result);
+    return result;
+  }
+
+  /** Shared across all emitters: each Exit's seats are ranked by unextended arrival. */
+  _finishPlans(layer, guide, context) {
+    if (guide.type !== 'graph' || !guide.graph.getNodesByType('exit').some(n => n.area)
+        || !layer.emitters.some(e => e.lifecycleMode === 'collect' && e.dotCount > 0)) return null;
+    const canonical = { ...guide, canonicalGeometry: true };
+    const geometryKey = JSON.stringify([
+      guide.imageAspect,
+      guide.graph.getNodes().map(n => [n.id, n.type, n.position(), n.area]),
+      guide.graph.getEdges().map(e => [e.id, e.sourceId, e.targetId, e.direction, e.weight, e.controlPoints]),
+      layer.emitters.map(e => [e.id, e.seed, e.dotCount, e.lifecycleMode]),
+    ]);
+    let geometry = this._finishGeometryCache.get(layer);
+    if (!geometry || geometry.key !== geometryKey
+        || layer.emitters.some((emitter, i) => emitter !== geometry.emitters[i])) {
+      const byEmitter = new Map();
+      for (const emitter of layer.emitters) {
+        if (emitter.lifecycleMode !== 'collect') continue;
+        const rows = new Array(emitter.dotCount).fill(null);
+        for (let i = 0; i < emitter.dotCount; i++) {
+          const terminal = this._firstTerminal(emitter, i, guide);
+          if (terminal?.type === 'exit' && terminal.area) rows[i] = this._journeyLength(emitter, i, canonical);
+        }
+        byEmitter.set(emitter, rows);
+      }
+      geometry = { key: geometryKey, emitters: [...layer.emitters], byEmitter };
+      this._finishGeometryCache.set(layer, geometry);
+    }
+    const plane = context.finishPackingContext || createFinishPackingContext(context);
+    const clock = context.finishReleaseContext
+      || { durationMs: context.durationMs, routeAnchors: context.routeAnchors };
+    const duration = Number.isFinite(clock.durationMs) && clock.durationMs >= 0 ? clock.durationMs : 10000;
+    const key = JSON.stringify([plane, duration, clock.routeAnchors, layer.emitters.map(e => [
+      e.dotSize, e.speed, e.speedVariance, e.releaseStart, e.releaseDuration, e.releaseAnchor,
+      e.onsetVariance, e.intensityRamp, e.busynessEnvelope,
+    ])]);
+    const cached = this._finishAllocationCache.get(layer);
+    if (cached?.geometry === geometry && cached.key === key) return cached;
+    const byEmitter = new Map(), byExit = new Map(), summaries = new Map();
+    let active = false, latest = 0;
+    for (const [emitterOrder, emitter] of layer.emitters.entries()) {
+      const journeys = geometry.byEmitter.get(emitter);
+      if (!journeys) continue;
+      const window = this._releaseWindow(emitter, clock.routeAnchors), rows = new Array(emitter.dotCount).fill(null);
+      byEmitter.set(emitter, rows);
+      journeys.forEach((journey, index) => {
+        if (!journey) return;
+        active = true;
+        const pace = this._journeyPace(emitter, index, 0), onsetFraction = this._onsetFraction(emitter, index, window);
+        const onsetMs = onsetFraction * duration;
+        const plan = { journey, pace, onsetFraction, onsetMs, emitter, emitterOrder, index,
+          arrivalMs: onsetMs + dotJourneyMs(journey.length, emitter.speed, pace) };
+        rows[index] = plan;
+        if (!byExit.has(journey.endId)) byExit.set(journey.endId, []);
+        byExit.get(journey.endId).push(plan);
+      });
+    }
+    const largest = Math.max(...layer.emitters.map(e => e.dotSize));
+    for (const [exitId, arrivals] of byExit) {
+      const exit = guide.graph.getNode(exitId), center = exit.position();
+      const packing = packFinishArea(exit.area, center, plane, largest, arrivals.length);
+      summaries.set(exitId, { capacity: packing.capacity, exact: packing.exact, arrivals: arrivals.length });
+      arrivals.sort((a, b) => a.arrivalMs - b.arrivalMs || a.emitterOrder - b.emitterOrder || a.index - b.index);
+      for (const [rank, plan] of arrivals.entries()) {
+        const place = packing.places.length ? packing.places[rank % packing.places.length] : center;
+        const finishLength = Math.hypot(place.x - center.x, place.y - center.y);
+        const totalLength = plan.journey.length + finishLength;
+        Object.assign(plan, { center, place, finishLength, totalLength,
+          journeyMs: dotJourneyMs(totalLength, plan.emitter.speed, plan.pace) });
+        plan.finishMs = plan.onsetMs + plan.journeyMs;
+        latest = Math.max(latest, plan.finishMs);
+      }
+    }
+    const result = { key, geometry, byEmitter, summaries, active, latest, guide: canonical };
+    this._finishAllocationCache.set(layer, result);
+    return result;
+  }
+
+  /** Capacity guidance for both authoring surfaces; unvisited areas cost only a centre test. */
+  finishAreaSummary(layer, nodeId, context = {}) {
+    const guide = layer && this._guideFor(layer, context), node = layer?.graph?.getNode(nodeId);
+    if (!guide || node?.type !== 'exit' || !node.area) return null;
+    const plans = this._finishPlans(layer, guide, context), summary = plans?.summaries.get(nodeId);
+    if (summary) return summary;
+    const packing = packFinishArea(node.area, node.position(),
+      context.finishPackingContext || createFinishPackingContext(context),
+      Math.max(...layer.emitters.map(e => e.dotSize)), 0);
+    return { capacity: packing.capacity, exact: packing.exact, arrivals: 0 };
+  }
+
+  _walkFinish(time, distance, emitter, index, plan, guide) {
+    // Shared terminal sum first, Exit second, Entry third: coincident floating
+    // boundaries cannot strand a dot at its old Entry or unextended Exit.
+    if (time >= plan.finishMs) return { point: plan.place, tangent: null };
+    if (time >= plan.arrivalMs) {
+      const fraction = time === plan.arrivalMs ? 0
+        : Math.min(1, (time - plan.arrivalMs) / 1000 * emitter.speed * plan.pace / plan.finishLength);
+      return { point: { x: plan.center.x + (plan.place.x - plan.center.x) * fraction,
+        y: plan.center.y + (plan.place.y - plan.center.y) * fraction }, tangent: null };
+    }
+    const area = plan.journey.area ? { ...plan.journey.area, totalLength: plan.journey.length, ends: true } : null;
+    return this._walkGraph(distance, emitter, index, plan.pace, guide, time, plan.onsetMs, area);
   }
 
   /** One dot's seeded approach; dormant settings never enter the old walk. */
@@ -636,7 +795,7 @@ export class SwarmEngine {
    * Append one emitter's live dots to `out`.
    * @private
    */
-  _evaluateEmitter(timelineMs, durationMs, emitter, guide, out, routeAnchors = null, journeys = null) {
+  _evaluateEmitter(timelineMs, durationMs, emitter, guide, out, routeAnchors = null, journeys = null, finish = null) {
     const { dotCount } = emitter;
     const window = this._releaseWindow(emitter, routeAnchors);
 
@@ -644,7 +803,9 @@ export class SwarmEngine {
       // Shared with COMPOSE-02's arrival solve and CROWD-05's scene end,
       // which must agree with the dots actually on screen rather than
       // restate their arithmetic.
-      const onsetMs = this._onsetFraction(emitter, i, window) * durationMs;
+      const plan = finish?.byEmitter.get(emitter)?.[i];
+      if (!plan && !(durationMs > 0 && Number.isFinite(durationMs))) continue;
+      const onsetMs = plan ? plan.onsetMs : this._onsetFraction(emitter, i, window) * durationMs;
 
       const elapsedSec = (timelineMs - onsetMs) / 1000;
       if (elapsedSec < 0) continue; // not yet released
@@ -652,7 +813,8 @@ export class SwarmEngine {
       const speedMultiplier = this._journeyPace(emitter, i, 0);
       const distance = emitter.speed * speedMultiplier * elapsedSec;
 
-      const sample = guide.type === 'route'
+      const sample = plan ? this._walkFinish(timelineMs, distance, emitter, i, plan, finish.guide)
+        : guide.type === 'route'
         ? this._walkRoute(distance, emitter, i, speedMultiplier, guide, timelineMs, onsetMs)
         : this._walkGraph(distance, emitter, i, speedMultiplier, guide, timelineMs, onsetMs, journeys?.areas?.[i]);
       if (!sample) continue; // lifecycle 'disappear' completed
@@ -907,7 +1069,7 @@ export class SwarmEngine {
       }
 
       const traversal = this._pickWeighted(candidates, seed, dotIndex, hop++);
-      const edgeGeom = this.edgeGeometry(graph, traversal.edge);
+      const edgeGeom = this._geometryFor(guide, traversal.edge);
       if (edgeGeom.length <= 0) {
         node = graph.getNode(traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId);
         cameFromEdgeId = traversal.edge.id;
@@ -921,7 +1083,7 @@ export class SwarmEngine {
         // `remaining` a hair short of the path's end at that very instant.
         // Only a dot at the end of its path is checked for being on its last.
         const journeyLength = travelled + edgeGeom.length;
-        if (finishesJourneys(emitter)
+        if (!guide.canonicalGeometry && finishesJourneys(emitter)
             && journeyOverAt(timelineMs, onsetMs, journeyLength, emitter, speedMultiplier)) {
           const end = this._journeyEndAfter(
             guide, traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId,
@@ -962,7 +1124,7 @@ export class SwarmEngine {
       const candidates = atExit ? [] : this._traversableEdges(graph, node.id, cameFromEdgeId);
       if (atExit || candidates.length === 0) return node;
       const traversal = this._pickWeighted(candidates, emitter.seed, dotIndex, hop++);
-      if (this.edgeGeometry(graph, traversal.edge).length > 0) return null;
+      if (this._geometryFor(guide, traversal.edge).length > 0) return null;
       node = graph.getNode(traversal.reversed ? traversal.edge.sourceId : traversal.edge.targetId);
       cameFromEdgeId = traversal.edge.id;
     }
@@ -991,7 +1153,7 @@ export class SwarmEngine {
       if (atExit || candidates.length === 0) break;
 
       const traversal = this._pickWeighted(candidates, seed, dotIndex, hop++);
-      const edgeGeom = this.edgeGeometry(graph, traversal.edge);
+      const edgeGeom = this._geometryFor(guide, traversal.edge);
       if (edgeGeom.length > 0) {
         journey.push({ points: edgeGeom.points, length: edgeGeom.length, reversed: traversal.reversed });
         journeyLength += edgeGeom.length;

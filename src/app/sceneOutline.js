@@ -7,6 +7,7 @@
  * and never enter project persistence.
  */
 
+import { getNodeAreaDescription } from './finishContexts.js';
 import { SceneOutlineController } from '../controllers/SceneOutlineController.js';
 import {
   buildSceneOutlineSnapshot,
@@ -269,7 +270,14 @@ export const sceneOutlineMixin = {
 
   _refreshSceneOutline() {
     if (!this.sceneOutlineController || !this.waypoints || !this.scene) return;
+    const nodeAreaDescriptions = new Map();
+    for (const layer of this.scene.getFlowLayers()) for (const node of layer.graph.getNodes()) {
+      if (['entry', 'exit'].includes(node.type) || node.area) {
+        nodeAreaDescriptions.set(JSON.stringify([layer.id, node.id]), getNodeAreaDescription(this, layer, node));
+      }
+    }
     const snapshot = buildSceneOutlineSnapshot({
+      nodeAreaDescriptions,
       waypoints: this.waypoints,
       scene: this.scene,
       selectionKey: this._sceneOutlineSelectionKey,
@@ -726,7 +734,7 @@ export const sceneOutlineMixin = {
     };
     if (!this._setNodeArea(layer, node, area)) return;
     this._queueSceneOutlineRefresh(`${sceneOutlineKey('node', layer.id, node.id)}:area-apply`);
-    this.announce('Start area updated. Undo is available.');
+    this.announce(`${node.type === 'exit' ? 'Finish' : 'Start'} area updated. Undo is available.`);
   },
 
   _outlineDeleteNode(command) {

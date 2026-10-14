@@ -6,6 +6,7 @@
  * RoutePlotter instance; main.js attaches the group via
  * Object.assign(RoutePlotter.prototype, wiringControllersMixin).
  */
+import { getFinishContexts } from './finishContexts.js';
 import { PATH_VISIBILITY } from '../config/constants.js';
 import { Waypoint } from '../models/Waypoint.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
@@ -979,6 +980,11 @@ export const wiringControllersMixin = {
       this.exportSettings.backgroundZoom = zoom;
       // Update coordinate transform with new zoom factor
       this.coordinateTransform.setBackgroundZoom(zoom / 100);
+      if (getFinishContexts(this).finishPackingContext) {
+        this.refreshSceneEnd();
+        this._syncNodeAreaCard?.();
+        this._queueSceneOutlineRefresh?.();
+      }
       // Clamp waypoints that may now be out of bounds
       this.clampWaypointsToCanvas();
       this.render();

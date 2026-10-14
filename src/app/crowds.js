@@ -13,6 +13,7 @@
  * crowdsMixin). Method names must stay unique across mixins
  * (tests/mixins.test.js).
  */
+import { hasFinishAreas } from './finishContexts.js';
 import { isMac } from '../config/keybindings.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import {
@@ -307,7 +308,8 @@ export const crowdsMixin = {
       this.saveUndoStateDebounced();
       this.autoSave();
       this.queueRender();
-      if (journeys) this._syncCrowdLifecycleHint();
+      if (journeys || hasFinishAreas(this.scene)) this._syncCrowdLifecycleHint();
+      this._syncNodeAreaCard?.();
       this.scheduleSceneEnd?.();
     });
 
@@ -324,7 +326,10 @@ export const crowdsMixin = {
       // Provisional geometry and its cancellation also change what can play and when it ends.
       this.scheduleSceneEnd?.();
     });
-    this.eventBus.on('scene:semantic-changed', () => this.scheduleSceneEnd?.());
+    this.eventBus.on('scene:semantic-changed', () => {
+      this._syncNodeAreaCard?.();
+      this.scheduleSceneEnd?.();
+    });
 
     // Route changes update the Add-crowd description: a new crowd follows
     // an existing route or starts an empty custom network.
@@ -424,7 +429,9 @@ export const crowdsMixin = {
       // The field shows the value the slider set: whatever was wrong with what was typed there is gone.
       clearRangeError(parts);
       this._syncCrowdRange(entry, emitter);
-      this.eventBus.emit('crowd:param-changed', { journeys: entry.journeys !== false });
+      this.eventBus.emit('crowd:param-changed', {
+        journeys: entry.journeys !== false || (entry.key === 'dotSize' && hasFinishAreas(this.scene)),
+      });
     });
   },
 
@@ -491,7 +498,9 @@ export const crowdsMixin = {
     clearRangeError(parts);
     emitter.update({ [entry.key]: entry.fromField(Number(field.value)) });
     this._syncCrowdRange(entry, emitter);
-    this.eventBus.emit('crowd:param-changed', { journeys: entry.journeys !== false });
+    this.eventBus.emit('crowd:param-changed', {
+      journeys: entry.journeys !== false || (entry.key === 'dotSize' && hasFinishAreas(this.scene)),
+    });
   },
 
   /**

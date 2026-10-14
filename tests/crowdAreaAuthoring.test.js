@@ -113,7 +113,10 @@ describe('start areas through both real authoring surfaces', () => {
     expect(entry.area.width).toBe(0.425);
     expect(exit).not.toHaveProperty('area');
     expect(history(app)).toBe(before + 1);
-    expect(byId('network-node-area-card').hidden).toBe(true);
+    // C now offers a Finish area on this Exit; changing selection still commits only the Entry draft.
+    expect(byId('network-node-area-card').hidden).toBe(false);
+    expect(field('shape').value).toBe('none');
+    expect(field('card').querySelector('.section-header').textContent).toContain('Finish area');
     app.undo();
     expect(stored(app).area.width).toBe(0.1);
     // The detached object must not accept a stale draft after Undo replaces models.
@@ -129,13 +132,19 @@ describe('start areas through both real authoring surfaces', () => {
     change(field('shape'), 'ellipse');
     change(byId('network-node-type'), 'exit');
     expect(entry.area.shape).toBe('ellipse');
+    // An Exit is active in C. Pass-through retains the inactive-setting contract.
+    expect(field('shape').disabled).toBe(false);
+    expect(field('hint').textContent).toMatch(/Only Collect at the end/);
+    change(byId('network-node-type'), 'normal');
+    expect(entry.area.shape).toBe('ellipse');
     expect(field('shape').disabled).toBe(true);
-    expect(byId('network-node-area-reason').textContent).toMatch(/Choose Entry in Type/);
+    expect(byId('network-node-area-reason').textContent).toMatch(/Choose Entry or Exit in Type/);
     change(byId('network-node-type'), 'entry');
     expect(field('shape').disabled).toBe(false);
     expect(byId('network-node-area-hint').textContent).toMatch(/Respawn.*Repeat.*start at the node/);
     expect(byId('network-node-area-image-hint').textContent).toBe(
-      'Add a background image to keep the area’s shape when you turn it.');
+      'Without a background image, Start area and Finish area use different proportions when turned.'
+      + ' Adding an image changes the layout.');
     const before = history(app);
     const oldSpeed = layer.emitters[0].speed;
     layer.emitters[0].update({ speed: 0.7 });

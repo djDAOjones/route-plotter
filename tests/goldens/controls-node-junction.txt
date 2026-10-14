@@ -40,7 +40,7 @@ ui + #network-node-area-card>h2[0]>button[0]: button aria-controls="section-node
 ui + #network-node-area-card>h2[0]>button[0]>span[0]: span aria-hidden="true" class="section-chevron"
 ui + #network-node-area-card>h2[0]>button[0]>span[0]>svg[0]: svg fill="currentColor" height="12" viewBox="0 0 12 12" width="12"
 ui + #network-node-area-card>h2[0]>button[0]>span[0]>svg[0]>path[0]: path d="M4.5 2L8.5 6L4.5 10"
-ui + #section-node-area-content: div class="section-content" (and 15 inside, fe6f3836)
+ui + #section-node-area-content: div class="section-content" (and 15 inside, a0983cd7)
 settled:
   announced "Editing · Node · entry"
   announced "Saved to browser recovery"
@@ -70,6 +70,13 @@ ui ~ #network-path-weight-1: input aria-describedby="network-path-weight-1-error
 ui ~ #network-path-weight-rows>div[1]>button[0]: button aria-describedby="network-path-weight-2-tip" aria-expanded="false" aria-label="Help: Path 2 to pass-through 2" class="param-hint-trigger" style="position-anchor: --network-path-weight-2-tip;" type="button" → button aria-describedby="network-path-weight-2-tip" aria-expanded="false" aria-label="Help: Path 2 to pass-through 1" class="param-hint-trigger" style="position-anchor: --network-path-weight-2-tip;" type="button"
 ui ~ #network-path-weight-2-name: span class="network-path-weight-name" data-tip-desc="network-path-weight-2-tip" data-tip="How strongly dots leaving this node prefer this path, shown as the share of them that take it. Arriving dots avoid turning straight back when another path is available" style="anchor-name: --network-path-weight-2-tip;" :text="Path 2 to pass-through 2" → span class="network-path-weight-name" data-tip-desc="network-path-weight-2-tip" data-tip="How strongly dots leaving this node prefer this path, shown as the share of them that take it. Arriving dots avoid turning straight back when another path is available" style="anchor-name: --network-path-weight-2-tip;" :text="Path 2 to pass-through 1"
 ui ~ #network-path-weight-2: input aria-describedby="network-path-weight-2-error network-path-weight-2-value network-path-weights-help network-path-weight-2-tip" aria-labelledby="network-path-weight-2-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-2-error network-path-weight-2-value network-path-weights-help network-path-weight-2-tip network-path-weight-2-tip" aria-labelledby="network-path-weight-2-name" min="0.01" step="0.01" type="number" :value="1"
+ui ~ #network-node-area-card: div (not shown) → div class="settings-section expanded" data-section="node-area"
+ui + #network-node-area-card>h2[0]: h2 class="section-title"
+ui + #network-node-area-card>h2[0]>button[0]: button aria-controls="section-node-area-content" aria-expanded="true" class="section-header" type="button" :text="Finish area"
+ui + #network-node-area-card>h2[0]>button[0]>span[0]: span aria-hidden="true" class="section-chevron"
+ui + #network-node-area-card>h2[0]>button[0]>span[0]>svg[0]: svg fill="currentColor" height="12" viewBox="0 0 12 12" width="12"
+ui + #network-node-area-card>h2[0]>button[0]>span[0]>svg[0]>path[0]: path d="M4.5 2L8.5 6L4.5 10"
+ui + #section-node-area-content: div class="section-content" (and 15 inside, da76c4e5)
 settled:
   emit animation:durationChange 28307.894043
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28307.894043, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}

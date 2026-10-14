@@ -408,3 +408,13 @@ The session's calls, for the owner to confirm: the grant holds for the run, whic
 
 **Deferred:** none
 
+## 2026-10-05 — REL-703 — v3.2.703 ships CROWD-05
+
+**Decision:** v3.2.703 is live from deploy commit `56c2367` (tag `v3.2.703`), released under GATELESS-1 because CROWD-05's merge (`5e9e660`, PR #98) changed `src/` and `index.html`.
+
+**Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full: clean `main` at `5e9e660`, Pages built there, tagged `rollback-v3.2.702-5e9e660`; fsck and the conflict-copy check clean; gate green; dry run clean; `npm run push` committed `56c2367`; Verify, the Pages build and deploy green (duplicate queued runs cancelled); all 22 files SHA-256-identical. Live, at 1280×800 after cleared storage: Open day played 3,002 ms, then ran to its end at 27,283 ms with no frame queued; the readout "Ends at 27.0 s — route 11.6 s, crowds finish +15.4 s"; MP4 1920×1080 29.3 s `ftypisom`; HTML with its CSP, the project and the live `player.js`; no failed resource. CROWD-05 changes export, so its save to disk is owed (a wish line).
+
+**Supersedes:** none
+
+**Deferred:** none
+

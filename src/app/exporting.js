@@ -6,6 +6,7 @@
  * RoutePlotter instance; main.js attaches the group via
  * Object.assign(RoutePlotter.prototype, exportingMixin).
  */
+import { getFinishContexts } from './finishContexts.js';
 import { VIDEO_EXPORT } from '../config/constants.js';
 import { VideoExporter } from '../services/VideoExporter.js';
 import { getRetainedBackgroundDataURL } from './persistence.js';
@@ -300,6 +301,7 @@ export const exportingMixin = {
       // From here every change is put back, each part whether or not another
       // part of the putting back fails.
       const transportState = this.animationEngine.suspendTransport();
+      this._finishExportContexts = getFinishContexts(this);
       try {
         this.announce('Starting video export — press Esc to cancel');
         window.addEventListener('keydown', onEscapeKey, true); // capture phase
@@ -409,6 +411,7 @@ export const exportingMixin = {
         // with, stale after a size chosen during the export (DEF-53).
         putBack(() => {
           if (pathOnly) this.background.image = originalBackgroundImage;
+          this._finishExportContexts = null;
         });
         // Restore canvas to display resolution (must happen before render)
         putBack(() => this._exitExportMode());

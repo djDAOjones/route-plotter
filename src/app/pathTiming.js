@@ -6,6 +6,7 @@
  * RoutePlotter instance; main.js attaches the group via
  * Object.assign(RoutePlotter.prototype, pathTimingMixin).
  */
+import { getFinishContexts } from './finishContexts.js';
 import { Easing } from '../utils/Easing.js';
 import { ANIMATION, PATH_VISIBILITY } from '../config/constants.js';
 import { MotionVisibilityService } from '../services/MotionVisibilityService.js';
@@ -169,6 +170,7 @@ function composeSceneEnd(app, baseMs) {
     // What the renderer evaluates the dots with, so they end where it ends them.
     swarmContext: {
       imageAspect: areaImageAspect(app.coordinateTransform),
+      ...getFinishContexts(app),
       routePathPoints: app.pathPoints,
       routeAnchors: app.getRouteArrivalMap?.() || null,
     },
@@ -209,6 +211,7 @@ function queueSceneEnd(app) {
  * @returns {number} The playback duration
  */
 export function measureSceneEnd(app) {
+  if (app._installingFinishContext) return app.animationEngine.state.duration;
   if (app._sceneEndTimeout) {
     clearTimeout(app._sceneEndTimeout);
     app._sceneEndTimeout = null;
@@ -230,6 +233,10 @@ export function measureSceneEnd(app) {
   // What can play follows the base timeline measured against (the no-route
   // Duration, an undo), as it follows every edit that queues this measure (CROWD-08 part A).
   app.refreshPlayAvailability?.();
+  if (getFinishContexts(app).finishPackingContext) {
+    app._syncNodeAreaCard?.();
+    app._queueSceneOutlineRefresh?.();
+  }
   return engine.state.duration;
 }
 

@@ -42,8 +42,8 @@ export runs the same stack: `src/player/PlayerApp.js` (bundled to
 snapshot, recomputes timing in the snapshot's `timingReference` space
 to preserve the authored timeline, and renders at export resolution with the
 app's own services. A separate stable `renderReference` supplies the visual
-short-edge scale for map-bound reference-pixel values; it never participates
-in coordinate or timeline calculations. Older snapshots migrate additively
+short-edge scale for map-bound reference-pixel values. CROWD-08 finish areas
+also pack and time eligible journeys at that reference. Other snapshots migrate
 from `timingReference` or the authored canvas (cross-check:
 `tests/playerApp.test.js` and `tests/renderReference.test.js`).
 The scene data model landed in Phase 2 (2026-08-18): `Scene` →

@@ -32,6 +32,7 @@
  * carried flow layers since Phase 2.
  */
 
+import { createFinishPackingContext } from '../utils/finishArea.js';
 import { snapToAngle } from '../utils/snapToAngle.js';
 import { getGraphDepartureShares } from '../utils/graphRouting.js';
 import { networkRoom, NETWORK_FULL } from '../utils/networkBudget.js';
@@ -957,7 +958,7 @@ export class NetworkEditService {
    * image plane as its samples; restore the transform before stroking so the
    * casing keeps its normal UI width even on a non-square no-image canvas. */
   _drawStartAreas(svc, ctx, state, nodes, ink, lineWidth, casing) {
-    const entries = nodes.filter(node => node.type === 'entry' && node.area);
+    const entries = nodes.filter(node => ['entry', 'exit'].includes(node.type) && node.area);
     if (entries.length === 0) return;
     ctx.save();
     const low = state.imageToCanvas(IMAGE_COORDINATES.MIN, IMAGE_COORDINATES.MIN);
@@ -966,9 +967,14 @@ export class NetworkEditService {
     ctx.rect(low.x, low.y, high.x - low.x, high.y - low.y);
     ctx.clip();
     const aspect = areaImageAspect(state.coordinateTransform);
+    const finishAspect = (state.finishPackingContext || createFinishPackingContext({
+      renderReference: state.renderReference, imageWidth: state.coordinateTransform?.imageWidth,
+      imageHeight: state.coordinateTransform?.imageHeight,
+      backgroundZoom: state.coordinateTransform?.backgroundZoom ?? 1 })).aspect;
     for (const node of entries) {
+      const nodeAspect = node.type === 'exit' ? finishAspect : aspect;
       const point = (u, v) => {
-        const image = areaPoint(node.area, node.position(), u, v, aspect);
+        const image = areaPoint(node.area, node.position(), u, v, nodeAspect);
         return state.imageToCanvas(image.x, image.y);
       };
       ctx.beginPath();
@@ -998,8 +1004,8 @@ export class NetworkEditService {
       ctx.strokeStyle = guideToken('--ui-background');
       ctx.lineWidth = casing;
       ctx.fillStyle = guideToken('--text-01');
-      ctx.strokeText('Start area', label.x, label.y - svc.scaleSizeClamped(4));
-      ctx.fillText('Start area', label.x, label.y - svc.scaleSizeClamped(4));
+      ctx.strokeText(node.type === 'exit' ? 'Finish area' : 'Start area', label.x, label.y - svc.scaleSizeClamped(4));
+      ctx.fillText(node.type === 'exit' ? 'Finish area' : 'Start area', label.x, label.y - svc.scaleSizeClamped(4));
     }
     ctx.restore();
   }
