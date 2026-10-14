@@ -136,4 +136,6 @@
 - The isolated control-golden toast-dismiss row fails on main too: focus is #toast-container rather than #timeline-slider; preserve the assertion and investigate test isolation — (from: CROWD-08, 2026-10-14)
 - Clear All writes the Duration thumb three times synchronously as it crosses below two waypoints and resets the base; accepted for the MVP, simplify that sync sequence in the refactor — (from: CROWD-08, 2026-10-14)
 - Lead #12's proposed reading of the owner's "the full feature in v4": allow an area placed off its node by dragging or offset, including a node on its edge; the interpretation awaits the owner — (from: CROWD-08, 2026-10-14)
-- v3.3.719 changes export admission and the player; save and open its MP4 and HTML exports from disk, or obtain the owner's explicit waiver for this release — (from: REL-719, 2026-10-14)
+- v3.3.719 MP4 and HTML saved-file check: the owner said “I’ll save and open both exports” on 2026-10-14; successful opening remains to be confirmed — (from: REL-719, 2026-10-14)
+
+- Reconcile the generic item-commit checker with the prescribed generated `chore: deploy vX.Y.Z` commit, which has no Verify body; both commit-shape diagnostics reproduced on v3.3.720 while the normal ledger check passed — (from: REL-720, 2026-10-14)

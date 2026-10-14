@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-14 — REL-720 — v3.3.720 ships CROWD-08 Part B's start areas
+
+**Decision:** v3.3.720 ships CROWD-08 Part B's centred Entry start areas, while the item remains in progress for C–G.
+
+**Rationale:** Released under GATELESS-1 and PLAN-4 after PR #142 merged as 04be29e4700f69934bdf74cc2dffe2aa9cbb785a; final source head b66a7515e7e278a624ed36d60e9aac3d29d4b715 had independent gpt-6-astra xhigh approval in round 1 and successful pull_request Verify 38596381929. The existing Part B decision owns the geometry and interaction choices. Deploy baa3a4c1a4800679908798edb3b49b1f0d51c620: 148 test files, 3658 passing tests and 2 existing todos; shell/build/check passed, zero unhandled errors; push succeeded, main-branch Verify 38605180272 and Pages checks succeeded, github-pages deployment 7072193377 reached that exact SHA, and published SHA-256 comparison was match 22, mismatch 0, errors 0. Live readiness and Open day playback/export smoke passed after clearing localStorage, sessionStorage and IndexedDB: six-waypoint Open day played to 3002 ms, then the end in 1442 further frames with zero queued; MP4 9,819,817 bytes, ftypisom, 1920×1080, 29.033333 s; HTML 2,041,847 bytes with CSP, embedded project and exact live player; no unexpected console/JS errors or failed application resources. The original live HTML export also played from start to end in a fresh tab, with moving pixels, a hidden error panel and no external resources; these headless checks do not substitute for the owner's saved-file check. Annotated tag v3.3.720 was pushed at the deploy SHA. This tenth build and its export/player changes independently require saving and opening MP4 and HTML from disk; that check is waived by the owner on 2026-10-14, verbatim: “Waive v3.3.720’s disk check”. For the separate v3.3.719 check, the owner answered on 14 October, verbatim: “I’ll save and open both exports”. The lead records a promise, pending confirmation that both opened successfully; it is neither completion nor a waiver and does not cover v3.3.720. CROWD-08 continues with Part C after this release record; no phase or whole-item close is claimed. An extra generic item-commit shape probe (`check.mjs --commit HEAD`) rejected the helper’s prescribed `chore: deploy` subject and absent Verify body; the normal ledger check passed. The lead treats this as a pre-existing convention/checker mismatch, recorded for reconciliation, without changing the generated commit; it is separate from the required release checks, which passed. House conventions: publication evidence lives in this record, implementation choices in the existing Part B decision, and outstanding owner assurance remains open.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-14 — CROWD-08 — Part B: seeded starts inside centred node areas
 
 **Decision:** Entry nodes gain rectangle or ellipse start areas, centred on the node and set by width, height and turn, so Disappear and Collect dots walk from seeded points to the unchanged network.
@@ -554,16 +564,6 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Decision:** v3.2.703 is live from deploy commit `56c2367` (tag `v3.2.703`), released under GATELESS-1 because CROWD-05's merge (`5e9e660`, PR #98) changed `src/` and `index.html`.
 
 **Rationale:** `DEV-INFRASTRUCTURE.md` → Releasing, in full: clean `main` at `5e9e660`, Pages built there, tagged `rollback-v3.2.702-5e9e660`; fsck and the conflict-copy check clean; gate green; dry run clean; `npm run push` committed `56c2367`; Verify, the Pages build and deploy green (duplicate queued runs cancelled); all 22 files SHA-256-identical. Live, at 1280×800 after cleared storage: Open day played 3,002 ms, then ran to its end at 27,283 ms with no frame queued; the readout "Ends at 27.0 s — route 11.6 s, crowds finish +15.4 s"; MP4 1920×1080 29.3 s `ftypisom`; HTML with its CSP, the project and the live `player.js`; no failed resource. CROWD-05 changes export, so its save to disk is owed (a wish line).
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-05 — REL-702 — v3.2.702 ships DEF-64; v3.2.701's exports saved and opened from disk
-
-**Decision:** v3.2.702 is live from deploy commit `aa53419` (tag `v3.2.702`), released under GATELESS-1 because DEF-64's merge (`8b969cc`, PR #77) changed `src/`; v3.2.701's export check is done, and v3.2.700's is superseded by it.
-
-**Rationale:** Releasing, in full: Pages' builds of `8b969cc` were cancelled twice in the queue (this account runs one job at a time) and a third request built; tagged `rollback-v3.2.701-8b969cc`; gate green; `npm run push` committed `aa53419`; all checks green; 22 files identical. Live smoke: 3,002 ms of 11,594, its end with no frame queued, MP4 1920×1080 13.6 s `ftypisom`, HTML embedded; two earlier runs read a stale session's 12,262 ms after the pane's example fetch timed out. Export save, through the owner's Chrome with his "please go ahead": `route-animation-2026-10-05T21-25-47.mp4` (5,090,666 bytes; `isom`, 1920×1080, 13.133 s) and `route-animation (1).html` (2,028,978 bytes; project, CSP and the live `player.js` byte for byte), opened from disk in Chrome: it loads the map, labels and controls with no console error, and the owner, watching it play: "it looks good to me". v3.2.700 is no longer live, so its save is superseded by 701's: the run's call, for the owner to confirm.
 
 **Supersedes:** none
 
