@@ -388,3 +388,13 @@ The session's calls, for the owner to confirm: the grant holds for the run, whic
 
 **Deferred:** CROWD-06, DEF-78, DEF-79, DEF-80
 
+## 2026-10-05 — GATELESS-1 — The owner confirms chat 10's three calls and orders an overhaul of the examples
+
+**Decision:** The owner confirms three of the run's calls (DEF-72 includes the branched-route slowdown; with a comet trail Preview stays longer than Edit by the trail; the Duration breakdown shows only when something runs past the route) and asks for a major overhaul of the built-in examples (EX-01, waiting on his direction).
+
+**Rationale:** the owner, in the run's chat on 2026-10-05: "The examples need a major overhaul. proceed with your reccomendation for:" the three calls as listed to him, quoted from DEF-72's and CROWD-05's entries; and "proceed with disk export checks / sign in", the owed export saves, which wait on Claude in Chrome being connected.
+
+**Supersedes:** none
+
+**Deferred:** EX-01
+

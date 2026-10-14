@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-14 — CROWD-08 — Part B: seeded starts inside centred node areas
+
+**Decision:** Entry nodes gain rectangle or ellipse start areas, centred on the node and set by width, height and turn, so Disappear and Collect dots walk from seeded points to the unchanged network.
+
+**Rationale:** The independently approved Part B brief applies the owner's centred-area MVP choice and gateless preference. The lead chooses image fractions 0.01–0.8 (default 0.1), clockwise degrees -180–180 (default 0), and intrinsic image-plane rotation; without an image the fixed square plane keeps playback independent of viewport size, with an explanatory hint. Rectangle draws are uniform and ellipse radius uses sqrt; a separate seed namespace preserves every old graph, onset and pace draw. At the outer stored-coordinate bounds, clipping the centre-to-point ray keeps samples inside both the shape and allowed box, intentionally sacrificing uniformity there. Shared journey totals include the approach; total terminal state wins over coincident onset/Entry boundaries. Walking variation is suppressed through the exact Entry instant, then resumes its old network value: the lead accepts the resulting sideways step as the easier MVP, pinned in adjacent-instant tests and Chromium. Respawn, Repeat journey, Follow route and non-Entry Types retain inactive data. Absent areas preserve old JSON and node event payloads. The app owns both card and outline edits through one validation/undo/autosave path, separate from the pen's older mutation exception; stable owner identity preserves drafts through unrelated sync and discards drafts superseded by an accepted outline edit. Image replacement refreshes timing only when its relevant intrinsic aspect changes; late-load rollback restores the old context. The Edit-only overlay uses shared geometry below guide edges. Standards: carbon's native select/number fields and single More disclosure; nielsen 1, 3, 4 and 9 for matching state, reversible edits and specific errors; wcag-2.2-aaa 2.5.5, 2.1.3 and 2.4.12 for 44 px controls, keyboard paths and retained focus; house-conventions' app ownership, additive persistence and regression tests. Physical-device and screen-reader evidence remain REV-03/REV-05. The source PR owns gate, mutant, golden-trace and browser evidence; publication belongs to its release record. CROWD-08 remains open for C–G under the owner's continuation instruction recorded by REL-719.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-14 — REL-719 — v3.3.719 ships CROWD-08 Part A; Codex takes over implementation
 
 **Decision:** v3.3.719 ships CROWD-08 Part A, closing DEF-84, and Codex takes over implementation under the run's grant while a separate read-only Codex reviews each CROWD-08 PR at xhigh until approval.
@@ -558,14 +568,4 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Supersedes:** none
 
 **Deferred:** none
-
-## 2026-10-05 — GATELESS-1 — The owner confirms chat 10's three calls and orders an overhaul of the examples
-
-**Decision:** The owner confirms three of the run's calls (DEF-72 includes the branched-route slowdown; with a comet trail Preview stays longer than Edit by the trail; the Duration breakdown shows only when something runs past the route) and asks for a major overhaul of the built-in examples (EX-01, waiting on his direction).
-
-**Rationale:** the owner, in the run's chat on 2026-10-05: "The examples need a major overhaul. proceed with your reccomendation for:" the three calls as listed to him, quoted from DEF-72's and CROWD-05's entries; and "proceed with disk export checks / sign in", the owed export saves, which wait on Claude in Chrome being connected.
-
-**Supersedes:** none
-
-**Deferred:** EX-01
 

@@ -9,6 +9,7 @@
  */
 
 import { waitForCrowdMs } from '../../src/utils/crowdArrival.js';
+import { areaImageAspect } from '../../src/utils/crowdArea.js';
 
 /**
  * @param {Object} app A booted RoutePlotter
@@ -22,6 +23,7 @@ export function fitWaitWithWaitForCrowdMs(app, layer, waypoint) {
   const arrivalMs = routeAnchors?.arrivalMsById?.[waypoint.id];
   if (!Number.isFinite(arrivalMs) || !(durationMs > 0)) return false;
   const schedules = app.swarmEngine.scheduleDots(layer, {
+    imageAspect: areaImageAspect(app.coordinateTransform),
     durationMs,
     routePathPoints: app.pathPoints,
     routeAnchors,

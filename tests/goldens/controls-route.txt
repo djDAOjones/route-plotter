@@ -89,7 +89,7 @@ settled:
 ## #route-scope>div[0]>h2[0]>button[0] · click
 app ~ focus: "body" → "#route-scope>div[0]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "video" → "head"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[253 chars, 55b82c34] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":true,\"path-emphasis\":t…[254 chars, a6127c57]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[270 chars, f6ba4348] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":true,\"path-emphasis\":t…[271 chars, c34df565]
 ui ~ #route-scope>div[0]: div class="settings-section expanded" data-section="head" → div class="settings-section" data-last="true" data-section="head"
 ui ~ #route-scope>div[0]>h2[0]>button[0]: button aria-controls="section-head-content" aria-expanded="true" class="section-header" type="button" :text="Head" → button aria-controls="section-head-content" aria-expanded="false" class="section-header" type="button" :text="Head"
 
@@ -262,7 +262,7 @@ settled:
 ## #route-scope>div[1]>h2[0]>button[0] · click
 app ~ focus: "body" → "#route-scope>div[1]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "video" → "pacing"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[253 chars, 55b82c34] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":false,\"reveal\":true,\"path-emphasis\":t…[254 chars, b05917a7]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[270 chars, f6ba4348] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":false,\"reveal\":true,\"path-emphasis\":t…[271 chars, 19f5b4f5]
 ui ~ #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" → div class="settings-section" data-last="true" data-section="pacing"
 ui ~ #route-scope>div[1]>h2[0]>button[0]: button aria-controls="section-pacing-content" aria-expanded="true" class="section-header" type="button" :text="Pacing" → button aria-controls="section-pacing-content" aria-expanded="false" class="section-header" type="button" :text="Pacing"
 
@@ -375,7 +375,7 @@ settled:
 ## #route-scope>div[2]>h2[0]>button[0] · click
 app ~ focus: "body" → "#route-scope>div[2]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "video" → "reveal"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[253 chars, 55b82c34] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":false,\"path-emphasis\":t…[254 chars, 80a74581]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[270 chars, f6ba4348] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":false,\"path-emphasis\":t…[271 chars, 2761f46f]
 ui ~ #route-scope>div[2]: div class="settings-section expanded" data-section="reveal" → div class="settings-section" data-last="true" data-section="reveal"
 ui ~ #route-scope>div[2]>h2[0]>button[0]: button aria-controls="section-reveal-content" aria-expanded="true" class="section-header" type="button" :text="Reveal" → button aria-controls="section-reveal-content" aria-expanded="false" class="section-header" type="button" :text="Reveal"
 
@@ -937,7 +937,7 @@ settled:
 ## #route-scope>div[3]>h2[0]>button[0] · click
 app ~ focus: "body" → "#route-scope>div[3]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "video" → "path-emphasis"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[253 chars, 55b82c34] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":fa…[254 chars, 038a5ea7]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[270 chars, f6ba4348] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":fa…[271 chars, 4443b9f5]
 ui ~ #route-scope>div[3]: div class="settings-section expanded" data-section="path-emphasis" → div class="settings-section" data-last="true" data-section="path-emphasis"
 ui ~ #route-scope>div[3]>h2[0]>button[0]: button aria-controls="section-path-emphasis-content" aria-expanded="true" class="section-header" type="button" :text="Path emphasis" → button aria-controls="section-path-emphasis-content" aria-expanded="false" class="section-header" type="button" :text="Path emphasis"
 
@@ -1004,7 +1004,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #route-scope>div[4]>h2[0]>button[0] · click
 app ~ focus: "body" → "#route-scope>div[4]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "video" → "background"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[253 chars, 55b82c34] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[254 chars, dd883d17]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[270 chars, f6ba4348] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[271 chars, 8d585ca5]
 ui ~ #route-scope>div[4]: div class="settings-section expanded" data-section="background" → div class="settings-section" data-last="true" data-section="background"
 ui ~ #route-scope>div[4]>h2[0]>button[0]: button aria-controls="section-background-content" aria-expanded="true" class="section-header" type="button" :text="Background" → button aria-controls="section-background-content" aria-expanded="false" class="section-header" type="button" :text="Background"
 
@@ -1071,6 +1071,7 @@ emit background:upload [file picked.png image/png]
 ui ~ #canvas-area: div aria-busy="false" class="canvas-area" → div aria-busy="true" class="canvas-area"
 settled:
   emit animation:durationChange 30973.788202
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
   announced "Browser recovery could not keep 3 images. The background, picked.png: this browser cannot store images for recovery. The path head image, asset-extras-head.png…[344 chars, 277a5a61]
@@ -1097,7 +1098,7 @@ settled:
 
 ## #route-scope>div[5]>h2[0]>button[0] · click
 app ~ focus: "body" → "#route-scope>div[5]>h2[0]>button[0]"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[253 chars, 55b82c34] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[254 chars, 7a29289b]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[270 chars, f6ba4348] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":true,\"pacing\":true,\"reveal\":true,\"path-emphasis\":tr…[271 chars, f900d291]
 ui ~ #route-scope>div[5]: div class="settings-section expanded" data-section="video" → div class="settings-section" data-last="true" data-section="video"
 ui ~ #route-scope>div[5]>h2[0]>button[0]: button aria-controls="section-video-content" aria-expanded="true" class="section-header" type="button" :text="Video settings" → button aria-controls="section-video-content" aria-expanded="false" class="section-header" type="button" :text="Video settings"
 

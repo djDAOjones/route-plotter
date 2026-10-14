@@ -48,8 +48,9 @@ const DEFAULT_SECTION_STATE = {
   dots: true,
   release: true,
   motion: true,
-  // Network scopes (single card each — always open)
+  // Network scopes
   node: true,
+  'node-area': true,
   edge: true
 };
 

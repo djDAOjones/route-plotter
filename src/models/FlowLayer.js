@@ -3,6 +3,7 @@ import { Emitter } from './Emitter.js';
 import { assertPersistedEntityId } from '../utils/entityId.js';
 import { isImageCoordinateInRange } from '../utils/imageCoordinates.js';
 import { IMAGE_COORDINATES } from '../config/constants.js';
+import { assertCrowdArea } from '../utils/crowdArea.js';
 
 /**
  * Model representing one flow layer in the scene: a guide network plus the
@@ -186,6 +187,7 @@ export class FlowLayer {
       if (!node || typeof node !== 'object' || Array.isArray(node)) {
         throw new Error('Invalid graph node: expected an object');
       }
+      assertCrowdArea(node.area);
       if (!Number.isFinite(Number(node.x)) || !Number.isFinite(Number(node.y))) {
         throw new Error('Invalid graph node position: expected finite coordinates');
       }

@@ -46,12 +46,13 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  ANIMATION, AREA_HIGHLIGHT, MOTION, RENDERING, TEXT_LABEL, VIDEO_EXPORT
+  ANIMATION, AREA_HIGHLIGHT, CROWD_AREA, MOTION, RENDERING, TEXT_LABEL, VIDEO_EXPORT
 } from '../src/config/constants.js';
 import { CAMERA_DEFAULTS, CameraService } from '../src/services/CameraService.js';
 import { PROJECT_MODEL_LIMITS } from '../src/app/persistence.js';
 import { UIController } from '../src/controllers/UIController.js';
 import { Emitter, EMITTER_LIMITS } from '../src/models/Emitter.js';
+import { createCrowdArea } from '../src/utils/crowdArea.js';
 import { GraphEdge } from '../src/models/GraphEdge.js';
 import { Waypoint } from '../src/models/Waypoint.js';
 import {
@@ -158,6 +159,9 @@ const FIELD_CONTRACT = {
   'crowd-speed': ['range', 1, 100, 15, 1],
   'crowd-speed-variance': ['range', 0, 100, 20, 1],
   'network-edge-weight': ['range', 1, 50, 10, 1],
+  'network-node-area-width': ['number', 1, 80, 10, 'any'],
+  'network-node-area-height': ['number', 1, 80, 10, 'any'],
+  'network-node-area-turn': ['number', -180, 180, 0, 'any'],
   'timeline-slider': ['range', 0, 1000, 0, 1],
   // DEF-86: a number field beside each crowd slider and Share, reaching the
   // model's whole range in the readout's unit; "any" step where the model
@@ -414,6 +418,16 @@ const PAIRINGS = {
     min: [new Emitter({ speedVariance: -1 }).speedVariance, "Emitter's clamp"],
     max: [new Emitter({ speedVariance: 2 }).speedVariance, "Emitter's clamp"],
     value: [DEFAULT_EMITTER.speedVariance, 'a new Emitter'] },
+  // CROWD-08: percentages of the image and clockwise degrees, all fractional.
+  'network-node-area-width': { toModel: percent,
+    min: [CROWD_AREA.SIZE_MIN, 'CROWD_AREA.SIZE_MIN'], max: [CROWD_AREA.SIZE_MAX, 'CROWD_AREA.SIZE_MAX'],
+    value: [createCrowdArea().width, 'a new crowd area'] },
+  'network-node-area-height': { toModel: percent,
+    min: [CROWD_AREA.SIZE_MIN, 'CROWD_AREA.SIZE_MIN'], max: [CROWD_AREA.SIZE_MAX, 'CROWD_AREA.SIZE_MAX'],
+    value: [createCrowdArea().height, 'a new crowd area'] },
+  'network-node-area-turn': { toModel: s => s,
+    min: [CROWD_AREA.TURN_MIN, 'CROWD_AREA.TURN_MIN'], max: [CROWD_AREA.TURN_MAX, 'CROWD_AREA.TURN_MAX'],
+    value: [createCrowdArea().turn, 'a new crowd area'] },
   // No maximum: GraphEdge gives a weight no top.
   'network-edge-weight-field': { toModel: s => s,
     min: [new GraphEdge({ sourceId: 'a', targetId: 'b', weight: 0 }).weight, "GraphEdge's smallest weight"],
@@ -675,7 +689,8 @@ const WRITERS_ON_A_NEW_PROJECT = {
     'path-head-size', 'pulse-amplitude', 'pulse-cycle-speed', 'ripple-max-scale', 'ripple-thickness',
     'segment-width', 'shape-amplitude', 'shape-frequency', 'waypoint-pause-time', 'waypoint-segment-speed'
   ],
-  'src/app/network.js': ['network-edge-weight', 'network-edge-weight-field'],
+  'src/app/network.js': ['network-edge-weight', 'network-edge-weight-field',
+    'network-node-area-height', 'network-node-area-turn', 'network-node-area-width'],
   // Start-up puts the Hold at end thumb where a new project's hold is (CROWD-06).
   'src/app/undoRedo.js': ['hold-at-end'],
   'src/app/wiringControllers.js': ['export-res-x', 'export-res-y'],
@@ -764,6 +779,8 @@ function limitsProject() {
   const [light, heavy] = project.scene.flowLayers[0].graph.edges;
   light.weight = new GraphEdge({ sourceId: 'a', targetId: 'b', weight: 0 }).weight;
   heavy.weight = 1000;
+  const entry = project.scene.flowLayers[0].graph.nodes.find(node => node.type === 'entry');
+  entry.area = { shape: 'ellipse', width: 0.8, height: 0.01, turn: 180 };
   return project;
 }
 
@@ -904,7 +921,10 @@ const RECEIVED = {
   'crowd-speed-variance-field': onCrowd('speedVariance'),
   'crowd-seed-value': onCrowd('seed'),
   'network-edge-weight': ['edge', app => app.networkEditService.selectedEdge().weight],
-  'network-edge-weight-field': ['edge', app => app.networkEditService.selectedEdge().weight]
+  'network-edge-weight-field': ['edge', app => app.networkEditService.selectedEdge().weight],
+  'network-node-area-width': ['node', app => app.networkEditService.selectedNode().area.width],
+  'network-node-area-height': ['node', app => app.networkEditService.selectedNode().area.height],
+  'network-node-area-turn': ['node', app => app.networkEditService.selectedNode().area.turn]
 };
 
 /** The mapping a field's handler should apply, from its pairing. */
@@ -989,6 +1009,21 @@ function drawAndSelectAnEdge(app) {
   selectEdge(app, layer, edges[0].id);
 }
 
+/** The real node card, with an area enabled when the fixture has none. */
+function selectStartArea(app) {
+  const layer = app.selectedCrowd;
+  const node = layer.graph.getNodes().find(node => node.type === 'entry') || layer.graph.getNodes()[0];
+  app.eventBus.emit('scene-outline:command', { action: 'select', kind: 'node', layerId: layer.id, nodeId: node.id });
+  for (const [id, value] of [['network-node-type', 'entry'],
+    ['network-node-area-shape', node.area?.shape || 'rectangle']]) {
+    const field = document.getElementById(id);
+    field.value = value;
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  expect(app.networkEditService.selectedNode()).toBe(node);
+  expect(node.area).toBeDefined();
+}
+
 describe('index.html ranges against the code (TST-13)', () => {
 
   test("every field's type, min, max, value and step are the reviewed contract", () => {
@@ -1022,8 +1057,8 @@ describe('index.html ranges against the code (TST-13)', () => {
     const paired = new Set([...Object.keys(PAIRINGS), ...Object.keys(APP_DEFAULTS), ...Object.keys(NO_COUNTERPART)]);
     expect([...FIELDS.keys()].filter(id => !paired.has(id)), 'a new field needs a pairing').toEqual([]);
     expect([...paired].filter(id => !FIELDS.has(id)), 'a paired field has gone from index.html').toEqual([]);
-    // 64, was 53: DEF-86's ten number fields and the Pattern seed's (CROWD-07 F16).
-    expect(FIELDS.size).toBe(64);
+    // CROWD-08 adds three area fields to the previous 64; every one stays paired and driven.
+    expect(FIELDS.size).toBe(67);
     const explained = [...Object.values(NO_COUNTERPART).map(({ why }) => why),
       ...Object.values(DISAGREEMENTS).map(({ why }) => why),
       ...Object.values(LOAD_LIMITS).map(({ why }) => why), ...Object.values(NEW_PROJECT_MISFITS),
@@ -1138,6 +1173,8 @@ describe('index.html ranges against the code (TST-13)', () => {
       await drive('crowd');
       drawAndSelectAnEdge(app);
       await drive('edge');
+      selectStartArea(app);
+      await drive('node');
     } finally {
       emit.mockRestore();
     }
@@ -1204,6 +1241,10 @@ describe('index.html ranges against the code (TST-13)', () => {
       // Its network's lightest and heaviest edges fill the Edge card in turn.
       selectEdge(app, app.selectedCrowd, LIMIT_EDGES.light);
       selectEdge(app, app.selectedCrowd, LIMIT_EDGES.heavy);
+      selectStartArea(app);
+      // The new fields display the loaded limits, without adding a misfit.
+      expect(['width', 'height', 'turn'].map(key => document.getElementById(`network-node-area-${key}`).value))
+        .toEqual(['80', '1', '180']);
       // The next major waypoint keeps the fixture's values, between the limits
       // and off any coarser grid (a 27 px label), so a step must hold them too.
       const between = app.waypoints.find((waypoint, index) => index > 0 && waypoint.isMajor);

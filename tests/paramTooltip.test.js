@@ -748,9 +748,12 @@ describe('the scene outline’s fields have hints, drawn as the outline is', () 
     const fields = parameterControlsIn(container);
     const kinds = new Set(fields.map(field => `${field.form.dataset.outlineAction}:${field.name}`));
 
-    // Vacuous unless all 47 fields of the 13 forms were drawn (47, was 46:
-    // Release bias is a direction and an amount since CROWD-07 F15).
-    expect(kinds.size).toBe(47);
+    // CROWD-08 adds shape, width, height and turn in one new area form.
+    // The previous 47 fields remain required alongside these four.
+    expect(kinds.size).toBe(51);
+    for (const name of ['shape', 'width', 'height', 'turn']) {
+      expect(kinds.has(`update-node-area:${name}`)).toBe(true);
+    }
     expect(withoutHint(fields)).toEqual([]);
   });
 

@@ -1,4 +1,5 @@
 import { resolveRenderReference } from '../utils/renderReference.js';
+import { areaImageAspect } from '../utils/crowdArea.js';
 
 /**
  * Canvas viewport: aspect ratio, visible bounds, screen/canvas/image coordinate conversion, manual zoom.
@@ -265,17 +266,31 @@ export const viewportMixin = {
    * @param {HTMLImageElement} img - The loaded image
    */
   updateImageTransform(img) {
+    const previousAspect = areaImageAspect(this.coordinateTransform);
+    const hadImage = this.coordinateTransform.imageWidth > 0 && this.coordinateTransform.imageHeight > 0;
     if (!img) {
       // No image: forget the previous bitmap bounds but keep the canvas size
       // so normalized authoring still spans the whole surface.
       this.coordinateTransform.clearImage();
-      return;
+    } else {
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+      // Always use 'fit' mode for contain rendering (full image visible with letterboxing)
+      this.coordinateTransform.setImageDimensions(width, height, 'fit');
     }
-    
-    const width = img.naturalWidth || img.width;
-    const height = img.naturalHeight || img.height;
-    // Always use 'fit' mode for contain rendering (full image visible with letterboxing)
-    this.coordinateTransform.setImageDimensions(width, height, 'fit');
+    // Fitting and PlayerApp call this repeatedly. Only a changed intrinsic
+    // aspect can alter the approach; canvas/output sizes must never retime it.
+    if (previousAspect !== areaImageAspect(this.coordinateTransform)
+        && this.scene?.getFlowLayers().some(layer => layer.guideType === 'graph'
+          && layer.graph.getNodes().some(node => node.type === 'entry' && node.area)
+          && layer.emitters.some(emitter => ['disappear', 'collect'].includes(emitter.lifecycleMode)))) {
+      this.refreshSceneEnd?.();
+    }
+    this._syncNodeAreaCard?.();
+    const hasImage = this.coordinateTransform.imageWidth > 0 && this.coordinateTransform.imageHeight > 0;
+    if (hadImage !== hasImage || previousAspect !== areaImageAspect(this.coordinateTransform)) {
+      this._queueSceneOutlineRefresh?.();
+    }
   },
   
   // ========== COORDINATE TRANSFORM PIPELINE ==========

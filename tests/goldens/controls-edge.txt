@@ -3,7 +3,7 @@
 ## #edge-scope>div[0]>h2[0]>button[0] · click
 app ~ focus: "body" → "#edge-scope>div[0]>h2[0]>button[0]"
 storage + routePlotter_lastSection: "edge"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 14cdc03d]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[274 chars, 2ec63c8a] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[275 chars, 66c7ec79]
 ui ~ #edge-scope>div[0]: div class="settings-section expanded" data-section="edge" → div class="settings-section" data-last="true" data-section="edge"
 ui ~ #edge-scope>div[0]>h2[0]>button[0]: button aria-controls="section-edge-content" aria-expanded="true" class="section-header" type="button" :text="Path" → button aria-controls="section-edge-content" aria-expanded="false" class="section-header" type="button" :text="Path"
 

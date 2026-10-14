@@ -104,7 +104,7 @@ settled:
 ## #waypoint-scope>div[0]>h2[0]>button[0] · click
 app ~ focus: "body" → "#waypoint-scope>div[0]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "area-highlight" → "marker"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[253 chars, 52b44e38] → "{\"marker\":false,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[254 chars, 53b46195]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[270 chars, 55228c44] → "{\"marker\":false,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[271 chars, 97a3ce4b]
 ui ~ #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" → div class="settings-section" data-last="true" data-section="marker"
 ui ~ #waypoint-scope>div[0]>h2[0]>button[0]: button aria-controls="section-marker-content" aria-expanded="true" class="section-header" type="button" :text="Marker" → button aria-controls="section-marker-content" aria-expanded="false" class="section-header" type="button" :text="Marker"
 
@@ -536,7 +536,7 @@ settled:
 ## #waypoint-scope>div[1]>h2[0]>button[0] · click
 app ~ focus: "body" → "#waypoint-scope>div[1]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "area-highlight" → "on-arrival"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[253 chars, 52b44e38] → "{\"marker\":true,\"on-arrival\":false,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[254 chars, 6301a497]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[270 chars, 55228c44] → "{\"marker\":true,\"on-arrival\":false,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[271 chars, ad8eeb25]
 ui ~ #waypoint-scope>div[1]: div class="settings-section expanded" data-section="on-arrival" → div class="settings-section" data-last="true" data-section="on-arrival"
 ui ~ #waypoint-scope>div[1]>h2[0]>button[0]: button aria-controls="section-on-arrival-content" aria-expanded="true" class="section-header" type="button" :text="On arrival" → button aria-controls="section-on-arrival-content" aria-expanded="false" class="section-header" type="button" :text="On arrival"
 
@@ -881,7 +881,7 @@ settled:
 ## #waypoint-scope>div[2]>h2[0]>button[0] · click
 app ~ focus: "body" → "#waypoint-scope>div[2]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "area-highlight" → "label"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[253 chars, 52b44e38] → "{\"marker\":true,\"on-arrival\":true,\"label\":false,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[254 chars, 79291d01]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[270 chars, 55228c44] → "{\"marker\":true,\"on-arrival\":true,\"label\":false,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[271 chars, 1894d2ef]
 ui ~ #waypoint-scope>div[2]: div class="settings-section expanded" data-section="label" → div class="settings-section" data-last="true" data-section="label"
 ui ~ #waypoint-scope>div[2]>h2[0]>button[0]: button aria-controls="section-label-content" aria-expanded="true" class="section-header" type="button" :text="Label" → button aria-controls="section-label-content" aria-expanded="false" class="section-header" type="button" :text="Label"
 
@@ -1436,7 +1436,7 @@ settled:
 ## #waypoint-scope>div[3]>h2[0]>button[0] · click
 app ~ focus: "body" → "#waypoint-scope>div[3]>h2[0]>button[0]"
 storage ~ routePlotter_lastSection: "area-highlight" → "leg"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[253 chars, 52b44e38] → "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":false,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[254 chars, 091114df]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[270 chars, 55228c44] → "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":false,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[271 chars, a364f0ed]
 ui ~ #waypoint-scope>div[3]: div class="settings-section expanded" data-section="leg" → div class="settings-section" data-last="true" data-section="leg"
 ui ~ #waypoint-scope>div[3]>h2[0]>button[0]: button aria-controls="section-leg-content" aria-expanded="true" class="section-header" type="button" → button aria-controls="section-leg-content" aria-expanded="false" class="section-header" type="button"
 
@@ -1991,7 +1991,7 @@ settled:
 
 ## #waypoint-scope>div[4]>h2[0]>button[0] · click
 app ~ focus: "body" → "#waypoint-scope>div[4]>h2[0]>button[0]"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[253 chars, 52b44e38] → "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[254 chars, 063bcc2f]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":true,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fals…[270 chars, 55228c44] → "{\"marker\":true,\"on-arrival\":true,\"label\":true,\"leg\":true,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":fal…[271 chars, 6762843d]
 ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section="area-highlight" → div class="settings-section" data-last="true" data-section="area-highlight"
 ui ~ #waypoint-scope>div[4]>h2[0]>button[0]: button aria-controls="section-area-highlight-content" aria-expanded="true" class="section-header" type="button" :text="Area" → button aria-controls="section-area-highlight-content" aria-expanded="false" class="section-header" type="button" :text="Area"
 

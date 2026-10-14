@@ -183,6 +183,15 @@ export const AREA_VISIBILITY = {
   ALWAYS_HIDE: 'always-hide'
 };
 
+/** Node-centred crowd areas use fractions of image width and height. */
+export const CROWD_AREA = Object.freeze({
+  SIZE_MIN: 0.01,
+  SIZE_MAX: 0.8,
+  SIZE_DEFAULT: 0.1,
+  TURN_MIN: -180,
+  TURN_MAX: 180,
+});
+
 /**
  * Area highlight configuration constants
  * Defines defaults and ranges for area highlight properties

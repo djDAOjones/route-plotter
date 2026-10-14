@@ -7,6 +7,7 @@ import {
   sampleBusynessEnvelope,
 } from '../utils/busynessEnvelope.js';
 import { clampImageCoordinate } from '../utils/imageCoordinates.js';
+import { sampleCrowdArea } from '../utils/crowdArea.js';
 
 /**
  * Deterministic swarm evaluator for flow layers (Phase 3).
@@ -46,6 +47,9 @@ const CHANNEL_ONSET = -1;
 const CHANNEL_SPEED = -2;
 const CHANNEL_WOBBLE_PHASE = -3;
 const CHANNEL_WOBBLE_FREQ = -4;
+
+// A different seed namespace leaves every existing hop/respawn draw intact.
+const AREA_SEED_NAMESPACE = 0xA83E92D7;
 
 /**
  * Respawned journeys (DEF-77, the owner's "Make Respawn vary"): journey k ≥ 1
@@ -157,6 +161,14 @@ function graphSignature(graph) {
   return `${nodes.join(';')}#${edges.join(';')}`;
 }
 
+/** Exact tuples keep new area geometry out of the legacy delimiter signature. */
+function startAreaSignature(guide, emitter) {
+  if (!finishesJourneys(emitter) || guide.imageAspect === undefined) return '';
+  return '|areas:' + JSON.stringify([guide.imageAspect, guide.entries
+    .filter(node => node.type === 'entry' && node.area)
+    .map(node => [node.id, node.position(), node.area])]);
+}
+
 export class SwarmEngine {
   constructor() {
     /**
@@ -209,6 +221,7 @@ export class SwarmEngine {
    * @param {import('../models/FlowLayer.js').FlowLayer} layer
    * @param {Object} context
    * @param {number} context.durationMs      — Master-timeline duration in ms (> 0).
+   * @param {number} [context.imageAspect=1] — Intrinsic background width/height; never the output canvas.
    * @param {Array}  [context.routePathPoints] — Hero-route polyline (normalised),
    *                                             required for guideType 'route'.
    * @returns {Array<{x:number, y:number, size:number, color:string,
@@ -224,8 +237,11 @@ export class SwarmEngine {
     if (!guide) return [];
 
     const dots = [];
+    const signature = guide.imageAspect === undefined ? null : graphSignature(guide.graph);
     for (const emitter of layer.emitters) {
-      this._evaluateEmitter(timelineMs, durationMs, emitter, guide, dots, context.routeAnchors);
+      const journeys = signature !== null && finishesJourneys(emitter)
+        ? this._cachedJourneys(layer, emitter, guide, signature) : null;
+      this._evaluateEmitter(timelineMs, durationMs, emitter, guide, dots, context.routeAnchors, journeys);
     }
     return dots;
   }
@@ -367,7 +383,8 @@ export class SwarmEngine {
    * @returns {{lengths: Float64Array, ends: Uint8Array, multiLeg: Uint8Array}}
    */
   _cachedJourneys(layer, emitter, guide, signature) {
-    const key = `${signature}|${emitter.seed}|${emitter.dotCount}`;
+    const areaSignature = startAreaSignature(guide, emitter);
+    const key = `${signature}|${emitter.seed}|${emitter.dotCount}${areaSignature}`;
     let byEmitter = this._journeyCache.get(layer);
     if (!byEmitter) {
       byEmitter = new WeakMap();
@@ -379,13 +396,17 @@ export class SwarmEngine {
     const lengths = new Float64Array(emitter.dotCount);
     const ends = new Uint8Array(emitter.dotCount);
     const multiLeg = new Uint8Array(emitter.dotCount);
+    const areas = areaSignature ? new Array(emitter.dotCount).fill(null) : null;
     for (let i = 0; i < emitter.dotCount; i++) {
       const journey = this._journeyLength(emitter, i, guide, reaching);
       lengths[i] = journey.length;
       ends[i] = journey.ends ? 1 : 0;
       multiLeg[i] = journey.legs > 1 ? 1 : 0;
+      if (areas && journey.area) {
+        areas[i] = { ...journey.area, totalLength: journey.length, ends: journey.ends };
+      }
     }
-    const entry = { key, lengths, ends, multiLeg };
+    const entry = { key, lengths, ends, multiLeg, ...(areas ? { areas } : {}) };
     byEmitter.set(emitter, entry);
     return entry;
   }
@@ -432,7 +453,9 @@ export class SwarmEngine {
       const window = this._releaseWindow(emitter, context.routeAnchors);
       for (let i = 0; i < emitter.dotCount; i++) {
         if (journeys) {
-          if (!journeys.ends[i] || journeys.multiLeg[i]) return true;
+          // Active areas have terminal precedence even when a multi-leg
+          // journey rounds to its onset. The old tiny-edge rule stays old.
+          if (!journeys.ends[i] || (!journeys.areas?.[i] && journeys.multiLeg[i])) return true;
           if (!(journeys.lengths[i] > 0)) continue;
         }
         const length = journeys ? journeys.lengths[i] : guide.length;
@@ -461,14 +484,19 @@ export class SwarmEngine {
     let hop = 0;
     let node = this._pickEntry(entries, seed, dotIndex, hop++);
     let cameFromEdgeId = null;
-    let total = 0;
-    let legs = 0;
+    const area = this._startArea(node, emitter, dotIndex, guide);
+    let total = area ? area.length : 0;
+    let legs = total > 0 ? 1 : 0;
 
     for (let step = 0; step < MAX_HOPS; step++) {
-      if (reaching && !reaching.has(node.id)) return { length: Infinity, ends: false, legs };
+      if (reaching && !reaching.has(node.id)) {
+        return { length: Infinity, ends: false, legs, ...(area ? { area } : {}) };
+      }
       const atExit = this._endsJourney(node, guide, step, step > 0);
       const candidates = atExit ? [] : this._traversableEdges(graph, node.id, cameFromEdgeId);
-      if (atExit || candidates.length === 0) return { length: total, ends: true, legs };
+      if (atExit || candidates.length === 0) {
+        return { length: total, ends: true, legs, ...(area ? { area: { ...area, endId: node.id } } : {}) };
+      }
 
       const traversal = this._pickWeighted(candidates, seed, dotIndex, hop++);
       const edgeLength = this.edgeGeometry(graph, traversal.edge).length;
@@ -478,7 +506,18 @@ export class SwarmEngine {
       cameFromEdgeId = traversal.edge.id;
       if (!node) break;
     }
-    return { length: total, ends: false, legs };
+    return { length: total, ends: false, legs, ...(area ? { area } : {}) };
+  }
+
+  /** One dot's seeded approach; dormant settings never enter the old walk. */
+  _startArea(node, emitter, dotIndex, guide) {
+    if (node.type !== 'entry' || !node.area || !finishesJourneys(emitter)) return null;
+    const center = node.position();
+    const seed = (emitter.seed ^ AREA_SEED_NAMESPACE) >>> 0;
+    const point = sampleCrowdArea(node.area, center, [
+      SwarmEngine.hash(seed, dotIndex, 0), SwarmEngine.hash(seed, dotIndex, 1),
+    ], guide.imageAspect);
+    return { point, length: Math.hypot(point.x - center.x, point.y - center.y) };
   }
 
   /**
@@ -545,7 +584,11 @@ export class SwarmEngine {
       const guide = { type: 'route', points, length: this._routeLength(points) };
       return guide.length > 0 ? guide : null;
     }
-    return this._buildGraphGuide(layer.graph);
+    const guide = this._buildGraphGuide(layer.graph);
+    if (guide?.entries.some(node => node.type === 'entry' && node.area)) {
+      guide.imageAspect = Number.isFinite(context.imageAspect) && context.imageAspect > 0 ? context.imageAspect : 1;
+    }
+    return guide;
   }
 
   /**
@@ -593,7 +636,7 @@ export class SwarmEngine {
    * Append one emitter's live dots to `out`.
    * @private
    */
-  _evaluateEmitter(timelineMs, durationMs, emitter, guide, out, routeAnchors = null) {
+  _evaluateEmitter(timelineMs, durationMs, emitter, guide, out, routeAnchors = null, journeys = null) {
     const { dotCount } = emitter;
     const window = this._releaseWindow(emitter, routeAnchors);
 
@@ -611,7 +654,7 @@ export class SwarmEngine {
 
       const sample = guide.type === 'route'
         ? this._walkRoute(distance, emitter, i, speedMultiplier, guide, timelineMs, onsetMs)
-        : this._walkGraph(distance, emitter, i, speedMultiplier, guide, timelineMs, onsetMs);
+        : this._walkGraph(distance, emitter, i, speedMultiplier, guide, timelineMs, onsetMs, journeys?.areas?.[i]);
       if (!sample) continue; // lifecycle 'disappear' completed
 
       let { x, y } = sample.point;
@@ -797,7 +840,7 @@ export class SwarmEngine {
    * @private
    * @returns {{point, tangent, wobbleDistance, journey}|null}
    */
-  _walkGraph(distance, emitter, dotIndex, speedMultiplier, guide, timelineMs = NaN, onsetMs = NaN) {
+  _walkGraph(distance, emitter, dotIndex, speedMultiplier, guide, timelineMs = NaN, onsetMs = NaN, area = null) {
     const { graph, entries } = guide;
     const { seed } = emitter;
     const mode = emitter.lifecycleMode;
@@ -815,12 +858,36 @@ export class SwarmEngine {
     let journey = 0;
     let pace = speedMultiplier;
 
+    if (area) {
+      // Compare the shared total first: it can round to onset, even with
+      // several real edges. Never borrow legacy multi-leg admission here.
+      if (area.ends && journeyOverAt(timelineMs, onsetMs, area.totalLength, emitter, speedMultiplier)) {
+        return mode === 'disappear' ? null : this._sampleNode(graph.getNode(area.endId), area.totalLength);
+      }
+      const approachEnd = onsetMs + dotJourneyMs(area.length, emitter.speed, speedMultiplier);
+      if (timelineMs <= approachEnd) {
+        if (timelineMs === approachEnd) return this._sampleNode(node, 0);
+        const fraction = Math.max(0, Math.min(1, distance / area.length));
+        const center = node.position();
+        return { point: {
+          x: area.point.x + (center.x - area.point.x) * fraction,
+          y: area.point.y + (center.y - area.point.y) * fraction,
+        }, tangent: null, wobbleDistance: 0, journey: 0 };
+      }
+      remaining = Math.max(0, distance - area.length);
+      travelled = area.length;
+    }
+
     for (let step = 0; step < MAX_HOPS; step++) {
       const atExit = this._endsJourney(node, guide, step, walked);
       const candidates = atExit ? [] : this._traversableEdges(graph, node.id, cameFromEdgeId);
 
       if (atExit || candidates.length === 0) {
-        if (mode === 'disappear') return null;
+        if (mode === 'disappear') {
+          // Distance arithmetic can reach the node one representable instant
+          // early. Active-area terminal state is owned by the time test above.
+          return area?.ends ? this._sampleNode(node, travelled, journey) : null;
+        }
         if (mode === 'respawn') {
           // The same time left, walked at the new journey's pace; its sway
           // runs from where it re-entered.
@@ -864,7 +931,8 @@ export class SwarmEngine {
         }
         const fraction = remaining / edgeGeom.length;
         const progress = traversal.reversed ? 1 - fraction : fraction;
-        return this._sampleAt(edgeGeom.points, progress, traversal.reversed, travelled + remaining, journey);
+        const wobbleDistance = area ? travelled + remaining - area.length : travelled + remaining;
+        return this._sampleAt(edgeGeom.points, progress, traversal.reversed, wobbleDistance, journey);
       }
 
       remaining -= edgeGeom.length;

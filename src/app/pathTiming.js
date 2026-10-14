@@ -15,6 +15,7 @@ import { composeRouteTimeline } from '../utils/branchTiming.js';
 import { resolveGraphAnchors } from '../utils/routeAnchors.js';
 import { computeSceneEnd, describeSceneEnd } from '../utils/sceneEnd.js';
 import { setRangeReadout } from '../utils/uiReadouts.js';
+import { areaImageAspect } from '../utils/crowdArea.js';
 
 /**
  * The waypoints `pathPoints` was built from — `waypoints` itself on a linear
@@ -167,6 +168,7 @@ function composeSceneEnd(app, baseMs) {
     swarmEngine: app.swarmEngine,
     // What the renderer evaluates the dots with, so they end where it ends them.
     swarmContext: {
+      imageAspect: areaImageAspect(app.coordinateTransform),
       routePathPoints: app.pathPoints,
       routeAnchors: app.getRouteArrivalMap?.() || null,
     },

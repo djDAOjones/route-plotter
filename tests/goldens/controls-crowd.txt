@@ -36,7 +36,7 @@ settled:
 ## #crowd-scope>div[1]>h2[0]>button[0] · click
 app ~ focus: "body" → "#crowd-scope>div[1]>h2[0]>button[0]"
 storage + routePlotter_lastSection: "guide"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 5c9a7faf]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[274 chars, 2ec63c8a] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[275 chars, 2980b6bd]
 ui ~ #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" → div class="settings-section" data-last="true" data-section="guide"
 ui ~ #crowd-scope>div[1]>h2[0]>button[0]: button aria-controls="section-guide-content" aria-expanded="true" class="section-header" type="button" :text="Guide" → button aria-controls="section-guide-content" aria-expanded="false" class="section-header" type="button" :text="Guide"
 
@@ -167,7 +167,7 @@ settled:
 ## #crowd-scope>div[2]>h2[0]>button[0] · click
 app ~ focus: "body" → "#crowd-scope>div[2]>h2[0]>button[0]"
 storage + routePlotter_lastSection: "dots"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, ee9e1b07]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[274 chars, 2ec63c8a] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[275 chars, e9b211d5]
 ui ~ #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" → div class="settings-section" data-last="true" data-section="dots"
 ui ~ #crowd-scope>div[2]>h2[0]>button[0]: button aria-controls="section-dots-content" aria-expanded="true" class="section-header" type="button" :text="Dots" → button aria-controls="section-dots-content" aria-expanded="false" class="section-header" type="button" :text="Dots"
 
@@ -528,7 +528,7 @@ settled:
 ## #crowd-scope>div[3]>h2[0]>button[0] · click
 app ~ focus: "body" → "#crowd-scope>div[3]>h2[0]>button[0]"
 storage + routePlotter_lastSection: "release"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 6e43a33f]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[274 chars, 2ec63c8a] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[275 chars, 346d95cd]
 ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section" data-last="true" data-section="release"
 ui ~ #crowd-scope>div[3]>h2[0]>button[0]: button aria-controls="section-release-content" aria-expanded="true" class="section-header" type="button" :text="Release" → button aria-controls="section-release-content" aria-expanded="false" class="section-header" type="button" :text="Release"
 
@@ -1230,7 +1230,7 @@ settled:
 ## #crowd-scope>div[4]>h2[0]>button[0] · click
 app ~ focus: "body" → "#crowd-scope>div[4]>h2[0]>button[0]"
 storage + routePlotter_lastSection: "motion"
-storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[257 chars, 9beb5ef6] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[258 chars, 216d91a3]
+storage ~ routePlotter_sectionState: "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[274 chars, 2ec63c8a] → "{\"marker\":true,\"on-arrival\":false,\"label\":false,\"leg\":false,\"area-highlight\":false,\"head\":false,\"pacing\":true,\"reveal\":false,\"path-emphasis\":…[275 chars, 4d514f99]
 ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section" data-last="true" data-section="motion"
 ui ~ #crowd-scope>div[4]>h2[0]>button[0]: button aria-controls="section-motion-content" aria-expanded="true" class="section-header" type="button" :text="Motion" → button aria-controls="section-motion-content" aria-expanded="false" class="section-header" type="button" :text="Motion"
 

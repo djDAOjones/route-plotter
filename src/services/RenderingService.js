@@ -7,6 +7,7 @@
  * - Preview mode (previewMode = true): Applies motion visibility settings
  */
 
+import { areaImageAspect } from '../utils/crowdArea.js';
 import { RENDERING, INTERACTION, PATH_VISIBILITY, WAYPOINT_VISIBILITY, BACKGROUND_VISIBILITY, MOTION, TEXT_LABEL } from '../config/constants.js';
 import { Easing } from '../utils/Easing.js';
 import { routeRuns, waypointPointIndices, legMidpointIndex } from '../utils/segmentHitTest.js';
@@ -1299,6 +1300,7 @@ export class RenderingService {
         for (const layer of layers) {
           if (!layer.visible) continue;
           const dots = state.swarmEngine.evaluate(timelineMs, layer, {
+            imageAspect: areaImageAspect(state.coordinateTransform),
             durationMs,
             routePathPoints: state.pathPoints,
             routeAnchors: state.routeAnchors,

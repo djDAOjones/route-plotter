@@ -123,6 +123,8 @@ const DYNAMIC_LOOKUPS = {
     what: "syncCrowdEditor's writes to the guide, colour, journey-end and seed controls" },
   'src/app/crowds.js `${id}${suffix}`': { calls: 1, runs: true,
     what: "a crowd slider's row (rangeParts): the slider, its number field, readout, reason and error line" },
+  'src/app/network.js `network-node-area-${key}`': { calls: 1, runs: true,
+    what: 'the Start area card, its shape and dimension fields, disclosures, hints and error lines' },
   'src/app/privacy.js disclosure.returnFocusId': { calls: 1, runs: true,
     what: 'where focus returns when a share dialog closes: the File or the Export menu button' },
   'src/app/wiringDom.js `${tabName}-tab`': { calls: 1, runs: false,

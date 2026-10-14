@@ -127,7 +127,7 @@ function emitterDescriptor(emitter, index, layerId) {
   };
 }
 
-function graphDescriptor(layer) {
+function graphDescriptor(layer, hasBackgroundImage) {
   const nodes = layer.graph.getNodes();
   const nodeNumber = new Map(nodes.map((node, index) => [node.id, index + 1]));
   const edges = layer.graph.getEdges().map((edge, index) => ({
@@ -167,6 +167,7 @@ function graphDescriptor(layer) {
       xCanonical: node.x,
       yCanonical: node.y,
       type: node.type,
+      ...(node.type === 'entry' || node.area ? { area: node.area ? { ...node.area } : null, hasBackgroundImage } : {}),
       label: node.label ?? '',
       connectedEdges: layer.graph.getEdgesForNode(node.id).length,
     })),
@@ -207,6 +208,7 @@ export function buildSceneOutlineSnapshot({
   scene,
   selectionKey = null,
   focusKey = null,
+  hasBackgroundImage = false,
 } = {}) {
   const numbering = buildRouteNumbering(waypoints);
   const route = waypoints.map((waypoint, routeIndex) => {
@@ -275,7 +277,7 @@ export function buildSceneOutlineSnapshot({
     emitters: layer.getEmitters().map((emitter, emitterIndex) =>
       emitterDescriptor(emitter, emitterIndex, layer.id)
     ),
-    graph: graphDescriptor(layer),
+    graph: graphDescriptor(layer, hasBackgroundImage),
   }));
 
   return {

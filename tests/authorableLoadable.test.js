@@ -114,6 +114,8 @@ const SLIDERS_INERT_WITHOUT_A_CROWD = [
  */
 const SELECTS_INERT_WITHOUT_A_CROWD = [
   'crowd-guide-type', 'crowd-lifecycle', 'network-node-type',
+  // No Entry selected here; crowdAreaAuthoring exercises every shape through both real surfaces and ZIP/recovery.
+  'network-node-area-shape',
   'network-edge-direction', 'route:add-after', 'route:add-kind',
 ];
 

@@ -10,6 +10,7 @@ import { ANIMATION } from '../config/constants.js';
 import { setTimelineReadout } from '../utils/uiReadouts.js';
 import { isModalOpen, whenNoModalOpen } from '../utils/focusTrap.js';
 import { returnFocus } from '../components/ModeBanner.js';
+import { areaImageAspect } from '../utils/crowdArea.js';
 
 /** Whether the first-start tip has been shown, in this browser's storage. */
 const PREVIEW_TIP_KEY = 'routePlotter_previewTipDismissed';
@@ -49,6 +50,7 @@ export const playbackMixin = {
     if ((this.waypoints?.length || 0) >= 2) return true;
     const engine = this.animationEngine;
     const context = {
+      imageAspect: areaImageAspect(this.coordinateTransform),
       durationMs: engine.state.baseDuration ?? engine.state.duration,
       routePathPoints: this.pathPoints,
       routeAnchors: this.getRouteArrivalMap?.() || null,
