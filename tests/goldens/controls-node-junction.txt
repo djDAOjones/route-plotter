@@ -40,7 +40,7 @@ ui + #network-node-area-card>h2[0]>button[0]: button aria-controls="section-node
 ui + #network-node-area-card>h2[0]>button[0]>span[0]: span aria-hidden="true" class="section-chevron"
 ui + #network-node-area-card>h2[0]>button[0]>span[0]>svg[0]: svg fill="currentColor" height="12" viewBox="0 0 12 12" width="12"
 ui + #network-node-area-card>h2[0]>button[0]>span[0]>svg[0]>path[0]: path d="M4.5 2L8.5 6L4.5 10"
-ui + #section-node-area-content: div class="section-content" (and 15 inside, a0983cd7)
+ui + #section-node-area-content: div class="section-content" (and 16 inside, 13664297)
 settled:
   announced "Editing · Node · entry"
   announced "Saved to browser recovery"
@@ -76,7 +76,7 @@ ui + #network-node-area-card>h2[0]>button[0]: button aria-controls="section-node
 ui + #network-node-area-card>h2[0]>button[0]>span[0]: span aria-hidden="true" class="section-chevron"
 ui + #network-node-area-card>h2[0]>button[0]>span[0]>svg[0]: svg fill="currentColor" height="12" viewBox="0 0 12 12" width="12"
 ui + #network-node-area-card>h2[0]>button[0]>span[0]>svg[0]>path[0]: path d="M4.5 2L8.5 6L4.5 10"
-ui + #section-node-area-content: div class="section-content" (and 15 inside, da76c4e5)
+ui + #section-node-area-content: div class="section-content" (and 16 inside, efd1a01d)
 settled:
   emit animation:durationChange 28307.894043
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28307.894043, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}

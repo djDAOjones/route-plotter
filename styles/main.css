@@ -1629,7 +1629,8 @@ kbd{
 .section-content .range-field-error{
   color:var(--text-error);
 }
-.section-content input[type="number"][aria-invalid="true"]{
+.section-content input[type="number"][aria-invalid="true"],
+#network-node-area-shape[aria-invalid="true"]{
   border-color:var(--support-01);
   box-shadow:0 0 0 1px var(--support-01);
 }

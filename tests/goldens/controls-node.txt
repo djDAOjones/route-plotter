@@ -36,7 +36,7 @@ ui - #network-node-area-card>h2[0]>button[0]: button aria-controls="section-node
 ui - #network-node-area-card>h2[0]>button[0]>span[0]: span aria-hidden="true" class="section-chevron"
 ui - #network-node-area-card>h2[0]>button[0]>span[0]>svg[0]: svg fill="currentColor" height="12" viewBox="0 0 12 12" width="12"
 ui - #network-node-area-card>h2[0]>button[0]>span[0]>svg[0]>path[0]: path d="M4.5 2L8.5 6L4.5 10"
-ui - #section-node-area-content: div class="section-content" (and 15 inside, a0983cd7)
+ui - #section-node-area-content: div class="section-content" (and 16 inside, 13664297)
 settled:
   announced "Editing · Node · pass-through"
   announced "Saved to browser recovery"
@@ -141,7 +141,7 @@ ui ~ #node-scope: div class="scope-group" → div (not shown)
 ui + #toast-container>div[1]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
 ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
 ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 19 inside, a374a0c1)
-ui - #network-node-area-card: div class="settings-section expanded" data-section="node-area" (and 21 inside, 42c1bb01)
+ui - #network-node-area-card: div class="settings-section expanded" data-section="node-area" (and 22 inside, 02b23871)
 settled:
   emit animation:durationChange 28307.894043
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28307.894043, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
