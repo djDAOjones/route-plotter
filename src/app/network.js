@@ -139,9 +139,9 @@ export const networkMixin = {
     this.eventBus.on('network:edit-mode-changed', () => this.updateGuideCard());
 
     // ── Central change pipeline ─────────────────────────────
-    // Gesture commits snapshot immediately (like waypoint edits); mid-drag
-    // frames only render. Slider-y card edits use crowd:param-changed for
-    // its debounced undo instead.
+    // Gesture commits snapshot immediately (like waypoint edits); provisional
+    // edits render here and retime through the crowds mixin. Slider-y card
+    // edits use crowd:param-changed for its debounced undo instead.
     this.eventBus.on('network:changed', ({ commit } = {}) => {
       if (commit) {
         this.saveUndoState();

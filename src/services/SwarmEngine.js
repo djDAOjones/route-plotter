@@ -368,7 +368,7 @@ export class SwarmEngine {
    */
   _cachedJourneys(layer, emitter, guide, signature) {
     const key = `${signature}|${emitter.seed}|${emitter.dotCount}`;
-    const slot = `${layer.id}\u0000${emitter.id}`;
+    const slot = JSON.stringify([layer.id, emitter.id]);
     const cached = this._journeyCache.get(slot);
     if (cached && cached.key === key) return cached;
     const reaching = this._nodesReachingEnd(guide);

@@ -91,6 +91,7 @@ export const playbackMixin = {
       this._durationRouteless = routeless;
       this.uiController?.setDurationRouteless?.(routeless);
       this.syncDurationThumb();
+      this.updateDurationReadout?.();
     }
     const playable = this.canPlayScene();
     if (playable === this._scenePlayable) return;

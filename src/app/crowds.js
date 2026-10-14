@@ -320,8 +320,8 @@ export const crowdsMixin = {
     // deleted or traced.
     this.eventBus.on('animation:durationChange', () => this._syncCrowdLifecycleHint());
     this.eventBus.on('network:changed', ({ commit } = {}) => {
-      if (!commit) return;
-      this._syncCrowdLifecycleHint();
+      if (commit) this._syncCrowdLifecycleHint();
+      // Provisional geometry and its cancellation also change what can play and when it ends.
       this.scheduleSceneEnd?.();
     });
     this.eventBus.on('scene:semantic-changed', () => this.scheduleSceneEnd?.());
