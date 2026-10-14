@@ -4,9 +4,9 @@
  * hit-testing on the engine's own edge geometry, and the Node/Edge
  * inspector cards.
  *
- * Division of labour: NetworkEditService owns tool state and model
- * mutations; this mixin owns coordinate transforms, hit-testing, the
- * cards, and the undo/autosave/render answer to `network:changed` —
+ * Division of labour: NetworkEditService owns tool state and legacy pen
+ * mutations; this mixin owns area edits, coordinate transforms, hit-testing,
+ * the cards, and the undo/autosave/render answer to `network:changed` —
  * the same seams the crowds mixin uses.
  *
  * RoutePlotter prototype mixin: `this` is the RoutePlotter instance;
@@ -23,6 +23,10 @@ import {
   shiftDecimal, showFieldError, SLIDER_REACH_REASON,
 } from '../utils/uiReadouts.js';
 import { regionOperation } from './regionLines.js';
+import { copyCrowdArea, createCrowdArea } from '../utils/crowdArea.js';
+
+const AREA_FIELDS = ['width', 'height', 'turn'];
+const areaControl = key => document.getElementById(`network-node-area-${key}`);
 
 const NODE_TYPE_LABELS = {
   normal: 'pass-through',
@@ -193,7 +197,11 @@ export const networkMixin = {
     // ── Selection → cards ───────────────────────────────────
     this.eventBus.on('network:node-selected', () => this.syncNetworkCards());
     this.eventBus.on('network:edge-selected', () => this.syncNetworkCards());
-    this.eventBus.on('network:node-deselected', () => this._syncNodePathWeights(null));
+    this.eventBus.on('network:node-deselected', () => {
+      this._commitNodeAreaDrafts();
+      this._syncNodeAreaCard();
+      this._syncNodePathWeights(null);
+    });
     // The Path card closes with its path: a weight typed there goes to that path (Codex r1 #4).
     this.eventBus.on('network:edge-deselected', () => this._commitEdgeWeightDraft());
 
@@ -204,6 +212,19 @@ export const networkMixin = {
     document.getElementById('network-node-delete')?.addEventListener('click', () => {
       this._deleteNetworkSelection('node');
     });
+    areaControl('shape')?.addEventListener('change', () => {
+      const node = draftOwner(areaControl('shape'));
+      const layer = this._nodeAreaLayer(node);
+      if (!layer || node.type !== 'entry') return;
+      const shape = areaControl('shape').value;
+      this._commitNodeAreaDrafts();
+      const area = shape === 'none' ? null : { ...(node.area || createCrowdArea()), shape };
+      this._setNodeArea(layer, node, area);
+      this._syncNodeAreaCard();
+    });
+    for (const key of AREA_FIELDS) {
+      areaControl(key)?.addEventListener('change', () => this._commitNodeAreaField(key));
+    }
 
     // ── Edge card ───────────────────────────────────────────
     document.getElementById('network-edge-direction')?.addEventListener('change', (e) => {
@@ -570,6 +591,7 @@ export const networkMixin = {
     }
     this._syncNodeCardTitle(node);
     this._syncNodePathWeights(node);
+    this._syncNodeAreaCard();
 
     const edge = svc.selectedEdge();
     if (edge) {
@@ -581,6 +603,99 @@ export const networkMixin = {
       clearFieldError(field, error);
       this._syncEdgeWeight(edge);
     }
+  },
+
+  /** Resolve by object identity: Undo/load can replace a node while retaining its id. */
+  _nodeAreaLayer(node) {
+    return node && this.scene.getFlowLayers().find(layer => layer.guideType === 'graph'
+      && layer.graph.getNode(node.id) === node);
+  },
+
+  /** The one durable owner for both authoring surfaces, outside the pen's legacy exception. */
+  _setNodeArea(layer, node, area) {
+    if (this._nodeAreaLayer(node) !== layer || node.type !== 'entry') {
+      throw new Error('Choose Entry in Type to edit a start area.');
+    }
+    const next = copyCrowdArea(area);
+    if (JSON.stringify(next) === JSON.stringify(node.area ?? null)) return false;
+    this._flushPendingUndo?.();
+    if (next) node.area = next;
+    else delete node.area;
+    this.eventBus.emit('network:changed', { commit: true });
+    return true;
+  },
+
+  _commitNodeAreaField(key) {
+    const control = areaControl(key);
+    const error = areaControl(`${key}-error`);
+    // Restoring the shown value corrects an invalid draft without an edit;
+    // draftOwner deliberately returns null in that case.
+    if (!changedSinceShown(control)) {
+      clearFieldError(control, error);
+      return;
+    }
+    const node = draftOwner(control);
+    const layer = this._nodeAreaLayer(node);
+    if (!layer || node.type !== 'entry' || !node.area) return;
+    const number = Number(control.value);
+    if (!control.value.trim() || !Number.isFinite(number)
+        || number < Number(control.min) || number > Number(control.max)) {
+      const message = key === 'turn' ? 'Enter a turn from -180 to 180 degrees.' : 'Enter a size from 1 to 80%.';
+      showFieldError(control, error, message, text => this.announce(text));
+      return;
+    }
+    clearFieldError(control, error);
+    // Mark accepted before the synchronous network change redraws the cards.
+    noteShownValue(control, node);
+    this._setNodeArea(layer, node, { ...node.area, [key]: key === 'turn' ? number : shiftDecimal(number, -2) });
+  },
+
+  _commitNodeAreaDrafts() {
+    if (this._committingNodeAreaDrafts) return;
+    this._committingNodeAreaDrafts = true;
+    try {
+      for (const key of AREA_FIELDS) this._commitNodeAreaField(key);
+    } finally {
+      this._committingNodeAreaDrafts = false;
+    }
+  },
+
+  _syncNodeAreaCard() {
+    if (this._committingNodeAreaDrafts) return;
+    const card = areaControl('card');
+    if (!card) return;
+    const node = this.networkEditService?.selectedNode();
+    if (this._shownNodeAreaNode !== node) this._commitNodeAreaDrafts();
+    card.hidden = !node || (node.type !== 'entry' && !node.area);
+    const area = node?.area;
+    const inactive = node && node.type !== 'entry';
+    const shape = areaControl('shape');
+    shape.value = area?.shape || 'none';
+    shape.disabled = !node || inactive;
+    noteShownValue(shape, node);
+    const reason = inactive ? 'Choose Entry in Type to edit and use this start area.' : '';
+    setControlReason(shape, areaControl('reason'), reason);
+    areaControl('size').hidden = !area;
+    areaControl('more').hidden = !area;
+    for (const key of AREA_FIELDS) {
+      const control = areaControl(key);
+      // Retain drafts through unrelated viewport/timing sync, but an accepted
+      // edit from the outline supersedes the old card's values for this area.
+      const keepDraft = this._shownNodeArea === area && draftOwner(control) === node && changedSinceShown(control);
+      if (!keepDraft) {
+        const value = area?.[key] ?? (key === 'turn' ? 0 : 0.1);
+        control.value = formatFieldNumber(key === 'turn' ? value : shiftDecimal(value, 2));
+        noteShownValue(control, node);
+        clearFieldError(control, areaControl(`${key}-error`));
+      }
+      control.disabled = !area || inactive;
+      setControlReason(control, areaControl('reason'), reason);
+    }
+    this._shownNodeArea = area;
+    this._shownNodeAreaNode = node;
+    const noImage = !(this.coordinateTransform?.imageWidth > 0 && this.coordinateTransform?.imageHeight > 0);
+    setControlReason(areaControl('turn'), areaControl('image-hint'), noImage
+      ? 'Add a background image to keep the area’s shape when you turn it.' : '');
   },
 
   /**

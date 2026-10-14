@@ -81,10 +81,10 @@ afterEach(() => {
 });
 
 describe('card headers are native buttons inside their headings (UI-06 B-21)', () => {
-  test('each of the 17 cards: an h2 holding one button that names the card, expands it and controls its content', () => {
+  test('each of the 18 cards: an h2 holding one button that names the card, expands it and controls its content', () => {
     const page = shell();
     const sections = [...page.querySelectorAll('#settings-sections .settings-section')];
-    expect(sections.length).toBe(17);
+    expect(sections.length).toBe(18);
     for (const section of sections) {
       const name = section.dataset.section;
       const heading = section.firstElementChild;
@@ -108,7 +108,7 @@ describe('card headers are native buttons inside their headings (UI-06 B-21)', (
     // Nothing in the cards plays a button any more: what is a button, is one.
     expect(page.querySelectorAll('#settings-sections [role="button"]').length).toBe(0);
     expect(page.querySelectorAll('.section-header:not(button)').length).toBe(0);
-    expect(page.querySelectorAll('.section-header').length).toBe(17);
+    expect(page.querySelectorAll('.section-header').length).toBe(18);
     // The Leg card's heading is renamed by the selection, through the span the button holds.
     expect(page.getElementById('leg-section-title').closest('button.section-header')).not.toBeNull();
   });
@@ -118,7 +118,7 @@ describe('card headers are native buttons inside their headings (UI-06 B-21)', (
     app.eventBus.emit('waypoint:add', { imgX: 0.2, imgY: 0.5, isMajor: true });
     app.eventBus.emit('waypoint:selected', app.waypoints[0]);
     const headers = [...document.querySelectorAll('#settings-sections .section-header')];
-    expect(headers.length).toBe(17);
+    expect(headers.length).toBe(18);
     for (const header of headers) {
       const section = header.closest('.settings-section');
       const content = document.getElementById(header.getAttribute('aria-controls'));

@@ -9,6 +9,7 @@
 import { sceneOutlineKey } from '../utils/sceneSemantics.js';
 import { IMAGE_COORDINATES } from '../config/constants.js';
 import { formatCrowdDotSize } from '../utils/uiReadouts.js';
+import { createCrowdArea } from '../utils/crowdArea.js';
 
 const OUTLINE_CANONICAL_VALUE = Symbol('outlineCanonicalValue');
 // A field the author has typed in or chosen in (UI-06 W-02, Codex r1): it
@@ -280,6 +281,21 @@ function syncReleaseBias(formEl) {
   else amount.removeAttribute('aria-describedby');
 }
 
+/** Shape drafts reveal their dimensions before Apply; the app alone changes the node. */
+function syncNodeArea(formEl) {
+  if (formEl?.dataset?.outlineAction !== 'update-node-area') return;
+  const inactive = formEl.dataset.areaInactive === 'true';
+  const enabled = formEl.elements.shape.value !== 'none';
+  for (const key of ['width', 'height', 'turn']) {
+    const field = formEl.elements[key];
+    field.disabled = inactive || !enabled;
+    field.closest('label').hidden = !enabled;
+  }
+  formEl.querySelector('details').hidden = !enabled;
+  formEl.elements.shape.disabled = inactive;
+  formEl.querySelector('[type="submit"]').disabled = inactive;
+}
+
 function form(action, data, fields, submitLabel = 'Apply', key = null, draftContext = null) {
   const node = el('form', {
     className: 'scene-outline-form',
@@ -497,6 +513,9 @@ export class SceneOutlineController {
     for (const formEl of this.container.querySelectorAll('form[data-outline-action="update-emitter"]')) {
       syncReleaseBias(formEl);
     }
+    for (const formEl of this.container.querySelectorAll('form[data-outline-action="update-node-area"]')) {
+      syncNodeArea(formEl);
+    }
     this._renderCommandError();
 
     const requested = disclosureFocus || snapshot.focusKey || priorFocus;
@@ -597,7 +616,10 @@ export class SceneOutlineController {
       }
       valid.add(`${crowd.graph.key}:add-node`);
       if (crowd.graph.nodes.length >= 2) valid.add(`${crowd.graph.key}:connect`);
-      for (const node of crowd.graph.nodes) valid.add(`${node.key}:apply`);
+      for (const node of crowd.graph.nodes) {
+        valid.add(`${node.key}:apply`);
+        if (node.type === 'entry' || node.area) valid.add(`${node.key}:area-apply`);
+      }
       for (const edge of crowd.graph.edges) {
         valid.add(`${edge.key}:apply`);
         valid.add(`${edge.key}:add-control`);
@@ -1237,6 +1259,7 @@ export class SceneOutlineController {
         key: `${node.key}:label`, canonicalValue: node.label, tip: FIELD_HINTS.nodeLabel,
       }),
     ], 'Apply node', `${node.key}:apply`));
+    if (node.type === 'entry' || node.area) content.appendChild(this._renderNodeArea(crowd, node));
     content.appendChild(button(
       `Delete node${node.connectedEdges ? ` and ${plural(node.connectedEdges, 'connected path')}` : ''}`,
       'delete-node',
@@ -1245,6 +1268,40 @@ export class SceneOutlineController {
     ));
     details.appendChild(content);
     return itemFor(details);
+  }
+
+  _renderNodeArea(crowd, node) {
+    const area = node.area || createCrowdArea();
+    const moreKey = `${node.key}:area-more`;
+    const more = detailsBlock(moreKey, 'More', this._isOpen(moreKey), 'section-more');
+    more.appendChild(labelledInput('turn', 'Turn (°)', area.turn, {
+      min: -180, max: 180, step: 'any', key: `${node.key}:area-turn`, canonicalValue: area.turn,
+      tip: 'Clockwise turn in the image’s plane; a negative value turns anticlockwise',
+    }));
+    const formEl = form('update-node-area', {
+      layerId: crowd.id, nodeId: node.id, areaInactive: node.type !== 'entry',
+    }, [
+      labelledSelect('shape', 'Start area', node.area?.shape || 'none', [
+        { value: 'none', label: 'None' }, { value: 'rectangle', label: 'Rectangle' },
+        { value: 'ellipse', label: 'Ellipse' },
+      ], { key: `${node.key}:area-shape`,
+        tip: 'Centred on this node. Dots start inside the area and walk straight to the node '
+          + 'before joining the network' }),
+      ...['width', 'height'].map(key => labelledInput(key,
+        key === 'width' ? 'Width (%)' : 'Height (%)', area[key] * 100, {
+        min: 1, max: 80, step: 'any', key: `${node.key}:area-${key}`, canonicalValue: area[key],
+        tip: `${key === 'width' ? 'Width' : 'Height'} before turning, as a percentage of the image’s ${key}`,
+      })),
+      more,
+    ], 'Apply start area', `${node.key}:area-apply`, JSON.stringify([node.type, node.area]));
+    const hints = ['Only Disappear and Collect at the end use the area. Respawn and Repeat journey start at the node.'];
+    if (node.type !== 'entry') hints.push('Choose Entry in Type to edit and use this start area.');
+    if (!node.hasBackgroundImage) hints.push('Add a background image to keep the area’s shape when you turn it.');
+    const hint = el('p', { className: 'scene-outline-hint', text: hints.join(' '),
+      attrs: { id: `${OUTLINE_REASON_ID_PREFIX}${++outlineReasonSerial}` } });
+    formEl.appendChild(hint);
+    for (const field of formEl.querySelectorAll('input, select')) field.setAttribute('aria-describedby', hint.id);
+    return formEl;
   }
 
   _renderEdge(crowd, edge) {
@@ -1408,6 +1465,7 @@ export class SceneOutlineController {
     field.form?.reset();
     this._clearEdits(field.form);
     syncReleaseBias(field.form);
+    syncNodeArea(field.form);
     field.form?.querySelector('[type="submit"]')?.focus();
   }
 
@@ -1423,5 +1481,6 @@ export class SceneOutlineController {
     if (!field?.form?.dataset?.outlineFormKey || !this.container.contains(field)) return;
     if (OUTLINE_CANONICAL_VALUE in field) field[OUTLINE_EDITED] = true;
     if (field.name === 'intensityRampDirection') syncReleaseBias(field.form);
+    if (field.name === 'shape') syncNodeArea(field.form);
   }
 }

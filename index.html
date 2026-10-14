@@ -1311,6 +1311,48 @@
             </div>
           </div>
 
+          <div id="network-node-area-card" class="settings-section" data-section="node-area" hidden>
+            <h2 class="section-title">
+              <button type="button" class="section-header" aria-expanded="false"
+                      aria-controls="section-node-area-content">Start area<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
+            </h2>
+            <div id="section-node-area-content" class="section-content">
+              <div class="section-primary">
+                <label for="network-node-area-shape">
+                  <span data-tip="Centred on this node. Dots start inside the area and walk straight to the node before joining the network">Start area</span>
+                  <select id="network-node-area-shape" aria-describedby="network-node-area-hint">
+                    <option value="none">None</option>
+                    <option value="rectangle">Rectangle</option>
+                    <option value="ellipse">Ellipse</option>
+                  </select>
+                </label>
+                <p id="network-node-area-reason" class="section-hint" hidden></p>
+                <div id="network-node-area-size" hidden>
+                  <label for="network-node-area-width">
+                    <span data-tip="Width before turning, as a percentage of the image’s width">Width (%)</span>
+                    <input id="network-node-area-width" type="number" min="1" max="80" step="any" value="10">
+                  </label>
+                  <p id="network-node-area-width-error" class="range-field-error" hidden></p>
+                  <label for="network-node-area-height">
+                    <span data-tip="Height before turning, as a percentage of the image’s height">Height (%)</span>
+                    <input id="network-node-area-height" type="number" min="1" max="80" step="any" value="10">
+                  </label>
+                  <p id="network-node-area-height-error" class="range-field-error" hidden></p>
+                </div>
+                <p id="network-node-area-hint" class="section-hint">Only Disappear and Collect at the end use the area. Respawn and Repeat journey start at the node.</p>
+                <p id="network-node-area-image-hint" class="section-hint" hidden></p>
+              </div>
+              <details id="network-node-area-more" class="section-more" hidden>
+                <summary>More</summary>
+                <label for="network-node-area-turn">
+                  <span data-tip="Clockwise turn in the image’s plane; a negative value turns anticlockwise">Turn (°)</span>
+                  <input id="network-node-area-turn" type="number" min="-180" max="180" step="any" value="0">
+                </label>
+                <p id="network-node-area-turn-error" class="range-field-error" hidden></p>
+              </details>
+            </div>
+          </div>
+
           </div><!-- /node-scope -->
 
           <!-- ============================================================

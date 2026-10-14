@@ -1853,6 +1853,17 @@ const CONTEXTS = [
     enter: app => inspectNetwork(app, (service, graph) => service.selectNode(junctionOf(graph))),
   },
   {
+    name: 'node-area',
+    about: 'an Entry with a rectangle start area and Turn revealed',
+    roots: ['#network-node-area-card'],
+    enter: app => {
+      inspectNetwork(app, (service, graph) => service.selectNode(graph.getNodes()[0]));
+      choose('network-node-type', 'entry');
+      choose('network-node-area-shape', 'rectangle');
+      document.getElementById('network-node-area-more').open = true;
+    },
+  },
+  {
     name: 'edge-junction',
     about: 'a path leaving that junction inspected',
     roots: ['#edge-scope'],

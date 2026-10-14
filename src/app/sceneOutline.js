@@ -274,6 +274,7 @@ export const sceneOutlineMixin = {
       scene: this.scene,
       selectionKey: this._sceneOutlineSelectionKey,
       focusKey: this._sceneOutlineFocusKey,
+      hasBackgroundImage: this.coordinateTransform?.imageWidth > 0 && this.coordinateTransform?.imageHeight > 0,
     });
     this._sceneOutlineSelectionKey = snapshot.selectionKey;
     this._sceneOutlineFocusKey = null;
@@ -316,6 +317,7 @@ export const sceneOutlineMixin = {
         case 'update-emitter': result = this._outlineUpdateEmitter(command); break;
         case 'add-node': result = this._outlineAddNode(command); break;
         case 'update-node': result = this._outlineUpdateNode(command); break;
+        case 'update-node-area': result = this._outlineUpdateNodeArea(command); break;
         case 'delete-node': result = this._outlineDeleteNode(command); break;
         case 'connect-nodes': result = this._outlineConnectNodes(command); break;
         case 'update-edge': result = this._outlineUpdateEdge(command); break;
@@ -709,6 +711,22 @@ export const sceneOutlineMixin = {
     const key = sceneOutlineKey('node', layer.id, node.id);
     this._queueSceneOutlineRefresh(`${key}:apply`);
     this.announce('Node updated.');
+  },
+
+  _outlineUpdateNodeArea(command) {
+    const layer = this._outlineLayer(command.layerId);
+    const node = this._outlineNode(layer, command.nodeId);
+    const read = (key, label) => {
+      if (String(command[key] ?? '').trim() === '') throw new Error(`Enter ${label.toLowerCase()}.`);
+      return originalCanonical(command, key) ?? Number(command[key]) / (key === 'turn' ? 1 : 100);
+    };
+    const area = command.shape === 'none' ? null : {
+      shape: command.shape,
+      width: read('width', 'Width'), height: read('height', 'Height'), turn: read('turn', 'Turn'),
+    };
+    if (!this._setNodeArea(layer, node, area)) return;
+    this._queueSceneOutlineRefresh(`${sceneOutlineKey('node', layer.id, node.id)}:area-apply`);
+    this.announce('Start area updated. Undo is available.');
   },
 
   _outlineDeleteNode(command) {

@@ -9,6 +9,7 @@
  */
 
 import { clampImageCoordinate } from '../utils/imageCoordinates.js';
+import { copyCrowdArea } from '../utils/crowdArea.js';
 
 const VALID_TYPES = ['normal', 'entry', 'exit'];
 
@@ -27,6 +28,8 @@ export class GraphNode {
     this.y = GraphNode._clamp01(options.y ?? 0.5);
     this.type = GraphNode._validateType(options.type);
     this.label = options.label ?? '';
+    // Retained on inactive node types; only explicit Entries use it in Part B.
+    if (options.area != null) this.area = copyCrowdArea(options.area);
 
     // COMPOSE-01: an anchored node follows a route waypoint. `x`/`y` stay the
     // AUTHORED position and are never rewritten — binding must not destroy the
@@ -101,6 +104,7 @@ export class GraphNode {
       label: this.label,
       // Omitted when null so an unanchored graph's saved shape is unchanged.
       ...(this.anchorWaypointId ? { anchorWaypointId: this.anchorWaypointId } : {}),
+      ...(this.area ? { area: copyCrowdArea(this.area) } : {}),
     };
   }
 

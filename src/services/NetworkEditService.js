@@ -37,6 +37,8 @@ import { getGraphDepartureShares } from '../utils/graphRouting.js';
 import { networkRoom, NETWORK_FULL } from '../utils/networkBudget.js';
 import { isInOpenModal } from '../utils/focusTrap.js';
 import { pageModeBanner, visibleFocusTarget } from '../components/ModeBanner.js';
+import { IMAGE_COORDINATES } from '../config/constants.js';
+import { areaImageAspect, areaPoint } from '../utils/crowdArea.js';
 
 /** Node types in T-key cycle order; 'normal' is user-facing "pass-through". */
 const NODE_TYPE_CYCLE = ['normal', 'entry', 'exit'];
@@ -907,6 +909,7 @@ export class NetworkEditService {
     const casing = 2 * svc.scaleSizeClamped(1);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    this._drawStartAreas(svc, ctx, state, nodes, ink, lineWidth, casing);
     for (const edge of graph.getEdges()) {
       const pts = this._edgeCanvasPoints(state, graph, edge);
       if (pts.length < 2) continue;
@@ -947,6 +950,57 @@ export class NetworkEditService {
       this._drawSelectionAffordances(svc, ctx, state, graph, ink, r);
     }
 
+    ctx.restore();
+  }
+
+  /** Edit-only scaffold, under guide paths. Construct the ellipse in the same
+   * image plane as its samples; restore the transform before stroking so the
+   * casing keeps its normal UI width even on a non-square no-image canvas. */
+  _drawStartAreas(svc, ctx, state, nodes, ink, lineWidth, casing) {
+    const entries = nodes.filter(node => node.type === 'entry' && node.area);
+    if (entries.length === 0) return;
+    ctx.save();
+    const low = state.imageToCanvas(IMAGE_COORDINATES.MIN, IMAGE_COORDINATES.MIN);
+    const high = state.imageToCanvas(IMAGE_COORDINATES.MAX, IMAGE_COORDINATES.MAX);
+    ctx.beginPath();
+    ctx.rect(low.x, low.y, high.x - low.x, high.y - low.y);
+    ctx.clip();
+    const aspect = areaImageAspect(state.coordinateTransform);
+    for (const node of entries) {
+      const point = (u, v) => {
+        const image = areaPoint(node.area, node.position(), u, v, aspect);
+        return state.imageToCanvas(image.x, image.y);
+      };
+      ctx.beginPath();
+      if (node.area.shape === 'ellipse') {
+        const center = point(0, 0), x = point(0.5, 0), y = point(0, 0.5);
+        ctx.save();
+        ctx.transform(x.x - center.x, x.y - center.y, y.x - center.x, y.y - center.y, center.x, center.y);
+        ctx.arc(0, 0, 1, 0, Math.PI * 2);
+        ctx.restore();
+      } else {
+        const corners = [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]].map(([u, v]) => point(u, v));
+        ctx.moveTo(corners[0].x, corners[0].y);
+        for (const corner of corners.slice(1)) ctx.lineTo(corner.x, corner.y);
+        ctx.closePath();
+      }
+      ctx.strokeStyle = guideToken('--ui-background');
+      ctx.lineWidth = lineWidth + casing;
+      ctx.globalAlpha = 1;
+      ctx.stroke();
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+      const label = point(0, -0.5);
+      ctx.font = `${svc.scaleLabelSize(14)}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.strokeStyle = guideToken('--ui-background');
+      ctx.lineWidth = casing;
+      ctx.fillStyle = guideToken('--text-01');
+      ctx.strokeText('Start area', label.x, label.y - svc.scaleSizeClamped(4));
+      ctx.fillText('Start area', label.x, label.y - svc.scaleSizeClamped(4));
+    }
     ctx.restore();
   }
 
