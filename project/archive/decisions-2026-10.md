@@ -418,3 +418,13 @@ The session's calls, for the owner to confirm: the grant holds for the run, whic
 
 **Deferred:** none
 
+## 2026-10-05 — GATELESS-1 — The owner lets gateless chat 11 run to 650k, once
+
+**Decision:** Gateless chat 11 runs to 650k tokens of context, no new agents past about 610k; later chats keep the profile's 200k.
+
+**Rationale:** the owner, at chat 11's start on 2026-10-05: "run this chat to 650kb up from 200kb, as a one off". Reading "kb" as thousand tokens of context and "one off" as this chat only is the run's call, for him to confirm.
+
+**Supersedes:** none
+
+**Deferred:** none
+

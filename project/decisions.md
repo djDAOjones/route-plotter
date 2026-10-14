@@ -18,6 +18,18 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-14 — CROWD-08 — Area edits preserve a project that can be saved and reopened
+
+**Decision:** Start and Finish area edits validate a detached canonical project against the loader and archive limits before changing the model or undo history, so an area cannot make a previously storable project exceed those limits.
+
+**Rationale:** Part D's independent brief review found that a new Entry weight could cross whole-project budgets; the implementing lead then reproduced the same gap in the shared B/C area setter on main after PR #144. A canonical project accepted at 100,000 tree values became 100,005 after adding an Exit area, and the loader refused it. The v3.3.721 release was stopped before publication: its first local gate and dry run passed, but the publishing helper's second gate was interrupted; no deploy commit or version bump occurred and live v3.3.720 remained unchanged. This focused correction stays under CROWD-08 and precedes the renewed release cycle.
+
+The existing app-owned setter now validates the proposed saved scene with the loader and the real ZIP metadata preparation, including referenced image manifests and the matching background filename. The check precedes pending-undo flushing and mutation. A refusal retains the model, selection, history and saved state; the card shows a linked, announced error, and the outline uses its existing form-error path. Rejected shape choices and numeric drafts remain unaccepted until validation succeeds; correcting an error to the unchanged stored value clears it without an edit. Both Entry and Exit use this owner. Packing, clocks and playback are unchanged. Standards: house conventions for one mutation owner, additive persistence and regression/mutation evidence; carbon native number/select fields; nielsen 3 and 9 for preserving work and actionable errors; wcag-2.2-aaa 3.3.6 and 2.1.3 for validated reversible submissions and keyboard correction. The source PR owns verification; publication evidence belongs to REL-721. CROWD-08 remains in progress for D–G.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-14 — CROWD-08 — Part C: arrival-ranked places in centred finish areas
 
 **Decision:** Collect dots reaching an area Exit take reference-sized grid places in arrival order, using a derived reference clock so their places and finishing times survive changes of output.
@@ -558,16 +570,6 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Decision:** TST-14 lands (PR #74): every check in `tests/restartSafety.test.sh` is an `if` that says what broke, its stand-in tools answer only the forms and processes they model, and `tests/contextMenu.test.js` pins the menu and the canvas's right-click menus.
 
 **Rationale:** The bash 3.2 macOS ships does not stop `set -e` for a failing `[[ … ]]`, so 8 of the old 13 checks could never fail on a Mac. Codex review r2's five gaps are closed in the tests only, each mutant passing before and failing now: a UDP or unknown protocol in the port query, identity asked about the script's own PID, the grace loop's sleep removed (it raced here), no canvas offset, Delete on the primary selection. Advisories C32 and C33 are killed too. Digest rule applied: house conventions → Testing and persistence. DEF-70 no longer waits on it.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-05 — GATELESS-1 — The owner lets gateless chat 11 run to 650k, once
-
-**Decision:** Gateless chat 11 runs to 650k tokens of context, no new agents past about 610k; later chats keep the profile's 200k.
-
-**Rationale:** the owner, at chat 11's start on 2026-10-05: "run this chat to 650kb up from 200kb, as a one off". Reading "kb" as thousand tokens of context and "one off" as this chat only is the run's call, for him to confirm.
 
 **Supersedes:** none
 

@@ -15,6 +15,7 @@
  * (tests/mixins.test.js).
  */
 import { getNodeAreaDescription } from './finishContexts.js';
+import { stageProjectModel } from './persistence.js';
 import { INTERACTION } from '../config/constants.js';
 import { isMac } from '../config/keybindings.js';
 import { getGraphDepartureShares } from '../utils/graphRouting.js';
@@ -214,14 +215,28 @@ export const networkMixin = {
       this._deleteNetworkSelection('node');
     });
     areaControl('shape')?.addEventListener('change', () => {
-      const node = draftOwner(areaControl('shape'));
+      const control = areaControl('shape'), error = areaControl('shape-error');
+      if (!changedSinceShown(control)) {
+        clearFieldError(control, error);
+        return;
+      }
+      const node = draftOwner(control);
       const layer = this._nodeAreaLayer(node);
       if (!layer || !['entry', 'exit'].includes(node.type)) return;
-      const shape = areaControl('shape').value;
+      const shape = control.value;
       this._commitNodeAreaDrafts();
       const area = shape === 'none' ? null : { ...(node.area || createCrowdArea()), shape };
-      this._setNodeArea(layer, node, area);
-      this._syncNodeAreaCard();
+      try {
+        this._setNodeArea(layer, node, area);
+        clearFieldError(control, error);
+        this._syncNodeAreaCard();
+      } catch (failure) {
+        // Keep a rejected choice as a draft. Resetting the native select to
+        // its stored value would prevent choosing that value from firing a
+        // change event, so the author could not clear the error by correcting it.
+        control.value = shape;
+        showFieldError(control, error, failure.message, text => this.announce(text));
+      }
     });
     for (const key of AREA_FIELDS) {
       areaControl(key)?.addEventListener('change', () => this._commitNodeAreaField(key));
@@ -619,6 +634,23 @@ export const networkMixin = {
     }
     const next = copyCrowdArea(area);
     if (JSON.stringify(next) === JSON.stringify(node.area ?? null)) return false;
+    // An additive field can pass every scene limit but exceed the loader's
+    // tree budget or the ZIP's metadata budget. Validate the detached saved
+    // shape, including its asset manifest, before flushing undo or writing.
+    const candidate = this._buildProjectSnapshot({ includeAssets: false });
+    const savedNode = candidate.scene.flowLayers.find(each => each.id === layer.id)
+      .graph.nodes.find(each => each.id === node.id);
+    if (next) savedNode.area = next;
+    else delete savedNode.area;
+    try {
+      stageProjectModel(JSON.parse(JSON.stringify(candidate)));
+      const cache = this._autosaveBackgroundCache;
+      const background = cache && cache.image === this.background?.image ? cache.dataURL : null;
+      this.imageAssetService.prepareArchive(candidate, background);
+    } catch (failure) {
+      throw new Error(`Area unchanged: ${failure.message}. `
+        + 'Shorten labels or remove unused nodes and paths, then try again.');
+    }
     this._flushPendingUndo?.();
     if (next) node.area = next;
     else delete node.area;
@@ -645,10 +677,13 @@ export const networkMixin = {
       showFieldError(control, error, message, text => this.announce(text));
       return;
     }
-    clearFieldError(control, error);
-    // Mark accepted before the synchronous network change redraws the cards.
-    noteShownValue(control, node);
-    this._setNodeArea(layer, node, { ...node.area, [key]: key === 'turn' ? number : shiftDecimal(number, -2) });
+    try {
+      this._setNodeArea(layer, node, { ...node.area, [key]: key === 'turn' ? number : shiftDecimal(number, -2) });
+      clearFieldError(control, error);
+      noteShownValue(control, node);
+    } catch (failure) {
+      showFieldError(control, error, failure.message, text => this.announce(text));
+    }
   },
 
   _commitNodeAreaDrafts() {
@@ -671,9 +706,16 @@ export const networkMixin = {
     const area = node?.area;
     const inactive = node && !['entry', 'exit'].includes(node.type);
     const shape = areaControl('shape');
-    shape.value = area?.shape || 'none';
+    if (this._shownNodeAreaNode !== node || this._shownNodeArea !== area) {
+      clearFieldError(shape, areaControl('shape-error'));
+    }
+    const keepShapeDraft = this._shownNodeAreaNode === node && this._shownNodeArea === area
+      && draftOwner(shape) === node && changedSinceShown(shape);
+    if (!keepShapeDraft) {
+      shape.value = area?.shape || 'none';
+      noteShownValue(shape, node);
+    }
     shape.disabled = !node || inactive;
-    noteShownValue(shape, node);
     const description = getNodeAreaDescription(this, this._nodeAreaLayer(node), node);
     card.querySelector('.section-header').firstChild.textContent = description.label;
     areaControl('label').textContent = description.label;
