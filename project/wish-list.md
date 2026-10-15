@@ -140,3 +140,5 @@
 
 - Reconcile the generic item-commit checker with the prescribed generated `chore: deploy vX.Y.Z` commit, which has no Verify body; both commit-shape diagnostics reproduced on v3.3.720 while the normal ledger check passed — (from: REL-720, 2026-10-14)
 - Broaden complete-input curvature-cache keys beyond eligible Finish-area journeys: the Part C design reviews reproduced warm/cold route and network differences after an internal bend edit, including network lengths 2.79668318121725 versus 2.796742803247161; C isolates its own calculations while legacy TST-09 behaviour remains pinned — (from: CROWD-08, 2026-10-14)
+
+- v3.3.721 changes exports and the player; save and open its MP4 and HTML exports from disk, or obtain the owner's explicit waiver for this release — (from: REL-721, 2026-10-14)

@@ -18,6 +18,16 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-14 — REL-721 — v3.3.721 ships CROWD-08 Part C's finish areas
+
+**Decision:** v3.3.721 ships CROWD-08 Part C's centred Exit finish areas, while the item remains in progress for D–G.
+
+**Rationale:** Released under GATELESS-1 and PLAN-4 after PR #144 merged as 722ba1d7deb7068aefce8ef7baa69187f108c479; final source head 353e40276d3bb565608850e6093a2d776c061f08 had independent gpt-6-astra xhigh approval in round 1 and successful pull_request Verify 38625793245. The existing Part C decision owns the geometry and interaction choices. Before publication, the area-storage correction PR #145 merged as c20be408fbbf69bce696f0c065fc0418b4e806dc; its final head b598a3707b47159a77a29b227148145cd17364f7 had independent xhigh approval in round 1 and successful pull_request Verify 38637633075. The separate area-budget decision owns the stopped prepublication attempt and the shared Start/Finish refusal fix. This release includes both reviewed changes. Deploy 2c2ae17c3c607d0f98f31d8058c50a46f7fbcefa: 154 test files, 3708 passing tests and 2 existing todos; shell/build/check passed, zero unhandled errors; push succeeded, main-branch Verify 38645187383 and Pages checks succeeded, github-pages deployment 7078404693 reached that exact SHA, and published SHA-256 comparison was match 22, mismatch 0, errors 0. Live readiness and Open day playback/export smoke passed after clearing localStorage, sessionStorage and IndexedDB: six-waypoint Open day played to 3002 ms, then the end in 1442 further frames with zero queued; MP4 9,819,817 bytes, ftypisom, 1920×1080, 29.033333 s, decoded frames at 1 and 2 s differ in 7525 sampled pixels; HTML 2,054,517 bytes with CSP, embedded project and exact live player; no unexpected console/JS errors or failed application resources. The original live HTML export also played from start to end in a fresh tab, with moving pixels, a hidden error panel and no external resources; these headless checks do not substitute for the owner's saved-file check. Annotated tag v3.3.721 was pushed at the deploy SHA. These export/player changes independently require saving and opening MP4 and HTML from disk; that check is owed pending the owner's completion or an explicit waiver for this release. For the separate v3.3.719 check, the owner answered on 14 October, verbatim: “I’ll save and open both exports”. The lead records a promise, pending confirmation that both opened successfully; it is neither completion nor a waiver and does not cover v3.3.721. CROWD-08 continues with Part D after this release record; no phase or whole-item close is claimed. House conventions: publication evidence lives in this record, implementation choices in the existing Part C decision, and outstanding owner assurance remains open.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-14 — CROWD-08 — Area edits preserve a project that can be saved and reopened
 
 **Decision:** Start and Finish area edits validate a detached canonical project against the loader and archive limits before changing the model or undo history, so an area cannot make a previously storable project exceed those limits.
@@ -560,16 +570,6 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Decision:** TST-05 lands (PR #72): golden transcripts pin every event the wiring subscribes to, the order its listeners run and what each changes; a payload the transcript abridges carries a digest of its plain fields (numbers to four decimals, class instances by name), and the app's waypoint lookup is checked at each step and after Undo and Redo.
 
 **Rationale:** Codex review r3's two mutants are killed in the tests only: the getter refusing new `wp_` IDs (B1) and the scene outline emitting `x: 0` (B2); advisories U2, U3 and U5 are killed too. A digest keeps the goldens readable but says only that a hidden field changed, not which, and misses a change past the fourth decimal. Two Chromium checks the row named are wish lines. Every golden line that moved with the main merge traces to DEF-06, DEF-42, DEF-44, DEF-64, DEF-77 or CROWD-05; the "paused half way" rows now seek half the route's own timeline, as before CROWD-05. Digest rule applied: house conventions → Testing and persistence. DEF-15, DEF-22, DEF-65, DEF-66 and DEF-74 no longer wait on it.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-05 — TST-14 — The restart script's safety checks can fail, and the context menu has tests
-
-**Decision:** TST-14 lands (PR #74): every check in `tests/restartSafety.test.sh` is an `if` that says what broke, its stand-in tools answer only the forms and processes they model, and `tests/contextMenu.test.js` pins the menu and the canvas's right-click menus.
-
-**Rationale:** The bash 3.2 macOS ships does not stop `set -e` for a failing `[[ … ]]`, so 8 of the old 13 checks could never fail on a Mac. Codex review r2's five gaps are closed in the tests only, each mutant passing before and failing now: a UDP or unknown protocol in the port query, identity asked about the script's own PID, the grace loop's sleep removed (it raced here), no canvas offset, Delete on the primary selection. Advisories C32 and C33 are killed too. Digest rule applied: house conventions → Testing and persistence. DEF-70 no longer waits on it.
 
 **Supersedes:** none
 

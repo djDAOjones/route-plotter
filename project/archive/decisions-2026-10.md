@@ -428,3 +428,13 @@ The session's calls, for the owner to confirm: the grant holds for the run, whic
 
 **Deferred:** none
 
+## 2026-10-05 — TST-14 — The restart script's safety checks can fail, and the context menu has tests
+
+**Decision:** TST-14 lands (PR #74): every check in `tests/restartSafety.test.sh` is an `if` that says what broke, its stand-in tools answer only the forms and processes they model, and `tests/contextMenu.test.js` pins the menu and the canvas's right-click menus.
+
+**Rationale:** The bash 3.2 macOS ships does not stop `set -e` for a failing `[[ … ]]`, so 8 of the old 13 checks could never fail on a Mac. Codex review r2's five gaps are closed in the tests only, each mutant passing before and failing now: a UDP or unknown protocol in the port query, identity asked about the script's own PID, the grace loop's sleep removed (it raced here), no canvas offset, Delete on the primary selection. Advisories C32 and C33 are killed too. Digest rule applied: house conventions → Testing and persistence. DEF-70 no longer waits on it.
+
+**Supersedes:** none
+
+**Deferred:** none
+
