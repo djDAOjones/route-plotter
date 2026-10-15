@@ -748,12 +748,13 @@ describe('the scene outline’s fields have hints, drawn as the outline is', () 
     const fields = parameterControlsIn(container);
     const kinds = new Set(fields.map(field => `${field.form.dataset.outlineAction}:${field.name}`));
 
-    // CROWD-08 adds shape, width, height and turn in one new area form.
-    // The previous 47 fields remain required alongside these four.
-    expect(kinds.size).toBe(51);
+    // CROWD-08 adds four area fields and Entry weight. Every preceding field
+    // remains required, and the new weight must have its own description too.
+    expect(kinds.size).toBe(52);
     for (const name of ['shape', 'width', 'height', 'turn']) {
       expect(kinds.has(`update-node-area:${name}`)).toBe(true);
     }
+    expect(kinds.has('update-entry-weight:entryWeight')).toBe(true);
     expect(withoutHint(fields)).toEqual([]);
   });
 

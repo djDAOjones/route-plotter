@@ -20,6 +20,8 @@
  * and pointer gestures other than the three below. Crowd and network controls
  * are present but inert in this fixture, which the coverage test names rather
  * than hides.
+ * Dynamic Entry weight number fields are inventoried and driven through both
+ * real surfaces, including min/mid/MAX and ZIP/recovery, in entryWeightAuthoring.
  *
  * Part 1 is `tests/projectSnapshotShape.test.js`.
  */

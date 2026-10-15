@@ -271,13 +271,16 @@ export const sceneOutlineMixin = {
   _refreshSceneOutline() {
     if (!this.sceneOutlineController || !this.waypoints || !this.scene) return;
     const nodeAreaDescriptions = new Map();
+    const nodeEntryContexts = new Map();
     for (const layer of this.scene.getFlowLayers()) for (const node of layer.graph.getNodes()) {
+      nodeEntryContexts.set(JSON.stringify([layer.id, node.id]), this._entryWeightContext(layer, node));
       if (['entry', 'exit'].includes(node.type) || node.area) {
         nodeAreaDescriptions.set(JSON.stringify([layer.id, node.id]), getNodeAreaDescription(this, layer, node));
       }
     }
     const snapshot = buildSceneOutlineSnapshot({
       nodeAreaDescriptions,
+      nodeEntryContexts,
       waypoints: this.waypoints,
       scene: this.scene,
       selectionKey: this._sceneOutlineSelectionKey,
@@ -326,6 +329,7 @@ export const sceneOutlineMixin = {
         case 'add-node': result = this._outlineAddNode(command); break;
         case 'update-node': result = this._outlineUpdateNode(command); break;
         case 'update-node-area': result = this._outlineUpdateNodeArea(command); break;
+        case 'update-entry-weight': result = this._outlineUpdateEntryWeight(command); break;
         case 'delete-node': result = this._outlineDeleteNode(command); break;
         case 'connect-nodes': result = this._outlineConnectNodes(command); break;
         case 'update-edge': result = this._outlineUpdateEdge(command); break;
@@ -735,6 +739,18 @@ export const sceneOutlineMixin = {
     if (!this._setNodeArea(layer, node, area)) return;
     this._queueSceneOutlineRefresh(`${sceneOutlineKey('node', layer.id, node.id)}:area-apply`);
     this.announce(`${node.type === 'exit' ? 'Finish' : 'Start'} area updated. Undo is available.`);
+  },
+
+  _outlineUpdateEntryWeight(command) {
+    const layer = this._outlineLayer(command.layerId);
+    const node = this._outlineNode(layer, command.nodeId);
+    if (command.entryWeightContext !== this._entryWeightContext(layer, node)) {
+      throw new Error('This Entry changed. Edit its current weight and apply again.');
+    }
+    const value = String(command.entryWeight ?? '').trim() ? Number(command.entryWeight) : NaN;
+    if (!this._setNodeEntryWeight(layer, node, value)) return;
+    this._queueSceneOutlineRefresh(`${sceneOutlineKey('node', layer.id, node.id)}:entry-weight-apply`);
+    this.announce('Entry weight updated. Undo is available.');
   },
 
   _outlineDeleteNode(command) {

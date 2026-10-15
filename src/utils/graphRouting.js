@@ -3,6 +3,7 @@
  * network authoring UI. Keeping direction filtering and display shares here
  * prevents the inspector from promising choices the engine cannot make.
  */
+import { entryWeightValue } from './entryWeight.js';
 
 /**
  * Return edges that can be traversed away from a node in graph insertion
@@ -64,6 +65,15 @@ export function getGraphDepartureShares(graph, nodeId, options = {}) {
   if (departures.length === 0) return [];
 
   const shares = normalizeGraphWeights(departures.map(({ edge }) => edge.weight));
+  const percents = roundedGraphPercents(shares);
+  return departures.map((departure, index) => ({
+    ...departure,
+    share: shares[index],
+    percent: percents[index],
+  }));
+}
+
+function roundedGraphPercents(shares) {
   const exactPercents = shares.map(share => share * 100);
   const percents = exactPercents.map(Math.floor);
   const remainder = 100 - percents.reduce((sum, percent) => sum + percent, 0);
@@ -75,9 +85,22 @@ export function getGraphDepartureShares(graph, nodeId, options = {}) {
     percents[ranked[i].index]++;
   }
 
-  return departures.map((departure, index) => ({
-    ...departure,
-    share: shares[index],
-    percent: percents[index],
-  }));
+  return percents;
+}
+
+/** Nominal Entry chances and the same stable rounding used for Path weights. */
+export function getGraphEntryShares(graph) {
+  const nodes = graph.getNodesByType('entry');
+  if (!nodes.length) return [];
+  const shares = normalizeGraphWeights(nodes.map(node => entryWeightValue(node.entryWeight)));
+  const percents = roundedGraphPercents(shares);
+  return nodes.map((node, i) => ({ node, share: shares[i], percent: percents[i] }));
+}
+
+/** Once per guide. Equal weights keep the old floor-based chooser, not cumulative bins. */
+export function graphEntryCumulative(entries) {
+  const weights = entries.map(node => entryWeightValue(node.entryWeight));
+  if (weights.every(weight => weight === weights[0])) return null;
+  let bound = 0;
+  return normalizeGraphWeights(weights).map(share => (bound += share));
 }

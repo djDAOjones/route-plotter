@@ -7,6 +7,8 @@
  */
 
 import { buildRouteNumbering } from './waypointNaming.js';
+import { getGraphEntryShares } from './graphRouting.js';
+import { entryWeightValue } from './entryWeight.js';
 
 const round = (value, places = 3) => {
   const factor = 10 ** places;
@@ -127,8 +129,9 @@ function emitterDescriptor(emitter, index, layerId) {
   };
 }
 
-function graphDescriptor(layer, hasBackgroundImage, nodeAreaDescriptions) {
+function graphDescriptor(layer, hasBackgroundImage, nodeAreaDescriptions, nodeEntryContexts) {
   const nodes = layer.graph.getNodes();
+  const entryPercents = new Map(getGraphEntryShares(layer.graph).map(row => [row.node.id, row.percent]));
   const nodeNumber = new Map(nodes.map((node, index) => [node.id, index + 1]));
   const edges = layer.graph.getEdges().map((edge, index) => ({
     key: sceneOutlineKey('edge', layer.id, edge.id),
@@ -167,6 +170,10 @@ function graphDescriptor(layer, hasBackgroundImage, nodeAreaDescriptions) {
       xCanonical: node.x,
       yCanonical: node.y,
       type: node.type,
+      ...(node.type === 'entry' || node.entryWeight !== undefined ? {
+        entryWeight: entryWeightValue(node.entryWeight), entryPercent: entryPercents.get(node.id) ?? null,
+        entryWeightContext: nodeEntryContexts?.get(JSON.stringify([layer.id, node.id])) ?? null,
+      } : {}),
       ...(['entry', 'exit'].includes(node.type) || node.area ? { area: node.area ? { ...node.area } : null,
         hasBackgroundImage, areaDescription: nodeAreaDescriptions?.get(JSON.stringify([layer.id, node.id])) } : {}),
       label: node.label ?? '',
@@ -211,6 +218,7 @@ export function buildSceneOutlineSnapshot({
   focusKey = null,
   hasBackgroundImage = false,
   nodeAreaDescriptions = null,
+  nodeEntryContexts = null,
 } = {}) {
   const numbering = buildRouteNumbering(waypoints);
   const route = waypoints.map((waypoint, routeIndex) => {
@@ -279,7 +287,7 @@ export function buildSceneOutlineSnapshot({
     emitters: layer.getEmitters().map((emitter, emitterIndex) =>
       emitterDescriptor(emitter, emitterIndex, layer.id)
     ),
-    graph: graphDescriptor(layer, hasBackgroundImage, nodeAreaDescriptions),
+    graph: graphDescriptor(layer, hasBackgroundImage, nodeAreaDescriptions, nodeEntryContexts),
   }));
 
   return {

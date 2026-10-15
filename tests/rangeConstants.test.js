@@ -46,10 +46,12 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  ANIMATION, AREA_HIGHLIGHT, CROWD_AREA, MOTION, RENDERING, TEXT_LABEL, VIDEO_EXPORT
+  ANIMATION, AREA_HIGHLIGHT, CROWD_AREA, CROWD_ENTRY_WEIGHT, MOTION, RENDERING, TEXT_LABEL, VIDEO_EXPORT
 } from '../src/config/constants.js';
 import { CAMERA_DEFAULTS, CameraService } from '../src/services/CameraService.js';
 import { PROJECT_MODEL_LIMITS } from '../src/app/persistence.js';
+import { setupWeights, entry, weightForm } from './helpers/entryWeightAuthoring.js';
+
 import { UIController } from '../src/controllers/UIController.js';
 import { Emitter, EMITTER_LIMITS } from '../src/models/Emitter.js';
 import { createCrowdArea } from '../src/utils/crowdArea.js';
@@ -62,6 +64,22 @@ import { sliderToPathWidth } from '../src/utils/pathWidthScale.js';
 import { bootApp } from './helpers/bootApp.js';
 import { loadCurrentSnapshot } from './helpers/projectSnapshot.js';
 import { authoredExtrasProject } from './fixtures/authoredExtras.js';
+
+test('dynamic Entry weight fields share the model bounds and preserve an arbitrary decimal step', async () => {
+  const app = await setupWeights();
+  const cards = [...document.querySelectorAll('#network-entry-weight-rows input[type="number"]')];
+  expect(cards).toHaveLength(2);
+  const outline = weightForm(entry(app)).elements.entryWeight;
+  for (const input of [...cards, outline]) {
+    expect(input.min).toBe(String(CROWD_ENTRY_WEIGHT.MIN));
+    expect(input.max).toBe(String(CROWD_ENTRY_WEIGHT.MAX));
+    expect(input.value).toBe(String(CROWD_ENTRY_WEIGHT.DEFAULT));
+    expect(input.step).toBe('any');
+    input.value = '0.010000000000000002';
+    expect(input.valueAsNumber).toBe(0.010000000000000002);
+    expect(input.validity.valid).toBe(true);
+  }
+});
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const shell = new DOMParser().parseFromString(readFileSync(join(repoRoot, 'index.html'), 'utf8'), 'text/html');

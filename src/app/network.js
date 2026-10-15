@@ -16,9 +16,10 @@
  */
 import { getNodeAreaDescription } from './finishContexts.js';
 import { stageProjectModel } from './persistence.js';
-import { INTERACTION } from '../config/constants.js';
+import { INTERACTION, CROWD_ENTRY_WEIGHT } from '../config/constants.js';
 import { isMac } from '../config/keybindings.js';
-import { getGraphDepartureShares } from '../utils/graphRouting.js';
+import { getGraphDepartureShares, getGraphEntryShares } from '../utils/graphRouting.js';
+import { entryWeightValue, ENTRY_WEIGHT_HINT } from '../utils/entryWeight.js';
 import { nearestOnPolyline } from '../utils/segmentHitTest.js';
 import {
   changedSinceShown, clearFieldError, draftOwner, formatFieldNumber, noteShownValue, setControlReason, setRangeReadout,
@@ -607,6 +608,7 @@ export const networkMixin = {
     }
     this._syncNodeCardTitle(node);
     this._syncNodePathWeights(node);
+    this._syncNodeEntryWeights(node);
     this._syncNodeAreaCard();
 
     const edge = svc.selectedEdge();
@@ -625,6 +627,114 @@ export const networkMixin = {
   _nodeAreaLayer(node) {
     return node && this.scene.getFlowLayers().find(layer => layer.guideType === 'graph'
       && layer.graph.getNode(node.id) === node);
+  },
+
+  /** Plain transient token for forms; a same-id replacement never inherits an old draft. */
+  _entryWeightContext(layer, node) {
+    this._entryWeightContexts ??= new WeakMap();
+    const state = JSON.stringify([layer.guideType, node.type, entryWeightValue(node.entryWeight)]);
+    let record = this._entryWeightContexts.get(node);
+    if (!record || record.state !== state) {
+      this._entryWeightContextSerial = (this._entryWeightContextSerial || 0) + 1;
+      record = { state, token: String(this._entryWeightContextSerial) };
+      this._entryWeightContexts.set(node, record);
+    }
+    return record.token;
+  },
+
+  /** Both surfaces preflight the complete saved candidate before touching history or live data. */
+  _setNodeEntryWeight(layer, node, value) {
+    if (this._nodeAreaLayer(node) !== layer || node.type !== 'entry') {
+      throw new Error('Choose Entry in Type on a custom network to edit its weight.');
+    }
+    const weight = entryWeightValue(value);
+    if (weight === entryWeightValue(node.entryWeight)) return false;
+    const candidate = this._buildProjectSnapshot({ includeAssets: false });
+    const saved = candidate.scene.flowLayers.find(each => each.id === layer.id)
+      .graph.nodes.find(each => each.id === node.id);
+    if (weight === CROWD_ENTRY_WEIGHT.DEFAULT) delete saved.entryWeight;
+    else saved.entryWeight = weight;
+    try {
+      stageProjectModel(JSON.parse(JSON.stringify(candidate)));
+      const cache = this._autosaveBackgroundCache;
+      const background = cache && cache.image === this.background?.image ? cache.dataURL : null;
+      this.imageAssetService.prepareArchive(candidate, background);
+    } catch (failure) {
+      throw new Error(`Entry weight unchanged: ${failure.message}. `
+        + 'Shorten labels or remove unused nodes and paths, then try again.');
+    }
+    this._flushPendingUndo?.();
+    if (weight === CROWD_ENTRY_WEIGHT.DEFAULT) delete node.entryWeight;
+    else node.entryWeight = weight;
+    this.eventBus.emit('network:changed', { commit: true });
+    return true;
+  },
+
+  _syncNodeEntryWeights(selected) {
+    const fieldset = document.getElementById('network-entry-weights');
+    const rows = document.getElementById('network-entry-weight-rows');
+    if (!fieldset || !rows) return;
+    const layer = this.networkEditService.layer;
+    // Observe transitions even when the fieldset is hidden, so Entry→normal→Entry drops old drafts.
+    if (layer) for (const node of layer.graph.getNodes()) this._entryWeightContext(layer, node);
+    fieldset.hidden = !selected || selected.type !== 'entry' || layer?.guideType !== 'graph';
+    this._entryWeightRows ??= new Map();
+    if (fieldset.hidden) {
+      rows.replaceChildren(); this._entryWeightRows.clear();
+      return;
+    }
+    document.getElementById('network-entry-weights-help').textContent = ENTRY_WEIGHT_HINT;
+    const shares = getGraphEntryShares(layer.graph);
+    const current = new Set(shares.map(({ node }) => node));
+    for (const [id, row] of this._entryWeightRows) {
+      if (row.layer !== layer || !current.has(row.node)) {
+        row.root.remove(); this._entryWeightRows.delete(id);
+      }
+    }
+    shares.forEach(({ node, percent }, index) => {
+      let row = this._entryWeightRows.get(node.id);
+      if (!row) {
+        const root = document.createElement('div');
+        root.className = 'network-path-weight-row network-entry-weight-row';
+        root.dataset.nodeId = node.id;
+        const input = document.createElement('input');
+        input.type = 'number'; input.required = true;
+        input.min = String(CROWD_ENTRY_WEIGHT.MIN); input.max = String(CROWD_ENTRY_WEIGHT.MAX); input.step = 'any';
+        input.id = `network-entry-weight-${encodeURIComponent(node.id)}`;
+        const label = document.createElement('label'), name = document.createElement('span');
+        label.htmlFor = input.id; name.className = 'network-path-weight-name'; label.appendChild(name);
+        const output = document.createElement('output');
+        output.id = `${input.id}-value`; output.className = 'network-path-weight-value';
+        output.setAttribute('for', input.id);
+        const error = document.createElement('span');
+        error.id = `${input.id}-error`; error.className = 'network-path-weight-error'; error.hidden = true;
+        input.setAttribute('aria-describedby', `${output.id} network-entry-weights-help`);
+        root.append(label, input, output, error);
+        row = { root, input, name, output, error, node, layer, context: null };
+        this._entryWeightRows.set(node.id, row);
+        input.addEventListener('change', () => {
+          if (!root.isConnected || fieldset.hidden || this._nodeAreaLayer(node) !== layer
+              || node.type !== 'entry' || row.context !== this._entryWeightContext(layer, node)) return;
+          if (!changedSinceShown(input)) { clearFieldError(input, error); return; }
+          try {
+            this._setNodeEntryWeight(layer, node, input.value.trim() ? Number(input.value) : NaN);
+            clearFieldError(input, error); noteShownValue(input, node);
+          } catch (failure) {
+            showFieldError(input, error, failure.message, text => this.announce(text));
+          }
+        });
+      }
+      const context = this._entryWeightContext(layer, node);
+      if (row.context !== context || draftOwner(row.input) !== node) {
+        row.input.value = formatFieldNumber(entryWeightValue(node.entryWeight));
+        noteShownValue(row.input, node); clearFieldError(row.input, row.error);
+      }
+      row.context = context;
+      row.name.textContent = `Entry ${index + 1}${node.label ? ` — ${node.label}` : ''}`;
+      row.output.textContent = `${percent}%`;
+      // Reuse nodes on ordinary refreshes: a focused input must not leave the DOM.
+      if (rows.children[index] !== row.root) rows.insertBefore(row.root, rows.children[index] || null);
+    });
   },
 
   /** The one durable owner for both authoring surfaces, outside the pen's legacy exception. */

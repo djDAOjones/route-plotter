@@ -10,6 +10,8 @@
 
 import { clampImageCoordinate } from '../utils/imageCoordinates.js';
 import { copyCrowdArea } from '../utils/crowdArea.js';
+import { entryWeightValue } from '../utils/entryWeight.js';
+import { CROWD_ENTRY_WEIGHT } from '../config/constants.js';
 
 const VALID_TYPES = ['normal', 'entry', 'exit'];
 
@@ -30,6 +32,8 @@ export class GraphNode {
     this.label = options.label ?? '';
     // Retained on inactive node types; only explicit Entries use it in Part B.
     if (options.area != null) this.area = copyCrowdArea(options.area);
+    const weight = entryWeightValue(options.entryWeight);
+    if (weight !== CROWD_ENTRY_WEIGHT.DEFAULT) this.entryWeight = weight;
 
     // COMPOSE-01: an anchored node follows a route waypoint. `x`/`y` stay the
     // AUTHORED position and are never rewritten — binding must not destroy the
@@ -96,6 +100,7 @@ export class GraphNode {
    * @returns {Object}
    */
   toJSON() {
+    const weight = entryWeightValue(this.entryWeight);
     return {
       id: this.id,
       x: this.x,
@@ -105,6 +110,7 @@ export class GraphNode {
       // Omitted when null so an unanchored graph's saved shape is unchanged.
       ...(this.anchorWaypointId ? { anchorWaypointId: this.anchorWaypointId } : {}),
       ...(this.area ? { area: copyCrowdArea(this.area) } : {}),
+      ...(weight !== CROWD_ENTRY_WEIGHT.DEFAULT ? { entryWeight: weight } : {}),
     };
   }
 

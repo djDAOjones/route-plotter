@@ -203,7 +203,8 @@ const LOOKED_UP = {
     crowd-guide-hint crowd-trace-route-btn crowd-trace-route-reason network-edge-delete network-edge-direction
     network-edge-direction network-edge-hint network-edge-swap network-edge-swap network-edge-weight
     network-edge-weight network-edge-weight-field network-edge-weight-field-error network-edge-weight-reason
-    network-edge-weight-value network-edit-btn network-node-delete
+    network-edge-weight-value network-edit-btn network-entry-weight-rows network-entry-weights
+    network-entry-weights-help network-node-delete
     network-node-hint
     network-node-type network-node-type network-path-weight-rows network-path-weight-rows
     network-path-weights node-section-title
