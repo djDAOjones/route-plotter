@@ -39,6 +39,45 @@ describe('Entry weights through real native authoring surfaces', () => {
     }
   });
 
+  test('Entry card element IDs cannot collide through suffixes or with the row container', async () => {
+    const app = await setupWeights();
+    const ids = ['rows', 'e', 'e-value', 'e-error', 'input-e', 'share-e', 'error-e'];
+    selectedLayer(app).graph.fromJSON({
+      nodes: [...ids.map(id => ({ id, type: 'entry', x: 0.2, y: 0.5 })),
+        { id: 'end', type: 'exit', x: 0.8, y: 0.5 }],
+      edges: ids.map((id, index) => ({ id: `path-${index}`, sourceId: id, targetId: 'end' })),
+    });
+    expect(await loadCurrentSnapshot(app, snapshot(app))).toBe(true);
+    selectEntry(app); await settled();
+    const assertLinks = () => {
+      const elements = [...byId('network-entry-weights').querySelectorAll('[id]')];
+      expect(new Set(elements.map(element => element.id)).size).toBe(elements.length);
+      for (const id of ids) {
+        const field = cardField(selectedLayer(app).graph.getNode(id));
+        const row = field.closest('[data-node-id]'), output = row.querySelector('output');
+        expect(field.labels).toHaveLength(1);
+        expect(field.labels[0].control).toBe(field);
+        expect(byId(field.id)).toBe(field);
+        expect(byId(output.id)).toBe(output);
+        expect(output.getAttribute('for')).toBe(field.id);
+        expect(field.getAttribute('aria-describedby').split(/\s+/).every(key => byId(key))).toBe(true);
+      }
+    };
+    assertLinks();
+    const node = selectedLayer(app).graph.getNode('e');
+    await editWeight(app, 'card', 0, node);
+    const field = cardField(node), error = field.closest('[data-node-id]').querySelector('.network-path-weight-error');
+    expect(field.getAttribute('aria-invalid')).toBe('true');
+    expect(byId(error.id)).toBe(error);
+    expect(field.getAttribute('aria-describedby').split(/\s+/)).toContain(error.id);
+    await editWeight(app, 'card', 3, node);
+    expect(field.hasAttribute('aria-invalid')).toBe(false);
+    const scene = snapshot(app).scene;
+    expect(await app.loadProject(await app.imageAssetService.exportZip(snapshot(app)))).toBe(true);
+    expect(snapshot(app).scene).toEqual(scene);
+    selectEntry(app); await settled(); assertLinks();
+  });
+
   test.each(['card', 'outline'])('%s min/mid/MAX/precision: one undo, autosave, ZIP and recovery', async surface => {
     const app = await setupWeights();
     for (const value of [0.01, 2.75, Number.MAX_VALUE, 0.010000000000000002, 1]) {

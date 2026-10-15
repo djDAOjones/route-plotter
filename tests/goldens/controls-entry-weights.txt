@@ -1,50 +1,50 @@
 # entry-weights: all explicit Entry weights, as native number fields with nominal shares
 
-## #network-entry-weight-gn_trace_ex-uon-1 · enter 24
+## #network-entry-weight-input-gn_trace_ex-uon-1 · enter 24
 emit network:changed {commit: true}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
 model + scene.flowLayers[0].graph.nodes[0].entryWeight: 24
-app ~ focus: "body" → "#network-entry-weight-gn_trace_ex-uon-1"
+app ~ focus: "body" → "#network-entry-weight-input-gn_trace_ex-uon-1"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
-ui ~ #network-entry-weight-gn_trace_ex-uon-1: input aria-describedby="network-entry-weight-gn_trace_ex-uon-1-value network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1" → input aria-describedby="network-entry-weight-gn_trace_ex-uon-1-value network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="24"
-ui ~ #network-entry-weight-gn_trace_ex-uon-1-value: output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-1" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-1" :text="96%"
-ui ~ #network-entry-weight-gn_trace_ex-uon-2-value: output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-2" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-2" :text="4%"
+ui ~ #network-entry-weight-input-gn_trace_ex-uon-1: input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-1 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1" → input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-1 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="24"
+ui ~ #network-entry-weight-share-gn_trace_ex-uon-1: output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-1" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-1" :text="96%"
+ui ~ #network-entry-weight-share-gn_trace_ex-uon-2: output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-2" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-2" :text="4%"
 ui ~ #network-path-weight-1: input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip network-path-weight-1-tip network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1"
 ui ~ #network-path-weight-2: input aria-describedby="network-path-weight-2-error network-path-weight-2-value network-path-weights-help network-path-weight-2-tip network-path-weight-2-tip network-path-weight-2-tip" aria-labelledby="network-path-weight-2-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-2-error network-path-weight-2-value network-path-weights-help network-path-weight-2-tip" aria-labelledby="network-path-weight-2-name" min="0.01" step="0.01" type="number" :value="1"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10064 chars, ec702b6b] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10081 chars, 9b6683d1]
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
-## #network-entry-weight-gn_trace_ex-uon-1 · enter 99999
+## #network-entry-weight-input-gn_trace_ex-uon-1 · enter 99999
 emit network:changed {commit: true}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
 model + scene.flowLayers[0].graph.nodes[0].entryWeight: 99999
-app ~ focus: "body" → "#network-entry-weight-gn_trace_ex-uon-1"
+app ~ focus: "body" → "#network-entry-weight-input-gn_trace_ex-uon-1"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
-ui ~ #network-entry-weight-gn_trace_ex-uon-1: input aria-describedby="network-entry-weight-gn_trace_ex-uon-1-value network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1" → input aria-describedby="network-entry-weight-gn_trace_ex-uon-1-value network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="99999"
-ui ~ #network-entry-weight-gn_trace_ex-uon-1-value: output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-1" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-1" :text="100%"
-ui ~ #network-entry-weight-gn_trace_ex-uon-2-value: output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-2" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-2" :text="0%"
+ui ~ #network-entry-weight-input-gn_trace_ex-uon-1: input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-1 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1" → input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-1 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="99999"
+ui ~ #network-entry-weight-share-gn_trace_ex-uon-1: output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-1" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-1" :text="100%"
+ui ~ #network-entry-weight-share-gn_trace_ex-uon-2: output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-2" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-2" :text="0%"
 ui ~ #network-path-weight-1: input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip network-path-weight-1-tip network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1"
 ui ~ #network-path-weight-2: input aria-describedby="network-path-weight-2-error network-path-weight-2-value network-path-weights-help network-path-weight-2-tip network-path-weight-2-tip network-path-weight-2-tip" aria-labelledby="network-path-weight-2-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-2-error network-path-weight-2-value network-path-weights-help network-path-weight-2-tip" aria-labelledby="network-path-weight-2-name" min="0.01" step="0.01" type="number" :value="1"
 settled:
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10064 chars, ec702b6b] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10084 chars, 64ae66fe]
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
-## #network-entry-weight-gn_trace_ex-uon-2 · enter 24
+## #network-entry-weight-input-gn_trace_ex-uon-2 · enter 24
 emit network:changed {commit: true}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
 model + scene.flowLayers[0].graph.nodes[1].entryWeight: 24
-app ~ focus: "body" → "#network-entry-weight-gn_trace_ex-uon-2"
+app ~ focus: "body" → "#network-entry-weight-input-gn_trace_ex-uon-2"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
-ui ~ #network-entry-weight-gn_trace_ex-uon-1-value: output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-1" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-1" :text="4%"
-ui ~ #network-entry-weight-gn_trace_ex-uon-2: input aria-describedby="network-entry-weight-gn_trace_ex-uon-2-value network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1" → input aria-describedby="network-entry-weight-gn_trace_ex-uon-2-value network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="24"
-ui ~ #network-entry-weight-gn_trace_ex-uon-2-value: output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-2" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-2" :text="96%"
+ui ~ #network-entry-weight-share-gn_trace_ex-uon-1: output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-1" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-1" :text="4%"
+ui ~ #network-entry-weight-input-gn_trace_ex-uon-2: input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-2 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1" → input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-2 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="24"
+ui ~ #network-entry-weight-share-gn_trace_ex-uon-2: output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-2" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-2" :text="96%"
 ui ~ #network-path-weight-1: input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip network-path-weight-1-tip network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1"
 ui ~ #network-path-weight-2: input aria-describedby="network-path-weight-2-error network-path-weight-2-value network-path-weights-help network-path-weight-2-tip network-path-weight-2-tip network-path-weight-2-tip" aria-labelledby="network-path-weight-2-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-2-error network-path-weight-2-value network-path-weights-help network-path-weight-2-tip" aria-labelledby="network-path-weight-2-name" min="0.01" step="0.01" type="number" :value="1"
 settled:
@@ -55,17 +55,17 @@ settled:
   ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:28" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:28"
 
-## #network-entry-weight-gn_trace_ex-uon-2 · enter 99999
+## #network-entry-weight-input-gn_trace_ex-uon-2 · enter 99999
 emit network:changed {commit: true}
 emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
 model + scene.flowLayers[0].graph.nodes[1].entryWeight: 99999
-app ~ focus: "body" → "#network-entry-weight-gn_trace_ex-uon-2"
+app ~ focus: "body" → "#network-entry-weight-input-gn_trace_ex-uon-2"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
 ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
-ui ~ #network-entry-weight-gn_trace_ex-uon-1-value: output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-1" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-1" :text="0%"
-ui ~ #network-entry-weight-gn_trace_ex-uon-2: input aria-describedby="network-entry-weight-gn_trace_ex-uon-2-value network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1" → input aria-describedby="network-entry-weight-gn_trace_ex-uon-2-value network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="99999"
-ui ~ #network-entry-weight-gn_trace_ex-uon-2-value: output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-2" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-gn_trace_ex-uon-2" :text="100%"
+ui ~ #network-entry-weight-share-gn_trace_ex-uon-1: output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-1" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-1" :text="0%"
+ui ~ #network-entry-weight-input-gn_trace_ex-uon-2: input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-2 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1" → input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-2 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="99999"
+ui ~ #network-entry-weight-share-gn_trace_ex-uon-2: output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-2" :text="50%" → output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-2" :text="100%"
 ui ~ #network-path-weight-1: input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip network-path-weight-1-tip network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1"
 ui ~ #network-path-weight-2: input aria-describedby="network-path-weight-2-error network-path-weight-2-value network-path-weights-help network-path-weight-2-tip network-path-weight-2-tip network-path-weight-2-tip" aria-labelledby="network-path-weight-2-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-2-error network-path-weight-2-value network-path-weights-help network-path-weight-2-tip" aria-labelledby="network-path-weight-2-name" min="0.01" step="0.01" type="number" :value="1"
 settled:

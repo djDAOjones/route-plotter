@@ -701,14 +701,17 @@ export const networkMixin = {
         const input = document.createElement('input');
         input.type = 'number'; input.required = true;
         input.min = String(CROWD_ENTRY_WEIGHT.MIN); input.max = String(CROWD_ENTRY_WEIGHT.MAX); input.step = 'any';
-        input.id = `network-entry-weight-${encodeSceneKeyPart(node.id)}`;
+        // Role prefixes prevent collisions with another node's fields or the rows container.
+        const key = encodeSceneKeyPart(node.id);
+        input.id = `network-entry-weight-input-${key}`;
         const label = document.createElement('label'), name = document.createElement('span');
         label.htmlFor = input.id; name.className = 'network-path-weight-name'; label.appendChild(name);
         const output = document.createElement('output');
-        output.id = `${input.id}-value`; output.className = 'network-path-weight-value';
+        output.id = `network-entry-weight-share-${key}`; output.className = 'network-path-weight-value';
         output.setAttribute('for', input.id);
         const error = document.createElement('span');
-        error.id = `${input.id}-error`; error.className = 'network-path-weight-error'; error.hidden = true;
+        error.id = `network-entry-weight-error-${key}`;
+        error.className = 'network-path-weight-error'; error.hidden = true;
         input.setAttribute('aria-describedby', `${output.id} network-entry-weights-help`);
         root.append(label, input, output, error);
         row = { root, input, name, output, error, node, layer, context: null };
