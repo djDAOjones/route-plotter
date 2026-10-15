@@ -142,3 +142,4 @@
 - Broaden complete-input curvature-cache keys beyond eligible Finish-area journeys: the Part C design reviews reproduced warm/cold route and network differences after an internal bend edit, including network lengths 2.79668318121725 versus 2.796742803247161; C isolates its own calculations while legacy TST-09 behaviour remains pinned — (from: CROWD-08, 2026-10-14)
 
 - v3.3.721 changes exports and the player; save and open its MP4 and HTML exports from disk, or obtain the owner's explicit waiver for this release — (from: REL-721, 2026-10-14)
+- Outline Start/Finish area controls remain enabled on Follow route, while the area setter refuses that inactive network with a Type-only reason; observed in Part D browser QA and present before D — (from: CROWD-08, 2026-10-15)

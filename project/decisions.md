@@ -18,6 +18,79 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-15 — CROWD-08 — Sol High implements D–G with consolidated publication
+
+**Decision:** On the owner's word, GPT-6.1 Sol High implements the remaining
+CROWD-08 parts, and their releases are consolidated while tests and independent
+Astra Extra High reviews remain required.
+
+**Rationale:** The owner, verbatim: “at a timely point, switch the route plotter
+CRM task to Sol High and consolidate the releases to speed it up, while keeping
+the tests and independent reviews.” This instruction was verified in his human
+message in the coordinating chat and relayed with the implementing task's
+model/effort override. The running Part D gate was preserved through its
+successful exit: 158 files, 3770 passing tests and two existing todos, with
+shell/build/check passing. The switch takes its checkpoint there.
+
+The lead's concrete plan is independently reviewed source parts D, E, F and G,
+merged in that order, followed by one combined deployment and one release-record
+PR where feasible. This replaces GATELESS-1 condition 7's release after every
+shipping merge for these remaining parts only. Earlier release evidence and
+owner checks stand: v3.3.719's promise is not completion, v3.3.720 alone was
+waived, and v3.3.721's saved-file question is still pending. No feature or
+required verification is dropped. Fresh read-only reviewers remain
+`gpt-6-astra` at `xhigh`, round after round until approval; the implementing
+session never approves itself. Source tests, regression and browser/export
+checks, exact-head CI and final integration verification remain required.
+Focused checks run early; evidence is reused only while the code it checked
+is unchanged. The final combined runtime receives the full gate and release
+verification. The deadline and A–E priority remain PLAN-4's; changing F/G scope
+still requires the owner's word. House conventions: record the authority and
+its narrow replacement without rewriting historical decisions.
+
+**Supersedes:** 2026-10-05 — GATELESS-1 — The run goes gateless: each merge lands and ships as it goes, with Codex reviewing
+
+**Deferred:** none
+
+## 2026-10-15 — CROWD-08 — Part D: relative Entry weights preserve equal choices
+
+**Decision:** Explicit Entries gain relative weights through the Node card and
+scene outline, while equal weights keep every dot's existing seeded choice.
+
+**Rationale:** Under the approved Part D brief and the owner's easier-safe-MVP
+preference, the lead chooses a strict optional finite number from 0.01 to
+Number.MAX_VALUE, default 1 omitted from saved data. Type changes retain it;
+implicit starts and Follow route ignore it. Max-scaled normalization avoids
+overflow. Unequal choices reuse one cumulative distribution per guide and a
+binary first-greater lookup; equal values retain the exact old floor
+expression, including its floating-point boundaries. The same single hash
+draw and hop feed all lifecycles, journey measurement and first-terminal
+selection. Both journey and finish-geometry cache keys include ordered node
+id/weight tuples. Nominal shares use the existing Path percentage rounding;
+finite seeded crowds need not match those percentages, and the help says
+very small weights may never be chosen. Stranded Entries remain in the pool.
+
+One app-owned setter checks a detached canonical candidate against the whole
+loader and asset-aware archive budgets before any live mutation or undo
+flush. Both native surfaces preserve decimal precision, commit one reversible
+edit and autosave, and clear corrected no-op errors without a new edit.
+App-owned identity/state tokens preserve drafts on unrelated refreshes and
+reject stale commands after replacement, Type changes or accepted edits from
+the other surface. No component receives the app. Legacy absent/default node
+JSON stays unchanged. The source PR owns regression, mutation, golden-trace,
+committed-build browser and independent review evidence; publication belongs
+to its REL record. Standards: carbon's existing native fieldset/number/output
+pattern and tokens; nielsen 1, 3, 4 and 9 for visible shares, reversible edits,
+consistent names and specific errors; wcag-2.2-aaa 2.5.5, 2.1.3, 2.4.12 and
+3.3.6 for targets, keyboard, retained focus and checked submissions;
+house-conventions' app ownership, additive persistence and behavioral tests.
+Physical-device and screen-reader assurance remain REV-03/REV-05. This is a
+part advance; CROWD-08 remains open for E–G.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-14 — REL-721 — v3.3.721 ships CROWD-08 Part C's finish areas
 
 **Decision:** v3.3.721 ships CROWD-08 Part C's centred Exit finish areas, while the item remains in progress for D–G.
@@ -550,26 +623,6 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Decision:** DEF-45 lands (PR #70): the live region reads announcements in turn, each for 2 s, so a recovery warning is never replaced or pushed out; a must-hear message already waiting merges into the waiting copy, so at most three routine messages and one of each must-hear text wait.
 
 **Rationale:** Codex review r2 found the queue unbounded (twelve Examples loads left six warnings and 20 s of stale feedback) and two protection mutants surviving; coalescing now leaves one warning and clears the region within 10 s of the last load, and Y1, Y3 and advisories Y2, Y5 are killed. A polite message can still wait while assertive ones keep arriving (stated in the code). keyTable and areaDrawTarget read the region straight after an action; their setups now let the queue play out first, their expected text unchanged; elementIds drops main.js's second announcer lookup. No real screen reader was tried. Digest rule applied: Nielsen → 1, visibility of system status; UI-STANDARDS gains one short announce rule (within its budget). DEF-50 and DEF-67 now wait only on DEF-28.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-05 — TST-08 — The mixin composition is guarded from main.js itself
-
-**Decision:** TST-08 lands (PR #73): `tests/mixins.test.js` parses `src/` and holds the composition to one `Object.assign` of the listed mixins, no change to a mixin, no name hidden, and every call on the app by name resolving; a shape it cannot follow is refused with its line.
-
-**Rationale:** Codex review r2 found 13 probes passing all 30 guards and r3 three more and a false positive; every evasion is refused now and pinned as an in-memory fixture, a stored callback's bound copy is accepted (42 tests), and real `src/` passes. The text prefilter is gone; a mixin exported under another name, `arguments`, a reassigned helper, `.bind` on anything but a function, reflective members (`valueOf`, `__defineGetter__`, `constructor`) writes to `Object`, and any write to a `bind`, `call` or `apply` property are refused; a helper takes the app only through a chain of handoffs that starts from `this`, and `window.window`, `window.self` and `.defaultView` read as the global itself. `window.app` is refused inside `main.js` and `src/app/` bar the one line that publishes it; outside them it stays unchecked, pinned as an exclusion (the run's call). The guards catch accidental breaks and the evasions tried; a function changed in a way the reader cannot follow, such as `Object.assign(f, src)` with a non-literal source on an alias, is not caught, and the test's header says so. Digest rule applied: house conventions → Testing and persistence.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-05 — TST-05 — Every wired event and its listener order are pinned
-
-**Decision:** TST-05 lands (PR #72): golden transcripts pin every event the wiring subscribes to, the order its listeners run and what each changes; a payload the transcript abridges carries a digest of its plain fields (numbers to four decimals, class instances by name), and the app's waypoint lookup is checked at each step and after Undo and Redo.
-
-**Rationale:** Codex review r3's two mutants are killed in the tests only: the getter refusing new `wp_` IDs (B1) and the scene outline emitting `x: 0` (B2); advisories U2, U3 and U5 are killed too. A digest keeps the goldens readable but says only that a hidden field changed, not which, and misses a change past the fourth decimal. Two Chromium checks the row named are wish lines. Every golden line that moved with the main merge traces to DEF-06, DEF-42, DEF-44, DEF-64, DEF-77 or CROWD-05; the "paused half way" rows now seek half the route's own timeline, as before CROWD-05. Digest rule applied: house conventions → Testing and persistence. DEF-15, DEF-22, DEF-65, DEF-66 and DEF-74 no longer wait on it.
 
 **Supersedes:** none
 

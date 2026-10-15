@@ -89,3 +89,18 @@ Asked when his client needs these features working, the owner picked "Within a w
 - 2026-10-14 — Before Part C's publication, its shared Start/Finish area setter gained detached whole-project load/archive budget checks and non-mutating refusal on both surfaces. The area-budget decision owns the correction and the stopped prepublication attempt; the source PR owns its regression evidence. Part C still awaits REL-721, then D follows.
 
 - 2026-10-14 — Part C shipped in v3.3.721 (PR #144, merge `722ba1d`, deploy `2c2ae17`); see REL-721 for publication evidence. CROWD-08 remains in progress for D–G, with Part D next under the owner's continuation.
+
+- 2026-10-15 — Part D adds strict optional Entry weights, shared nominal
+  percentages and seeded proportional choices in every lifecycle. Equal
+  weights retain the exact old chooser. Both native authoring surfaces use
+  one app-owned candidate-budget check, undo and autosave; identity/state
+  tokens reject stale drafts. The Part D decision owns the lead's choices,
+  and its source PR owns verification and review. Publication belongs to
+  REL-722; this item remains open for E–G.
+
+- 2026-10-15 — The owner switched implementation to GPT-6.1 Sol High and
+  requested consolidated releases, retaining tests and independent reviews.
+  The new decision owns that authority: the lead plans reviewed D–G source
+  merges followed by one combined deployment and release record. Astra xhigh
+  reviews and all required source, browser/export, CI and final integration
+  checks remain; no scope or outstanding owner saved-file check is waived.

@@ -1,7 +1,8 @@
 import { PathCalculator } from './PathCalculator.js';
 import { releaseStartFraction } from '../utils/routeAnchors.js';
 import { dotOnsetFraction, dotJourneyMs } from '../utils/crowdArrival.js';
-import { getGraphDepartures, normalizeGraphWeights } from '../utils/graphRouting.js';
+import { getGraphDepartures, normalizeGraphWeights, graphEntryCumulative } from '../utils/graphRouting.js';
+import { entryWeightValue } from '../utils/entryWeight.js';
 import {
   compileBusynessEnvelope,
   sampleBusynessEnvelope,
@@ -159,7 +160,8 @@ function graphSignature(graph) {
     edge.id, edge.sourceId, edge.targetId, edge.direction, edge.weight,
     ...edge.controlPoints.flatMap(point => [point.x, point.y]),
   ].join(','));
-  return `${nodes.join(';')}#${edges.join(';')}`;
+  const entryWeights = graph.getNodes().map(node => [node.id, entryWeightValue(node.entryWeight)]);
+  return `${nodes.join(';')}#${edges.join(';')}|entries:${JSON.stringify(entryWeights)}`;
 }
 
 /** Exact tuples keep new area geometry out of the legacy delimiter signature. */
@@ -505,7 +507,7 @@ export class SwarmEngine {
     const { seed } = emitter;
 
     let hop = 0;
-    let node = this._pickEntry(entries, seed, dotIndex, hop++);
+    let node = this._pickEntry(entries, seed, dotIndex, hop++, guide.entryCumulative);
     let cameFromEdgeId = null;
     const area = this._startArea(node, emitter, dotIndex, guide);
     let total = guide.canonicalGeometry ? 0 : area ? area.length : 0;
@@ -535,7 +537,8 @@ export class SwarmEngine {
 
   /** The topology-only first journey chooses C eligibility without warming geometry. */
   _firstTerminal(emitter, dotIndex, guide) {
-    let hop = 0, node = this._pickEntry(guide.entries, emitter.seed, dotIndex, hop++), from = null;
+    let hop = 0;
+    let node = this._pickEntry(guide.entries, emitter.seed, dotIndex, hop++, guide.entryCumulative), from = null;
     for (let step = 0; node && step < MAX_HOPS; step++) {
       const atExit = this._endsJourney(node, guide, step, step > 0);
       const choices = atExit ? [] : this._traversableEdges(guide.graph, node.id, from);
@@ -572,7 +575,7 @@ export class SwarmEngine {
     const canonical = { ...guide, canonicalGeometry: true };
     const geometryKey = JSON.stringify([
       guide.imageAspect,
-      guide.graph.getNodes().map(n => [n.id, n.type, n.position(), n.area]),
+      guide.graph.getNodes().map(n => [n.id, n.type, n.position(), n.area, entryWeightValue(n.entryWeight)]),
       guide.graph.getEdges().map(e => [e.id, e.sourceId, e.targetId, e.direction, e.weight, e.controlPoints]),
       layer.emitters.map(e => [e.id, e.seed, e.dotCount, e.lifecycleMode]),
     ]);
@@ -968,12 +971,13 @@ export class SwarmEngine {
     if (nodes.length === 0 || edges.length === 0) return null;
 
     let entries = graph.getNodesByType('entry');
+    const entryCumulative = entries.length ? graphEntryCumulative(entries) : null;
     if (entries.length === 0) {
       entries = nodes.filter(n => this._traversableEdges(graph, n.id, null).length > 0);
     }
     if (entries.length === 0) return null;
 
-    return { type: 'graph', graph, entries, fallbackExits: fallbackExitIds(graph, edges) };
+    return { type: 'graph', graph, entries, entryCumulative, fallbackExits: fallbackExitIds(graph, edges) };
   }
 
   /**
@@ -1012,7 +1016,7 @@ export class SwarmEngine {
     }
 
     let hop = 0;
-    let node = this._pickEntry(entries, seed, dotIndex, hop++);
+    let node = this._pickEntry(entries, seed, dotIndex, hop++, guide.entryCumulative);
     let cameFromEdgeId = null;
     let remaining = distance;
     let travelled = 0;
@@ -1059,7 +1063,7 @@ export class SwarmEngine {
           pace = next;
           travelled = 0;
           walked = false;
-          node = this._pickEntry(entries, seed, dotIndex, hop++);
+          node = this._pickEntry(entries, seed, dotIndex, hop++, guide.entryCumulative);
           cameFromEdgeId = null;
           continue;
         }
@@ -1142,7 +1146,7 @@ export class SwarmEngine {
     const { seed } = emitter;
 
     let hop = 0;
-    let node = this._pickEntry(entries, seed, dotIndex, hop++);
+    let node = this._pickEntry(entries, seed, dotIndex, hop++, guide.entryCumulative);
     let cameFromEdgeId = null;
     const journey = [];
     let journeyLength = 0;
@@ -1180,9 +1184,20 @@ export class SwarmEngine {
     return this._sampleAt(last.points, last.reversed ? 0 : 1, last.reversed, distance);
   }
 
-  /** Weighted-uniform entry choice. @private */
-  _pickEntry(entries, seed, dotIndex, hopIndex) {
+  /** One draw, with exactly the old floor boundary for equal weights and implicit starts. @private */
+  _pickEntry(entries, seed, dotIndex, hopIndex, cumulative = null) {
     const r = SwarmEngine.hash(seed, dotIndex, hopIndex);
+    if (cumulative) {
+      // First bound strictly greater than r, including repeated bounds for
+      // tiny shares. Binary search keeps large Entry pools cheap per dot.
+      let low = 0, high = entries.length;
+      while (low < high) {
+        const middle = Math.floor((low + high) / 2);
+        if (r < cumulative[middle]) high = middle;
+        else low = middle + 1;
+      }
+      return entries[Math.min(low, entries.length - 1)];
+    }
     return entries[Math.min(entries.length - 1, Math.floor(r * entries.length))];
   }
 

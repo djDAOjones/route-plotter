@@ -183,6 +183,9 @@ export const AREA_VISIBILITY = {
   ALWAYS_HIDE: 'always-hide'
 };
 
+/** Relative Entry chances use the full finite number range, with a strict positive floor. */
+export const CROWD_ENTRY_WEIGHT = Object.freeze({ MIN: 0.01, MAX: Number.MAX_VALUE, DEFAULT: 1 });
+
 /** Node-centred crowd areas use fractions of image width and height. */
 export const CROWD_AREA = Object.freeze({
   SIZE_MIN: 0.01,

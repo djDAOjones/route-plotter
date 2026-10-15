@@ -8,9 +8,10 @@
 
 import { crowdAreaDescription } from '../utils/crowdAreaDescription.js';
 import { sceneOutlineKey } from '../utils/sceneSemantics.js';
-import { IMAGE_COORDINATES } from '../config/constants.js';
+import { IMAGE_COORDINATES, CROWD_ENTRY_WEIGHT } from '../config/constants.js';
 import { formatCrowdDotSize } from '../utils/uiReadouts.js';
 import { createCrowdArea } from '../utils/crowdArea.js';
+import { ENTRY_WEIGHT_HINT, entryWeightValue } from '../utils/entryWeight.js';
 
 const OUTLINE_CANONICAL_VALUE = Symbol('outlineCanonicalValue');
 // A field the author has typed in or chosen in (UI-06 W-02, Codex r1): it
@@ -620,6 +621,7 @@ export class SceneOutlineController {
       for (const node of crowd.graph.nodes) {
         valid.add(`${node.key}:apply`);
         if (['entry', 'exit'].includes(node.type) || node.area) valid.add(`${node.key}:area-apply`);
+        if (node.type === 'entry' || node.entryWeight !== undefined) valid.add(`${node.key}:entry-weight-apply`);
       }
       for (const edge of crowd.graph.edges) {
         valid.add(`${edge.key}:apply`);
@@ -674,7 +676,12 @@ export class SceneOutlineController {
 
   _showCommandError(error = {}) {
     if (!error.formKey || !error.message) return;
-    this._error = { formKey: String(error.formKey), message: String(error.message) };
+    const formKey = String(error.formKey);
+    this._error = {
+      formKey,
+      message: String(error.message),
+      context: this._formForKey(formKey)?.[OUTLINE_DRAFT_CONTEXT] ?? null,
+    };
     this._renderCommandError();
   }
 
@@ -702,6 +709,10 @@ export class SceneOutlineController {
   _renderCommandError() {
     if (!this._error) return;
     const formEl = this._formForKey(this._error.formKey);
+    if (this._error.context !== null && formEl?.[OUTLINE_DRAFT_CONTEXT] !== this._error.context) {
+      this._clearCommandError();
+      return;
+    }
     if (!formEl || formEl.querySelector('.scene-outline-error')) return;
     const errorId = `${OUTLINE_ERROR_ID_PREFIX}${++this._errorSerial}`;
     const error = el('p', {
@@ -1261,6 +1272,9 @@ export class SceneOutlineController {
       }),
     ], 'Apply node', `${node.key}:apply`));
     if (['entry', 'exit'].includes(node.type) || node.area) content.appendChild(this._renderNodeArea(crowd, node));
+    if (node.type === 'entry' || node.entryWeight !== undefined) {
+      content.appendChild(this._renderNodeEntryWeight(crowd, node));
+    }
     content.appendChild(button(
       `Delete node${node.connectedEdges ? ` and ${plural(node.connectedEdges, 'connected path')}` : ''}`,
       'delete-node',
@@ -1269,6 +1283,35 @@ export class SceneOutlineController {
     ));
     details.appendChild(content);
     return itemFor(details);
+  }
+
+  _renderNodeEntryWeight(crowd, node) {
+    const key = `${node.key}:entry-weight-apply`;
+    const active = crowd.graph.active && node.type === 'entry';
+    const formEl = form('update-entry-weight', {
+      layerId: crowd.id, nodeId: node.id, entryWeightContext: node.entryWeightContext,
+    }, [labelledInput('entryWeight', 'Entry weight', node.entryWeight ?? CROWD_ENTRY_WEIGHT.DEFAULT, {
+      min: CROWD_ENTRY_WEIGHT.MIN, max: CROWD_ENTRY_WEIGHT.MAX, step: 'any', key: `${node.key}:entry-weight`,
+      tip: ENTRY_WEIGHT_HINT,
+    })], 'Apply entry weight', key, node.entryWeightContext);
+    const hint = el('p', { className: 'scene-outline-hint',
+      text: !crowd.graph.active ? 'Choose Custom network in Guide to use this retained weight.'
+        : node.type === 'entry' ? ENTRY_WEIGHT_HINT : 'Choose Entry in Type to use this retained weight.',
+      attrs: { id: `${OUTLINE_REASON_ID_PREFIX}${++outlineReasonSerial}` } });
+    const input = formEl.elements.entryWeight;
+    const output = el('output', { className: 'scene-outline-hint',
+      text: active ? `${node.entryPercent}% of dots` : 'Entry weight inactive',
+      attrs: { id: `${hint.id}-share` } });
+    input.setAttribute('aria-describedby', `${output.id} ${hint.id}`);
+    input.disabled = !active;
+    formEl.querySelector('[type="submit"]').disabled = input.disabled;
+    input.addEventListener('invalid', event => {
+      event.preventDefault();
+      try { entryWeightValue(input.value.trim() ? Number(input.value) : NaN); }
+      catch (failure) { this._showCommandError({ formKey: key, message: failure.message }); }
+    });
+    formEl.append(output, hint);
+    return formEl;
   }
 
   _renderNodeArea(crowd, node) {

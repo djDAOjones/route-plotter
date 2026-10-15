@@ -1864,6 +1864,17 @@ const CONTEXTS = [
     },
   },
   {
+    name: 'entry-weights',
+    about: 'all explicit Entry weights, as native number fields with nominal shares',
+    roots: ['#network-entry-weights'],
+    enter: app => {
+      // The first node is already an Entry. Add the junction so both dynamic
+      // rows revealed by the Type gesture have their change listener exercised.
+      inspectNetwork(app, (service, graph) => service.selectNode(junctionOf(graph)));
+      choose('network-node-type', 'entry');
+    },
+  },
+  {
     name: 'node-finish-area',
     about: 'an Exit with a rectangle finish area, Collect enabled and Turn revealed',
     roots: ['#network-node-area-card'],

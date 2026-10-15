@@ -30,7 +30,17 @@ ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
 ui ~ #node-section-title: span :text="Node · Main entrance · entry" → span :text="Node · Main entrance · pass-through"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="normal"
+ui ~ #network-entry-weights: fieldset class="network-path-weights" → fieldset (not shown)
 ui ~ #network-node-area-card: div class="settings-section expanded" data-section="node-area" → div (not shown)
+ui - #network-entry-weights>legend[0]: legend :text="Entry weights"
+ui - #network-entry-weights-help: p class="section-hint" :text="Relative weights set each Entry’s chance of releasing a dot. Percentages are rounded, not fixed counts. Very small weights may never be chosen."
+ui - #network-entry-weight-rows: div class="network-path-weight-rows"
+ui - #network-entry-weight-rows>div[0]: div class="network-path-weight-row network-entry-weight-row" data-node-id="gn_trace_ex-uon-1"
+ui - #network-entry-weight-rows>div[0]>label[0]: label for="network-entry-weight-input-gn_trace_ex-uon-1"
+ui - #network-entry-weight-rows>div[0]>label[0]>span[0]: span class="network-path-weight-name" :text="Entry 1 — Main entrance"
+ui - #network-entry-weight-input-gn_trace_ex-uon-1: input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-1 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1"
+ui - #network-entry-weight-share-gn_trace_ex-uon-1: output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-1" :text="100%"
+ui - #network-entry-weight-error-gn_trace_ex-uon-1: span (not shown)
 ui - #network-node-area-card>h2[0]: h2 class="section-title"
 ui - #network-node-area-card>h2[0]>button[0]: button aria-controls="section-node-area-content" aria-expanded="true" class="section-header" type="button" :text="Start area"
 ui - #network-node-area-card>h2[0]>button[0]>span[0]: span aria-hidden="true" class="section-chevron"
@@ -60,14 +70,62 @@ ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
 ui ~ #node-section-title: span :text="Node · Main entrance · entry" → span :text="Node · Main entrance · exit"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="entry" → select aria-describedby="network-node-type-tip" :value="exit"
+ui ~ #network-entry-weights: fieldset class="network-path-weights" → fieldset (not shown)
 ui ~ #network-node-area-card>h2[0]>button[0]: button aria-controls="section-node-area-content" aria-expanded="true" class="section-header" type="button" :text="Start area" → button aria-controls="section-node-area-content" aria-expanded="true" class="section-header" type="button" :text="Finish area"
 ui ~ #section-node-area-content>div[0]>button[0]: button aria-describedby="network-node-area-shape-tip" aria-expanded="false" aria-label="Help: Start area" class="param-hint-trigger" style="position-anchor: --network-node-area-shape-tip;" type="button" → button aria-describedby="network-node-area-shape-tip" aria-expanded="false" aria-label="Help: Finish area" class="param-hint-trigger" style="position-anchor: --network-node-area-shape-tip;" type="button"
 ui ~ #network-node-area-label: span data-tip-desc="network-node-area-shape-tip" data-tip="Centred on this node. Entry dots walk to the node; collecting Exit dots walk into places" style="anchor-name: --network-node-area-shape-tip;" :text="Start area" → span data-tip-desc="network-node-area-shape-tip" data-tip="Centred on this node. Entry dots walk to the node; collecting Exit dots walk into places" style="anchor-name: --network-node-area-shape-tip;" :text="Finish area"
 ui ~ #network-node-area-hint: p class="section-hint" :text="Only Disappear and Collect at the end use the area. Respawn and Repeat journey start at the node." → p class="section-hint" :text="Only Collect at the end uses the finish area. Other journey-end settings keep their usual behaviour. Finish-area journeys use the project's reference timing. T…[281 chars, 6437b98b]
+ui - #network-entry-weights>legend[0]: legend :text="Entry weights"
+ui - #network-entry-weights-help: p class="section-hint" :text="Relative weights set each Entry’s chance of releasing a dot. Percentages are rounded, not fixed counts. Very small weights may never be chosen."
+ui - #network-entry-weight-rows: div class="network-path-weight-rows"
+ui - #network-entry-weight-rows>div[0]: div class="network-path-weight-row network-entry-weight-row" data-node-id="gn_trace_ex-uon-1"
+ui - #network-entry-weight-rows>div[0]>label[0]: label for="network-entry-weight-input-gn_trace_ex-uon-1"
+ui - #network-entry-weight-rows>div[0]>label[0]>span[0]: span class="network-path-weight-name" :text="Entry 1 — Main entrance"
+ui - #network-entry-weight-input-gn_trace_ex-uon-1: input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-1 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1"
+ui - #network-entry-weight-share-gn_trace_ex-uon-1: output class="network-path-weight-value" for="network-entry-weight-input-gn_trace_ex-uon-1" :text="100%"
+ui - #network-entry-weight-error-gn_trace_ex-uon-1: span (not shown)
 settled:
   announced "Editing · Node · exit"
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10064 chars, 160d74d0]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+
+## #network-entry-weight-input-gn_trace_ex-uon-1 · enter 24
+emit network:changed {commit: true}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+announced "Unsaved changes"
+model + scene.flowLayers[0].graph.nodes[0].entryWeight: 24
+app ~ focus: "body" → "#network-entry-weight-input-gn_trace_ex-uon-1"
+storage + routePlotter_lastSection: "node"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
+ui ~ #network-entry-weight-input-gn_trace_ex-uon-1: input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-1 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1" → input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-1 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="24"
+settled:
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10082 chars, b88c2cd4]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+
+## #network-entry-weight-input-gn_trace_ex-uon-1 · enter 99999
+emit network:changed {commit: true}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+announced "Unsaved changes"
+model + scene.flowLayers[0].graph.nodes[0].entryWeight: 99999
+app ~ focus: "body" → "#network-entry-weight-input-gn_trace_ex-uon-1"
+storage + routePlotter_lastSection: "node"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes"
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #undo-btn: button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)" disabled="" → button aria-describedby="undo-btn-tip" aria-label="Undo" class="btn btn-icon" data-tip-desc="undo-btn-tip" data-tip="Undo the last change (Ctrl+Z)"
+ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
+ui ~ #network-entry-weight-input-gn_trace_ex-uon-1: input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-1 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="1" → input aria-describedby="network-entry-weight-share-gn_trace_ex-uon-1 network-entry-weights-help" max="1.7976931348623157e+308" min="0.01" required="" step="any" type="number" :value="99999"
+settled:
+  announced "Saved to browser recovery"
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10085 chars, 6f2b2159]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
 
@@ -140,7 +198,7 @@ ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="mo
 ui ~ #node-scope: div class="scope-group" → div (not shown)
 ui + #toast-container>div[1]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
 ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
-ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 19 inside, a374a0c1)
+ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 29 inside, 4223046d)
 ui - #network-node-area-card: div class="settings-section expanded" data-section="node-area" (and 22 inside, 02b23871)
 settled:
   emit animation:durationChange 28307.894043

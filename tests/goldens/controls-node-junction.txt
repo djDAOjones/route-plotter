@@ -30,6 +30,10 @@ ui ~ #scope-chip-text: span aria-live="off" class="scope-chip-text" role="status
 ui ~ #node-scope>div[0]: div class="settings-section expanded" data-section="node" → div class="settings-section expanded" data-last="true" data-section="node"
 ui ~ #node-section-title: span :text="Node · Trent Building · pass-through" → span :text="Node · Trent Building · entry"
 ui ~ #network-node-type: select aria-describedby="network-node-type-tip" :value="normal" → select aria-describedby="network-node-type-tip" :value="entry"
+ui ~ #network-entry-weights: fieldset (not shown) → fieldset class="network-path-weights"
+ui + #network-entry-weights>legend[0]: legend :text="Entry weights"
+ui + #network-entry-weights-help: p class="section-hint" :text="Relative weights set each Entry’s chance of releasing a dot. Percentages are rounded, not fixed counts. Very small weights may never be chosen."
+ui + #network-entry-weight-rows: div class="network-path-weight-rows" (and 12 inside, 9554feb4)
 ui ~ #network-path-weight-1: input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1" → input aria-describedby="network-path-weight-1-error network-path-weight-1-value network-path-weights-help network-path-weight-1-tip network-path-weight-1-tip" aria-labelledby="network-path-weight-1-name" min="0.01" step="0.01" type="number" :value="1"
 ui ~ #network-path-weight-rows>div[1]>button[0]: button aria-describedby="network-path-weight-2-tip" aria-expanded="false" aria-label="Help: Path 2 to pass-through 2" class="param-hint-trigger" style="position-anchor: --network-path-weight-2-tip;" type="button" → button aria-describedby="network-path-weight-2-tip" aria-expanded="false" aria-label="Help: Path 2 to pass-through 1" class="param-hint-trigger" style="position-anchor: --network-path-weight-2-tip;" type="button"
 ui ~ #network-path-weight-2-name: span class="network-path-weight-name" data-tip-desc="network-path-weight-2-tip" data-tip="How strongly dots leaving this node prefer this path, shown as the share of them that take it. Arriving dots avoid turning straight back when another path is available" style="anchor-name: --network-path-weight-2-tip;" :text="Path 2 to pass-through 2" → span class="network-path-weight-name" data-tip-desc="network-path-weight-2-tip" data-tip="How strongly dots leaving this node prefer this path, shown as the share of them that take it. Arriving dots avoid turning straight back when another path is available" style="anchor-name: --network-path-weight-2-tip;" :text="Path 2 to pass-through 1"
@@ -261,7 +265,7 @@ ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="mo
 ui ~ #node-scope: div class="scope-group" → div (not shown)
 ui + #toast-container>div[1]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
 ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
-ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 40 inside, 3b802e9b)
+ui - #node-scope>div[0]: div class="settings-section expanded" data-section="node" (and 41 inside, 5d491eea)
 ui - #network-node-area-card: div (not shown)
 settled:
   emit animation:durationChange 28307.894043
