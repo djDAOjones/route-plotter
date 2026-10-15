@@ -18,6 +18,40 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-15 — CROWD-08 — Sol High implements D–G with consolidated publication
+
+**Decision:** On the owner's word, GPT-6.1 Sol High implements the remaining
+CROWD-08 parts, and their releases are consolidated while tests and independent
+Astra Extra High reviews remain required.
+
+**Rationale:** The owner, verbatim: “at a timely point, switch the route plotter
+CRM task to Sol High and consolidate the releases to speed it up, while keeping
+the tests and independent reviews.” This instruction was verified in his human
+message in the coordinating chat and relayed with the implementing task's
+model/effort override. The running Part D gate was preserved through its
+successful exit: 158 files, 3770 passing tests and two existing todos, with
+shell/build/check passing. The switch takes its checkpoint there.
+
+The lead's concrete plan is independently reviewed source parts D, E, F and G,
+merged in that order, followed by one combined deployment and one release-record
+PR where feasible. This replaces GATELESS-1 condition 7's release after every
+shipping merge for these remaining parts only. Earlier release evidence and
+owner checks stand: v3.3.719's promise is not completion, v3.3.720 alone was
+waived, and v3.3.721's saved-file question is still pending. No feature or
+required verification is dropped. Fresh read-only reviewers remain
+`gpt-6-astra` at `xhigh`, round after round until approval; the implementing
+session never approves itself. Source tests, regression and browser/export
+checks, exact-head CI and final integration verification remain required.
+Focused checks run early; evidence is reused only while the code it checked
+is unchanged. The final combined runtime receives the full gate and release
+verification. The deadline and A–E priority remain PLAN-4's; changing F/G scope
+still requires the owner's word. House conventions: record the authority and
+its narrow replacement without rewriting historical decisions.
+
+**Supersedes:** 2026-10-05 — GATELESS-1 — The run goes gateless: each merge lands and ships as it goes, with Codex reviewing
+
+**Deferred:** none
+
 ## 2026-10-15 — CROWD-08 — Part D: relative Entry weights preserve equal choices
 
 **Decision:** Explicit Entries gain relative weights through the Node card and
@@ -589,16 +623,6 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Decision:** DEF-45 lands (PR #70): the live region reads announcements in turn, each for 2 s, so a recovery warning is never replaced or pushed out; a must-hear message already waiting merges into the waiting copy, so at most three routine messages and one of each must-hear text wait.
 
 **Rationale:** Codex review r2 found the queue unbounded (twelve Examples loads left six warnings and 20 s of stale feedback) and two protection mutants surviving; coalescing now leaves one warning and clears the region within 10 s of the last load, and Y1, Y3 and advisories Y2, Y5 are killed. A polite message can still wait while assertive ones keep arriving (stated in the code). keyTable and areaDrawTarget read the region straight after an action; their setups now let the queue play out first, their expected text unchanged; elementIds drops main.js's second announcer lookup. No real screen reader was tried. Digest rule applied: Nielsen → 1, visibility of system status; UI-STANDARDS gains one short announce rule (within its budget). DEF-50 and DEF-67 now wait only on DEF-28.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-05 — TST-08 — The mixin composition is guarded from main.js itself
-
-**Decision:** TST-08 lands (PR #73): `tests/mixins.test.js` parses `src/` and holds the composition to one `Object.assign` of the listed mixins, no change to a mixin, no name hidden, and every call on the app by name resolving; a shape it cannot follow is refused with its line.
-
-**Rationale:** Codex review r2 found 13 probes passing all 30 guards and r3 three more and a false positive; every evasion is refused now and pinned as an in-memory fixture, a stored callback's bound copy is accepted (42 tests), and real `src/` passes. The text prefilter is gone; a mixin exported under another name, `arguments`, a reassigned helper, `.bind` on anything but a function, reflective members (`valueOf`, `__defineGetter__`, `constructor`) writes to `Object`, and any write to a `bind`, `call` or `apply` property are refused; a helper takes the app only through a chain of handoffs that starts from `this`, and `window.window`, `window.self` and `.defaultView` read as the global itself. `window.app` is refused inside `main.js` and `src/app/` bar the one line that publishes it; outside them it stays unchecked, pinned as an exclusion (the run's call). The guards catch accidental breaks and the evasions tried; a function changed in a way the reader cannot follow, such as `Object.assign(f, src)` with a non-literal source on an alias, is not caught, and the test's header says so. Digest rule applied: house conventions → Testing and persistence.
 
 **Supersedes:** none
 
