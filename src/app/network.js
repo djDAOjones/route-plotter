@@ -20,6 +20,7 @@ import { INTERACTION, CROWD_ENTRY_WEIGHT } from '../config/constants.js';
 import { isMac } from '../config/keybindings.js';
 import { getGraphDepartureShares, getGraphEntryShares } from '../utils/graphRouting.js';
 import { entryWeightValue, ENTRY_WEIGHT_HINT } from '../utils/entryWeight.js';
+import { encodeSceneKeyPart } from '../utils/sceneSemantics.js';
 import { nearestOnPolyline } from '../utils/segmentHitTest.js';
 import {
   changedSinceShown, clearFieldError, draftOwner, formatFieldNumber, noteShownValue, setControlReason, setRangeReadout,
@@ -700,7 +701,7 @@ export const networkMixin = {
         const input = document.createElement('input');
         input.type = 'number'; input.required = true;
         input.min = String(CROWD_ENTRY_WEIGHT.MIN); input.max = String(CROWD_ENTRY_WEIGHT.MAX); input.step = 'any';
-        input.id = `network-entry-weight-${encodeURIComponent(node.id)}`;
+        input.id = `network-entry-weight-${encodeSceneKeyPart(node.id)}`;
         const label = document.createElement('label'), name = document.createElement('span');
         label.htmlFor = input.id; name.className = 'network-path-weight-name'; label.appendChild(name);
         const output = document.createElement('output');

@@ -10,6 +10,35 @@ import {
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); localStorage.getItem.mockImplementation(() => null); });
 
 describe('Entry weights through real native authoring surfaces', () => {
+  test('accepted unusual node IDs keep distinct labelled card fields through save and reload', async () => {
+    const app = await setupWeights();
+    const ids = ['bad\uD800id', 'bad\uDC00id', 'bad\uFFFDid', 'bad%uD800id', 'space : % 😀'];
+    selectedLayer(app).graph.fromJSON({
+      nodes: [...ids.map(id => ({ id, type: 'entry', x: 0.2, y: 0.5 })),
+        { id: 'end', type: 'exit', x: 0.8, y: 0.5 }],
+      edges: ids.map((id, index) => ({ id: `path-${index}`, sourceId: id, targetId: 'end' })),
+    });
+    expect(await loadCurrentSnapshot(app, snapshot(app))).toBe(true);
+    selectEntry(app); await settled();
+    expect(() => app.syncNetworkCards()).not.toThrow();
+    const fields = ids.map(id => cardField(selectedLayer(app).graph.getNode(id)));
+    expect(new Set(fields.map(field => field.id)).size).toBe(ids.length);
+    for (let index = 0; index < ids.length; index++) {
+      const node = selectedLayer(app).graph.getNode(ids[index]), field = fields[index];
+      expect(field.labels).toHaveLength(1);
+      expect(field.labels[0].control).toBe(field);
+      await editWeight(app, 'card', index + 2, node);
+    }
+    const scene = snapshot(app).scene;
+    const zip = await app.imageAssetService.exportZip(snapshot(app), app._autosaveBackgroundCache?.dataURL);
+    expect(await app.loadProject(zip)).toBe(true);
+    expect(snapshot(app).scene).toEqual(scene);
+    selectEntry(app); await settled();
+    for (let index = 0; index < ids.length; index++) {
+      expect(cardField(selectedLayer(app).graph.getNode(ids[index])).value).toBe(String(index + 2));
+    }
+  });
+
   test.each(['card', 'outline'])('%s min/mid/MAX/precision: one undo, autosave, ZIP and recovery', async surface => {
     const app = await setupWeights();
     for (const value of [0.01, 2.75, Number.MAX_VALUE, 0.010000000000000002, 1]) {
@@ -136,6 +165,31 @@ describe('Entry weights through real native authoring surfaces', () => {
       expect(weightForm(node).elements.entryWeight.hasAttribute('aria-invalid')).toBe(false);
     }
     expect(history(app)).toBe(before); expect(save).not.toHaveBeenCalled();
+  });
+
+  test('Follow route disables Entry weight with a reason and restores the retained value', async () => {
+    const app = await setupWeights();
+    await editWeight(app, 'card', 3);
+    const stale = { ...weightForm(entry(app)).dataset, action: 'update-entry-weight', entryWeight: '14' };
+    change(weightForm(entry(app)).elements.entryWeight, 14);
+    change(byId('crowd-guide-type'), 'route'); await settled();
+    const form = weightForm(entry(app)), field = form.elements.entryWeight;
+    expect(field.disabled).toBe(true);
+    expect(form.querySelector('[type="submit"]').disabled).toBe(true);
+    expect(field.value).toBe('3');
+    expect(form.textContent).toContain('Entry weight inactive');
+    expect(field.getAttribute('aria-describedby').split(/\s+/).map(id => byId(id)?.textContent).join(' '))
+      .toContain('Choose Custom network in Guide');
+    expect(byId('node-scope').hidden).toBe(true);
+    expect(entry(app).entryWeight).toBe(3);
+    change(byId('crowd-guide-type'), 'graph'); await settled();
+    expect(weightForm(entry(app)).elements.entryWeight.disabled).toBe(false);
+    expect(weightForm(entry(app)).elements.entryWeight.value).toBe('3');
+    expect(weightForm(entry(app)).textContent).toContain('75%');
+    const before = history(app);
+    app.eventBus.emit('scene-outline:command', stale);
+    expect(entry(app).entryWeight).toBe(3);
+    expect(history(app)).toBe(before);
   });
 
   test('an outline command from before a same-id replacement or accepted card edit is refused', async () => {

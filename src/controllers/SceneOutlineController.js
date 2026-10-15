@@ -1278,6 +1278,7 @@ export class SceneOutlineController {
 
   _renderNodeEntryWeight(crowd, node) {
     const key = `${node.key}:entry-weight-apply`;
+    const active = crowd.graph.active && node.type === 'entry';
     const formEl = form('update-entry-weight', {
       layerId: crowd.id, nodeId: node.id, entryWeightContext: node.entryWeightContext,
     }, [labelledInput('entryWeight', 'Entry weight', node.entryWeight ?? CROWD_ENTRY_WEIGHT.DEFAULT, {
@@ -1285,14 +1286,15 @@ export class SceneOutlineController {
       tip: ENTRY_WEIGHT_HINT,
     })], 'Apply entry weight', key, node.entryWeightContext);
     const hint = el('p', { className: 'scene-outline-hint',
-      text: node.type === 'entry' ? ENTRY_WEIGHT_HINT : 'Choose Entry in Type to use this retained weight.',
+      text: !crowd.graph.active ? 'Choose Custom network in Guide to use this retained weight.'
+        : node.type === 'entry' ? ENTRY_WEIGHT_HINT : 'Choose Entry in Type to use this retained weight.',
       attrs: { id: `${OUTLINE_REASON_ID_PREFIX}${++outlineReasonSerial}` } });
     const input = formEl.elements.entryWeight;
     const output = el('output', { className: 'scene-outline-hint',
-      text: node.type === 'entry' ? `${node.entryPercent}% of dots` : 'Entry weight inactive',
+      text: active ? `${node.entryPercent}% of dots` : 'Entry weight inactive',
       attrs: { id: `${hint.id}-share` } });
     input.setAttribute('aria-describedby', `${output.id} ${hint.id}`);
-    input.disabled = node.type !== 'entry';
+    input.disabled = !active;
     formEl.querySelector('[type="submit"]').disabled = input.disabled;
     input.addEventListener('invalid', event => {
       event.preventDefault();

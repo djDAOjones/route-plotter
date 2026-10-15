@@ -41,7 +41,7 @@ export function sceneOutlineKey(kind, ...parts) {
   return [kind, ...parts].map(encodeSceneKeyPart).join(':');
 }
 
-function encodeSceneKeyPart(part) {
+export function encodeSceneKeyPart(part) {
   const value = String(part);
   let encoded = '';
   for (let index = 0; index < value.length; index += 1) {
