@@ -99,6 +99,10 @@
 - [ ] DEF-95 — Network loop sway varies per lap — since 2026-10-11 — (from: CROWD-07, 2026-10-11)
 - [ ] DEF-97 — Busyness fields drop typed values — since 2026-10-12 — (from: CROWD-07, 2026-10-12)
 
+**Medium term — the owner's word of 2026-10-15**
+
+- [ ] AI-01 — AI-editable saves — since 2026-10-15
+
 ## Icebox
 
 - [ ] REV-07 — CI maturity · Engineering maturity — since 2026-10-01

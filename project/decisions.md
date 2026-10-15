@@ -91,6 +91,19 @@ House conventions' truthful verification and behavioural testing rules apply.
 
 **Deferred:** none
 
+## 2026-10-15 — AI-01 — AI-editable saves are filed in Next as a medium-term feature
+
+**Decision:** On the owner's word, AI-01 is filed at the end of Next as a medium-term feature, so that authors can one day describe a scene and have a chat-based AI build or seed a save that the app then opens.
+
+**Rationale:**
+- **The owner's words, 2026-10-15, verbatim:** after asking how feasible it is "to export a save from route plotter, have an AI agent edit a file for you, and upload that back into the app", and hearing the filing session's analysis, he said "add to the backlog as a medium term future feature".
+- **Placement:** a heading of its own at the end of Next, "Medium term — the owner's word of 2026-10-15". The item's order among Next's items, its timing relative to MERGE-01 and its design are the filing session's proposals in the item file (`project/items/AI-01.md`), for a plan to settle with the owner.
+- CROWD-08, REFACTOR-01 and MERGE-01 are unchanged.
+
+**Supersedes:** none
+
+**Deferred:** AI-01
+
 ## 2026-10-15 — CROWD-08 — Part F: shared group journeys and checked edits
 
 **Decision:** Groups share seeded choices, release and pace on a reference
