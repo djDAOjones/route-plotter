@@ -178,6 +178,7 @@ const LOOKED_UP = {
   // CROWD-07 F16: the seed's field, wired for its change and cleared with its error line as a crowd is shown,
   // and the error line, written by the change. PR 5b round 3 (Codex r2 #1): the seed's field twice more, noted
   // as shown for its crowd when it is shown, and read for a draft before the cards show another crowd or none.
+  // CROWD-08: duplicate admission also checks the Pattern seed field for an unsubmitted draft.
   'src/app/crowds.js': words(`
     add-crowd-btn crowd-busyness-add crowd-busyness-add crowd-busyness-add-reason crowd-busyness-graph crowd-busyness-graph
     crowd-busyness-graph
@@ -185,7 +186,7 @@ const LOOKED_UP = {
     crowd-busyness-reset-reason crowd-busyness-reset-reason
     crowd-busyness-summary crowd-dot-color crowd-guide-type crowd-lifecycle crowd-lifecycle-hint
     crowd-no-emitter crowd-pattern-hint crowd-reroll-btn crowd-scope crowd-seed-error crowd-seed-error
-    crowd-seed-value crowd-seed-value crowd-seed-value crowd-seed-value layers-strip
+    crowd-seed-value crowd-seed-value crowd-seed-value crowd-seed-value crowd-seed-value layers-strip
   `),
   'src/app/editorPanel.js': words('area-draw-reason waypoint-scope'),
   // UI-06 B-18: the export items' reason line and its two spans.

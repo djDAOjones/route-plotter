@@ -2229,7 +2229,8 @@ kbd{
 }
 
 .layer-visibility,
-.layer-delete{
+.layer-delete,
+.layer-duplicate{
   flex:none;
   display:inline-flex;
   align-items:center;
@@ -2245,12 +2246,14 @@ kbd{
   line-height:1;
 }
 .layer-visibility:hover,
-.layer-delete:hover{
+.layer-delete:hover,
+.layer-duplicate:hover{
   background:var(--hover-ui);
   color:var(--text-01);
 }
 .layer-visibility:focus-visible,
-.layer-delete:focus-visible{
+.layer-delete:focus-visible,
+.layer-duplicate:focus-visible{
   outline:none;
   box-shadow:
     0 0 0 2px var(--focus-inner),
@@ -4450,3 +4453,17 @@ input[type="number"]:disabled{
   border-color:var(--disabled-02);
   cursor:not-allowed;
 }
+
+.layer-item{ flex-wrap:wrap; }
+.layer-copy-reason{
+  order:1;
+  flex-basis:100%;
+  margin:0;
+  padding:var(--space-2);
+  color:var(--text-01);
+  font-size:var(--text-sm);
+}
+
+/* A full name row keeps the new 44 px action from squeezing names in the desktop sidebar. */
+.layer-item:has(> .layer-duplicate) > .layer-row{ flex-basis:100%; }
+.layer-item:has(> .layer-duplicate) > .layer-visibility{ margin-left:auto; }

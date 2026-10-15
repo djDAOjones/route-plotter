@@ -254,6 +254,13 @@ Other localStorage keys: `routePlotter_splashShown`, `routePlotter_previewTipDis
 
 ### Project save/load (ZIP)
 
+Duplicate crowd in Layers or the scene outline copies a crowd's settings with
+new identities and pattern seeds. It checks the complete candidate before
+changing the scene, selection or history. Finish pending Crowd, Node or Path
+fields, including Entry weights and Busyness, first. Starting a rename cancels
+a duplicate check in progress. A copy that exceeds a project limit or cannot
+preserve its text is refused with a reason and a correction to try; the source stays intact.
+
 Save Project packages all state (including the background image) into a `.zip`
 file. Open Project validates and decodes a detached candidate before replacing
 the current project; any failure leaves the live project, assets, history, and

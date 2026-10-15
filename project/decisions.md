@@ -18,6 +18,85 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-15 — CROWD-08 — Checked crowd copies preserve drafts and ZIP text
+
+**Decision:** Duplication preserves pending edits and refuses prepared ZIP text
+that the browser would split or replace before accepting a checked copy.
+
+**Rationale:** The independent storage preflight found that successful ZIP
+creation alone does not prove text can reopen intact. A browser reproduction
+saved and reopened the original with its emoji, then accepted a copy whose
+extra metadata shifted that emoji across a 16,384-code-unit string boundary;
+the generated ZIP failed the loader's fatal UTF-8 decoder. Node's encoder can
+instead replace the character, so tests compare exact restored text as well.
+
+The independently approved correction checks the exact prepared JSON for
+surrogate pairs crossing every chunk boundary and for raw lone surrogates.
+Well-formed JSON escapes remain safe. A regression pins the reviewed browser
+JSZip distribution, because its chunking and encoder own this assumption.
+Duplication still validates the complete model and actual compressed ZIP, with
+its existing asynchronous ownership guards. A refusal preserves source,
+selection, inspection, history and recovery; a label or image-name correction
+permits retry. The existing native error owners link the recovery instruction.
+Readiness also checks live Node-area, all Entry-weight rows, both Path-weight
+editors and Busyness number drafts before validation and acceptance. Tracking
+compares the last displayed value, preserving unchanged rounded readouts. An inline rename can blur and commit during a strip rebuild
+after validation. Starting one now abandons the current check before creating
+the new input; its old completion cannot redraw, commit or steal focus. An
+already open rename is refused without rebuilding its row, preserving the
+field even when a native action activates without first moving focus. The user
+finishes the name and retries as a separate reversible action.
+
+This applies house persistence and behavioural testing, Nielsen prevention and
+recovery, Carbon helper text, and WCAG checked reversible submissions.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-15 — CROWD-08 — Part E: a checked independent crowd copy
+
+**Decision:** Both native authoring surfaces duplicate a crowd above its source
+in drawing order, with fresh identities and seeds, only after its complete
+candidate passes the loader and actual ZIP exporter.
+
+**Rationale:** The lead follows the independently approved E design under the
+owner's Sol High continuation and consolidated-publication instruction. Above
+means source index plus one in the existing bottom-first scene order; UI-07
+remains parked. The detached canonical copy keeps hidden state, dormant graphs,
+all emitters, areas, shares, curves, precision and waypoint/image references.
+Compact IDs avoid the project's existing identities and remap graph endpoints;
+Emitter.reseed supplies fresh authoring-time seeds with its same-value fallback.
+The bounded copy name avoids splitting a surrogate pair. Redo restores these
+allocated values rather than generating another pattern.
+
+One app-owned operation performs JSON/load and metadata checks, then awaits
+successful real compressed ZIP generation with retained original background
+bytes. Preparation alone cannot prove the completed 50 MiB limit. While checking,
+no model, selection, history or save changes. A project/channel token plus scene,
+source identity, authored revision, canonical model, asset values/references,
+background, selection and undo owner checks reject obsolete completion. Pointer
+transactions and unsubmitted Crowd number/seed drafts are refused before checking
+and again before acceptance. Copied waypoint anchors resolve before the first
+draw; original live layers remain intact. Accepted insertion selects the copy,
+records one reversible change and autosaves once.
+
+Layers and the outline expose native actions, visible loading and persistent
+linked refusal reasons. Outline duplication alone owns asynchronous settlement;
+its per-form/context feedback cannot erase or replace an unrelated form's newer
+error, and ordinary commands retain their synchronous contract. Source replacement
+invalidates old controls; obsolete project work cannot steal selection or focus.
+Carbon native actions/tokens; Nielsen 1/3/4/5/9; WCAG AAA contrast, 44 px targets,
+keyboard, focus and checked reversible submissions; and house app ownership,
+persistence and behavioural tests apply. REV-03/REV-05 retain device and screen
+reader assurance. The source PR owns regression, mutation, golden and browser
+verification. This is a part advance, not whole-item closure or publication;
+F and G precede the one combined release and record.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-15 — CROWD-08 — Sol High implements D–G with consolidated publication
 
 **Decision:** On the owner's word, GPT-6.1 Sol High implements the remaining
@@ -603,26 +682,6 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Decision:** DEF-28 lands (PR #54): a recovery record that cannot be restored is kept under a key of its own, or held where no copy fits, and offered (Download it, Discard) instead of being cleared or overwritten; Discard and Clear All report what they removed and what they could not; under DEF-45's queue every message saying a session could not be restored or removed is must-hear, while Discard's and Clear All's own confirmations stay routine. Phase 1 closes with it: all 14 PLAN-1 items landed; next is UI-04, by the owner's order of 2026-10-05 (after TST-04).
 
 **Rationale:** Codex review r11's three findings are fixed in `unrestoredAutosave.js` and `StorageService.discardKept`: a search settles a disappearance only once every listed key's text is known (F1); Discard keeps and reports a copy it cannot read (F2); a search and a successful Clear All retire start-time keys, so Clear All reports no phantom discard (F3). Nine cases close P1–P3 and the three test gaps; each named mutant passed before and fails now. Merging DEF-45 marked the recovery announcements essential and made Discard's next-offer message must-hear. Digest rules applied: house conventions → Testing and persistence; Nielsen → 9, recognise, diagnose and recover from errors. DEF-50 and DEF-67 no longer wait on it. Recall at the phase close, local, 8/8: (1) trajectory.md → Phase 1: DEF-28, TST-04, DEF-45, TST-08; (2) decisions.md → DEF-45, the queue bounded by coalescing because twelve Examples loads left six warnings; (3) wish-list.md and backlog.md's [!] lines (EX-01, REV-03, REV-05); (4) backlog.md → Next, "After TST-04": UI-04.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-05 — TST-04 — Every sidebar control's effect is pinned, credited by the listeners it runs
-
-**Decision:** TST-04 lands (PR #57): golden transcripts pin what each sidebar control does (control → bus and model), credited by the listeners its gestures actually run, and the suite installs its replacements of `addEventListener`, the `on…` handler properties and its other patches before any application module is evaluated.
-
-**Rationale:** Codex review r8 found a module that binds a listener while it loads escaping the inventory (EARLY-ADD), and a history comparison that ignored waypoints (A1); both mutants pass before and fail now, normal and isolated. The suite has no static application import, and Vitest's record of evaluated modules enforces the order; listeners on the document and window stay outside the inventory. After the main merge the goldens moved, every line traced by bisecting main's nine commits (UI-03, CROWD-05, DEF-06, DEF-42, DEF-77, DEF-44) and then DEF-45's queue, whose waiting messages each golden now records as `announced` lines; UI-03's numbered hint ids are keyed by position. Digest rule applied: house conventions → Testing and persistence. UI-04, CROWD-06, DEF-14, DEF-19, DEF-20, DEF-54, DEF-55 and W4's DEL items no longer wait on it.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-05 — DEF-45 — Announcements are read in turn, and the queue is bounded
-
-**Decision:** DEF-45 lands (PR #70): the live region reads announcements in turn, each for 2 s, so a recovery warning is never replaced or pushed out; a must-hear message already waiting merges into the waiting copy, so at most three routine messages and one of each must-hear text wait.
-
-**Rationale:** Codex review r2 found the queue unbounded (twelve Examples loads left six warnings and 20 s of stale feedback) and two protection mutants surviving; coalescing now leaves one warning and clears the region within 10 s of the last load, and Y1, Y3 and advisories Y2, Y5 are killed. A polite message can still wait while assertive ones keep arriving (stated in the code). keyTable and areaDrawTarget read the region straight after an action; their setups now let the queue play out first, their expected text unchanged; elementIds drops main.js's second announcer lookup. No real screen reader was tried. Digest rule applied: Nielsen → 1, visibility of system status; UI-STANDARDS gains one short announce rule (within its budget). DEF-50 and DEF-67 now wait only on DEF-28.
 
 **Supersedes:** none
 

@@ -104,3 +104,43 @@ Asked when his client needs these features working, the owner picked "Within a w
   merges followed by one combined deployment and release record. Astra xhigh
   reviews and all required source, browser/export, CI and final integration
   checks remain; no scope or outstanding owner saved-file check is waived.
+
+- 2026-10-15 — Part E adds native Duplicate crowd actions in Layers and the
+  outline, preserving canonical settings with fresh IDs and seeds. One owner
+  checks the complete detached loadable project and real compressed ZIP before
+  mutation, guards asynchronous ownership and drafts, resolves copied anchors,
+  selects the adjacent copy and records one undo/save. The Part E decision owns
+  these choices; its source PR owns verification. Publication remains the
+  combined D–G release, and CROWD-08 stays in progress for F/G.
+
+- 2026-10-15 — Part E's first independent code review found that selection cleanup
+  could commit pending Node-area or Path-weight drafts after copy validation.
+  The shared readiness guard now refuses those live drafts both before checking
+  and immediately before acceptance, preserving source, inspection and history.
+  Budget refusals name crowds and give a recovery action. The source PR owns
+  the regression and review evidence; this does not close CROWD-08.
+
+- 2026-10-15 — The independent storage preflight also reproduced a browser ZIP
+  text-boundary failure after duplication. Its new decision owns the prepared
+  text guard and browser-encoder contract; native regressions preserve exact
+  Unicode through refusal, renaming and repeated ZIP reopening. The full source
+  still requires independent code approval before merge and combined release.
+
+- 2026-10-15 — A final Part E audit reproduced an inline rename committing during
+  a pending copy's selection cleanup. Renaming now takes over and abandons that
+  check before its new field exists; an open rename refuses a non-focusing
+  Duplicate action without losing its draft. The correction decision owns this
+  behaviour; the source PR owns native regressions and final review evidence.
+
+- 2026-10-15 — The Part E readiness correction also covers unselected Entry
+  weight rows, junction Path weights and Busyness number drafts. Native tests
+  reproduce the unchecked cleanup before the guard; the correction decision
+  owns this narrow admission change. DEF-97 retains broader Busyness refresh
+  behaviour outside duplication.
+
+- 2026-10-15 — Part E code round 2 approved source `d46f78f` with no blocking
+  findings. Its nonblocking metadata-error advisory is being completed before
+  merge: the refusal names labels, crowds, nodes and paths the author can
+  shorten or remove. Existing native metadata and path-budget cases assert the
+  correction; this later change still needs its own complete gate, committed
+  browser evidence, fresh final-head approval and CI.

@@ -86,7 +86,7 @@ ui ~ #canvas-area: div aria-busy="false" class="canvas-area" → div aria-busy="
 settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
   announced "Browser recovery could not keep 3 images. The background, Court.png: this browser cannot store images for recovery. The path head image, asset-extras-head.png:…[343 chars, 57c18834]
@@ -119,7 +119,7 @@ ui ~ #canvas-area: div aria-busy="false" class="canvas-area" → div aria-busy="
 settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
   announced "Browser recovery could not keep 3 images. The background, Garlic.jpg: this browser cannot store images for recovery. The path head image, asset-extras-head.png…[344 chars, 05b885e7]
@@ -152,7 +152,7 @@ ui ~ #canvas-area: div aria-busy="false" class="canvas-area" → div aria-busy="
 settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
   announced "Browser recovery could not keep 3 images. The background, Nervous_System.jpg: this browser cannot store images for recovery. The path head image, asset-extras-…[352 chars, ecf15f13]
@@ -185,7 +185,7 @@ ui ~ #canvas-area: div aria-busy="false" class="canvas-area" → div aria-busy="
 settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
   announced "Browser recovery could not keep 3 images. The background, PARM_Aerial.jpg: this browser cannot store images for recovery. The path head image, asset-extras-hea…[349 chars, e514be72]
@@ -218,7 +218,7 @@ ui ~ #canvas-area: div aria-busy="false" class="canvas-area" → div aria-busy="
 settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
   announced "Browser recovery could not keep 3 images. The background, Rocketry.jpg: this browser cannot store images for recovery. The path head image, asset-extras-head.p…[346 chars, 12b6a25c]
@@ -251,7 +251,7 @@ ui ~ #canvas-area: div aria-busy="false" class="canvas-area" → div aria-busy="
 settled:
   emit video:resolution-native
   emit animation:durationChange 30973.788202
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
   announced "Browser recovery could not keep 3 images. The background, UoN_map.png: this browser cannot store images for recovery. The path head image, asset-extras-head.pn…[345 chars, ff8e2640]

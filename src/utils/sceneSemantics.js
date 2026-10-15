@@ -219,6 +219,8 @@ export function buildSceneOutlineSnapshot({
   hasBackgroundImage = false,
   nodeAreaDescriptions = null,
   nodeEntryContexts = null,
+  crowdDuplicateContexts = null,
+  crowdDuplicateBusy = false,
 } = {}) {
   const numbering = buildRouteNumbering(waypoints);
   const route = waypoints.map((waypoint, routeIndex) => {
@@ -282,6 +284,8 @@ export function buildSceneOutlineSnapshot({
     displayName: typeof layer.name === 'string' && layer.name.trim()
       ? layer.name
       : `Crowd ${index + 1}`,
+    duplicateContext: crowdDuplicateContexts?.get(layer.id) ?? null,
+    duplicateBusy: crowdDuplicateBusy,
     visible: layer.visible,
     guideType: layer.guideType,
     emitters: layer.getEmitters().map((emitter, emitterIndex) =>
