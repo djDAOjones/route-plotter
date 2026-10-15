@@ -676,7 +676,12 @@ export class SceneOutlineController {
 
   _showCommandError(error = {}) {
     if (!error.formKey || !error.message) return;
-    this._error = { formKey: String(error.formKey), message: String(error.message) };
+    const formKey = String(error.formKey);
+    this._error = {
+      formKey,
+      message: String(error.message),
+      context: this._formForKey(formKey)?.[OUTLINE_DRAFT_CONTEXT] ?? null,
+    };
     this._renderCommandError();
   }
 
@@ -704,6 +709,10 @@ export class SceneOutlineController {
   _renderCommandError() {
     if (!this._error) return;
     const formEl = this._formForKey(this._error.formKey);
+    if (this._error.context !== null && formEl?.[OUTLINE_DRAFT_CONTEXT] !== this._error.context) {
+      this._clearCommandError();
+      return;
+    }
     if (!formEl || formEl.querySelector('.scene-outline-error')) return;
     const errorId = `${OUTLINE_ERROR_ID_PREFIX}${++this._errorSerial}`;
     const error = el('p', {

@@ -192,6 +192,39 @@ describe('Entry weights through real native authoring surfaces', () => {
     expect(history(app)).toBe(before);
   });
 
+  test.each(['card edit', 'Guide change', 'Type change', 'same-id replacement'])(
+    '%s clears an obsolete outline error while unrelated refresh preserves the invalid draft', async transition => {
+      const app = await setupWeights(), node = entry(app);
+      await editWeight(app, 'outline', 0);
+      app._refreshSceneOutline(); await settled();
+      expect(weightForm(node).elements.entryWeight.value).toBe('0');
+      expect(weightForm(node).elements.entryWeight.getAttribute('aria-invalid')).toBe('true');
+      expect(weightForm(node).querySelector('.scene-outline-error').textContent).toContain('Invalid Entry weight');
+      if (transition === 'card edit') await editWeight(app, 'card', 3);
+      else if (transition === 'Guide change') change(byId('crowd-guide-type'), 'route');
+      else if (transition === 'Type change') change(byId('network-node-type'), 'normal');
+      else {
+        selectedLayer(app).graph.fromJSON(selectedLayer(app).graph.toJSON());
+        app.syncNetworkCards(); app._refreshSceneOutline();
+      }
+      await settled();
+      const assertCurrent = () => {
+        const form = weightForm(node), field = form.elements.entryWeight;
+        expect(field.value).toBe(transition === 'card edit' ? '3' : '1');
+        expect(field.hasAttribute('aria-invalid')).toBe(false);
+        expect(form.querySelector('.scene-outline-error')).toBeNull();
+        expect(field.getAttribute('aria-describedby').split(/\s+/).every(id => byId(id))).toBe(true);
+      };
+      if (transition === 'Type change') {
+        expect(weightForm(node)).toBeUndefined();
+        change(byId('network-node-type'), 'entry'); await settled();
+      }
+      assertCurrent();
+      if (transition === 'Guide change') change(byId('crowd-guide-type'), 'graph');
+      await settled(); assertCurrent();
+    }
+  );
+
   test('an outline command from before a same-id replacement or accepted card edit is refused', async () => {
     const app = await setupWeights(), node = entry(app);
     const stale = { ...weightForm(node).dataset, action: 'update-entry-weight', entryWeight: '11' };
