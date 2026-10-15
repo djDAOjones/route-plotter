@@ -104,3 +104,11 @@ Asked when his client needs these features working, the owner picked "Within a w
   merges followed by one combined deployment and release record. Astra xhigh
   reviews and all required source, browser/export, CI and final integration
   checks remain; no scope or outstanding owner saved-file check is waived.
+
+- 2026-10-15 — Part E adds native Duplicate crowd actions in Layers and the
+  outline, preserving canonical settings with fresh IDs and seeds. One owner
+  checks the complete detached loadable project and real compressed ZIP before
+  mutation, guards asynchronous ownership and drafts, resolves copied anchors,
+  selects the adjacent copy and records one undo/save. The Part E decision owns
+  these choices; its source PR owns verification. Publication remains the
+  combined D–G release, and CROWD-08 stays in progress for F/G.

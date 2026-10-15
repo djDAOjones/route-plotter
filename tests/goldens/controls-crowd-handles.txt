@@ -3,7 +3,7 @@
 ## #crowd-busyness-graph · drag its middle handle a quarter of the way along and a third down
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 pointer capture 1 taken by #crowd-busyness-graph
 pointer capture 1 let go by #crowd-busyness-graph
 announced "Busyness handle moved. Undo is available."
@@ -29,7 +29,7 @@ settled:
 ## #crowd-busyness-graph · drag its middle handle past the last
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 pointer capture 1 taken by #crowd-busyness-graph
 pointer capture 1 let go by #crowd-busyness-graph
 announced "Busyness handle moved. Undo is available."
@@ -53,7 +53,7 @@ settled:
 ## #crowd-busyness-graph · drag its middle handle past the first
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 pointer capture 1 taken by #crowd-busyness-graph
 pointer capture 1 let go by #crowd-busyness-graph
 announced "Busyness handle moved. Undo is available."
@@ -81,7 +81,7 @@ settled:
 ## #crowd-busyness-handles>div[1]>label[2]>input[1] · enter 24
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.24
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[2]>input[1]"
@@ -102,7 +102,7 @@ settled:
 ## #crowd-busyness-handles>div[1]>label[2]>input[1] · enter 99999
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 0.99
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[2]>input[1]"
@@ -130,7 +130,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-busyness-handles>div[1]>label[8]>select[1] · choose "step"
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].transition: "gradual" → "step"
 app ~ focus: "body" → "#crowd-busyness-handles>div[1]>label[8]>select[1]"
@@ -149,7 +149,7 @@ settled:
 ## #crowd-busyness-handles>div[1]>button[10] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1
@@ -205,7 +205,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #crowd-busyness-handles>div[2]>label[5]>input[1] · enter 24
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness pattern updated. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[2].value: 1 → 0.24
 app ~ focus: "body" → "#crowd-busyness-handles>div[2]>label[5]>input[1]"
@@ -236,7 +236,7 @@ ui ~ #crowd-busyness-handles>div[2]>label[5]>input[1]: input aria-describedby="{
 ## #crowd-busyness-reset · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-busyness-envelope", layerId: "ex-uon-crowd", emitterId: "ex-uon-emitter"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Busyness reset to even. Undo is available."
 model ~ scene.flowLayers[0].emitters[0].busynessEnvelope[1].time: 0.5 → 1
 model - scene.flowLayers[0].emitters[0].busynessEnvelope[2].time: 1

@@ -278,7 +278,11 @@ export const sceneOutlineMixin = {
         nodeAreaDescriptions.set(JSON.stringify([layer.id, node.id]), getNodeAreaDescription(this, layer, node));
       }
     }
+    const crowdDuplicateContexts = new Map(this.scene.getFlowLayers().map(layer =>
+      [layer.id, this._crowdDuplicateContext(layer)]));
     const snapshot = buildSceneOutlineSnapshot({
+      crowdDuplicateContexts,
+      crowdDuplicateBusy: this._crowdDuplicateJobCurrent(),
       nodeAreaDescriptions,
       nodeEntryContexts,
       waypoints: this.waypoints,
@@ -322,6 +326,7 @@ export const sceneOutlineMixin = {
         case 'add-waypoint': result = this._outlineAddWaypoint(command); break;
         case 'update-waypoint': result = this._outlineUpdateWaypoint(command); break;
         case 'delete-waypoint': result = this._outlineDeleteWaypoint(command); break;
+        case 'duplicate-crowd': return this._outlineDuplicateCrowd(command);
         case 'add-crowd': result = this._outlineAddCrowd(); break;
         case 'update-crowd': result = this._outlineUpdateCrowd(command); break;
         case 'delete-crowd': result = this._outlineDeleteCrowd(command); break;
@@ -360,6 +365,24 @@ export const sceneOutlineMixin = {
         this.announce(message, 'assertive');
         this._queueSceneOutlineRefresh();
       }
+    }
+  },
+
+  async _outlineDuplicateCrowd(command) {
+    const source = this.scene.getFlowLayer(command.layerId);
+    if (!source || command.duplicateContext !== this._crowdDuplicateContext(source)) return;
+    const generation = this._projectGeneration;
+    const feedback = { scoped: true, formKey: command.outlineFormKey,
+      feedbackToken: command.feedbackToken, context: command.duplicateContext };
+    try {
+      const copy = await this.duplicateCrowd(source);
+      if (!copy) return;
+      this.eventBus.emit('scene-outline:accepted', feedback);
+      this._queueSceneOutlineRefresh(`${sceneOutlineKey('crowd', copy.id)}:select`);
+    } catch (error) {
+      if (this._projectGeneration !== generation || this.scene.getFlowLayer(source.id) !== source) return;
+      this.eventBus.emit('scene-outline:error', { ...feedback, message: error.message });
+      this.announce(error.message, 'assertive');
     }
   },
 

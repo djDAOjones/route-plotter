@@ -4,6 +4,7 @@ import { EventBus } from '../src/core/EventBus.js';
 import { Scene } from '../src/models/Scene.js';
 import { Waypoint } from '../src/models/Waypoint.js';
 import { NetworkEditService } from '../src/services/NetworkEditService.js';
+import { crowdsMixin } from '../src/app/crowds.js';
 import { sceneOutlineMixin } from '../src/app/sceneOutline.js';
 import { networkMixin } from '../src/app/network.js';
 import { buildSceneOutlineSnapshot, sceneOutlineKey } from '../src/utils/sceneSemantics.js';
@@ -57,6 +58,8 @@ function makeApp() {
   Object.assign(app, sceneOutlineMixin);
   // The adapter's plain snapshot carries the network owner's transient draft token.
   app._entryWeightContext = networkMixin._entryWeightContext;
+  app._crowdDuplicateContext = crowdsMixin._crowdDuplicateContext;
+  app._crowdDuplicateJobCurrent = crowdsMixin._crowdDuplicateJobCurrent;
 
   eventBus.on('network:changed', ({ commit } = {}) => {
     if (commit) {

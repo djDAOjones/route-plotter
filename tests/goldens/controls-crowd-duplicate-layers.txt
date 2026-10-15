@@ -1,0 +1,12 @@
+surface layers
+native click button
+loading disabled=true busy=true
+before admission unchanged=true saves=0
+order Below | Stand | Stand copy | Above
+selected Stand copy; original retained=true
+fresh seeds true,true
+saved 1; semantic crowd-duplicated
+announced Checking Stand before duplicating | Stand copy duplicated
+focus Layers select
+Undo crowds=3
+Redo unchanged=true

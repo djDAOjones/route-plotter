@@ -384,6 +384,9 @@ export class SceneOutlineController {
     this._revealing = false;
     this._error = null;
     this._errorSerial = 0;
+    this._duplicateFeedback = new Map();
+    this._duplicateErrors = new Map();
+    this._duplicateFeedbackSerial = 0;
     this._drafts = new Map();
 
     this._unsubscribes = [
@@ -519,6 +522,7 @@ export class SceneOutlineController {
       syncNodeArea(formEl);
     }
     this._renderCommandError();
+    this._renderDuplicateErrors();
 
     const requested = disclosureFocus || snapshot.focusKey || priorFocus;
     if (requested) {
@@ -649,7 +653,8 @@ export class SceneOutlineController {
 
   _clearCommandError() {
     this._error = null;
-    for (const error of this.container.querySelectorAll('.scene-outline-error')) error.remove();
+    const errors = this.container.querySelectorAll('.scene-outline-error:not([data-outline-scoped-error])');
+    for (const error of errors) error.remove();
     for (const field of this.container.querySelectorAll('[aria-invalid="true"]')) {
       field.removeAttribute('aria-invalid');
       // Only the error's token goes: the field's hint keeps describing it.
@@ -667,6 +672,8 @@ export class SceneOutlineController {
 
   _resetDrafts() {
     this._drafts.clear();
+    for (const key of this._duplicateErrors.keys()) this._clearDuplicateError(key);
+    this._duplicateFeedback.clear();
     for (const formEl of this.container.querySelectorAll('form[data-outline-form-key]')) {
       formEl.reset();
       this._clearEdits(formEl);
@@ -675,6 +682,17 @@ export class SceneOutlineController {
   }
 
   _showCommandError(error = {}) {
+    if (error.scoped) {
+      if (!this._currentDuplicateFeedback(error)) return;
+      this._clearDuplicateError(error.formKey);
+      this._duplicateErrors.set(error.formKey, { message: error.message, context: error.context });
+      this._renderDuplicateErrors();
+      const active = document.activeElement;
+      if (!active || active === document.body || !active.isConnected) {
+        this._formForKey(error.formKey)?.querySelector('[type="submit"]')?.focus();
+      }
+      return;
+    }
     if (!error.formKey || !error.message) return;
     const formKey = String(error.formKey);
     this._error = {
@@ -685,7 +703,14 @@ export class SceneOutlineController {
     this._renderCommandError();
   }
 
-  _acceptCommand({ formKey } = {}) {
+  _acceptCommand(result = {}) {
+    const { formKey } = result;
+    if (result.scoped) {
+      if (result.clearContext) {
+        if (this._duplicateErrors.get(formKey)?.context === result.clearContext) this._clearDuplicateError(formKey);
+      } else if (this._currentDuplicateFeedback(result)) this._clearDuplicateError(formKey);
+      return;
+    }
     if (!formKey) return;
     const normalizedKey = String(formKey);
     const formEl = this._formForKey(normalizedKey);
@@ -704,6 +729,41 @@ export class SceneOutlineController {
     }
     this._drafts.delete(normalizedKey);
     this._clearCommandError();
+  }
+
+  _currentDuplicateFeedback(result) {
+    const pending = this._duplicateFeedback.get(result.formKey);
+    return Boolean(pending) && pending.token === result.feedbackToken && pending.context === result.context &&
+      this._snapshot?.crowds.some(crowd => crowd.duplicateContext === result.context);
+  }
+
+  _clearDuplicateError(key) {
+    const formEl = this._formForKey(key);
+    const error = formEl?.querySelector('[data-outline-scoped-error]');
+    if (error) {
+      const submit = formEl.querySelector('[type="submit"]');
+      const kept = (submit.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== error.id);
+      if (kept.length) submit.setAttribute('aria-describedby', kept.join(' '));
+      else submit.removeAttribute('aria-describedby');
+      error.remove();
+    }
+    this._duplicateErrors.delete(key);
+  }
+
+  _renderDuplicateErrors() {
+    for (const [key, stored] of this._duplicateErrors) {
+      if (!this._snapshot?.crowds.some(crowd => crowd.duplicateContext === stored.context)) {
+        this._clearDuplicateError(key); continue;
+      }
+      const formEl = this._formForKey(key);
+      if (!formEl || formEl[OUTLINE_DRAFT_CONTEXT] !== stored.context ||
+          formEl.querySelector('[data-outline-scoped-error]')) continue;
+      const id = `${OUTLINE_ERROR_ID_PREFIX}${++this._errorSerial}`;
+      formEl.appendChild(el('p', { className: 'scene-outline-error', text: stored.message,
+        attrs: { id, 'data-outline-scoped-error': 'true' } }));
+      const submit = formEl.querySelector('[type="submit"]');
+      submit.setAttribute('aria-describedby', [id, submit.getAttribute('aria-describedby')].filter(Boolean).join(' '));
+    }
   }
 
   _renderCommandError() {
@@ -1002,6 +1062,14 @@ export class SceneOutlineController {
       })
     );
     content.appendChild(actions);
+    const duplicate = form('duplicate-crowd', { layerId: crowd.id, duplicateContext: crowd.duplicateContext },
+      [], 'Duplicate crowd', `${crowd.key}:duplicate`, crowd.duplicateContext);
+    const submit = duplicate.querySelector('[type="submit"]');
+    submit.disabled = crowd.duplicateBusy;
+    submit.setAttribute('aria-busy', String(crowd.duplicateBusy));
+    submit.setAttribute('data-tip', 'Copy this crowd above it in drawing order, with a new pattern.');
+    if (crowd.duplicateBusy) duplicate.appendChild(description('Checking the project before duplicating…'));
+    content.appendChild(duplicate);
     content.appendChild(form('update-crowd', { layerId: crowd.id }, [
       labelledInput('name', 'Crowd name', crowd.name, {
         type: 'text', required: false, inputMode: null, maxLength: 200,
@@ -1455,7 +1523,14 @@ export class SceneOutlineController {
     if (!formEl || !this.container.contains(formEl)) return;
     event.preventDefault();
     if (!formEl.reportValidity()) return;
-    this._clearCommandError();
+    let feedbackToken;
+    if (formEl.dataset.outlineAction === 'duplicate-crowd') {
+      if (formEl.querySelector('[type="submit"]').disabled) return;
+      this._clearDuplicateError(formEl.dataset.outlineFormKey);
+      feedbackToken = ++this._duplicateFeedbackSerial;
+      this._duplicateFeedback.set(formEl.dataset.outlineFormKey,
+        { token: feedbackToken, context: formEl[OUTLINE_DRAFT_CONTEXT] });
+    } else this._clearCommandError();
     const values = Object.fromEntries(new FormData(formEl).entries());
     const outlineOriginalValues = {};
     for (const field of formEl.elements) {
@@ -1472,6 +1547,7 @@ export class SceneOutlineController {
       ...formEl.dataset,
       ...values,
       outlineOriginalValues,
+      feedbackToken,
     });
   }
 

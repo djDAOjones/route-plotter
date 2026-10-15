@@ -17,7 +17,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #network-node-type · choose "normal"
 emit network:changed {commit: true}
 emit network:node-selected {node: {id: "gn_trace_ex-uon-1", x: 0.16, y: 0.63, type: "normal", label: "Main entrance", anchorWaypointId: "ex-uon-1", _resolvedX: 0.16, _resolvedY: 0.63}}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].graph.nodes[0].type: "entry" → "normal"
 app ~ focus: "body" → "#network-node-type"
@@ -57,7 +57,7 @@ settled:
 ## #network-node-type · choose "exit"
 emit network:changed {commit: true}
 emit network:node-selected {node: {id: "gn_trace_ex-uon-1", x: 0.16, y: 0.63, type: "exit", label: "Main entrance", anchorWaypointId: "ex-uon-1", _resolvedX: 0.16, _resolvedY: 0.63}}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].graph.nodes[0].type: "entry" → "exit"
 app ~ focus: "body" → "#network-node-type"
@@ -93,7 +93,7 @@ settled:
 
 ## #network-entry-weight-input-gn_trace_ex-uon-1 · enter 24
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 announced "Unsaved changes"
 model + scene.flowLayers[0].graph.nodes[0].entryWeight: 24
 app ~ focus: "body" → "#network-entry-weight-input-gn_trace_ex-uon-1"
@@ -112,7 +112,7 @@ settled:
 
 ## #network-entry-weight-input-gn_trace_ex-uon-1 · enter 99999
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 announced "Unsaved changes"
 model + scene.flowLayers[0].graph.nodes[0].entryWeight: 99999
 app ~ focus: "body" → "#network-entry-weight-input-gn_trace_ex-uon-1"
@@ -133,7 +133,7 @@ settled:
 emit network:node-deselected
 emit network:changed {commit: true}
 emit ui:toast {message: "Deleted node — press Ctrl+Z to undo"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].graph.nodes[0].id: "gn_trace_ex-uon-1" → "gn_trace_ex-uon-2"
 model ~ scene.flowLayers[0].graph.nodes[0].x: 0.16 → 0.4
@@ -229,7 +229,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #network-node-area-shape · choose "rectangle"
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 announced "Unsaved changes"
 model + scene.flowLayers[0].graph.nodes[0].area.shape: "rectangle"
 model + scene.flowLayers[0].graph.nodes[0].area.width: 0.1
@@ -279,7 +279,7 @@ settled:
 
 ## #network-node-area-shape · choose "ellipse"
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{9 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 announced "Unsaved changes"
 model + scene.flowLayers[0].graph.nodes[0].area.shape: "ellipse"
 model + scene.flowLayers[0].graph.nodes[0].area.width: 0.1
