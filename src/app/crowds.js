@@ -1199,7 +1199,13 @@ export const crowdsMixin = {
       throw new Error(`${error.message}. Remove unused crowds, nodes or paths, or shorten labels, then try again.`);
     }
     const background = getRetainedBackgroundDataURL(this, 'duplicating this crowd');
-    const prepared = this.imageAssetService.prepareArchive(project, background);
+    let prepared;
+    try {
+      prepared = this.imageAssetService.prepareArchive(project, background);
+    } catch (error) {
+      if (error.message !== 'Project metadata exceeds the 2 MB limit') throw error;
+      throw new Error(`${error.message}. Shorten labels or remove unused crowds, nodes or paths, then try again.`);
+    }
     assertArchiveTextSafe(prepared.projectJSON);
     const job = {
       source, scene: this.scene, project, background, copy: staged.scene.getFlowLayer(copy.id), index,

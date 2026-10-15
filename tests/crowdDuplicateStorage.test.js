@@ -151,6 +151,12 @@ test.each(['layers', 'outline'].flatMap(surface => ['tree', 'metadata'].flatMap(
     } else {
       expect(snapshot(app)).toEqual(before); expect(app.undoService.createSnapshot()).toEqual(undo);
       expect(save).not.toHaveBeenCalled();
+      if (budget === 'metadata') {
+        const container = surface === 'layers' ? layerButton(app, app.selectedCrowd).closest('li')
+          : outlineForm(app.selectedCrowd);
+        expect(container.textContent).toContain('Project metadata exceeds the 2 MB limit');
+        expect(container.textContent).toContain('Shorten labels or remove unused crowds, nodes or paths');
+      }
     }
   }, 60000
 );
@@ -179,4 +185,6 @@ test.each(['layers', 'outline'])('%s refuses paths at the earlier archive cap fr
     await pressCopy(app, surface, selected);
     expect(snapshot(app)).toEqual(before); expect(app.undoService.createSnapshot()).toEqual(undo);
     expect(app.selectedCrowd).toBe(selected); expect(save).not.toHaveBeenCalled(); expect(flush).not.toHaveBeenCalled();
+    const container = surface === 'layers' ? layerButton(app, selected).closest('li') : outlineForm(selected);
+    expect(container.textContent).toContain('Shorten labels or remove unused crowds, nodes or paths');
   }, 30000);

@@ -137,3 +137,10 @@ Asked when his client needs these features working, the owner picked "Within a w
   reproduce the unchecked cleanup before the guard; the correction decision
   owns this narrow admission change. DEF-97 retains broader Busyness refresh
   behaviour outside duplication.
+
+- 2026-10-15 — Part E code round 2 approved source `d46f78f` with no blocking
+  findings. Its nonblocking metadata-error advisory is being completed before
+  merge: the refusal names labels, crowds, nodes and paths the author can
+  shorten or remove. Existing native metadata and path-budget cases assert the
+  correction; this later change still needs its own complete gate, committed
+  browser evidence, fresh final-head approval and CI.
