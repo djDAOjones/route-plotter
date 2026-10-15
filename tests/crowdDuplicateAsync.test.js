@@ -90,3 +90,58 @@ test('playback position alone does not invalidate admission and paused settlemen
   expect(app.scene.getFlowLayers()).toHaveLength(4);
   expect(app.animationEngine.state.isPlaying).toBe(false);
 });
+
+const networkDraftCases = ['width', 'height', 'turn', 'path-weight', 'entry-weight', 'node-path-weight'].flatMap(kind =>
+  ['layers', 'outline'].flatMap(surface => [false, true].flatMap(active =>
+    ['before', 'during'].flatMap(when => ['30', ''].map(value => [kind, surface, active, when, value])))));
+
+test.each(networkDraftCases)(
+  '%s draft %s active=%s entered %s (%s) refuses without source/history changes and retries',
+  async (kind, surface, active, when, value) => {
+    const app = await setupCopy(), source = app.selectedCrowd, service = app.networkEditService;
+    if (kind === 'entry-weight') {
+      source.graph.addNode({ id: 'other-entry', type: 'entry', x: 0.2, y: 0.8, entryWeight: 7 });
+    }
+    if (kind === 'node-path-weight') {
+      source.graph.addNode({ id: 'exit-two', type: 'exit', x: 0.8, y: 0.8 });
+      source.graph.addEdge({ id: 'second-street', sourceId: 'entry', targetId: 'exit-two', direction: 'one-way' });
+    }
+    if (active) app.enterNetworkEditMode();
+    else service.bindForInspection(source);
+    if (kind === 'path-weight') service.selectEdge(source.graph.getEdge('street'));
+    else service.selectNode(source.graph.getNode('entry'));
+    await settled(); app._flushPendingUndo(); app.storageService.flushAutoSave();
+    const field = kind === 'node-path-weight' ? document.querySelector('#network-path-weight-rows input')
+      : kind === 'entry-weight' ? document.querySelector('#network-entry-weight-rows .network-entry-weight-row:last-child input')
+      : document.getElementById(kind === 'path-weight' ? 'network-edge-weight-field' : `network-node-area-${kind}`);
+    expect(field).toBeTruthy(); expect(field.disabled).toBe(false);
+    const shown = field.value, original = source.toJSON();
+    const hold = when === 'during' ? deferred() : null;
+    const exporter = hold ? vi.spyOn(app.imageAssetService, 'exportZip').mockReturnValue(hold.promise)
+      : vi.spyOn(app.imageAssetService, 'exportZip');
+    let pending;
+    if (hold) {
+      pending = pressCopy(app, surface, source); await Promise.resolve();
+      expect(exporter).toHaveBeenCalledOnce();
+    }
+    field.value = value; field.focus();
+    const before = capture(app), selection = { ...service.selection }, mode = service.active;
+    const save = vi.spyOn(app, 'autoSave'), undo = vi.spyOn(app, 'saveUndoState');
+    const flush = vi.spyOn(app, '_flushPendingUndo');
+    if (hold) { hold.resolve(new Blob()); await pending; }
+    else await pressCopy(app, surface, source);
+    expect(capture(app)).toEqual(before); expect(source.toJSON()).toEqual(original);
+    expect(service.selection).toEqual(selection); expect(service.layer).toBe(source); expect(service.active).toBe(mode);
+    expect(field.value).toBe(value); expect(save).not.toHaveBeenCalled(); expect(undo).not.toHaveBeenCalled();
+    expect(flush).not.toHaveBeenCalled();
+    if (!hold) expect(exporter).not.toHaveBeenCalled();
+    const container = surface === 'layers' ? layerButton(app, source).closest('li') : outlineForm(source);
+    expect(container.textContent).toContain('Finish editing the current network field');
+    exporter.mockRestore(); field.value = shown;
+    await pressCopy(app, surface, source);
+    expect(source.toJSON()).toEqual(original); expect(app.scene.getFlowLayers()).toHaveLength(4);
+    expect(save).toHaveBeenCalledOnce(); expect(undo).toHaveBeenCalledOnce(); expect(flush).toHaveBeenCalledOnce();
+    expect(app.selectedCrowd.graph.getNodes()[0].area).toEqual(source.graph.getNodes()[0].area);
+    expect(app.selectedCrowd.graph.getEdges()[0].weight).toBe(source.graph.getEdges()[0].weight);
+    expect(app.selectedCrowd.graph.getNodes()[0].entryWeight).toBe(source.graph.getNodes()[0].entryWeight);
+  });

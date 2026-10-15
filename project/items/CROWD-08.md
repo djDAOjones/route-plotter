@@ -112,3 +112,28 @@ Asked when his client needs these features working, the owner picked "Within a w
   selects the adjacent copy and records one undo/save. The Part E decision owns
   these choices; its source PR owns verification. Publication remains the
   combined D–G release, and CROWD-08 stays in progress for F/G.
+
+- 2026-10-15 — Part E's first independent code review found that selection cleanup
+  could commit pending Node-area or Path-weight drafts after copy validation.
+  The shared readiness guard now refuses those live drafts both before checking
+  and immediately before acceptance, preserving source, inspection and history.
+  Budget refusals name crowds and give a recovery action. The source PR owns
+  the regression and review evidence; this does not close CROWD-08.
+
+- 2026-10-15 — The independent storage preflight also reproduced a browser ZIP
+  text-boundary failure after duplication. Its new decision owns the prepared
+  text guard and browser-encoder contract; native regressions preserve exact
+  Unicode through refusal, renaming and repeated ZIP reopening. The full source
+  still requires independent code approval before merge and combined release.
+
+- 2026-10-15 — A final Part E audit reproduced an inline rename committing during
+  a pending copy's selection cleanup. Renaming now takes over and abandons that
+  check before its new field exists; an open rename refuses a non-focusing
+  Duplicate action without losing its draft. The correction decision owns this
+  behaviour; the source PR owns native regressions and final review evidence.
+
+- 2026-10-15 — The Part E readiness correction also covers unselected Entry
+  weight rows, junction Path weights and Busyness number drafts. Native tests
+  reproduce the unchecked cleanup before the guard; the correction decision
+  owns this narrow admission change. DEF-97 retains broader Busyness refresh
+  behaviour outside duplication.

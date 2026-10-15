@@ -18,6 +18,42 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+## 2026-10-15 — CROWD-08 — Checked crowd copies preserve drafts and ZIP text
+
+**Decision:** Duplication preserves pending edits and refuses prepared ZIP text
+that the browser would split or replace before accepting a checked copy.
+
+**Rationale:** The independent storage preflight found that successful ZIP
+creation alone does not prove text can reopen intact. A browser reproduction
+saved and reopened the original with its emoji, then accepted a copy whose
+extra metadata shifted that emoji across a 16,384-code-unit string boundary;
+the generated ZIP failed the loader's fatal UTF-8 decoder. Node's encoder can
+instead replace the character, so tests compare exact restored text as well.
+
+The independently approved correction checks the exact prepared JSON for
+surrogate pairs crossing every chunk boundary and for raw lone surrogates.
+Well-formed JSON escapes remain safe. A regression pins the reviewed browser
+JSZip distribution, because its chunking and encoder own this assumption.
+Duplication still validates the complete model and actual compressed ZIP, with
+its existing asynchronous ownership guards. A refusal preserves source,
+selection, inspection, history and recovery; a label or image-name correction
+permits retry. The existing native error owners link the recovery instruction.
+Readiness also checks live Node-area, all Entry-weight rows, both Path-weight
+editors and Busyness number drafts before validation and acceptance. Tracking
+compares the last displayed value, preserving unchanged rounded readouts. An inline rename can blur and commit during a strip rebuild
+after validation. Starting one now abandons the current check before creating
+the new input; its old completion cannot redraw, commit or steal focus. An
+already open rename is refused without rebuilding its row, preserving the
+field even when a native action activates without first moving focus. The user
+finishes the name and retries as a separate reversible action.
+
+This applies house persistence and behavioural testing, Nielsen prevention and
+recovery, Carbon helper text, and WCAG checked reversible submissions.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-15 — CROWD-08 — Part E: a checked independent crowd copy
 
 **Decision:** Both native authoring surfaces duplicate a crowd above its source
@@ -646,16 +682,6 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Decision:** DEF-28 lands (PR #54): a recovery record that cannot be restored is kept under a key of its own, or held where no copy fits, and offered (Download it, Discard) instead of being cleared or overwritten; Discard and Clear All report what they removed and what they could not; under DEF-45's queue every message saying a session could not be restored or removed is must-hear, while Discard's and Clear All's own confirmations stay routine. Phase 1 closes with it: all 14 PLAN-1 items landed; next is UI-04, by the owner's order of 2026-10-05 (after TST-04).
 
 **Rationale:** Codex review r11's three findings are fixed in `unrestoredAutosave.js` and `StorageService.discardKept`: a search settles a disappearance only once every listed key's text is known (F1); Discard keeps and reports a copy it cannot read (F2); a search and a successful Clear All retire start-time keys, so Clear All reports no phantom discard (F3). Nine cases close P1–P3 and the three test gaps; each named mutant passed before and fails now. Merging DEF-45 marked the recovery announcements essential and made Discard's next-offer message must-hear. Digest rules applied: house conventions → Testing and persistence; Nielsen → 9, recognise, diagnose and recover from errors. DEF-50 and DEF-67 no longer wait on it. Recall at the phase close, local, 8/8: (1) trajectory.md → Phase 1: DEF-28, TST-04, DEF-45, TST-08; (2) decisions.md → DEF-45, the queue bounded by coalescing because twelve Examples loads left six warnings; (3) wish-list.md and backlog.md's [!] lines (EX-01, REV-03, REV-05); (4) backlog.md → Next, "After TST-04": UI-04.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-05 — TST-04 — Every sidebar control's effect is pinned, credited by the listeners it runs
-
-**Decision:** TST-04 lands (PR #57): golden transcripts pin what each sidebar control does (control → bus and model), credited by the listeners its gestures actually run, and the suite installs its replacements of `addEventListener`, the `on…` handler properties and its other patches before any application module is evaluated.
-
-**Rationale:** Codex review r8 found a module that binds a listener while it loads escaping the inventory (EARLY-ADD), and a history comparison that ignored waypoints (A1); both mutants pass before and fail now, normal and isolated. The suite has no static application import, and Vitest's record of evaluated modules enforces the order; listeners on the document and window stay outside the inventory. After the main merge the goldens moved, every line traced by bisecting main's nine commits (UI-03, CROWD-05, DEF-06, DEF-42, DEF-77, DEF-44) and then DEF-45's queue, whose waiting messages each golden now records as `announced` lines; UI-03's numbered hint ids are keyed by position. Digest rule applied: house conventions → Testing and persistence. UI-04, CROWD-06, DEF-14, DEF-19, DEF-20, DEF-54, DEF-55 and W4's DEL items no longer wait on it.
 
 **Supersedes:** none
 

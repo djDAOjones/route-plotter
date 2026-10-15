@@ -32,6 +32,7 @@ import { DOT_BASE_RADIUS_PX } from '../services/DotRenderer.js';
 import { stageProjectModel, getRetainedBackgroundDataURL } from './persistence.js';
 import { sceneOutlineKey } from '../utils/sceneSemantics.js';
 import { createCrowdCopy } from '../utils/crowdCopy.js';
+import { assertArchiveTextSafe } from '../utils/archiveText.js';
 import { resolveGraphAnchors } from '../utils/routeAnchors.js';
 import { beginAsyncProjectOperation, isAsyncProjectOperationCurrent } from './operationGeneration.js';
 import {
@@ -1106,7 +1107,17 @@ export const crowdsMixin = {
         if (this._projectGeneration !== generation || this.scene.getFlowLayer(layer.id) !== layer) return;
         this._crowdDuplicateErrors ??= new WeakMap();
         this._crowdDuplicateErrors.set(layer, error.message);
-        this.updateLayersStrip(); this.announce(error.message, 'assertive');
+        // A native action can activate without moving focus. Rebuilding here
+        // would blur/commit the rename that readiness just refused to touch.
+        if (this._layersStripEl.querySelector('.layer-rename-input')) {
+          let line = item.querySelector('.layer-copy-reason');
+          if (!line) {
+            line = document.createElement('p'); line.className = 'layer-copy-reason';
+            line.id = `layer-copy-reason-${context}`; item.appendChild(line);
+          }
+          line.textContent = error.message; addDescription(duplicate, line.id);
+        } else this.updateLayersStrip();
+        this.announce(error.message, 'assertive');
         this._restoreStripFocus(this._layersStripEl, { layerId: layer.id, control: 'duplicate' });
       }
     });
@@ -1135,6 +1146,9 @@ export const crowdsMixin = {
 
   _assertCrowdDuplicateReady() {
     if (this._openingLabel) throw new Error('Wait for the project to open before duplicating this crowd.');
+    if (this._layersStripEl?.querySelector('.layer-rename-input')) {
+      throw new Error('Finish renaming the crowd before duplicating. Then try again.');
+    }
     if (this.networkEditService?.drag) {
       throw new Error('Finish moving the network before duplicating this crowd.');
     }
@@ -1142,8 +1156,12 @@ export const crowdsMixin = {
         this.areaEditService?.isDragging || this._crowdBusynessDrag) {
       throw new Error('Finish or cancel the current map edit before duplicating this crowd.');
     }
+    if (this._hasPendingNetworkCardDrafts()) {
+      throw new Error('Finish editing the current network field before duplicating.');
+    }
     const fields = [...CROWD_RANGES.map(entry => rangeParts(entry.id).field),
-      document.getElementById('crowd-seed-value')];
+      document.getElementById('crowd-seed-value'),
+      ...document.querySelectorAll('#crowd-busyness-handles input:not([readonly])')];
     const inScene = emitter => this.scene.getFlowLayers().some(layer => layer.emitters.includes(emitter));
     if (fields.some(field => !field?.disabled && draftOwner(field) && inScene(draftOwner(field)))) {
       throw new Error('Finish editing the current crowd field before duplicating.');
@@ -1166,9 +1184,23 @@ export const crowdsMixin = {
     const index = this.scene.getFlowLayers().indexOf(source);
     const copy = createCrowdCopy(project.scene.flowLayers[index], ids);
     project.scene.flowLayers.splice(index + 1, 0, copy);
-    const staged = stageProjectModel(JSON.parse(JSON.stringify(project)));
+    let staged;
+    try {
+      staged = stageProjectModel(JSON.parse(JSON.stringify(project)));
+    } catch (error) {
+      const budget = /^Scene (flow-layer limit|emitter limit|dot budget|graph-node limit|graph-edge limit) is (\d+)$/
+        .exec(error.message);
+      const names = { 'flow-layer limit': 'crowds', 'emitter limit': 'emitters', 'dot budget': 'dots',
+        'graph-node limit': 'nodes', 'graph-edge limit': 'paths' };
+      if (budget) {
+        throw new Error(`This copy exceeds the project limit of ${budget[2]} ${names[budget[1]]}. `
+          + 'Delete an unused crowd, or reduce its dots, nodes or paths, then try again.');
+      }
+      throw new Error(`${error.message}. Remove unused crowds, nodes or paths, or shorten labels, then try again.`);
+    }
     const background = getRetainedBackgroundDataURL(this, 'duplicating this crowd');
-    this.imageAssetService.prepareArchive(project, background);
+    const prepared = this.imageAssetService.prepareArchive(project, background);
+    assertArchiveTextSafe(prepared.projectJSON);
     const job = {
       source, scene: this.scene, project, background, copy: staged.scene.getFlowLayer(copy.id), index,
       canonical, token: beginAsyncProjectOperation(this, 'crowd-duplicate'), revision: this._editRevision,
@@ -1207,7 +1239,12 @@ export const crowdsMixin = {
       });
       return job.copy;
     } catch (error) {
-      if (this._crowdDuplicateJobCurrent(job)) throw error;
+      if (this._crowdDuplicateJobCurrent(job)) {
+        if (error.message === 'Project ZIP exceeds the 50 MB limit') {
+          throw new Error(`${error.message}. Use a smaller background or fewer custom images, then try again.`);
+        }
+        throw error;
+      }
       return null;
     } finally {
       if (this._crowdDuplicateJob === job) {
@@ -1253,6 +1290,15 @@ export const crowdsMixin = {
    * @private
    */
   _startCrowdRename(layer, titleEl) {
+    if (this._crowdDuplicateJobCurrent()) {
+      // Renaming takes over before its input exists. The old check can no
+      // longer commit or redraw/blur that new draft when it eventually settles.
+      this._crowdDuplicateJob = null;
+      this.updateLayersStrip(); this._queueSceneOutlineRefresh();
+      titleEl = this._crowdRowOf(layer)?.querySelector('.layer-title');
+      if (!titleEl) return;
+      this.announce('Crowd duplication cancelled. Finish renaming, then try again.');
+    }
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'layer-rename-input';
@@ -1587,9 +1633,9 @@ export const crowdsMixin = {
       title.textContent = `Handle ${index + 1}`;
       row.appendChild(title);
       row.appendChild(this._crowdBusynessNumberControl('Time', index, 'time', handle.time * 100, {
-        readOnly: index === 0 || index === handles.length - 1,
+        readOnly: index === 0 || index === handles.length - 1, owner: emitter,
       }));
-      row.appendChild(this._crowdBusynessNumberControl('Busy', index, 'value', handle.value * 100));
+      row.appendChild(this._crowdBusynessNumberControl('Busy', index, 'value', handle.value * 100, { owner: emitter }));
 
       if (index < handles.length - 1) {
         const label = document.createElement('label');
@@ -1646,7 +1692,7 @@ export const crowdsMixin = {
   },
 
   /** @private */
-  _crowdBusynessNumberControl(labelText, index, field, value, { readOnly = false } = {}) {
+  _crowdBusynessNumberControl(labelText, index, field, value, { readOnly = false, owner = null } = {}) {
     const label = document.createElement('label');
     label.appendChild(busynessLabelText(labelText, BUSYNESS_HINTS[field]));
     const input = document.createElement('input');
@@ -1655,6 +1701,7 @@ export const crowdsMixin = {
     input.max = '100';
     input.step = '0.1';
     input.value = String(Math.round(value * 10) / 10);
+    noteShownValue(input, owner);
     input.readOnly = readOnly;
     input.inputMode = 'decimal';
     input.dataset.busynessIndex = String(index);

@@ -103,6 +103,11 @@ test.each(cases)('%s %s whole-project duplication fits=%s', async (surface, budg
     expect(save).not.toHaveBeenCalled(); expect(flush).not.toHaveBeenCalled();
     const container = surface === 'layers' ? layerButton(app, source).closest('li') : outlineForm(source);
     expect(container.textContent).toMatch(/limit|budget/);
+    if (budget === 'crowds') {
+      expect(container.textContent).toContain('project limit of 32 crowds');
+      expect(container.textContent).toContain('Delete an unused crowd');
+      expect(container.textContent).not.toContain('flow-layer');
+    }
   }
 }, 60000);
 

@@ -800,6 +800,26 @@ export const networkMixin = {
     }
   },
 
+  /** Selection cleanup commits these drafts; checked actions must refuse before that cleanup. */
+  _hasPendingNetworkCardDrafts() {
+    const layers = this.scene.getFlowLayers();
+    const areaDraft = [areaControl('shape'), ...AREA_FIELDS.map(areaControl)].some(field => {
+      const node = draftOwner(field);
+      return !field?.disabled && node && ['entry', 'exit'].includes(node.type)
+        && layers.some(layer => layer.graph?.getNode(node.id) === node);
+    });
+    const entryDraft = [...(this._entryWeightRows?.values() ?? [])].some(row =>
+      row.root.isConnected && !row.root.closest('fieldset')?.hidden && row.node.type === 'entry'
+      && row.context === this._entryWeightContext(row.layer, row.node)
+      && draftOwner(row.input) === row.node && this._nodeAreaLayer(row.node) === row.layer);
+    const edgeDraft = [edgeWeightParts().field,
+      ...document.querySelectorAll('#network-path-weight-rows input')].some(field => {
+      const edge = draftOwner(field);
+      return !field?.disabled && edge && layers.some(layer => layer.graph?.getEdge(edge.id) === edge);
+    });
+    return Boolean(areaDraft || entryDraft || edgeDraft);
+  },
+
   _commitNodeAreaDrafts() {
     if (this._committingNodeAreaDrafts) return;
     this._committingNodeAreaDrafts = true;
@@ -979,6 +999,7 @@ export const networkMixin = {
       input.min = '0.01';
       input.step = '0.01';
       input.value = formatWeight(departure.edge.weight);
+      noteShownValue(input, departure.edge);
       input.setAttribute('aria-labelledby', nameId);
       // The error first, when there is one, then the readout and the help.
       input.setAttribute('aria-describedby', `${errorId} ${outputId} network-path-weights-help`);
@@ -1018,6 +1039,7 @@ export const networkMixin = {
         }
         setValid();
         departure.edge.setWeight(weight);
+        noteShownValue(input, departure.edge);
         this._updateNodePathWeightReadouts(node.id);
         // crowd:param-changed → crowds mixin → debounced undo/autosave/render.
         this.eventBus.emit('crowd:param-changed');
