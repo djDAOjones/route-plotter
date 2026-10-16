@@ -182,3 +182,11 @@ Asked when his client needs these features working, the owner picked "Within a w
   native forms with separate draft identities. Its new decision owns numerical,
   reference-clock and compact-route choices. Source, browser, mutation and final
   review remain separate verification; one combined D–G publication follows.
+
+- 2026-10-16 — All A–G acceptance sections are reconciled and the MVP phase is
+  closed. A shipped in v3.3.719 (#139), B in v3.3.720 (#142), C in v3.3.721
+  (#144/#145), and D/E/F/G together in v3.3.722 (#147/#148/#150/#151).
+  See REL-722 for positive publication evidence and the phase-close decision
+  for bounds, standards, local recall and the next-item reason. Pending owner
+  disk and manual-assurance checks retain their own lines. REFACTOR-01 stays
+  first next; no refactor or v4 work starts under this completed MVP item.

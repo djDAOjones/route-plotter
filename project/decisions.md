@@ -19,6 +19,118 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-10-16 — CROWD-08 — All seven MVP parts shipped; phase closed
+
+**Decision:** CROWD-08's seven-part football and mob MVP is shipped and its
+phase closes; REFACTOR-01 remains first next because the owner put refactoring
+before v4, and the lead asks what comes next before starting it.
+
+**Rationale:** Reconciled against PLAN-4's list and every A–G acceptance section
+in project/items/CROWD-08.md: A crowds without a route shipped in v3.3.719 (PR
+#139, also DEF-84); B centred Start areas in v3.3.720 (PR #142); C
+arrival-ranked Finish areas in v3.3.721 (PR #144 and checked area-storage
+correction #145); D relative Entry weights (#147), E independent checked copies
+(#148), F Groups (#150), and G waiting/nearest-first Final whistle (#151) ship
+together in v3.3.722. Source PRs own design/code reviews, full gates,
+legacy/mutation proofs and committed browser/export evidence; REL-719 through
+REL-722 own publication. Both private football and mob scenes were exercised
+without publishing examples. Legacy off/inactive paths, additive persistence,
+separate per-emitter settings, finite lifecycle bounds and the Groups/Final
+whistle exclusion remain the recorded MVP limits. Carbon's native
+controls/helpers, Nielsen 3 and 9's reversible actions and actionable refusals,
+WCAG 2.2 AAA's 44 px targets/keyboard/focus/contrast, and house conventions'
+event ownership, persistence and tests were applied. REV-03/REV-05 still own
+manual assurance; the existing export wishes and general ZIP, layout and cache
+observations remain open, with no scope added. The new very long crowd-name
+observation gets one unjudged wish line.
+
+Before the owner’s v3.3.722 waiver, local recall on this reconciled record
+was first self-scored 8/8; independent record review R1 corrects it to
+7/8 (1,2,2,2). Its original answers, produced before writing the result, are
+retained: (1) project/trajectory.md → MVP and Ahead of
+Phase 2's last defects names CROWD-08, DEF-84, DEF-98 and DEF-94, newest first;
+(2) decisions.md → Part G: waiting crowds leave nearest first preserves seeded
+identities while ranking release slots, for the football leaving scene; (3)
+project/wish-list.md retains the 719/721/722 saved-file checks, presets/v4 area
+proposal and general ZIP/cache/layout observations, while backlog.md's
+REV-03/REV-05/EX-01 and defect lines retain their scope; (4) backlog.md → Next →
+After CROWD-08 names REFACTOR-01 before MERGE-01, because the 14 October
+REFACTOR-01 decision puts modularisation before v4. This is local recall, not a
+fresh-session handoff test. The earlier pre-close baseline was separate and is
+not this phase-close result. After the owner’s explicit 722 waiver changed the
+open checks, a separate local recheck was also self-scored 8/8 and is corrected
+to 7/8 (1,2,2,2). Its original answers, produced before its result write, are
+retained. Answers (1), (2) and (4) keep the same anchors;
+answer (3) now cites REL-722’s waiver and wish-list.md’s remaining 719/721 checks.
+Both corrected scores and original answers are retained in order. R1 found
+answer (1) partial in both rounds: DEF-94 should have been DEF-89 and the
+Phase 3 — Design reviews anchor was missing. tools/ledger.mjs reads the latest
+line of each phase first, so CROWD-08 now follows DEF-84 within the MVP phase;
+this restores the reader’s newest-first order without moving any prior item.
+After both R1 repairs, a separate local recall scored 8/8 (2,2,2,2), with
+answers produced before its result write: (1) the canonical trajectory reader
+now returns CROWD-08, DEF-84, DEF-98, DEF-89, under MVP, Ahead of Phase 2’s last
+defects and Phase 3 — Design reviews; (2) Part G’s decision explains seeded
+identities and nearest-first release for the football scene; (3) REL-722 and
+wish-list.md retain the 719/721 saved-file checks and all earlier open export
+wishes, including REL-703/REL-706; other deferred work remains in backlog.md; (4) backlog.md → Next and project/items/REFACTOR-01.md retain the
+owner’s refactor-before-v4 sequence and owner-decided plan. This third result
+has its own trajectory line and remains local. REFACTOR-01 is not begun; the
+lead asks what comes next.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-16 — REL-722 — v3.3.722 publishes CROWD-08 D–G together
+
+**Decision:** v3.3.722 publishes Entry weights, checked crowd duplication,
+Groups and Final whistle together under the owner's consolidated-release call.
+
+**Rationale:** The existing part decisions own their implementation choices.
+Each source merge matched its independently approved final source/PNG tree: D:
+PR #147, merge b0e883862e3e6982ef962a1a01b0aaea038cfe7d, final head
+6c8052912fa52234b816b8f382f0ba024b7b29a9, independent gpt-6-astra xhigh round 3
+approved, pull_request Verify 38726961801 succeeded; E: PR #148, merge
+6ba84d388816b4ff1e050b343bdaa9f6f0410456, final head
+a21a6d26704ea9812e3cd99c0aaa77188f52dcf0, independent gpt-6-astra xhigh round 3
+approved, pull_request Verify 38789757329 succeeded; F: PR #150, merge
+6650e7645dc8357190641837882484172500a5f3, final head
+ac5edb1b385e9a98afa6f0562cccec0a0a33807a, independent gpt-6-astra xhigh round 3
+approved, pull_request Verify 38844165787 succeeded; G: PR #151, merge
+5daf698687a3b98d6d31aebfeb138b3d4af9566a, final head
+69083409bb89718a0380d6e66272825bc869f469, independent gpt-6-astra xhigh round 1
+approved, pull_request Verify 38860680318 succeeded. The final combined
+runtime's local gate and both mandatory publication gates retained every test:
+201 test files, 4323 passing tests and 2 existing todos; shell/build/check
+passed, zero unhandled errors. Deploy 148de6114b3091179b20545bf9af5ccc232f1f99
+was pushed from clean matching main; main-branch Verify 38871256324 and Pages
+checks succeeded, github-pages deployment 7114094439 reached that SHA, and
+published comparison was match 22, mismatch 0, errors 0. The player is
+byte-identical to the final G committed archive; the app differs only in
+build.js's single build-time comment, with every other byte identical. Live
+checks after cleared localStorage, sessionStorage and IndexedDB, six-waypoint
+Open day played to 3002 ms and reached its end with zero queued frames; MP4
+9819817 bytes, 1920×1080, 29.033333 s, decoded frames differ in 7525 sampled
+pixels; original HTML 2070460 bytes carries CSP/project/exact live player and
+plays to exact end with moving pixels, no external resources or exceptions;
+rendered version stamp visible, no unexpected console/JS errors or failed
+application resources. Annotated tag v3.3.722 was pushed at that deploy SHA.
+Part G's PR owns 32 exact saved-ZIP reopens, five decoded moving MP4 variants
+with 131 matching normalised evaluations, the original current-player HTML
+reaching its exact end/idle, 37 inspected PNGs and the preserved failed attempts
+preceding successful corrections. These browser checks do not replace the
+separate owner saved-file check. After publication, the owner answered
+“Waive v3.3.722’s disk check”. That explicit waiver retires only v3.3.722's
+saved-file check. The existing v3.3.719 promise and v3.3.721 question stay
+pending; v3.3.720's earlier waiver remains limited to 720. House conventions: testing and persistence, positive publication
+evidence and one owning record per fact; no general accessibility assurance is
+claimed.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-16 — CROWD-08 — Part G: waiting crowds leave nearest first
 
 **Decision:** Final whistle shows seeded waiting dots from zero and assigns
@@ -761,37 +873,6 @@ v4 departs from the founding decision of 2026-08-17 (the frozen canon log; `proj
 **Decision:** TST-09 lands: five suites (41 tests, goldens under `tests/goldens/domains-*.json`, regenerated with UPDATE_DOMAIN_GOLDENS=1) pin today's camera, dot positions, curvature cache, minor-end timing and the time domains from before the start to past the playback end, on the branched Open day route, so the fixes they gate (DEF-05, DEF-07, DEF-10, DEF-11, DEF-12, DEF-79) each move a baseline on purpose.
 
 **Rationale:** each domain compares play, seek and export where the harness allows; eight source mutants (camera state kept across seeks, a frame-late dot, a cache key ignoring the middle point, a minor end counted as major, the tail evaluated on B, releases on F, beacons ignoring the intro, a rate limit never released) fail it. It confirmed DEF-79 (a linear-route video export re-measures a bound crowd's arrival, 5,915 ms against 2,292 ms) and found four candidates, wish lines until verified. The checker asks for an archive at 46 live entries, but the oldest is now GATELESS-1's founding grant, which open lines cite and the run works under, so it stays live under the owner's prune bar (2026-08-27: budgets yield to context feeding open work); the run's call. It ran alongside UI-04 and CROWD-06, which PLAN-2 orders first, under GATELESS-1's rule of up to three items in flight with merges one at a time; it lands when ready. Digest rule applied: house conventions → Testing and persistence.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-06 — CROWD-06 — A Hold at end control carries the animation on after everything has finished
-
-**Decision:** CROWD-06 lands: a "Hold at end" slider in Pacing (0–10 s) adds its time after the last end of anything that finishes, the same in the editor, Preview, scrub, video export and the HTML player, and Duration includes it; a project saved without the setting opens with no hold, a new project or Clear All starts at 2 s; "Wait here for this crowd" is retired.
-
-**Rationale:** the hold extends only the playback duration, so the base timeline and every crowd release timed against it are unchanged, and looping crowds keep moving through it while the route head holds its end. 0 s for saved projects is the run's call (PLAN-2), keeping their playback as it was; the owner's waiver was said of DEF-77. `END_BUFFER_SECONDS`, the unused intent, gives way to `ANIMATION.HOLD_AT_END_*`. The retired button's utility, `waitForCrowdMs`, stays unused with its tests, and the two tests that went through the button fit the wait with it directly, assertions unchanged, so no test is deleted. Two wish lines about the retired button retire with it: its title naming the selected waypoint while it targeted the last major is gone, and the very long wait it worked out on networks where no journey ends keeps its line, reworded to the cause, `scheduleDots` counting Disappear and Collect dots as finishing. After Codex review r1: the slider alone has a 44 px hit area (`range-hit-target`), and undo records one entry per committed change (`change`), not after a 400 ms pause; the editor and the player match dot for dot through the hold on the branched route. 15 new tests fail on main; the mutants of both rounds are killed. Digest rules applied: house conventions → Testing and persistence; Nielsen → 1, visibility of system status (the Duration breakdown).
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-06 — PLAN-2 — Phase 2 runs the owner's after-TST-04 items, then W5 and the defects it held
-
-**Decision:** Phase 2 runs, in order, the owner's two items placed after TST-04 (UI-04, then CROWD-06), W5's three characterisation items (TST-09, TST-03, TST-11), then the seven defects that waited for W5's tests (DEF-20, DEF-13, DEF-32, DEF-14, DEF-15, DEF-19, DEF-22), one at a time under GATELESS-1.
-
-**Items:** UI-04, CROWD-06, TST-09, TST-03, TST-11, DEF-20, DEF-13, DEF-32, DEF-14, DEF-15, DEF-19, DEF-22
-
-**Rationale:** the review (plan step 2), against the brief, the adopted standards and GATELESS-1's order ("W5, defects runnable now, defects that wait on their W5 test, then W4 (which keeps its own mutation criterion), plus the found defects"):
-- A click on any `[data-tip]` element is taken by the hint's delegated handler, which calls `preventDefault()` and `stopPropagation()` (`src/components/ParamTooltip.js`:467-471), so a click on a label that carries its hint does not toggle its control (DEF-14, plan row :4486; Nielsen 4, WCAG 2.1.3): UI-04, the owner's order of 2026-10-05, folds in DEF-14's first remedy; DEF-14 stays an item until its whole scope is met.
-- Since CROWD-05 the animation ends when the last concluding animation ends, with no padding for looping crowds, and "Wait here for this crowd" writes a fixed timed wait at the route's last major waypoint (`src/app/crowds.js`:812-822) that goes stale when the crowd changes: CROWD-06, the owner's control; how existing projects take it is the run's call (its item file).
-- W5's three characterisation rows are unstarted: camera, dots, curvature and time domains (plan row :4565, TST-09), the visibility-mode matrix (:4561, TST-03), source-text assertions made behavioural (:4566, TST-11).
-- Seven defects held by §13 ground rule 8 are runnable now that TST-04, TST-05 and TST-13 have landed: P1 DEF-20 (:4494), DEF-13 (:4485), DEF-32 (:4493), DEF-14 (:4486); P2 DEF-15 (:4498), DEF-19 (:4499), DEF-22 (:4500).
-Deferred, already lines in Next: W4 (DEL-01 to DEL-06) and the 24 found defects, some runnable now (DEF-50, DEF-54, DEF-55, DEF-71 among them), for the phase after this one. That follows the order PLAN-1 recorded for Next (W5, the defects after their W5 test, W4, then the found defects), which the owner confirmed ("sounds good", GATELESS-1, 2026-10-05); reading "defects runnable now" as the held defects rather than the found ones is the run's call. EX-01 waits on the owner's direction, REV-03 and REV-05 on his evidence; the brief's open question on format 9 stands. None is new.
-
-The archive the checker asked for moved the two oldest entries verbatim; INTAKE is still cited as the origin of open wish lines, which resolve through `project/archive/INDEX.md`; no open item depends on its rationale, so the prune bar holds (the run's reading).
-
-The session's calls, for the owner to confirm: the owner's two items first, then W5's tests in the plan's order, then the held defects P1 before P2; the found defects after W4; CROWD-06's 0 s for saved projects. Codex reviewed this plan before it executes (r1: five corrections, made).
 
 **Supersedes:** none
 

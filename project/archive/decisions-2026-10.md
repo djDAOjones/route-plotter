@@ -508,3 +508,34 @@ The session's calls, for the owner to confirm: the grant holds for the run, whic
 
 **Deferred:** none
 
+## 2026-10-06 — PLAN-2 — Phase 2 runs the owner's after-TST-04 items, then W5 and the defects it held
+
+**Decision:** Phase 2 runs, in order, the owner's two items placed after TST-04 (UI-04, then CROWD-06), W5's three characterisation items (TST-09, TST-03, TST-11), then the seven defects that waited for W5's tests (DEF-20, DEF-13, DEF-32, DEF-14, DEF-15, DEF-19, DEF-22), one at a time under GATELESS-1.
+
+**Items:** UI-04, CROWD-06, TST-09, TST-03, TST-11, DEF-20, DEF-13, DEF-32, DEF-14, DEF-15, DEF-19, DEF-22
+
+**Rationale:** the review (plan step 2), against the brief, the adopted standards and GATELESS-1's order ("W5, defects runnable now, defects that wait on their W5 test, then W4 (which keeps its own mutation criterion), plus the found defects"):
+- A click on any `[data-tip]` element is taken by the hint's delegated handler, which calls `preventDefault()` and `stopPropagation()` (`src/components/ParamTooltip.js`:467-471), so a click on a label that carries its hint does not toggle its control (DEF-14, plan row :4486; Nielsen 4, WCAG 2.1.3): UI-04, the owner's order of 2026-10-05, folds in DEF-14's first remedy; DEF-14 stays an item until its whole scope is met.
+- Since CROWD-05 the animation ends when the last concluding animation ends, with no padding for looping crowds, and "Wait here for this crowd" writes a fixed timed wait at the route's last major waypoint (`src/app/crowds.js`:812-822) that goes stale when the crowd changes: CROWD-06, the owner's control; how existing projects take it is the run's call (its item file).
+- W5's three characterisation rows are unstarted: camera, dots, curvature and time domains (plan row :4565, TST-09), the visibility-mode matrix (:4561, TST-03), source-text assertions made behavioural (:4566, TST-11).
+- Seven defects held by §13 ground rule 8 are runnable now that TST-04, TST-05 and TST-13 have landed: P1 DEF-20 (:4494), DEF-13 (:4485), DEF-32 (:4493), DEF-14 (:4486); P2 DEF-15 (:4498), DEF-19 (:4499), DEF-22 (:4500).
+Deferred, already lines in Next: W4 (DEL-01 to DEL-06) and the 24 found defects, some runnable now (DEF-50, DEF-54, DEF-55, DEF-71 among them), for the phase after this one. That follows the order PLAN-1 recorded for Next (W5, the defects after their W5 test, W4, then the found defects), which the owner confirmed ("sounds good", GATELESS-1, 2026-10-05); reading "defects runnable now" as the held defects rather than the found ones is the run's call. EX-01 waits on the owner's direction, REV-03 and REV-05 on his evidence; the brief's open question on format 9 stands. None is new.
+
+The archive the checker asked for moved the two oldest entries verbatim; INTAKE is still cited as the origin of open wish lines, which resolve through `project/archive/INDEX.md`; no open item depends on its rationale, so the prune bar holds (the run's reading).
+
+The session's calls, for the owner to confirm: the owner's two items first, then W5's tests in the plan's order, then the held defects P1 before P2; the found defects after W4; CROWD-06's 0 s for saved projects. Codex reviewed this plan before it executes (r1: five corrections, made).
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-06 — CROWD-06 — A Hold at end control carries the animation on after everything has finished
+
+**Decision:** CROWD-06 lands: a "Hold at end" slider in Pacing (0–10 s) adds its time after the last end of anything that finishes, the same in the editor, Preview, scrub, video export and the HTML player, and Duration includes it; a project saved without the setting opens with no hold, a new project or Clear All starts at 2 s; "Wait here for this crowd" is retired.
+
+**Rationale:** the hold extends only the playback duration, so the base timeline and every crowd release timed against it are unchanged, and looping crowds keep moving through it while the route head holds its end. 0 s for saved projects is the run's call (PLAN-2), keeping their playback as it was; the owner's waiver was said of DEF-77. `END_BUFFER_SECONDS`, the unused intent, gives way to `ANIMATION.HOLD_AT_END_*`. The retired button's utility, `waitForCrowdMs`, stays unused with its tests, and the two tests that went through the button fit the wait with it directly, assertions unchanged, so no test is deleted. Two wish lines about the retired button retire with it: its title naming the selected waypoint while it targeted the last major is gone, and the very long wait it worked out on networks where no journey ends keeps its line, reworded to the cause, `scheduleDots` counting Disappear and Collect dots as finishing. After Codex review r1: the slider alone has a 44 px hit area (`range-hit-target`), and undo records one entry per committed change (`change`), not after a 400 ms pause; the editor and the player match dot for dot through the hold on the branched route. 15 new tests fail on main; the mutants of both rounds are killed. Digest rules applied: house conventions → Testing and persistence; Nielsen → 1, visibility of system status (the Duration breakdown).
+
+**Supersedes:** none
+
+**Deferred:** none
+
