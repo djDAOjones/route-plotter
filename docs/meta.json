@@ -1,7 +1,7 @@
 {
   "inputs": {
     "src/config/constants.js": {
-      "bytes": 19486,
+      "bytes": 19822,
       "imports": [],
       "format": "esm"
     },
@@ -203,8 +203,24 @@
       "imports": [],
       "format": "esm"
     },
+    "src/utils/groupSettings.js": {
+      "bytes": 2735,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/waitingSettings.js": {
+      "bytes": 2432,
+      "imports": [],
+      "format": "esm"
+    },
     "src/app/finishContexts.js": {
-      "bytes": 3017,
+      "bytes": 3618,
       "imports": [
         {
           "path": "src/utils/finishArea.js",
@@ -230,12 +246,33 @@
           "path": "src/utils/crowdAreaDescription.js",
           "kind": "import-statement",
           "original": "../utils/crowdAreaDescription.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/entryWeight.js": {
+      "bytes": 942,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
         }
       ],
       "format": "esm"
     },
     "src/models/GraphNode.js": {
-      "bytes": 5240,
+      "bytes": 5629,
       "imports": [
         {
           "path": "src/utils/imageCoordinates.js",
@@ -246,6 +283,16 @@
           "path": "src/utils/crowdArea.js",
           "kind": "import-statement",
           "original": "../utils/crowdArea.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "../utils/entryWeight.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
         }
       ],
       "format": "esm"
@@ -293,7 +340,7 @@
       "format": "esm"
     },
     "src/models/Emitter.js": {
-      "bytes": 12677,
+      "bytes": 13710,
       "imports": [
         {
           "path": "src/utils/safeColor.js",
@@ -304,6 +351,21 @@
           "path": "src/utils/busynessEnvelope.js",
           "kind": "import-statement",
           "original": "../utils/busynessEnvelope.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
         },
         {
           "path": "src/utils/routeAnchors.js",
@@ -319,7 +381,7 @@
       "format": "esm"
     },
     "src/models/FlowLayer.js": {
-      "bytes": 10100,
+      "bytes": 10202,
       "imports": [
         {
           "path": "src/models/GraphModel.js",
@@ -350,6 +412,11 @@
           "path": "src/utils/crowdArea.js",
           "kind": "import-statement",
           "original": "../utils/crowdArea.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "../utils/entryWeight.js"
         }
       ],
       "format": "esm"
@@ -534,12 +601,40 @@
       "format": "esm"
     },
     "src/utils/graphRouting.js": {
-      "bytes": 3255,
-      "imports": [],
+      "bytes": 4230,
+      "imports": [
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "./entryWeight.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/groupRouting.js": {
+      "bytes": 3802,
+      "imports": [
+        {
+          "path": "src/utils/graphRouting.js",
+          "kind": "import-statement",
+          "original": "./graphRouting.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/groupJourney.js": {
+      "bytes": 6907,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
       "format": "esm"
     },
     "src/services/SwarmEngine.js": {
-      "bytes": 59075,
+      "bytes": 75085,
       "imports": [
         {
           "path": "src/services/PathCalculator.js",
@@ -560,6 +655,31 @@
           "path": "src/utils/graphRouting.js",
           "kind": "import-statement",
           "original": "../utils/graphRouting.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "../utils/entryWeight.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        },
+        {
+          "path": "src/utils/groupRouting.js",
+          "kind": "import-statement",
+          "original": "../utils/groupRouting.js"
+        },
+        {
+          "path": "src/utils/groupJourney.js",
+          "kind": "import-statement",
+          "original": "../utils/groupJourney.js"
         },
         {
           "path": "src/utils/busynessEnvelope.js",
@@ -2784,12 +2904,42 @@
       "format": "esm"
     },
     "src/utils/sceneSemantics.js": {
-      "bytes": 11215,
+      "bytes": 13362,
       "imports": [
         {
           "path": "src/utils/waypointNaming.js",
           "kind": "import-statement",
           "original": "./waypointNaming.js"
+        },
+        {
+          "path": "src/utils/graphRouting.js",
+          "kind": "import-statement",
+          "original": "./graphRouting.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "./entryWeight.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "./groupSettings.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "./waitingSettings.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "./uiReadouts.js"
         }
       ],
       "format": "esm"
@@ -3059,8 +3209,24 @@
       "imports": [],
       "format": "esm"
     },
+    "src/utils/archiveText.js": {
+      "bytes": 1067,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/archiveBound.js": {
+      "bytes": 2576,
+      "imports": [
+        {
+          "path": "src/utils/archiveText.js",
+          "kind": "import-statement",
+          "original": "./archiveText.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/services/ImageAssetService.js": {
-      "bytes": 32975,
+      "bytes": 33408,
       "imports": [
         {
           "path": "src/models/ImageAsset.js",
@@ -3076,6 +3242,11 @@
           "path": "src/utils/assetReferences.js",
           "kind": "import-statement",
           "original": "../utils/assetReferences.js"
+        },
+        {
+          "path": "src/utils/archiveBound.js",
+          "kind": "import-statement",
+          "original": "../utils/archiveBound.js"
         }
       ],
       "format": "esm"
@@ -3479,7 +3650,7 @@
       "format": "esm"
     },
     "src/app/persistence.js": {
-      "bytes": 74147,
+      "bytes": 75313,
       "imports": [
         {
           "path": "src/app/finishContexts.js",
@@ -3898,8 +4069,19 @@
       ],
       "format": "esm"
     },
+    "src/utils/crowdCopy.js": {
+      "bytes": 1412,
+      "imports": [
+        {
+          "path": "src/models/Emitter.js",
+          "kind": "import-statement",
+          "original": "../models/Emitter.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/app/crowds.js": {
-      "bytes": 66623,
+      "bytes": 92415,
       "imports": [
         {
           "path": "src/app/finishContexts.js",
@@ -3957,6 +4139,41 @@
           "original": "./persistence.js"
         },
         {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/crowdCopy.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdCopy.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        },
+        {
+          "path": "src/utils/archiveText.js",
+          "kind": "import-statement",
+          "original": "../utils/archiveText.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "../utils/routeAnchors.js"
+        },
+        {
+          "path": "src/app/operationGeneration.js",
+          "kind": "import-statement",
+          "original": "./operationGeneration.js"
+        },
+        {
           "path": "src/utils/uiReadouts.js",
           "kind": "import-statement",
           "original": "../utils/uiReadouts.js"
@@ -3969,8 +4186,44 @@
       ],
       "format": "esm"
     },
+    "src/app/crowdWaiting.js": {
+      "bytes": 9285,
+      "imports": [
+        {
+          "path": "src/models/Emitter.js",
+          "kind": "import-statement",
+          "original": "../models/Emitter.js"
+        },
+        {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./persistence.js"
+        },
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        }
+      ],
+      "format": "esm"
+    },
     "src/app/network.js": {
-      "bytes": 42487,
+      "bytes": 50743,
       "imports": [
         {
           "path": "src/app/finishContexts.js",
@@ -3998,6 +4251,21 @@
           "original": "../utils/graphRouting.js"
         },
         {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "../utils/entryWeight.js"
+        },
+        {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
           "path": "src/utils/segmentHitTest.js",
           "kind": "import-statement",
           "original": "../utils/segmentHitTest.js"
@@ -4021,7 +4289,7 @@
       "format": "esm"
     },
     "src/controllers/SceneOutlineController.js": {
-      "bytes": 65398,
+      "bytes": 80965,
       "imports": [
         {
           "path": "src/utils/crowdAreaDescription.js",
@@ -4032,6 +4300,16 @@
           "path": "src/utils/sceneSemantics.js",
           "kind": "import-statement",
           "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
         },
         {
           "path": "src/config/constants.js",
@@ -4047,17 +4325,27 @@
           "path": "src/utils/crowdArea.js",
           "kind": "import-statement",
           "original": "../utils/crowdArea.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "../utils/entryWeight.js"
         }
       ],
       "format": "esm"
     },
     "src/app/sceneOutline.js": {
-      "bytes": 48179,
+      "bytes": 52372,
       "imports": [
         {
           "path": "src/app/finishContexts.js",
           "kind": "import-statement",
           "original": "./finishContexts.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
         },
         {
           "path": "src/controllers/SceneOutlineController.js",
@@ -4207,7 +4495,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 71218,
+      "bytes": 71298,
       "imports": [
         {
           "path": "src/app/finishContexts.js",
@@ -4425,6 +4713,11 @@
           "original": "./app/crowds.js"
         },
         {
+          "path": "src/app/crowdWaiting.js",
+          "kind": "import-statement",
+          "original": "./app/crowdWaiting.js"
+        },
+        {
           "path": "src/app/network.js",
           "kind": "import-statement",
           "original": "./app/network.js"
@@ -4504,13 +4797,13 @@
     }
   },
   "outputs": {
-    ".docs-build-gh24Wv/app.js.map": {
+    ".docs-build-oge272/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 4069996
+      "bytes": 4252835
     },
-    ".docs-build-gh24Wv/app.js": {
+    ".docs-build-oge272/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -4519,7 +4812,7 @@
           "bytesInOutput": 97352
         },
         "src/config/constants.js": {
-          "bytesInOutput": 4454
+          "bytesInOutput": 4609
         },
         "src/services/CoordinateTransform.js": {
           "bytesInOutput": 3754
@@ -4569,11 +4862,20 @@
         "src/utils/crowdAreaDescription.js": {
           "bytesInOutput": 1230
         },
+        "src/utils/groupSettings.js": {
+          "bytesInOutput": 1679
+        },
+        "src/utils/waitingSettings.js": {
+          "bytesInOutput": 1728
+        },
         "src/app/finishContexts.js": {
-          "bytesInOutput": 1407
+          "bytesInOutput": 1586
+        },
+        "src/utils/entryWeight.js": {
+          "bytesInOutput": 528
         },
         "src/models/GraphNode.js": {
-          "bytesInOutput": 1312
+          "bytesInOutput": 1437
         },
         "src/models/GraphEdge.js": {
           "bytesInOutput": 1302
@@ -4591,13 +4893,13 @@
           "bytesInOutput": 1621
         },
         "src/models/Emitter.js": {
-          "bytesInOutput": 4772
+          "bytesInOutput": 5218
         },
         "src/utils/entityId.js": {
           "bytesInOutput": 694
         },
         "src/models/FlowLayer.js": {
-          "bytesInOutput": 4279
+          "bytesInOutput": 4297
         },
         "src/models/Scene.js": {
           "bytesInOutput": 2238
@@ -4630,10 +4932,16 @@
           "bytesInOutput": 280
         },
         "src/utils/graphRouting.js": {
-          "bytesInOutput": 797
+          "bytesInOutput": 1123
+        },
+        "src/utils/groupRouting.js": {
+          "bytesInOutput": 1681
+        },
+        "src/utils/groupJourney.js": {
+          "bytesInOutput": 2911
         },
         "src/services/SwarmEngine.js": {
-          "bytesInOutput": 17117
+          "bytesInOutput": 24943
         },
         "src/core/EventBus.js": {
           "bytesInOutput": 1297
@@ -4738,7 +5046,7 @@
           "bytesInOutput": 1370
         },
         "src/utils/sceneSemantics.js": {
-          "bytesInOutput": 4652
+          "bytesInOutput": 5535
         },
         "src/controllers/UIController.js": {
           "bytesInOutput": 45058
@@ -4792,10 +5100,16 @@
           "bytesInOutput": 5069
         },
         "src/services/ImageAssetService.js": {
-          "bytesInOutput": 14071
+          "bytesInOutput": 14182
         },
         "src/utils/assetReferences.js": {
           "bytesInOutput": 2653
+        },
+        "src/utils/archiveText.js": {
+          "bytesInOutput": 356
+        },
+        "src/utils/archiveBound.js": {
+          "bytesInOutput": 1192
         },
         "src/services/HTMLExportService.js": {
           "bytesInOutput": 8228
@@ -4858,7 +5172,7 @@
           "bytesInOutput": 93
         },
         "src/app/persistence.js": {
-          "bytesInOutput": 32688
+          "bytesInOutput": 33196
         },
         "src/app/exporting.js": {
           "bytesInOutput": 7613
@@ -4887,17 +5201,23 @@
         "src/app/pointer.js": {
           "bytesInOutput": 1871
         },
+        "src/utils/crowdCopy.js": {
+          "bytesInOutput": 647
+        },
         "src/app/crowds.js": {
-          "bytesInOutput": 27208
+          "bytesInOutput": 43627
+        },
+        "src/app/crowdWaiting.js": {
+          "bytesInOutput": 5680
         },
         "src/app/network.js": {
-          "bytesInOutput": 17613
+          "bytesInOutput": 22120
         },
         "src/controllers/SceneOutlineController.js": {
-          "bytesInOutput": 37033
+          "bytesInOutput": 46621
         },
         "src/app/sceneOutline.js": {
-          "bytesInOutput": 27913
+          "bytesInOutput": 30707
         },
         "src/app/helpDialog.js": {
           "bytesInOutput": 1387
@@ -4912,10 +5232,10 @@
           "bytesInOutput": 1089
         },
         "src/main.js": {
-          "bytesInOutput": 28821
+          "bytesInOutput": 28824
         }
       },
-      "bytes": 1222632
+      "bytes": 1282922
     }
   }
 }

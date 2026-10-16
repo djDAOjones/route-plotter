@@ -633,7 +633,24 @@ kbd{
   margin-top:var(--space-2);
 }
 
-.beacon-sub-controls .checkbox-label input[type="checkbox"]{
+/* Native group forms share the existing checkbox and productive field patterns. */
+.crowd-group-form{
+  display:grid;
+  gap:var(--space-2);
+  min-width:0;
+}
+.crowd-group-form[hidden]{ display:none; }
+.crowd-group-toggle{
+  min-height:var(--touch-target-min);
+}
+.crowd-group-form input[type="number"]{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+
+.beacon-sub-controls .checkbox-label input[type="checkbox"],
+.crowd-group-toggle input[type="checkbox"]{
   width:16px;
   height:16px;
   cursor:pointer;
@@ -2229,7 +2246,8 @@ kbd{
 }
 
 .layer-visibility,
-.layer-delete{
+.layer-delete,
+.layer-duplicate{
   flex:none;
   display:inline-flex;
   align-items:center;
@@ -2245,12 +2263,14 @@ kbd{
   line-height:1;
 }
 .layer-visibility:hover,
-.layer-delete:hover{
+.layer-delete:hover,
+.layer-duplicate:hover{
   background:var(--hover-ui);
   color:var(--text-01);
 }
 .layer-visibility:focus-visible,
-.layer-delete:focus-visible{
+.layer-delete:focus-visible,
+.layer-duplicate:focus-visible{
   outline:none;
   box-shadow:
     0 0 0 2px var(--focus-inner),
@@ -4450,3 +4470,46 @@ input[type="number"]:disabled{
   border-color:var(--disabled-02);
   cursor:not-allowed;
 }
+
+.crowd-group-toggle input[type="checkbox"]:disabled{
+  cursor:not-allowed;
+  accent-color:var(--disabled-03);
+}
+.crowd-group-toggle:has(input:disabled){ cursor:not-allowed; }
+
+.layer-item{ flex-wrap:wrap; }
+.layer-copy-reason{
+  order:1;
+  flex-basis:100%;
+  margin:0;
+  padding:var(--space-2);
+  color:var(--text-01);
+  font-size:var(--text-sm);
+}
+
+/* A full name row keeps the new 44 px action from squeezing names in the desktop sidebar. */
+.layer-item:has(> .layer-duplicate) > .layer-row{ flex-basis:100%; }
+.layer-item:has(> .layer-duplicate) > .layer-visibility{ margin-left:auto; }
+
+/* Final whistle uses the same native productive form pattern as Groups. */
+.crowd-wait-form{
+  display:grid;
+  gap:var(--space-2);
+  margin-top:var(--space-3);
+}
+.crowd-wait-form[hidden]{ display:none; }
+.crowd-wait-toggle{
+  min-height:var(--touch-target-min);
+  cursor:pointer;
+}
+.crowd-wait-toggle input[type="checkbox"]{
+  width:16px;
+  height:16px;
+  cursor:pointer;
+  accent-color:var(--control-accent);
+}
+.crowd-wait-toggle input[type="checkbox"]:disabled{
+  accent-color:var(--disabled-03);
+  cursor:not-allowed;
+}
+.crowd-wait-toggle:has(input:disabled){ cursor:not-allowed; }
