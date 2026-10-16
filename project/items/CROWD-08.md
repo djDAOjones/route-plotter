@@ -165,3 +165,12 @@ Asked when his client needs these features working, the owner picked "Within a w
   regression owns restoration of the original emitter's local error and draft.
   The source PR owns renewed gate, mutation, browser and review evidence. This
   remains a part advance before G and the combined publication.
+
+- 2026-10-16 — Part F code round 2 found that closing an outline emitter
+  discarded its Groups refusal while retaining the unapplied values. Hidden
+  Groups feedback now checks the live semantic emitter context, so reopening
+  restores the linked recovery message without inheriting a replacement's
+  error. Production-refusal regressions cover primary and secondary emitters,
+  Cancel, acceptance, same-ID replacement and newer unrelated feedback. The
+  source PR owns renewed verification and independent approval; CROWD-08
+  remains open for G and the combined publication.

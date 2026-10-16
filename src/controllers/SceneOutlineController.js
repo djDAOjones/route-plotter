@@ -773,7 +773,15 @@ export class SceneOutlineController {
   _renderCommandError() {
     if (!this._error) return;
     const formEl = this._formForKey(this._error.formKey);
-    if (this._error.context !== null && formEl?.[OUTLINE_DRAFT_CONTEXT] !== this._error.context) {
+    let context = formEl?.[OUTLINE_DRAFT_CONTEXT];
+    // Lazy disclosures omit the form; its live emitter context still owns the refusal.
+    if (!formEl && this._error.formKey.endsWith(':groups-apply')) {
+      for (const crowd of this._snapshot?.crowds || []) {
+        const emitter = crowd.emitters.find(item => `${item.key}:groups-apply` === this._error.formKey);
+        if (emitter) { context = emitter.groupsContext; break; }
+      }
+    }
+    if (this._error.context !== null && context !== this._error.context) {
       this._clearCommandError();
       return;
     }
