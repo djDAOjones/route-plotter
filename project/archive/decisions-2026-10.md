@@ -478,3 +478,23 @@ The session's calls, for the owner to confirm: the grant holds for the run, whic
 
 **Deferred:** none
 
+## 2026-10-06 — DEF-28 — A session that cannot be restored is kept and offered, not lost
+
+**Decision:** DEF-28 lands (PR #54): a recovery record that cannot be restored is kept under a key of its own, or held where no copy fits, and offered (Download it, Discard) instead of being cleared or overwritten; Discard and Clear All report what they removed and what they could not; under DEF-45's queue every message saying a session could not be restored or removed is must-hear, while Discard's and Clear All's own confirmations stay routine. Phase 1 closes with it: all 14 PLAN-1 items landed; next is UI-04, by the owner's order of 2026-10-05 (after TST-04).
+
+**Rationale:** Codex review r11's three findings are fixed in `unrestoredAutosave.js` and `StorageService.discardKept`: a search settles a disappearance only once every listed key's text is known (F1); Discard keeps and reports a copy it cannot read (F2); a search and a successful Clear All retire start-time keys, so Clear All reports no phantom discard (F3). Nine cases close P1–P3 and the three test gaps; each named mutant passed before and fails now. Merging DEF-45 marked the recovery announcements essential and made Discard's next-offer message must-hear. Digest rules applied: house conventions → Testing and persistence; Nielsen → 9, recognise, diagnose and recover from errors. DEF-50 and DEF-67 no longer wait on it. Recall at the phase close, local, 8/8: (1) trajectory.md → Phase 1: DEF-28, TST-04, DEF-45, TST-08; (2) decisions.md → DEF-45, the queue bounded by coalescing because twelve Examples loads left six warnings; (3) wish-list.md and backlog.md's [!] lines (EX-01, REV-03, REV-05); (4) backlog.md → Next, "After TST-04": UI-04.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-06 — REL-704 — v3.2.704 ships DEF-45
+
+**Decision:** v3.2.704 is live from deploy commit `2edf75a` (tag `v3.2.704`), released under GATELESS-1 because DEF-45's merge (`44d3009`, PR #70) changed `src/`.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.703-44d3009`, gate green, dry run, push, Verify and the Pages deploy green, 22 of 22 live files SHA-256-identical to the build. Live smoke in the browser pane (1280×800): title v3.2.704, Open day played 3,002 ms of 27,028, ran to its end with no frame queued, MP4 1920×1080 29.0 s `ftypisom`, HTML export with its project, CSP and the live player, no failed resource, no console error. DEF-45 does not change export, so no disk save is owed; v3.2.703's stays owed (a wish line).
+
+**Supersedes:** none
+
+**Deferred:** none
+

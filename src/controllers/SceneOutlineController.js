@@ -8,10 +8,11 @@
 
 import { crowdAreaDescription } from '../utils/crowdAreaDescription.js';
 import { sceneOutlineKey } from '../utils/sceneSemantics.js';
+import { groupChoiceHint, GROUP_HINT, GROUP_FIELD_HINTS } from '../utils/groupSettings.js';
 import { IMAGE_COORDINATES, CROWD_ENTRY_WEIGHT } from '../config/constants.js';
-import { formatCrowdDotSize } from '../utils/uiReadouts.js';
+import { formatCrowdDotSize, shiftDecimal } from '../utils/uiReadouts.js';
 import { createCrowdArea } from '../utils/crowdArea.js';
-import { ENTRY_WEIGHT_HINT, entryWeightValue } from '../utils/entryWeight.js';
+import { entryWeightHint, entryWeightValue } from '../utils/entryWeight.js';
 
 const OUTLINE_CANONICAL_VALUE = Symbol('outlineCanonicalValue');
 // A field the author has typed in or chosen in (UI-06 W-02, Codex r1): it
@@ -241,7 +242,8 @@ function releaseBiasFields(emitter) {
   const direction = canonical < 0 ? 'earlier' : (canonical > 0 ? 'later' : 'even');
   const amount = labelledInput('intensityRampAmount', 'Release bias amount (%)', Math.abs(emitter.intensityRamp), {
     min: 0, max: 100, step: 'any', key: `${emitter.key}:ramp-amount`,
-    canonicalValue: Math.abs(canonical), tip: FIELD_HINTS.releaseBiasAmount,
+    canonicalValue: Math.abs(canonical),
+    tip: groupChoiceHint(emitter.groupsActive ? 'group' : null, FIELD_HINTS.releaseBiasAmount),
   });
   outlineReasonSerial += 1;
   const reason = el('p', {
@@ -619,6 +621,7 @@ export class SceneOutlineController {
       valid.add(`${crowd.key}:apply`);
       for (const emitter of crowd.emitters) {
         if (emitter.primary) valid.add(`${emitter.key}:apply`);
+        valid.add(`${emitter.key}:groups-apply`);
       }
       valid.add(`${crowd.graph.key}:add-node`);
       if (crowd.graph.nodes.length >= 2) valid.add(`${crowd.graph.key}:connect`);
@@ -694,6 +697,7 @@ export class SceneOutlineController {
       return;
     }
     if (!error.formKey || !error.message) return;
+    if (error.formScoped) this._clearCommandError();
     const formKey = String(error.formKey);
     this._error = {
       formKey,
@@ -728,7 +732,7 @@ export class SceneOutlineController {
       this._clearEdits(formEl);
     }
     this._drafts.delete(normalizedKey);
-    this._clearCommandError();
+    if (!result.formScoped || this._error?.formKey === normalizedKey) this._clearCommandError();
   }
 
   _currentDuplicateFeedback(result) {
@@ -769,7 +773,15 @@ export class SceneOutlineController {
   _renderCommandError() {
     if (!this._error) return;
     const formEl = this._formForKey(this._error.formKey);
-    if (this._error.context !== null && formEl?.[OUTLINE_DRAFT_CONTEXT] !== this._error.context) {
+    let context = formEl?.[OUTLINE_DRAFT_CONTEXT];
+    // Lazy disclosures omit the form; its live emitter context still owns the refusal.
+    if (!formEl && this._error.formKey.endsWith(':groups-apply')) {
+      for (const crowd of this._snapshot?.crowds || []) {
+        const emitter = crowd.emitters.find(item => `${item.key}:groups-apply` === this._error.formKey);
+        if (emitter) { context = emitter.groupsContext; break; }
+      }
+    }
+    if (this._error.context !== null && context !== this._error.context) {
       this._clearCommandError();
       return;
     }
@@ -1129,8 +1141,8 @@ export class SceneOutlineController {
     }));
     if (!emitter.primary) {
       content.appendChild(description(
-        'A second emitter can be read here, not edited: editing more than one emitter in a crowd is a ' +
-        'later feature.'
+        'These existing controls are read-only: editing more than one emitter in a crowd is a later feature. ' +
+        'Groups settings can be edited separately below.'
       ));
       content.appendChild(readOnlyList([
         ['Count', emitter.dotCount],
@@ -1152,7 +1164,8 @@ export class SceneOutlineController {
         }),
         labelledInput('releaseStart', 'Window start (%)', emitter.releaseStart, {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:start`, canonicalValue: emitter.releaseStartCanonical,
-          tip: FIELD_HINTS.releaseStart,
+          tip: emitter.groupsActive ? groupChoiceHint('group', FIELD_HINTS.releaseStart)
+            + ' on the project reference timeline' : FIELD_HINTS.releaseStart,
         }),
         labelledInput('releaseDuration', 'Window length (%)', emitter.releaseDuration, {
           min: 0,
@@ -1160,15 +1173,17 @@ export class SceneOutlineController {
           step: 'any',
           key: `${emitter.key}:duration`,
           canonicalValue: emitter.releaseDurationCanonical,
-          tip: FIELD_HINTS.releaseLength,
+          tip: emitter.groupsActive ? groupChoiceHint('group', FIELD_HINTS.releaseLength)
+            + ' on the project reference timeline' : FIELD_HINTS.releaseLength,
         }),
         labelledInput('onsetVariance', 'Release timing (%)', emitter.onsetVariance, {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:onset`, canonicalValue: emitter.onsetVarianceCanonical,
-          tip: FIELD_HINTS.releaseTiming,
+          tip: groupChoiceHint(emitter.groupsActive ? 'group' : null, FIELD_HINTS.releaseTiming),
         }),
         ...releaseBiasFields(emitter),
         labelledInput('speed', 'Speed (image lengths/s)', emitter.speed, {
-          min: 0.001, max: 1000, step: 'any', key: `${emitter.key}:speed`, tip: FIELD_HINTS.speed,
+          min: 0.001, max: 1000, step: 'any', key: `${emitter.key}:speed`,
+          tip: groupChoiceHint(emitter.groupsActive ? 'group' : null, FIELD_HINTS.speed),
         }),
         labelledInput('speedVariance', 'Pace variation (%)', emitter.speedVariance, {
           min: 0,
@@ -1176,7 +1191,7 @@ export class SceneOutlineController {
           step: 'any',
           key: `${emitter.key}:speed-variance`,
           canonicalValue: emitter.speedVarianceCanonical,
-          tip: FIELD_HINTS.paceVariation,
+          tip: groupChoiceHint(emitter.groupsActive ? 'group' : null, FIELD_HINTS.paceVariation),
         }),
         labelledInput('dotSize', 'Dot size (×)', emitter.dotSize, {
           min: 0.01, max: 100, step: 'any', key: `${emitter.key}:size`, tip: dotSizeHint(emitter.dotSize),
@@ -1201,8 +1216,72 @@ export class SceneOutlineController {
       ));
       content.appendChild(readOnlyList([['Pattern seed', emitter.seed]]));
     }
+    content.appendChild(this._renderGroupForm(crowd, emitter));
     details.appendChild(content);
     return itemFor(details);
+  }
+
+  _renderGroupForm(crowd, emitter) {
+    // A semantic view without an app-owned identity token can describe settings,
+    // but cannot submit a checked command against a live emitter.
+    if (emitter.groupsContext == null) return readOnlyList([
+      ['Groups', emitter.groups ? 'On' : 'Off'], ['Group size (dots)', emitter.groupSize],
+      ['Group width (%)', emitter.groupWidth],
+    ]);
+    const key = `${emitter.key}:groups-apply`, reason = emitter.groupsReason;
+    const check = el('input', { attrs: { type: 'checkbox', name: 'groups' },
+      data: { outlineKey: `${emitter.key}:groups` } });
+    check.checked = emitter.groups; check.defaultChecked = emitter.groups;
+    check.disabled = !!reason && !emitter.groups;
+    const label = el('label', { className: 'checkbox-label crowd-group-toggle' });
+    label.append(check, el('span', { text: 'Groups', attrs: { 'data-tip': GROUP_FIELD_HINTS.groups } }));
+    const node = form('update-groups', { layerId: crowd.id, emitterId: emitter.id,
+      groupsContext: emitter.groupsContext }, [label,
+      labelledInput('groupSize', 'Group size (dots)', emitter.groupSize,
+        { min: 1, max: 5000, step: 1, key: `${emitter.key}:group-size`, tip: GROUP_FIELD_HINTS.groupSize }),
+      labelledInput('groupWidth', 'Group width (%)', emitter.groupWidth,
+        { min: 0, max: 20, step: 'any', key: `${emitter.key}:group-width`,
+          canonicalValue: emitter.groupWidthCanonical, tip: GROUP_FIELD_HINTS.groupWidth }),
+    ], 'Apply groups', key, emitter.groupsContext);
+    node.elements.groupSize.disabled = !!reason; node.elements.groupWidth.disabled = !!reason;
+    node.querySelector('[type="submit"]').disabled = !!reason && !emitter.groups;
+    const help = el('p', { className: 'scene-outline-hint',
+      text: reason ? `${emitter.groups ? 'Stored on; turn off, or ' : ''}${reason}`
+        : GROUP_HINT,
+      attrs: { id: `${OUTLINE_REASON_ID_PREFIX}${++outlineReasonSerial}` } });
+    node.appendChild(help);
+    for (const field of node.elements) field.setAttribute('aria-describedby', help.id);
+    node.appendChild(button('Cancel edits', 'cancel-groups', {}, { key: `${emitter.key}:groups-cancel` }));
+    return node;
+  }
+
+  /** Includes retained hidden forms, but only while their live identity/context is current. */
+  pendingGroupDrafts(contexts, exemption = null) {
+    this._captureDirtyDrafts();
+    const pending = [];
+    for (const [key, draft] of this._drafts) {
+      if (!key.endsWith(':groups-apply')) continue;
+      const current = contexts.get(key);
+      if (!current || draft.context !== current.context) { this._drafts.delete(key); continue; }
+      if (exemption && (key !== exemption.formKey || exemption.surface === 'outline')) continue;
+      const dirty = [...draft.fields.values()].some(field => {
+        if (field.name === 'groups') return field.checked !== current.groups;
+        if (field.name === 'groupSize') return !field.value.trim() || Number(field.value) !== current.groupSize;
+        if (field.name === 'groupWidth') {
+          return !field.value.trim() || shiftDecimal(Number(field.value), -2) !== current.groupWidth;
+        }
+        return false;
+      });
+      if (dirty) pending.push(key);
+    }
+    return pending;
+  }
+
+  cancelGroupDraft(key) {
+    this._drafts.delete(key);
+    const formEl = this._formForKey(key);
+    formEl?.reset(); this._clearEdits(formEl);
+    if (this._error?.formKey === key) this._clearCommandError();
   }
 
   _renderNetwork(crowd) {
@@ -1257,7 +1336,8 @@ export class SceneOutlineController {
           { value: 'one-way', label: 'One-way' },
         ], { key: `${graph.key}:direction`, tip: FIELD_HINTS.newEdgeDirection }),
         labelledInput('weight', 'Path weight', 1, {
-          min: 0.01, step: 'any', key: `${graph.key}:weight`, tip: FIELD_HINTS.pathWeight,
+          min: 0.01, step: 'any', key: `${graph.key}:weight`,
+          tip: groupChoiceHint(crowd.choiceRole, FIELD_HINTS.pathWeight),
         }),
       ], 'Connect nodes', `${graph.key}:connect`));
     } else {
@@ -1360,15 +1440,17 @@ export class SceneOutlineController {
       layerId: crowd.id, nodeId: node.id, entryWeightContext: node.entryWeightContext,
     }, [labelledInput('entryWeight', 'Entry weight', node.entryWeight ?? CROWD_ENTRY_WEIGHT.DEFAULT, {
       min: CROWD_ENTRY_WEIGHT.MIN, max: CROWD_ENTRY_WEIGHT.MAX, step: 'any', key: `${node.key}:entry-weight`,
-      tip: ENTRY_WEIGHT_HINT,
+      tip: entryWeightHint(crowd.choiceRole),
     })], 'Apply entry weight', key, node.entryWeightContext);
     const hint = el('p', { className: 'scene-outline-hint',
       text: !crowd.graph.active ? 'Choose Custom network in Guide to use this retained weight.'
-        : node.type === 'entry' ? ENTRY_WEIGHT_HINT : 'Choose Entry in Type to use this retained weight.',
+        : node.type === 'entry' ? entryWeightHint(crowd.choiceRole)
+          : 'Choose Entry in Type to use this retained weight.',
       attrs: { id: `${OUTLINE_REASON_ID_PREFIX}${++outlineReasonSerial}` } });
     const input = formEl.elements.entryWeight;
     const output = el('output', { className: 'scene-outline-hint',
-      text: active ? `${node.entryPercent}% of dots` : 'Entry weight inactive',
+      text: active ? `${node.entryPercent}% of ${crowd.choiceRole ? 'Entry choices' : 'dots'}`
+        : 'Entry weight inactive',
       attrs: { id: `${hint.id}-share` } });
     input.setAttribute('aria-describedby', `${output.id} ${hint.id}`);
     input.disabled = !active;
@@ -1435,7 +1517,7 @@ export class SceneOutlineController {
       ], { key: `${edge.key}:direction`, tip: FIELD_HINTS.edgeDirection }),
       labelledInput('weight', 'Path weight', edge.weight, {
         min: 0.01, step: 'any', key: `${edge.key}:weight`, canonicalValue: edge.weight,
-        tip: FIELD_HINTS.pathWeight,
+        tip: groupChoiceHint(crowd.choiceRole, FIELD_HINTS.pathWeight),
       }),
     ], 'Apply path', `${edge.key}:apply`));
     content.appendChild(button('Delete path', 'delete-edge', {
@@ -1530,7 +1612,10 @@ export class SceneOutlineController {
       feedbackToken = ++this._duplicateFeedbackSerial;
       this._duplicateFeedback.set(formEl.dataset.outlineFormKey,
         { token: feedbackToken, context: formEl[OUTLINE_DRAFT_CONTEXT] });
-    } else this._clearCommandError();
+    } else if (formEl.dataset.outlineAction !== 'update-groups'
+        || this._error?.formKey === formEl.dataset.outlineFormKey) {
+      this._clearCommandError();
+    }
     const values = Object.fromEntries(new FormData(formEl).entries());
     const outlineOriginalValues = {};
     for (const field of formEl.elements) {
@@ -1567,6 +1652,9 @@ export class SceneOutlineController {
     }
     const target = event.target.closest('button[data-outline-action]');
     if (!target || !this.container.contains(target)) return;
+    if (target.dataset.outlineAction === 'cancel-groups') {
+      this.cancelGroupDraft(target.closest('form')?.dataset.outlineFormKey); return;
+    }
     this.eventBus.emit('scene-outline:command', {
       action: target.dataset.outlineAction,
       ...target.dataset,

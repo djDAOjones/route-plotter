@@ -17,7 +17,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #network-node-type · choose "entry"
 emit network:changed {commit: true}
 emit network:node-selected {node: {id: "gn_trace_ex-uon-2", x: 0.4, y: 0.47, type: "entry", label: "Trent Building", anchorWaypointId: "ex-uon-2", _resolvedX: 0.4, _resolvedY: 0.47}}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].graph.nodes[1].type: "normal" → "entry"
 app ~ focus: "body" → "#network-node-type"
@@ -55,7 +55,7 @@ settled:
 ## #network-node-type · choose "exit"
 emit network:changed {commit: true}
 emit network:node-selected {node: {id: "gn_trace_ex-uon-2", x: 0.4, y: 0.47, type: "exit", label: "Trent Building", anchorWaypointId: "ex-uon-2", _resolvedX: 0.4, _resolvedY: 0.47}}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].graph.nodes[1].type: "normal" → "exit"
 app ~ focus: "body" → "#network-node-type"
@@ -116,7 +116,7 @@ settled:
   emit animation:durationChange 28307.894043
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28307.894043, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10066 chars, 900f9075]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -142,7 +142,7 @@ settled:
   emit animation:durationChange 28307.894043
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 28307.894043, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10069 chars, bc3d643a]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -173,7 +173,7 @@ ui ~ #network-path-weight-2: input aria-describedby="network-path-weight-2-error
 ui ~ #network-path-weight-2-value: output class="network-path-weight-value" for="network-path-weight-2" :text="Weight 1 · 50%" → output class="network-path-weight-value" for="network-path-weight-2" :text="Weight 24 · 96%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10066 chars, 1b51b70b]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -195,7 +195,7 @@ ui ~ #network-path-weight-2: input aria-describedby="network-path-weight-2-error
 ui ~ #network-path-weight-2-value: output class="network-path-weight-value" for="network-path-weight-2" :text="Weight 1 · 50%" → output class="network-path-weight-value" for="network-path-weight-2" :text="Weight 99999 · 100%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-2", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10069 chars, e0da9462]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -206,7 +206,7 @@ settled:
 emit network:node-deselected
 emit network:changed {commit: true}
 emit ui:toast {message: "Deleted node — press Ctrl+Z to undo"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].graph.nodes[1].id: "gn_trace_ex-uon-2" → "gn_trace_ex-uon-3"
 model ~ scene.flowLayers[0].graph.nodes[1].x: 0.4 → 0.78
@@ -261,7 +261,7 @@ ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, ea7effa7)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
-ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
+ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 69 inside, 1e54bcba)
 ui ~ #node-scope: div class="scope-group" → div (not shown)
 ui + #toast-container>div[1]: div class="toast" :text="Deleted node — press Ctrl+Z to undo"
 ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

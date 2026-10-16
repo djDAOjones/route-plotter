@@ -22,6 +22,8 @@ import {
   assertValidBusynessEnvelope,
   normalizeBusynessEnvelope,
 } from '../utils/busynessEnvelope.js';
+import { assertGroupSettings } from '../utils/groupSettings.js';
+import { CROWD_GROUPS } from '../config/constants.js';
 import { normaliseReleaseAnchor } from '../utils/routeAnchors.js';
 
 const VALID_LIFECYCLE_MODES = ['disappear', 'respawn', 'loop', 'collect'];
@@ -57,6 +59,7 @@ export class Emitter {
    * @param {number}  [options.wobble=0]            — Path-wobble amplitude, 0–1.
    */
   constructor(options = {}) {
+    assertGroupSettings(options);
     this.id = options.id || Emitter._generateId();
     this.seed = Emitter._validateSeed(options.seed);
     this.dotCount = Emitter._clampCount(options.dotCount ?? 50);
@@ -76,6 +79,9 @@ export class Emitter {
     this.intensityRamp = Emitter._clampSigned(options.intensityRamp ?? 0);
     this.busynessEnvelope = normalizeBusynessEnvelope(options.busynessEnvelope);
     this.wobble = Emitter._clamp01(options.wobble ?? 0);
+    this.groups = options.groups ?? false;
+    this.groupSize = options.groupSize ?? CROWD_GROUPS.SIZE;
+    this.groupWidth = options.groupWidth ?? CROWD_GROUPS.WIDTH;
   }
 
   /**
@@ -84,6 +90,7 @@ export class Emitter {
    * @param {Object} partial — Subset of constructor options (id is not updatable).
    */
   update(partial = {}) {
+    assertGroupSettings(partial);
     if ('seed' in partial) this.seed = Emitter._validateSeed(partial.seed);
     if ('dotCount' in partial) this.dotCount = Emitter._clampCount(partial.dotCount);
     if ('speed' in partial) this.speed = Emitter._clampMin(partial.speed, MIN_SPEED, EMITTER_LIMITS.MAX_SPEED);
@@ -100,6 +107,9 @@ export class Emitter {
       this.busynessEnvelope = normalizeBusynessEnvelope(partial.busynessEnvelope);
     }
     if ('wobble' in partial) this.wobble = Emitter._clamp01(partial.wobble);
+    for (const key of ['groups', 'groupSize', 'groupWidth']) {
+      if (key in partial) this[key] = partial[key];
+    }
   }
 
   /**
@@ -139,6 +149,9 @@ export class Emitter {
       // Handles are cloned so exported/project JSON cannot mutate live model data.
       busynessEnvelope: this.busynessEnvelope.map(handle => ({ ...handle })),
       wobble: this.wobble,
+      ...(this.groups ? { groups: true } : {}),
+      ...(this.groupSize !== CROWD_GROUPS.SIZE ? { groupSize: this.groupSize } : {}),
+      ...(this.groupWidth !== CROWD_GROUPS.WIDTH ? { groupWidth: this.groupWidth } : {}),
     };
   }
 
@@ -163,6 +176,8 @@ export class Emitter {
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
       throw new Error('Invalid emitter: expected an object');
     }
+
+    assertGroupSettings(data);
 
     const finiteFields = [
       'seed', 'dotCount', 'speed', 'speedVariance', 'dotSize',

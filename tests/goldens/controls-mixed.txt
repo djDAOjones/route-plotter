@@ -139,7 +139,7 @@ ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 31656.019695, baseDuration: 23727.587296, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10094 chars, 0ce00ada]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -573,7 +573,7 @@ ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:
 settled:
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 31554.685792, baseDuration: 23461.903267, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10094 chars, 4d0810e9]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -742,7 +742,7 @@ ui - #area-fade-out-tip: span class="sr-only" :text="Duration of the fade-out an
 ui - #area-fade-out-value: span class="range-readout" :text="1.8s"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10053 chars, 3d9079f0]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -763,7 +763,7 @@ ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section=
 ui ~ #area-rect-width: input aria-describedby="area-rect-width-value area-rect-width-tip" aria-valuetext="27%" max="1000" min="0" step="1" type="range" value="125" :value="329" → input aria-describedby="area-rect-width-value area-rect-width-tip" aria-valuetext="27%" max="1000" min="0" step="1" type="range" value="125" :value="333"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10110 chars, 951c26c5]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -785,7 +785,7 @@ ui ~ #area-rect-height: input aria-describedby="area-rect-height-value area-rect
 ui ~ #area-rect-height-value: span class="range-readout" :text="19%" → span class="range-readout" :text="27%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10110 chars, 538bb6da]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -808,7 +808,7 @@ ui ~ #area-fill-color-group-0: input class="swatch-radio" name="area-fill-color-
 ui ~ #area-fill-color-group-2: input class="swatch-radio" name="area-fill-color-group" type="radio" value="#E69F00" :checked → input class="swatch-radio" name="area-fill-color-group" type="radio" value="#E69F00" :unchecked
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10065 chars, aa3d9626]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -830,7 +830,7 @@ ui ~ #area-fill-opacity: input aria-describedby="area-fill-opacity-value area-fi
 ui ~ #area-fill-opacity-value: span class="range-readout" :text="55%" → span class="range-readout" :text="33%"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10065 chars, 43e7416a]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -853,7 +853,7 @@ ui ~ #area-border-color-group-0: input class="swatch-radio" name="area-border-co
 ui ~ #area-border-color-group-3: input class="swatch-radio" name="area-border-color-group" type="radio" value="#D55E00" :checked → input class="swatch-radio" name="area-border-color-group" type="radio" value="#D55E00" :unchecked
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10065 chars, db1b7ea7]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -874,7 +874,7 @@ ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section=
 ui ~ #area-border-style: select aria-describedby="area-border-style-tip" :value="dashed" → select aria-describedby="area-border-style-tip" :value="solid"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10062 chars, b539356e]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -896,7 +896,7 @@ ui ~ #area-border-width: input aria-describedby="area-border-width-value area-bo
 ui ~ #area-border-width-value: span class="range-readout" :text="6 reference px" → span class="range-readout" :text="4 reference px"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10065 chars, 1b984fa0]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -917,7 +917,7 @@ ui ~ #waypoint-scope>div[4]: div class="settings-section expanded" data-section=
 ui ~ #area-visibility: select aria-describedby="area-visibility-tip" :value="always-show" → select aria-describedby="area-visibility-tip" :value="hide-before"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10065 chars, b8e7c517]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -939,7 +939,7 @@ ui ~ #area-fade-in: input aria-describedby="area-fade-in-value area-fade-in-tip"
 ui ~ #area-fade-in-value: span class="range-readout" :text="1.3s" → span class="range-readout" :text="3.3s"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10065 chars, 96c7461a]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -961,7 +961,7 @@ ui ~ #area-fade-out: input aria-describedby="area-fade-out-value area-fade-out-t
 ui ~ #area-fade-out-value: span class="range-readout" :text="1.8s" → span class="range-readout" :text="3.3s"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10065 chars, 079ceca1]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"

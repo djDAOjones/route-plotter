@@ -15,12 +15,13 @@
  * (tests/mixins.test.js).
  */
 import { getNodeAreaDescription } from './finishContexts.js';
-import { stageProjectModel } from './persistence.js';
+import { prepareCheckedProjectEdit, projectEditError } from './persistence.js';
 import { INTERACTION, CROWD_ENTRY_WEIGHT } from '../config/constants.js';
 import { isMac } from '../config/keybindings.js';
 import { getGraphDepartureShares, getGraphEntryShares } from '../utils/graphRouting.js';
-import { entryWeightValue, ENTRY_WEIGHT_HINT } from '../utils/entryWeight.js';
+import { entryWeightValue, entryWeightHint } from '../utils/entryWeight.js';
 import { encodeSceneKeyPart } from '../utils/sceneSemantics.js';
+import { groupChoiceRole, groupChoiceHint } from '../utils/groupSettings.js';
 import { nearestOnPolyline } from '../utils/segmentHitTest.js';
 import {
   changedSinceShown, clearFieldError, draftOwner, formatFieldNumber, noteShownValue, setControlReason, setRangeReadout,
@@ -592,15 +593,35 @@ export const networkMixin = {
    * Push the selected node/edge into the Node/Edge card controls.
    * Safe with no selection (cards are hidden then anyway).
    */
+  _refreshGroupNetworkHints() {
+    const svc = this.networkEditService, role = groupChoiceRole(svc?.layer);
+    const hints = svc?.active ? NETWORK_CARD_HINTS.active : NETWORK_CARD_HINTS.passive;
+    for (const kind of ['node', 'edge']) {
+      const line = document.getElementById(`network-${kind}-hint`);
+      const text = groupChoiceHint(role, hints[kind]);
+      if (line && line.textContent !== text) line.textContent = text;
+    }
+    const entry = document.getElementById('network-entry-weights-help');
+    const entryText = entryWeightHint(role);
+    if (entry && entry.textContent !== entryText) entry.textContent = entryText;
+    for (const tip of document.querySelectorAll('#network-path-weight-rows [data-tip]')) {
+      const text = groupChoiceHint(role, PATH_WEIGHT_HINT);
+      if (tip.getAttribute('data-tip') !== text) tip.setAttribute('data-tip', text);
+    }
+    this._groupPathHintDefaults ??= new WeakMap();
+    const labels = 'label[for="network-edge-weight"] [data-tip], label[for="network-edge-weight-field"] [data-tip]';
+    for (const tip of document.querySelectorAll(labels)) {
+      if (!this._groupPathHintDefaults.has(tip)) this._groupPathHintDefaults.set(tip, tip.getAttribute('data-tip'));
+      const text = groupChoiceHint(role, this._groupPathHintDefaults.get(tip));
+      if (tip.getAttribute('data-tip') !== text) tip.setAttribute('data-tip', text);
+    }
+  },
+
   syncNetworkCards() {
     // A weight typed for the path shown before goes to it first (Codex r1 #4).
     this._commitEdgeWeightDraft();
     const svc = this.networkEditService;
-    const hints = svc.active ? NETWORK_CARD_HINTS.active : NETWORK_CARD_HINTS.passive;
-    const nodeHint = document.getElementById('network-node-hint');
-    const edgeHint = document.getElementById('network-edge-hint');
-    if (nodeHint) nodeHint.textContent = hints.node;
-    if (edgeHint) edgeHint.textContent = hints.edge;
+    this._refreshGroupNetworkHints();
 
     const node = svc.selectedNode();
     if (node) {
@@ -656,13 +677,9 @@ export const networkMixin = {
     if (weight === CROWD_ENTRY_WEIGHT.DEFAULT) delete saved.entryWeight;
     else saved.entryWeight = weight;
     try {
-      stageProjectModel(JSON.parse(JSON.stringify(candidate)));
-      const cache = this._autosaveBackgroundCache;
-      const background = cache && cache.image === this.background?.image ? cache.dataURL : null;
-      this.imageAssetService.prepareArchive(candidate, background);
+      prepareCheckedProjectEdit(this, candidate, 'saving this edit');
     } catch (failure) {
-      throw new Error(`Entry weight unchanged: ${failure.message}. `
-        + 'Shorten labels or remove unused nodes and paths, then try again.');
+      throw projectEditError('Entry weight unchanged', failure);
     }
     this._flushPendingUndo?.();
     if (weight === CROWD_ENTRY_WEIGHT.DEFAULT) delete node.entryWeight;
@@ -684,7 +701,7 @@ export const networkMixin = {
       rows.replaceChildren(); this._entryWeightRows.clear();
       return;
     }
-    document.getElementById('network-entry-weights-help').textContent = ENTRY_WEIGHT_HINT;
+    document.getElementById('network-entry-weights-help').textContent = entryWeightHint(groupChoiceRole(layer));
     const shares = getGraphEntryShares(layer.graph);
     const current = new Set(shares.map(({ node }) => node));
     for (const [id, row] of this._entryWeightRows) {
@@ -757,13 +774,9 @@ export const networkMixin = {
     if (next) savedNode.area = next;
     else delete savedNode.area;
     try {
-      stageProjectModel(JSON.parse(JSON.stringify(candidate)));
-      const cache = this._autosaveBackgroundCache;
-      const background = cache && cache.image === this.background?.image ? cache.dataURL : null;
-      this.imageAssetService.prepareArchive(candidate, background);
+      prepareCheckedProjectEdit(this, candidate, 'saving this edit');
     } catch (failure) {
-      throw new Error(`Area unchanged: ${failure.message}. `
-        + 'Shorten labels or remove unused nodes and paths, then try again.');
+      throw projectEditError('Area unchanged', failure);
     }
     this._flushPendingUndo?.();
     if (next) node.area = next;
@@ -990,7 +1003,7 @@ export const networkMixin = {
       name.id = nameId;
       name.className = 'network-path-weight-name';
       name.textContent = `Path ${index + 1} to ${NODE_TYPE_LABELS[type]} ${ordinal}`;
-      name.setAttribute('data-tip', PATH_WEIGHT_HINT);
+      name.setAttribute('data-tip', groupChoiceHint(groupChoiceRole(this.networkEditService.layer), PATH_WEIGHT_HINT));
       label.appendChild(name);
 
       const input = document.createElement('input');

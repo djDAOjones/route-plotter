@@ -60,7 +60,7 @@ app ~ focus: "body" → "#scope-route-btn"
 
 ## #scope-next-btn · click
 emit waypoint:selected waypoint[0]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
 app ~ selected: null → "waypoint[0]"
 app ~ selection: "" → "waypoint[0]"
 app ~ focus: "body" → "#scope-next-btn"
@@ -1071,7 +1071,7 @@ emit background:upload [file picked.png image/png]
 ui ~ #canvas-area: div aria-busy="false" class="canvas-area" → div aria-busy="true" class="canvas-area"
 settled:
   emit animation:durationChange 30973.788202
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
   emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 30973.788202, baseDuration: 21938.866969, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
   announced "Unsaved changes"
   announced "Browser recovery could not keep 3 images. The background, picked.png: this browser cannot store images for recovery. The path head image, asset-extras-head.png…[344 chars, 277a5a61]
@@ -1376,7 +1376,7 @@ app ~ focus: "body" → "#layers-strip>li[0]>button[0]"
 
 ## #layers-strip>li[1]>button[0] · click
 emit crowd:selected layer[0]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 app ~ crowd: null → "layer[0]"
 app ~ focus: "body" → "#layers-strip>li[1]>button[0]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="crowd"
@@ -1389,7 +1389,7 @@ ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 4b8a0c98)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
-ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
+ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 69 inside, 1e54bcba)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
 ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item selected"
@@ -1403,7 +1403,7 @@ ui - #route-scope>div[5]: div class="settings-section expanded" data-section="vi
 
 ## #layers-strip>li[1]>button[0] · double-click
 emit crowd:selected layer[0]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 app ~ crowd: null → "layer[0]"
 app ~ focus: "body" → "#layers-strip>li[1]>button[0]>input[1]"
 app ~ focusedText: null → [0,8,"none"]
@@ -1417,7 +1417,7 @@ ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 4b8a0c98)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
-ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
+ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 69 inside, 1e54bcba)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
 ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item selected"
@@ -1436,7 +1436,7 @@ emit crowd:selected layer[0]
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-name", layerId: "ex-uon-crowd"}
 emit crowd:selected layer[0]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].name: "Visitors" → "Renamed"
 app ~ crowd: null → "layer[0]"
@@ -1454,7 +1454,7 @@ ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 4b8a0c98)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
-ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
+ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 69 inside, 1e54bcba)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
 ui ~ #layers-strip>li[1]: li class="layer-item" → li class="layer-item selected"
@@ -1479,7 +1479,7 @@ settled:
 ## #layers-strip>li[1]>button[2] · click
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-visibility", layerId: "ex-uon-crowd"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].visible: true → false
 app ~ focus: "body" → "#layers-strip>li[1]>button[2]"
@@ -1508,7 +1508,7 @@ settled:
   ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="0:28"
 
 ## #layers-strip>li[1]>button[3] · click
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Checking Visitors before duplicating"
 ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Checking Visitors before duplicating"
 ui ~ #layers-strip>li[1]>button[3]: button aria-busy="false" aria-describedby="{#layers-strip>li[1]>span[4]}" aria-label="Duplicate Visitors" class="layer-duplicate" data-tip-desc="{#layers-strip>li[1]>span[4]}" data-tip="Copy this crowd above it in drawing order, with a new pattern." type="button" → button aria-busy="true" aria-describedby="layer-copy-reason-crowd-copy-1 {#layers-strip>li[1]>span[4]}" aria-label="Duplicate Visitors" class="layer-duplicate" data-tip-desc="{#layers-strip>li[1]>span[4]}" data-tip="Copy this crowd above it in drawing order, with a new pattern." disabled="" type="button"
@@ -1517,7 +1517,7 @@ settled:
   emit crowd:selected layer[1]
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
   emit scene:semantic-changed {kind: "crowd-duplicated", layerId: "copy-1"}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}, {11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:copy-1", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}, {12 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:copy-1", focusKey: null}
   emit scene-outline:accepted {scoped: true, clearContext: "crowd-copy-1", formKey: "crowd:ex-uon-crowd:duplicate"}
   announced "Unsaved changes"
   announced "Visitors copy duplicated"
@@ -1540,7 +1540,7 @@ settled:
   ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 4b8a0c98)
   ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
   ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfd4cd76)
-  ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
+  ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 69 inside, 1e54bcba)
   ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
   ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
   ui ~ #layers-strip>li[1]>button[3]: button aria-busy="true" aria-describedby="layer-copy-reason-crowd-copy-1 {#layers-strip>li[1]>span[4]}" aria-label="Duplicate Visitors" class="layer-duplicate" data-tip-desc="{#layers-strip>li[1]>span[4]}" data-tip="Copy this crowd above it in drawing order, with a new pattern." disabled="" type="button" → button aria-busy="false" aria-describedby="{#layers-strip>li[1]>span[4]}" aria-label="Duplicate Visitors" class="layer-duplicate" data-tip-desc="{#layers-strip>li[1]>span[4]}" data-tip="Copy this crowd above it in drawing order, with a new pattern." type="button"
@@ -1589,7 +1589,7 @@ settled:
 emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
 emit scene:semantic-changed {kind: "crowd-added", layerId: "fl_1790154060000_kynqlqqyk"}
 emit crowd:selected layer[1]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}, {11 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:fl_1790154060000_kynqlqqyk", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}, {12 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:fl_1790154060000_kynqlqqyk", focusKey: null}
 announced "Unsaved changes"
 model + scene.flowLayers[1]: 25 values (8b24640c)
 app ~ crowd: null → "layer[1]"
@@ -1608,7 +1608,7 @@ ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, aa532887)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 8736fa52)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, c96aaec2)
-ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, fb73a3df)
+ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 69 inside, d5e70892)
 ui ~ #layers-strip>li[0]: li class="layer-item selected" → li class="layer-item"
 ui ~ #layers-strip>li[0]>button[0]: button aria-pressed="true" class="layer-row" type="button" → button aria-pressed="false" class="layer-row" type="button"
 ui + #layers-strip>li[2]: li class="layer-item selected" (and 14 inside, 54e9be5f)
@@ -1627,7 +1627,7 @@ settled:
 
 ## #waypoint-list>li[0]>button[0] · click
 emit waypoint:add-at-center
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 6, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 6, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model + waypoints[6]: 57 values (a7079ff3)
 model ~ animationState.duration: 21807.894043 → 26790.06598
@@ -1670,7 +1670,7 @@ settled:
 ## #waypoint-list>li[0]>button[0] · double-click
 emit waypoint:add-at-center
 emit waypoint:add-at-center
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 7, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 7, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model + waypoints[6]: 57 values (ae74589f)
 model + waypoints[7]: 57 values (8badef67)
@@ -1722,7 +1722,7 @@ settled:
 
 ## #waypoint-list>li[1] · drag onto the upper half of the next major’s row
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[3], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 4, Extras 5, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
@@ -1786,7 +1786,7 @@ settled:
 
 ## #waypoint-list>li[1] · drag onto the lower half of the next major’s row
 emit waypoints:reordered [waypoint[2], waypoint[0], waypoint[3], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 3, Extras 1, Extras 2, Extras 4, Extras 5, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[0].id: "ex-uon-1" → "ex-uon-2a"
@@ -1971,7 +1971,7 @@ ui - #waypoint-list>li[3]>button[2]: button aria-label="Delete Extras 3" class="
 
 ## #waypoint-list>li[1] · drag onto the upper half of the minor’s row
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[3], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 4, Extras 5, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
@@ -2035,7 +2035,7 @@ settled:
 
 ## #waypoint-list>li[1] · drag onto the lower half of the minor’s row
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[3], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 4, Extras 5, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
@@ -2099,7 +2099,7 @@ settled:
 
 ## #waypoint-list>li[1]>button[0] · click
 emit waypoint:selected waypoint[0]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
 app ~ selected: null → "waypoint[0]"
 app ~ selection: "" → "waypoint[0]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -2127,7 +2127,7 @@ settled:
 ## #waypoint-list>li[1]>button[0] · double-click
 emit waypoint:selected waypoint[0]
 emit waypoint:selected waypoint[0]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
 app ~ selected: null → "waypoint[0]"
 app ~ selection: "" → "waypoint[0]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -2159,7 +2159,7 @@ settled:
 emit waypoint:selected waypoint[0]
 emit waypoint:selected waypoint[0]
 emit waypoint:name-changed {waypoint: waypoint[0], name: "Renamed"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[0].name: "Extras 1" → "Renamed"
 app ~ selected: null → "waypoint[0]"
@@ -2201,7 +2201,7 @@ settled:
 
 ## #waypoint-list>li[1]>button[0] · shift-click
 emit waypoint:selected waypoint[0]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
 app ~ selected: null → "waypoint[0]"
 app ~ selection: "" → "waypoint[0]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -2228,7 +2228,7 @@ settled:
 
 ## #waypoint-list>li[1]>button[0] · Cmd-click
 emit waypoint:selected waypoint[0]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
 app ~ selected: null → "waypoint[0]"
 app ~ selection: "" → "waypoint[0]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -2255,7 +2255,7 @@ settled:
 
 ## #waypoint-list>li[1]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[0]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
 app ~ selected: null → "waypoint[0]"
 app ~ selection: "" → "waypoint[0]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -2285,7 +2285,7 @@ settled:
 ## #waypoint-list>li[1]>span[1]>button[1] · click
 emit waypoints:reordered [waypoint[2], waypoint[0], waypoint[3], waypoint[5]]
 emit ui:announce {message: "Extras 1 moved down"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[0].id: "ex-uon-1" → "ex-uon-2a"
 model ~ waypoints[0].imgX: 0.16 → 0.52
@@ -2436,7 +2436,7 @@ settled:
 
 ## #waypoint-list>li[1]>button[2] · click
 emit waypoint:delete waypoint[0]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
 announced "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
 model ~ waypoints[0].id: "ex-uon-1" → "ex-uon-2"
 model ~ waypoints[0].imgX: 0.16 → 0.4
@@ -2604,7 +2604,7 @@ settled:
 
 ## #waypoint-list>li[2]>button[0] · click
 emit waypoint:selected waypoint[1]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: null → "waypoint[1]"
 app ~ selection: "" → "waypoint[1]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -2632,7 +2632,7 @@ settled:
 ## #waypoint-list>li[2]>button[0] · double-click
 emit waypoint:selected waypoint[1]
 emit waypoint:selected waypoint[1]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: null → "waypoint[1]"
 app ~ selection: "" → "waypoint[1]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -2664,7 +2664,7 @@ settled:
 emit waypoint:selected waypoint[1]
 emit waypoint:selected waypoint[1]
 emit waypoint:name-changed {waypoint: waypoint[1], name: "Renamed"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[1].name: "Extras 2" → "Renamed"
 app ~ selected: null → "waypoint[1]"
@@ -2704,7 +2704,7 @@ settled:
 
 ## #waypoint-list>li[2]>button[0] · shift-click
 emit waypoint:selected waypoint[1]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: null → "waypoint[1]"
 app ~ selection: "" → "waypoint[1]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -2731,7 +2731,7 @@ settled:
 
 ## #waypoint-list>li[2]>button[0] · Cmd-click
 emit waypoint:selected waypoint[1]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: null → "waypoint[1]"
 app ~ selection: "" → "waypoint[1]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -2758,7 +2758,7 @@ settled:
 
 ## #waypoint-list>li[2]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[1]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: null → "waypoint[1]"
 app ~ selection: "" → "waypoint[1]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -2785,7 +2785,7 @@ settled:
 
 ## #waypoint-list>li[2]>button[1] · click
 emit waypoint:delete waypoint[1]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 0, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 0, selectionKey: null, focusKey: null}
 announced "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
 model ~ waypoints[1].id: "ex-uon-2" → "ex-uon-2a"
 model ~ waypoints[1].imgX: 0.4 → 0.52
@@ -2913,7 +2913,7 @@ settled:
 
 ## #waypoint-list>li[3] · drag onto the upper half of the next major’s row
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[3], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 4, Extras 5, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
@@ -2977,7 +2977,7 @@ settled:
 
 ## #waypoint-list>li[3] · drag onto the lower half of the next major’s row
 emit waypoints:reordered [waypoint[0], waypoint[3], waypoint[2], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 4, Extras 5, Extras 3, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
@@ -3100,7 +3100,7 @@ ui - #waypoint-list>li[5]>button[1]: button aria-label="Delete Extras 5" class="
 
 ## #waypoint-list>li[3] · drag onto the upper half of the minor’s row
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[3], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 4, Extras 5, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
@@ -3164,7 +3164,7 @@ settled:
 
 ## #waypoint-list>li[3] · drag onto the lower half of the minor’s row
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[3], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 4, Extras 5, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
@@ -3228,7 +3228,7 @@ settled:
 
 ## #waypoint-list>li[3]>button[0] · click
 emit waypoint:selected waypoint[2]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
 app ~ selected: null → "waypoint[2]"
 app ~ selection: "" → "waypoint[2]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -3256,7 +3256,7 @@ settled:
 ## #waypoint-list>li[3]>button[0] · double-click
 emit waypoint:selected waypoint[2]
 emit waypoint:selected waypoint[2]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
 app ~ selected: null → "waypoint[2]"
 app ~ selection: "" → "waypoint[2]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -3288,7 +3288,7 @@ settled:
 emit waypoint:selected waypoint[2]
 emit waypoint:selected waypoint[2]
 emit waypoint:name-changed {waypoint: waypoint[2], name: "Renamed"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[2].name: "Extras 3" → "Renamed"
 app ~ selected: null → "waypoint[2]"
@@ -3330,7 +3330,7 @@ settled:
 
 ## #waypoint-list>li[3]>button[0] · shift-click
 emit waypoint:selected waypoint[2]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
 app ~ selected: null → "waypoint[2]"
 app ~ selection: "" → "waypoint[2]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -3357,7 +3357,7 @@ settled:
 
 ## #waypoint-list>li[3]>button[0] · Cmd-click
 emit waypoint:selected waypoint[2]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
 app ~ selected: null → "waypoint[2]"
 app ~ selection: "" → "waypoint[2]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -3384,7 +3384,7 @@ settled:
 
 ## #waypoint-list>li[3]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[2]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
 app ~ selected: null → "waypoint[2]"
 app ~ selection: "" → "waypoint[2]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -3412,7 +3412,7 @@ settled:
 ## #waypoint-list>li[3]>span[1]>button[0] · click
 emit waypoints:reordered [waypoint[2], waypoint[0], waypoint[3], waypoint[5]]
 emit ui:announce {message: "Extras 3 moved up"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[0].id: "ex-uon-1" → "ex-uon-2a"
 model ~ waypoints[0].imgX: 0.16 → 0.52
@@ -3564,7 +3564,7 @@ settled:
 ## #waypoint-list>li[3]>span[1]>button[1] · click
 emit waypoints:reordered [waypoint[0], waypoint[3], waypoint[2], waypoint[5]]
 emit ui:announce {message: "Extras 3 moved down"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
 model ~ waypoints[2].imgX: 0.52 → 0.63
@@ -3657,7 +3657,7 @@ settled:
 
 ## #waypoint-list>li[3]>button[2] · click
 emit waypoint:delete waypoint[2]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
 model ~ waypoints[2].imgX: 0.52 → 0.63
@@ -3753,7 +3753,7 @@ settled:
 
 ## #waypoint-list>li[4] · drag onto the upper half of the next major’s row
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[3], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 4, Extras 5, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
@@ -3817,7 +3817,7 @@ settled:
 
 ## #waypoint-list>li[4] · drag onto the lower half of the next major’s row
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[5], waypoint[3]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 6, Extras 4, Extras 5
 announced "Unsaved changes"
 model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-3"
@@ -3930,7 +3930,7 @@ ui - #waypoint-list>li[6]>button[2]: button aria-label="Delete Extras 6" class="
 
 ## #waypoint-list>li[4] · drag onto the upper half of the minor’s row
 emit waypoints:reordered [waypoint[0], waypoint[3], waypoint[2], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 4, Extras 5, Extras 3, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
@@ -4023,7 +4023,7 @@ settled:
 
 ## #waypoint-list>li[4] · drag onto the lower half of the minor’s row
 emit waypoints:reordered [waypoint[0], waypoint[3], waypoint[2], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 4, Extras 5, Extras 3, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
@@ -4116,7 +4116,7 @@ settled:
 
 ## #waypoint-list>li[4]>button[0] · click
 emit waypoint:selected waypoint[3]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
 app ~ selected: null → "waypoint[3]"
 app ~ selection: "" → "waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -4144,7 +4144,7 @@ settled:
 ## #waypoint-list>li[4]>button[0] · double-click
 emit waypoint:selected waypoint[3]
 emit waypoint:selected waypoint[3]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
 app ~ selected: null → "waypoint[3]"
 app ~ selection: "" → "waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -4176,7 +4176,7 @@ settled:
 emit waypoint:selected waypoint[3]
 emit waypoint:selected waypoint[3]
 emit waypoint:name-changed {waypoint: waypoint[3], name: "Renamed"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[3].name: "Extras 4" → "Renamed"
 app ~ selected: null → "waypoint[3]"
@@ -4218,7 +4218,7 @@ settled:
 
 ## #waypoint-list>li[4]>button[0] · shift-click
 emit waypoint:selected waypoint[3]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
 app ~ selected: null → "waypoint[3]"
 app ~ selection: "" → "waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -4245,7 +4245,7 @@ settled:
 
 ## #waypoint-list>li[4]>button[0] · Cmd-click
 emit waypoint:selected waypoint[3]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
 app ~ selected: null → "waypoint[3]"
 app ~ selection: "" → "waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -4272,7 +4272,7 @@ settled:
 
 ## #waypoint-list>li[4]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[3]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
 app ~ selected: null → "waypoint[3]"
 app ~ selection: "" → "waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -4300,7 +4300,7 @@ settled:
 ## #waypoint-list>li[4]>span[1]>button[0] · click
 emit waypoints:reordered [waypoint[0], waypoint[3], waypoint[2], waypoint[5]]
 emit ui:announce {message: "Extras 4 moved up"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-2b"
 model ~ waypoints[2].imgX: 0.52 → 0.63
@@ -4394,7 +4394,7 @@ settled:
 ## #waypoint-list>li[4]>span[1]>button[1] · click
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[5], waypoint[3]]
 emit ui:announce {message: "Extras 4 moved down"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-3"
 model ~ waypoints[3].imgX: 0.63 → 0.78
@@ -4477,7 +4477,7 @@ settled:
 
 ## #waypoint-list>li[4]>button[2] · click
 emit waypoint:delete waypoint[3]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-b1"
 model ~ waypoints[3].imgX: 0.63 → 0.44
@@ -4559,7 +4559,7 @@ settled:
 
 ## #waypoint-list>li[5]>button[0] · click
 emit waypoint:selected waypoint[4]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 app ~ selected: null → "waypoint[4]"
 app ~ selection: "" → "waypoint[4]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -4587,7 +4587,7 @@ settled:
 ## #waypoint-list>li[5]>button[0] · double-click
 emit waypoint:selected waypoint[4]
 emit waypoint:selected waypoint[4]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 app ~ selected: null → "waypoint[4]"
 app ~ selection: "" → "waypoint[4]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -4619,7 +4619,7 @@ settled:
 emit waypoint:selected waypoint[4]
 emit waypoint:selected waypoint[4]
 emit waypoint:name-changed {waypoint: waypoint[4], name: "Renamed"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[4].name: "Extras 5" → "Renamed"
 app ~ selected: null → "waypoint[4]"
@@ -4659,7 +4659,7 @@ settled:
 
 ## #waypoint-list>li[5]>button[0] · shift-click
 emit waypoint:selected waypoint[4]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 app ~ selected: null → "waypoint[4]"
 app ~ selection: "" → "waypoint[4]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -4686,7 +4686,7 @@ settled:
 
 ## #waypoint-list>li[5]>button[0] · Cmd-click
 emit waypoint:selected waypoint[4]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 app ~ selected: null → "waypoint[4]"
 app ~ selection: "" → "waypoint[4]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -4713,7 +4713,7 @@ settled:
 
 ## #waypoint-list>li[5]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[4]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 app ~ selected: null → "waypoint[4]"
 app ~ selection: "" → "waypoint[4]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -4740,7 +4740,7 @@ settled:
 
 ## #waypoint-list>li[5]>button[1] · click
 emit waypoint:delete waypoint[4]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
 announced "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
 model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
 model ~ waypoints[4].imgX: 0.44 → 0.78
@@ -4803,7 +4803,7 @@ settled:
 
 ## #waypoint-list>li[6] · drag onto the upper half of the previous major’s row
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[5], waypoint[3]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 6, Extras 4, Extras 5
 announced "Unsaved changes"
 model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-3"
@@ -4886,7 +4886,7 @@ settled:
 
 ## #waypoint-list>li[6] · drag onto the lower half of the previous major’s row
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[3], waypoint[5]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 4, Extras 5, Extras 6
 announced "Unsaved changes"
 model ~ waypoints[4].id: "ex-uon-b1" → "ex-uon-3"
@@ -4953,7 +4953,7 @@ while over it, the list shows: (add), Extras 1, Extras 2, Extras 3, Extras 4, Ex
 
 ## #waypoint-list>li[6] · drag onto the upper half of the minor’s row
 emit waypoints:reordered [waypoint[0], waypoint[5], waypoint[2], waypoint[3]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 6, Extras 3, Extras 4, Extras 5
 announced "Unsaved changes"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-3"
@@ -5051,7 +5051,7 @@ settled:
 
 ## #waypoint-list>li[6] · drag onto the lower half of the minor’s row
 emit waypoints:reordered [waypoint[0], waypoint[5], waypoint[2], waypoint[3]]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 while over it, the list shows: (add), Extras 1, Extras 2, Extras 6, Extras 3, Extras 4, Extras 5
 announced "Unsaved changes"
 model ~ waypoints[2].id: "ex-uon-2a" → "ex-uon-3"
@@ -5149,7 +5149,7 @@ settled:
 
 ## #waypoint-list>li[6]>button[0] · click
 emit waypoint:selected waypoint[5]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
 app ~ selected: null → "waypoint[5]"
 app ~ selection: "" → "waypoint[5]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -5178,7 +5178,7 @@ settled:
 ## #waypoint-list>li[6]>button[0] · double-click
 emit waypoint:selected waypoint[5]
 emit waypoint:selected waypoint[5]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
 app ~ selected: null → "waypoint[5]"
 app ~ selection: "" → "waypoint[5]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -5211,7 +5211,7 @@ settled:
 emit waypoint:selected waypoint[5]
 emit waypoint:selected waypoint[5]
 emit waypoint:name-changed {waypoint: waypoint[5], name: "Renamed"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[5].name: "Extras 6" → "Renamed"
 app ~ selected: null → "waypoint[5]"
@@ -5254,7 +5254,7 @@ settled:
 
 ## #waypoint-list>li[6]>button[0] · shift-click
 emit waypoint:selected waypoint[5]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
 app ~ selected: null → "waypoint[5]"
 app ~ selection: "" → "waypoint[5]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -5282,7 +5282,7 @@ settled:
 
 ## #waypoint-list>li[6]>button[0] · Cmd-click
 emit waypoint:selected waypoint[5]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
 app ~ selected: null → "waypoint[5]"
 app ~ selection: "" → "waypoint[5]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -5310,7 +5310,7 @@ settled:
 
 ## #waypoint-list>li[6]>button[0] · Ctrl-click
 emit waypoint:selected waypoint[5]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
 app ~ selected: null → "waypoint[5]"
 app ~ selection: "" → "waypoint[5]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="route" → div class="scope-chip" data-scope="waypoint"
@@ -5339,7 +5339,7 @@ settled:
 ## #waypoint-list>li[6]>span[1]>button[0] · click
 emit waypoints:reordered [waypoint[0], waypoint[2], waypoint[5], waypoint[3]]
 emit ui:announce {message: "Extras 6 moved up"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ waypoints[3].id: "ex-uon-2b" → "ex-uon-3"
 model ~ waypoints[3].imgX: 0.63 → 0.78
@@ -5424,7 +5424,7 @@ settled:
 
 ## #waypoint-list>li[6]>button[2] · click
 emit waypoint:delete waypoint[5]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 4, minorCount: 1, selectionKey: null, focusKey: null}
 announced "A crowd node lost the waypoint it followed (Visitors) — back at its own position"
 model ~ animationState.duration: 21807.894043 → 14022.974915
 model - waypoints[5]: 57 values (42c9f4ff)

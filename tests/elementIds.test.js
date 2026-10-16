@@ -119,10 +119,13 @@ const DYNAMIC_LOOKUPS = {
   // DEF-86 (reason for the change): a crowd slider's row is looked up whole,
   // its slider, field, readout, reason and error by their suffixes on the
   // slider's id; syncCrowdEditor writes its other controls by id.
-  'src/app/crowds.js id': { calls: 1, runs: true,
-    what: "syncCrowdEditor's writes to the guide, colour, journey-end and seed controls" },
+  'src/app/crowds.js id': { calls: 2, runs: true,
+    what: "syncCrowdEditor's controls and the group-role hints restored from their original copy" },
   'src/app/crowds.js `${id}${suffix}`': { calls: 1, runs: true,
     what: "a crowd slider's row (rangeParts): the slider, its number field, readout, reason and error line" },
+  // CROWD-08: these group-role hints are refreshed only while a node or edge is inspected.
+  'src/app/network.js `network-${kind}-hint`': { calls: 1, runs: false,
+    what: 'the currently inspected node or edge choice hint; this boot flow inspects neither' },
   'src/app/network.js `network-node-area-${key}`': { calls: 1, runs: true,
     what: 'the Start area card, its shape and dimension fields, disclosures, hints and error lines' },
   'src/app/privacy.js disclosure.returnFocusId': { calls: 1, runs: true,
@@ -179,12 +182,16 @@ const LOOKED_UP = {
   // and the error line, written by the change. PR 5b round 3 (Codex r2 #1): the seed's field twice more, noted
   // as shown for its crowd when it is shown, and read for a draft before the cards show another crowd or none.
   // CROWD-08: duplicate admission also checks the Pattern seed field for an unsubmitted draft.
+  // Groups adds native form feedback; empty crowds separately clear its reason and field error.
   'src/app/crowds.js': words(`
     add-crowd-btn crowd-busyness-add crowd-busyness-add crowd-busyness-add-reason crowd-busyness-graph crowd-busyness-graph
     crowd-busyness-graph
-    crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-reset crowd-busyness-reset
+    crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-handles crowd-busyness-hint crowd-busyness-reset crowd-busyness-reset
     crowd-busyness-reset-reason crowd-busyness-reset-reason
-    crowd-busyness-summary crowd-dot-color crowd-guide-type crowd-lifecycle crowd-lifecycle-hint
+    crowd-busyness-summary crowd-dot-color
+    crowd-group-cancel crowd-group-error crowd-group-error crowd-group-error crowd-group-error
+    crowd-group-form crowd-group-form crowd-group-form crowd-group-hint crowd-group-reason crowd-group-reason
+    crowd-guide-type crowd-lifecycle crowd-lifecycle-hint
     crowd-no-emitter crowd-pattern-hint crowd-reroll-btn crowd-scope crowd-seed-error crowd-seed-error
     crowd-seed-value crowd-seed-value crowd-seed-value crowd-seed-value crowd-seed-value layers-strip
   `),
@@ -202,11 +209,10 @@ const LOOKED_UP = {
   // CROWD-07 X-05: the Node card's title, the span its header button holds.
   'src/app/network.js': words(`
     crowd-guide-hint crowd-trace-route-btn crowd-trace-route-reason network-edge-delete network-edge-direction
-    network-edge-direction network-edge-hint network-edge-swap network-edge-swap network-edge-weight
+    network-edge-direction network-edge-swap network-edge-swap network-edge-weight
     network-edge-weight network-edge-weight-field network-edge-weight-field-error network-edge-weight-reason
     network-edge-weight-value network-edit-btn network-entry-weight-rows network-entry-weights
-    network-entry-weights-help network-node-delete
-    network-node-hint
+    network-entry-weights-help network-entry-weights-help network-node-delete
     network-node-type network-node-type network-path-weight-rows network-path-weight-rows
     network-path-weights node-section-title
   `),

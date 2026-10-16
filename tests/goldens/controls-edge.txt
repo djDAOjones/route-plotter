@@ -17,7 +17,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 ## #network-edge-direction · choose "two-way"
 emit network:changed {commit: true}
 emit network:edge-selected {edge: {id: "ge_trace_ex-uon-1__ex-uon-2", sourceId: "gn_trace_ex-uon-1", targetId: "gn_trace_ex-uon-2", weight: 1, direction: "two-way", controlPoints: [0 items]}}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].graph.edges[0].direction: "one-way" → "two-way"
 app ~ focus: "body" → "#network-edge-direction"
@@ -41,7 +41,7 @@ settled:
 
 ## #network-edge-swap · click
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].graph.edges[0].sourceId: "gn_trace_ex-uon-1" → "gn_trace_ex-uon-2"
 model ~ scene.flowLayers[0].graph.edges[0].targetId: "gn_trace_ex-uon-2" → "gn_trace_ex-uon-1"
@@ -85,7 +85,7 @@ ui ~ #network-edge-weight: input aria-describedby="network-edge-weight-value net
 ui ~ #network-edge-weight-field: input aria-describedby="network-edge-weight-value network-edge-weight-field-tip" min="0.01" step="any" type="number" value="1" :value="1" → input aria-describedby="network-edge-weight-value network-edge-weight-field-tip" min="0.01" step="any" type="number" value="1" :value="1.7"
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10067 chars, 343f6ed5]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -114,7 +114,7 @@ ui ~ #network-edge-weight-field: input aria-describedby="network-edge-weight-val
 ui ~ #network-edge-weight-reason: p (not shown) → p class="section-hint range-reason" :text="Beyond the slider's reach — use the number field."
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10066 chars, 5ab7620b]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -136,7 +136,7 @@ ui ~ #network-edge-weight-field: input aria-describedby="network-edge-weight-val
 ui ~ #network-edge-weight-reason: p (not shown) → p class="section-hint range-reason" :text="Beyond the slider's reach — use the number field."
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 1, redoCount: 0}
-  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "edge:ex-uon-crowd:ge_trace_ex-uon-1__ex-uon-2", focusKey: null}
   announced "Saved to browser recovery"
   storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10052 chars, 9e1b22f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10069 chars, 55c8eb42]
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Unsaved changes" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
@@ -147,7 +147,7 @@ settled:
 emit network:edge-deselected
 emit network:changed {commit: true}
 emit ui:toast {message: "Deleted path — press Ctrl+Z to undo"}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 announced "Unsaved changes"
 model ~ scene.flowLayers[0].graph.edges[0].id: "ge_trace_ex-uon-1__ex-uon-2" → "ge_trace_ex-uon-2__ex-uon-3"
 model ~ scene.flowLayers[0].graph.edges[0].sourceId: "gn_trace_ex-uon-1" → "gn_trace_ex-uon-2"
@@ -184,7 +184,7 @@ ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 7f3a1b23)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
 ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
-ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 41 inside, 3991aad6)
+ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 69 inside, 1e54bcba)
 ui ~ #edge-scope: div class="scope-group" → div (not shown)
 ui + #toast-container>div[1]: div class="toast" :text="Deleted path — press Ctrl+Z to undo"
 ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"

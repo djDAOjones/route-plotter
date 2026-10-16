@@ -14,7 +14,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #network-node-area-shape · choose "none"
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 model - scene.flowLayers[0].graph.nodes[0].area.shape: "rectangle"
 model - scene.flowLayers[0].graph.nodes[0].area.width: 0.1
 model - scene.flowLayers[0].graph.nodes[0].area.height: 0.1
@@ -58,7 +58,7 @@ settled:
 
 ## #network-node-area-shape · choose "ellipse"
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 model ~ scene.flowLayers[0].graph.nodes[0].area.shape: "rectangle" → "ellipse"
 app ~ focus: "body" → "#network-node-area-shape"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
@@ -79,7 +79,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #network-node-area-width · enter 24
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 model ~ scene.flowLayers[0].graph.nodes[0].area.width: 0.1 → 0.24
 app ~ focus: "body" → "#network-node-area-width"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
@@ -112,7 +112,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #network-node-area-height · enter 24
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 model ~ scene.flowLayers[0].graph.nodes[0].area.height: 0.1 → 0.24
 app ~ focus: "body" → "#network-node-area-height"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
@@ -150,7 +150,7 @@ ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-too
 
 ## #network-node-area-turn · enter 24
 emit network:changed {commit: true}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "node:ex-uon-crowd:gn_trace_ex-uon-1", focusKey: null}
 model ~ scene.flowLayers[0].graph.nodes[0].area.turn: 0 → 24
 app ~ focus: "body" → "#network-node-area-turn"
 ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"

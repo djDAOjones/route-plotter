@@ -8,6 +8,7 @@
  */
 
 import { getNodeAreaDescription } from './finishContexts.js';
+import { shiftDecimal } from '../utils/uiReadouts.js';
 import { SceneOutlineController } from '../controllers/SceneOutlineController.js';
 import {
   buildSceneOutlineSnapshot,
@@ -285,6 +286,7 @@ export const sceneOutlineMixin = {
       crowdDuplicateBusy: this._crowdDuplicateJobCurrent(),
       nodeAreaDescriptions,
       nodeEntryContexts,
+      emitterGroupContexts: this._groupOutlineContexts?.() ?? null,
       waypoints: this.waypoints,
       scene: this.scene,
       selectionKey: this._sceneOutlineSelectionKey,
@@ -330,6 +332,7 @@ export const sceneOutlineMixin = {
         case 'add-crowd': result = this._outlineAddCrowd(); break;
         case 'update-crowd': result = this._outlineUpdateCrowd(command); break;
         case 'delete-crowd': result = this._outlineDeleteCrowd(command); break;
+        case 'update-groups': return this._outlineUpdateGroups(command);
         case 'update-emitter': result = this._outlineUpdateEmitter(command); break;
         case 'add-node': result = this._outlineAddNode(command); break;
         case 'update-node': result = this._outlineUpdateNode(command); break;
@@ -662,6 +665,25 @@ export const sceneOutlineMixin = {
     this._queueSceneOutlineRefresh(
       fallback ? `${sceneOutlineKey('crowd', fallback.id)}:select` : 'crowds:add'
     );
+  },
+
+  _outlineUpdateGroups(command) {
+    const layer = this.scene.getFlowLayer(command.layerId), emitter = layer?.getEmitter(command.emitterId);
+    if (!emitter || command.groupsContext !== this._groupContext(layer, emitter)) return;
+    try {
+      const unavailable = layer.guideType !== 'graph' || !['collect', 'disappear'].includes(emitter.lifecycleMode)
+        || emitter.waitAtStart;
+      this._setEmitterGroups(layer, emitter, {
+        groups: command.groups === 'on',
+        groupSize: unavailable ? emitter.groupSize : Number(command.groupSize),
+        groupWidth: unavailable ? emitter.groupWidth : originalCanonical(command, 'groupWidth')
+          ?? shiftDecimal(command.groupWidth?.trim() ? Number(command.groupWidth) : NaN, -2),
+      }, command.groupsContext, 'outline');
+      this.eventBus.emit('scene-outline:accepted', { formKey: command.outlineFormKey, formScoped: true });
+    } catch (failure) {
+      this.eventBus.emit('scene-outline:error', { formKey: command.outlineFormKey,
+        message: failure.message, formScoped: true });
+    }
   },
 
   _outlineUpdateEmitter(command) {

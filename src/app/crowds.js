@@ -13,7 +13,7 @@
  * crowdsMixin). Method names must stay unique across mixins
  * (tests/mixins.test.js).
  */
-import { hasFinishAreas } from './finishContexts.js';
+import { hasFinishAreas, finishRenderReference } from './finishContexts.js';
 import { isMac } from '../config/keybindings.js';
 import { refreshSwatchPicker } from '../components/SwatchPicker.js';
 import {
@@ -26,11 +26,16 @@ import {
 import { traceRouteIntoGraph, applyTraceToLayer } from '../utils/routeTrace.js';
 import { FLOW_LAYER_LIMITS } from '../models/FlowLayer.js';
 import { GraphModel } from '../models/GraphModel.js';
-import { EMITTER_LIMITS } from '../models/Emitter.js';
+import { Emitter, EMITTER_LIMITS } from '../models/Emitter.js';
 import { SCENE_LIMITS } from '../models/Scene.js';
 import { DOT_BASE_RADIUS_PX } from '../services/DotRenderer.js';
-import { stageProjectModel, getRetainedBackgroundDataURL } from './persistence.js';
+import {
+  stageProjectModel, getRetainedBackgroundDataURL, prepareCheckedProjectEdit, projectEditError,
+} from './persistence.js';
 import { sceneOutlineKey } from '../utils/sceneSemantics.js';
+import {
+  assertGroupSettings, groupsUnavailableReason, groupsActive, groupChoiceHint, GROUP_HINT,
+} from '../utils/groupSettings.js';
 import { createCrowdCopy } from '../utils/crowdCopy.js';
 import { assertArchiveTextSafe } from '../utils/archiveText.js';
 import { resolveGraphAnchors } from '../utils/routeAnchors.js';
@@ -293,6 +298,7 @@ export const crowdsMixin = {
    * Call once at init, after the static DOM exists.
    */
   setupCrowdControls() {
+    this._setupCrowdGroupControls();
     this._layersStripEl = document.getElementById('layers-strip');
     this._addCrowdBtn = document.getElementById('add-crowd-btn');
 
@@ -336,6 +342,7 @@ export const crowdsMixin = {
     // Every one, `journeys: false` too, may change where the scene ends
     // (CROWD-05): the lifecycle decides whether a crowd finishes at all.
     this.eventBus.on('crowd:param-changed', ({ journeys = true } = {}) => {
+      this._syncCrowdGroupControls();
       this.saveUndoStateDebounced();
       this.autoSave();
       this.queueRender();
@@ -1130,6 +1137,235 @@ export const crowdsMixin = {
     return item;
   },
 
+  _groupContext(layer, emitter) {
+    this._groupContexts ??= new WeakMap();
+    const state = JSON.stringify([layer.guideType, emitter.lifecycleMode, emitter.groups,
+      emitter.groupSize, emitter.groupWidth, emitter.waitAtStart ?? false]);
+    let value = this._groupContexts.get(emitter);
+    if (!value || value.layer !== layer || value.state !== state) {
+      this._groupContextSerial = (this._groupContextSerial || 0) + 1;
+      value = { layer, state, token: String(this._groupContextSerial) };
+      this._groupContexts.set(emitter, value);
+    }
+    return value.token;
+  },
+
+  _groupOutlineContexts() {
+    const contexts = new Map();
+    for (const layer of this.scene.getFlowLayers()) for (const emitter of layer.emitters) {
+      contexts.set(`${sceneOutlineKey('emitter', layer.id, emitter.id)}:groups-apply`, {
+        context: this._groupContext(layer, emitter), groups: emitter.groups,
+        groupSize: emitter.groupSize, groupWidth: emitter.groupWidth,
+      });
+    }
+    return contexts;
+  },
+
+  _captureCrowdGroupDraft() {
+    const record = this._groupCardRecord, form = document.getElementById('crowd-group-form');
+    if (!record || !form || form.hidden) return;
+    record.values = { groups: form.elements.groups.checked,
+      groupSize: form.elements.groupSize.value, groupWidth: form.elements.groupWidth.value };
+    this._groupCardDrafts.set(record.emitter, record);
+  },
+
+  _hasPendingGroupDrafts(exemption = null) {
+    this._captureCrowdGroupDraft();
+    const live = this.scene.getFlowLayers();
+    for (const [emitter, record] of this._groupCardDrafts || []) {
+      if (!live.includes(record.layer) || !record.layer.emitters.includes(emitter)
+          || this._groupContext(record.layer, emitter) !== record.context) {
+        this._groupCardDrafts.delete(emitter); continue;
+      }
+      if (exemption?.surface === 'card' && exemption.emitter === emitter) continue;
+      if (exemption && exemption.emitter !== emitter) continue;
+      const v = record.values;
+      if (v.groups !== emitter.groups || !v.groupSize.trim() || !v.groupWidth.trim()
+          || Number(v.groupSize) !== emitter.groupSize
+          || (v.groupWidth !== record.shownWidth
+            && shiftDecimal(Number(v.groupWidth), -2) !== emitter.groupWidth)) return true;
+    }
+    const outlineExemption = exemption ? {
+      formKey: `${sceneOutlineKey('emitter', exemption.layer.id, exemption.emitter.id)}:groups-apply`,
+      surface: exemption.surface,
+    } : null;
+    return !!this.sceneOutlineController?.pendingGroupDrafts?.(this._groupOutlineContexts(), outlineExemption)?.length;
+  },
+
+  _setupCrowdGroupControls() {
+    this._groupCardDrafts = new Map();
+    const form = document.getElementById('crowd-group-form');
+    if (!form) return;
+    document.getElementById('crowd-group-hint').textContent = GROUP_HINT;
+    form.addEventListener('input', () => this._captureCrowdGroupDraft());
+    form.addEventListener('change', () => this._captureCrowdGroupDraft());
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const record = this._groupCardRecord;
+      if (!record || !form.reportValidity() || this.scene.getFlowLayer(record.layer.id) !== record.layer
+          || !record.layer.emitters.includes(record.emitter)) return;
+      this._captureCrowdGroupDraft();
+      try {
+        const eligible = !groupsUnavailableReason(record.layer, record.emitter);
+        this._setEmitterGroups(record.layer, record.emitter, {
+          groups: form.elements.groups.checked,
+          groupSize: eligible ? Number(form.elements.groupSize.value) : record.emitter.groupSize,
+          groupWidth: !eligible || form.elements.groupWidth.value === record.shownWidth
+            ? record.emitter.groupWidth : shiftDecimal(Number(form.elements.groupWidth.value), -2),
+        }, record.context, 'card');
+        record.error = ''; this._groupCardDrafts.delete(record.emitter);
+        this._groupCardRecord = null; this._syncCrowdGroupControls();
+      } catch (failure) {
+        record.error = failure.message;
+        for (const field of [form.elements.groups, form.elements.groupSize, form.elements.groupWidth]) {
+          showFieldError(field, document.getElementById('crowd-group-error'), failure.message);
+        }
+        this.announce(failure.message);
+      }
+    });
+    document.getElementById('crowd-group-cancel').addEventListener('click', () => {
+      const record = this._groupCardRecord;
+      if (record) this._groupCardDrafts.delete(record.emitter);
+      this._groupCardRecord = null; this._syncCrowdGroupControls();
+    });
+    const reset = () => {
+      this._groupCardDrafts.clear(); this._groupCardRecord = null; this._syncCrowdGroupControls();
+    };
+    this.eventBus.on('project:replaced', reset); this.eventBus.on('app:cleared', reset);
+  },
+
+  _syncCrowdGroupControls() {
+    const form = document.getElementById('crowd-group-form');
+    if (!form) return;
+    this._captureCrowdGroupDraft();
+    const layer = this.selectedCrowd, emitter = layer?.emitters[0];
+    form.hidden = !layer;
+    this._syncGroupRoleHints();
+    if (!emitter) {
+      // The empty card keeps disabled settings and their usable help, like
+      // Dots and Release. Feedback still belongs to its original emitter.
+      this._groupCardRecord = null;
+      const reason = document.getElementById('crowd-group-reason');
+      if (reason.textContent) reason.textContent = '';
+      reason.hidden = true;
+      for (const field of form.querySelectorAll('input')) {
+        clearFieldError(field, document.getElementById('crowd-group-error'));
+      }
+      return;
+    }
+    const context = this._groupContext(layer, emitter);
+    let record = this._groupCardDrafts?.get(emitter);
+    if (!record || record.context !== context) record = { layer, emitter, context, error: '', values: {
+      groups: emitter.groups, groupSize: String(emitter.groupSize),
+      groupWidth: formatFieldNumber(shiftDecimal(emitter.groupWidth, 2)),
+    } };
+    record.shownWidth ??= formatFieldNumber(shiftDecimal(emitter.groupWidth, 2));
+    this._groupCardDrafts ??= new Map(); this._groupCardDrafts.set(emitter, record);
+    this._groupCardRecord = record;
+    form.elements.groups.checked = record.values.groups;
+    form.elements.groupSize.value = record.values.groupSize; form.elements.groupWidth.value = record.values.groupWidth;
+    const reason = groupsUnavailableReason(layer, emitter);
+    const line = document.getElementById('crowd-group-reason');
+    line.textContent = reason ? `${emitter.groups ? 'Stored on; turn off, or ' : ''}${reason}` : '';
+    line.hidden = !reason;
+    form.elements.groups.disabled = !!reason && !emitter.groups;
+    form.elements.groupSize.disabled = !!reason; form.elements.groupWidth.disabled = !!reason;
+    form.querySelector('[type="submit"]').disabled = !!reason && !emitter.groups;
+    for (const field of [form.elements.groups, form.elements.groupSize, form.elements.groupWidth]) {
+      addDescription(field, 'crowd-group-reason', { first: true });
+      addDescription(field, 'crowd-group-hint', { first: true });
+      if (record.error) showFieldError(field, document.getElementById('crowd-group-error'), record.error);
+      else clearFieldError(field, document.getElementById('crowd-group-error'));
+    }
+  },
+
+  _syncGroupRoleHints() {
+    const layer = this.selectedCrowd, emitter = layer?.emitters[0];
+    const active = !!emitter && groupsActive(layer, emitter);
+    const overrides = {
+      'crowd-release-start-label': "When the first group sets off, as a position in the project's reference timeline",
+      'crowd-release-duration-label':
+        "How much of the project's reference timeline the group releases are spread across",
+      'crowd-speed-variance-label': 'Per-group pace variation — 0% moves every group at the same speed',
+      'crowd-onset-variance-label': 'How unevenly groups set off within the release window',
+      'crowd-intensity-ramp-label':
+        'Earlier sets more groups off near the start; Later near the end; Even favours neither',
+    };
+    this._groupHintDefaults ??= new Map();
+    for (const [id, replacement] of Object.entries(overrides)) {
+      const tip = document.getElementById(id);
+      if (!tip) continue;
+      if (!this._groupHintDefaults.has(id)) this._groupHintDefaults.set(id, tip.getAttribute('data-tip'));
+      const text = active ? replacement : this._groupHintDefaults.get(id);
+      if (tip.getAttribute('data-tip') !== text) tip.setAttribute('data-tip', text);
+    }
+    const hint = document.getElementById('crowd-busyness-hint');
+    if (hint) {
+      this._groupBusynessHintDefault ??= hint.textContent;
+      const text = groupChoiceHint(active ? 'group' : null, this._groupBusynessHintDefault);
+      if (hint.textContent !== text) hint.textContent = text;
+    }
+    for (const field of document.querySelectorAll('#crowd-busyness-handles input[data-busyness-field="value"]')) {
+      const tip = field.closest('label')?.querySelector('[data-tip]');
+      const text = groupChoiceHint(active ? 'group' : null, BUSYNESS_HINTS.value);
+      if (tip && tip.getAttribute('data-tip') !== text) tip.setAttribute('data-tip', text);
+    }
+    const pattern = document.getElementById('crowd-pattern-hint');
+    if (pattern && emitter) {
+      const text = active
+      ? 'Re-roll changes group Entry, path, release and pace choices, '
+        + 'plus each dot’s start point and walking variation.'
+      : layer.guideType === 'graph'
+        ? 'Path shares set the route proportions. Re-roll changes which dots take each path, '
+          + 'plus individual walking and set-off variation.'
+        : 'Re-roll changes individual walking and set-off variation. '
+          + 'Custom networks also re-roll which dots take each path.';
+      if (pattern.textContent !== text) pattern.textContent = text;
+    }
+  },
+
+  /** Both native surfaces share one synchronous, checked durable owner. */
+  _setEmitterGroups(layer, emitter, values, context, surface) {
+    if (this.scene.getFlowLayer(layer?.id) !== layer || !layer.emitters.includes(emitter)
+        || context !== this._groupContext(layer, emitter)) {
+      throw new Error('Groups changed. Reopen this panel and try again.');
+    }
+    assertGroupSettings(values);
+    const next = Emitter.fromJSON({ ...emitter.toJSON(), ...values });
+    const unchanged = ['groups', 'groupSize', 'groupWidth'].every(key => next[key] === emitter[key]);
+    const reason = groupsUnavailableReason(layer, emitter);
+    if (reason && !(unchanged || (emitter.groups && !next.groups
+        && next.groupSize === emitter.groupSize && next.groupWidth === emitter.groupWidth))) throw new Error(reason);
+    if (unchanged) return false;
+    const exemption = { layer, emitter, surface };
+    if (this._hasPendingGroupDrafts(exemption)) {
+      throw new Error(`The ${surface === 'card' ? 'scene outline' : 'crowd card'} has an unapplied edit. `
+        + 'Use Apply groups or Cancel edits there, then try again.');
+    }
+    this._assertCrowdDuplicateReady(exemption);
+    const candidate = this._buildProjectSnapshot({ includeAssets: false });
+    const saved = candidate.scene.flowLayers.find(item => item.id === layer.id);
+    saved.emitters[saved.emitters.findIndex(item => item.id === emitter.id)] = next.toJSON();
+    let checked;
+    try {
+      const staged = stageProjectModel(candidate);
+      candidate.renderReference = finishRenderReference(
+        staged.scene, candidate.renderReference, candidate.timingReference);
+      checked = prepareCheckedProjectEdit(this, candidate, 'saving these groups');
+    } catch (failure) { throw projectEditError('Groups unchanged', failure); }
+    this._flushPendingUndo();
+    emitter.update({ groups: next.groups, groupSize: next.groupSize, groupWidth: next.groupWidth });
+    this.renderReference = checked.candidate.renderReference;
+    this._groupCardDrafts?.delete(emitter);
+    if (this._groupCardRecord?.emitter === emitter) this._groupCardRecord = null;
+    this.saveUndoState(); this.autoSave(); this.queueRender();
+    this._syncCrowdGroupControls(); this._syncCrowdLifecycleHint(); this._syncNodeAreaCard?.();
+    this._refreshGroupNetworkHints?.();
+    this.scheduleSceneEnd?.(); this._queueSceneOutlineRefresh();
+    this.announce('Groups updated. Undo is available.');
+    return true;
+  },
+
   _crowdDuplicateContext(layer) {
     this._crowdDuplicateContexts ??= new WeakMap();
     if (!this._crowdDuplicateContexts.has(layer)) {
@@ -1144,27 +1380,33 @@ export const crowdsMixin = {
       this.scene.getFlowLayer(job.source.id) === job.source && isAsyncProjectOperationCurrent(this, job.token);
   },
 
-  _assertCrowdDuplicateReady() {
-    if (this._openingLabel) throw new Error('Wait for the project to open before duplicating this crowd.');
+  _assertCrowdDuplicateReady(groupExemption = null) {
+    // Preserve the existing copy feedback while naming a submitted Groups action.
+    const refusal = message => new Error(groupExemption
+      ? message.replace(/duplicating(?: this crowd)?/g, 'applying groups') : message);
+    if (this._hasPendingGroupDrafts(groupExemption)) {
+      throw refusal('Finish the group edit with Apply groups or Cancel edits before continuing.');
+    }
+    if (this._openingLabel) throw refusal('Wait for the project to open before duplicating this crowd.');
     if (this._layersStripEl?.querySelector('.layer-rename-input')) {
-      throw new Error('Finish renaming the crowd before duplicating. Then try again.');
+      throw refusal('Finish renaming the crowd before duplicating. Then try again.');
     }
     if (this.networkEditService?.drag) {
-      throw new Error('Finish moving the network before duplicating this crowd.');
+      throw refusal('Finish moving the network before duplicating this crowd.');
     }
     if (this.interactionHandler?.activePointer || this.areaDrawingService?.isDrawing ||
         this.areaEditService?.isDragging || this._crowdBusynessDrag) {
-      throw new Error('Finish or cancel the current map edit before duplicating this crowd.');
+      throw refusal('Finish or cancel the current map edit before duplicating this crowd.');
     }
     if (this._hasPendingNetworkCardDrafts()) {
-      throw new Error('Finish editing the current network field before duplicating.');
+      throw refusal('Finish editing the current network field before duplicating.');
     }
     const fields = [...CROWD_RANGES.map(entry => rangeParts(entry.id).field),
       document.getElementById('crowd-seed-value'),
       ...document.querySelectorAll('#crowd-busyness-handles input:not([readonly])')];
     const inScene = emitter => this.scene.getFlowLayers().some(layer => layer.emitters.includes(emitter));
     if (fields.some(field => !field?.disabled && draftOwner(field) && inScene(draftOwner(field)))) {
-      throw new Error('Finish editing the current crowd field before duplicating.');
+      throw refusal('Finish editing the current crowd field before duplicating.');
     }
   },
 
@@ -1481,7 +1723,8 @@ export const crowdsMixin = {
     set('crowd-guide-type', layer.guideType);
     this.updateGuideCard?.(); // Network mixin's Edit-network button + hint
     this._syncCrowdLifecycleHint(); // Before the emitter guard: no dots, no hint
-    this._syncCrowdEmptyState(Boolean(em)); // The cards say why they are off (UI-06 B-31)
+    this._syncCrowdEmptyState(Boolean(em));
+    this._syncCrowdGroupControls(); // The cards say why they are off (UI-06 B-31)
     // Before the guard too: a reason or an error about the crowd shown before goes, emitter or not (DEF-86).
     this._clearCrowdRangeNotes();
     if (!em) return;
@@ -1496,12 +1739,7 @@ export const crowdsMixin = {
     noteShownValue(document.getElementById('crowd-seed-value'), em); // what is typed there is this crowd's (Codex r2 #1)
     this._syncCrowdBusynessEditor(em);
 
-    const hint = document.getElementById('crowd-pattern-hint');
-    if (hint) {
-      hint.textContent = layer.guideType === 'graph'
-        ? 'Path shares set the route proportions. Re-roll changes which dots take each path, plus individual walking and set-off variation.'
-        : 'Re-roll changes individual walking and set-off variation. Custom networks also re-roll which dots take each path.';
-    }
+    this._syncGroupRoleHints();
 
     // Chip text follows crowd selection/name via the UIController's own
     // crowd listeners; nothing to do here beyond the controls.
@@ -1700,7 +1938,8 @@ export const crowdsMixin = {
   /** @private */
   _crowdBusynessNumberControl(labelText, index, field, value, { readOnly = false, owner = null } = {}) {
     const label = document.createElement('label');
-    label.appendChild(busynessLabelText(labelText, BUSYNESS_HINTS[field]));
+    label.appendChild(busynessLabelText(labelText, groupChoiceHint(
+      groupsActive(this.selectedCrowd, this.selectedCrowd?.emitters[0]) ? 'group' : null, BUSYNESS_HINTS[field])));
     const input = document.createElement('input');
     input.type = 'number';
     input.min = '0';

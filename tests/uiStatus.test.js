@@ -1070,22 +1070,24 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
     const line = id('crowd-no-emitter');
     expect(line.hidden).toBe(true);
     const ownRules = Object.fromEntries(CARDS.map(name => [name, disabledIn(name)]));
-    expect(ownRules).toEqual({ dots: [], release: ['crowd-busyness-reset'], motion: [] });
+    expect(ownRules).toEqual({ dots: [], release: ['crowd-busyness-reset'],
+      motion: ['crowd-groups', 'crowd-group-size', 'crowd-group-width', 'crowd-group-apply'] });
 
     app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
 
     expect(line.hidden).toBe(false);
     // What to do, in the panel's words (reason: UI-06 B-31, glossary §D, the owner's words [Q4]).
     expect(line.textContent).toBe('This crowd has no dots. To start again, delete it in Layers and choose + Add crowd.');
-    // Every control that edits the crowd is disabled, all 34 of them: only
-    // the 12 hints' triggers are left out ([editable, help] per card).
+    // Every control that edits the crowd is disabled, all 39 of them: only
+    // the 15 hints' triggers are left out ([editable, help] per card).
     // (Reason for 12, was 11: the Pattern seed's label has a hint now,
     // CROWD-07 F18. Reason for 34, was 24: DEF-86's number field beside each
     // of the nine sliders, and the Pattern seed, a field now (CROWD-07 F16).
     // A number field is named and described by its slider's label and hint,
-    // so it brings no trigger of its own.)
+    // so it brings no trigger of its own. CROWD-08 adds five Groups controls
+    // and their three field hints.)
     expect(Object.fromEntries(CARDS.map(name => [name, [editableOf(name).length, helpOf(name).length]])))
-      .toEqual({ dots: [15, 3], release: [14, 6], motion: [5, 3] });
+      .toEqual({ dots: [15, 3], release: [14, 6], motion: [10, 6] });
     for (const name of CARDS) {
       expect(editableOf(name).filter(control => !control.disabled), `${name} controls left enabled`).toEqual([]);
       expect(card(name).querySelector('.section-header').getAttribute('aria-describedby')).toBe('crowd-no-emitter');
@@ -1094,12 +1096,13 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
     expect(id('crowd-guide-type').disabled).toBe(false);
     expect(id('crowd-guide-type').value).toBe('graph');
 
-    // Help stays (Codex r3, question 2-2): all 12 "?" triggers are enabled,
+    // Help stays (Codex r3, question 2-2): all 15 "?" triggers are enabled,
     // and each opens its explanation by keyboard and by pointer (12, was 11:
-    // the Pattern seed's hint, CROWD-07 F18).
+    // the Pattern seed's hint, CROWD-07 F18; three more for Groups, CROWD-08).
     const help = CARDS.flatMap(helpOf);
     const named = trigger => trigger.getAttribute('aria-label');
-    expect(help).toHaveLength(12);
+    expect(help).toHaveLength(15);
+    expect(id('crowd-group-form').hidden).toBe(false);
     expect(help.filter(trigger => trigger.disabled || trigger.hidden).map(named)).toEqual([]);
     /** The explanation showing, if any: the one shared hint, made on first use. */
     const shown = () => {
@@ -1166,6 +1169,8 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
       const option = control.closest('.swatch-option');
       return { fieldset: control.closest('fieldset.swatch-fieldset').disabled, cursor: cascade(option, 'cursor')?.value, opacity: cascade(option, 'opacity')?.value };
     }
+    if (control.type === 'checkbox') return { cursor, accent: hex(paintOf(control, 'accent-color')),
+      labelCursor: cascade(control.closest('.crowd-group-toggle'), 'cursor')?.value };
     if (control.classList.contains('btn')) return { cursor };
     throw new Error(`#${control.id}: a ${control.type} control this test does not know how to look at`);
   }
@@ -1189,15 +1194,16 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
       field: { cursor: 'not-allowed', fill: field, text: mark, border: edge },
       radio: { fieldset: true, cursor: 'not-allowed', opacity: '0.6' },
       button: { cursor: 'not-allowed' },
+      checkbox: { cursor: 'not-allowed', accent: mark, labelCursor: 'not-allowed' },
     };
     const kind = (control) => {
       if (control.tagName === 'SELECT' || control.type === 'number') return 'field';
-      return control.type === 'range' || control.type === 'radio' ? control.type : 'button';
+      return ['range', 'radio', 'checkbox'].includes(control.type) ? control.type : 'button';
     };
 
     app.eventBus.emit('crowd:selected', app.scene.getFlowLayer('empty'));
     const controls = shown();
-    expect(new Set(controls.map(kind))).toEqual(new Set(['range', 'field', 'radio', 'button']));
+    expect(new Set(controls.map(kind))).toEqual(new Set(['range', 'field', 'radio', 'button', 'checkbox']));
     for (const control of controls) {
       expect(control.disabled, `#${control.id || control.value}`).toBe(true);
       expect(look(control), `#${control.id || control.value}`).toEqual(DISABLED[kind(control)]);
@@ -1219,6 +1225,10 @@ describe('a crowd with no emitter (UI-06 B-31)', () => {
       }
       if (kind(control) === 'radio') expect([now.fieldset, now.opacity], `#${control.id || control.value}`).toEqual([false, undefined]);
     }
+    // An eligible emitter restores the native checkbox and its whole label.
+    full.setGuideType('graph'); full.emitters[0].update({ lifecycleMode: 'collect' }); app.syncCrowdEditor();
+    expect(id('crowd-groups').disabled).toBe(false);
+    expect(look(id('crowd-groups'))).toEqual({ cursor: 'pointer', accent, labelCursor: 'pointer' });
   });
 });
 

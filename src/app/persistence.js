@@ -6,7 +6,7 @@
  * RoutePlotter instance; main.js attaches the group via
  * Object.assign(RoutePlotter.prototype, persistenceMixin).
  */
-import { finishRenderReference, hasFinishAreas } from './finishContexts.js';
+import { finishRenderReference, hasReferenceMotion } from './finishContexts.js';
 import {
   ANIMATION,
   BACKGROUND_VISIBILITY,
@@ -595,6 +595,29 @@ function getUndoBaseline(staged) {
   return baseline;
 }
 
+/** Detached canonical Scene and exact archive proof for synchronous checked edits. */
+export function prepareCheckedProjectEdit(app, projectData, action) {
+  const candidate = JSON.parse(JSON.stringify(projectData));
+  candidate.scene = stageProjectModel(candidate).scene.toJSON();
+  // Constructor defaults/omission can alter tree size; validate the final shape too.
+  stageProjectModel(candidate);
+  const background = getRetainedBackgroundDataURL(app, action);
+  const prepared = app.imageAssetService.assertArchiveFitsByBound(candidate, background);
+  return { candidate, background, prepared };
+}
+
+/** Preserve an existing recovery instruction instead of obscuring it with unrelated advice. */
+export function projectEditError(label, failure) {
+  let message = failure.message;
+  if (!/try again|Reload the PNG/.test(message)) {
+    const advice = /image|background/i.test(message)
+      ? 'Use a smaller background or fewer custom images, then try again.'
+      : 'Shorten labels or remove unused nodes and paths, then try again.';
+    message += `${message.endsWith('.') ? '' : '.'} ${advice}`;
+  }
+  return new Error(`${label}: ${message}`);
+}
+
 /**
  * Return the exact validated bytes that produced the live background image.
  *
@@ -960,7 +983,7 @@ function restoreLiveState(app, previous) {
   // size (UI-06 PR 6), and the image's transform is measured on it.
   runRollbackStep('the canvas size', () => app._restoreCanvasFit?.(previous.canvasFit));
   runRollbackStep('the background transform', () => {
-    if (hasFinishAreas(app.scene)) {
+    if (hasReferenceMotion(app.scene)) {
       app.coordinateTransform?.setBackgroundZoom?.(previous.exportSettings.backgroundZoom / 100);
     }
     app.updateImageTransform?.(previous.background.image ?? null);
@@ -1069,7 +1092,7 @@ function syncLoadedProjectUI(app, staged) {
 function commitStagedProject(app, staged, { markClean = false } = {}) {
   const previous = captureLiveState(app);
   try {
-    app._installingFinishContext = hasFinishAreas(staged.scene);
+    app._installingFinishContext = hasReferenceMotion(staged.scene);
     if (app.imageAssetService.replaceAssets) {
       app.imageAssetService.replaceAssets(staged.assets);
     } else if (staged.assets.length > 0) {

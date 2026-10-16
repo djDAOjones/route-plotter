@@ -144,3 +144,33 @@ Asked when his client needs these features working, the owner picked "Within a w
   shorten or remove. Existing native metadata and path-budget cases assert the
   correction; this later change still needs its own complete gate, committed
   browser evidence, fresh final-head approval and CI.
+
+
+- 2026-10-15 — Part F implements groups under the independently approved design.
+  Its decision owns the active-only routing/arc algorithm, shared reference
+  clock and conservative storage guarantee for Groups, Node-area and Entry
+  weights. Both native surfaces have provisional Apply groups/Cancel edits
+  forms; E refuses pending drafts. Source verification and independent code
+  review precede merge. This item remains in progress for G and the combined
+  publication; no F-only release is intended.
+
+- 2026-10-16 — Part F code round 1 found a subnormal onset difference rounding
+  to negative zero, and a reverse walk using the wrong sway tangent at an
+  internal arc vertex. Active group plans now compare onset milliseconds
+  before conversion; reverse sampling chooses the departing nonzero segment
+  while preserving points and endpoint conventions. Strict loaded-project,
+  zero-segment corner and curved-engine regressions cover the corrections;
+  ordinary branches retain their arithmetic. The empty-card browser proof
+  covers help, disabled styling and restored eligibility; groupAuthoring's
+  regression owns restoration of the original emitter's local error and draft.
+  The source PR owns renewed gate, mutation, browser and review evidence. This
+  remains a part advance before G and the combined publication.
+
+- 2026-10-16 — Part F code round 2 found that closing an outline emitter
+  discarded its Groups refusal while retaining the unapplied values. Hidden
+  Groups feedback now checks the live semantic emitter context, so reopening
+  restores the linked recovery message without inheriting a replacement's
+  error. Production-refusal regressions cover primary and secondary emitters,
+  Cancel, acceptance, same-ID replacement and newer unrelated feedback. The
+  source PR owns renewed verification and independent approval; CROWD-08
+  remains open for G and the combined publication.
