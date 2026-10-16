@@ -153,3 +153,15 @@ Asked when his client needs these features working, the owner picked "Within a w
   forms; E refuses pending drafts. Source verification and independent code
   review precede merge. This item remains in progress for G and the combined
   publication; no F-only release is intended.
+
+- 2026-10-16 — Part F code round 1 found a subnormal onset difference rounding
+  to negative zero, and a reverse walk using the wrong sway tangent at an
+  internal arc vertex. Active group plans now compare onset milliseconds
+  before conversion; reverse sampling chooses the departing nonzero segment
+  while preserving points and endpoint conventions. Strict loaded-project,
+  zero-segment corner and curved-engine regressions cover the corrections;
+  ordinary branches retain their arithmetic. The empty-card browser proof
+  covers help, disabled styling and restored eligibility; groupAuthoring's
+  regression owns restoration of the original emitter's local error and draft.
+  The source PR owns renewed gate, mutation, browser and review evidence. This
+  remains a part advance before G and the combined publication.

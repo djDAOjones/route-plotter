@@ -15,6 +15,15 @@ const upperBound = (values, value) => {
   }
   return lo;
 };
+const lowerBound = (values, value) => {
+  let lo = 0, hi = values.length;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi) / 2);
+    if (values[mid] < value) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+};
 
 /** Active-only true arc distance. Pin spline endpoints without changing old samplers. */
 export function createGroupArc(path, from, to) {
@@ -30,14 +39,18 @@ export function createGroupArc(path, from, to) {
   }
   const length = prefix[prefix.length - 1];
   return { points, prefix, length, firstTangent, lastTangent,
-    sample(distance) {
+    sample(distance, reversed = false) {
       if (distance <= 0) return { point: points[0], tangent: firstTangent };
       if (distance >= length) return { point: points[points.length - 1], tangent: lastTangent };
       const index = upperBound(prefix, distance) - 1;
       const a = points[index], b = points[index + 1];
       const fraction = (distance - prefix[index]) / (prefix[index + 1] - prefix[index]);
+      // At a vertex, reverse travel departs on the previous nonzero segment.
+      // Keep the point calculation unchanged, including rounded prefix plateaus.
+      const tangentIndex = reversed && prefix[index] === distance ? lowerBound(prefix, distance) - 1 : index;
+      const ta = points[tangentIndex], tb = points[tangentIndex + 1];
       return { point: { x: a.x + (b.x - a.x) * fraction, y: a.y + (b.y - a.y) * fraction },
-        tangent: unit(b.x - a.x, b.y - a.y) };
+        tangent: unit(tb.x - ta.x, tb.y - ta.y) };
     },
   };
 }
@@ -96,7 +109,7 @@ export function sampleGroupJourney(journey, distance) {
     const next = walked + arc.length;
     if (distance < next) {
       const reversed = code % 2 === 1;
-      const result = arc.sample(reversed ? arc.length - (distance - walked) : distance - walked);
+      const result = arc.sample(reversed ? arc.length - (distance - walked) : distance - walked, reversed);
       return reversed ? { point: result.point, tangent: reverse(result.tangent) } : result;
     }
     walked = next;

@@ -19,6 +19,29 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-10-16 — CROWD-08 — Verify has room for the complete crowd suite
+
+**Decision:** Verify's job ceiling rises from 30 to 90 minutes so the complete
+crowd suite can finish on the hosted runner without dropping checks.
+
+**Rationale:** GitHub cancelled PR #150's Verify run `38829142491` on
+`35b480799c4f34c10e11312c83bfce5e35e23804` after 30 minutes, annotating
+“The job has exceeded the maximum execution time of 30m0s”. Its log records
+3,800 passing test rows across 139 files and no assertion failure before the
+cutoff; the complete local R3 gate passed 184 files and 4,187 tests. This is
+the lead's capacity adjustment under GATELESS-1 and the owner's continuation
+with all tests retained, not a new owner instruction. The ceiling gives the
+remaining storage cases and subsequent parts room; it does not make a run
+passing or extend any individual test timeout. Every test, assertion, fixture,
+canonical command, independent review and exact-head CI requirement remains.
+The earlier interrupted local R4 attempt is preserved and is not passing;
+the complete correction, configuration and record receive a fresh full gate.
+House conventions' truthful verification and behavioural testing rules apply.
+
+**Supersedes:** 2026-10-07 — DEF-81 — Verify gets 30 minutes, since the suite reached 15
+
+**Deferred:** none
+
 ## 2026-10-15 — CROWD-08 — Part F: shared group journeys and checked edits
 
 **Decision:** Groups share seeded choices, release and pace on a reference
@@ -730,16 +753,6 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Decision:** v3.2.705 is live from deploy commit `e6cb2dd` (tag `v3.2.705`), released under GATELESS-1 because DEF-28's merge (`3095574`, PR #54) changed `src/`, `styles/` and `index.html`.
 
 **Rationale:** release.sh: rollback tag `rollback-v3.2.704-3095574`, gate green (109 files, 2,608 tests), dry run, push, Verify and the Pages deploy green, 22 of 22 live files SHA-256-identical. Live smoke as for v3.2.704, the same readings (27,028 ms, MP4 29.0 s, HTML complete), no failed resource or console error. DEF-28 does not change export, so no disk save is owed.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-06 — REL-704 — v3.2.704 ships DEF-45
-
-**Decision:** v3.2.704 is live from deploy commit `2edf75a` (tag `v3.2.704`), released under GATELESS-1 because DEF-45's merge (`44d3009`, PR #70) changed `src/`.
-
-**Rationale:** release.sh: rollback tag `rollback-v3.2.703-44d3009`, gate green, dry run, push, Verify and the Pages deploy green, 22 of 22 live files SHA-256-identical to the build. Live smoke in the browser pane (1280×800): title v3.2.704, Open day played 3,002 ms of 27,028, ran to its end with no frame queued, MP4 1920×1080 29.0 s `ftypisom`, HTML export with its project, CSP and the live player, no failed resource, no console error. DEF-45 does not change export, so no disk save is owed; v3.2.703's stays owed (a wish line).
 
 **Supersedes:** none
 

@@ -1025,6 +1025,9 @@ export class SwarmEngine {
       if (!plan && !(durationMs > 0 && Number.isFinite(durationMs))) continue;
       const onsetMs = plan ? plan.onsetMs : this._onsetFraction(emitter, i, window) * durationMs;
 
+      // A subnormal negative difference can become -0 in seconds. Keep the
+      // active-group release test in milliseconds; legacy arithmetic stays put.
+      if (plan?.group && timelineMs < onsetMs) continue;
       const elapsedSec = (timelineMs - onsetMs) / 1000;
       if (elapsedSec < 0) continue; // not yet released
 
