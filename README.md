@@ -271,12 +271,28 @@ At an Exit, they dissolve into individually ranked finish-area places.
 Active groups use the project's reference clock in every output, including
 networks without finish areas; other crowds retain their existing clocks.
 
+### Final whistle
+
+In Release, **Final whistle** shows every dot waiting at its seeded Start point
+from the beginning. Dots leave nearest to their Entry first, ties by dot index.
+The existing release controls shape the departure spread; they do not reverse
+this order. Each dot keeps its own Entry, pace and path choices.
+
+It requires Custom network, a Start area on every Entry, and Disappear or
+Collect at the end. Inactive settings stay stored with a reason and a way to
+turn off. While Final whistle is on, Groups stays stored but inactive. Waiting
+uses the project's reference clock in every output, including without Finish
+areas. The crowd card edits its first emitter; the scene outline edits each.
+**Apply final whistle** accepts one undoable edit; **Cancel edits** restores
+that form's stored setting. Apply or cancel pending Groups and Final whistle
+edits before applying in another panel or duplicating a crowd.
+
 ### Project save/load (ZIP)
 
 Duplicate crowd in Layers or the scene outline copies a crowd's settings with
 new identities and pattern seeds. It checks the complete candidate before
 changing the scene, selection or history. Finish pending Crowd, Node or Path
-fields, including Entry weights and Busyness, and apply or cancel Groups drafts first. Starting a rename cancels
+fields, including Entry weights and Busyness, and apply or cancel Groups and Final whistle drafts first. Starting a rename cancels
 a duplicate check in progress. A copy that exceeds a project limit or cannot
 preserve its text is refused with a reason and a correction to try; the source stays intact.
 
@@ -291,7 +307,7 @@ behind. Project files keep those images' stored filenames and HTML exports
 leave them out, though an image's original bytes can carry metadata of their
 own.
 
-Node-area, Entry-weight and Groups edits prove guaranteed room for the whole
+Node-area, Entry-weight, Groups and Final whistle edits prove guaranteed room for the whole
 saved ZIP before changing the project, using its canonical JSON and retained
 original image bytes. This is a conservative upper bound, not a measured ZIP
 size: a large, compressible project may still save but lack guaranteed room

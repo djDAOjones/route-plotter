@@ -16,6 +16,7 @@ import {
   formatCrowdReleaseBias,
   formatCrowdReleaseTiming,
 } from '../src/app/crowds.js';
+import { crowdWaitingMixin } from '../src/app/crowdWaiting.js';
 import { formatCrowdDotSize } from '../src/utils/uiReadouts.js';
 import { DotRenderer } from '../src/services/DotRenderer.js';
 import { Scene } from '../src/models/Scene.js';
@@ -68,7 +69,7 @@ function makeApp({ hasRoute = true } = {}) {
     queueRender() { this.renders++; },
     announce(msg) { this.announced.push(msg); },
   };
-  Object.assign(app, crowdsMixin);
+  Object.assign(app, crowdsMixin, crowdWaitingMixin);
   app.eventBus.on('crowd:selected', l => app.events.push(['selected', l.id]));
   app.eventBus.on('crowd:deselected', () => app.events.push(['deselected']));
   app.eventBus.on('network:guide-changed', l => app.events.push(['network-guide', l.id]));

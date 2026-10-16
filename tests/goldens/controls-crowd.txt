@@ -24,7 +24,7 @@ ui ~ #layers-strip>li[1]>button[0]: button aria-describedby="{#layers-strip>li[1
 ui - #crowd-no-emitter: p (not shown)
 ui - #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 4b8a0c98)
 ui - #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
-ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, fd5af58c)
+ui - #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 154 inside, 07ff579b)
 ui - #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 69 inside, 43fc8129)
 settled:
   announced "Editing · Route"
@@ -62,6 +62,7 @@ ui ~ #crowd-guide-type: select aria-describedby="crowd-guide-type-tip" :value="g
 ui ~ #network-edit-btn: button aria-describedby="network-edit-btn-tip" class="btn btn-secondary" data-tip-desc="network-edit-btn-tip" data-tip="Draw the network this crowd walks: nodes joined by paths" type="button" :text="Edit network" → button (not shown)
 ui ~ #crowd-trace-route-btn: button aria-describedby="crowd-trace-route-reason crowd-trace-route-btn-tip" class="btn btn-secondary" data-tip-desc="crowd-trace-route-btn-tip" data-tip="Copy the route into this crowd's network, so its dots follow the same shape and can branch where the route branches" type="button" :text="Trace route into network" → button (not shown)
 ui ~ #crowd-guide-hint: p class="section-hint" :text="Dots walk this crowd's own network (4 nodes, 4 paths). Journeys start at entry nodes and end at exit nodes (a node's Type). With no exit, they end at nodes with one path; with no entry, dots set off from any node they can leave." → p class="section-hint" :text="Dots follow your route. Custom network lets you draw paths of their own."
+ui ~ #crowd-wait-reason: p class="section-hint" :text="Give every Entry node a Start area to use Final whistle." → p class="section-hint" :text="Choose Custom network to use Final whistle."
 ui ~ #crowd-pattern-hint: p class="section-hint" :text="Path shares set the route proportions. Re-roll changes which dots take each path, plus individual walking and set-off variation." → p class="section-hint" :text="Re-roll changes individual walking and set-off variation. Custom networks also re-roll which dots take each path."
 ui ~ #crowd-groups: input aria-describedby="crowd-group-hint crowd-group-reason crowd-groups-tip" name="groups" type="checkbox" :unchecked → input aria-describedby="crowd-group-hint crowd-group-reason crowd-groups-tip" disabled="" name="groups" type="checkbox" :unchecked
 ui ~ #crowd-group-size: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="4" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" disabled="" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="4"
@@ -732,6 +733,22 @@ ui ~ #crowd-release-duration-field: input aria-describedby="crowd-release-durati
 ui ~ #crowd-release-duration-field-error: p (not shown) → p class="section-hint range-field-error" :text="Enter a window length from 0 to 100%; the crowd keeps 45% until you do."
 settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Enter a window length from 0 to 100%; the crowd keeps 45% until you do." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+
+## #crowd-wait-at-start · disabled, not operated
+
+## #crowd-wait-form>button[1] · click
+app ~ focus: "body" → "#crowd-wait-form>button[1]"
+storage + routePlotter_lastSection: "release"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-wait-form>button[1]: button aria-describedby="crowd-wait-at-start-tip" aria-expanded="false" aria-label="Help: Final whistle" class="param-hint-trigger" style="position-anchor: --crowd-wait-at-start-tip;" type="button" → button aria-describedby="crowd-wait-at-start-tip" aria-expanded="true" aria-label="Help: Final whistle" class="param-hint-trigger" style="position-anchor: --crowd-wait-at-start-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Show every dot in its Start area from the beginning; Apply final whistle accepts this edit"
+
+## #crowd-wait-apply · disabled, not operated
+
+## #crowd-wait-cancel · click
+app ~ focus: "body" → "#crowd-wait-cancel"
+storage + routePlotter_lastSection: "release"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
 
 ## #section-release-content>details[1]>summary[0] · click
 app ~ focus: "body" → "#section-release-content>details[1]>summary[0]"

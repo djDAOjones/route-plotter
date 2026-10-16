@@ -23,6 +23,7 @@ import {
   normalizeBusynessEnvelope,
 } from '../utils/busynessEnvelope.js';
 import { assertGroupSettings } from '../utils/groupSettings.js';
+import { assertWaitingSettings } from '../utils/waitingSettings.js';
 import { CROWD_GROUPS } from '../config/constants.js';
 import { normaliseReleaseAnchor } from '../utils/routeAnchors.js';
 
@@ -60,6 +61,7 @@ export class Emitter {
    */
   constructor(options = {}) {
     assertGroupSettings(options);
+    assertWaitingSettings(options);
     this.id = options.id || Emitter._generateId();
     this.seed = Emitter._validateSeed(options.seed);
     this.dotCount = Emitter._clampCount(options.dotCount ?? 50);
@@ -79,6 +81,7 @@ export class Emitter {
     this.intensityRamp = Emitter._clampSigned(options.intensityRamp ?? 0);
     this.busynessEnvelope = normalizeBusynessEnvelope(options.busynessEnvelope);
     this.wobble = Emitter._clamp01(options.wobble ?? 0);
+    this.waitAtStart = options.waitAtStart ?? false;
     this.groups = options.groups ?? false;
     this.groupSize = options.groupSize ?? CROWD_GROUPS.SIZE;
     this.groupWidth = options.groupWidth ?? CROWD_GROUPS.WIDTH;
@@ -91,6 +94,7 @@ export class Emitter {
    */
   update(partial = {}) {
     assertGroupSettings(partial);
+    assertWaitingSettings(partial);
     if ('seed' in partial) this.seed = Emitter._validateSeed(partial.seed);
     if ('dotCount' in partial) this.dotCount = Emitter._clampCount(partial.dotCount);
     if ('speed' in partial) this.speed = Emitter._clampMin(partial.speed, MIN_SPEED, EMITTER_LIMITS.MAX_SPEED);
@@ -107,7 +111,7 @@ export class Emitter {
       this.busynessEnvelope = normalizeBusynessEnvelope(partial.busynessEnvelope);
     }
     if ('wobble' in partial) this.wobble = Emitter._clamp01(partial.wobble);
-    for (const key of ['groups', 'groupSize', 'groupWidth']) {
+    for (const key of ['groups', 'groupSize', 'groupWidth', 'waitAtStart']) {
       if (key in partial) this[key] = partial[key];
     }
   }
@@ -150,6 +154,7 @@ export class Emitter {
       busynessEnvelope: this.busynessEnvelope.map(handle => ({ ...handle })),
       wobble: this.wobble,
       ...(this.groups ? { groups: true } : {}),
+      ...(this.waitAtStart ? { waitAtStart: true } : {}),
       ...(this.groupSize !== CROWD_GROUPS.SIZE ? { groupSize: this.groupSize } : {}),
       ...(this.groupWidth !== CROWD_GROUPS.WIDTH ? { groupWidth: this.groupWidth } : {}),
     };
@@ -178,6 +183,7 @@ export class Emitter {
     }
 
     assertGroupSettings(data);
+    assertWaitingSettings(data);
 
     const finiteFields = [
       'seed', 'dotCount', 'speed', 'speedVariance', 'dotSize',

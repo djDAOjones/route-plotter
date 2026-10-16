@@ -195,6 +195,11 @@ const LOOKED_UP = {
     crowd-no-emitter crowd-pattern-hint crowd-reroll-btn crowd-scope crowd-seed-error crowd-seed-error
     crowd-seed-value crowd-seed-value crowd-seed-value crowd-seed-value crowd-seed-value layers-strip
   `),
+  // CROWD-08 Final whistle: capture, setup, refusal, Cancel and sync use these nine literal lookups.
+  'src/app/crowdWaiting.js': words(`
+    crowd-wait-cancel crowd-wait-cancel crowd-wait-error crowd-wait-error
+    crowd-wait-form crowd-wait-form crowd-wait-form crowd-wait-hint crowd-wait-reason
+  `),
   'src/app/editorPanel.js': words('area-draw-reason waypoint-scope'),
   // UI-06 B-18: the export items' reason line and its two spans.
   // UI-06 J-18: the Cancel button an export shows, and the toggle that takes focus from it as it hides.

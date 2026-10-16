@@ -4,6 +4,7 @@ import { dotOnsetFraction, dotJourneyMs } from '../utils/crowdArrival.js';
 import { getGraphDepartures, normalizeGraphWeights, graphEntryCumulative } from '../utils/graphRouting.js';
 import { entryWeightValue } from '../utils/entryWeight.js';
 import { groupsActive } from '../utils/groupSettings.js';
+import { waitingLayerReason, waitingActive } from '../utils/waitingSettings.js';
 import { buildGroupRouting, chooseGroupDeparture } from '../utils/groupRouting.js';
 import {
   createGroupArc, traceGroupJourney, sampleGroupJourney, groupNormal, groupOffsets,
@@ -258,6 +259,7 @@ export class SwarmEngine {
     const signature = guide.imageAspect === undefined ? null : graphSignature(guide.graph);
     for (const emitter of layer.emitters) {
       const journeys = signature !== null && finishesJourneys(emitter) && !groupsActive(layer, emitter)
+        && !waitingActive(layer, emitter, guide.waitingReason)
         ? this._cachedJourneys(layer, emitter, guide, signature) : null;
       this._evaluateEmitter(timelineMs, durationMs, emitter, guide, dots, context.routeAnchors, journeys, finish);
     }
@@ -348,8 +350,7 @@ export class SwarmEngine {
   hasJourneyEnd(layer) {
     if (!layer) return null;
     if (layer.guideType === 'route') return true;
-    const guide = layer.emitters.some(e => groupsActive(layer, e))
-      ? this._indexedGroupGuide(layer) : this._buildGraphGuide(layer.graph);
+    const guide = this._guideFor(layer, {});
     if (!guide) return null;
     const reaching = this._nodesReachingEnd(guide);
     return guide.entries.some(entry => reaching.has(entry.id));
@@ -386,7 +387,7 @@ export class SwarmEngine {
     let latest = finish?.latest || 0;
     if (!(durationMs > 0 && Number.isFinite(durationMs))) return latest;
     for (const emitter of finishing) {
-      if (groupsActive(layer, emitter)) continue;
+      if (groupsActive(layer, emitter) || waitingActive(layer, emitter, guide.waitingReason)) continue;
       const journeys = signature === null ? null : this._cachedJourneys(layer, emitter, guide, signature);
       const window = this._releaseWindow(emitter, context.routeAnchors);
       for (let i = 0; i < emitter.dotCount; i++) {
@@ -483,7 +484,7 @@ export class SwarmEngine {
     const signature = guide.type === 'graph' ? graphSignature(guide.graph) : null;
 
     for (const emitter of emitters) {
-      if (groupsActive(layer, emitter)) continue;
+      if (groupsActive(layer, emitter) || waitingActive(layer, emitter, guide.waitingReason)) continue;
       if (emitter.lifecycleMode !== 'disappear') return true;
       const journeys = signature === null ? null : this._cachedJourneys(layer, emitter, guide, signature);
       const window = this._releaseWindow(emitter, context.routeAnchors);
@@ -546,7 +547,7 @@ export class SwarmEngine {
     return { length: total, ends: false, legs, ...(area ? { area } : {}) };
   }
 
-  /** An indexed guide is used only on layers with an active group emitter. */
+  /** Active groups and waiting dots share indexed topology and compact routes. */
   _indexedGroupGuide(layer) {
     const graph = layer.graph, nodes = graph.getNodes(), edges = graph.getEdges();
     if (!nodes.length || !edges.length) return null;
@@ -593,8 +594,10 @@ export class SwarmEngine {
       const byEmitter = new Map();
       for (const emitter of layer.emitters) {
         const rows = new Array(emitter.dotCount).fill(null);
-        if (groupsActive(layer, emitter)) {
-          const count = Math.ceil(emitter.dotCount / emitter.groupSize);
+        const waiting = waitingActive(layer, emitter, guide.waitingReason);
+        if (groupsActive(layer, emitter) || waiting) {
+          const size = waiting ? 1 : emitter.groupSize, width = waiting ? 0 : emitter.groupWidth;
+          const count = Math.ceil(emitter.dotCount / size);
           const offsetsByCount = new Map();
           for (let k = 0; k < count; k++) {
             const entry = this._pickEntry(routing.entries, emitter.seed, k, 0, routing.entryCumulative);
@@ -605,15 +608,16 @@ export class SwarmEngine {
                 return createGroupArc(path, guide.graph.getNode(edge.sourceId).position(),
                   guide.graph.getNode(edge.targetId).position());
               });
-            const n = Math.min(emitter.groupSize, emitter.dotCount - k * emitter.groupSize);
-            if (!offsetsByCount.has(n)) offsetsByCount.set(n, groupOffsets(n, emitter.groupWidth));
+            const n = Math.min(size, emitter.dotCount - k * size);
+            if (!offsetsByCount.has(n)) offsetsByCount.set(n, groupOffsets(n, width));
             const offsets = offsetsByCount.get(n);
-            const group = { journey, width: emitter.groupWidth, k, count, maxApproach: 0, memo: new Map() };
+            const group = { journey, width, k, count, maxApproach: 0, memo: new Map() };
             const terminalNormal = groupNormal(journey, journey.length, group.width);
             for (let member = 0; member < n; member++) {
-              const index = k * emitter.groupSize + member, { across, behind } = offsets[member];
+              const index = k * size + member, { across, behind } = offsets[member];
               const at = this._groupFormation(group, -behind);
-              const staging = { x: at.point.x + across * at.normal.x, y: at.point.y + across * at.normal.y };
+              const staging = waiting ? entry.position()
+                : { x: at.point.x + across * at.normal.x, y: at.point.y + across * at.normal.y };
               const area = this._startArea(entry, emitter, index, canonical);
               const start = area?.point || staging;
               const approach = area ? Math.hypot(start.x - staging.x, start.y - staging.y) : 0;
@@ -622,8 +626,16 @@ export class SwarmEngine {
                 y: journey.end.y + across * terminalNormal.y };
               const collapse = journey.ends ? Math.hypot(terminal.x - journey.end.x, terminal.y - journey.end.y) : 0;
               rows[index] = { group, index, start, staging, approach, across, behind, terminal, collapse,
+                ...(waiting ? { waiting: true } : {}),
                 journey, endId: journey.terminal?.id };
             }
+          }
+          if (waiting) {
+            // Rank in the intrinsic image plane. Keep original-i rows and routing intact.
+            const ranked = rows.map(row => ({ row, distance: Math.hypot(
+              (row.start.x - row.staging.x) * aspect, row.start.y - row.staging.y) }));
+            ranked.sort((a, b) => a.distance - b.distance || a.row.index - b.row.index);
+            ranked.forEach(({ row }, rank) => { row.distanceRank = rank; });
           }
         } else if (emitter.lifecycleMode === 'collect') {
           for (let i = 0; i < emitter.dotCount; i++) {
@@ -652,12 +664,16 @@ export class SwarmEngine {
     for (const [emitterOrder, emitter] of layer.emitters.entries()) {
       const rows = new Array(emitter.dotCount).fill(null), window = this._releaseWindow(emitter, clock.routeAnchors);
       byEmitter.set(emitter, rows);
+      // The old release distribution survives; only ownership of its sorted slots changes.
+      const slots = waitingActive(layer, emitter, guide.waitingReason)
+        ? Float64Array.from({ length: emitter.dotCount }, (_, i) => this._onsetFraction(emitter, i, window)).sort()
+        : null;
       for (const [index, row] of geometry.byEmitter.get(emitter).entries()) {
         if (!row) continue;
         const role = row.group ? row.group.k : index;
         const roleEmitter = row.group ? { ...emitter, dotCount: row.group.count } : emitter;
         const pace = this._journeyPace(emitter, role, 0);
-        const onsetFraction = this._onsetFraction(roleEmitter, role, window);
+        const onsetFraction = slots ? slots[row.distanceRank] : this._onsetFraction(roleEmitter, role, window);
         const onsetMs = onsetFraction * duration;
         const networkLength = row.group ? row.group.maxApproach + row.journey.length + row.behind : row.journey.length;
         const nodeLength = networkLength + (row.collapse || 0);
@@ -696,7 +712,7 @@ export class SwarmEngine {
       plan.journeyMs = dotJourneyMs(plan.totalLength, plan.emitter.speed, plan.pace);
       plan.finishMs = plan.onsetMs + plan.journeyMs;
       if (plan.ends) latest = Math.max(latest, plan.finishMs);
-      if (!plan.ends || plan.emitter.lifecycleMode === 'collect' || plan.finishMs > plan.onsetMs) active = true;
+      if (plan.waiting || !plan.ends || plan.emitter.lifecycleMode === 'collect' || plan.finishMs > plan.onsetMs) active = true;
     }
     const result = { key, geometry, byEmitter, summaries, active, latest, guide: canonical };
     this._groupAllocationCache.set(layer, result);
@@ -781,7 +797,9 @@ export class SwarmEngine {
 
   /** Shared across all emitters: each Exit's seats are ranked by unextended arrival. */
   _finishPlans(layer, guide, context) {
-    if (layer.emitters.some(e => groupsActive(layer, e))) return this._groupPlans(layer, guide, context);
+    if (guide.activeWaiting || layer.emitters.some(e => groupsActive(layer, e))) {
+      return this._groupPlans(layer, guide, context);
+    }
     if (guide.type !== 'graph' || !guide.graph.getNodesByType('exit').some(n => n.area)
         || !layer.emitters.some(e => e.lifecycleMode === 'collect' && e.dotCount > 0)) return null;
     const canonical = { ...guide, canonicalGeometry: true };
@@ -960,8 +978,11 @@ export class SwarmEngine {
       const guide = { type: 'route', points, length: this._routeLength(points) };
       return guide.length > 0 ? guide : null;
     }
-    const guide = layer.emitters.some(e => groupsActive(layer, e))
+    const waitingReason = waitingLayerReason(layer);
+    const activeWaiting = layer.emitters.some(e => waitingActive(layer, e, waitingReason));
+    const guide = activeWaiting || layer.emitters.some(e => groupsActive(layer, e))
       ? this._indexedGroupGuide(layer) : this._buildGraphGuide(layer.graph);
+    if (guide) { guide.waitingReason = waitingReason; guide.activeWaiting = activeWaiting; }
     if (guide?.entries.some(node => node.type === 'entry' && node.area)) {
       guide.imageAspect = Number.isFinite(context.imageAspect) && context.imageAspect > 0 ? context.imageAspect : 1;
     }
@@ -1025,8 +1046,14 @@ export class SwarmEngine {
       if (!plan && !(durationMs > 0 && Number.isFinite(durationMs))) continue;
       const onsetMs = plan ? plan.onsetMs : this._onsetFraction(emitter, i, window) * durationMs;
 
-      // A subnormal negative difference can become -0 in seconds. Keep the
-      // active-group release test in milliseconds; legacy arithmetic stays put.
+      // G's exact initial sample wins even for a zero-length journey. Waiting
+      // precedes subtraction: subnormal negative seconds can otherwise become -0.
+      if (plan?.waiting && timelineMs >= 0 && (timelineMs === 0 || timelineMs < onsetMs)) {
+        out.push({ x: plan.start.x, y: plan.start.y, size: emitter.dotSize,
+          color: emitter.dotColor, emitterId: emitter.id, dotIndex: i });
+        continue;
+      }
+      // Active compact plans compare milliseconds; legacy arithmetic stays put.
       if (plan?.group && timelineMs < onsetMs) continue;
       const elapsedSec = (timelineMs - onsetMs) / 1000;
       if (elapsedSec < 0) continue; // not yet released

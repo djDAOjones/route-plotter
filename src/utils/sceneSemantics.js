@@ -11,6 +11,7 @@ import { getGraphEntryShares } from './graphRouting.js';
 import { entryWeightValue } from './entryWeight.js';
 import { groupsUnavailableReason, groupsActive, groupChoiceRole } from './groupSettings.js';
 import { CROWD_GROUPS } from '../config/constants.js';
+import { waitingLayerReason, waitingUnavailableReason, waitingActive } from './waitingSettings.js';
 import { shiftDecimal } from './uiReadouts.js';
 
 const round = (value, places = 3) => {
@@ -98,7 +99,7 @@ function nodeName(node, index) {
   return authored ? `${base} — ${authored}` : base;
 }
 
-function emitterDescriptor(emitter, index, layer, groupContexts) {
+function emitterDescriptor(emitter, index, layer, groupContexts, waitingContexts, waitingReason) {
   const layerId = layer.id;
   return {
     key: sceneOutlineKey('emitter', layerId, emitter.id),
@@ -130,6 +131,11 @@ function emitterDescriptor(emitter, index, layer, groupContexts) {
     wobble: percent(emitter.wobble),
     wobbleCanonical: emitter.wobble,
     seed: emitter.seed,
+    waitAtStart: emitter.waitAtStart ?? false,
+    waitingReason: waitingUnavailableReason(layer, emitter, waitingReason),
+    waitingActive: waitingActive(layer, emitter, waitingReason),
+    waitingContext: waitingContexts?.get(
+      `${sceneOutlineKey('emitter', layerId, emitter.id)}:waiting-apply`)?.context ?? null,
     groups: emitter.groups ?? false,
     groupSize: emitter.groupSize ?? CROWD_GROUPS.SIZE,
     groupWidth: shiftDecimal(emitter.groupWidth ?? CROWD_GROUPS.WIDTH, 2),
@@ -232,6 +238,7 @@ export function buildSceneOutlineSnapshot({
   nodeAreaDescriptions = null,
   nodeEntryContexts = null,
   emitterGroupContexts = null,
+  emitterWaitingContexts = null,
   crowdDuplicateContexts = null,
   crowdDuplicateBusy = false,
 } = {}) {
@@ -289,7 +296,9 @@ export function buildSceneOutlineSnapshot({
   });
 
   const layers = scene?.getFlowLayers?.() || [];
-  const crowds = layers.map((layer, index) => ({
+  const crowds = layers.map((layer, index) => {
+    const waitingReason = waitingLayerReason(layer);
+    return ({
     key: sceneOutlineKey('crowd', layer.id),
     id: layer.id,
     index,
@@ -303,10 +312,11 @@ export function buildSceneOutlineSnapshot({
     visible: layer.visible,
     guideType: layer.guideType,
     emitters: layer.getEmitters().map((emitter, emitterIndex) =>
-      emitterDescriptor(emitter, emitterIndex, layer, emitterGroupContexts)
+      emitterDescriptor(emitter, emitterIndex, layer, emitterGroupContexts, emitterWaitingContexts, waitingReason)
     ),
     graph: graphDescriptor(layer, hasBackgroundImage, nodeAreaDescriptions, nodeEntryContexts),
-  }));
+    });
+  });
 
   return {
     route,

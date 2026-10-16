@@ -174,3 +174,11 @@ Asked when his client needs these features working, the owner picked "Within a w
   Cancel, acceptance, same-ID replacement and newer unrelated feedback. The
   source PR owns renewed verification and independent approval; CROWD-08
   remains open for G and the combined publication.
+
+- 2026-10-16 — Part F merged in PR #150 after independent code approval and
+  successful final-head CI. Part G's canonical design is independently approved
+  against that actual merge. Final whistle is being implemented as a strict
+  per-emitter waiting flag, nearest-first release-slot assignment and checked
+  native forms with separate draft identities. Its new decision owns numerical,
+  reference-clock and compact-route choices. Source, browser, mutation and final
+  review remain separate verification; one combined D–G publication follows.

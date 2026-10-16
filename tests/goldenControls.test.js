@@ -1746,6 +1746,38 @@ const CONTEXTS = [
   },
   { name: 'crowd', about: 'the crowd selected', roots: ['#scope-chip', '#crowd-scope'], enter: selectCrowd },
   {
+    name: 'waiting-draft',
+    about: 'eligible Final whistle with an unapplied checked draft, ready to Apply or Cancel',
+    roots: ['#crowd-wait-form'],
+    enter: app => {
+      selectCrowd(app);
+      const layer = app.scene.flowLayers[0];
+      for (const entry of layer.graph.getNodesByType('entry')) {
+        entry.area = { shape: 'ellipse', width: 0.2, height: 0.2, turn: 17 };
+      }
+      choose('crowd-lifecycle', 'collect'); app.syncCrowdEditor();
+      const header = document.querySelector('[data-section="release"] .section-header');
+      if (header.getAttribute('aria-expanded') === 'false') header.click();
+      document.getElementById('crowd-wait-at-start').click();
+    },
+  },
+  {
+    name: 'waiting-on',
+    about: 'active Final whistle keeps original dot identities and the stored checkbox',
+    roots: ['#crowd-wait-form'],
+    enter: app => {
+      selectCrowd(app);
+      const layer = app.scene.flowLayers[0];
+      for (const entry of layer.graph.getNodesByType('entry')) {
+        entry.area = { shape: 'ellipse', width: 0.2, height: 0.2, turn: 17 };
+      }
+      choose('crowd-lifecycle', 'collect'); app.syncCrowdEditor();
+      const header = document.querySelector('[data-section="release"] .section-header');
+      if (header.getAttribute('aria-expanded') === 'false') header.click();
+      document.getElementById('crowd-wait-at-start').click(); document.getElementById('crowd-wait-apply').click();
+    },
+  },
+  {
     name: 'group-draft',
     about: 'eligible groups with provisional settings, ready to Apply groups or Cancel edits',
     roots: ['#crowd-group-form'],

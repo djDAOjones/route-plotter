@@ -37,6 +37,7 @@ import {
   assertGroupSettings, groupsUnavailableReason, groupsActive, groupChoiceHint, GROUP_HINT,
 } from '../utils/groupSettings.js';
 import { createCrowdCopy } from '../utils/crowdCopy.js';
+import { waitingActive, WAITING_RELEASE_HINTS } from '../utils/waitingSettings.js';
 import { assertArchiveTextSafe } from '../utils/archiveText.js';
 import { resolveGraphAnchors } from '../utils/routeAnchors.js';
 import { beginAsyncProjectOperation, isAsyncProjectOperationCurrent } from './operationGeneration.js';
@@ -299,6 +300,7 @@ export const crowdsMixin = {
    */
   setupCrowdControls() {
     this._setupCrowdGroupControls();
+    this._setupCrowdWaitingControls();
     this._layersStripEl = document.getElementById('layers-strip');
     this._addCrowdBtn = document.getElementById('add-crowd-btn');
 
@@ -1282,6 +1284,13 @@ export const crowdsMixin = {
   _syncGroupRoleHints() {
     const layer = this.selectedCrowd, emitter = layer?.emitters[0];
     const active = !!emitter && groupsActive(layer, emitter);
+    const waiting = !!emitter && waitingActive(layer, emitter);
+    const waitingReplacements = {
+      'crowd-release-start-label': WAITING_RELEASE_HINTS.start,
+      'crowd-release-duration-label': WAITING_RELEASE_HINTS.length,
+      'crowd-onset-variance-label': WAITING_RELEASE_HINTS.timing,
+      'crowd-intensity-ramp-label': WAITING_RELEASE_HINTS.bias,
+    };
     const overrides = {
       'crowd-release-start-label': "When the first group sets off, as a position in the project's reference timeline",
       'crowd-release-duration-label':
@@ -1296,7 +1305,8 @@ export const crowdsMixin = {
       const tip = document.getElementById(id);
       if (!tip) continue;
       if (!this._groupHintDefaults.has(id)) this._groupHintDefaults.set(id, tip.getAttribute('data-tip'));
-      const text = active ? replacement : this._groupHintDefaults.get(id);
+      const text = active ? replacement
+        : waiting && waitingReplacements[id] ? waitingReplacements[id] : this._groupHintDefaults.get(id);
       if (tip.getAttribute('data-tip') !== text) tip.setAttribute('data-tip', text);
     }
     const hint = document.getElementById('crowd-busyness-hint');
@@ -1312,7 +1322,9 @@ export const crowdsMixin = {
     }
     const pattern = document.getElementById('crowd-pattern-hint');
     if (pattern && emitter) {
-      const text = active
+      const text = waiting
+      ? 'Re-roll changes each dot’s Start point, Entry, path, pace and departure spread; nearest-first order stays.'
+      : active
       ? 'Re-roll changes group Entry, path, release and pace choices, '
         + 'plus each dot’s start point and walking variation.'
       : layer.guideType === 'graph'
@@ -1382,10 +1394,15 @@ export const crowdsMixin = {
 
   _assertCrowdDuplicateReady(groupExemption = null) {
     // Preserve the existing copy feedback while naming a submitted Groups action.
+    const kind = groupExemption?.kind || 'groups';
     const refusal = message => new Error(groupExemption
-      ? message.replace(/duplicating(?: this crowd)?/g, 'applying groups') : message);
-    if (this._hasPendingGroupDrafts(groupExemption)) {
+      ? message.replace(/duplicating(?: this crowd)?/g, kind === 'waiting' ? 'applying Final whistle' : 'applying groups')
+      : message);
+    if (this._hasPendingGroupDrafts(kind === 'groups' ? groupExemption : null)) {
       throw refusal('Finish the group edit with Apply groups or Cancel edits before continuing.');
+    }
+    if (this._hasPendingWaitingDrafts?.(kind === 'waiting' ? groupExemption : null)) {
+      throw refusal('Finish the Final whistle edit with Apply final whistle or Cancel edits before continuing.');
     }
     if (this._openingLabel) throw refusal('Wait for the project to open before duplicating this crowd.');
     if (this._layersStripEl?.querySelector('.layer-rename-input')) {
@@ -1725,6 +1742,7 @@ export const crowdsMixin = {
     this._syncCrowdLifecycleHint(); // Before the emitter guard: no dots, no hint
     this._syncCrowdEmptyState(Boolean(em));
     this._syncCrowdGroupControls(); // The cards say why they are off (UI-06 B-31)
+    this._syncCrowdWaitingControls();
     // Before the guard too: a reason or an error about the crowd shown before goes, emitter or not (DEF-86).
     this._clearCrowdRangeNotes();
     if (!em) return;

@@ -144,3 +144,4 @@
 - v3.3.721 changes exports and the player; save and open its MP4 and HTML exports from disk, or obtain the owner's explicit waiver for this release — (from: REL-721, 2026-10-14)
 - Outline Start/Finish area controls remain enabled on Follow route, while the area setter refuses that inactive network with a Type-only reason; observed in Part D browser QA and present before D — (from: CROWD-08, 2026-10-15)
 - The browser ZIP encoder can split a Unicode pair across a 16,384-code-unit string chunk outside checked crowd actions, so a successful Save Project can lose text or fail to reopen — (from: CROWD-08, 2026-10-15)
+- Near-limit ZIPs may grow on Open/re-save while waypoint timestamps and timing are normalised; investigate the observed CROWD-08 QA case (unjudged) — (from: CROWD-08, 2026-10-16)

@@ -1627,6 +1627,7 @@ const focusName = () => {
 const KEY_LISTENER = {
   crowdRename: 'src/app/crowds.js: input keydown #1',
   busyness: 'src/app/crowds.js: input keydown #2',
+  waitingForm: 'src/app/crowdWaiting.js: form keydown',
   crowdRow: 'src/app/crowds.js: row keydown',
   exportEscape: 'src/app/exporting.js: window keydown (capture)',
   // DEF-98: the banner slot's prompt for a background recovery could not bring back
@@ -1678,6 +1679,10 @@ const KEY_LISTENERS = {
     what: 'a busyness handle number field: Enter applies what was typed (TST-04 mutant C5 breaks it)',
     keys: ['Enter'], reads: ['preventDefault'],
     pinnedBy: { 'tests/crowds.test.js': ['Enter'] } },
+  [KEY_LISTENER.waitingForm]: {
+    what: 'Escape in the Final whistle card cancels its own draft, focuses Apply and keeps the page unchanged',
+    keys: ['Escape'], reads: ['preventDefault', 'stopPropagation'],
+    suite: 'tests/waitingKeys.test.js' },
   [KEY_LISTENER.crowdRow]: {
     what: "F2 on a crowd's row in the Layers strip selects it and starts its rename, as a waypoint row's does (UI-06 J-13)",
     keys: ['F2'], reads: ['preventDefault'],

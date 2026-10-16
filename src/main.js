@@ -73,6 +73,7 @@ import { exportingMixin } from './app/exporting.js';
 import { editorPanelMixin } from './app/editorPanel.js';
 import { pointerMixin } from './app/pointer.js';
 import { crowdsMixin } from './app/crowds.js';
+import { crowdWaitingMixin } from './app/crowdWaiting.js';
 import { networkMixin } from './app/network.js';
 import { sceneOutlineMixin } from './app/sceneOutline.js';
 import { privacyMixin } from './app/privacy.js';
@@ -1566,6 +1567,7 @@ Object.assign(
   editorPanelMixin,
   pointerMixin,
   crowdsMixin,
+  crowdWaitingMixin,
   networkMixin,
   sceneOutlineMixin,
   privacyMixin,
