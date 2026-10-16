@@ -9,6 +9,11 @@
 
 ## MVP — football crowds and mobs
 
+- RECALL — 8/8 (2026-10-16) — scores: 2,2,2,2 — local — see decisions
+- RECALL — 8/8 (2026-10-16) — scores: 2,2,2,2 — local — see decisions
+
+- CROWD-08 — all seven football and mob MVP parts shipped across v3.3.719–722; D–G published together (2026-10-16) — see decisions
+
 - DEF-84 — crowds with a drawable network play and export without a route; empty scenes explain what to add (2026-10-14) — see decisions
 
 ## Ahead of Phase 2's last defects — the owner's word of 2026-10-13
