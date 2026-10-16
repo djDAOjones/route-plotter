@@ -46,7 +46,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
-  ANIMATION, AREA_HIGHLIGHT, CROWD_AREA, CROWD_ENTRY_WEIGHT, MOTION, RENDERING, TEXT_LABEL, VIDEO_EXPORT
+  ANIMATION, AREA_HIGHLIGHT, CROWD_AREA, CROWD_ENTRY_WEIGHT, CROWD_GROUPS, MOTION, RENDERING, TEXT_LABEL, VIDEO_EXPORT
 } from '../src/config/constants.js';
 import { CAMERA_DEFAULTS, CameraService } from '../src/services/CameraService.js';
 import { PROJECT_MODEL_LIMITS } from '../src/app/persistence.js';
@@ -196,7 +196,9 @@ const FIELD_CONTRACT = {
   'crowd-speed-variance-field': ['number', 0, 100, 20, 'any'],
   'network-edge-weight-field': ['number', 0.01, null, 1, 'any'],
   // CROWD-07 F16: the Pattern seed, a whole number from 0 to the largest seed.
-  'crowd-seed-value': ['number', 0, 4294967295, 0, 1]
+  'crowd-seed-value': ['number', 0, 4294967295, 0, 1],
+  'crowd-group-size': ['number', 1, 5000, 4, 1],
+  'crowd-group-width': ['number', 0, 20, 2, 'any']
 };
 
 /**
@@ -454,6 +456,13 @@ const PAIRINGS = {
   'crowd-seed-value': { toModel: s => s,
     min: [0, 'the smallest seed'],
     max: [EMITTER_LIMITS.MAX_SEED, 'EMITTER_LIMITS.MAX_SEED'] },
+  // Groups edits remain provisional until their native Apply button is pressed.
+  'crowd-group-size': { toModel: s => s,
+    min: [1, 'the smallest group'], max: [CROWD_GROUPS.MAX_SIZE, 'CROWD_GROUPS.MAX_SIZE'],
+    value: [CROWD_GROUPS.SIZE, 'CROWD_GROUPS.SIZE'] },
+  'crowd-group-width': { toModel: percent,
+    min: [0, 'no spread'], max: [CROWD_GROUPS.MAX_WIDTH, 'CROWD_GROUPS.MAX_WIDTH'],
+    value: [CROWD_GROUPS.WIDTH, 'CROWD_GROUPS.WIDTH'] },
   'timeline-slider': { toModel: s => s / ANIMATION.TIMELINE_RESOLUTION,
     min: [0, 'the start of the timeline'],
     max: [1, 'the end of the timeline (ANIMATION.TIMELINE_RESOLUTION steps)'] }
@@ -696,7 +705,8 @@ const WRITERS_ON_A_NEW_PROJECT = {
   'src/app/camera.js': ['camera-selected-zoom', 'camera-zoom'],
   // DEF-86: each slider's number field is written with it; the seed is a field too (CROWD-07 F16).
   'src/app/crowds.js': [
-    'crowd-count', 'crowd-count-field', 'crowd-dot-size', 'crowd-dot-size-field', 'crowd-intensity-ramp',
+    'crowd-count', 'crowd-count-field', 'crowd-dot-size', 'crowd-dot-size-field',
+    'crowd-group-size', 'crowd-group-width', 'crowd-intensity-ramp',
     'crowd-intensity-ramp-field', 'crowd-onset-variance', 'crowd-onset-variance-field', 'crowd-release-duration',
     'crowd-release-duration-field', 'crowd-release-start', 'crowd-release-start-field', 'crowd-seed-value',
     'crowd-speed', 'crowd-speed-field', 'crowd-speed-variance', 'crowd-speed-variance-field', 'crowd-wobble',
@@ -938,6 +948,8 @@ const RECEIVED = {
   'crowd-speed-field': onCrowd('speed'),
   'crowd-speed-variance-field': onCrowd('speedVariance'),
   'crowd-seed-value': onCrowd('seed'),
+  'crowd-group-size': ['group', app => app.selectedCrowd.emitters[0].groupSize],
+  'crowd-group-width': ['group', app => app.selectedCrowd.emitters[0].groupWidth],
   'network-edge-weight': ['edge', app => app.networkEditService.selectedEdge().weight],
   'network-edge-weight-field': ['edge', app => app.networkEditService.selectedEdge().weight],
   'network-node-area-width': ['node', app => app.networkEditService.selectedNode().area.width],
@@ -971,6 +983,9 @@ function setAsUser(id, value) {
   const field = document.getElementById(id);
   field.value = String(value);
   field.dispatchEvent(new Event(field.type === 'number' ? 'change' : 'input', { bubbles: true }));
+  if (id === 'crowd-group-size' || id === 'crowd-group-width') {
+    document.getElementById('crowd-group-apply').click();
+  }
 }
 
 /** A booted editor, Help closed and its image loaded. */
@@ -1075,8 +1090,8 @@ describe('index.html ranges against the code (TST-13)', () => {
     const paired = new Set([...Object.keys(PAIRINGS), ...Object.keys(APP_DEFAULTS), ...Object.keys(NO_COUNTERPART)]);
     expect([...FIELDS.keys()].filter(id => !paired.has(id)), 'a new field needs a pairing').toEqual([]);
     expect([...paired].filter(id => !FIELDS.has(id)), 'a paired field has gone from index.html').toEqual([]);
-    // CROWD-08 adds three area fields to the previous 64; every one stays paired and driven.
-    expect(FIELDS.size).toBe(67);
+    // CROWD-08 adds three area and two group fields to the previous 64; all stay paired and driven.
+    expect(FIELDS.size).toBe(69);
     const explained = [...Object.values(NO_COUNTERPART).map(({ why }) => why),
       ...Object.values(DISAGREEMENTS).map(({ why }) => why),
       ...Object.values(LOAD_LIMITS).map(({ why }) => why), ...Object.values(NEW_PROJECT_MISFITS),
@@ -1189,6 +1204,12 @@ describe('index.html ranges against the code (TST-13)', () => {
       document.getElementById('add-crowd-btn').click();
       expect(app.selectedCrowd).toBeTruthy();
       await drive('crowd');
+      // The old crowd controls start in Respawn; Groups requires a finite journey.
+      const guide = document.getElementById('crowd-guide-type');
+      guide.value = 'graph'; guide.dispatchEvent(new Event('change', { bubbles: true }));
+      const lifecycle = document.getElementById('crowd-lifecycle');
+      lifecycle.value = 'collect'; lifecycle.dispatchEvent(new Event('change', { bubbles: true }));
+      await drive('group');
       drawAndSelectAnEdge(app);
       await drive('edge');
       selectStartArea(app);

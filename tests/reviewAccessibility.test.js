@@ -481,6 +481,11 @@ describe('render and static UI regressions', () => {
         primary: ['export-res-x', 'export-res-y', 'preset-native', 'preset-16-9', 'preset-1-1', 'preset-9-16', 'export-frame-rate'],
         more: ['export-include-image', 'export-include-camera', 'export-include-text'],
       },
+      motion: {
+        primary: ['crowd-speed', 'crowd-speed-field', 'crowd-speed-variance',
+          'crowd-speed-variance-field', 'crowd-lifecycle'],
+        more: ['crowd-groups', 'crowd-group-size', 'crowd-group-width', 'crowd-group-apply', 'crowd-group-cancel'],
+      },
       release: {
         primary: ['crowd-count', 'crowd-release-start', 'crowd-release-duration'],
         more: ['crowd-onset-variance', 'crowd-intensity-ramp', 'crowd-seed-value', 'crowd-reroll-btn'],
@@ -509,7 +514,7 @@ describe('render and static UI regressions', () => {
 
     for (const sectionName of [
       'marker', 'head', 'pacing', 'path-emphasis', 'background', 'guide',
-      'dots', 'motion', 'node', 'edge',
+      'dots', 'node', 'edge',
     ]) {
       expect(document.querySelector(
         `.settings-section[data-section="${sectionName}"] .section-more`

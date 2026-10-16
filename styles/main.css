@@ -633,7 +633,24 @@ kbd{
   margin-top:var(--space-2);
 }
 
-.beacon-sub-controls .checkbox-label input[type="checkbox"]{
+/* Native group forms share the existing checkbox and productive field patterns. */
+.crowd-group-form{
+  display:grid;
+  gap:var(--space-2);
+  min-width:0;
+}
+.crowd-group-form[hidden]{ display:none; }
+.crowd-group-toggle{
+  min-height:var(--touch-target-min);
+}
+.crowd-group-form input[type="number"]{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+
+.beacon-sub-controls .checkbox-label input[type="checkbox"],
+.crowd-group-toggle input[type="checkbox"]{
   width:16px;
   height:16px;
   cursor:pointer;
@@ -4453,6 +4470,12 @@ input[type="number"]:disabled{
   border-color:var(--disabled-02);
   cursor:not-allowed;
 }
+
+.crowd-group-toggle input[type="checkbox"]:disabled{
+  cursor:not-allowed;
+  accent-color:var(--disabled-03);
+}
+.crowd-group-toggle:has(input:disabled){ cursor:not-allowed; }
 
 .layer-item{ flex-wrap:wrap; }
 .layer-copy-reason{

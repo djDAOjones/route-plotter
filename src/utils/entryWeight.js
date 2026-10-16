@@ -3,6 +3,12 @@ import { CROWD_ENTRY_WEIGHT } from '../config/constants.js';
 export const ENTRY_WEIGHT_HINT = 'Relative weights set each Entry’s chance of releasing a dot. '
   + 'Percentages are rounded, not fixed counts. Very small weights may never be chosen.';
 
+export function entryWeightHint(role) {
+  if (!role) return ENTRY_WEIGHT_HINT;
+  return ENTRY_WEIGHT_HINT.replace('a dot.', role === 'mixed' ? 'a group or individual dot.' : 'a group.')
+    + ' Partial groups can change the dot proportions.';
+}
+
 /** Strict additive boundary: only absence takes the historical default. */
 export function entryWeightValue(value) {
   if (value === undefined) return CROWD_ENTRY_WEIGHT.DEFAULT;

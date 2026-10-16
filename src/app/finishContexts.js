@@ -3,6 +3,7 @@ import { FinishReleaseClock } from '../utils/finishReleaseClock.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { areaImageAspect } from '../utils/crowdArea.js';
 import { crowdAreaDescription } from '../utils/crowdAreaDescription.js';
+import { groupsActive } from '../utils/groupSettings.js';
 
 const EMPTY = Object.freeze({});
 
@@ -11,9 +12,16 @@ export function hasFinishAreas(scene) {
     && layer.graph.getNodes().some(node => node.type === 'exit' && node.area));
 }
 
-/** C migration uses authored references only; legacy projects keep their old fallback. */
+/** Active groups use C's reference clock even without a Finish area. */
+export function hasReferenceMotion(scene) {
+  return hasFinishAreas(scene) || !!scene?.getFlowLayers?.().some(layer =>
+    layer.graph.getNodes().length > 0 && layer.graph.getEdges().length > 0
+      && layer.emitters.some(emitter => groupsActive(layer, emitter)));
+}
+
+/** C/F migration uses authored references first; inactive projects keep the old fallback. */
 export function finishRenderReference(scene, reference, timing, legacyFallback = null) {
-  return resolveRenderReference(reference, timing, hasFinishAreas(scene) ? FINISH_REFERENCE : legacyFallback);
+  return resolveRenderReference(reference, timing, hasReferenceMotion(scene) ? FINISH_REFERENCE : legacyFallback);
 }
 
 /**
@@ -24,7 +32,7 @@ export function finishRenderReference(scene, reference, timing, legacyFallback =
  */
 export function getFinishContexts(app) {
   if (app._finishExportContexts) return app._finishExportContexts;
-  if (app._installingFinishContext || !hasFinishAreas(app.scene)) return EMPTY;
+  if (app._installingFinishContext || !hasReferenceMotion(app.scene)) return EMPTY;
   let host = app._finishContextState;
   if (!host) host = app._finishContextState = { clock: new FinishReleaseClock() };
   const image = app.background?.image;

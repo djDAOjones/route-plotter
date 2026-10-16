@@ -631,7 +631,7 @@ function parameterControlsIn(root) {
     .filter(isParameterControl);
 }
 
-function hintOf(control) {
+function hintOf(control, labels = control.labels) {
   // A field with no label of its own is named by the words it is labelled by:
   // a crowd slider's number field by its row's label (DEF-86, Carbon's slider
   // with an input), whose hint then describes the field too.
@@ -639,7 +639,7 @@ function hintOf(control) {
     .map(id => document.getElementById(id));
   const namers = control.matches('fieldset')
     ? [control.querySelector(':scope > legend')]
-    : [...control.labels, ...labelledBy];
+    : [...labels, ...labelledBy];
   const trigger = namers.filter(Boolean)
     .map(namer => (namer.matches('[data-tip]') ? namer : namer.querySelector('[data-tip]')))
     .find(Boolean);
@@ -652,7 +652,37 @@ function nameOf(control) {
   return control.id || `${control.name || control.tagName} "${namer?.textContent.trim().replace(/\s+/g, ' ')}"`;
 }
 
-const withoutHint = controls => controls.filter(control => !hintOf(control)).map(nameOf);
+// Query each native label binding once per inventory, not once per field.
+// jsdom's live `control.labels` repeatedly walks the complete document. The
+// relation below still comes from the browser API, including wrapped labels,
+// duplicate IDs and non-labelable targets; nothing is inferred from markup.
+function labelsByControl() {
+  const result = new Map();
+  for (const label of document.querySelectorAll('label')) {
+    const control = label.control;
+    if (!control) continue;
+    if (!result.has(control)) result.set(control, []);
+    result.get(control).push(label);
+  }
+  return result;
+}
+
+const withoutHint = controls => {
+  const labels = labelsByControl();
+  return controls.filter(control => !hintOf(control, labels.get(control) || [])).map(nameOf);
+};
+
+test('the inventory preserves native label bindings, including wrapped and duplicate-ID targets', () => {
+  document.body.innerHTML = `<label for="first">First</label><label for="first">Second</label>
+    <input id="first"><input id="first"><label>Wrapped <input id="wrapped"></label>
+    <div id="not-labelable"></div><label for="not-labelable">No control</label>
+    <label for="missing">Missing</label><input id="unlabelled">`;
+  const labels = labelsByControl();
+  const controls = [...document.querySelectorAll('input')];
+  expect(controls).toHaveLength(4);
+  expect(controls.map(control => labels.get(control) || [])).toEqual(controls.map(control => [...control.labels]));
+  expect([...labels.values()].flat()).toHaveLength(3);
+});
 
 describe('every parameter control has a hint', () => {
   test('the settings panel: every inspector card, colour pickers included', () => {
@@ -1177,10 +1207,10 @@ describe('DEF-14: a click on a hinted label acts as a label', () => {
   test('every hinted checkbox toggles when its label text is clicked', () => {
     const boxes = [...document.querySelectorAll('input[type="checkbox"]')]
       .filter(box => [...box.labels].some(label => label.querySelector('[data-tip]')));
-    // The five DEF-14 counted, and Wait during ripple.
+    // The five DEF-14 counted, Wait during ripple, and Groups (CROWD-08).
     expect(boxes.map(box => box.id)).toEqual([
       'ripple-wait', 'path-casing-toggle', 'path-glow-toggle',
-      'export-include-image', 'export-include-camera', 'export-include-text',
+      'export-include-image', 'export-include-camera', 'export-include-text', 'crowd-groups',
     ]);
 
     const stuck = boxes.filter((box) => {

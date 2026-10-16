@@ -12,6 +12,7 @@
 import { ImageAsset, IMAGE_LIMITS } from '../models/ImageAsset.js';
 import JSZip from 'jszip';
 import { collectImageAssetReferences } from '../utils/assetReferences.js';
+import { assertPreparedArchiveFits } from '../utils/archiveBound.js';
 
 // Size limits in bytes
 export const SIZE_LIMITS = Object.freeze({
@@ -716,6 +717,13 @@ export class ImageAssetService {
     return { projectJSON, images, background };
   }
   
+  /** Checked synchronous edits use a sufficient bound; ordinary Save still measures its ZIP. */
+  assertArchiveFitsByBound(projectData, backgroundBase64 = null) {
+    const prepared = this.prepareArchive(projectData, backgroundBase64);
+    const boundBytes = assertPreparedArchiveFits(prepared, SIZE_LIMITS.ZIP_MAX);
+    return { ...prepared, boundBytes };
+  }
+
   /**
    * Import project from ZIP file
    * 

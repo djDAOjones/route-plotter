@@ -184,6 +184,10 @@ export const AREA_VISIBILITY = {
 };
 
 /** Relative Entry chances use the full finite number range, with a strict positive floor. */
+export const CROWD_GROUPS = Object.freeze({
+  SIZE: 4, WIDTH: 0.02, MAX_SIZE: 5000, MAX_WIDTH: 0.2, MAX_HOPS: 2048, CHECKPOINT_HOPS: 32,
+});
+
 export const CROWD_ENTRY_WEIGHT = Object.freeze({ MIN: 0.01, MAX: Number.MAX_VALUE, DEFAULT: 1 });
 
 /** Node-centred crowd areas use fractions of image width and height. */

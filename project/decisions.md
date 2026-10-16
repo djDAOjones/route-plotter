@@ -18,6 +18,74 @@
      moves the oldest entries verbatim to project/archive/ — on the
      owner's word, as the rules file says. -->
 
+
+## 2026-10-15 — CROWD-08 — Part F: shared group journeys and checked edits
+
+**Decision:** Groups share seeded choices, release and pace on a reference
+clock, while checked crowd edits prove whole-project ZIP headroom before mutation.
+
+**Rationale:** These are the lead's narrow MVP choices under PLAN-4 and the
+owner's instruction to continue D–G on Sol High with tests and independent
+reviews, then publish together. Independent Astra xhigh approved the design
+and the storage proof before implementation; approval of the code remains a
+separate requirement. Defaults are off, four dots and 2% width; strict size
+1–5,000 and finite width 0–20% persist additively, retaining inactive settings.
+Off, ineligible and configured-size1 keep the old movement and clocks.
+
+Each emitter's group index owns its Entry, release, pace and junction hashes;
+original member indices own start samples, sway and render identity. Actual
+members occupy a fixed row-major grid across and behind the front. Width is
+normalised Euclidean image distance, so a square looks rectangular on a
+nonsquare image. True arc distance pins canonical spline endpoints. A bounded
+chord normal narrows U-turns without normalising tiny chords. Members approach
+their staging places, wait for the last, lag along the network, then collapse
+at a terminal and take C's places in actual arrival order. Walking variation
+stops at collapse or nonterminal parking; a nonzero-sway phase step is explicit,
+not a promise of general formation continuity. Nonending walks park after the
+2,048-hop bound and do not extend the scene or count as arrivals.
+
+Active groups use indexed topology and shared logarithmic weighted sum trees,
+rebuilding the excluded arrival path rather than subtracting a huge weight
+from a rounded root. New active-group junction rounding is accepted; ordinary
+choices retain their exact arithmetic. Packed per-group routes and 32-hop
+checkpoints share edge arcs. All active groups use C's reference clock, even
+without an Exit area, across editor/player/export/load/rollback. This is a
+new-group-only exception to the previous clock choice, not an unrelated fix.
+
+Groups forms use native fields under Motion More and per-emitter outline
+forms, context-owned provisional drafts, Apply groups and Cancel edits.
+Inactive-on controls permit turning off. Shared readiness errors name applying
+groups for this form while ordinary copy feedback stays literal. All three
+fields keep their own parameter hints alongside the form instructions through
+refreshes and errors. The native Groups grid and checkbox styles are scoped to
+these controls, preserving the existing beacon scope. Motion keeps Speed, Pace
+variation and At journey end in its primary tier, with Groups under More. Empty
+crowds retain disabled Groups controls and usable hints; scoped disabled tokens
+and cursors restore on an eligible emitter. Feedback remains with its original
+emitter across an empty selection. One app owner checks the complete
+canonical candidate before undo flush, mutation or one undo/save. Cross-panel
+conflicts name the other panel's cancel route; pending drafts and accepted
+edits invalidate E's asynchronous copy. Unrelated newer errors stay owned.
+
+The proven B/C/D completed-ZIP gap is closed by the same checked-edit helper.
+Node areas, Entry weights and Groups count exact prepared UTF-8 JSON, every
+binary, both path copies, the assets folder and ZIP overhead using the reviewed
+browser DEFLATE upper bound. Retained background bytes cannot be omitted.
+This sufficient guarantee can refuse a compressible project that still saves;
+that deliberate tradeoff keeps these actions synchronous and is explained in
+README. The refusal recommends smaller background/fewer images; text failures
+retain their own correction. Global Save/prepareArchive/exportZip admission
+is unchanged. Exact prepared/post-accept JSON equality is required.
+
+Digest rules: house app ownership, additive persistence and behavioural tests;
+Carbon native fields/disclosure/tokens; Nielsen provisional status, prevention
+and recovery; WCAG 2.1.3 keyboard, 2.5.5 targets, 3.3.6 checked reversible edits.
+Physical-device and screen-reader assurance remains REV-03/REV-05.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-15 — CROWD-08 — Checked crowd copies preserve drafts and ZIP text
 
 **Decision:** Duplication preserves pending edits and refuses prepared ZIP text
@@ -672,16 +740,6 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 **Decision:** v3.2.704 is live from deploy commit `2edf75a` (tag `v3.2.704`), released under GATELESS-1 because DEF-45's merge (`44d3009`, PR #70) changed `src/`.
 
 **Rationale:** release.sh: rollback tag `rollback-v3.2.703-44d3009`, gate green, dry run, push, Verify and the Pages deploy green, 22 of 22 live files SHA-256-identical to the build. Live smoke in the browser pane (1280×800): title v3.2.704, Open day played 3,002 ms of 27,028, ran to its end with no frame queued, MP4 1920×1080 29.0 s `ftypisom`, HTML export with its project, CSP and the live player, no failed resource, no console error. DEF-45 does not change export, so no disk save is owed; v3.2.703's stays owed (a wish line).
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-06 — DEF-28 — A session that cannot be restored is kept and offered, not lost
-
-**Decision:** DEF-28 lands (PR #54): a recovery record that cannot be restored is kept under a key of its own, or held where no copy fits, and offered (Download it, Discard) instead of being cleared or overwritten; Discard and Clear All report what they removed and what they could not; under DEF-45's queue every message saying a session could not be restored or removed is must-hear, while Discard's and Clear All's own confirmations stay routine. Phase 1 closes with it: all 14 PLAN-1 items landed; next is UI-04, by the owner's order of 2026-10-05 (after TST-04).
-
-**Rationale:** Codex review r11's three findings are fixed in `unrestoredAutosave.js` and `StorageService.discardKept`: a search settles a disappearance only once every listed key's text is known (F1); Discard keeps and reports a copy it cannot read (F2); a search and a successful Clear All retire start-time keys, so Clear All reports no phantom discard (F3). Nine cases close P1–P3 and the three test gaps; each named mutant passed before and fails now. Merging DEF-45 marked the recovery announcements essential and made Discard's next-offer message must-hear. Digest rules applied: house conventions → Testing and persistence; Nielsen → 9, recognise, diagnose and recover from errors. DEF-50 and DEF-67 no longer wait on it. Recall at the phase close, local, 8/8: (1) trajectory.md → Phase 1: DEF-28, TST-04, DEF-45, TST-08; (2) decisions.md → DEF-45, the queue bounded by coalescing because twelve Examples loads left six warnings; (3) wish-list.md and backlog.md's [!] lines (EX-01, REV-03, REV-05); (4) backlog.md → Next, "After TST-04": UI-04.
 
 **Supersedes:** none
 

@@ -2,7 +2,7 @@
 
 ## #scope-route-btn · click
 emit waypoint:deselected
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 app ~ selected: "waypoint[0]" → null
 app ~ selection: "waypoint[0]" → ""
 app ~ focus: "body" → "#scope-route-btn"
@@ -30,7 +30,7 @@ settled:
 
 ## #scope-prev-btn · click
 emit waypoint:deselected
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 app ~ selected: "waypoint[0]" → null
 app ~ selection: "waypoint[0]" → ""
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
@@ -57,7 +57,7 @@ settled:
 
 ## #scope-next-btn · click
 emit waypoint:selected waypoint[1]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: "waypoint[0]" → "waypoint[1]"
 app ~ selection: "waypoint[0]" → "waypoint[1]"
 app ~ focus: "body" → "#scope-next-btn"

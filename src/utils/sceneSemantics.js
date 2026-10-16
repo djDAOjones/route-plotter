@@ -9,6 +9,9 @@
 import { buildRouteNumbering } from './waypointNaming.js';
 import { getGraphEntryShares } from './graphRouting.js';
 import { entryWeightValue } from './entryWeight.js';
+import { groupsUnavailableReason, groupsActive, groupChoiceRole } from './groupSettings.js';
+import { CROWD_GROUPS } from '../config/constants.js';
+import { shiftDecimal } from './uiReadouts.js';
 
 const round = (value, places = 3) => {
   const factor = 10 ** places;
@@ -95,7 +98,8 @@ function nodeName(node, index) {
   return authored ? `${base} — ${authored}` : base;
 }
 
-function emitterDescriptor(emitter, index, layerId) {
+function emitterDescriptor(emitter, index, layer, groupContexts) {
+  const layerId = layer.id;
   return {
     key: sceneOutlineKey('emitter', layerId, emitter.id),
     id: emitter.id,
@@ -126,6 +130,14 @@ function emitterDescriptor(emitter, index, layerId) {
     wobble: percent(emitter.wobble),
     wobbleCanonical: emitter.wobble,
     seed: emitter.seed,
+    groups: emitter.groups ?? false,
+    groupSize: emitter.groupSize ?? CROWD_GROUPS.SIZE,
+    groupWidth: shiftDecimal(emitter.groupWidth ?? CROWD_GROUPS.WIDTH, 2),
+    groupWidthCanonical: emitter.groupWidth ?? CROWD_GROUPS.WIDTH,
+    groupsReason: groupsUnavailableReason(layer, emitter),
+    groupsActive: groupsActive(layer, emitter),
+    groupsContext: groupContexts?.get(
+      `${sceneOutlineKey('emitter', layer.id, emitter.id)}:groups-apply`)?.context ?? null,
   };
 }
 
@@ -219,6 +231,7 @@ export function buildSceneOutlineSnapshot({
   hasBackgroundImage = false,
   nodeAreaDescriptions = null,
   nodeEntryContexts = null,
+  emitterGroupContexts = null,
   crowdDuplicateContexts = null,
   crowdDuplicateBusy = false,
 } = {}) {
@@ -286,10 +299,11 @@ export function buildSceneOutlineSnapshot({
       : `Crowd ${index + 1}`,
     duplicateContext: crowdDuplicateContexts?.get(layer.id) ?? null,
     duplicateBusy: crowdDuplicateBusy,
+    choiceRole: groupChoiceRole(layer),
     visible: layer.visible,
     guideType: layer.guideType,
     emitters: layer.getEmitters().map((emitter, emitterIndex) =>
-      emitterDescriptor(emitter, emitterIndex, layer.id)
+      emitterDescriptor(emitter, emitterIndex, layer, emitterGroupContexts)
     ),
     graph: graphDescriptor(layer, hasBackgroundImage, nodeAreaDescriptions, nodeEntryContexts),
   }));

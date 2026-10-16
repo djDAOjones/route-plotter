@@ -144,3 +144,12 @@ Asked when his client needs these features working, the owner picked "Within a w
   shorten or remove. Existing native metadata and path-budget cases assert the
   correction; this later change still needs its own complete gate, committed
   browser evidence, fresh final-head approval and CI.
+
+
+- 2026-10-15 — Part F implements groups under the independently approved design.
+  Its decision owns the active-only routing/arc algorithm, shared reference
+  clock and conservative storage guarantee for Groups, Node-area and Entry
+  weights. Both native surfaces have provisional Apply groups/Cancel edits
+  forms; E refuses pending drafts. Source verification and independent code
+  review precede merge. This item remains in progress for G and the combined
+  publication; no F-only release is intended.

@@ -3,14 +3,14 @@
 # among that module's listeners for the event. Written by
 # tests/eventTranscript.test.js (TST-05); regenerate with UPDATE_EVENT_GOLDENS=1.
 #
-# 206 listeners on 139 events, from 12 modules:
+# 208 listeners on 139 events, from 12 modules:
 #   AreaDrawingService.js 5
 #   AreaEditService.js 8
 #   InteractionHandler.js 5
 #   SceneOutlineController.js 5
 #   SectionController.js 14
 #   UIController.js 10
-#   crowds.js 10
+#   crowds.js 12
 #   main.js 3
 #   network.js 20
 #   sceneOutline.js 24
@@ -49,6 +49,7 @@ app:cleared
   AreaDrawingService.js#1
   AreaEditService.js#1
   SectionController.js#1
+  crowds.js#1
   network.js#1
   SceneOutlineController.js#1
   sceneOutline.js#1
@@ -212,6 +213,7 @@ project:replaced
   AreaDrawingService.js#1
   AreaEditService.js#1
   SectionController.js#1
+  crowds.js#1
   network.js#1
   SceneOutlineController.js#1
   sceneOutline.js#1

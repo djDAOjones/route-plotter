@@ -1,0 +1,52 @@
+# groups-on: active groups sharing release and pace, with the stored settings shown
+
+## #crowd-groups · click
+app ~ focus: "body" → "#crowd-groups"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-groups: input aria-describedby="crowd-group-hint crowd-group-reason crowd-groups-tip" name="groups" type="checkbox" :checked → input aria-describedby="crowd-group-hint crowd-group-reason crowd-groups-tip" name="groups" type="checkbox" :unchecked
+
+## #crowd-group-form>button[1] · click
+app ~ focus: "body" → "#crowd-group-form>button[1]"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-form>button[1]: button aria-describedby="crowd-groups-tip" aria-expanded="false" aria-label="Help: Groups" class="param-hint-trigger" style="position-anchor: --crowd-groups-tip;" type="button" → button aria-describedby="crowd-groups-tip" aria-expanded="true" aria-label="Help: Groups" class="param-hint-trigger" style="position-anchor: --crowd-groups-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Move consecutive dots together; Apply groups accepts these edits"
+
+## #crowd-group-form>button[3] · click
+app ~ focus: "body" → "#crowd-group-form>button[3]"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-form>button[3]: button aria-describedby="crowd-group-size-tip" aria-expanded="false" aria-label="Help: Group size (dots)" class="param-hint-trigger" style="position-anchor: --crowd-group-size-tip;" type="button" → button aria-describedby="crowd-group-size-tip" aria-expanded="true" aria-label="Help: Group size (dots)" class="param-hint-trigger" style="position-anchor: --crowd-group-size-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Dots in each group, from 1 to 5,000. Size 1 keeps individual movement"
+
+## #crowd-group-size · enter 24
+app ~ focus: "body" → "#crowd-group-size"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-size: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="4" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="24"
+
+## #crowd-group-size · enter 99999
+app ~ focus: "body" → "#crowd-group-size"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-size: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="4" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="99999"
+
+## #crowd-group-form>button[7] · click
+app ~ focus: "body" → "#crowd-group-form>button[7]"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-form>button[7]: button aria-describedby="crowd-group-width-tip" aria-expanded="false" aria-label="Help: Group width (%)" class="param-hint-trigger" style="position-anchor: --crowd-group-width-tip;" type="button" → button aria-describedby="crowd-group-width-tip" aria-expanded="true" aria-label="Help: Group width (%)" class="param-hint-trigger" style="position-anchor: --crowd-group-width-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Width uses image proportions across and behind; walking variation may spread dots further"
+
+## #crowd-group-width · enter 24
+app ~ focus: "body" → "#crowd-group-width"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-width: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="2" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="24"
+
+## #crowd-group-width · enter 99999
+app ~ focus: "body" → "#crowd-group-width"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-width: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="2" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="99999"
+
+## #crowd-group-apply · click
+app ~ focus: "body" → "#crowd-group-apply"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+
+## #crowd-group-cancel · click
+app ~ focus: "body" → "#crowd-group-cancel"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"

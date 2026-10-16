@@ -3,6 +3,11 @@ import { releaseStartFraction } from '../utils/routeAnchors.js';
 import { dotOnsetFraction, dotJourneyMs } from '../utils/crowdArrival.js';
 import { getGraphDepartures, normalizeGraphWeights, graphEntryCumulative } from '../utils/graphRouting.js';
 import { entryWeightValue } from '../utils/entryWeight.js';
+import { groupsActive } from '../utils/groupSettings.js';
+import { buildGroupRouting, chooseGroupDeparture } from '../utils/groupRouting.js';
+import {
+  createGroupArc, traceGroupJourney, sampleGroupJourney, groupNormal, groupOffsets,
+} from '../utils/groupJourney.js';
 import {
   compileBusynessEnvelope,
   sampleBusynessEnvelope,
@@ -198,6 +203,9 @@ export class SwarmEngine {
     this._finishGeometryCache = new WeakMap();
     this._finishAllocationCache = new WeakMap();
     this._canonicalEdgeCache = new WeakMap();
+    this._groupRoutingCache = new WeakMap();
+    this._groupGeometryCache = new WeakMap();
+    this._groupAllocationCache = new WeakMap();
   }
 
   /**
@@ -249,7 +257,7 @@ export class SwarmEngine {
     const dots = [];
     const signature = guide.imageAspect === undefined ? null : graphSignature(guide.graph);
     for (const emitter of layer.emitters) {
-      const journeys = signature !== null && finishesJourneys(emitter)
+      const journeys = signature !== null && finishesJourneys(emitter) && !groupsActive(layer, emitter)
         ? this._cachedJourneys(layer, emitter, guide, signature) : null;
       this._evaluateEmitter(timelineMs, durationMs, emitter, guide, dots, context.routeAnchors, journeys, finish);
     }
@@ -302,7 +310,7 @@ export class SwarmEngine {
         const plan = finish?.byEmitter.get(emitter)?.[i];
         if (plan) {
           schedules.push({ onsetFraction: plan.onsetFraction, onsetMs: plan.onsetMs,
-            journeyMs: plan.journeyMs, finishes: true, ends: true });
+            journeyMs: plan.journeyMs, finishes: plan.group ? plan.ends : true, ends: plan.group ? plan.ends : true });
           continue;
         }
         if (!legacy) continue;
@@ -340,7 +348,8 @@ export class SwarmEngine {
   hasJourneyEnd(layer) {
     if (!layer) return null;
     if (layer.guideType === 'route') return true;
-    const guide = this._buildGraphGuide(layer.graph);
+    const guide = layer.emitters.some(e => groupsActive(layer, e))
+      ? this._indexedGroupGuide(layer) : this._buildGraphGuide(layer.graph);
     if (!guide) return null;
     const reaching = this._nodesReachingEnd(guide);
     return guide.entries.some(entry => reaching.has(entry.id));
@@ -377,6 +386,7 @@ export class SwarmEngine {
     let latest = finish?.latest || 0;
     if (!(durationMs > 0 && Number.isFinite(durationMs))) return latest;
     for (const emitter of finishing) {
+      if (groupsActive(layer, emitter)) continue;
       const journeys = signature === null ? null : this._cachedJourneys(layer, emitter, guide, signature);
       const window = this._releaseWindow(emitter, context.routeAnchors);
       for (let i = 0; i < emitter.dotCount; i++) {
@@ -473,6 +483,7 @@ export class SwarmEngine {
     const signature = guide.type === 'graph' ? graphSignature(guide.graph) : null;
 
     for (const emitter of emitters) {
+      if (groupsActive(layer, emitter)) continue;
       if (emitter.lifecycleMode !== 'disappear') return true;
       const journeys = signature === null ? null : this._cachedJourneys(layer, emitter, guide, signature);
       const window = this._releaseWindow(emitter, context.routeAnchors);
@@ -535,6 +546,206 @@ export class SwarmEngine {
     return { length: total, ends: false, legs, ...(area ? { area } : {}) };
   }
 
+  /** An indexed guide is used only on layers with an active group emitter. */
+  _indexedGroupGuide(layer) {
+    const graph = layer.graph, nodes = graph.getNodes(), edges = graph.getEdges();
+    if (!nodes.length || !edges.length) return null;
+    const key = JSON.stringify([nodes.map(n => [n.id, n.type, n.position(), entryWeightValue(n.entryWeight)]),
+      edges.map(e => [e.id, e.sourceId, e.targetId, e.direction, e.weight, e.controlPoints])]);
+    let cache = this._groupRoutingCache.get(layer);
+    if (!cache || cache.graph !== graph || cache.key !== key) {
+      const routing = buildGroupRouting(graph), leadsFrom = new Map(), reaching = new Set();
+      const entryIds = new Set(routing.entries.map(n => n.id));
+      for (const node of nodes) {
+        const departures = routing.byNode.get(node.id).departures;
+        if (node.type === 'exit' || routing.fallbackExits?.has(node.id)
+            || (!departures.length && (entryIds.has(node.id) || routing.incidence.has(node.id)))) reaching.add(node.id);
+        for (const { edge, reversed } of departures) {
+          const to = reversed ? edge.sourceId : edge.targetId;
+          if (!leadsFrom.has(to)) leadsFrom.set(to, []);
+          leadsFrom.get(to).push(node.id);
+        }
+      }
+      const queue = [...reaching];
+      while (queue.length) for (const from of leadsFrom.get(queue.pop()) || []) {
+        if (!reaching.has(from)) { reaching.add(from); queue.push(from); }
+      }
+      routing.reaching = reaching;
+      cache = { graph, key, routing };
+      this._groupRoutingCache.set(layer, cache);
+    }
+    return cache.routing.entries.length ? { ...cache.routing, indexedRouting: cache.routing } : null;
+  }
+
+  /** F plans rank their actual node arrivals together with the ordinary C journeys. */
+  _groupPlans(layer, guide, context) {
+    if (guide.type !== 'graph' || !guide.indexedRouting) return null;
+    const routing = guide.indexedRouting;
+    const aspect = Number.isFinite(context.imageAspect) && context.imageAspect > 0 ? context.imageAspect : 1;
+    const canonical = { ...guide, canonicalGeometry: true, imageAspect: aspect };
+    const geometryKey = JSON.stringify([aspect,
+      guide.graph.getNodes().map(n => [n.id, n.area]),
+      layer.emitters.map(e => [e.id, e.seed, e.dotCount, e.lifecycleMode, e.groups,
+        e.groupSize, e.groupWidth, e.waitAtStart])]);
+    let geometry = this._groupGeometryCache.get(layer);
+    if (!geometry || geometry.routing !== routing || geometry.key !== geometryKey
+        || layer.emitters.some((e, i) => e !== geometry.emitters[i])) {
+      const byEmitter = new Map();
+      for (const emitter of layer.emitters) {
+        const rows = new Array(emitter.dotCount).fill(null);
+        if (groupsActive(layer, emitter)) {
+          const count = Math.ceil(emitter.dotCount / emitter.groupSize);
+          const offsetsByCount = new Map();
+          for (let k = 0; k < count; k++) {
+            const entry = this._pickEntry(routing.entries, emitter.seed, k, 0, routing.entryCumulative);
+            const journey = traceGroupJourney(routing, entry,
+              (pool, from, hop) => chooseGroupDeparture(pool, from, SwarmEngine.hash(emitter.seed, k, hop)),
+              ordinal => {
+                const edge = routing.edges[ordinal], path = this._geometryFor(canonical, edge).points;
+                return createGroupArc(path, guide.graph.getNode(edge.sourceId).position(),
+                  guide.graph.getNode(edge.targetId).position());
+              });
+            const n = Math.min(emitter.groupSize, emitter.dotCount - k * emitter.groupSize);
+            if (!offsetsByCount.has(n)) offsetsByCount.set(n, groupOffsets(n, emitter.groupWidth));
+            const offsets = offsetsByCount.get(n);
+            const group = { journey, width: emitter.groupWidth, k, count, maxApproach: 0, memo: new Map() };
+            const terminalNormal = groupNormal(journey, journey.length, group.width);
+            for (let member = 0; member < n; member++) {
+              const index = k * emitter.groupSize + member, { across, behind } = offsets[member];
+              const at = this._groupFormation(group, -behind);
+              const staging = { x: at.point.x + across * at.normal.x, y: at.point.y + across * at.normal.y };
+              const area = this._startArea(entry, emitter, index, canonical);
+              const start = area?.point || staging;
+              const approach = area ? Math.hypot(start.x - staging.x, start.y - staging.y) : 0;
+              group.maxApproach = Math.max(group.maxApproach, approach);
+              const terminal = { x: journey.end.x + across * terminalNormal.x,
+                y: journey.end.y + across * terminalNormal.y };
+              const collapse = journey.ends ? Math.hypot(terminal.x - journey.end.x, terminal.y - journey.end.y) : 0;
+              rows[index] = { group, index, start, staging, approach, across, behind, terminal, collapse,
+                journey, endId: journey.terminal?.id };
+            }
+          }
+        } else if (emitter.lifecycleMode === 'collect') {
+          for (let i = 0; i < emitter.dotCount; i++) {
+            const terminal = this._firstTerminal(emitter, i, guide);
+            if (terminal?.type === 'exit' && terminal.area) {
+              rows[i] = { journey: this._journeyLength(emitter, i, canonical), index: i, endId: terminal.id };
+            }
+          }
+        }
+        byEmitter.set(emitter, rows);
+      }
+      geometry = { key: geometryKey, routing, emitters: [...layer.emitters], byEmitter };
+      this._groupGeometryCache.set(layer, geometry);
+    }
+    const plane = context.finishPackingContext || createFinishPackingContext(context);
+    const clock = context.finishReleaseContext
+      || { durationMs: context.durationMs, routeAnchors: context.routeAnchors };
+    const duration = Number.isFinite(clock.durationMs) && clock.durationMs >= 0 ? clock.durationMs : 10000;
+    const key = JSON.stringify([plane, duration, clock.routeAnchors, layer.emitters.map(e => [e.dotSize,
+      e.speed, e.speedVariance, e.releaseStart, e.releaseDuration, e.releaseAnchor,
+      e.onsetVariance, e.intensityRamp, e.busynessEnvelope])]);
+    const cached = this._groupAllocationCache.get(layer);
+    if (cached?.geometry === geometry && cached.key === key) return cached;
+    const byEmitter = new Map(), byExit = new Map(), summaries = new Map();
+    const allocated = [];
+    for (const [emitterOrder, emitter] of layer.emitters.entries()) {
+      const rows = new Array(emitter.dotCount).fill(null), window = this._releaseWindow(emitter, clock.routeAnchors);
+      byEmitter.set(emitter, rows);
+      for (const [index, row] of geometry.byEmitter.get(emitter).entries()) {
+        if (!row) continue;
+        const role = row.group ? row.group.k : index;
+        const roleEmitter = row.group ? { ...emitter, dotCount: row.group.count } : emitter;
+        const pace = this._journeyPace(emitter, role, 0);
+        const onsetFraction = this._onsetFraction(roleEmitter, role, window);
+        const onsetMs = onsetFraction * duration;
+        const networkLength = row.group ? row.group.maxApproach + row.journey.length + row.behind : row.journey.length;
+        const nodeLength = networkLength + (row.collapse || 0);
+        const plan = { ...row, emitter, emitterOrder, index, pace, onsetFraction, onsetMs,
+          ends: row.group ? row.journey.ends : true, nodeLength,
+          center: row.journey.end || guide.graph.getNode(row.endId).position(),
+          arrivalMs: onsetMs + dotJourneyMs(nodeLength, emitter.speed, pace),
+          collapseMs: onsetMs + dotJourneyMs(networkLength, emitter.speed, pace) };
+        if (row.group) {
+          plan.networkMs = onsetMs + dotJourneyMs(row.group.maxApproach, emitter.speed, pace);
+          plan.approachMs = onsetMs + dotJourneyMs(row.approach, emitter.speed, pace);
+        }
+        rows[index] = plan; allocated.push(plan);
+        const exit = guide.graph.getNode(row.endId);
+        if (plan.ends && emitter.lifecycleMode === 'collect' && exit?.type === 'exit' && exit.area) {
+          if (!byExit.has(row.endId)) byExit.set(row.endId, []);
+          byExit.get(row.endId).push(plan);
+        }
+      }
+    }
+    const largest = Math.max(...layer.emitters.map(e => e.dotSize));
+    for (const [exitId, arrivals] of byExit) {
+      const exit = guide.graph.getNode(exitId), center = exit.position();
+      const packing = packFinishArea(exit.area, center, plane, largest, arrivals.length);
+      summaries.set(exitId, { capacity: packing.capacity, exact: packing.exact, arrivals: arrivals.length });
+      arrivals.sort((a, b) => a.arrivalMs - b.arrivalMs || a.emitterOrder - b.emitterOrder || a.index - b.index);
+      arrivals.forEach((plan, rank) => {
+        plan.place = packing.places.length ? packing.places[rank % packing.places.length] : center;
+      });
+    }
+    let latest = 0, active = false;
+    for (const plan of allocated) {
+      plan.place ??= plan.center;
+      plan.finishLength = plan.ends ? Math.hypot(plan.place.x - plan.center.x, plan.place.y - plan.center.y) : 0;
+      plan.totalLength = plan.nodeLength + plan.finishLength;
+      plan.journeyMs = dotJourneyMs(plan.totalLength, plan.emitter.speed, plan.pace);
+      plan.finishMs = plan.onsetMs + plan.journeyMs;
+      if (plan.ends) latest = Math.max(latest, plan.finishMs);
+      if (!plan.ends || plan.emitter.lifecycleMode === 'collect' || plan.finishMs > plan.onsetMs) active = true;
+    }
+    const result = { key, geometry, byEmitter, summaries, active, latest, guide: canonical };
+    this._groupAllocationCache.set(layer, result);
+    return result;
+  }
+
+  /** Reuse a row's centre/normal; only the current queried distance is memoised. */
+  _groupFormation(group, distance) {
+    let sample = group.memo.get(distance);
+    if (!sample) {
+      sample = { ...sampleGroupJourney(group.journey, distance),
+        normal: groupNormal(group.journey, distance, group.width) };
+      group.memo.set(distance, sample);
+    }
+    return sample;
+  }
+
+  _walkGroupPlan(time, emitter, plan) {
+    const { group, journey, pace } = plan;
+    if (plan.ends && time >= plan.finishMs) {
+      return emitter.lifecycleMode === 'disappear' ? null : { point: plan.place, tangent: null };
+    }
+    if (!plan.ends && time >= plan.collapseMs) return { point: plan.terminal, tangent: null };
+    if (plan.ends && time >= plan.arrivalMs) {
+      const f = time === plan.arrivalMs ? 0
+        : Math.min(1, (time - plan.arrivalMs) / 1000 * emitter.speed * pace / plan.finishLength);
+      return { point: { x: plan.center.x + (plan.place.x - plan.center.x) * f,
+        y: plan.center.y + (plan.place.y - plan.center.y) * f }, tangent: null };
+    }
+    if (plan.ends && time >= plan.collapseMs) {
+      const f = time === plan.collapseMs ? 0
+        : Math.min(1, (time - plan.collapseMs) / 1000 * emitter.speed * pace / plan.collapse);
+      return { point: { x: plan.terminal.x + (plan.center.x - plan.terminal.x) * f,
+        y: plan.terminal.y + (plan.center.y - plan.terminal.y) * f }, tangent: null };
+    }
+    if (time >= plan.networkMs) {
+      const q = Math.min(journey.length + plan.behind, (time - plan.networkMs) / 1000 * emitter.speed * pace);
+      if (group.memoQ !== q) { group.memoQ = q; group.memo.clear(); }
+      const distance = q - plan.behind, sample = this._groupFormation(group, distance);
+      return { point: { x: sample.point.x + plan.across * sample.normal.x,
+        y: sample.point.y + plan.across * sample.normal.y }, tangent: sample.tangent,
+        wobbleDistance: Math.max(0, distance), journey: 0 };
+    }
+    if (time >= plan.approachMs) return { point: plan.staging, tangent: null };
+    const f = Math.min(1, (time - plan.onsetMs) / 1000 * emitter.speed * pace / plan.approach);
+    return { point: { x: plan.start.x + (plan.staging.x - plan.start.x) * f,
+      y: plan.start.y + (plan.staging.y - plan.start.y) * f }, tangent: null };
+  }
+
   /** The topology-only first journey chooses C eligibility without warming geometry. */
   _firstTerminal(emitter, dotIndex, guide) {
     let hop = 0;
@@ -570,6 +781,7 @@ export class SwarmEngine {
 
   /** Shared across all emitters: each Exit's seats are ranked by unextended arrival. */
   _finishPlans(layer, guide, context) {
+    if (layer.emitters.some(e => groupsActive(layer, e))) return this._groupPlans(layer, guide, context);
     if (guide.type !== 'graph' || !guide.graph.getNodesByType('exit').some(n => n.area)
         || !layer.emitters.some(e => e.lifecycleMode === 'collect' && e.dotCount > 0)) return null;
     const canonical = { ...guide, canonicalGeometry: true };
@@ -658,6 +870,7 @@ export class SwarmEngine {
   }
 
   _walkFinish(time, distance, emitter, index, plan, guide) {
+    if (plan.group) return this._walkGroupPlan(time, emitter, plan);
     // Shared terminal sum first, Exit second, Entry third: coincident floating
     // boundaries cannot strand a dot at its old Entry or unextended Exit.
     if (time >= plan.finishMs) return { point: plan.place, tangent: null };
@@ -711,6 +924,7 @@ export class SwarmEngine {
    * @returns {Set<string>}
    */
   _nodesReachingEnd(guide) {
+    if (guide.indexedRouting) return guide.indexedRouting.reaching;
     const { graph } = guide;
     const leadsFrom = new Map(); // node id → ids of the nodes a path leads to it from
     for (const node of graph.getNodes()) {
@@ -746,7 +960,8 @@ export class SwarmEngine {
       const guide = { type: 'route', points, length: this._routeLength(points) };
       return guide.length > 0 ? guide : null;
     }
-    const guide = this._buildGraphGuide(layer.graph);
+    const guide = layer.emitters.some(e => groupsActive(layer, e))
+      ? this._indexedGroupGuide(layer) : this._buildGraphGuide(layer.graph);
     if (guide?.entries.some(node => node.type === 'entry' && node.area)) {
       guide.imageAspect = Number.isFinite(context.imageAspect) && context.imageAspect > 0 ? context.imageAspect : 1;
     }
@@ -813,7 +1028,7 @@ export class SwarmEngine {
       const elapsedSec = (timelineMs - onsetMs) / 1000;
       if (elapsedSec < 0) continue; // not yet released
 
-      const speedMultiplier = this._journeyPace(emitter, i, 0);
+      const speedMultiplier = plan?.group ? plan.pace : this._journeyPace(emitter, i, 0);
       const distance = emitter.speed * speedMultiplier * elapsedSec;
 
       const sample = plan ? this._walkFinish(timelineMs, distance, emitter, i, plan, finish.guide)

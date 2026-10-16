@@ -1243,37 +1243,71 @@
               <button type="button" class="section-header" aria-expanded="false" aria-controls="section-motion-content">Motion<span class="section-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2L8.5 6L4.5 10"/></svg></span></button>
             </h2>
             <div id="section-motion-content" class="section-content">
-              <div class="range-row">
-                <label for="crowd-speed">
-                  <span id="crowd-speed-label" data-tip="Dot travel speed in image lengths per second: 1 is the image's width across or its height down">Speed</span>
-                  <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1" aria-describedby="crowd-speed-value" aria-valuetext="0.15 image lengths/s">
-                </label>
-                <span id="crowd-speed-value" class="range-readout range-field"><input type="number" id="crowd-speed-field" min="0.001" max="1000" step="0.001" value="0.15" aria-labelledby="crowd-speed-label crowd-speed-unit" aria-describedby="crowd-speed-tip"> <span id="crowd-speed-unit" class="range-field-unit">image lengths/s</span></span>
-                <p id="crowd-speed-reason" class="section-hint range-reason" hidden></p>
-                <p id="crowd-speed-field-error" class="section-hint range-field-error" hidden></p>
-              </div>
+              <div class="section-primary">
+                <div class="range-row">
+                  <label for="crowd-speed">
+                    <span id="crowd-speed-label" data-tip="Dot travel speed in image lengths per second: 1 is the image's width across or its height down">Speed</span>
+                    <input type="range" id="crowd-speed" min="1" max="100" value="15" step="1" aria-describedby="crowd-speed-value" aria-valuetext="0.15 image lengths/s">
+                  </label>
+                  <span id="crowd-speed-value" class="range-readout range-field"><input type="number" id="crowd-speed-field" min="0.001" max="1000" step="0.001" value="0.15" aria-labelledby="crowd-speed-label crowd-speed-unit" aria-describedby="crowd-speed-tip"> <span id="crowd-speed-unit" class="range-field-unit">image lengths/s</span></span>
+                  <p id="crowd-speed-reason" class="section-hint range-reason" hidden></p>
+                  <p id="crowd-speed-field-error" class="section-hint range-field-error" hidden></p>
+                </div>
 
-              <div class="range-row">
-                <label for="crowd-speed-variance">
-                  <span id="crowd-speed-variance-label" data-tip="Per-dot pace variation — 0% moves every dot at the same speed">Pace variation</span>
-                  <input type="range" id="crowd-speed-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-speed-variance-value" aria-valuetext="20%">
-                </label>
-                <span id="crowd-speed-variance-value" class="range-readout range-field"><input type="number" id="crowd-speed-variance-field" min="0" max="100" step="any" value="20" aria-labelledby="crowd-speed-variance-label crowd-speed-variance-unit" aria-describedby="crowd-speed-variance-tip"><span id="crowd-speed-variance-unit" class="range-field-unit">%</span></span>
-                <p id="crowd-speed-variance-reason" class="section-hint range-reason" hidden></p>
-                <p id="crowd-speed-variance-field-error" class="section-hint range-field-error" hidden></p>
-              </div>
+                <div class="range-row">
+                  <label for="crowd-speed-variance">
+                    <span id="crowd-speed-variance-label" data-tip="Per-dot pace variation — 0% moves every dot at the same speed">Pace variation</span>
+                    <input type="range" id="crowd-speed-variance" min="0" max="100" value="20" step="1" aria-describedby="crowd-speed-variance-value" aria-valuetext="20%">
+                  </label>
+                  <span id="crowd-speed-variance-value" class="range-readout range-field"><input type="number" id="crowd-speed-variance-field" min="0" max="100" step="any" value="20" aria-labelledby="crowd-speed-variance-label crowd-speed-variance-unit" aria-describedby="crowd-speed-variance-tip"><span id="crowd-speed-variance-unit" class="range-field-unit">%</span></span>
+                  <p id="crowd-speed-variance-reason" class="section-hint range-reason" hidden></p>
+                  <p id="crowd-speed-variance-field-error" class="section-hint range-field-error" hidden></p>
+                </div>
 
-              <label class="label-stacked" for="crowd-lifecycle">
-                <span data-tip="Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start sends a new dot from the start with its own pace and walking variation; Repeat journey follows the same paths again at the same pace">At journey end</span>
-                <select id="crowd-lifecycle" aria-describedby="crowd-lifecycle-hint">
-                  <option value="respawn">Respawn at the start</option>
-                  <option value="loop">Repeat journey</option>
-                  <option value="disappear">Disappear</option>
-                  <option value="collect">Collect at the end</option>
-                </select>
-              </label>
-              <!-- DEF-77: crowds.js fills this while no dot reaches its journey end -->
-              <p id="crowd-lifecycle-hint" class="section-hint" hidden></p>
+                <label class="label-stacked" for="crowd-lifecycle">
+                  <span data-tip="Disappear removes a dot at its journey's end; Collect at the end parks it there; Respawn at the start sends a new dot from the start with its own pace and walking variation; Repeat journey follows the same paths again at the same pace">At journey end</span>
+                  <select id="crowd-lifecycle" aria-describedby="crowd-lifecycle-hint">
+                    <option value="respawn">Respawn at the start</option>
+                    <option value="loop">Repeat journey</option>
+                    <option value="disappear">Disappear</option>
+                    <option value="collect">Collect at the end</option>
+                  </select>
+                </label>
+                <!-- DEF-77: crowds.js fills this while no dot reaches its journey end -->
+                <p id="crowd-lifecycle-hint" class="section-hint" hidden></p>
+              </div>
+              <details class="section-more">
+                <summary>More</summary>
+                <div class="section-more-content">
+                  <form id="crowd-group-form" class="crowd-group-form"
+                        aria-describedby="crowd-group-hint crowd-group-reason">
+                    <label for="crowd-groups" class="checkbox-label crowd-group-toggle">
+                      <input id="crowd-groups" name="groups" type="checkbox">
+                      <span data-tip="Move consecutive dots together; Apply groups accepts these edits">Groups</span>
+                    </label>
+                    <label for="crowd-group-size">
+                      <span data-tip="Dots in each group, from 1 to 5,000. Size 1 keeps individual movement">
+                        Group size (dots)
+                      </span>
+                    </label>
+                    <input id="crowd-group-size" name="groupSize" type="number"
+                           min="1" max="5000" step="1" required value="4">
+                    <label for="crowd-group-width">
+                      <span
+                        data-tip="Width uses image proportions across and behind; walking variation may spread dots further">
+                        Group width (%)
+                      </span>
+                    </label>
+                    <input id="crowd-group-width" name="groupWidth" type="number"
+                           min="0" max="20" step="any" required value="2">
+                    <p id="crowd-group-hint" class="section-hint"></p>
+                    <p id="crowd-group-reason" class="section-hint" hidden></p>
+                    <p id="crowd-group-error" class="section-hint range-field-error" hidden></p>
+                    <button id="crowd-group-apply" class="btn btn-primary" type="submit">Apply groups</button>
+                    <button id="crowd-group-cancel" class="btn btn-secondary" type="button">Cancel edits</button>
+                  </form>
+                </div>
+              </details>
             </div>
           </div>
 

@@ -252,12 +252,31 @@ record stays, and the autosave's failure report says how to free space.
 
 Other localStorage keys: `routePlotter_splashShown`, `routePlotter_previewTipDismissed`, `routePlotter_sectionState` and `routePlotter_lastSection`. `routePlotter_customKeybindings` is read only by the help panel (Keybindings below); `routePlotter_preferences` has read/write helpers in `StorageService` with no callers.
 
+### Crowd groups
+
+In Motion → More, **Groups** shares an Entry, release time, pace and junction
+choices between consecutive sets of dots. Group size is 1–5,000 dots; Group
+width is 0–20% of the image, spread across and behind the front. Width uses
+image proportions, so its square looks rectangular on a nonsquare image.
+Walking variation remains individual and can spread dots further. Size 1 keeps
+individual movement. Groups requires Custom network and Disappear or Collect.
+Unavailable settings are retained, with a reason and a way to turn Groups off.
+
+The crowd card edits its first emitter; each emitter has a Groups form in the
+scene outline. **Apply groups** accepts the draft as one undoable edit;
+**Cancel edits** restores that form's stored settings. Finish or cancel a draft
+before applying in the other panel or duplicating a crowd. Members walk from
+their seeded start-area points and wait beside Entry for the last member.
+At an Exit, they dissolve into individually ranked finish-area places.
+Active groups use the project's reference clock in every output, including
+networks without finish areas; other crowds retain their existing clocks.
+
 ### Project save/load (ZIP)
 
 Duplicate crowd in Layers or the scene outline copies a crowd's settings with
 new identities and pattern seeds. It checks the complete candidate before
 changing the scene, selection or history. Finish pending Crowd, Node or Path
-fields, including Entry weights and Busyness, first. Starting a rename cancels
+fields, including Entry weights and Busyness, and apply or cancel Groups drafts first. Starting a rename cancels
 a duplicate check in progress. A copy that exceeds a project limit or cannot
 preserve its text is refused with a reason and a correction to try; the source stays intact.
 
@@ -271,6 +290,14 @@ images the project uses; an image that only undo could bring back stays
 behind. Project files keep those images' stored filenames and HTML exports
 leave them out, though an image's original bytes can carry metadata of their
 own.
+
+Node-area, Entry-weight and Groups edits prove guaranteed room for the whole
+saved ZIP before changing the project, using its canonical JSON and retained
+original image bytes. This is a conservative upper bound, not a measured ZIP
+size: a large, compressible project may still save but lack guaranteed room
+for these edits. Use a smaller background or fewer custom images, then retry.
+Text refusals instead identify the label or image-name correction. Save Project
+and crowd duplication keep their existing actual compressed-size checks.
 
 ### Import safety limits
 

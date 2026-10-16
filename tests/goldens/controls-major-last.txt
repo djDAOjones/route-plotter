@@ -2,7 +2,7 @@
 
 ## #scope-route-btn · click
 emit waypoint:deselected
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 app ~ selected: "waypoint[5]" → null
 app ~ selection: "waypoint[5]" → ""
 app ~ focus: "body" → "#scope-route-btn"
@@ -31,7 +31,7 @@ settled:
 
 ## #scope-prev-btn · click
 emit waypoint:selected waypoint[4]
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 app ~ selected: "waypoint[5]" → "waypoint[4]"
 app ~ selection: "waypoint[5]" → "waypoint[4]"
 app ~ focus: "body" → "#scope-prev-btn"

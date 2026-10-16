@@ -2,7 +2,7 @@
 
 ## #waypoint-list>li[1]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[0], waypoint[1], waypoint[2]], primary: waypoint[0]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[0]"
 app ~ selection: "waypoint[3]" → "waypoint[0] waypoint[1] waypoint[2] waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -100,7 +100,7 @@ settled:
 
 ## #waypoint-list>li[1]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[0]], primary: waypoint[0]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[0]"
 app ~ selection: "waypoint[3]" → "waypoint[0] waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -194,7 +194,7 @@ settled:
 
 ## #waypoint-list>li[1]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[0]], primary: waypoint[0]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-1", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[0]"
 app ~ selection: "waypoint[3]" → "waypoint[0] waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -288,7 +288,7 @@ settled:
 
 ## #waypoint-list>li[2]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[1], waypoint[2]], primary: waypoint[1]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[1]"
 app ~ selection: "waypoint[3]" → "waypoint[1] waypoint[2] waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -354,7 +354,7 @@ settled:
 
 ## #waypoint-list>li[2]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[1]], primary: waypoint[1]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[1]"
 app ~ selection: "waypoint[3]" → "waypoint[1] waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -406,7 +406,7 @@ settled:
 
 ## #waypoint-list>li[2]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[1]], primary: waypoint[1]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[1]"
 app ~ selection: "waypoint[3]" → "waypoint[1] waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -458,7 +458,7 @@ settled:
 
 ## #waypoint-list>li[3]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[2]], primary: waypoint[2]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[2]"
 app ~ selection: "waypoint[3]" → "waypoint[2] waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -522,7 +522,7 @@ settled:
 
 ## #waypoint-list>li[3]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[2]], primary: waypoint[2]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[2]"
 app ~ selection: "waypoint[3]" → "waypoint[2] waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -586,7 +586,7 @@ settled:
 
 ## #waypoint-list>li[3]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[2]], primary: waypoint[2]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2a", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[2]"
 app ~ selection: "waypoint[3]" → "waypoint[2] waypoint[3]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -650,7 +650,7 @@ settled:
 
 ## #waypoint-list>li[4]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3]], primary: waypoint[3]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-2b", focusKey: null}
 ui ~ #camera-single-controls: div style="display: block;" → div (not shown)
 ui ~ #camera-multi-controls: div (not shown) → div style="display: block;"
 ui + #camera-multi-controls>div[0]: div class="control-row control-row-inline"
@@ -678,7 +678,7 @@ settled:
 
 ## #waypoint-list>li[4]>button[0] · Cmd-click
 emit waypoint:deselected
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 app ~ selected: "waypoint[3]" → null
 app ~ selection: "waypoint[3]" → ""
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
@@ -705,7 +705,7 @@ settled:
 
 ## #waypoint-list>li[4]>button[0] · Ctrl-click
 emit waypoint:deselected
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: null, focusKey: null}
 app ~ selected: "waypoint[3]" → null
 app ~ selection: "waypoint[3]" → ""
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="route"
@@ -732,7 +732,7 @@ settled:
 
 ## #waypoint-list>li[5]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[4]], primary: waypoint[4]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[4]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[4]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -796,7 +796,7 @@ settled:
 
 ## #waypoint-list>li[5]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[4]], primary: waypoint[4]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[4]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[4]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -860,7 +860,7 @@ settled:
 
 ## #waypoint-list>li[5]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[4]], primary: waypoint[4]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-b1", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[4]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[4]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -924,7 +924,7 @@ settled:
 
 ## #waypoint-list>li[6]>button[0] · shift-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[4], waypoint[5]], primary: waypoint[5]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[5]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[4] waypoint[5]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -990,7 +990,7 @@ settled:
 
 ## #waypoint-list>li[6]>button[0] · Cmd-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[5]], primary: waypoint[5]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[5]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[5]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"
@@ -1054,7 +1054,7 @@ settled:
 
 ## #waypoint-list>li[6]>button[0] · Ctrl-click
 emit waypoint:multi-selected {waypoints: [waypoint[3], waypoint[5]], primary: waypoint[5]}
-emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{11 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "waypoint:ex-uon-3", focusKey: null}
 app ~ selected: "waypoint[3]" → "waypoint[5]"
 app ~ selection: "waypoint[3]" → "waypoint[3] waypoint[5]"
 ui ~ #scope-chip: div class="scope-chip" data-scope="waypoint" → div class="scope-chip" data-scope="multi"

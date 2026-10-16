@@ -1746,6 +1746,33 @@ const CONTEXTS = [
   },
   { name: 'crowd', about: 'the crowd selected', roots: ['#scope-chip', '#crowd-scope'], enter: selectCrowd },
   {
+    name: 'group-draft',
+    about: 'eligible groups with provisional settings, ready to Apply groups or Cancel edits',
+    roots: ['#crowd-group-form'],
+    enter: app => {
+      selectCrowd(app);
+      choose('crowd-lifecycle', 'collect');
+      const form = document.getElementById('crowd-group-form');
+      form.closest('details').open = true;
+      document.getElementById('crowd-groups').click();
+      choose('crowd-group-size', '3');
+      choose('crowd-group-width', '8');
+    },
+  },
+  {
+    name: 'groups-on',
+    about: 'active groups sharing release and pace, with the stored settings shown',
+    roots: ['#crowd-group-form'],
+    enter: app => {
+      selectCrowd(app);
+      choose('crowd-lifecycle', 'collect');
+      const form = document.getElementById('crowd-group-form');
+      form.closest('details').open = true;
+      document.getElementById('crowd-groups').click();
+      document.getElementById('crowd-group-apply').click();
+    },
+  },
+  {
     name: 'node',
     about: 'the crowd network\'s first node inspected',
     roots: ['#node-scope'],

@@ -1,0 +1,89 @@
+# group-draft: eligible groups with provisional settings, ready to Apply groups or Cancel edits
+
+## #crowd-groups · click
+app ~ focus: "body" → "#crowd-groups"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-groups: input aria-describedby="crowd-group-hint crowd-group-reason crowd-groups-tip" name="groups" type="checkbox" :checked → input aria-describedby="crowd-group-hint crowd-group-reason crowd-groups-tip" name="groups" type="checkbox" :unchecked
+
+## #crowd-group-form>button[1] · click
+app ~ focus: "body" → "#crowd-group-form>button[1]"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-form>button[1]: button aria-describedby="crowd-groups-tip" aria-expanded="false" aria-label="Help: Groups" class="param-hint-trigger" style="position-anchor: --crowd-groups-tip;" type="button" → button aria-describedby="crowd-groups-tip" aria-expanded="true" aria-label="Help: Groups" class="param-hint-trigger" style="position-anchor: --crowd-groups-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Move consecutive dots together; Apply groups accepts these edits"
+
+## #crowd-group-form>button[3] · click
+app ~ focus: "body" → "#crowd-group-form>button[3]"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-form>button[3]: button aria-describedby="crowd-group-size-tip" aria-expanded="false" aria-label="Help: Group size (dots)" class="param-hint-trigger" style="position-anchor: --crowd-group-size-tip;" type="button" → button aria-describedby="crowd-group-size-tip" aria-expanded="true" aria-label="Help: Group size (dots)" class="param-hint-trigger" style="position-anchor: --crowd-group-size-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Dots in each group, from 1 to 5,000. Size 1 keeps individual movement"
+
+## #crowd-group-size · enter 24
+app ~ focus: "body" → "#crowd-group-size"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-size: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="3" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="24"
+
+## #crowd-group-size · enter 99999
+app ~ focus: "body" → "#crowd-group-size"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-size: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="3" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="99999"
+
+## #crowd-group-form>button[7] · click
+app ~ focus: "body" → "#crowd-group-form>button[7]"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-form>button[7]: button aria-describedby="crowd-group-width-tip" aria-expanded="false" aria-label="Help: Group width (%)" class="param-hint-trigger" style="position-anchor: --crowd-group-width-tip;" type="button" → button aria-describedby="crowd-group-width-tip" aria-expanded="true" aria-label="Help: Group width (%)" class="param-hint-trigger" style="position-anchor: --crowd-group-width-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Width uses image proportions across and behind; walking variation may spread dots further"
+
+## #crowd-group-width · enter 24
+app ~ focus: "body" → "#crowd-group-width"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-width: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="8" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="24"
+
+## #crowd-group-width · enter 99999
+app ~ focus: "body" → "#crowd-group-width"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-group-width: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="8" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="99999"
+
+## #crowd-group-apply · click
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+announced "Groups updated. Undo is available."
+model + scene.flowLayers[0].emitters[0].groups: true
+model + scene.flowLayers[0].emitters[0].groupSize: 3
+model + scene.flowLayers[0].emitters[0].groupWidth: 0.08
+app ~ focus: "body" → "#crowd-group-apply"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Groups updated. Undo is available."
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-release-start-label: span data-tip-desc="crowd-release-start-tip" data-tip="When the first dots set off, as a position in the timeline" style="anchor-name: --crowd-release-start-tip;" :text="Window start" → span data-tip-desc="crowd-release-start-tip" data-tip="When the first group sets off, as a position in the project's reference timeline" style="anchor-name: --crowd-release-start-tip;" :text="Window start"
+ui ~ #crowd-release-start-tip: span class="sr-only" :text="When the first dots set off, as a position in the timeline" → span class="sr-only" :text="When the first group sets off, as a position in the project's reference timeline"
+ui ~ #crowd-release-duration-label: span data-tip-desc="crowd-release-duration-tip" data-tip="How much of the timeline the release is spread across" style="anchor-name: --crowd-release-duration-tip;" :text="Window length" → span data-tip-desc="crowd-release-duration-tip" data-tip="How much of the project's reference timeline the group releases are spread across" style="anchor-name: --crowd-release-duration-tip;" :text="Window length"
+ui ~ #crowd-release-duration-tip: span class="sr-only" :text="How much of the timeline the release is spread across" → span class="sr-only" :text="How much of the project's reference timeline the group releases are spread across"
+ui ~ #crowd-onset-variance-label: span data-tip-desc="crowd-onset-variance-tip" data-tip="How unevenly individual dots set off within the release window" style="anchor-name: --crowd-onset-variance-tip;" :text="Release timing" → span data-tip-desc="crowd-onset-variance-tip" data-tip="How unevenly groups set off within the release window" style="anchor-name: --crowd-onset-variance-tip;" :text="Release timing"
+ui ~ #crowd-onset-variance-tip: span class="sr-only" :text="How unevenly individual dots set off within the release window" → span class="sr-only" :text="How unevenly groups set off within the release window"
+ui ~ #crowd-intensity-ramp-label: span data-tip-desc="crowd-intensity-ramp-tip" data-tip="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither" style="anchor-name: --crowd-intensity-ramp-tip;" :text="Release bias" → span data-tip-desc="crowd-intensity-ramp-tip" data-tip="Earlier sets more groups off near the start; Later near the end; Even favours neither" style="anchor-name: --crowd-intensity-ramp-tip;" :text="Release bias"
+ui ~ #crowd-intensity-ramp-tip: span class="sr-only" :text="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither" → span class="sr-only" :text="Earlier sets more groups off near the start; Later near the end; Even favours neither"
+ui ~ #crowd-busyness-hint: p class="section-hint" :text="Higher handles release more dots. Drag a handle, or use the exact controls below. Each span can change gradually or suddenly." → p class="section-hint" :text="Higher handles release more groups. Drag a handle, or use the exact controls below. Each span can change gradually or suddenly."
+ui ~ #crowd-busyness-handles>div[0]>label[5]>span[0]: span data-tip-desc="{#crowd-busyness-handles>div[0]>span[6]}" data-tip="How busy the release is at this handle: higher sets more dots off around it, 0% none" style="anchor-name: --{#crowd-busyness-handles>div[0]>span[6]};" :text="Busy" → span data-tip-desc="{#crowd-busyness-handles>div[0]>span[6]}" data-tip="How busy the release is at this handle: higher sets more groups off around it, 0% none" style="anchor-name: --{#crowd-busyness-handles>div[0]>span[6]};" :text="Busy"
+ui ~ #crowd-busyness-handles>div[0]>span[6]: span class="sr-only" :text="How busy the release is at this handle: higher sets more dots off around it, 0% none" → span class="sr-only" :text="How busy the release is at this handle: higher sets more groups off around it, 0% none"
+ui ~ #crowd-busyness-handles>div[1]>label[5]>span[0]: span data-tip-desc="{#crowd-busyness-handles>div[1]>span[6]}" data-tip="How busy the release is at this handle: higher sets more dots off around it, 0% none" style="anchor-name: --{#crowd-busyness-handles>div[1]>span[6]};" :text="Busy" → span data-tip-desc="{#crowd-busyness-handles>div[1]>span[6]}" data-tip="How busy the release is at this handle: higher sets more groups off around it, 0% none" style="anchor-name: --{#crowd-busyness-handles>div[1]>span[6]};" :text="Busy"
+ui ~ #crowd-busyness-handles>div[1]>span[6]: span class="sr-only" :text="How busy the release is at this handle: higher sets more dots off around it, 0% none" → span class="sr-only" :text="How busy the release is at this handle: higher sets more groups off around it, 0% none"
+ui ~ #crowd-pattern-hint: p class="section-hint" :text="Path shares set the route proportions. Re-roll changes which dots take each path, plus individual walking and set-off variation." → p class="section-hint" :text="Re-roll changes group Entry, path, release and pace choices, plus each dot’s start point and walking variation."
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-speed-variance-label: span data-tip-desc="crowd-speed-variance-tip" data-tip="Per-dot pace variation — 0% moves every dot at the same speed" style="anchor-name: --crowd-speed-variance-tip;" :text="Pace variation" → span data-tip-desc="crowd-speed-variance-tip" data-tip="Per-group pace variation — 0% moves every group at the same speed" style="anchor-name: --crowd-speed-variance-tip;" :text="Pace variation"
+ui ~ #crowd-speed-variance-tip: span class="sr-only" :text="Per-dot pace variation — 0% moves every dot at the same speed" → span class="sr-only" :text="Per-group pace variation — 0% moves every group at the same speed"
+settled:
+  emit animation:durationChange 348489.536046
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 348489.536046, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10063 chars, 925f89f1] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10109 chars, bf631b2b]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Groups updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:30" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 5:48" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #total-time: span class="time" :text="0:30" → span class="time" :text="5:48"
+
+## #crowd-group-cancel · click
+app ~ focus: "body" → "#crowd-group-cancel"
+ui ~ #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" → div class="settings-section expanded" data-last="true" data-section="motion"
+ui ~ #crowd-groups: input aria-describedby="crowd-group-hint crowd-group-reason crowd-groups-tip" name="groups" type="checkbox" :checked → input aria-describedby="crowd-group-hint crowd-group-reason crowd-groups-tip" name="groups" type="checkbox" :unchecked
+ui ~ #crowd-group-size: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="3" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="4"
+ui ~ #crowd-group-width: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="8" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="2"
