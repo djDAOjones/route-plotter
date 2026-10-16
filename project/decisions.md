@@ -45,8 +45,9 @@ observations remain open, with no scope added. The new very long crowd-name
 observation gets one unjudged wish line.
 
 Before the owner’s v3.3.722 waiver, local recall on this reconciled record
-scored 8/8 (2,2,2,2), with answers
-produced before writing the result: (1) project/trajectory.md → MVP and Ahead of
+was first self-scored 8/8; independent record review R1 corrects it to
+7/8 (1,2,2,2). Its original answers, produced before writing the result, are
+retained: (1) project/trajectory.md → MVP and Ahead of
 Phase 2's last defects names CROWD-08, DEF-84, DEF-98 and DEF-94, newest first;
 (2) decisions.md → Part G: waiting crowds leave nearest first preserves seeded
 identities while ranking release slots, for the football leaving scene; (3)
@@ -57,11 +58,25 @@ After CROWD-08 names REFACTOR-01 before MERGE-01, because the 14 October
 REFACTOR-01 decision puts modularisation before v4. This is local recall, not a
 fresh-session handoff test. The earlier pre-close baseline was separate and is
 not this phase-close result. After the owner’s explicit 722 waiver changed the
-open checks, a separate local recheck again scored 8/8 (2,2,2,2), with answers
-produced before its result write. Answers (1), (2) and (4) keep the same anchors;
+open checks, a separate local recheck was also self-scored 8/8 and is corrected
+to 7/8 (1,2,2,2). Its original answers, produced before its result write, are
+retained. Answers (1), (2) and (4) keep the same anchors;
 answer (3) now cites REL-722’s waiver and wish-list.md’s remaining 719/721 checks.
-Both results are retained in order. REFACTOR-01 is not begun; the lead asks what
-comes next.
+Both corrected scores and original answers are retained in order. R1 found
+answer (1) partial in both rounds: DEF-94 should have been DEF-89 and the
+Phase 3 — Design reviews anchor was missing. tools/ledger.mjs reads the latest
+line of each phase first, so CROWD-08 now follows DEF-84 within the MVP phase;
+this restores the reader’s newest-first order without moving any prior item.
+After both R1 repairs, a separate local recall scored 8/8 (2,2,2,2), with
+answers produced before its result write: (1) the canonical trajectory reader
+now returns CROWD-08, DEF-84, DEF-98, DEF-89, under MVP, Ahead of Phase 2’s last
+defects and Phase 3 — Design reviews; (2) Part G’s decision explains seeded
+identities and nearest-first release for the football scene; (3) REL-722 and
+wish-list.md retain the 719/721 saved-file checks and all earlier open export
+wishes, including REL-703/REL-706; other deferred work remains in backlog.md; (4) backlog.md → Next and project/items/REFACTOR-01.md retain the
+owner’s refactor-before-v4 sequence and owner-decided plan. This third result
+has its own trajectory line and remains local. REFACTOR-01 is not begun; the
+lead asks what comes next.
 
 **Supersedes:** none
 
