@@ -4490,3 +4490,26 @@ input[type="number"]:disabled{
 /* A full name row keeps the new 44 px action from squeezing names in the desktop sidebar. */
 .layer-item:has(> .layer-duplicate) > .layer-row{ flex-basis:100%; }
 .layer-item:has(> .layer-duplicate) > .layer-visibility{ margin-left:auto; }
+
+/* Final whistle uses the same native productive form pattern as Groups. */
+.crowd-wait-form{
+  display:grid;
+  gap:var(--space-2);
+  margin-top:var(--space-3);
+}
+.crowd-wait-form[hidden]{ display:none; }
+.crowd-wait-toggle{
+  min-height:var(--touch-target-min);
+  cursor:pointer;
+}
+.crowd-wait-toggle input[type="checkbox"]{
+  width:16px;
+  height:16px;
+  cursor:pointer;
+  accent-color:var(--control-accent);
+}
+.crowd-wait-toggle input[type="checkbox"]:disabled{
+  accent-color:var(--disabled-03);
+  cursor:not-allowed;
+}
+.crowd-wait-toggle:has(input:disabled){ cursor:not-allowed; }

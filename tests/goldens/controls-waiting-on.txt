@@ -1,0 +1,20 @@
+# waiting-on: active Final whistle keeps original dot identities and the stored checkbox
+
+## #crowd-wait-at-start · click
+app ~ focus: "body" → "#crowd-wait-at-start"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-wait-at-start: input aria-describedby="crowd-wait-hint crowd-wait-reason crowd-wait-at-start-tip" name="waitAtStart" type="checkbox" :checked → input aria-describedby="crowd-wait-hint crowd-wait-reason crowd-wait-at-start-tip" name="waitAtStart" type="checkbox" :unchecked
+
+## #crowd-wait-form>button[1] · click
+app ~ focus: "body" → "#crowd-wait-form>button[1]"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-wait-form>button[1]: button aria-describedby="crowd-wait-at-start-tip" aria-expanded="false" aria-label="Help: Final whistle" class="param-hint-trigger" style="position-anchor: --crowd-wait-at-start-tip;" type="button" → button aria-describedby="crowd-wait-at-start-tip" aria-expanded="true" aria-label="Help: Final whistle" class="param-hint-trigger" style="position-anchor: --crowd-wait-at-start-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Show every dot in its Start area from the beginning; Apply final whistle accepts this edit"
+
+## #crowd-wait-apply · click
+app ~ focus: "body" → "#crowd-wait-apply"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+
+## #crowd-wait-cancel · click
+app ~ focus: "body" → "#crowd-wait-cancel"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"

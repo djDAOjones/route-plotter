@@ -1207,10 +1207,11 @@ describe('DEF-14: a click on a hinted label acts as a label', () => {
   test('every hinted checkbox toggles when its label text is clicked', () => {
     const boxes = [...document.querySelectorAll('input[type="checkbox"]')]
       .filter(box => [...box.labels].some(label => label.querySelector('[data-tip]')));
-    // The five DEF-14 counted, Wait during ripple, and Groups (CROWD-08).
+    // The five DEF-14 counted, Wait during ripple, Groups and Final whistle (CROWD-08).
     expect(boxes.map(box => box.id)).toEqual([
       'ripple-wait', 'path-casing-toggle', 'path-glow-toggle',
-      'export-include-image', 'export-include-camera', 'export-include-text', 'crowd-groups',
+      'export-include-image', 'export-include-camera', 'export-include-text',
+      'crowd-wait-at-start', 'crowd-groups',
     ]);
 
     const stuck = boxes.filter((box) => {

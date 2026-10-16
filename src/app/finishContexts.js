@@ -4,6 +4,7 @@ import { resolveRenderReference } from '../utils/renderReference.js';
 import { areaImageAspect } from '../utils/crowdArea.js';
 import { crowdAreaDescription } from '../utils/crowdAreaDescription.js';
 import { groupsActive } from '../utils/groupSettings.js';
+import { waitingLayerReason, waitingActive } from '../utils/waitingSettings.js';
 
 const EMPTY = Object.freeze({});
 
@@ -12,11 +13,13 @@ export function hasFinishAreas(scene) {
     && layer.graph.getNodes().some(node => node.type === 'exit' && node.area));
 }
 
-/** Active groups use C's reference clock even without a Finish area. */
+/** Active groups and Final whistle use C's clock even without a Finish area. */
 export function hasReferenceMotion(scene) {
-  return hasFinishAreas(scene) || !!scene?.getFlowLayers?.().some(layer =>
-    layer.graph.getNodes().length > 0 && layer.graph.getEdges().length > 0
-      && layer.emitters.some(emitter => groupsActive(layer, emitter)));
+  return hasFinishAreas(scene) || !!scene?.getFlowLayers?.().some(layer => {
+    const reason = waitingLayerReason(layer);
+    return layer.graph.getNodes().length > 0 && layer.graph.getEdges().length > 0
+      && layer.emitters.some(emitter => groupsActive(layer, emitter) || waitingActive(layer, emitter, reason));
+  });
 }
 
 /** C/F migration uses authored references first; inactive projects keep the old fallback. */

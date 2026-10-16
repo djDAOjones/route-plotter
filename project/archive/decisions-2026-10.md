@@ -498,3 +498,13 @@ The session's calls, for the owner to confirm: the grant holds for the run, whic
 
 **Deferred:** none
 
+## 2026-10-06 — REL-705 — v3.2.705 ships DEF-28
+
+**Decision:** v3.2.705 is live from deploy commit `e6cb2dd` (tag `v3.2.705`), released under GATELESS-1 because DEF-28's merge (`3095574`, PR #54) changed `src/`, `styles/` and `index.html`.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.704-3095574`, gate green (109 files, 2,608 tests), dry run, push, Verify and the Pages deploy green, 22 of 22 live files SHA-256-identical. Live smoke as for v3.2.704, the same readings (27,028 ms, MP4 29.0 s, HTML complete), no failed resource or console error. DEF-28 does not change export, so no disk save is owed.
+
+**Supersedes:** none
+
+**Deferred:** none
+

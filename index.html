@@ -1176,6 +1176,18 @@
                 <p id="crowd-release-duration-reason" class="section-hint range-reason" hidden></p>
                 <p id="crowd-release-duration-field-error" class="section-hint range-field-error" hidden></p>
               </div>
+                <form id="crowd-wait-form" class="crowd-wait-form"
+                      aria-describedby="crowd-wait-hint crowd-wait-reason">
+                  <label for="crowd-wait-at-start" class="checkbox-label crowd-wait-toggle">
+                    <input id="crowd-wait-at-start" name="waitAtStart" type="checkbox">
+                    <span data-tip="Show dots in their Start areas from the beginning">Final whistle</span>
+                  </label>
+                  <p id="crowd-wait-hint" class="section-hint"></p>
+                  <p id="crowd-wait-reason" class="section-hint" hidden></p>
+                  <p id="crowd-wait-error" class="section-hint range-field-error" hidden></p>
+                  <button id="crowd-wait-apply" class="btn btn-primary" type="submit">Apply final whistle</button>
+                  <button id="crowd-wait-cancel" class="btn btn-secondary" type="button">Cancel edits</button>
+                </form>
               </div>
 
               <details class="section-more">

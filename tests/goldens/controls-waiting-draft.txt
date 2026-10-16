@@ -1,0 +1,51 @@
+# waiting-draft: eligible Final whistle with an unapplied checked draft, ready to Apply or Cancel
+
+## #crowd-wait-at-start · click
+app ~ focus: "body" → "#crowd-wait-at-start"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-wait-at-start: input aria-describedby="crowd-wait-hint crowd-wait-reason crowd-wait-at-start-tip" name="waitAtStart" type="checkbox" :checked → input aria-describedby="crowd-wait-hint crowd-wait-reason crowd-wait-at-start-tip" name="waitAtStart" type="checkbox" :unchecked
+
+## #crowd-wait-form>button[1] · click
+app ~ focus: "body" → "#crowd-wait-form>button[1]"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-wait-form>button[1]: button aria-describedby="crowd-wait-at-start-tip" aria-expanded="false" aria-label="Help: Final whistle" class="param-hint-trigger" style="position-anchor: --crowd-wait-at-start-tip;" type="button" → button aria-describedby="crowd-wait-at-start-tip" aria-expanded="true" aria-label="Help: Final whistle" class="param-hint-trigger" style="position-anchor: --crowd-wait-at-start-tip;" type="button"
+ui ~ #param-tooltip: div (not shown) → div aria-hidden="true" class="param-tooltip" role="tooltip" style="display: block;" :text="Show every dot in its Start area from the beginning; Apply final whistle accepts this edit"
+
+## #crowd-wait-apply · click
+emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
+emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+announced "Final whistle updated. Undo is available."
+model + scene.flowLayers[0].emitters[0].waitAtStart: true
+app ~ focus: "body" → "#crowd-wait-apply"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Final whistle updated. Undo is available."
+ui ~ #title-indicator: span (not shown) → span aria-hidden="true" class="title-indicator" :text="●"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery" → p aria-live="off" class="header-status" role="status" :text="Unsaved changes"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-release-start-label: span data-tip-desc="crowd-release-start-tip" data-tip="When the first dots set off, as a position in the timeline" style="anchor-name: --crowd-release-start-tip;" :text="Window start" → span data-tip-desc="crowd-release-start-tip" data-tip="When the first dots leave, as a position in the project’s reference timeline; nearest to Entry leaves first" style="anchor-name: --crowd-release-start-tip;" :text="Window start"
+ui ~ #crowd-release-start-tip: span class="sr-only" :text="When the first dots set off, as a position in the timeline" → span class="sr-only" :text="When the first dots leave, as a position in the project’s reference timeline; nearest to Entry leaves first"
+ui ~ #crowd-release-duration-label: span data-tip-desc="crowd-release-duration-tip" data-tip="How much of the timeline the release is spread across" style="anchor-name: --crowd-release-duration-tip;" :text="Window length" → span data-tip-desc="crowd-release-duration-tip" data-tip="How much of the project’s reference timeline the nearest-first departures are spread across" style="anchor-name: --crowd-release-duration-tip;" :text="Window length"
+ui ~ #crowd-release-duration-tip: span class="sr-only" :text="How much of the timeline the release is spread across" → span class="sr-only" :text="How much of the project’s reference timeline the nearest-first departures are spread across"
+ui ~ #crowd-onset-variance-label: span data-tip-desc="crowd-onset-variance-tip" data-tip="How unevenly individual dots set off within the release window" style="anchor-name: --crowd-onset-variance-tip;" :text="Release timing" → span data-tip-desc="crowd-onset-variance-tip" data-tip="How unevenly departures are spread; dots still leave nearest to their Entry first" style="anchor-name: --crowd-onset-variance-tip;" :text="Release timing"
+ui ~ #crowd-onset-variance-tip: span class="sr-only" :text="How unevenly individual dots set off within the release window" → span class="sr-only" :text="How unevenly departures are spread; dots still leave nearest to their Entry first"
+ui ~ #crowd-intensity-ramp-label: span data-tip-desc="crowd-intensity-ramp-tip" data-tip="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither" style="anchor-name: --crowd-intensity-ramp-tip;" :text="Release bias" → span data-tip-desc="crowd-intensity-ramp-tip" data-tip="Earlier and Later change the departure spread across the window; nearest-first order stays the same" style="anchor-name: --crowd-intensity-ramp-tip;" :text="Release bias"
+ui ~ #crowd-intensity-ramp-tip: span class="sr-only" :text="Left (Earlier) sets more dots off near the window's start; right (Later) near its end; Even favours neither" → span class="sr-only" :text="Earlier and Later change the departure spread across the window; nearest-first order stays the same"
+ui ~ #crowd-pattern-hint: p class="section-hint" :text="Path shares set the route proportions. Re-roll changes which dots take each path, plus individual walking and set-off variation." → p class="section-hint" :text="Re-roll changes each dot’s Start point, Entry, path, pace and departure spread; nearest-first order stays."
+ui ~ #crowd-groups: input aria-describedby="crowd-group-hint crowd-group-reason crowd-groups-tip" name="groups" type="checkbox" :unchecked → input aria-describedby="crowd-group-hint crowd-group-reason crowd-groups-tip" disabled="" name="groups" type="checkbox" :unchecked
+ui ~ #crowd-group-size: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="4" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-size-tip" disabled="" max="5000" min="1" name="groupSize" required="" step="1" type="number" value="4" :value="4"
+ui ~ #crowd-group-width: input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="2" → input aria-describedby="crowd-group-hint crowd-group-reason crowd-group-width-tip" disabled="" max="20" min="0" name="groupWidth" required="" step="any" type="number" value="2" :value="2"
+ui ~ #crowd-group-reason: p (not shown) → p class="section-hint" :text="Turn off Final whistle to use groups."
+ui ~ #crowd-group-apply: button class="btn btn-primary" type="submit" :text="Apply groups" → button class="btn btn-primary" disabled="" type="submit" :text="Apply groups"
+settled:
+  emit animation:durationChange 329931.467536
+  emit animation:update {isPlaying: false, progress: 0, pathProgress: 0, currentTime: 0, duration: 329931.467536, baseDuration: 21807.894043, mode: "constant-time", speed: 275, playbackSpeed: 1, isPaused: true, isWaitingAtWaypoint: false, pauseWaypointIndex: -1, pauseStartTime: 0, pauseEndTime: 0, waypointProgressSnapshot: 0, lastTime: 0}
+  emit scene-outline:update {route: [{23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}, {23 keys}], crowds: [{12 keys}], majorCount: 5, minorCount: 1, selectionKey: "crowd:ex-uon-crowd", focusKey: null}
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10125 chars, 3c378441] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10144 chars, 13f27c0b]
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Final whistle updated. Undo is available." → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
+  ui ~ #timeline-slider: input aria-describedby="current-time total-time" aria-valuetext="0:00 of 0:33" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0" → input aria-describedby="current-time total-time" aria-valuetext="0:00 of 5:29" class="timeline-slider" max="1000" min="0" step="1" type="range" value="0" :value="0"
+  ui ~ #total-time: span class="time" :text="0:33" → span class="time" :text="5:29"
+
+## #crowd-wait-cancel · click
+app ~ focus: "body" → "#crowd-wait-cancel"
+ui ~ #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" → div class="settings-section expanded" data-last="true" data-section="release"
+ui ~ #crowd-wait-at-start: input aria-describedby="crowd-wait-hint crowd-wait-reason crowd-wait-at-start-tip" name="waitAtStart" type="checkbox" :checked → input aria-describedby="crowd-wait-hint crowd-wait-reason crowd-wait-at-start-tip" name="waitAtStart" type="checkbox" :unchecked

@@ -169,7 +169,7 @@ ui ~ #crowd-scope: div (not shown) → div class="scope-group"
 ui + #crowd-no-emitter: p (not shown)
 ui + #crowd-scope>div[1]: div class="settings-section expanded" data-section="guide" (and 20 inside, 7f3a1b23)
 ui + #crowd-scope>div[2]: div class="settings-section expanded" data-section="dots" (and 80 inside, 4f27abdb)
-ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 142 inside, cfed04ff)
+ui + #crowd-scope>div[3]: div class="settings-section expanded" data-section="release" (and 154 inside, 14f4c2a8)
 ui + #crowd-scope>div[4]: div class="settings-section expanded" data-section="motion" (and 69 inside, 1e54bcba)
 ui ~ #edge-scope: div class="scope-group" → div (not shown)
 ui + #toast-container>div[1]: div class="toast" :text="Deleted path — press Ctrl+Z to undo"

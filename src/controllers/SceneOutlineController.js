@@ -9,6 +9,7 @@
 import { crowdAreaDescription } from '../utils/crowdAreaDescription.js';
 import { sceneOutlineKey } from '../utils/sceneSemantics.js';
 import { groupChoiceHint, GROUP_HINT, GROUP_FIELD_HINTS } from '../utils/groupSettings.js';
+import { WAITING_HINT, WAITING_FIELD_HINT, WAITING_RELEASE_HINTS } from '../utils/waitingSettings.js';
 import { IMAGE_COORDINATES, CROWD_ENTRY_WEIGHT } from '../config/constants.js';
 import { formatCrowdDotSize, shiftDecimal } from '../utils/uiReadouts.js';
 import { createCrowdArea } from '../utils/crowdArea.js';
@@ -255,7 +256,8 @@ function releaseBiasFields(emitter) {
       { value: 'earlier', label: 'Earlier' },
       { value: 'even', label: 'Even' },
       { value: 'later', label: 'Later' },
-    ], { key: `${emitter.key}:ramp-direction`, tip: FIELD_HINTS.releaseBias }),
+    ], { key: `${emitter.key}:ramp-direction`,
+      tip: emitter.waitingActive ? WAITING_RELEASE_HINTS.bias : FIELD_HINTS.releaseBias }),
     amount,
     reason,
   ];
@@ -622,6 +624,7 @@ export class SceneOutlineController {
       for (const emitter of crowd.emitters) {
         if (emitter.primary) valid.add(`${emitter.key}:apply`);
         valid.add(`${emitter.key}:groups-apply`);
+        valid.add(`${emitter.key}:waiting-apply`);
       }
       valid.add(`${crowd.graph.key}:add-node`);
       if (crowd.graph.nodes.length >= 2) valid.add(`${crowd.graph.key}:connect`);
@@ -775,10 +778,12 @@ export class SceneOutlineController {
     const formEl = this._formForKey(this._error.formKey);
     let context = formEl?.[OUTLINE_DRAFT_CONTEXT];
     // Lazy disclosures omit the form; its live emitter context still owns the refusal.
-    if (!formEl && this._error.formKey.endsWith(':groups-apply')) {
+    const suffix = this._error.formKey.endsWith(':groups-apply') ? 'groups'
+      : this._error.formKey.endsWith(':waiting-apply') ? 'waiting' : null;
+    if (!formEl && suffix) {
       for (const crowd of this._snapshot?.crowds || []) {
-        const emitter = crowd.emitters.find(item => `${item.key}:groups-apply` === this._error.formKey);
-        if (emitter) { context = emitter.groupsContext; break; }
+        const emitter = crowd.emitters.find(item => `${item.key}:${suffix}-apply` === this._error.formKey);
+        if (emitter) { context = emitter[`${suffix}Context`]; break; }
       }
     }
     if (this._error.context !== null && context !== this._error.context) {
@@ -1164,7 +1169,8 @@ export class SceneOutlineController {
         }),
         labelledInput('releaseStart', 'Window start (%)', emitter.releaseStart, {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:start`, canonicalValue: emitter.releaseStartCanonical,
-          tip: emitter.groupsActive ? groupChoiceHint('group', FIELD_HINTS.releaseStart)
+          tip: emitter.waitingActive ? WAITING_RELEASE_HINTS.start
+            : emitter.groupsActive ? groupChoiceHint('group', FIELD_HINTS.releaseStart)
             + ' on the project reference timeline' : FIELD_HINTS.releaseStart,
         }),
         labelledInput('releaseDuration', 'Window length (%)', emitter.releaseDuration, {
@@ -1173,12 +1179,14 @@ export class SceneOutlineController {
           step: 'any',
           key: `${emitter.key}:duration`,
           canonicalValue: emitter.releaseDurationCanonical,
-          tip: emitter.groupsActive ? groupChoiceHint('group', FIELD_HINTS.releaseLength)
+          tip: emitter.waitingActive ? WAITING_RELEASE_HINTS.length
+            : emitter.groupsActive ? groupChoiceHint('group', FIELD_HINTS.releaseLength)
             + ' on the project reference timeline' : FIELD_HINTS.releaseLength,
         }),
         labelledInput('onsetVariance', 'Release timing (%)', emitter.onsetVariance, {
           min: 0, max: 100, step: 'any', key: `${emitter.key}:onset`, canonicalValue: emitter.onsetVarianceCanonical,
-          tip: groupChoiceHint(emitter.groupsActive ? 'group' : null, FIELD_HINTS.releaseTiming),
+          tip: emitter.waitingActive ? WAITING_RELEASE_HINTS.timing
+            : groupChoiceHint(emitter.groupsActive ? 'group' : null, FIELD_HINTS.releaseTiming),
         }),
         ...releaseBiasFields(emitter),
         labelledInput('speed', 'Speed (image lengths/s)', emitter.speed, {
@@ -1217,8 +1225,54 @@ export class SceneOutlineController {
       content.appendChild(readOnlyList([['Pattern seed', emitter.seed]]));
     }
     content.appendChild(this._renderGroupForm(crowd, emitter));
+    content.appendChild(this._renderWaitingForm(crowd, emitter));
     details.appendChild(content);
     return itemFor(details);
+  }
+
+  _renderWaitingForm(crowd, emitter) {
+    if (emitter.waitingContext == null) return readOnlyList([
+      ['Final whistle', emitter.waitAtStart ? 'On' : 'Off'],
+    ]);
+    const key = `${emitter.key}:waiting-apply`, reason = emitter.waitingReason;
+    const draft = this._drafts.get(key);
+    const pendingOn = draft?.context === emitter.waitingContext
+      && [...draft.fields.values()].some(field => field.name === 'waitAtStart' && field.checked);
+    const ownError = this._error?.formKey === key && this._error.context === emitter.waitingContext;
+    const disabled = !!reason && !emitter.waitAtStart && !pendingOn && !ownError;
+    const check = el('input', { attrs: { type: 'checkbox', name: 'waitAtStart' },
+      data: { outlineKey: `${emitter.key}:waiting` } });
+    check.checked = emitter.waitAtStart; check.defaultChecked = emitter.waitAtStart; check.disabled = disabled;
+    const label = el('label', { className: 'checkbox-label crowd-wait-toggle' });
+    label.append(check, el('span', { text: 'Final whistle', attrs: { 'data-tip': WAITING_FIELD_HINT } }));
+    const node = form('update-waiting', { layerId: crowd.id, emitterId: emitter.id,
+      waitingContext: emitter.waitingContext }, [label], 'Apply final whistle', key, emitter.waitingContext);
+    node.classList.add('crowd-wait-form'); node.querySelector('[type="submit"]').disabled = disabled;
+    const help = el('p', { className: 'scene-outline-hint', text: WAITING_HINT,
+      attrs: { id: `${OUTLINE_REASON_ID_PREFIX}${++outlineReasonSerial}` } });
+    const status = el('p', { className: 'scene-outline-hint', text: reason
+      ? `${emitter.waitAtStart ? 'Stored on. ' : pendingOn ? 'Unapplied on. ' : ''}` + reason
+        + (emitter.waitAtStart || pendingOn ? ' Turn off or use Cancel edits to restore the stored setting.' : '') : '',
+    attrs: { id: `${OUTLINE_REASON_ID_PREFIX}${++outlineReasonSerial}` } });
+    status.hidden = !status.textContent; node.append(help, status);
+    check.setAttribute('aria-describedby', `${help.id} ${status.id}`);
+    node.appendChild(button('Cancel edits', 'cancel-waiting', {}, { key: `${emitter.key}:waiting-cancel` }));
+    return node;
+  }
+
+  /** Waiting tokens survive prerequisite edits; stale model tokens do not. */
+  pendingWaitingDrafts(contexts, exemption = null) {
+    this._captureDirtyDrafts();
+    const pending = [];
+    for (const [key, draft] of this._drafts) {
+      if (!key.endsWith(':waiting-apply')) continue;
+      const current = contexts.get(key);
+      if (!current || draft.context !== current.context) { this._drafts.delete(key); continue; }
+      if (exemption && (key !== exemption.formKey || exemption.surface === 'outline')) continue;
+      if ([...draft.fields.values()].some(field => field.name === 'waitAtStart'
+          && field.checked !== current.waitAtStart)) pending.push(key);
+    }
+    return pending;
   }
 
   _renderGroupForm(crowd, emitter) {
@@ -1612,7 +1666,7 @@ export class SceneOutlineController {
       feedbackToken = ++this._duplicateFeedbackSerial;
       this._duplicateFeedback.set(formEl.dataset.outlineFormKey,
         { token: feedbackToken, context: formEl[OUTLINE_DRAFT_CONTEXT] });
-    } else if (formEl.dataset.outlineAction !== 'update-groups'
+    } else if (!['update-groups', 'update-waiting'].includes(formEl.dataset.outlineAction)
         || this._error?.formKey === formEl.dataset.outlineFormKey) {
       this._clearCommandError();
     }
@@ -1652,6 +1706,12 @@ export class SceneOutlineController {
     }
     const target = event.target.closest('button[data-outline-action]');
     if (!target || !this.container.contains(target)) return;
+    if (target.dataset.outlineAction === 'cancel-waiting') {
+      const key = target.closest('form')?.dataset.outlineFormKey;
+      this.cancelGroupDraft(key);
+      if (this._snapshot) this.render(this._snapshot, `${key?.replace(/:waiting-apply$/, '')}:waiting`);
+      return;
+    }
     if (target.dataset.outlineAction === 'cancel-groups') {
       this.cancelGroupDraft(target.closest('form')?.dataset.outlineFormKey); return;
     }
@@ -1667,6 +1727,13 @@ export class SceneOutlineController {
     if (!field || !this.container.contains(field)) return;
     event.preventDefault();
     event.stopPropagation();
+    if (['update-groups', 'update-waiting'].includes(field.form?.dataset.outlineAction)) {
+      const key = field.form.dataset.outlineFormKey;
+      this.cancelGroupDraft(key);
+      if (field.form.dataset.outlineAction === 'update-waiting' && this._snapshot) this.render(this._snapshot, key);
+      this._formForKey(key)?.querySelector('[type="submit"]')?.focus();
+      return;
+    }
     this._clearCommandError();
     this._drafts.delete(field.form?.dataset?.outlineFormKey);
     field.form?.reset();

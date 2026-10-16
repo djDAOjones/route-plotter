@@ -287,6 +287,7 @@ export const sceneOutlineMixin = {
       nodeAreaDescriptions,
       nodeEntryContexts,
       emitterGroupContexts: this._groupOutlineContexts?.() ?? null,
+      emitterWaitingContexts: this._waitingOutlineContexts?.() ?? null,
       waypoints: this.waypoints,
       scene: this.scene,
       selectionKey: this._sceneOutlineSelectionKey,
@@ -333,6 +334,7 @@ export const sceneOutlineMixin = {
         case 'update-crowd': result = this._outlineUpdateCrowd(command); break;
         case 'delete-crowd': result = this._outlineDeleteCrowd(command); break;
         case 'update-groups': return this._outlineUpdateGroups(command);
+        case 'update-waiting': return this._outlineUpdateWaiting(command);
         case 'update-emitter': result = this._outlineUpdateEmitter(command); break;
         case 'add-node': result = this._outlineAddNode(command); break;
         case 'update-node': result = this._outlineUpdateNode(command); break;
@@ -665,6 +667,18 @@ export const sceneOutlineMixin = {
     this._queueSceneOutlineRefresh(
       fallback ? `${sceneOutlineKey('crowd', fallback.id)}:select` : 'crowds:add'
     );
+  },
+
+  _outlineUpdateWaiting(command) {
+    const layer = this.scene.getFlowLayer(command.layerId), emitter = layer?.getEmitter(command.emitterId);
+    if (!emitter || command.waitingContext !== this._waitingContext(layer, emitter)) return;
+    try {
+      this._setEmitterWaiting(layer, emitter, command.waitAtStart === 'on', command.waitingContext, 'outline');
+      this.eventBus.emit('scene-outline:accepted', { formKey: command.outlineFormKey, formScoped: true });
+    } catch (failure) {
+      this.eventBus.emit('scene-outline:error', { formKey: command.outlineFormKey,
+        message: failure.message, formScoped: true });
+    }
   },
 
   _outlineUpdateGroups(command) {

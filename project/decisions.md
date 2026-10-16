@@ -19,6 +19,55 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-10-16 — CROWD-08 — Part G: waiting crowds leave nearest first
+
+**Decision:** Final whistle shows seeded waiting dots from zero and assigns
+ordinary release slots nearest-first, with checked per-emitter Apply/Cancel.
+
+**Rationale:** These are the lead's MVP choices under the owner's Sol High
+D–G continuation, not new owner instructions. Fresh Astra xhigh approved the
+canonical design against the actual Part F merge, after preliminary review.
+The strict optional boolean defaults false and omits false from saved data.
+It acts on an emitter's own nonempty network with explicit Entries, every Entry
+carrying a Start area, and Disappear or Collect. Zero-length paths and stranded
+Entries remain valid. Inactive settings persist with a reason and an off escape;
+authored-on Final whistle suppresses Groups even while waiting is ineligible.
+
+Original dot indices retain D's Entry choice, B's sample, pace, junction hashes
+and drawing order. Intrinsic-image distance to each chosen Entry ranks dots,
+ties by index. The numerically sorted ordinary onset-fraction multiset is
+assigned by that rank, so variance and Busyness retain their distribution
+without reversing departures. Waiting has no sway. Negative instants are absent;
+at exactly zero the initial sample wins even for a zero-duration journey.
+At positive instants cumulative terminal time wins. No epsilon or artificial
+duration is added; the actual export callers retain their no-duration refusal.
+
+Every active waiting dot uses C/F's reference clock, including without a Finish
+area, across hosts, migration, load rollback and export freezes. B keeps its
+no-image aspect1 while C keeps reference packing. Active waiting reuses F's
+compact indexed true-arc routes independently per original dot; the new-G-only
+junction rounding/arc exception is explicit. Inactive motion stays exact. C
+ranks actual arrivals jointly across all emitter kinds; nonending bounded walks
+park without a place or scene extension. At20,000 full2048-hop routes, codes and
+checkpoints occupy92,320,000 typed bytes, excluding descriptors and other heap.
+Ranks and release slots are cached, with no per-frame ranking or route rebuild.
+
+A separate app method group owns waiting drafts and complete canonical loader,
+text, retained-background and ZIP-bound admission before mutation or undo flush.
+Acceptance records one undo/save. Waiting tokens bind actual identities and the
+accepted flag, separately from Groups serials. Eligibility is rechecked at Apply,
+preserving clearable pending-on drafts through prerequisite edits. Other-kind,
+cross-panel and hidden drafts refuse acceptance; duplication exempts neither
+and rechecks ownership after its asynchronous ZIP. Newer feedback remains owned.
+Carbon native fields/tokens, Nielsen visible status and recovery, WCAG AAA
+keyboard/targets/focus/checked submissions and house ownership/persistence/tests
+apply. Source verification belongs to the PR, combined publication to REL-722.
+This advances G; the whole item remains open until that publication and close.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-16 — CROWD-08 — Verify has room for the complete crowd suite
 
 **Decision:** Verify's job ceiling rises from 30 to 90 minutes so the complete
@@ -743,16 +792,6 @@ Deferred, already lines in Next: W4 (DEL-01 to DEL-06) and the 24 found defects,
 The archive the checker asked for moved the two oldest entries verbatim; INTAKE is still cited as the origin of open wish lines, which resolve through `project/archive/INDEX.md`; no open item depends on its rationale, so the prune bar holds (the run's reading).
 
 The session's calls, for the owner to confirm: the owner's two items first, then W5's tests in the plan's order, then the held defects P1 before P2; the found defects after W4; CROWD-06's 0 s for saved projects. Codex reviewed this plan before it executes (r1: five corrections, made).
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-06 — REL-705 — v3.2.705 ships DEF-28
-
-**Decision:** v3.2.705 is live from deploy commit `e6cb2dd` (tag `v3.2.705`), released under GATELESS-1 because DEF-28's merge (`3095574`, PR #54) changed `src/`, `styles/` and `index.html`.
-
-**Rationale:** release.sh: rollback tag `rollback-v3.2.704-3095574`, gate green (109 files, 2,608 tests), dry run, push, Verify and the Pages deploy green, 22 of 22 live files SHA-256-identical. Live smoke as for v3.2.704, the same readings (27,028 ms, MP4 29.0 s, HTML complete), no failed resource or console error. DEF-28 does not change export, so no disk save is owed.
 
 **Supersedes:** none
 

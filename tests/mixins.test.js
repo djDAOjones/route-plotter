@@ -33,6 +33,7 @@ import { exportingMixin } from '../src/app/exporting.js';
 import { editorPanelMixin } from '../src/app/editorPanel.js';
 import { pointerMixin } from '../src/app/pointer.js';
 import { crowdsMixin } from '../src/app/crowds.js';
+import { crowdWaitingMixin } from '../src/app/crowdWaiting.js';
 import { networkMixin } from '../src/app/network.js';
 import { sceneOutlineMixin } from '../src/app/sceneOutline.js';
 import { privacyMixin } from '../src/app/privacy.js';
@@ -54,6 +55,7 @@ const MIXINS = {
   editorPanelMixin,
   pointerMixin,
   crowdsMixin,
+  crowdWaitingMixin,
   networkMixin,
   sceneOutlineMixin,
   privacyMixin,
