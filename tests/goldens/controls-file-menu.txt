@@ -78,6 +78,36 @@ settled:
   ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Signal flow…" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
   ui ~ #toast-container>div[1]: div class="toast" :text="Could not open Signal flow (HTTP 404). Check your connection and try again." → div class="toast is-visible" :text="Could not open Signal flow (HTTP 404). Check your connection and try again."
 
+## #example-projects-menu>button[6] · click
+emit ui:toast {message: "Could not open Match day (HTTP 404). Check your connection and try again.", priority: "assertive"}
+announced "Opening Match day…"
+app ~ focus: "#save-project-btn" → "#file-dropdown-btn"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Match day…"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Could not open Match day"
+ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾" → button aria-controls="file-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾"
+ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
+ui + #toast-container>div[1]: div class="toast" :text="Could not open Match day (HTTP 404). Check your connection and try again."
+ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+settled:
+  announced "Could not open Match day (HTTP 404). Check your connection and try again."
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Match day…" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #toast-container>div[1]: div class="toast" :text="Could not open Match day (HTTP 404). Check your connection and try again." → div class="toast is-visible" :text="Could not open Match day (HTTP 404). Check your connection and try again."
+
+## #example-projects-menu>button[8] · click
+emit ui:toast {message: "Could not open Reform riot, 1831 (HTTP 404). Check your connection and try again.", priority: "assertive"}
+announced "Opening Reform riot, 1831…"
+app ~ focus: "#save-project-btn" → "#file-dropdown-btn"
+ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Reform riot, 1831…"
+ui ~ #app-status: p aria-live="off" class="header-status" role="status" → p aria-live="off" class="header-status" role="status" :text="Could not open Reform riot, 1831"
+ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾" → button aria-controls="file-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾"
+ui ~ #file-menu: div aria-hidden="false" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file is-open" role="menu" → div aria-hidden="true" aria-labelledby="file-dropdown-btn" class="dropdown-menu dropdown-menu-file" role="menu"
+ui + #toast-container>div[1]: div class="toast" :text="Could not open Reform riot, 1831 (HTTP 404). Check your connection and try again."
+ui + #toast-container>div[1]>button[0]: button aria-label="Dismiss" class="toast-dismiss" :text="×"
+settled:
+  announced "Could not open Reform riot, 1831 (HTTP 404). Check your connection and try again."
+  ui ~ #announcer: div aria-atomic="true" aria-live="polite" class="sr-only" role="status" :text="Opening Reform riot, 1831…" → div aria-atomic="true" aria-live="polite" class="sr-only" role="status"
+  ui ~ #toast-container>div[1]: div class="toast" :text="Could not open Reform riot, 1831 (HTTP 404). Check your connection and try again." → div class="toast is-visible" :text="Could not open Reform riot, 1831 (HTTP 404). Check your connection and try again."
+
 ## #example-backgrounds-menu>button[0] · click
 app ~ focus: "#save-project-btn" → "#file-dropdown-btn"
 ui ~ #file-dropdown-btn: button aria-controls="file-menu" aria-expanded="true" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾" → button aria-controls="file-menu" aria-expanded="false" aria-haspopup="menu" class="btn btn-secondary dropdown-toggle" :text="File ▾"

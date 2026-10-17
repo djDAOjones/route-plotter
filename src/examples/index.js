@@ -168,8 +168,204 @@ function nervousSystemFlow() {
   return { waypoints, scene };
 }
 
+/**
+ * Add a one-way chain of nodes to a crowd's network. `points` are the inner
+ * nodes in walking order; the chain runs from `fromId` to `toId` through them,
+ * so a street drawn once can be reused by every crowd that walks it.
+ */
+function addChain(graph, prefix, fromId, points, toId) {
+  let previous = fromId;
+  points.forEach(([x, y], index) => {
+    const id = `${prefix}-${index + 1}`;
+    graph.addNode({ id, x, y, type: 'normal' });
+    graph.addEdge({ id: `${prefix}-e${index + 1}`, sourceId: previous, targetId: id, direction: 'one-way' });
+    previous = id;
+  });
+  graph.addEdge({ id: `${prefix}-e${points.length + 1}`, sourceId: previous, targetId: toId, direction: 'one-way' });
+}
+
+/** Okabe-Ito vermillion and blue: the home and away ends of the football example. */
+const HOME_RED = '#D55E00';
+const AWAY_BLUE = '#0072B2';
+
+/**
+ * The City Ground, on the PARM aerial of Nottingham. Every point is a
+ * normalised position read off the bundled image; areas are centred on their
+ * node and turned to the stand they fill (CROWD-08 parts B and C).
+ */
+const MATCH_DAY = {
+  entries: {
+    square: { x: 0.334, y: 0.399, label: 'Market Square', area: { shape: 'rectangle', width: 0.022, height: 0.016, turn: 0 } },
+    station: { x: 0.468, y: 0.607, label: 'Station', area: { shape: 'rectangle', width: 0.05, height: 0.016, turn: 0 } },
+    trentBridge: { x: 0.652, y: 0.990, label: 'Trent Bridge', area: { shape: 'rectangle', width: 0.016, height: 0.012, turn: 0 } },
+    coachPark: { x: 0.718, y: 0.937, label: 'Coach park', area: { shape: 'rectangle', width: 0.018, height: 0.024, turn: 20 } },
+  },
+  // South from the square, down Carrington Street to Station Street.
+  squareToStation: [[0.352, 0.412], [0.385, 0.445], [0.418, 0.480], [0.419, 0.560], [0.421, 0.592]],
+  stationStreet: { x: 0.505, y: 0.592 },
+  // Down London Road, east past the railway sidings, over Lady Bay Bridge and
+  // on to the ground's north-east corner.
+  ladyBay: [
+    [0.538, 0.594], [0.540, 0.677], [0.600, 0.677], [0.645, 0.680], [0.652, 0.700],
+    [0.668, 0.728], [0.679, 0.753], [0.685, 0.778], [0.690, 0.807], [0.7045, 0.830],
+    [0.716, 0.860], [0.727, 0.887],
+  ],
+  // Corners of the walk around the ground.
+  corners: {
+    northEast: { x: 0.708, y: 0.906 },
+    northWest: { x: 0.664, y: 0.903 },
+    southWest: { x: 0.646, y: 0.958 },
+    southEast: { x: 0.705, y: 0.974 },
+  },
+  southStreet: [[0.672, 0.977]],
+  stands: {
+    trentEnd: { x: 0.657, y: 0.931, label: 'Trent End', area: { shape: 'rectangle', width: 0.012, height: 0.030, turn: 22 } },
+    north: { x: 0.683, y: 0.920, label: 'North stand', area: { shape: 'rectangle', width: 0.034, height: 0.015, turn: 17 } },
+    east: { x: 0.6985, y: 0.938, label: 'East stand', area: { shape: 'rectangle', width: 0.011, height: 0.024, turn: 22 } },
+    awayEnd: { x: 0.692, y: 0.959, label: 'Away end', area: { shape: 'rectangle', width: 0.011, height: 0.016, turn: 22 } },
+    south: { x: 0.670, y: 0.959, label: 'South stand', area: { shape: 'rectangle', width: 0.032, height: 0.014, turn: 18 } },
+  },
+};
+
+/**
+ * One crowd for one stand: its Entries with Start areas and shares, the
+ * streets from each to the ground, and the stand as a Finish area.
+ */
+function matchDayCrowd(scene, { key, name, stand, entries, color, dotCount, seed }) {
+  const prefix = `ex-fb-${key}`;
+  const layer = scene.addFlowLayer({ id: `${prefix}-crowd`, name, guideType: 'graph' });
+  const graph = layer.graph;
+  const node = (id, spec, type) => graph.addNode({
+    id: `${prefix}-${id}`, x: spec.x, y: spec.y, type, label: spec.label ?? '',
+    ...(spec.area ? { area: spec.area } : {}),
+  });
+  const edge = (from, to) => graph.addEdge({
+    id: `${prefix}-${from}-${to}`, sourceId: `${prefix}-${from}`, targetId: `${prefix}-${to}`, direction: 'one-way',
+  });
+
+  for (const [id, weight] of Object.entries(entries)) {
+    graph.addNode({
+      id: `${prefix}-${id}`, ...MATCH_DAY.entries[id], type: 'entry', entryWeight: weight,
+    });
+  }
+  // The last steps differ by stand: each corner leads round the ground to it.
+  const approaches = {
+    trentEnd: [['northEast', 'northWest'], ['northWest', 'stand'], ['southWest', 'stand']],
+    north: [['northEast', 'stand'], ['southWest', 'northWest'], ['northWest', 'stand']],
+    east: [['northEast', 'stand'], ['southEast', 'stand']],
+    awayEnd: [['northEast', 'southEast'], ['southEast', 'stand']],
+    south: [['southWest', 'stand'], ['northEast', 'southEast'], ['southEast', 'stand']],
+  }[stand];
+  const fromNorth = entries.square || entries.station;
+  const southStreet = entries.trentBridge && stand === 'east';
+
+  // Only the corners this crowd walks through, so its network has no stray node.
+  const corners = new Set(approaches.flat().filter(id => id !== 'stand'));
+  if (fromNorth) corners.add('northEast');
+  if (entries.trentBridge) corners.add('southWest');
+  if (entries.coachPark || southStreet) corners.add('southEast');
+  for (const [id, spec] of Object.entries(MATCH_DAY.corners)) {
+    if (corners.has(id)) node(id, spec, 'normal');
+  }
+  node('stand', MATCH_DAY.stands[stand], 'exit');
+
+  if (fromNorth) {
+    node('stationStreet', MATCH_DAY.stationStreet, 'normal');
+    if (entries.square) addChain(graph, `${prefix}-city`, `${prefix}-square`, MATCH_DAY.squareToStation, `${prefix}-stationStreet`);
+    if (entries.station) edge('station', 'stationStreet');
+    addChain(graph, `${prefix}-ladybay`, `${prefix}-stationStreet`, MATCH_DAY.ladyBay, `${prefix}-northEast`);
+  }
+  if (entries.trentBridge) edge('trentBridge', 'southWest');
+  if (entries.coachPark) edge('coachPark', 'southEast');
+  for (const [from, to] of approaches) edge(from, to);
+  if (southStreet) {
+    addChain(graph, `${prefix}-south`, `${prefix}-southWest`, MATCH_DAY.southStreet, `${prefix}-southEast`);
+  }
+
+  layer.addEmitter({
+    id: `${prefix}-fans`, seed, dotCount, speed: 0.07, speedVariance: 0.3,
+    dotSize: 0.08, dotColor: color, lifecycleMode: 'collect',
+    releaseStart: 0, releaseDuration: 0.6, onsetVariance: 0.5,
+    groups: true, groupSize: 3, groupWidth: 0.004,
+  });
+  return layer;
+}
+
+/**
+ * Match day: fans from the Market Square and the station walk over Lady Bay
+ * Bridge, others arrive over Trent Bridge, and each stand fills seat by seat.
+ * Away fans come by train and coach to their own end. No route: the crowds
+ * play on the base timeline alone (CROWD-08 part A).
+ */
+function matchDay() {
+  const scene = new Scene();
+  const home = { square: 1, station: 1, trentBridge: 2 };
+  matchDayCrowd(scene, { key: 'trent', name: 'Trent End', stand: 'trentEnd', entries: home, color: HOME_RED, dotCount: 102, seed: 1865 });
+  matchDayCrowd(scene, { key: 'north', name: 'North stand', stand: 'north', entries: home, color: HOME_RED, dotCount: 159, seed: 1866 });
+  matchDayCrowd(scene, { key: 'south', name: 'South stand', stand: 'south', entries: home, color: HOME_RED, dotCount: 144, seed: 1867 });
+  matchDayCrowd(scene, { key: 'east', name: 'East stand', stand: 'east', entries: home, color: HOME_RED, dotCount: 90, seed: 1868 });
+  matchDayCrowd(scene, { key: 'away', name: 'Away fans', stand: 'awayEnd', entries: { station: 2, coachPark: 1 }, color: AWAY_BLUE, dotCount: 48, seed: 1869 });
+  return { waypoints: [], scene };
+}
+
+/** Okabe-Ito colours for the riot: the mob and the crowd it gathers. */
+const MOB_RED = '#D55E00';
+const MARKET_YELLOW = '#F0E442';
+
+/**
+ * Reform riot, October 1831: a mob comes back into town from Colwick along
+ * the river road, sweeps through the Market Square — where a crowd has
+ * gathered, and follows — and climbs Friar Lane to Nottingham Castle.
+ */
+const RIOT = {
+  colwick: { x: 0.975, y: 0.565, label: 'From Colwick', area: { shape: 'rectangle', width: 0.03, height: 0.03, turn: -30 } },
+  // Colwick Road under the Sneinton escarpment, then up into Hockley.
+  intoTown: [
+    [0.940, 0.590], [0.888, 0.622], [0.850, 0.653], [0.800, 0.673], [0.740, 0.676],
+    [0.700, 0.662], [0.676, 0.620], [0.660, 0.570], [0.640, 0.520], [0.625, 0.487],
+    [0.590, 0.440], [0.520, 0.396], [0.450, 0.400], [0.420, 0.408], [0.355, 0.404],
+  ],
+  square: { x: 0.334, y: 0.399, label: 'Market Square', area: { shape: 'rectangle', width: 0.022, height: 0.016, turn: 0 } },
+  // Friar Lane to the Castle gatehouse.
+  friarLane: [[0.324, 0.408], [0.315, 0.430], [0.301, 0.463], [0.290, 0.495], [0.282, 0.518]],
+  castle: { x: 0.256, y: 0.537, label: 'Nottingham Castle', area: { shape: 'ellipse', width: 0.036, height: 0.036, turn: 0 } },
+  castleGate: { x: 0.284, y: 0.540, label: 'Castle gate', area: { shape: 'ellipse', width: 0.020, height: 0.026, turn: 0 } },
+};
+
+function reformRiot1831() {
+  const scene = new Scene();
+
+  const mob = scene.addFlowLayer({ id: 'ex-riot-mob', name: 'Rioters', guideType: 'graph' });
+  mob.graph.addNode({ id: 'ex-riot-mob-colwick', ...RIOT.colwick, type: 'entry' });
+  mob.graph.addNode({ id: 'ex-riot-mob-square', x: RIOT.square.x, y: RIOT.square.y, type: 'normal', label: RIOT.square.label });
+  mob.graph.addNode({ id: 'ex-riot-mob-castle', ...RIOT.castle, type: 'exit' });
+  addChain(mob.graph, 'ex-riot-mob-town', 'ex-riot-mob-colwick', RIOT.intoTown, 'ex-riot-mob-square');
+  addChain(mob.graph, 'ex-riot-mob-friar', 'ex-riot-mob-square', RIOT.friarLane, 'ex-riot-mob-castle');
+  mob.addEmitter({
+    id: 'ex-riot-mob-dots', seed: 1831, dotCount: 348, speed: 0.07, speedVariance: 0.08,
+    dotSize: 0.08, dotColor: MOB_RED, lifecycleMode: 'collect',
+    releaseStart: 0, releaseDuration: 0.1, onsetVariance: 0.3,
+    groups: true, groupSize: 12, groupWidth: 0.02,
+  });
+
+  // The Market Square crowd waits from the start (Final whistle, part G) and
+  // leaves nearest first as the mob arrives.
+  const market = scene.addFlowLayer({ id: 'ex-riot-market', name: 'Market Square crowd', guideType: 'graph' });
+  market.graph.addNode({ id: 'ex-riot-market-square', ...RIOT.square, type: 'entry' });
+  market.graph.addNode({ id: 'ex-riot-market-castle', ...RIOT.castleGate, type: 'exit' });
+  addChain(market.graph, 'ex-riot-market-friar', 'ex-riot-market-square', RIOT.friarLane, 'ex-riot-market-castle');
+  market.addEmitter({
+    id: 'ex-riot-market-dots', seed: 1832, dotCount: 132, speed: 0.05, speedVariance: 0.3,
+    dotSize: 0.08, dotColor: MARKET_YELLOW, lifecycleMode: 'collect',
+    releaseStart: 0.5, releaseDuration: 0.25, onsetVariance: 0.3,
+    waitAtStart: true,
+  });
+
+  return { waypoints: [], scene };
+}
+
 /** Everything a project snapshot needs beyond waypoints and scene. */
-function snapshotFrom({ waypoints, scene }, { speed = 140 } = {}) {
+function snapshotFrom({ waypoints, scene }, { speed = 140, duration = 0 } = {}) {
   return {
     coordVersion: 9,
     waypoints: waypoints.map(waypoint => waypoint.toJSON()),
@@ -178,7 +374,7 @@ function snapshotFrom({ waypoints, scene }, { speed = 140 } = {}) {
       pathColor: ROUTE_ORANGE, pathWidth: 4, dotSize: 10,
       pathHead: { style: 'arrow', color: ROUTE_ORANGE, size: 12, image: null, imageAssetId: null },
     },
-    animationState: { mode: 'constant-speed', speed, duration: 0 },
+    animationState: { mode: 'constant-speed', speed, duration },
     background: { overlay: 0, fit: 'fit' },
     exportSettings: {
       frameRate: 30, pathOnly: false, resolutionX: 1920, resolutionY: 1080,
@@ -221,6 +417,20 @@ export function buildExampleProjects() {
       description: 'A weighted guide network with two dot streams and no hero route.',
       backgroundSource: 'images/Nervous_System.jpg',
       project: snapshotFrom(nervousSystemFlow(), { speed: 200 }),
+    },
+    {
+      id: 'city-ground-match-day',
+      name: 'Match day',
+      description: 'Fans walk from the Market Square, the station and Trent Bridge to fill the four stands of the City Ground; away fans come by train and coach.',
+      backgroundSource: 'images/PARM_Aerial.jpg',
+      project: snapshotFrom(matchDay(), { duration: 20000 }),
+    },
+    {
+      id: 'reform-riot-1831',
+      name: 'Reform riot, 1831',
+      description: 'A mob from Colwick sweeps through the Market Square, gathering the crowd there, and climbs Friar Lane to Nottingham Castle.',
+      backgroundSource: 'images/PARM_Aerial.jpg',
+      project: snapshotFrom(reformRiot1831(), { duration: 24000 }),
     },
   ];
 }

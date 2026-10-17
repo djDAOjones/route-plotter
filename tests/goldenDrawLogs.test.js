@@ -67,6 +67,9 @@ const INSTANTS = [0, 0.25, 0.5, 0.75, 1];
  */
 const MODES = ['edit', 'preview', 'export'];
 
+/** The fixtures with no minor waypoint, whose editor draws exactly their preview. */
+const NO_MINORS = new Set(['nervous-system-flow', 'city-ground-match-day', 'reform-riot-1831']);
+
 /**
  * Every fixture, with the background it is meant to be seen against.
  *
@@ -290,10 +293,11 @@ describe('golden draw logs (TST-02)', () => {
     describe(fixture.id, () => {
 
       for (const mode of MODES) {
-        // `nervous-system-flow` has no minor waypoints, so its editor draws
-        // exactly its preview; the test below asserts that equality at every
-        // instant instead of keeping a second identical file.
-        const skipGolden = fixture.id === 'nervous-system-flow' && mode === 'edit';
+        // `nervous-system-flow` has no minor waypoints, and the crowd-only
+        // examples (EX-02) no route at all, so their editor draws exactly their
+        // preview; the test below asserts that equality at every instant
+        // instead of keeping a second identical file.
+        const skipGolden = NO_MINORS.has(fixture.id) && mode === 'edit';
 
         test(`${mode} draws its golden frames`, async () => {
           const app = await appWithFixture(fixture);
@@ -342,7 +346,7 @@ describe('golden draw logs (TST-02)', () => {
         // two are identical — asserted at every instant, which is what lets
         // that file be left out above.
         const hasMinors = fixture.project.waypoints.some(waypoint => waypoint.isMajor === false);
-        expect(!hasMinors).toBe(fixture.id === 'nervous-system-flow');
+        expect(!hasMinors).toBe(NO_MINORS.has(fixture.id));
 
         const drawn = {};
         for (const mode of MODES) {
@@ -1250,7 +1254,9 @@ describe('golden draw logs (TST-02)', () => {
           // Under a viewport zoom the layer is drawn inside a save, which put
           // the route's round caps back at the end of every frame (Codex).
           enterMode(app, 'edit');
-          app.setZoom(2, app.waypoints[1]);
+          // A crowd-only example (EX-02) has no waypoint to centre on, so it
+          // zooms on the image's centre.
+          app.setZoom(2, app.waypoints[1] ?? { imgX: 0.5, imgY: 0.5 });
           expectEveryInstantAlike(app, 'edit under a 2× zoom', border);
           const { app: exporter, player } = await exportAndPlayer(fixture);
           expectEveryInstantAlike(exporter, 'export', border);

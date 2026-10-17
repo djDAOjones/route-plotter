@@ -1,0 +1,4023 @@
+# canvas set-up
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
+main drawImage [canvas vector] 0 0 660 660
+
+# progress 0
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
+main drawImage [canvas vector] 0 0 660 660
+
+# progress 0.25
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 435.025 612.194
+vector arc 434.536 612.194 0.489 0 6.283
+vector moveTo 433.891 611.736
+vector arc 433.402 611.736 0.489 0 6.283
+vector moveTo 436.158 612.651
+vector arc 435.669 612.651 0.489 0 6.283
+vector moveTo 357.121 401.665
+vector arc 356.632 401.665 0.489 0 6.283
+vector moveTo 354.482 401.729
+vector arc 353.993 401.729 0.489 0 6.283
+vector moveTo 355.738 399.057
+vector arc 355.249 399.057 0.489 0 6.283
+vector moveTo 247.557 284.801
+vector arc 247.068 284.801 0.489 0 6.283
+vector moveTo 245.69 286.668
+vector arc 245.201 286.668 0.489 0 6.283
+vector moveTo 244.757 283.868
+vector arc 244.268 283.868 0.489 0 6.283
+vector moveTo 434.109 614.46
+vector arc 433.62 614.46 0.489 0 6.283
+vector moveTo 432.976 614.002
+vector arc 432.487 614.002 0.489 0 6.283
+vector moveTo 435.242 614.918
+vector arc 434.753 614.918 0.489 0 6.283
+vector moveTo 432.3 612.411
+vector arc 431.811 612.411 0.489 0 6.283
+vector moveTo 436.833 614.242
+vector arc 436.344 614.242 0.489 0 6.283
+vector moveTo 432.518 615.135
+vector arc 432.029 615.135 0.489 0 6.283
+vector moveTo 433.434 612.869
+vector arc 432.945 612.869 0.489 0 6.283
+vector moveTo 435.7 613.785
+vector arc 435.211 613.785 0.489 0 6.283
+vector moveTo 433.651 615.593
+vector arc 433.162 615.593 0.489 0 6.283
+vector moveTo 434.784 616.051
+vector arc 434.295 616.051 0.489 0 6.283
+vector moveTo 431.385 614.678
+vector arc 430.896 614.678 0.489 0 6.283
+vector moveTo 435.917 616.509
+vector arc 435.429 616.509 0.489 0 6.283
+vector moveTo 258.596 296.026
+vector arc 258.107 296.026 0.489 0 6.283
+vector moveTo 256.675 297.837
+vector arc 256.186 297.837 0.489 0 6.283
+vector moveTo 255.824 295.01
+vector arc 255.336 295.01 0.489 0 6.283
+vector moveTo 243.554 280.799
+vector arc 243.065 280.799 0.489 0 6.283
+vector moveTo 241.688 282.665
+vector arc 241.199 282.665 0.489 0 6.283
+vector moveTo 240.754 279.865
+vector arc 240.265 279.865 0.489 0 6.283
+vector moveTo 431.842 613.544
+vector arc 431.354 613.544 0.489 0 6.283
+vector moveTo 436.375 615.376
+vector arc 435.886 615.376 0.489 0 6.283
+vector moveTo 434.567 613.327
+vector arc 434.078 613.327 0.489 0 6.283
+vector moveTo 257.8 295.182
+vector arc 257.311 295.182 0.489 0 6.283
+vector moveTo 255.879 296.993
+vector arc 255.391 296.993 0.489 0 6.283
+vector moveTo 255.029 294.167
+vector arc 254.54 294.167 0.489 0 6.283
+vector moveTo 401.962 445.862
+vector arc 401.473 445.862 0.489 0 6.283
+vector moveTo 401.786 448.496
+vector arc 401.297 448.496 0.489 0 6.283
+vector moveTo 399.24 447.003
+vector arc 398.751 447.003 0.489 0 6.283
+vector moveTo 305.115 389.4
+vector arc 304.626 389.4 0.489 0 6.283
+vector moveTo 305.115 392.04
+vector arc 304.626 392.04 0.489 0 6.283
+vector moveTo 302.475 390.72
+vector arc 301.986 390.72 0.489 0 6.283
+vector moveTo 277.764 322.778
+vector arc 277.275 322.778 0.489 0 6.283
+vector moveTo 275.124 322.811
+vector arc 274.635 322.811 0.489 0 6.283
+vector moveTo 276.411 320.155
+vector arc 275.922 320.155 0.489 0 6.283
+vector moveTo 427.661 643.773
+vector arc 427.172 643.773 0.489 0 6.283
+vector moveTo 430.256 643.287
+vector arc 429.767 643.287 0.489 0 6.283
+vector moveTo 429.445 646.125
+vector arc 428.956 646.125 0.489 0 6.283
+vector moveTo 222.142 263.712
+vector arc 221.653 263.712 0.489 0 6.283
+vector moveTo 217.771 261.823
+vector arc 217.282 261.823 0.489 0 6.283
+vector moveTo 217.822 261.878
+vector arc 217.333 261.878 0.489 0 6.283
+vector moveTo 432.848 611.489
+vector arc 432.359 611.489 0.489 0 6.283
+vector moveTo 437.08 613.199
+vector arc 436.591 613.199 0.489 0 6.283
+vector moveTo 433.394 616.229
+vector arc 432.905 616.229 0.489 0 6.283
+vector moveTo 430.079 620.854
+vector arc 429.59 620.854 0.489 0 6.283
+vector moveTo 432.524 621.85
+vector arc 432.035 621.85 0.489 0 6.283
+vector moveTo 430.305 623.797
+vector arc 429.816 623.797 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 445.425 605.413
+vector arc 444.936 605.413 0.489 0 6.283
+vector moveTo 457.113 608.987
+vector arc 456.624 608.987 0.489 0 6.283
+vector moveTo 444.256 605.056
+vector arc 443.767 605.056 0.489 0 6.283
+vector moveTo 448.931 606.485
+vector arc 448.442 606.485 0.489 0 6.283
+vector moveTo 453.607 607.915
+vector arc 453.118 607.915 0.489 0 6.283
+vector moveTo 447.762 606.128
+vector arc 447.274 606.128 0.489 0 6.283
+vector moveTo 278.233 360.316
+vector arc 277.744 360.316 0.489 0 6.283
+vector moveTo 275.593 360.349
+vector arc 275.104 360.349 0.489 0 6.283
+vector moveTo 276.88 357.692
+vector arc 276.391 357.692 0.489 0 6.283
+vector moveTo 278.874 377.967
+vector arc 278.386 377.967 0.489 0 6.283
+vector moveTo 276.24 378.132
+vector arc 275.751 378.132 0.489 0 6.283
+vector moveTo 277.392 375.414
+vector arc 276.903 375.414 0.489 0 6.283
+vector moveTo 233.638 270.901
+vector arc 233.149 270.901 0.489 0 6.283
+vector moveTo 231.935 272.907
+vector arc 231.446 272.907 0.489 0 6.283
+vector moveTo 230.646 270.358
+vector arc 230.157 270.358 0.489 0 6.283
+vector moveTo 466.674 547.315
+vector arc 466.185 547.315 0.489 0 6.283
+vector moveTo 464.316 548.473
+vector arc 463.827 548.473 0.489 0 6.283
+vector moveTo 464.105 545.652
+vector arc 463.616 545.652 0.489 0 6.283
+vector moveTo 450.457 605.674
+vector arc 449.969 605.674 0.489 0 6.283
+vector moveTo 452.795 606.389
+vector arc 452.306 606.389 0.489 0 6.283
+vector moveTo 449.289 605.316
+vector arc 448.8 605.316 0.489 0 6.283
+vector moveTo 344.591 390.052
+vector arc 344.102 390.052 0.489 0 6.283
+vector moveTo 344.431 392.687
+vector arc 343.942 392.687 0.489 0 6.283
+vector moveTo 341.876 391.21
+vector arc 341.387 391.21 0.489 0 6.283
+vector moveTo 308.336 389.4
+vector arc 307.847 389.4 0.489 0 6.283
+vector moveTo 308.336 392.04
+vector arc 307.847 392.04 0.489 0 6.283
+vector moveTo 305.696 390.72
+vector arc 305.207 390.72 0.489 0 6.283
+vector moveTo 442.215 479.304
+vector arc 441.726 479.304 0.489 0 6.283
+vector moveTo 439.891 480.55
+vector arc 439.402 480.55 0.489 0 6.283
+vector moveTo 439.743 477.635
+vector arc 439.254 477.635 0.489 0 6.283
+vector moveTo 377.722 445.5
+vector arc 377.233 445.5 0.489 0 6.283
+vector moveTo 377.722 448.14
+vector arc 377.233 448.14 0.489 0 6.283
+vector moveTo 375.082 446.82
+vector arc 374.593 446.82 0.489 0 6.283
+vector moveTo 357.816 430.514
+vector arc 357.327 430.514 0.489 0 6.283
+vector moveTo 355.177 430.578
+vector arc 354.688 430.578 0.489 0 6.283
+vector moveTo 356.433 427.907
+vector arc 355.944 427.907 0.489 0 6.283
+vector moveTo 364.814 445.5
+vector arc 364.325 445.5 0.489 0 6.283
+vector moveTo 364.814 448.14
+vector arc 364.325 448.14 0.489 0 6.283
+vector moveTo 362.174 446.82
+vector arc 361.685 446.82 0.489 0 6.283
+vector moveTo 451.269 607.2
+vector arc 450.78 607.2 0.489 0 6.283
+vector moveTo 450.1 606.843
+vector arc 449.611 606.843 0.489 0 6.283
+vector moveTo 452.438 607.557
+vector arc 451.949 607.557 0.489 0 6.283
+vector moveTo 458.282 609.344
+vector arc 457.793 609.344 0.489 0 6.283
+vector moveTo 443.087 604.699
+vector arc 442.598 604.699 0.489 0 6.283
+vector moveTo 459.451 609.701
+vector arc 458.962 609.701 0.489 0 6.283
+vector moveTo 434.207 605.554
+vector arc 433.718 605.554 0.489 0 6.283
+vector moveTo 436.716 606.375
+vector arc 436.227 606.375 0.489 0 6.283
+vector moveTo 434.64 608.474
+vector arc 434.151 608.474 0.489 0 6.283
+vector moveTo 257.91 295.298
+vector arc 257.421 295.298 0.489 0 6.283
+vector moveTo 255.989 297.109
+vector arc 255.5 297.109 0.489 0 6.283
+vector moveTo 255.139 294.283
+vector arc 254.65 294.283 0.489 0 6.283
+vector moveTo 351.933 390.497
+vector arc 351.444 390.497 0.489 0 6.283
+vector moveTo 351.773 393.132
+vector arc 351.284 393.132 0.489 0 6.283
+vector moveTo 349.218 391.655
+vector arc 348.729 391.655 0.489 0 6.283
+vector moveTo 333.269 389.562
+vector arc 332.78 389.562 0.489 0 6.283
+vector moveTo 333.804 392.083
+vector arc 333.315 392.083 0.489 0 6.283
+vector moveTo 331.09 391.814
+vector arc 330.601 391.814 0.489 0 6.283
+vector moveTo 454.775 608.272
+vector arc 454.286 608.272 0.489 0 6.283
+vector moveTo 446.594 605.771
+vector arc 446.105 605.771 0.489 0 6.283
+vector moveTo 455.944 608.629
+vector arc 455.455 608.629 0.489 0 6.283
+vector moveTo 240.287 277.531
+vector arc 239.798 277.531 0.489 0 6.283
+vector moveTo 238.42 279.398
+vector arc 237.931 279.398 0.489 0 6.283
+vector moveTo 237.487 276.598
+vector arc 236.998 276.598 0.489 0 6.283
+vector moveTo 434.768 603.839
+vector arc 434.279 603.839 0.489 0 6.283
+vector moveTo 437.277 604.66
+vector arc 436.788 604.66 0.489 0 6.283
+vector moveTo 435.201 606.758
+vector arc 434.713 606.758 0.489 0 6.283
+vector moveTo 334.989 389.478
+vector arc 334.5 389.478 0.489 0 6.283
+vector moveTo 334.9 392.102
+vector arc 334.411 392.102 0.489 0 6.283
+vector moveTo 332.415 391.277
+vector arc 331.927 391.277 0.489 0 6.283
+vector moveTo 441.918 604.341
+vector arc 441.429 604.341 0.489 0 6.283
+vector moveTo 460.619 610.059
+vector arc 460.131 610.059 0.489 0 6.283
+vector moveTo 451.626 606.031
+vector arc 451.137 606.031 0.489 0 6.283
+vector moveTo 224.172 264.054
+vector arc 223.683 264.054 0.489 0 6.283
+vector moveTo 222.627 266.194
+vector arc 222.138 266.194 0.489 0 6.283
+vector moveTo 221.259 263.579
+vector arc 220.77 263.579 0.489 0 6.283
+vector moveTo 441.371 596.573
+vector arc 440.882 596.573 0.489 0 6.283
+vector moveTo 439.611 598.541
+vector arc 439.122 598.541 0.489 0 6.283
+vector moveTo 438.643 596.242
+vector arc 438.154 596.242 0.489 0 6.283
+vector moveTo 348.693 390.301
+vector arc 348.204 390.301 0.489 0 6.283
+vector moveTo 348.533 392.936
+vector arc 348.044 392.936 0.489 0 6.283
+vector moveTo 345.978 391.459
+vector arc 345.489 391.459 0.489 0 6.283
+vector moveTo 426.753 638.931
+vector arc 426.264 638.931 0.489 0 6.283
+vector moveTo 429.348 638.444
+vector arc 428.859 638.444 0.489 0 6.283
+vector moveTo 428.537 641.282
+vector arc 428.048 641.282 0.489 0 6.283
+vector moveTo 437.246 596.634
+vector arc 436.757 596.634 0.489 0 6.283
+vector moveTo 439.492 597.526
+vector arc 439.003 597.526 0.489 0 6.283
+vector moveTo 437.548 599.589
+vector arc 437.059 599.589 0.489 0 6.283
+vector moveTo 425.722 631.651
+vector arc 425.233 631.651 0.489 0 6.283
+vector moveTo 428.259 632.044
+vector arc 427.77 632.044 0.489 0 6.283
+vector moveTo 427.252 634.428
+vector arc 426.763 634.428 0.489 0 6.283
+vector moveTo 234.422 271.669
+vector arc 233.933 271.669 0.489 0 6.283
+vector moveTo 232.595 273.57
+vector arc 232.106 273.57 0.489 0 6.283
+vector moveTo 231.471 270.953
+vector arc 230.982 270.953 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 319.541 389.4
+vector arc 319.052 389.4 0.489 0 6.283
+vector moveTo 319.541 392.04
+vector arc 319.052 392.04 0.489 0 6.283
+vector moveTo 316.901 390.72
+vector arc 316.412 390.72 0.489 0 6.283
+vector moveTo 356.925 393.503
+vector arc 356.436 393.503 0.489 0 6.283
+vector moveTo 354.285 393.567
+vector arc 353.796 393.567 0.489 0 6.283
+vector moveTo 354.427 391.971
+vector arc 353.938 391.971 0.489 0 6.283
+vector moveTo 440.364 632.185
+vector arc 439.875 632.185 0.489 0 6.283
+vector moveTo 445.014 633.695
+vector arc 444.525 633.695 0.489 0 6.283
+vector moveTo 439.202 631.807
+vector arc 438.713 631.807 0.489 0 6.283
+vector moveTo 442.689 632.94
+vector arc 442.2 632.94 0.489 0 6.283
+vector moveTo 441.526 632.562
+vector arc 441.038 632.562 0.489 0 6.283
+vector moveTo 443.851 633.318
+vector arc 443.362 633.318 0.489 0 6.283
+vector moveTo 357.309 409.465
+vector arc 356.82 409.465 0.489 0 6.283
+vector moveTo 354.67 409.529
+vector arc 354.181 409.529 0.489 0 6.283
+vector moveTo 355.926 406.858
+vector arc 355.437 406.858 0.489 0 6.283
+vector moveTo 232.872 270.341
+vector arc 232.383 270.341 0.489 0 6.283
+vector moveTo 231.276 272.438
+vector arc 230.787 272.438 0.489 0 6.283
+vector moveTo 229.934 269.844
+vector arc 229.445 269.844 0.489 0 6.283
+vector moveTo 308.873 399.397
+vector arc 308.384 399.397 0.489 0 6.283
+vector moveTo 309.865 401.843
+vector arc 309.376 401.843 0.489 0 6.283
+vector moveTo 310.584 401.853
+vector arc 310.095 401.853 0.489 0 6.283
+vector moveTo 436.877 631.052
+vector arc 436.388 631.052 0.489 0 6.283
+vector moveTo 448.501 634.828
+vector arc 448.012 634.828 0.489 0 6.283
+vector moveTo 434.552 630.296
+vector arc 434.063 630.296 0.489 0 6.283
+vector moveTo 314.846 400.876
+vector arc 314.357 400.876 0.489 0 6.283
+vector moveTo 306.054 400.99
+vector arc 305.565 400.99 0.489 0 6.283
+vector moveTo 301.029 403.28
+vector arc 300.54 403.28 0.489 0 6.283
+vector moveTo 448.305 492.967
+vector arc 447.816 492.967 0.489 0 6.283
+vector moveTo 445.889 494.03
+vector arc 445.4 494.03 0.489 0 6.283
+vector moveTo 446.034 491.082
+vector arc 445.545 491.082 0.489 0 6.283
+vector moveTo 300.401 389.4
+vector arc 299.912 389.4 0.489 0 6.283
+vector moveTo 300.401 392.04
+vector arc 299.912 392.04 0.489 0 6.283
+vector moveTo 297.761 390.72
+vector arc 297.272 390.72 0.489 0 6.283
+vector moveTo 446.176 634.073
+vector arc 445.687 634.073 0.489 0 6.283
+vector moveTo 438.039 631.429
+vector arc 437.55 631.429 0.489 0 6.283
+vector moveTo 447.338 634.451
+vector arc 446.85 634.451 0.489 0 6.283
+vector moveTo 294.624 389.4
+vector arc 294.136 389.4 0.489 0 6.283
+vector moveTo 294.624 392.04
+vector arc 294.136 392.04 0.489 0 6.283
+vector moveTo 291.984 390.72
+vector arc 291.496 390.72 0.489 0 6.283
+vector moveTo 221.852 262.378
+vector arc 221.363 262.378 0.489 0 6.283
+vector moveTo 220.306 264.519
+vector arc 219.817 264.519 0.489 0 6.283
+vector moveTo 218.939 261.903
+vector arc 218.45 261.903 0.489 0 6.283
+vector moveTo 435.714 630.674
+vector arc 435.226 630.674 0.489 0 6.283
+vector moveTo 449.663 635.206
+vector arc 449.174 635.206 0.489 0 6.283
+vector moveTo 450.826 635.584
+vector arc 450.337 635.584 0.489 0 6.283
+vector moveTo 278.051 345.726
+vector arc 277.562 345.726 0.489 0 6.283
+vector moveTo 275.411 345.759
+vector arc 274.922 345.759 0.489 0 6.283
+vector moveTo 276.698 343.103
+vector arc 276.209 343.103 0.489 0 6.283
+vector moveTo 357.409 413.623
+vector arc 356.92 413.623 0.489 0 6.283
+vector moveTo 354.77 413.687
+vector arc 354.281 413.687 0.489 0 6.283
+vector moveTo 356.026 411.016
+vector arc 355.537 411.016 0.489 0 6.283
+vector moveTo 239.601 276.845
+vector arc 239.112 276.845 0.489 0 6.283
+vector moveTo 237.734 278.712
+vector arc 237.245 278.712 0.489 0 6.283
+vector moveTo 236.801 275.912
+vector arc 236.312 275.912 0.489 0 6.283
+vector moveTo 441.946 631.588
+vector arc 441.457 631.588 0.489 0 6.283
+vector moveTo 441.836 634.226
+vector arc 441.347 634.226 0.489 0 6.283
+vector moveTo 439.253 632.797
+vector arc 438.765 632.797 0.489 0 6.283
+vector moveTo 353.128 390.57
+vector arc 352.639 390.57 0.489 0 6.283
+vector moveTo 352.968 393.205
+vector arc 352.479 393.205 0.489 0 6.283
+vector moveTo 350.413 391.728
+vector arc 349.924 391.728 0.489 0 6.283
+vector moveTo 357.342 410.838
+vector arc 356.853 410.838 0.489 0 6.283
+vector moveTo 354.703 410.902
+vector arc 354.214 410.902 0.489 0 6.283
+vector moveTo 355.959 408.231
+vector arc 355.47 408.231 0.489 0 6.283
+vector moveTo 433.39 629.919
+vector arc 432.901 629.919 0.489 0 6.283
+vector moveTo 451.988 635.961
+vector arc 451.499 635.961 0.489 0 6.283
+vector moveTo 443.067 631.778
+vector arc 442.578 631.778 0.489 0 6.283
+vector moveTo 357.611 421.997
+vector arc 357.122 421.997 0.489 0 6.283
+vector moveTo 354.972 422.061
+vector arc 354.483 422.061 0.489 0 6.283
+vector moveTo 356.228 419.39
+vector arc 355.739 419.39 0.489 0 6.283
+vector moveTo 354.674 390.77
+vector arc 354.185 390.77 0.489 0 6.283
+vector moveTo 354.295 393.178
+vector arc 353.806 393.178 0.489 0 6.283
+vector moveTo 351.849 391.815
+vector arc 351.36 391.815 0.489 0 6.283
+vector moveTo 266.149 304.037
+vector arc 265.661 304.037 0.489 0 6.283
+vector moveTo 264.229 305.848
+vector arc 263.74 305.848 0.489 0 6.283
+vector moveTo 263.378 303.022
+vector arc 262.889 303.022 0.489 0 6.283
+vector moveTo 318.173 401.537
+vector arc 317.684 401.537 0.489 0 6.283
+vector moveTo 311.651 401.773
+vector arc 311.163 401.773 0.489 0 6.283
+vector moveTo 306.897 401.541
+vector arc 306.408 401.541 0.489 0 6.283
+vector moveTo 246.01 283.255
+vector arc 245.521 283.255 0.489 0 6.283
+vector moveTo 244.144 285.121
+vector arc 243.655 285.121 0.489 0 6.283
+vector moveTo 243.21 282.321
+vector arc 242.721 282.321 0.489 0 6.283
+vector moveTo 235.227 272.471
+vector arc 234.738 272.471 0.489 0 6.283
+vector moveTo 233.36 274.338
+vector arc 232.871 274.338 0.489 0 6.283
+vector moveTo 232.371 271.604
+vector arc 231.882 271.604 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 461.499 619.08
+vector arc 461.01 619.08 0.489 0 6.283
+vector moveTo 460.366 618.622
+vector arc 459.877 618.622 0.489 0 6.283
+vector moveTo 462.632 619.538
+vector arc 462.143 619.538 0.489 0 6.283
+vector moveTo 349.234 390.334
+vector arc 348.745 390.334 0.489 0 6.283
+vector moveTo 349.074 392.969
+vector arc 348.586 392.969 0.489 0 6.283
+vector moveTo 346.519 391.492
+vector arc 346.03 391.492 0.489 0 6.283
+vector moveTo 226.971 266.075
+vector arc 226.482 266.075 0.489 0 6.283
+vector moveTo 225.425 268.215
+vector arc 224.936 268.215 0.489 0 6.283
+vector moveTo 224.058 265.6
+vector arc 223.569 265.6 0.489 0 6.283
+vector moveTo 278.317 367.012
+vector arc 277.828 367.012 0.489 0 6.283
+vector moveTo 275.677 367.045
+vector arc 275.188 367.045 0.489 0 6.283
+vector moveTo 276.964 364.388
+vector arc 276.475 364.388 0.489 0 6.283
+vector moveTo 428.925 650.515
+vector arc 428.436 650.515 0.489 0 6.283
+vector moveTo 431.52 650.028
+vector arc 431.031 650.028 0.489 0 6.283
+vector moveTo 430.709 652.867
+vector arc 430.22 652.867 0.489 0 6.283
+vector moveTo 364.119 445.5
+vector arc 363.63 445.5 0.489 0 6.283
+vector moveTo 364.119 448.14
+vector arc 363.63 448.14 0.489 0 6.283
+vector moveTo 361.479 446.82
+vector arc 360.99 446.82 0.489 0 6.283
+vector moveTo 253.631 290.875
+vector arc 253.142 290.875 0.489 0 6.283
+vector moveTo 251.764 292.742
+vector arc 251.275 292.742 0.489 0 6.283
+vector moveTo 250.83 289.942
+vector arc 250.342 289.942 0.489 0 6.283
+vector moveTo 259.447 296.929
+vector arc 258.958 296.929 0.489 0 6.283
+vector moveTo 257.526 298.74
+vector arc 257.037 298.74 0.489 0 6.283
+vector moveTo 256.676 295.913
+vector arc 256.187 295.913 0.489 0 6.283
+vector moveTo 462.859 634.042
+vector arc 462.37 634.042 0.489 0 6.283
+vector moveTo 465.457 633.573
+vector arc 464.968 633.573 0.489 0 6.283
+vector moveTo 464.627 636.406
+vector arc 464.138 636.406 0.489 0 6.283
+vector moveTo 459.232 618.164
+vector arc 458.744 618.164 0.489 0 6.283
+vector moveTo 463.765 619.996
+vector arc 463.276 619.996 0.489 0 6.283
+vector moveTo 461.957 617.947
+vector arc 461.468 617.947 0.489 0 6.283
+vector moveTo 414.251 446.681
+vector arc 413.762 446.681 0.489 0 6.283
+vector moveTo 414.075 449.315
+vector arc 413.586 449.315 0.489 0 6.283
+vector moveTo 411.529 447.823
+vector arc 411.04 447.823 0.489 0 6.283
+vector moveTo 460.824 617.489
+vector arc 460.335 617.489 0.489 0 6.283
+vector moveTo 463.09 618.405
+vector arc 462.601 618.405 0.489 0 6.283
+vector moveTo 459.69 617.031
+vector arc 459.201 617.031 0.489 0 6.283
+vector moveTo 277.838 328.702
+vector arc 277.349 328.702 0.489 0 6.283
+vector moveTo 275.198 328.735
+vector arc 274.709 328.735 0.489 0 6.283
+vector moveTo 276.485 326.079
+vector arc 275.996 326.079 0.489 0 6.283
+vector moveTo 277.958 338.338
+vector arc 277.469 338.338 0.489 0 6.283
+vector moveTo 275.318 338.371
+vector arc 274.83 338.371 0.489 0 6.283
+vector moveTo 276.605 335.714
+vector arc 276.116 335.714 0.489 0 6.283
+vector moveTo 427.738 644.184
+vector arc 427.249 644.184 0.489 0 6.283
+vector moveTo 430.333 643.697
+vector arc 429.844 643.697 0.489 0 6.283
+vector moveTo 429.522 646.536
+vector arc 429.033 646.536 0.489 0 6.283
+vector moveTo 431.122 633.768
+vector arc 430.633 633.768 0.489 0 6.283
+vector moveTo 429.564 635.899
+vector arc 429.075 635.899 0.489 0 6.283
+vector moveTo 428.211 633.276
+vector arc 427.723 633.276 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #0072B2
+vector beginPath
+vector moveTo 391.101 445.5
+vector arc 390.612 445.5 0.489 0 6.283
+vector moveTo 391.101 448.14
+vector arc 390.612 448.14 0.489 0 6.283
+vector moveTo 388.461 446.82
+vector arc 387.972 446.82 0.489 0 6.283
+vector moveTo 380.429 445.5
+vector arc 379.94 445.5 0.489 0 6.283
+vector moveTo 380.429 448.14
+vector arc 379.94 448.14 0.489 0 6.283
+vector moveTo 377.789 446.82
+vector arc 377.3 446.82 0.489 0 6.283
+vector moveTo 431.579 460.204
+vector arc 431.09 460.204 0.489 0 6.283
+vector moveTo 429.087 461.076
+vector arc 428.598 461.076 0.489 0 6.283
+vector moveTo 429.461 458.148
+vector arc 428.972 458.148 0.489 0 6.283
+vector moveTo 454.942 632.024
+vector arc 454.454 632.024 0.489 0 6.283
+vector moveTo 459.475 633.856
+vector arc 458.986 633.856 0.489 0 6.283
+vector moveTo 457.667 631.807
+vector arc 457.178 631.807 0.489 0 6.283
+vector moveTo 356.995 396.418
+vector arc 356.506 396.418 0.489 0 6.283
+vector moveTo 354.356 396.481
+vector arc 353.867 396.481 0.489 0 6.283
+vector moveTo 355.612 393.81
+vector arc 355.123 393.81 0.489 0 6.283
+vector moveTo 457.209 632.94
+vector arc 456.72 632.94 0.489 0 6.283
+vector moveTo 456.076 632.482
+vector arc 455.587 632.482 0.489 0 6.283
+vector moveTo 458.342 633.398
+vector arc 457.853 633.398 0.489 0 6.283
+vector moveTo 357.849 431.872
+vector arc 357.36 431.872 0.489 0 6.283
+vector moveTo 355.21 431.936
+vector arc 354.721 431.936 0.489 0 6.283
+vector moveTo 356.466 429.265
+vector arc 355.977 429.265 0.489 0 6.283
+vector moveTo 312.451 401.068
+vector arc 311.962 401.068 0.489 0 6.283
+vector moveTo 309.865 401.843
+vector arc 309.376 401.843 0.489 0 6.283
+vector moveTo 306.09 401.913
+vector arc 305.601 401.913 0.489 0 6.283
+vector fill
+vector restore
+main drawImage [canvas vector] 0 0 660 660
+
+# progress 0.5
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 435.025 612.194
+vector arc 434.536 612.194 0.489 0 6.283
+vector moveTo 433.891 611.736
+vector arc 433.402 611.736 0.489 0 6.283
+vector moveTo 436.158 612.651
+vector arc 435.669 612.651 0.489 0 6.283
+vector moveTo 438.091 603.975
+vector arc 437.602 603.975 0.489 0 6.283
+vector moveTo 435.53 603.334
+vector arc 435.041 603.334 0.489 0 6.283
+vector moveTo 437.451 601.093
+vector arc 436.962 601.093 0.489 0 6.283
+vector moveTo 382.449 445.5
+vector arc 381.96 445.5 0.489 0 6.283
+vector moveTo 382.449 448.14
+vector arc 381.96 448.14 0.489 0 6.283
+vector moveTo 379.809 446.82
+vector arc 379.32 446.82 0.489 0 6.283
+vector moveTo 434.109 614.46
+vector arc 433.62 614.46 0.489 0 6.283
+vector moveTo 432.976 614.002
+vector arc 432.487 614.002 0.489 0 6.283
+vector moveTo 435.242 614.918
+vector arc 434.753 614.918 0.489 0 6.283
+vector moveTo 432.3 612.411
+vector arc 431.811 612.411 0.489 0 6.283
+vector moveTo 436.833 614.242
+vector arc 436.344 614.242 0.489 0 6.283
+vector moveTo 432.518 615.135
+vector arc 432.029 615.135 0.489 0 6.283
+vector moveTo 433.434 612.869
+vector arc 432.945 612.869 0.489 0 6.283
+vector moveTo 435.7 613.785
+vector arc 435.211 613.785 0.489 0 6.283
+vector moveTo 433.651 615.593
+vector arc 433.162 615.593 0.489 0 6.283
+vector moveTo 434.784 616.051
+vector arc 434.295 616.051 0.489 0 6.283
+vector moveTo 431.385 614.678
+vector arc 430.896 614.678 0.489 0 6.283
+vector moveTo 435.917 616.509
+vector arc 435.429 616.509 0.489 0 6.283
+vector moveTo 357.637 423.089
+vector arc 357.149 423.089 0.489 0 6.283
+vector moveTo 354.998 423.153
+vector arc 354.509 423.153 0.489 0 6.283
+vector moveTo 356.254 420.481
+vector arc 355.765 420.481 0.489 0 6.283
+vector moveTo 365.134 445.5
+vector arc 364.645 445.5 0.489 0 6.283
+vector moveTo 365.134 448.14
+vector arc 364.645 448.14 0.489 0 6.283
+vector moveTo 362.494 446.82
+vector arc 362.005 446.82 0.489 0 6.283
+vector moveTo 431.842 613.544
+vector arc 431.354 613.544 0.489 0 6.283
+vector moveTo 436.375 615.376
+vector arc 435.886 615.376 0.489 0 6.283
+vector moveTo 434.567 613.327
+vector arc 434.078 613.327 0.489 0 6.283
+vector moveTo 370.321 445.5
+vector arc 369.833 445.5 0.489 0 6.283
+vector moveTo 370.321 448.14
+vector arc 369.833 448.14 0.489 0 6.283
+vector moveTo 367.681 446.82
+vector arc 367.193 446.82 0.489 0 6.283
+vector moveTo 433.411 619.451
+vector arc 432.922 619.451 0.489 0 6.283
+vector moveTo 430.011 618.077
+vector arc 429.522 618.077 0.489 0 6.283
+vector moveTo 434.544 619.909
+vector arc 434.055 619.909 0.489 0 6.283
+vector moveTo 455.295 598.433
+vector arc 454.806 598.433 0.489 0 6.283
+vector moveTo 455.475 595.799
+vector arc 454.986 595.799 0.489 0 6.283
+vector moveTo 458.019 597.295
+vector arc 457.53 597.295 0.489 0 6.283
+vector moveTo 357.009 396.992
+vector arc 356.52 396.992 0.489 0 6.283
+vector moveTo 354.369 397.056
+vector arc 353.88 397.056 0.489 0 6.283
+vector moveTo 355.625 394.384
+vector arc 355.136 394.384 0.489 0 6.283
+vector moveTo 305.991 389.4
+vector arc 305.502 389.4 0.489 0 6.283
+vector moveTo 305.991 392.04
+vector arc 305.502 392.04 0.489 0 6.283
+vector moveTo 303.351 390.72
+vector arc 302.862 390.72 0.489 0 6.283
+vector moveTo 435.94 609.927
+vector arc 435.451 609.927 0.489 0 6.283
+vector moveTo 434.807 609.469
+vector arc 434.318 609.469 0.489 0 6.283
+vector moveTo 433.674 609.011
+vector arc 433.185 609.011 0.489 0 6.283
+vector moveTo 397.965 445.596
+vector arc 397.477 445.596 0.489 0 6.283
+vector moveTo 397.79 448.23
+vector arc 397.301 448.23 0.489 0 6.283
+vector moveTo 395.241 446.82
+vector arc 394.752 446.82 0.489 0 6.283
+vector moveTo 435.46 617.642
+vector arc 434.971 617.642 0.489 0 6.283
+vector moveTo 435.482 611.06
+vector arc 434.994 611.06 0.489 0 6.283
+vector moveTo 434.349 610.602
+vector arc 433.86 610.602 0.489 0 6.283
+vector moveTo 435.15 466.937
+vector arc 434.661 466.937 0.489 0 6.283
+vector moveTo 432.858 468.246
+vector arc 432.369 468.246 0.489 0 6.283
+vector moveTo 432.694 465.299
+vector arc 432.205 465.299 0.489 0 6.283
+vector moveTo 279.35 385.584
+vector arc 278.862 385.584 0.489 0 6.283
+vector moveTo 276.716 385.749
+vector arc 276.227 385.749 0.489 0 6.283
+vector moveTo 277.868 383.031
+vector arc 277.379 383.031 0.489 0 6.283
+vector moveTo 433.249 463.61
+vector arc 432.761 463.61 0.489 0 6.283
+vector moveTo 430.957 464.92
+vector arc 430.468 464.92 0.489 0 6.283
+vector moveTo 430.799 461.971
+vector arc 430.31 461.971 0.489 0 6.283
+vector moveTo 430.469 616.944
+vector arc 429.98 616.944 0.489 0 6.283
+vector moveTo 435.002 618.775
+vector arc 434.513 618.775 0.489 0 6.283
+vector moveTo 437.074 610.385
+vector arc 436.585 610.385 0.489 0 6.283
+vector moveTo 432.758 611.278
+vector arc 432.269 611.278 0.489 0 6.283
+vector moveTo 437.291 613.109
+vector arc 436.802 613.109 0.489 0 6.283
+vector moveTo 433.193 616.726
+vector arc 432.704 616.726 0.489 0 6.283
+vector moveTo 401.289 445.817
+vector arc 400.801 445.817 0.489 0 6.283
+vector moveTo 401.114 448.451
+vector arc 400.625 448.451 0.489 0 6.283
+vector moveTo 398.568 446.959
+vector arc 398.079 446.959 0.489 0 6.283
+vector moveTo 481.33 585.329
+vector arc 480.842 585.329 0.489 0 6.283
+vector moveTo 479.129 585.122
+vector arc 478.64 585.122 0.489 0 6.283
+vector moveTo 479.233 582.78
+vector arc 478.745 582.78 0.489 0 6.283
+vector moveTo 279.689 389.4
+vector arc 279.201 389.4 0.489 0 6.283
+vector moveTo 279.689 392.04
+vector arc 279.201 392.04 0.489 0 6.283
+vector moveTo 278.268 389.423
+vector arc 277.779 389.423 0.489 0 6.283
+vector moveTo 432.06 616.269
+vector arc 431.571 616.269 0.489 0 6.283
+vector moveTo 434.326 617.184
+vector arc 433.838 617.184 0.489 0 6.283
+vector moveTo 430.927 615.811
+vector arc 430.438 615.811 0.489 0 6.283
+vector moveTo 438.207 610.843
+vector arc 437.718 610.843 0.489 0 6.283
+vector moveTo 432.277 618.993
+vector arc 431.789 618.993 0.489 0 6.283
+vector moveTo 431.144 618.535
+vector arc 430.655 618.535 0.489 0 6.283
+vector moveTo 453.687 512.403
+vector arc 453.198 512.403 0.489 0 6.283
+vector moveTo 451.114 512.987
+vector arc 450.625 512.987 0.489 0 6.283
+vector moveTo 451.784 510.128
+vector arc 451.295 510.128 0.489 0 6.283
+vector moveTo 437.531 609.252
+vector arc 437.042 609.252 0.489 0 6.283
+vector moveTo 434.132 607.878
+vector arc 433.643 607.878 0.489 0 6.283
+vector moveTo 431.82 620.126
+vector arc 431.331 620.126 0.489 0 6.283
+vector moveTo 436.616 611.518
+vector arc 436.127 611.518 0.489 0 6.283
+vector moveTo 433.216 610.145
+vector arc 432.727 610.145 0.489 0 6.283
+vector moveTo 437.749 611.976
+vector arc 437.26 611.976 0.489 0 6.283
+vector moveTo 432.735 617.86
+vector arc 432.246 617.86 0.489 0 6.283
+vector moveTo 431.602 617.402
+vector arc 431.113 617.402 0.489 0 6.283
+vector moveTo 433.869 618.318
+vector arc 433.38 618.318 0.489 0 6.283
+vector moveTo 278.072 347.439
+vector arc 277.583 347.439 0.489 0 6.283
+vector moveTo 275.432 347.472
+vector arc 274.943 347.472 0.489 0 6.283
+vector moveTo 276.719 344.816
+vector arc 276.23 344.816 0.489 0 6.283
+vector moveTo 436.398 608.794
+vector arc 435.909 608.794 0.489 0 6.283
+vector moveTo 435.265 608.336
+vector arc 434.776 608.336 0.489 0 6.283
+vector moveTo 438.665 609.71
+vector arc 438.176 609.71 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 445.425 605.413
+vector arc 444.936 605.413 0.489 0 6.283
+vector moveTo 457.113 608.987
+vector arc 456.624 608.987 0.489 0 6.283
+vector moveTo 444.256 605.056
+vector arc 443.767 605.056 0.489 0 6.283
+vector moveTo 448.931 606.485
+vector arc 448.442 606.485 0.489 0 6.283
+vector moveTo 453.607 607.915
+vector arc 453.118 607.915 0.489 0 6.283
+vector moveTo 447.762 606.128
+vector arc 447.274 606.128 0.489 0 6.283
+vector moveTo 451.357 502.692
+vector arc 450.868 502.692 0.489 0 6.283
+vector moveTo 448.79 503.308
+vector arc 448.301 503.308 0.489 0 6.283
+vector moveTo 449.458 500.433
+vector arc 448.969 500.433 0.489 0 6.283
+vector moveTo 466.779 600.027
+vector arc 466.29 600.027 0.489 0 6.283
+vector moveTo 465.489 597.724
+vector arc 465 597.724 0.489 0 6.283
+vector moveTo 468.311 597.418
+vector arc 467.822 597.418 0.489 0 6.283
+vector moveTo 391.732 445.5
+vector arc 391.243 445.5 0.489 0 6.283
+vector moveTo 391.732 448.14
+vector arc 391.243 448.14 0.489 0 6.283
+vector moveTo 389.092 446.82
+vector arc 388.603 446.82 0.489 0 6.283
+vector moveTo 447.405 607.297
+vector arc 446.916 607.297 0.489 0 6.283
+vector moveTo 454.418 609.441
+vector arc 453.929 609.441 0.489 0 6.283
+vector moveTo 446.236 606.939
+vector arc 445.747 606.939 0.489 0 6.283
+vector moveTo 450.457 605.674
+vector arc 449.969 605.674 0.489 0 6.283
+vector moveTo 452.795 606.389
+vector arc 452.306 606.389 0.489 0 6.283
+vector moveTo 449.289 605.316
+vector arc 448.8 605.316 0.489 0 6.283
+vector moveTo 478.489 589.107
+vector arc 478 589.107 0.489 0 6.283
+vector moveTo 476.622 587.24
+vector arc 476.133 587.24 0.489 0 6.283
+vector moveTo 479.422 586.307
+vector arc 478.933 586.307 0.489 0 6.283
+vector moveTo 480.645 586.772
+vector arc 480.157 586.772 0.489 0 6.283
+vector moveTo 478.688 585.352
+vector arc 478.2 585.352 0.489 0 6.283
+vector moveTo 479.655 583.816
+vector arc 479.166 583.816 0.489 0 6.283
+vector moveTo 449.646 604.148
+vector arc 449.157 604.148 0.489 0 6.283
+vector moveTo 454.321 605.577
+vector arc 453.832 605.577 0.489 0 6.283
+vector moveTo 448.477 603.79
+vector arc 447.988 603.79 0.489 0 6.283
+vector moveTo 452.892 610.252
+vector arc 452.403 610.252 0.489 0 6.283
+vector moveTo 447.048 608.466
+vector arc 446.559 608.466 0.489 0 6.283
+vector moveTo 454.061 610.61
+vector arc 453.572 610.61 0.489 0 6.283
+vector moveTo 441.204 606.679
+vector arc 440.715 606.679 0.489 0 6.283
+vector moveTo 459.905 612.396
+vector arc 459.416 612.396 0.489 0 6.283
+vector moveTo 451.172 603.336
+vector arc 450.683 603.336 0.489 0 6.283
+vector moveTo 471.332 596.264
+vector arc 470.843 596.264 0.489 0 6.283
+vector moveTo 469.465 594.397
+vector arc 468.976 594.397 0.489 0 6.283
+vector moveTo 472.265 593.463
+vector arc 471.777 593.463 0.489 0 6.283
+vector moveTo 451.269 607.2
+vector arc 450.78 607.2 0.489 0 6.283
+vector moveTo 450.1 606.843
+vector arc 449.611 606.843 0.489 0 6.283
+vector moveTo 452.438 607.557
+vector arc 451.949 607.557 0.489 0 6.283
+vector moveTo 474.67 592.925
+vector arc 474.181 592.925 0.489 0 6.283
+vector moveTo 472.803 591.059
+vector arc 472.315 591.059 0.489 0 6.283
+vector moveTo 475.604 590.125
+vector arc 475.115 590.125 0.489 0 6.283
+vector moveTo 458.282 609.344
+vector arc 457.793 609.344 0.489 0 6.283
+vector moveTo 443.087 604.699
+vector arc 442.598 604.699 0.489 0 6.283
+vector moveTo 459.451 609.701
+vector arc 458.962 609.701 0.489 0 6.283
+vector moveTo 457.47 607.818
+vector arc 456.981 607.818 0.489 0 6.283
+vector moveTo 444.613 603.887
+vector arc 444.124 603.887 0.489 0 6.283
+vector moveTo 458.639 608.175
+vector arc 458.15 608.175 0.489 0 6.283
+vector moveTo 442.633 602.004
+vector arc 442.144 602.004 0.489 0 6.283
+vector moveTo 461.334 607.721
+vector arc 460.845 607.721 0.489 0 6.283
+vector moveTo 450.554 609.538
+vector arc 450.065 609.538 0.489 0 6.283
+vector moveTo 443.899 606.225
+vector arc 443.41 606.225 0.489 0 6.283
+vector moveTo 457.924 610.513
+vector arc 457.436 610.513 0.489 0 6.283
+vector moveTo 442.73 605.867
+vector arc 442.241 605.867 0.489 0 6.283
+vector moveTo 453.045 509.724
+vector arc 452.556 509.724 0.489 0 6.283
+vector moveTo 450.478 510.34
+vector arc 449.989 510.34 0.489 0 6.283
+vector moveTo 451.145 507.465
+vector arc 450.656 507.465 0.489 0 6.283
+vector moveTo 470.672 557.711
+vector arc 470.183 557.711 0.489 0 6.283
+vector moveTo 468.207 558.656
+vector arc 467.718 558.656 0.489 0 6.283
+vector moveTo 468.494 555.718
+vector arc 468.005 555.718 0.489 0 6.283
+vector moveTo 451.056 606.799
+vector arc 450.567 606.799 0.489 0 6.283
+vector moveTo 451.67 606.987
+vector arc 451.181 606.987 0.489 0 6.283
+vector moveTo 452.024 606.777
+vector arc 451.535 606.777 0.489 0 6.283
+vector moveTo 446.139 603.076
+vector arc 445.651 603.076 0.489 0 6.283
+vector moveTo 457.828 606.649
+vector arc 457.339 606.649 0.489 0 6.283
+vector moveTo 444.971 602.718
+vector arc 444.482 602.718 0.489 0 6.283
+vector moveTo 454.775 608.272
+vector arc 454.286 608.272 0.489 0 6.283
+vector moveTo 446.594 605.771
+vector arc 446.105 605.771 0.489 0 6.283
+vector moveTo 455.944 608.629
+vector arc 455.455 608.629 0.489 0 6.283
+vector moveTo 380.773 445.5
+vector arc 380.284 445.5 0.489 0 6.283
+vector moveTo 380.773 448.14
+vector arc 380.284 448.14 0.489 0 6.283
+vector moveTo 378.133 446.82
+vector arc 377.644 446.82 0.489 0 6.283
+vector moveTo 370.822 445.5
+vector arc 370.333 445.5 0.489 0 6.283
+vector moveTo 370.822 448.14
+vector arc 370.333 448.14 0.489 0 6.283
+vector moveTo 368.182 446.82
+vector arc 367.693 446.82 0.489 0 6.283
+vector moveTo 444.557 484.449
+vector arc 444.068 484.449 0.489 0 6.283
+vector moveTo 442.141 485.512
+vector arc 441.652 485.512 0.489 0 6.283
+vector moveTo 442.286 482.564
+vector arc 441.797 482.564 0.489 0 6.283
+vector moveTo 420.761 447.115
+vector arc 420.272 447.115 0.489 0 6.283
+vector moveTo 420.585 449.749
+vector arc 420.096 449.749 0.489 0 6.283
+vector moveTo 418.039 448.257
+vector arc 417.55 448.257 0.489 0 6.283
+vector moveTo 443.445 603.53
+vector arc 442.956 603.53 0.489 0 6.283
+vector moveTo 459.808 608.533
+vector arc 459.319 608.533 0.489 0 6.283
+vector moveTo 442.276 603.172
+vector arc 441.787 603.172 0.489 0 6.283
+vector moveTo 474.27 567.097
+vector arc 473.781 567.097 0.489 0 6.283
+vector moveTo 471.815 568.067
+vector arc 471.326 568.067 0.489 0 6.283
+vector moveTo 472.097 565.117
+vector arc 471.608 565.117 0.489 0 6.283
+vector moveTo 453.51 604.051
+vector arc 453.021 604.051 0.489 0 6.283
+vector moveTo 450.003 602.979
+vector arc 449.514 602.979 0.489 0 6.283
+vector moveTo 454.679 604.408
+vector arc 454.19 604.408 0.489 0 6.283
+vector moveTo 445.879 608.108
+vector arc 445.39 608.108 0.489 0 6.283
+vector moveTo 455.229 610.967
+vector arc 454.741 610.967 0.489 0 6.283
+vector moveTo 444.71 607.751
+vector arc 444.221 607.751 0.489 0 6.283
+vector moveTo 441.918 604.341
+vector arc 441.429 604.341 0.489 0 6.283
+vector moveTo 460.619 610.059
+vector arc 460.131 610.059 0.489 0 6.283
+vector moveTo 451.626 606.031
+vector arc 451.137 606.031 0.489 0 6.283
+vector moveTo 302.326 389.4
+vector arc 301.837 389.4 0.489 0 6.283
+vector moveTo 302.326 392.04
+vector arc 301.837 392.04 0.489 0 6.283
+vector moveTo 299.686 390.72
+vector arc 299.197 390.72 0.489 0 6.283
+vector moveTo 433.66 464.33
+vector arc 433.172 464.33 0.489 0 6.283
+vector moveTo 431.368 465.64
+vector arc 430.879 465.64 0.489 0 6.283
+vector moveTo 431.205 462.693
+vector arc 430.716 462.693 0.489 0 6.283
+vector moveTo 278.654 374.441
+vector arc 278.165 374.441 0.489 0 6.283
+vector moveTo 276.019 374.605
+vector arc 275.53 374.605 0.489 0 6.283
+vector moveTo 277.172 371.888
+vector arc 276.683 371.888 0.489 0 6.283
+vector moveTo 455.49 605.934
+vector arc 455.001 605.934 0.489 0 6.283
+vector moveTo 447.308 603.433
+vector arc 446.819 603.433 0.489 0 6.283
+vector moveTo 456.659 606.292
+vector arc 456.17 606.292 0.489 0 6.283
+vector moveTo 453.964 606.746
+vector arc 453.475 606.746 0.489 0 6.283
+vector moveTo 448.12 604.959
+vector arc 447.631 604.959 0.489 0 6.283
+vector moveTo 455.133 607.103
+vector arc 454.644 607.103 0.489 0 6.283
+vector moveTo 456.398 611.324
+vector arc 455.909 611.324 0.489 0 6.283
+vector moveTo 443.541 607.394
+vector arc 443.052 607.394 0.489 0 6.283
+vector moveTo 457.567 611.682
+vector arc 457.078 611.682 0.489 0 6.283
+vector moveTo 458.996 607.006
+vector arc 458.508 607.006 0.489 0 6.283
+vector moveTo 443.802 602.361
+vector arc 443.313 602.361 0.489 0 6.283
+vector moveTo 460.165 607.364
+vector arc 459.676 607.364 0.489 0 6.283
+vector moveTo 451.984 604.862
+vector arc 451.495 604.862 0.489 0 6.283
+vector moveTo 450.815 604.505
+vector arc 450.326 604.505 0.489 0 6.283
+vector moveTo 453.152 605.22
+vector arc 452.664 605.22 0.489 0 6.283
+vector moveTo 475.819 591.777
+vector arc 475.33 591.777 0.489 0 6.283
+vector moveTo 473.952 589.91
+vector arc 473.463 589.91 0.489 0 6.283
+vector moveTo 476.753 588.976
+vector arc 476.264 588.976 0.489 0 6.283
+vector moveTo 452.08 608.726
+vector arc 451.591 608.726 0.489 0 6.283
+vector moveTo 448.574 607.654
+vector arc 448.085 607.654 0.489 0 6.283
+vector moveTo 453.249 609.084
+vector arc 452.76 609.084 0.489 0 6.283
+vector moveTo 449.385 609.18
+vector arc 448.896 609.18 0.489 0 6.283
+vector moveTo 451.723 609.895
+vector arc 451.234 609.895 0.489 0 6.283
+vector moveTo 448.217 608.823
+vector arc 447.728 608.823 0.489 0 6.283
+vector moveTo 446.951 604.602
+vector arc 446.462 604.602 0.489 0 6.283
+vector moveTo 456.301 607.461
+vector arc 455.813 607.461 0.489 0 6.283
+vector moveTo 445.782 604.244
+vector arc 445.293 604.244 0.489 0 6.283
+vector moveTo 459.093 610.87
+vector arc 458.604 610.87 0.489 0 6.283
+vector moveTo 441.561 605.51
+vector arc 441.072 605.51 0.489 0 6.283
+vector moveTo 460.262 611.228
+vector arc 459.773 611.228 0.489 0 6.283
+vector moveTo 460.977 608.89
+vector arc 460.488 608.89 0.489 0 6.283
+vector moveTo 450.912 608.369
+vector arc 450.423 608.369 0.489 0 6.283
+vector moveTo 449.743 608.011
+vector arc 449.254 608.011 0.489 0 6.283
+vector moveTo 442.372 607.036
+vector arc 441.884 607.036 0.489 0 6.283
+vector moveTo 458.736 612.039
+vector arc 458.247 612.039 0.489 0 6.283
+vector moveTo 452.341 603.694
+vector arc 451.852 603.694 0.489 0 6.283
+vector moveTo 368.475 445.5
+vector arc 367.986 445.5 0.489 0 6.283
+vector moveTo 368.475 448.14
+vector arc 367.986 448.14 0.489 0 6.283
+vector moveTo 365.835 446.82
+vector arc 365.346 446.82 0.489 0 6.283
+vector moveTo 357.752 427.831
+vector arc 357.263 427.831 0.489 0 6.283
+vector moveTo 355.112 427.894
+vector arc 354.624 427.894 0.489 0 6.283
+vector moveTo 356.368 425.223
+vector arc 355.88 425.223 0.489 0 6.283
+vector moveTo 357.735 427.155
+vector arc 357.247 427.155 0.489 0 6.283
+vector moveTo 355.096 427.218
+vector arc 354.607 427.218 0.489 0 6.283
+vector moveTo 356.352 424.547
+vector arc 355.863 424.547 0.489 0 6.283
+vector moveTo 455.587 609.798
+vector arc 455.098 609.798 0.489 0 6.283
+vector moveTo 445.067 606.582
+vector arc 444.579 606.582 0.489 0 6.283
+vector moveTo 456.756 610.156
+vector arc 456.267 610.156 0.489 0 6.283
+vector moveTo 290.14 389.4
+vector arc 289.651 389.4 0.489 0 6.283
+vector moveTo 290.14 392.04
+vector arc 289.651 392.04 0.489 0 6.283
+vector moveTo 287.5 390.72
+vector arc 287.011 390.72 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 471.327 596.269
+vector arc 470.838 596.269 0.489 0 6.283
+vector moveTo 469.46 594.402
+vector arc 468.971 594.402 0.489 0 6.283
+vector moveTo 472.26 593.469
+vector arc 471.771 593.469 0.489 0 6.283
+vector moveTo 455.933 640.052
+vector arc 455.444 640.052 0.489 0 6.283
+vector moveTo 456.973 637.626
+vector arc 456.484 637.626 0.489 0 6.283
+vector moveTo 458.88 639.879
+vector arc 458.391 639.879 0.489 0 6.283
+vector moveTo 440.364 632.185
+vector arc 439.875 632.185 0.489 0 6.283
+vector moveTo 445.014 633.695
+vector arc 444.525 633.695 0.489 0 6.283
+vector moveTo 439.202 631.807
+vector arc 438.713 631.807 0.489 0 6.283
+vector moveTo 442.689 632.94
+vector arc 442.2 632.94 0.489 0 6.283
+vector moveTo 441.526 632.562
+vector arc 441.038 632.562 0.489 0 6.283
+vector moveTo 443.851 633.318
+vector arc 443.362 633.318 0.489 0 6.283
+vector moveTo 468.394 551.769
+vector arc 467.905 551.769 0.489 0 6.283
+vector moveTo 465.929 552.714
+vector arc 465.44 552.714 0.489 0 6.283
+vector moveTo 466.217 549.777
+vector arc 465.728 549.777 0.489 0 6.283
+vector moveTo 357.362 411.647
+vector arc 356.873 411.647 0.489 0 6.283
+vector moveTo 354.722 411.71
+vector arc 354.234 411.71 0.489 0 6.283
+vector moveTo 355.979 409.039
+vector arc 355.49 409.039 0.489 0 6.283
+vector moveTo 467.243 639.839
+vector arc 466.754 639.839 0.489 0 6.283
+vector moveTo 464.605 639.723
+vector arc 464.116 639.723 0.489 0 6.283
+vector moveTo 466.04 637.143
+vector arc 465.551 637.143 0.489 0 6.283
+vector moveTo 436.877 631.052
+vector arc 436.388 631.052 0.489 0 6.283
+vector moveTo 448.501 634.828
+vector arc 448.012 634.828 0.489 0 6.283
+vector moveTo 434.552 630.296
+vector arc 434.063 630.296 0.489 0 6.283
+vector moveTo 452.214 506.261
+vector arc 451.725 506.261 0.489 0 6.283
+vector moveTo 449.647 506.877
+vector arc 449.158 506.877 0.489 0 6.283
+vector moveTo 450.314 504.002
+vector arc 449.825 504.002 0.489 0 6.283
+vector moveTo 446.961 635.613
+vector arc 446.472 635.613 0.489 0 6.283
+vector moveTo 436.499 632.214
+vector arc 436.01 632.214 0.489 0 6.283
+vector moveTo 448.123 635.991
+vector arc 447.634 635.991 0.489 0 6.283
+vector moveTo 467.972 623.308
+vector arc 467.483 623.308 0.489 0 6.283
+vector moveTo 465.334 623.192
+vector arc 464.846 623.192 0.489 0 6.283
+vector moveTo 466.77 620.612
+vector arc 466.281 620.612 0.489 0 6.283
+vector moveTo 446.176 634.073
+vector arc 445.687 634.073 0.489 0 6.283
+vector moveTo 438.039 631.429
+vector arc 437.55 631.429 0.489 0 6.283
+vector moveTo 447.338 634.451
+vector arc 446.85 634.451 0.489 0 6.283
+vector moveTo 454.835 518.741
+vector arc 454.346 518.741 0.489 0 6.283
+vector moveTo 452.234 519.189
+vector arc 451.745 519.189 0.489 0 6.283
+vector moveTo 453.086 516.363
+vector arc 452.597 516.363 0.489 0 6.283
+vector moveTo 448.879 633.666
+vector arc 448.39 633.666 0.489 0 6.283
+vector moveTo 436.092 629.511
+vector arc 435.603 629.511 0.489 0 6.283
+vector moveTo 450.041 634.044
+vector arc 449.552 634.044 0.489 0 6.283
+vector moveTo 368.953 445.5
+vector arc 368.465 445.5 0.489 0 6.283
+vector moveTo 368.953 448.14
+vector arc 368.465 448.14 0.489 0 6.283
+vector moveTo 366.313 446.82
+vector arc 365.825 446.82 0.489 0 6.283
+vector moveTo 357.395 413.02
+vector arc 356.906 413.02 0.489 0 6.283
+vector moveTo 354.756 413.084
+vector arc 354.267 413.084 0.489 0 6.283
+vector moveTo 356.012 410.413
+vector arc 355.523 410.413 0.489 0 6.283
+vector moveTo 358.062 440.721
+vector arc 357.573 440.721 0.489 0 6.283
+vector moveTo 355.423 440.784
+vector arc 354.934 440.784 0.489 0 6.283
+vector moveTo 356.679 438.113
+vector arc 356.19 438.113 0.489 0 6.283
+vector moveTo 435.714 630.674
+vector arc 435.226 630.674 0.489 0 6.283
+vector moveTo 449.663 635.206
+vector arc 449.174 635.206 0.489 0 6.283
+vector moveTo 450.826 635.584
+vector arc 450.337 635.584 0.489 0 6.283
+vector moveTo 434.93 629.134
+vector arc 434.441 629.134 0.489 0 6.283
+vector moveTo 451.203 634.421
+vector arc 450.715 634.421 0.489 0 6.283
+vector moveTo 433.767 628.756
+vector arc 433.278 628.756 0.489 0 6.283
+vector moveTo 468.992 600.193
+vector arc 468.503 600.193 0.489 0 6.283
+vector moveTo 466.354 600.077
+vector arc 465.865 600.077 0.489 0 6.283
+vector moveTo 468.096 597.633
+vector arc 467.607 597.633 0.489 0 6.283
+vector moveTo 457.011 531.463
+vector arc 456.522 531.463 0.489 0 6.283
+vector moveTo 454.474 532.078
+vector arc 453.985 532.078 0.489 0 6.283
+vector moveTo 455.294 529.169
+vector arc 454.805 529.169 0.489 0 6.283
+vector moveTo 357.015 397.252
+vector arc 356.526 397.252 0.489 0 6.283
+vector moveTo 354.376 397.315
+vector arc 353.887 397.315 0.489 0 6.283
+vector moveTo 355.632 394.644
+vector arc 355.143 394.644 0.489 0 6.283
+vector moveTo 475.404 569.883
+vector arc 474.916 569.883 0.489 0 6.283
+vector moveTo 472.96 570.879
+vector arc 472.471 570.879 0.489 0 6.283
+vector moveTo 473.186 567.936
+vector arc 472.697 567.936 0.489 0 6.283
+vector moveTo 452.366 634.799
+vector arc 451.877 634.799 0.489 0 6.283
+vector moveTo 442.311 634.102
+vector arc 441.822 634.102 0.489 0 6.283
+vector moveTo 441.149 633.725
+vector arc 440.66 633.725 0.489 0 6.283
+vector moveTo 448.621 636.918
+vector arc 448.132 636.918 0.489 0 6.283
+vector moveTo 449.661 634.492
+vector arc 449.172 634.492 0.489 0 6.283
+vector moveTo 451.567 636.745
+vector arc 451.078 636.745 0.489 0 6.283
+vector moveTo 435.337 631.836
+vector arc 434.848 631.836 0.489 0 6.283
+vector moveTo 449.286 636.369
+vector arc 448.797 636.369 0.489 0 6.283
+vector moveTo 434.174 631.459
+vector arc 433.685 631.459 0.489 0 6.283
+vector moveTo 363.122 445.5
+vector arc 362.633 445.5 0.489 0 6.283
+vector moveTo 363.122 448.14
+vector arc 362.633 448.14 0.489 0 6.283
+vector moveTo 360.482 446.82
+vector arc 359.993 446.82 0.489 0 6.283
+vector moveTo 441.904 631.4
+vector arc 441.415 631.4 0.489 0 6.283
+vector moveTo 444.229 632.155
+vector arc 443.74 632.155 0.489 0 6.283
+vector moveTo 440.742 631.022
+vector arc 440.253 631.022 0.489 0 6.283
+vector moveTo 468.746 605.771
+vector arc 468.257 605.771 0.489 0 6.283
+vector moveTo 466.108 605.654
+vector arc 465.619 605.654 0.489 0 6.283
+vector moveTo 467.543 603.075
+vector arc 467.054 603.075 0.489 0 6.283
+vector moveTo 467.536 633.185
+vector arc 467.047 633.185 0.489 0 6.283
+vector moveTo 464.899 633.068
+vector arc 464.41 633.068 0.489 0 6.283
+vector moveTo 466.334 630.489
+vector arc 465.845 630.489 0.489 0 6.283
+vector moveTo 433.39 629.919
+vector arc 432.901 629.919 0.489 0 6.283
+vector moveTo 451.988 635.961
+vector arc 451.499 635.961 0.489 0 6.283
+vector moveTo 443.067 631.778
+vector arc 442.578 631.778 0.489 0 6.283
+vector moveTo 438.824 632.969
+vector arc 438.335 632.969 0.489 0 6.283
+vector moveTo 445.798 635.235
+vector arc 445.31 635.235 0.489 0 6.283
+vector moveTo 437.662 632.592
+vector arc 437.173 632.592 0.489 0 6.283
+vector moveTo 468.203 551.271
+vector arc 467.714 551.271 0.489 0 6.283
+vector moveTo 465.738 552.216
+vector arc 465.249 552.216 0.489 0 6.283
+vector moveTo 466.026 549.278
+vector arc 465.537 549.278 0.489 0 6.283
+vector moveTo 443.444 630.615
+vector arc 442.955 630.615 0.489 0 6.283
+vector moveTo 442.282 630.238
+vector arc 441.793 630.238 0.489 0 6.283
+vector moveTo 444.607 630.993
+vector arc 444.118 630.993 0.489 0 6.283
+vector moveTo 443.474 634.48
+vector arc 442.985 634.48 0.489 0 6.283
+vector moveTo 439.986 633.347
+vector arc 439.498 633.347 0.489 0 6.283
+vector moveTo 444.636 634.858
+vector arc 444.147 634.858 0.489 0 6.283
+vector moveTo 470.294 556.726
+vector arc 469.805 556.726 0.489 0 6.283
+vector moveTo 467.829 557.671
+vector arc 467.34 557.671 0.489 0 6.283
+vector moveTo 468.117 554.734
+vector arc 467.628 554.734 0.489 0 6.283
+vector moveTo 384.772 445.5
+vector arc 384.283 445.5 0.489 0 6.283
+vector moveTo 384.772 448.14
+vector arc 384.283 448.14 0.489 0 6.283
+vector moveTo 382.132 446.82
+vector arc 381.643 446.82 0.489 0 6.283
+vector moveTo 452.419 507.117
+vector arc 451.93 507.117 0.489 0 6.283
+vector moveTo 449.852 507.733
+vector arc 449.363 507.733 0.489 0 6.283
+vector moveTo 450.52 504.858
+vector arc 450.031 504.858 0.489 0 6.283
+vector moveTo 357.819 430.642
+vector arc 357.331 430.642 0.489 0 6.283
+vector moveTo 355.18 430.706
+vector arc 354.691 430.706 0.489 0 6.283
+vector moveTo 356.436 428.035
+vector arc 355.947 428.035 0.489 0 6.283
+vector moveTo 445.391 632.533
+vector arc 444.902 632.533 0.489 0 6.283
+vector moveTo 439.579 630.645
+vector arc 439.09 630.645 0.489 0 6.283
+vector moveTo 446.554 632.911
+vector arc 446.065 632.911 0.489 0 6.283
+vector moveTo 387.868 445.5
+vector arc 387.379 445.5 0.489 0 6.283
+vector moveTo 387.868 448.14
+vector arc 387.379 448.14 0.489 0 6.283
+vector moveTo 385.228 446.82
+vector arc 384.739 446.82 0.489 0 6.283
+vector moveTo 357.918 434.745
+vector arc 357.429 434.745 0.489 0 6.283
+vector moveTo 355.279 434.808
+vector arc 354.79 434.808 0.489 0 6.283
+vector moveTo 356.535 432.137
+vector arc 356.046 432.137 0.489 0 6.283
+vector moveTo 429.881 455.355
+vector arc 429.393 455.355 0.489 0 6.283
+vector moveTo 427.39 456.227
+vector arc 426.901 456.227 0.489 0 6.283
+vector moveTo 427.763 453.299
+vector arc 427.275 453.299 0.489 0 6.283
+vector moveTo 450.448 636.746
+vector arc 449.959 636.746 0.489 0 6.283
+vector moveTo 433.012 631.081
+vector arc 432.523 631.081 0.489 0 6.283
+vector moveTo 451.61 637.124
+vector arc 451.122 637.124 0.489 0 6.283
+vector moveTo 438.417 630.267
+vector arc 437.928 630.267 0.489 0 6.283
+vector moveTo 447.716 633.288
+vector arc 447.227 633.288 0.489 0 6.283
+vector moveTo 437.255 629.889
+vector arc 436.766 629.889 0.489 0 6.283
+vector moveTo 441.119 629.86
+vector arc 440.631 629.86 0.489 0 6.283
+vector moveTo 445.769 631.371
+vector arc 445.28 631.371 0.489 0 6.283
+vector moveTo 439.957 629.482
+vector arc 439.468 629.482 0.489 0 6.283
+vector moveTo 277.896 333.351
+vector arc 277.407 333.351 0.489 0 6.283
+vector moveTo 275.256 333.384
+vector arc 274.767 333.384 0.489 0 6.283
+vector moveTo 276.543 330.727
+vector arc 276.054 330.727 0.489 0 6.283
+vector moveTo 348.121 390.266
+vector arc 347.632 390.266 0.489 0 6.283
+vector moveTo 347.961 392.901
+vector arc 347.472 392.901 0.489 0 6.283
+vector moveTo 345.406 391.424
+vector arc 344.917 391.424 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 461.499 619.08
+vector arc 461.01 619.08 0.489 0 6.283
+vector moveTo 460.366 618.622
+vector arc 459.877 618.622 0.489 0 6.283
+vector moveTo 462.632 619.538
+vector arc 462.143 619.538 0.489 0 6.283
+vector moveTo 470.924 558.369
+vector arc 470.435 558.369 0.489 0 6.283
+vector moveTo 468.459 559.314
+vector arc 467.97 559.314 0.489 0 6.283
+vector moveTo 468.747 556.377
+vector arc 468.258 556.377 0.489 0 6.283
+vector moveTo 358.009 445.695
+vector arc 357.521 445.695 0.489 0 6.283
+vector moveTo 357.611 447.945
+vector arc 357.122 447.945 0.489 0 6.283
+vector moveTo 356.847 445.102
+vector arc 356.359 445.102 0.489 0 6.283
+vector moveTo 418.381 446.957
+vector arc 417.892 446.957 0.489 0 6.283
+vector moveTo 418.205 449.591
+vector arc 417.716 449.591 0.489 0 6.283
+vector moveTo 415.659 448.098
+vector arc 415.17 448.098 0.489 0 6.283
+vector moveTo 462.174 620.671
+vector arc 461.685 620.671 0.489 0 6.283
+vector moveTo 458.775 619.298
+vector arc 458.286 619.298 0.489 0 6.283
+vector moveTo 463.307 621.129
+vector arc 462.819 621.129 0.489 0 6.283
+vector moveTo 461.357 620.095
+vector arc 460.868 620.095 0.489 0 6.283
+vector moveTo 460.73 619.758
+vector arc 460.241 619.758 0.489 0 6.283
+vector moveTo 461.583 618.797
+vector arc 461.094 618.797 0.489 0 6.283
+vector moveTo 363.755 445.5
+vector arc 363.266 445.5 0.489 0 6.283
+vector moveTo 363.755 448.14
+vector arc 363.266 448.14 0.489 0 6.283
+vector moveTo 361.115 446.82
+vector arc 360.626 446.82 0.489 0 6.283
+vector moveTo 440.318 475.981
+vector arc 439.829 475.981 0.489 0 6.283
+vector moveTo 438.026 477.29
+vector arc 437.537 477.29 0.489 0 6.283
+vector moveTo 437.862 474.343
+vector arc 437.373 474.343 0.489 0 6.283
+vector moveTo 464.223 618.862
+vector arc 463.734 618.862 0.489 0 6.283
+vector moveTo 461.041 620.213
+vector arc 460.552 620.213 0.489 0 6.283
+vector moveTo 459.908 619.755
+vector arc 459.419 619.755 0.489 0 6.283
+vector moveTo 459.232 618.164
+vector arc 458.744 618.164 0.489 0 6.283
+vector moveTo 463.765 619.996
+vector arc 463.276 619.996 0.489 0 6.283
+vector moveTo 461.957 617.947
+vector arc 461.468 617.947 0.489 0 6.283
+vector moveTo 451.496 503.271
+vector arc 451.007 503.271 0.489 0 6.283
+vector moveTo 448.929 503.887
+vector arc 448.44 503.887 0.489 0 6.283
+vector moveTo 449.597 501.012
+vector arc 449.108 501.012 0.489 0 6.283
+vector moveTo 290.239 389.4
+vector arc 289.75 389.4 0.489 0 6.283
+vector moveTo 290.239 392.04
+vector arc 289.75 392.04 0.489 0 6.283
+vector moveTo 287.599 390.72
+vector arc 287.11 390.72 0.489 0 6.283
+vector moveTo 460.125 622.48
+vector arc 459.636 622.48 0.489 0 6.283
+vector moveTo 458.992 622.022
+vector arc 458.503 622.022 0.489 0 6.283
+vector moveTo 461.259 622.938
+vector arc 460.77 622.938 0.489 0 6.283
+vector moveTo 460.824 617.489
+vector arc 460.335 617.489 0.489 0 6.283
+vector moveTo 463.09 618.405
+vector arc 462.601 618.405 0.489 0 6.283
+vector moveTo 459.69 617.031
+vector arc 459.201 617.031 0.489 0 6.283
+vector moveTo 468.158 551.154
+vector arc 467.669 551.154 0.489 0 6.283
+vector moveTo 465.693 552.099
+vector arc 465.204 552.099 0.489 0 6.283
+vector moveTo 465.981 549.162
+vector arc 465.492 549.162 0.489 0 6.283
+vector moveTo 462.85 622.262
+vector arc 462.361 622.262 0.489 0 6.283
+vector moveTo 462.872 615.68
+vector arc 462.384 615.68 0.489 0 6.283
+vector moveTo 461.739 615.222
+vector arc 461.25 615.222 0.489 0 6.283
+vector moveTo 439.789 475.055
+vector arc 439.3 475.055 0.489 0 6.283
+vector moveTo 437.497 476.365
+vector arc 437.008 476.365 0.489 0 6.283
+vector moveTo 437.333 473.418
+vector arc 436.845 473.418 0.489 0 6.283
+vector moveTo 464.27 543.439
+vector arc 463.781 543.439 0.489 0 6.283
+vector moveTo 462.037 544.847
+vector arc 461.548 544.847 0.489 0 6.283
+vector moveTo 461.745 541.91
+vector arc 461.256 541.91 0.489 0 6.283
+vector moveTo 464.006 616.138
+vector arc 463.517 616.138 0.489 0 6.283
+vector moveTo 460.606 614.765
+vector arc 460.117 614.765 0.489 0 6.283
+vector moveTo 465.139 616.596
+vector arc 464.65 616.596 0.489 0 6.283
+vector moveTo 462.197 614.089
+vector arc 461.708 614.089 0.489 0 6.283
+vector moveTo 464.464 615.005
+vector arc 463.975 615.005 0.489 0 6.283
+vector moveTo 461.064 613.631
+vector arc 460.575 613.631 0.489 0 6.283
+vector moveTo 393.281 445.5
+vector arc 392.792 445.5 0.489 0 6.283
+vector moveTo 393.281 448.14
+vector arc 392.792 448.14 0.489 0 6.283
+vector moveTo 390.641 446.82
+vector arc 390.152 446.82 0.489 0 6.283
+vector moveTo 291.701 389.4
+vector arc 291.213 389.4 0.489 0 6.283
+vector moveTo 291.701 392.04
+vector arc 291.213 392.04 0.489 0 6.283
+vector moveTo 289.061 390.72
+vector arc 288.573 390.72 0.489 0 6.283
+vector moveTo 460.148 615.898
+vector arc 459.659 615.898 0.489 0 6.283
+vector moveTo 464.681 617.729
+vector arc 464.192 617.729 0.489 0 6.283
+vector moveTo 460.583 621.346
+vector arc 460.094 621.346 0.489 0 6.283
+vector moveTo 392.221 445.5
+vector arc 391.732 445.5 0.489 0 6.283
+vector moveTo 392.221 448.14
+vector arc 391.732 448.14 0.489 0 6.283
+vector moveTo 389.581 446.82
+vector arc 389.092 446.82 0.489 0 6.283
+vector moveTo 465.597 615.463
+vector arc 465.108 615.463 0.489 0 6.283
+vector moveTo 459.667 623.613
+vector arc 459.179 623.613 0.489 0 6.283
+vector moveTo 458.534 623.155
+vector arc 458.045 623.155 0.489 0 6.283
+vector moveTo 357.617 422.225
+vector arc 357.128 422.225 0.489 0 6.283
+vector moveTo 354.977 422.289
+vector arc 354.488 422.289 0.489 0 6.283
+vector moveTo 356.233 419.618
+vector arc 355.745 419.618 0.489 0 6.283
+vector moveTo 462.415 616.814
+vector arc 461.926 616.814 0.489 0 6.283
+vector moveTo 461.281 616.356
+vector arc 460.792 616.356 0.489 0 6.283
+vector moveTo 463.548 617.271
+vector arc 463.059 617.271 0.489 0 6.283
+vector moveTo 457.859 621.564
+vector arc 457.37 621.564 0.489 0 6.283
+vector moveTo 462.392 623.395
+vector arc 461.903 623.395 0.489 0 6.283
+vector moveTo 463.33 614.547
+vector arc 462.841 614.547 0.489 0 6.283
+vector moveTo 272.628 310.908
+vector arc 272.139 310.908 0.489 0 6.283
+vector moveTo 270.707 312.719
+vector arc 270.218 312.719 0.489 0 6.283
+vector moveTo 269.857 309.893
+vector arc 269.368 309.893 0.489 0 6.283
+vector moveTo 459.45 620.889
+vector arc 458.961 620.889 0.489 0 6.283
+vector moveTo 461.716 621.804
+vector arc 461.228 621.804 0.489 0 6.283
+vector moveTo 458.317 620.431
+vector arc 457.828 620.431 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #0072B2
+vector beginPath
+vector moveTo 459.933 632.722
+vector arc 459.444 632.722 0.489 0 6.283
+vector moveTo 456.751 634.073
+vector arc 456.262 634.073 0.489 0 6.283
+vector moveTo 455.618 633.615
+vector arc 455.129 633.615 0.489 0 6.283
+vector moveTo 457.884 634.531
+vector arc 457.395 634.531 0.489 0 6.283
+vector moveTo 454.485 633.158
+vector arc 453.996 633.158 0.489 0 6.283
+vector moveTo 459.017 634.989
+vector arc 458.529 634.989 0.489 0 6.283
+vector moveTo 458.125 630.674
+vector arc 457.636 630.674 0.489 0 6.283
+vector moveTo 456.991 630.216
+vector arc 456.502 630.216 0.489 0 6.283
+vector moveTo 459.258 631.131
+vector arc 458.769 631.131 0.489 0 6.283
+vector moveTo 454.942 632.024
+vector arc 454.454 632.024 0.489 0 6.283
+vector moveTo 459.475 633.856
+vector arc 458.986 633.856 0.489 0 6.283
+vector moveTo 457.667 631.807
+vector arc 457.178 631.807 0.489 0 6.283
+vector moveTo 468.484 611.695
+vector arc 467.995 611.695 0.489 0 6.283
+vector moveTo 465.847 611.579
+vector arc 465.358 611.579 0.489 0 6.283
+vector moveTo 467.282 609
+vector arc 466.793 609 0.489 0 6.283
+vector moveTo 457.209 632.94
+vector arc 456.72 632.94 0.489 0 6.283
+vector moveTo 456.076 632.482
+vector arc 455.587 632.482 0.489 0 6.283
+vector moveTo 458.342 633.398
+vector arc 457.853 633.398 0.489 0 6.283
+vector moveTo 479.875 587.72
+vector arc 479.387 587.72 0.489 0 6.283
+vector moveTo 478.009 585.853
+vector arc 477.52 585.853 0.489 0 6.283
+vector moveTo 480.042 584.765
+vector arc 479.553 584.765 0.489 0 6.283
+vector moveTo 475.118 592.477
+vector arc 474.63 592.477 0.489 0 6.283
+vector moveTo 473.252 590.61
+vector arc 472.763 590.61 0.489 0 6.283
+vector moveTo 476.052 589.677
+vector arc 475.563 589.677 0.489 0 6.283
+vector moveTo 381.842 445.5
+vector arc 381.353 445.5 0.489 0 6.283
+vector moveTo 381.842 448.14
+vector arc 381.353 448.14 0.489 0 6.283
+vector moveTo 379.202 446.82
+vector arc 378.713 446.82 0.489 0 6.283
+vector moveTo 456.234 526.85
+vector arc 455.745 526.85 0.489 0 6.283
+vector moveTo 453.632 527.299
+vector arc 453.143 527.299 0.489 0 6.283
+vector moveTo 454.484 524.473
+vector arc 453.995 524.473 0.489 0 6.283
+vector moveTo 476.641 572.919
+vector arc 476.152 572.919 0.489 0 6.283
+vector moveTo 474.196 573.915
+vector arc 473.707 573.915 0.489 0 6.283
+vector moveTo 474.423 570.972
+vector arc 473.934 570.972 0.489 0 6.283
+vector moveTo 432.543 462.377
+vector arc 432.054 462.377 0.489 0 6.283
+vector moveTo 430.24 463.663
+vector arc 429.751 463.663 0.489 0 6.283
+vector moveTo 430.325 460.617
+vector arc 429.836 460.617 0.489 0 6.283
+vector moveTo 463.917 542.879
+vector arc 463.428 542.879 0.489 0 6.283
+vector moveTo 461.684 544.287
+vector arc 461.195 544.287 0.489 0 6.283
+vector moveTo 461.393 541.35
+vector arc 460.904 541.35 0.489 0 6.283
+vector moveTo 456.534 631.349
+vector arc 456.045 631.349 0.489 0 6.283
+vector moveTo 458.8 632.265
+vector arc 458.311 632.265 0.489 0 6.283
+vector moveTo 455.4 630.891
+vector arc 454.911 630.891 0.489 0 6.283
+vector moveTo 417.266 446.882
+vector arc 416.777 446.882 0.489 0 6.283
+vector moveTo 417.09 449.516
+vector arc 416.601 449.516 0.489 0 6.283
+vector moveTo 414.544 448.024
+vector arc 414.055 448.024 0.489 0 6.283
+vector moveTo 429.175 453.335
+vector arc 428.686 453.335 0.489 0 6.283
+vector moveTo 426.683 454.207
+vector arc 426.194 454.207 0.489 0 6.283
+vector moveTo 427.057 451.279
+vector arc 426.568 451.279 0.489 0 6.283
+vector fill
+vector restore
+main drawImage [canvas vector] 0 0 660 660
+
+# progress 0.75
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 435.025 612.194
+vector arc 434.536 612.194 0.489 0 6.283
+vector moveTo 433.891 611.736
+vector arc 433.402 611.736 0.489 0 6.283
+vector moveTo 436.158 612.651
+vector arc 435.669 612.651 0.489 0 6.283
+vector moveTo 430.686 619.668
+vector arc 430.198 619.668 0.489 0 6.283
+vector moveTo 432.953 620.584
+vector arc 432.464 620.584 0.489 0 6.283
+vector moveTo 429.553 619.21
+vector arc 429.064 619.21 0.489 0 6.283
+vector moveTo 432.037 622.85
+vector arc 431.548 622.85 0.489 0 6.283
+vector moveTo 428.637 621.477
+vector arc 428.149 621.477 0.489 0 6.283
+vector moveTo 433.17 623.308
+vector arc 432.681 623.308 0.489 0 6.283
+vector moveTo 434.109 614.46
+vector arc 433.62 614.46 0.489 0 6.283
+vector moveTo 432.976 614.002
+vector arc 432.487 614.002 0.489 0 6.283
+vector moveTo 435.242 614.918
+vector arc 434.753 614.918 0.489 0 6.283
+vector moveTo 432.3 612.411
+vector arc 431.811 612.411 0.489 0 6.283
+vector moveTo 436.833 614.242
+vector arc 436.344 614.242 0.489 0 6.283
+vector moveTo 432.518 615.135
+vector arc 432.029 615.135 0.489 0 6.283
+vector moveTo 433.434 612.869
+vector arc 432.945 612.869 0.489 0 6.283
+vector moveTo 435.7 613.785
+vector arc 435.211 613.785 0.489 0 6.283
+vector moveTo 433.651 615.593
+vector arc 433.162 615.593 0.489 0 6.283
+vector moveTo 434.784 616.051
+vector arc 434.295 616.051 0.489 0 6.283
+vector moveTo 431.385 614.678
+vector arc 430.896 614.678 0.489 0 6.283
+vector moveTo 435.917 616.509
+vector arc 435.429 616.509 0.489 0 6.283
+vector moveTo 469.884 555.655
+vector arc 469.395 555.655 0.489 0 6.283
+vector moveTo 467.419 556.6
+vector arc 466.93 556.6 0.489 0 6.283
+vector moveTo 467.706 553.663
+vector arc 467.217 553.663 0.489 0 6.283
+vector moveTo 438.336 602.992
+vector arc 437.848 602.992 0.489 0 6.283
+vector moveTo 435.775 602.352
+vector arc 435.286 602.352 0.489 0 6.283
+vector moveTo 437.696 600.111
+vector arc 437.207 600.111 0.489 0 6.283
+vector moveTo 431.842 613.544
+vector arc 431.354 613.544 0.489 0 6.283
+vector moveTo 436.375 615.376
+vector arc 435.886 615.376 0.489 0 6.283
+vector moveTo 434.567 613.327
+vector arc 434.078 613.327 0.489 0 6.283
+vector moveTo 441.565 597.496
+vector arc 441.076 597.496 0.489 0 6.283
+vector moveTo 441.745 594.863
+vector arc 441.256 594.863 0.489 0 6.283
+vector moveTo 444.289 596.359
+vector arc 443.8 596.359 0.489 0 6.283
+vector moveTo 433.411 619.451
+vector arc 432.922 619.451 0.489 0 6.283
+vector moveTo 430.011 618.077
+vector arc 429.522 618.077 0.489 0 6.283
+vector moveTo 434.544 619.909
+vector arc 434.055 619.909 0.489 0 6.283
+vector moveTo 434.086 621.042
+vector arc 433.597 621.042 0.489 0 6.283
+vector moveTo 436.856 607.661
+vector arc 436.367 607.661 0.489 0 6.283
+vector moveTo 435.723 607.203
+vector arc 435.234 607.203 0.489 0 6.283
+vector moveTo 476.595 572.805
+vector arc 476.106 572.805 0.489 0 6.283
+vector moveTo 474.15 573.801
+vector arc 473.661 573.801 0.489 0 6.283
+vector moveTo 474.376 570.858
+vector arc 473.887 570.858 0.489 0 6.283
+vector moveTo 463.703 542.54
+vector arc 463.214 542.54 0.489 0 6.283
+vector moveTo 461.47 543.948
+vector arc 460.981 543.948 0.489 0 6.283
+vector moveTo 461.179 541.011
+vector arc 460.69 541.011 0.489 0 6.283
+vector moveTo 435.94 609.927
+vector arc 435.451 609.927 0.489 0 6.283
+vector moveTo 434.807 609.469
+vector arc 434.318 609.469 0.489 0 6.283
+vector moveTo 433.674 609.011
+vector arc 433.185 609.011 0.489 0 6.283
+vector moveTo 435.711 613.494
+vector arc 435.222 613.494 0.489 0 6.283
+vector moveTo 433.15 612.854
+vector arc 432.661 612.854 0.489 0 6.283
+vector moveTo 435.071 610.613
+vector arc 434.582 610.613 0.489 0 6.283
+vector moveTo 435.46 617.642
+vector arc 434.971 617.642 0.489 0 6.283
+vector moveTo 435.482 611.06
+vector arc 434.994 611.06 0.489 0 6.283
+vector moveTo 434.349 610.602
+vector arc 433.86 610.602 0.489 0 6.283
+vector moveTo 429.095 620.344
+vector arc 428.606 620.344 0.489 0 6.283
+vector moveTo 433.628 622.175
+vector arc 433.139 622.175 0.489 0 6.283
+vector moveTo 437.314 606.527
+vector arc 436.825 606.527 0.489 0 6.283
+vector moveTo 429.745 454.966
+vector arc 429.257 454.966 0.489 0 6.283
+vector moveTo 427.254 455.838
+vector arc 426.765 455.838 0.489 0 6.283
+vector moveTo 427.627 452.91
+vector arc 427.139 452.91 0.489 0 6.283
+vector moveTo 436.181 606.07
+vector arc 435.692 606.07 0.489 0 6.283
+vector moveTo 438.447 606.985
+vector arc 437.958 606.985 0.489 0 6.283
+vector moveTo 435.047 605.612
+vector arc 434.559 605.612 0.489 0 6.283
+vector moveTo 430.469 616.944
+vector arc 429.98 616.944 0.489 0 6.283
+vector moveTo 435.002 618.775
+vector arc 434.513 618.775 0.489 0 6.283
+vector moveTo 437.074 610.385
+vector arc 436.585 610.385 0.489 0 6.283
+vector moveTo 432.758 611.278
+vector arc 432.269 611.278 0.489 0 6.283
+vector moveTo 437.291 613.109
+vector arc 436.802 613.109 0.489 0 6.283
+vector moveTo 433.193 616.726
+vector arc 432.704 616.726 0.489 0 6.283
+vector moveTo 439.58 607.443
+vector arc 439.091 607.443 0.489 0 6.283
+vector moveTo 430.904 622.393
+vector arc 430.415 622.393 0.489 0 6.283
+vector moveTo 429.771 621.935
+vector arc 429.282 621.935 0.489 0 6.283
+vector moveTo 437.989 608.119
+vector arc 437.5 608.119 0.489 0 6.283
+vector moveTo 434.59 606.745
+vector arc 434.101 606.745 0.489 0 6.283
+vector moveTo 439.122 608.576
+vector arc 438.634 608.576 0.489 0 6.283
+vector moveTo 433.689 464.38
+vector arc 433.2 464.38 0.489 0 6.283
+vector moveTo 431.397 465.69
+vector arc 430.908 465.69 0.489 0 6.283
+vector moveTo 431.233 462.743
+vector arc 430.744 462.743 0.489 0 6.283
+vector moveTo 432.06 616.269
+vector arc 431.571 616.269 0.489 0 6.283
+vector moveTo 434.326 617.184
+vector arc 433.838 617.184 0.489 0 6.283
+vector moveTo 430.927 615.811
+vector arc 430.438 615.811 0.489 0 6.283
+vector moveTo 438.207 610.843
+vector arc 437.718 610.843 0.489 0 6.283
+vector moveTo 432.277 618.993
+vector arc 431.789 618.993 0.489 0 6.283
+vector moveTo 431.144 618.535
+vector arc 430.655 618.535 0.489 0 6.283
+vector moveTo 431.362 621.259
+vector arc 430.873 621.259 0.489 0 6.283
+vector moveTo 430.229 620.801
+vector arc 429.74 620.801 0.489 0 6.283
+vector moveTo 432.495 621.717
+vector arc 432.006 621.717 0.489 0 6.283
+vector moveTo 437.531 609.252
+vector arc 437.042 609.252 0.489 0 6.283
+vector moveTo 434.132 607.878
+vector arc 433.643 607.878 0.489 0 6.283
+vector moveTo 431.82 620.126
+vector arc 431.331 620.126 0.489 0 6.283
+vector moveTo 436.616 611.518
+vector arc 436.127 611.518 0.489 0 6.283
+vector moveTo 433.216 610.145
+vector arc 432.727 610.145 0.489 0 6.283
+vector moveTo 437.749 611.976
+vector arc 437.26 611.976 0.489 0 6.283
+vector moveTo 432.735 617.86
+vector arc 432.246 617.86 0.489 0 6.283
+vector moveTo 431.602 617.402
+vector arc 431.113 617.402 0.489 0 6.283
+vector moveTo 433.869 618.318
+vector arc 433.38 618.318 0.489 0 6.283
+vector moveTo 473.186 564.269
+vector arc 472.697 564.269 0.489 0 6.283
+vector moveTo 470.721 565.214
+vector arc 470.232 565.214 0.489 0 6.283
+vector moveTo 471.008 562.277
+vector arc 470.519 562.277 0.489 0 6.283
+vector moveTo 436.398 608.794
+vector arc 435.909 608.794 0.489 0 6.283
+vector moveTo 435.265 608.336
+vector arc 434.776 608.336 0.489 0 6.283
+vector moveTo 438.665 609.71
+vector arc 438.176 609.71 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 445.425 605.413
+vector arc 444.936 605.413 0.489 0 6.283
+vector moveTo 457.113 608.987
+vector arc 456.624 608.987 0.489 0 6.283
+vector moveTo 444.256 605.056
+vector arc 443.767 605.056 0.489 0 6.283
+vector moveTo 448.931 606.485
+vector arc 448.442 606.485 0.489 0 6.283
+vector moveTo 453.607 607.915
+vector arc 453.118 607.915 0.489 0 6.283
+vector moveTo 447.762 606.128
+vector arc 447.274 606.128 0.489 0 6.283
+vector moveTo 450.1 606.843
+vector arc 449.611 606.843 0.489 0 6.283
+vector moveTo 452.438 607.557
+vector arc 451.949 607.557 0.489 0 6.283
+vector moveTo 448.931 606.485
+vector arc 448.442 606.485 0.489 0 6.283
+vector moveTo 457.016 605.123
+vector arc 456.527 605.123 0.489 0 6.283
+vector moveTo 446.497 601.907
+vector arc 446.008 601.907 0.489 0 6.283
+vector moveTo 458.185 605.48
+vector arc 457.696 605.48 0.489 0 6.283
+vector moveTo 460.619 610.059
+vector arc 460.131 610.059 0.489 0 6.283
+vector moveTo 451.626 606.031
+vector arc 451.137 606.031 0.489 0 6.283
+vector moveTo 450.457 605.674
+vector arc 449.969 605.674 0.489 0 6.283
+vector moveTo 447.405 607.297
+vector arc 446.916 607.297 0.489 0 6.283
+vector moveTo 454.418 609.441
+vector arc 453.929 609.441 0.489 0 6.283
+vector moveTo 446.236 606.939
+vector arc 445.747 606.939 0.489 0 6.283
+vector moveTo 450.457 605.674
+vector arc 449.969 605.674 0.489 0 6.283
+vector moveTo 452.795 606.389
+vector arc 452.306 606.389 0.489 0 6.283
+vector moveTo 449.289 605.316
+vector arc 448.8 605.316 0.489 0 6.283
+vector moveTo 446.69 609.634
+vector arc 446.202 609.634 0.489 0 6.283
+vector moveTo 453.703 611.778
+vector arc 453.214 611.778 0.489 0 6.283
+vector moveTo 454.872 612.136
+vector arc 454.383 612.136 0.489 0 6.283
+vector moveTo 447.859 609.992
+vector arc 447.37 609.992 0.489 0 6.283
+vector moveTo 452.534 611.421
+vector arc 452.046 611.421 0.489 0 6.283
+vector moveTo 445.522 609.277
+vector arc 445.033 609.277 0.489 0 6.283
+vector moveTo 449.646 604.148
+vector arc 449.157 604.148 0.489 0 6.283
+vector moveTo 454.321 605.577
+vector arc 453.832 605.577 0.489 0 6.283
+vector moveTo 448.477 603.79
+vector arc 447.988 603.79 0.489 0 6.283
+vector moveTo 452.892 610.252
+vector arc 452.403 610.252 0.489 0 6.283
+vector moveTo 447.048 608.466
+vector arc 446.559 608.466 0.489 0 6.283
+vector moveTo 454.061 610.61
+vector arc 453.572 610.61 0.489 0 6.283
+vector moveTo 441.204 606.679
+vector arc 440.715 606.679 0.489 0 6.283
+vector moveTo 459.905 612.396
+vector arc 459.416 612.396 0.489 0 6.283
+vector moveTo 451.172 603.336
+vector arc 450.683 603.336 0.489 0 6.283
+vector moveTo 461.691 606.552
+vector arc 461.203 606.552 0.489 0 6.283
+vector moveTo 450.197 610.706
+vector arc 449.708 610.706 0.489 0 6.283
+vector moveTo 451.366 611.064
+vector arc 450.877 611.064 0.489 0 6.283
+vector moveTo 451.269 607.2
+vector arc 450.78 607.2 0.489 0 6.283
+vector moveTo 450.1 606.843
+vector arc 449.611 606.843 0.489 0 6.283
+vector moveTo 452.438 607.557
+vector arc 451.949 607.557 0.489 0 6.283
+vector moveTo 445.328 601.549
+vector arc 444.839 601.549 0.489 0 6.283
+vector moveTo 459.354 605.838
+vector arc 458.865 605.838 0.489 0 6.283
+vector moveTo 444.159 601.192
+vector arc 443.67 601.192 0.489 0 6.283
+vector moveTo 458.282 609.344
+vector arc 457.793 609.344 0.489 0 6.283
+vector moveTo 443.087 604.699
+vector arc 442.598 604.699 0.489 0 6.283
+vector moveTo 459.451 609.701
+vector arc 458.962 609.701 0.489 0 6.283
+vector moveTo 457.47 607.818
+vector arc 456.981 607.818 0.489 0 6.283
+vector moveTo 444.613 603.887
+vector arc 444.124 603.887 0.489 0 6.283
+vector moveTo 458.639 608.175
+vector arc 458.15 608.175 0.489 0 6.283
+vector moveTo 442.633 602.004
+vector arc 442.144 602.004 0.489 0 6.283
+vector moveTo 461.334 607.721
+vector arc 460.845 607.721 0.489 0 6.283
+vector moveTo 450.554 609.538
+vector arc 450.065 609.538 0.489 0 6.283
+vector moveTo 443.899 606.225
+vector arc 443.41 606.225 0.489 0 6.283
+vector moveTo 457.924 610.513
+vector arc 457.436 610.513 0.489 0 6.283
+vector moveTo 442.73 605.867
+vector arc 442.241 605.867 0.489 0 6.283
+vector moveTo 440.846 607.848
+vector arc 440.357 607.848 0.489 0 6.283
+vector moveTo 459.547 613.565
+vector arc 459.059 613.565 0.489 0 6.283
+vector moveTo 451.269 607.2
+vector arc 450.78 607.2 0.489 0 6.283
+vector moveTo 457.21 612.851
+vector arc 456.721 612.851 0.489 0 6.283
+vector moveTo 442.015 608.205
+vector arc 441.526 608.205 0.489 0 6.283
+vector moveTo 458.379 613.208
+vector arc 457.89 613.208 0.489 0 6.283
+vector moveTo 448.834 602.622
+vector arc 448.346 602.622 0.489 0 6.283
+vector moveTo 455.847 604.766
+vector arc 455.358 604.766 0.489 0 6.283
+vector moveTo 447.666 602.264
+vector arc 447.177 602.264 0.489 0 6.283
+vector moveTo 446.139 603.076
+vector arc 445.651 603.076 0.489 0 6.283
+vector moveTo 457.828 606.649
+vector arc 457.339 606.649 0.489 0 6.283
+vector moveTo 444.971 602.718
+vector arc 444.482 602.718 0.489 0 6.283
+vector moveTo 454.775 608.272
+vector arc 454.286 608.272 0.489 0 6.283
+vector moveTo 446.594 605.771
+vector arc 446.105 605.771 0.489 0 6.283
+vector moveTo 455.944 608.629
+vector arc 455.455 608.629 0.489 0 6.283
+vector moveTo 443.087 604.699
+vector arc 442.598 604.699 0.489 0 6.283
+vector moveTo 459.451 609.701
+vector arc 458.962 609.701 0.489 0 6.283
+vector moveTo 441.918 604.341
+vector arc 441.429 604.341 0.489 0 6.283
+vector moveTo 456.301 607.461
+vector arc 455.813 607.461 0.489 0 6.283
+vector moveTo 445.782 604.244
+vector arc 445.293 604.244 0.489 0 6.283
+vector moveTo 457.47 607.818
+vector arc 456.981 607.818 0.489 0 6.283
+vector moveTo 446.594 605.771
+vector arc 446.105 605.771 0.489 0 6.283
+vector moveTo 455.944 608.629
+vector arc 455.455 608.629 0.489 0 6.283
+vector moveTo 445.425 605.413
+vector arc 444.936 605.413 0.489 0 6.283
+vector moveTo 457.113 608.987
+vector arc 456.624 608.987 0.489 0 6.283
+vector moveTo 444.256 605.056
+vector arc 443.767 605.056 0.489 0 6.283
+vector moveTo 458.282 609.344
+vector arc 457.793 609.344 0.489 0 6.283
+vector moveTo 443.445 603.53
+vector arc 442.956 603.53 0.489 0 6.283
+vector moveTo 459.808 608.533
+vector arc 459.319 608.533 0.489 0 6.283
+vector moveTo 442.276 603.172
+vector arc 441.787 603.172 0.489 0 6.283
+vector moveTo 444.353 608.92
+vector arc 443.864 608.92 0.489 0 6.283
+vector moveTo 456.041 612.493
+vector arc 455.552 612.493 0.489 0 6.283
+vector moveTo 443.184 608.562
+vector arc 442.695 608.562 0.489 0 6.283
+vector moveTo 453.51 604.051
+vector arc 453.021 604.051 0.489 0 6.283
+vector moveTo 450.003 602.979
+vector arc 449.514 602.979 0.489 0 6.283
+vector moveTo 454.679 604.408
+vector arc 454.19 604.408 0.489 0 6.283
+vector moveTo 445.879 608.108
+vector arc 445.39 608.108 0.489 0 6.283
+vector moveTo 455.229 610.967
+vector arc 454.741 610.967 0.489 0 6.283
+vector moveTo 444.71 607.751
+vector arc 444.221 607.751 0.489 0 6.283
+vector moveTo 441.918 604.341
+vector arc 441.429 604.341 0.489 0 6.283
+vector moveTo 460.619 610.059
+vector arc 460.131 610.059 0.489 0 6.283
+vector moveTo 451.626 606.031
+vector arc 451.137 606.031 0.489 0 6.283
+vector moveTo 470.648 557.648
+vector arc 470.159 557.648 0.489 0 6.283
+vector moveTo 468.183 558.593
+vector arc 467.694 558.593 0.489 0 6.283
+vector moveTo 468.47 555.656
+vector arc 467.981 555.656 0.489 0 6.283
+vector moveTo 453.607 607.915
+vector arc 453.118 607.915 0.489 0 6.283
+vector moveTo 447.762 606.128
+vector arc 447.274 606.128 0.489 0 6.283
+vector moveTo 454.775 608.272
+vector arc 454.286 608.272 0.489 0 6.283
+vector moveTo 454.257 515.388
+vector arc 453.768 515.388 0.489 0 6.283
+vector moveTo 451.656 515.836
+vector arc 451.167 515.836 0.489 0 6.283
+vector moveTo 452.478 513.017
+vector arc 451.989 513.017 0.489 0 6.283
+vector moveTo 455.49 605.934
+vector arc 455.001 605.934 0.489 0 6.283
+vector moveTo 447.308 603.433
+vector arc 446.819 603.433 0.489 0 6.283
+vector moveTo 456.659 606.292
+vector arc 456.17 606.292 0.489 0 6.283
+vector moveTo 453.964 606.746
+vector arc 453.475 606.746 0.489 0 6.283
+vector moveTo 448.12 604.959
+vector arc 447.631 604.959 0.489 0 6.283
+vector moveTo 455.133 607.103
+vector arc 454.644 607.103 0.489 0 6.283
+vector moveTo 456.398 611.324
+vector arc 455.909 611.324 0.489 0 6.283
+vector moveTo 443.541 607.394
+vector arc 443.052 607.394 0.489 0 6.283
+vector moveTo 457.567 611.682
+vector arc 457.078 611.682 0.489 0 6.283
+vector moveTo 458.996 607.006
+vector arc 458.508 607.006 0.489 0 6.283
+vector moveTo 443.802 602.361
+vector arc 443.313 602.361 0.489 0 6.283
+vector moveTo 460.165 607.364
+vector arc 459.676 607.364 0.489 0 6.283
+vector moveTo 451.984 604.862
+vector arc 451.495 604.862 0.489 0 6.283
+vector moveTo 450.815 604.505
+vector arc 450.326 604.505 0.489 0 6.283
+vector moveTo 453.152 605.22
+vector arc 452.664 605.22 0.489 0 6.283
+vector moveTo 460.523 606.195
+vector arc 460.034 606.195 0.489 0 6.283
+vector moveTo 442.99 600.835
+vector arc 442.501 600.835 0.489 0 6.283
+vector moveTo 449.028 610.349
+vector arc 448.539 610.349 0.489 0 6.283
+vector moveTo 452.08 608.726
+vector arc 451.591 608.726 0.489 0 6.283
+vector moveTo 448.574 607.654
+vector arc 448.085 607.654 0.489 0 6.283
+vector moveTo 453.249 609.084
+vector arc 452.76 609.084 0.489 0 6.283
+vector moveTo 449.385 609.18
+vector arc 448.896 609.18 0.489 0 6.283
+vector moveTo 451.723 609.895
+vector arc 451.234 609.895 0.489 0 6.283
+vector moveTo 448.217 608.823
+vector arc 447.728 608.823 0.489 0 6.283
+vector moveTo 446.951 604.602
+vector arc 446.462 604.602 0.489 0 6.283
+vector moveTo 456.301 607.461
+vector arc 455.813 607.461 0.489 0 6.283
+vector moveTo 445.782 604.244
+vector arc 445.293 604.244 0.489 0 6.283
+vector moveTo 459.093 610.87
+vector arc 458.604 610.87 0.489 0 6.283
+vector moveTo 441.561 605.51
+vector arc 441.072 605.51 0.489 0 6.283
+vector moveTo 460.262 611.228
+vector arc 459.773 611.228 0.489 0 6.283
+vector moveTo 460.977 608.89
+vector arc 460.488 608.89 0.489 0 6.283
+vector moveTo 450.912 608.369
+vector arc 450.423 608.369 0.489 0 6.283
+vector moveTo 449.743 608.011
+vector arc 449.254 608.011 0.489 0 6.283
+vector moveTo 442.372 607.036
+vector arc 441.884 607.036 0.489 0 6.283
+vector moveTo 458.736 612.039
+vector arc 458.247 612.039 0.489 0 6.283
+vector moveTo 452.341 603.694
+vector arc 451.852 603.694 0.489 0 6.283
+vector moveTo 452.795 606.389
+vector arc 452.306 606.389 0.489 0 6.283
+vector moveTo 449.289 605.316
+vector arc 448.8 605.316 0.489 0 6.283
+vector moveTo 453.964 606.746
+vector arc 453.475 606.746 0.489 0 6.283
+vector moveTo 472.608 594.988
+vector arc 472.119 594.988 0.489 0 6.283
+vector moveTo 470.741 593.121
+vector arc 470.252 593.121 0.489 0 6.283
+vector moveTo 473.541 592.188
+vector arc 473.052 592.188 0.489 0 6.283
+vector moveTo 448.12 604.959
+vector arc 447.631 604.959 0.489 0 6.283
+vector moveTo 455.133 607.103
+vector arc 454.644 607.103 0.489 0 6.283
+vector moveTo 446.951 604.602
+vector arc 446.462 604.602 0.489 0 6.283
+vector moveTo 455.587 609.798
+vector arc 455.098 609.798 0.489 0 6.283
+vector moveTo 445.067 606.582
+vector arc 444.579 606.582 0.489 0 6.283
+vector moveTo 456.756 610.156
+vector arc 456.267 610.156 0.489 0 6.283
+vector moveTo 470.352 556.877
+vector arc 469.863 556.877 0.489 0 6.283
+vector moveTo 467.887 557.822
+vector arc 467.398 557.822 0.489 0 6.283
+vector moveTo 468.174 554.884
+vector arc 467.686 554.884 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 447.746 637.153
+vector arc 447.257 637.153 0.489 0 6.283
+vector moveTo 434.959 632.999
+vector arc 434.47 632.999 0.489 0 6.283
+vector moveTo 448.908 637.531
+vector arc 448.419 637.531 0.489 0 6.283
+vector moveTo 437.632 628.727
+vector arc 437.143 628.727 0.489 0 6.283
+vector moveTo 449.256 632.504
+vector arc 448.767 632.504 0.489 0 6.283
+vector moveTo 436.47 628.349
+vector arc 435.981 628.349 0.489 0 6.283
+vector moveTo 440.364 632.185
+vector arc 439.875 632.185 0.489 0 6.283
+vector moveTo 445.014 633.695
+vector arc 444.525 633.695 0.489 0 6.283
+vector moveTo 439.202 631.807
+vector arc 438.713 631.807 0.489 0 6.283
+vector moveTo 442.689 632.94
+vector arc 442.2 632.94 0.489 0 6.283
+vector moveTo 441.526 632.562
+vector arc 441.038 632.562 0.489 0 6.283
+vector moveTo 443.851 633.318
+vector arc 443.362 633.318 0.489 0 6.283
+vector moveTo 448.472 630.964
+vector arc 447.983 630.964 0.489 0 6.283
+vector moveTo 438.01 627.564
+vector arc 437.521 627.564 0.489 0 6.283
+vector moveTo 449.634 631.341
+vector arc 449.145 631.341 0.489 0 6.283
+vector moveTo 474.639 568.005
+vector arc 474.15 568.005 0.489 0 6.283
+vector moveTo 472.192 568.994
+vector arc 471.703 568.994 0.489 0 6.283
+vector moveTo 472.452 566.042
+vector arc 471.963 566.042 0.489 0 6.283
+vector moveTo 450.419 632.881
+vector arc 449.93 632.881 0.489 0 6.283
+vector moveTo 435.307 627.971
+vector arc 434.819 627.971 0.489 0 6.283
+vector moveTo 451.581 633.259
+vector arc 451.092 633.259 0.489 0 6.283
+vector moveTo 436.877 631.052
+vector arc 436.388 631.052 0.489 0 6.283
+vector moveTo 448.501 634.828
+vector arc 448.012 634.828 0.489 0 6.283
+vector moveTo 434.552 630.296
+vector arc 434.063 630.296 0.489 0 6.283
+vector moveTo 439.231 635.672
+vector arc 438.742 635.672 0.489 0 6.283
+vector moveTo 443.881 637.183
+vector arc 443.392 637.183 0.489 0 6.283
+vector moveTo 438.069 635.294
+vector arc 437.58 635.294 0.489 0 6.283
+vector moveTo 446.961 635.613
+vector arc 446.472 635.613 0.489 0 6.283
+vector moveTo 436.499 632.214
+vector arc 436.01 632.214 0.489 0 6.283
+vector moveTo 448.123 635.991
+vector arc 447.634 635.991 0.489 0 6.283
+vector moveTo 440.771 634.887
+vector arc 440.282 634.887 0.489 0 6.283
+vector moveTo 443.096 635.642
+vector arc 442.607 635.642 0.489 0 6.283
+vector moveTo 439.609 634.509
+vector arc 439.12 634.509 0.489 0 6.283
+vector moveTo 446.176 634.073
+vector arc 445.687 634.073 0.489 0 6.283
+vector moveTo 438.039 631.429
+vector arc 437.55 631.429 0.489 0 6.283
+vector moveTo 447.338 634.451
+vector arc 446.85 634.451 0.489 0 6.283
+vector moveTo 436.848 627.187
+vector arc 436.359 627.187 0.489 0 6.283
+vector moveTo 450.796 631.719
+vector arc 450.307 631.719 0.489 0 6.283
+vector moveTo 435.685 626.809
+vector arc 435.196 626.809 0.489 0 6.283
+vector moveTo 448.879 633.666
+vector arc 448.39 633.666 0.489 0 6.283
+vector moveTo 436.092 629.511
+vector arc 435.603 629.511 0.489 0 6.283
+vector moveTo 450.041 634.044
+vector arc 449.552 634.044 0.489 0 6.283
+vector moveTo 445.043 637.56
+vector arc 444.554 637.56 0.489 0 6.283
+vector moveTo 436.906 634.916
+vector arc 436.417 634.916 0.489 0 6.283
+vector moveTo 446.205 637.938
+vector arc 445.717 637.938 0.489 0 6.283
+vector moveTo 468.068 621.133
+vector arc 467.579 621.133 0.489 0 6.283
+vector moveTo 465.43 621.017
+vector arc 464.942 621.017 0.489 0 6.283
+vector moveTo 466.865 618.437
+vector arc 466.377 618.437 0.489 0 6.283
+vector moveTo 467.513 633.706
+vector arc 467.024 633.706 0.489 0 6.283
+vector moveTo 464.876 633.59
+vector arc 464.387 633.59 0.489 0 6.283
+vector moveTo 466.311 631.01
+vector arc 465.822 631.01 0.489 0 6.283
+vector moveTo 435.714 630.674
+vector arc 435.226 630.674 0.489 0 6.283
+vector moveTo 449.663 635.206
+vector arc 449.174 635.206 0.489 0 6.283
+vector moveTo 450.826 635.584
+vector arc 450.337 635.584 0.489 0 6.283
+vector moveTo 434.93 629.134
+vector arc 434.441 629.134 0.489 0 6.283
+vector moveTo 451.203 634.421
+vector arc 450.715 634.421 0.489 0 6.283
+vector moveTo 433.767 628.756
+vector arc 433.278 628.756 0.489 0 6.283
+vector moveTo 444.258 636.02
+vector arc 443.769 636.02 0.489 0 6.283
+vector moveTo 438.446 634.132
+vector arc 437.957 634.132 0.489 0 6.283
+vector moveTo 445.421 636.398
+vector arc 444.932 636.398 0.489 0 6.283
+vector moveTo 444.984 629.83
+vector arc 444.495 629.83 0.489 0 6.283
+vector moveTo 441.497 628.697
+vector arc 441.008 628.697 0.489 0 6.283
+vector moveTo 446.147 630.208
+vector arc 445.658 630.208 0.489 0 6.283
+vector moveTo 472.665 562.912
+vector arc 472.177 562.912 0.489 0 6.283
+vector moveTo 470.2 563.857
+vector arc 469.711 563.857 0.489 0 6.283
+vector moveTo 470.488 560.919
+vector arc 469.999 560.919 0.489 0 6.283
+vector moveTo 433.797 632.621
+vector arc 433.308 632.621 0.489 0 6.283
+vector moveTo 450.07 637.909
+vector arc 449.581 637.909 0.489 0 6.283
+vector moveTo 432.634 632.243
+vector arc 432.145 632.243 0.489 0 6.283
+vector moveTo 452.366 634.799
+vector arc 451.877 634.799 0.489 0 6.283
+vector moveTo 442.311 634.102
+vector arc 441.822 634.102 0.489 0 6.283
+vector moveTo 441.149 633.725
+vector arc 440.66 633.725 0.489 0 6.283
+vector moveTo 446.931 631.748
+vector arc 446.443 631.748 0.489 0 6.283
+vector moveTo 438.795 629.104
+vector arc 438.306 629.104 0.489 0 6.283
+vector moveTo 448.094 632.126
+vector arc 447.605 632.126 0.489 0 6.283
+vector moveTo 435.337 631.836
+vector arc 434.848 631.836 0.489 0 6.283
+vector moveTo 449.286 636.369
+vector arc 448.797 636.369 0.489 0 6.283
+vector moveTo 434.174 631.459
+vector arc 433.685 631.459 0.489 0 6.283
+vector moveTo 467.432 635.556
+vector arc 466.943 635.556 0.489 0 6.283
+vector moveTo 464.794 635.439
+vector arc 464.305 635.439 0.489 0 6.283
+vector moveTo 466.229 632.86
+vector arc 465.74 632.86 0.489 0 6.283
+vector moveTo 441.904 631.4
+vector arc 441.415 631.4 0.489 0 6.283
+vector moveTo 444.229 632.155
+vector arc 443.74 632.155 0.489 0 6.283
+vector moveTo 440.742 631.022
+vector arc 440.253 631.022 0.489 0 6.283
+vector moveTo 437.284 633.754
+vector arc 436.795 633.754 0.489 0 6.283
+vector moveTo 446.583 636.776
+vector arc 446.094 636.776 0.489 0 6.283
+vector moveTo 436.122 633.376
+vector arc 435.633 633.376 0.489 0 6.283
+vector moveTo 434.145 627.594
+vector arc 433.656 627.594 0.489 0 6.283
+vector moveTo 452.743 633.637
+vector arc 452.255 633.637 0.489 0 6.283
+vector moveTo 441.934 635.265
+vector arc 441.445 635.265 0.489 0 6.283
+vector moveTo 433.39 629.919
+vector arc 432.901 629.919 0.489 0 6.283
+vector moveTo 451.988 635.961
+vector arc 451.499 635.961 0.489 0 6.283
+vector moveTo 443.067 631.778
+vector arc 442.578 631.778 0.489 0 6.283
+vector moveTo 438.824 632.969
+vector arc 438.335 632.969 0.489 0 6.283
+vector moveTo 445.798 635.235
+vector arc 445.31 635.235 0.489 0 6.283
+vector moveTo 437.662 632.592
+vector arc 437.173 632.592 0.489 0 6.283
+vector moveTo 451.233 638.286
+vector arc 450.744 638.286 0.489 0 6.283
+vector moveTo 443.822 629.453
+vector arc 443.333 629.453 0.489 0 6.283
+vector moveTo 442.66 629.075
+vector arc 442.171 629.075 0.489 0 6.283
+vector moveTo 443.444 630.615
+vector arc 442.955 630.615 0.489 0 6.283
+vector moveTo 442.282 630.238
+vector arc 441.793 630.238 0.489 0 6.283
+vector moveTo 444.607 630.993
+vector arc 444.118 630.993 0.489 0 6.283
+vector moveTo 443.474 634.48
+vector arc 442.985 634.48 0.489 0 6.283
+vector moveTo 439.986 633.347
+vector arc 439.498 633.347 0.489 0 6.283
+vector moveTo 444.636 634.858
+vector arc 444.147 634.858 0.489 0 6.283
+vector moveTo 440.335 628.32
+vector arc 439.846 628.32 0.489 0 6.283
+vector moveTo 447.309 630.586
+vector arc 446.82 630.586 0.489 0 6.283
+vector moveTo 439.172 627.942
+vector arc 438.683 627.942 0.489 0 6.283
+vector moveTo 467.197 640.882
+vector arc 466.708 640.882 0.489 0 6.283
+vector moveTo 464.559 640.766
+vector arc 464.07 640.766 0.489 0 6.283
+vector moveTo 465.994 638.187
+vector arc 465.505 638.187 0.489 0 6.283
+vector moveTo 441.556 636.427
+vector arc 441.067 636.427 0.489 0 6.283
+vector moveTo 440.393 636.05
+vector arc 439.905 636.05 0.489 0 6.283
+vector moveTo 442.718 636.805
+vector arc 442.229 636.805 0.489 0 6.283
+vector moveTo 480.199 587.397
+vector arc 479.71 587.397 0.489 0 6.283
+vector moveTo 478.332 585.53
+vector arc 477.843 585.53 0.489 0 6.283
+vector moveTo 479.87 584.342
+vector arc 479.381 584.342 0.489 0 6.283
+vector moveTo 445.391 632.533
+vector arc 444.902 632.533 0.489 0 6.283
+vector moveTo 439.579 630.645
+vector arc 439.09 630.645 0.489 0 6.283
+vector moveTo 446.554 632.911
+vector arc 446.065 632.911 0.489 0 6.283
+vector moveTo 467.357 637.235
+vector arc 466.869 637.235 0.489 0 6.283
+vector moveTo 464.72 637.118
+vector arc 464.231 637.118 0.489 0 6.283
+vector moveTo 466.155 634.539
+vector arc 465.666 634.539 0.489 0 6.283
+vector moveTo 468.77 605.21
+vector arc 468.281 605.21 0.489 0 6.283
+vector moveTo 466.133 605.094
+vector arc 465.644 605.094 0.489 0 6.283
+vector moveTo 467.568 602.514
+vector arc 467.079 602.514 0.489 0 6.283
+vector moveTo 451.959 632.097
+vector arc 451.47 632.097 0.489 0 6.283
+vector moveTo 434.523 626.431
+vector arc 434.034 626.431 0.489 0 6.283
+vector moveTo 453.121 632.474
+vector arc 452.632 632.474 0.489 0 6.283
+vector moveTo 450.448 636.746
+vector arc 449.959 636.746 0.489 0 6.283
+vector moveTo 433.012 631.081
+vector arc 432.523 631.081 0.489 0 6.283
+vector moveTo 451.61 637.124
+vector arc 451.122 637.124 0.489 0 6.283
+vector moveTo 438.417 630.267
+vector arc 437.928 630.267 0.489 0 6.283
+vector moveTo 447.716 633.288
+vector arc 447.227 633.288 0.489 0 6.283
+vector moveTo 437.255 629.889
+vector arc 436.766 629.889 0.489 0 6.283
+vector moveTo 441.119 629.86
+vector arc 440.631 629.86 0.489 0 6.283
+vector moveTo 445.769 631.371
+vector arc 445.28 631.371 0.489 0 6.283
+vector moveTo 439.957 629.482
+vector arc 439.468 629.482 0.489 0 6.283
+vector moveTo 428.05 450.12
+vector arc 427.561 450.12 0.489 0 6.283
+vector moveTo 425.558 450.992
+vector arc 425.069 450.992 0.489 0 6.283
+vector moveTo 425.411 448.748
+vector arc 424.923 448.748 0.489 0 6.283
+vector moveTo 469.449 554.52
+vector arc 468.96 554.52 0.489 0 6.283
+vector moveTo 466.983 555.465
+vector arc 466.495 555.465 0.489 0 6.283
+vector moveTo 467.271 552.527
+vector arc 466.782 552.527 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 461.499 619.08
+vector arc 461.01 619.08 0.489 0 6.283
+vector moveTo 460.366 618.622
+vector arc 459.877 618.622 0.489 0 6.283
+vector moveTo 462.632 619.538
+vector arc 462.143 619.538 0.489 0 6.283
+vector moveTo 458.076 624.288
+vector arc 457.588 624.288 0.489 0 6.283
+vector moveTo 460.343 625.204
+vector arc 459.854 625.204 0.489 0 6.283
+vector moveTo 456.943 623.83
+vector arc 456.454 623.83 0.489 0 6.283
+vector moveTo 460.366 618.622
+vector arc 459.877 618.622 0.489 0 6.283
+vector moveTo 462.632 619.538
+vector arc 462.143 619.538 0.489 0 6.283
+vector moveTo 459.232 618.164
+vector arc 458.744 618.164 0.489 0 6.283
+vector moveTo 456.485 624.964
+vector arc 455.996 624.964 0.489 0 6.283
+vector moveTo 461.018 626.795
+vector arc 460.529 626.795 0.489 0 6.283
+vector moveTo 461.499 619.08
+vector arc 461.01 619.08 0.489 0 6.283
+vector moveTo 462.174 620.671
+vector arc 461.685 620.671 0.489 0 6.283
+vector moveTo 458.775 619.298
+vector arc 458.286 619.298 0.489 0 6.283
+vector moveTo 463.307 621.129
+vector arc 462.819 621.129 0.489 0 6.283
+vector moveTo 460.801 624.071
+vector arc 460.312 624.071 0.489 0 6.283
+vector moveTo 457.401 622.697
+vector arc 456.912 622.697 0.489 0 6.283
+vector moveTo 461.934 624.529
+vector arc 461.445 624.529 0.489 0 6.283
+vector moveTo 463.627 616.549
+vector arc 463.138 616.549 0.489 0 6.283
+vector moveTo 461.096 615.797
+vector arc 460.608 615.797 0.489 0 6.283
+vector moveTo 463.113 613.642
+vector arc 462.624 613.642 0.489 0 6.283
+vector moveTo 465.379 612.739
+vector arc 464.89 612.739 0.489 0 6.283
+vector moveTo 461.98 611.365
+vector arc 461.491 611.365 0.489 0 6.283
+vector moveTo 466.512 613.196
+vector arc 466.024 613.196 0.489 0 6.283
+vector moveTo 464.223 618.862
+vector arc 463.734 618.862 0.489 0 6.283
+vector moveTo 461.041 620.213
+vector arc 460.552 620.213 0.489 0 6.283
+vector moveTo 459.908 619.755
+vector arc 459.419 619.755 0.489 0 6.283
+vector moveTo 459.232 618.164
+vector arc 458.744 618.164 0.489 0 6.283
+vector moveTo 463.765 619.996
+vector arc 463.276 619.996 0.489 0 6.283
+vector moveTo 461.957 617.947
+vector arc 461.468 617.947 0.489 0 6.283
+vector moveTo 461.476 625.662
+vector arc 460.987 625.662 0.489 0 6.283
+vector moveTo 464.246 612.281
+vector arc 463.757 612.281 0.489 0 6.283
+vector moveTo 463.113 611.823
+vector arc 462.624 611.823 0.489 0 6.283
+vector moveTo 443.924 483.009
+vector arc 443.435 483.009 0.489 0 6.283
+vector moveTo 441.507 484.072
+vector arc 441.018 484.072 0.489 0 6.283
+vector moveTo 441.652 481.124
+vector arc 441.163 481.124 0.489 0 6.283
+vector moveTo 460.125 622.48
+vector arc 459.636 622.48 0.489 0 6.283
+vector moveTo 458.992 622.022
+vector arc 458.503 622.022 0.489 0 6.283
+vector moveTo 461.259 622.938
+vector arc 460.77 622.938 0.489 0 6.283
+vector moveTo 460.824 617.489
+vector arc 460.335 617.489 0.489 0 6.283
+vector moveTo 463.09 618.405
+vector arc 462.601 618.405 0.489 0 6.283
+vector moveTo 459.69 617.031
+vector arc 459.201 617.031 0.489 0 6.283
+vector moveTo 461.522 612.498
+vector arc 461.033 612.498 0.489 0 6.283
+vector moveTo 466.055 614.33
+vector arc 465.566 614.33 0.489 0 6.283
+vector moveTo 459.21 624.746
+vector arc 458.721 624.746 0.489 0 6.283
+vector moveTo 462.85 622.262
+vector arc 462.361 622.262 0.489 0 6.283
+vector moveTo 462.872 615.68
+vector arc 462.384 615.68 0.489 0 6.283
+vector moveTo 461.739 615.222
+vector arc 461.25 615.222 0.489 0 6.283
+vector moveTo 458.752 625.879
+vector arc 458.263 625.879 0.489 0 6.283
+vector moveTo 457.619 625.421
+vector arc 457.13 625.421 0.489 0 6.283
+vector moveTo 459.885 626.337
+vector arc 459.396 626.337 0.489 0 6.283
+vector moveTo 463.788 613.414
+vector arc 463.299 613.414 0.489 0 6.283
+vector moveTo 462.655 612.956
+vector arc 462.166 612.956 0.489 0 6.283
+vector moveTo 464.921 613.872
+vector arc 464.432 613.872 0.489 0 6.283
+vector moveTo 464.006 616.138
+vector arc 463.517 616.138 0.489 0 6.283
+vector moveTo 460.606 614.765
+vector arc 460.117 614.765 0.489 0 6.283
+vector moveTo 465.139 616.596
+vector arc 464.65 616.596 0.489 0 6.283
+vector moveTo 462.197 614.089
+vector arc 461.708 614.089 0.489 0 6.283
+vector moveTo 464.464 615.005
+vector arc 463.975 615.005 0.489 0 6.283
+vector moveTo 461.064 613.631
+vector arc 460.575 613.631 0.489 0 6.283
+vector moveTo 464.52 613.541
+vector arc 464.031 613.541 0.489 0 6.283
+vector moveTo 461.989 612.79
+vector arc 461.5 612.79 0.489 0 6.283
+vector moveTo 464.006 610.635
+vector arc 463.517 610.635 0.489 0 6.283
+vector moveTo 450.018 497.137
+vector arc 449.529 497.137 0.489 0 6.283
+vector moveTo 447.495 497.884
+vector arc 447.006 497.884 0.489 0 6.283
+vector moveTo 447.785 495.063
+vector arc 447.297 495.063 0.489 0 6.283
+vector moveTo 460.148 615.898
+vector arc 459.659 615.898 0.489 0 6.283
+vector moveTo 464.681 617.729
+vector arc 464.192 617.729 0.489 0 6.283
+vector moveTo 460.583 621.346
+vector arc 460.094 621.346 0.489 0 6.283
+vector moveTo 463.765 619.996
+vector arc 463.276 619.996 0.489 0 6.283
+vector moveTo 461.957 617.947
+vector arc 461.468 617.947 0.489 0 6.283
+vector moveTo 460.824 617.489
+vector arc 460.335 617.489 0.489 0 6.283
+vector moveTo 465.597 615.463
+vector arc 465.108 615.463 0.489 0 6.283
+vector moveTo 459.667 623.613
+vector arc 459.179 623.613 0.489 0 6.283
+vector moveTo 458.534 623.155
+vector arc 458.045 623.155 0.489 0 6.283
+vector moveTo 466.867 605.637
+vector arc 466.378 605.637 0.489 0 6.283
+vector moveTo 464.336 604.886
+vector arc 463.847 604.886 0.489 0 6.283
+vector moveTo 466.353 602.73
+vector arc 465.864 602.73 0.489 0 6.283
+vector moveTo 462.415 616.814
+vector arc 461.926 616.814 0.489 0 6.283
+vector moveTo 461.281 616.356
+vector arc 460.792 616.356 0.489 0 6.283
+vector moveTo 463.548 617.271
+vector arc 463.059 617.271 0.489 0 6.283
+vector moveTo 457.859 621.564
+vector arc 457.37 621.564 0.489 0 6.283
+vector moveTo 462.392 623.395
+vector arc 461.903 623.395 0.489 0 6.283
+vector moveTo 463.33 614.547
+vector arc 462.841 614.547 0.489 0 6.283
+vector moveTo 418.114 446.939
+vector arc 417.625 446.939 0.489 0 6.283
+vector moveTo 417.938 449.573
+vector arc 417.449 449.573 0.489 0 6.283
+vector moveTo 415.392 448.08
+vector arc 414.903 448.08 0.489 0 6.283
+vector moveTo 459.45 620.889
+vector arc 458.961 620.889 0.489 0 6.283
+vector moveTo 461.716 621.804
+vector arc 461.228 621.804 0.489 0 6.283
+vector moveTo 458.317 620.431
+vector arc 457.828 620.431 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #0072B2
+vector beginPath
+vector moveTo 459.933 632.722
+vector arc 459.444 632.722 0.489 0 6.283
+vector moveTo 456.751 634.073
+vector arc 456.262 634.073 0.489 0 6.283
+vector moveTo 455.618 633.615
+vector arc 455.129 633.615 0.489 0 6.283
+vector moveTo 457.884 634.531
+vector arc 457.395 634.531 0.489 0 6.283
+vector moveTo 454.485 633.158
+vector arc 453.996 633.158 0.489 0 6.283
+vector moveTo 459.017 634.989
+vector arc 458.529 634.989 0.489 0 6.283
+vector moveTo 458.125 630.674
+vector arc 457.636 630.674 0.489 0 6.283
+vector moveTo 456.991 630.216
+vector arc 456.502 630.216 0.489 0 6.283
+vector moveTo 459.258 631.131
+vector arc 458.769 631.131 0.489 0 6.283
+vector moveTo 454.942 632.024
+vector arc 454.454 632.024 0.489 0 6.283
+vector moveTo 459.475 633.856
+vector arc 458.986 633.856 0.489 0 6.283
+vector moveTo 457.667 631.807
+vector arc 457.178 631.807 0.489 0 6.283
+vector moveTo 455.858 629.758
+vector arc 455.369 629.758 0.489 0 6.283
+vector moveTo 460.391 631.589
+vector arc 459.902 631.589 0.489 0 6.283
+vector moveTo 456.293 635.206
+vector arc 455.804 635.206 0.489 0 6.283
+vector moveTo 457.209 632.94
+vector arc 456.72 632.94 0.489 0 6.283
+vector moveTo 456.076 632.482
+vector arc 455.587 632.482 0.489 0 6.283
+vector moveTo 458.342 633.398
+vector arc 457.853 633.398 0.489 0 6.283
+vector moveTo 459.716 629.998
+vector arc 459.227 629.998 0.489 0 6.283
+vector moveTo 456.316 628.625
+vector arc 455.827 628.625 0.489 0 6.283
+vector moveTo 460.849 630.456
+vector arc 460.36 630.456 0.489 0 6.283
+vector moveTo 455.16 634.749
+vector arc 454.671 634.749 0.489 0 6.283
+vector moveTo 457.426 635.664
+vector arc 456.938 635.664 0.489 0 6.283
+vector moveTo 454.027 634.291
+vector arc 453.538 634.291 0.489 0 6.283
+vector moveTo 467.813 626.906
+vector arc 467.324 626.906 0.489 0 6.283
+vector moveTo 465.176 626.79
+vector arc 464.687 626.79 0.489 0 6.283
+vector moveTo 466.611 624.21
+vector arc 466.122 624.21 0.489 0 6.283
+vector moveTo 453.569 635.424
+vector arc 453.08 635.424 0.489 0 6.283
+vector moveTo 458.102 637.255
+vector arc 457.613 637.255 0.489 0 6.283
+vector moveTo 457.209 632.94
+vector arc 456.72 632.94 0.489 0 6.283
+vector moveTo 458.56 636.122
+vector arc 458.071 636.122 0.489 0 6.283
+vector moveTo 458.582 629.54
+vector arc 458.094 629.54 0.489 0 6.283
+vector moveTo 457.449 629.082
+vector arc 456.96 629.082 0.489 0 6.283
+vector moveTo 459.475 633.856
+vector arc 458.986 633.856 0.489 0 6.283
+vector moveTo 457.667 631.807
+vector arc 457.178 631.807 0.489 0 6.283
+vector moveTo 456.534 631.349
+vector arc 456.045 631.349 0.489 0 6.283
+vector moveTo 455.835 636.34
+vector arc 455.346 636.34 0.489 0 6.283
+vector moveTo 454.702 635.882
+vector arc 454.213 635.882 0.489 0 6.283
+vector moveTo 456.969 636.798
+vector arc 456.48 636.798 0.489 0 6.283
+vector moveTo 456.534 631.349
+vector arc 456.045 631.349 0.489 0 6.283
+vector moveTo 458.8 632.265
+vector arc 458.311 632.265 0.489 0 6.283
+vector moveTo 455.4 630.891
+vector arc 454.911 630.891 0.489 0 6.283
+vector moveTo 456.076 632.482
+vector arc 455.587 632.482 0.489 0 6.283
+vector moveTo 458.342 633.398
+vector arc 457.853 633.398 0.489 0 6.283
+vector moveTo 454.942 632.024
+vector arc 454.454 632.024 0.489 0 6.283
+vector moveTo 458.8 632.265
+vector arc 458.311 632.265 0.489 0 6.283
+vector moveTo 455.4 630.891
+vector arc 454.911 630.891 0.489 0 6.283
+vector moveTo 459.933 632.722
+vector arc 459.444 632.722 0.489 0 6.283
+vector fill
+vector restore
+main drawImage [canvas vector] 0 0 660 660
+
+# progress 1
+main clearRect 0 0 660 660
+main set:fillStyle #ffffff
+main fillRect 0 0 660 660
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 0 0 660 660
+vector clearRect 0 0 660 660
+vector set:lineCap round
+vector set:lineJoin round
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 435.025 612.194
+vector arc 434.536 612.194 0.489 0 6.283
+vector moveTo 433.891 611.736
+vector arc 433.402 611.736 0.489 0 6.283
+vector moveTo 436.158 612.651
+vector arc 435.669 612.651 0.489 0 6.283
+vector moveTo 430.686 619.668
+vector arc 430.198 619.668 0.489 0 6.283
+vector moveTo 432.953 620.584
+vector arc 432.464 620.584 0.489 0 6.283
+vector moveTo 429.553 619.21
+vector arc 429.064 619.21 0.489 0 6.283
+vector moveTo 432.037 622.85
+vector arc 431.548 622.85 0.489 0 6.283
+vector moveTo 428.637 621.477
+vector arc 428.149 621.477 0.489 0 6.283
+vector moveTo 433.17 623.308
+vector arc 432.681 623.308 0.489 0 6.283
+vector moveTo 434.109 614.46
+vector arc 433.62 614.46 0.489 0 6.283
+vector moveTo 432.976 614.002
+vector arc 432.487 614.002 0.489 0 6.283
+vector moveTo 435.242 614.918
+vector arc 434.753 614.918 0.489 0 6.283
+vector moveTo 432.3 612.411
+vector arc 431.811 612.411 0.489 0 6.283
+vector moveTo 436.833 614.242
+vector arc 436.344 614.242 0.489 0 6.283
+vector moveTo 432.518 615.135
+vector arc 432.029 615.135 0.489 0 6.283
+vector moveTo 433.434 612.869
+vector arc 432.945 612.869 0.489 0 6.283
+vector moveTo 435.7 613.785
+vector arc 435.211 613.785 0.489 0 6.283
+vector moveTo 433.651 615.593
+vector arc 433.162 615.593 0.489 0 6.283
+vector moveTo 434.784 616.051
+vector arc 434.295 616.051 0.489 0 6.283
+vector moveTo 431.385 614.678
+vector arc 430.896 614.678 0.489 0 6.283
+vector moveTo 435.917 616.509
+vector arc 435.429 616.509 0.489 0 6.283
+vector moveTo 432.758 611.278
+vector arc 432.269 611.278 0.489 0 6.283
+vector moveTo 437.291 613.109
+vector arc 436.802 613.109 0.489 0 6.283
+vector moveTo 433.193 616.726
+vector arc 432.704 616.726 0.489 0 6.283
+vector moveTo 431.842 613.544
+vector arc 431.354 613.544 0.489 0 6.283
+vector moveTo 436.375 615.376
+vector arc 435.886 615.376 0.489 0 6.283
+vector moveTo 434.567 613.327
+vector arc 434.078 613.327 0.489 0 6.283
+vector moveTo 431.842 613.544
+vector arc 431.354 613.544 0.489 0 6.283
+vector moveTo 436.375 615.376
+vector arc 435.886 615.376 0.489 0 6.283
+vector moveTo 434.567 613.327
+vector arc 434.078 613.327 0.489 0 6.283
+vector moveTo 433.434 612.869
+vector arc 432.945 612.869 0.489 0 6.283
+vector moveTo 435.7 613.785
+vector arc 435.211 613.785 0.489 0 6.283
+vector moveTo 432.3 612.411
+vector arc 431.811 612.411 0.489 0 6.283
+vector moveTo 433.411 619.451
+vector arc 432.922 619.451 0.489 0 6.283
+vector moveTo 430.011 618.077
+vector arc 429.522 618.077 0.489 0 6.283
+vector moveTo 434.544 619.909
+vector arc 434.055 619.909 0.489 0 6.283
+vector moveTo 434.086 621.042
+vector arc 433.597 621.042 0.489 0 6.283
+vector moveTo 436.856 607.661
+vector arc 436.367 607.661 0.489 0 6.283
+vector moveTo 435.723 607.203
+vector arc 435.234 607.203 0.489 0 6.283
+vector moveTo 434.784 616.051
+vector arc 434.295 616.051 0.489 0 6.283
+vector moveTo 431.385 614.678
+vector arc 430.896 614.678 0.489 0 6.283
+vector moveTo 435.917 616.509
+vector arc 435.429 616.509 0.489 0 6.283
+vector moveTo 435.025 612.194
+vector arc 434.536 612.194 0.489 0 6.283
+vector moveTo 433.891 611.736
+vector arc 433.402 611.736 0.489 0 6.283
+vector moveTo 436.158 612.651
+vector arc 435.669 612.651 0.489 0 6.283
+vector moveTo 435.94 609.927
+vector arc 435.451 609.927 0.489 0 6.283
+vector moveTo 434.807 609.469
+vector arc 434.318 609.469 0.489 0 6.283
+vector moveTo 433.674 609.011
+vector arc 433.185 609.011 0.489 0 6.283
+vector moveTo 434.109 614.46
+vector arc 433.62 614.46 0.489 0 6.283
+vector moveTo 432.976 614.002
+vector arc 432.487 614.002 0.489 0 6.283
+vector moveTo 435.242 614.918
+vector arc 434.753 614.918 0.489 0 6.283
+vector moveTo 435.46 617.642
+vector arc 434.971 617.642 0.489 0 6.283
+vector moveTo 435.482 611.06
+vector arc 434.994 611.06 0.489 0 6.283
+vector moveTo 434.349 610.602
+vector arc 433.86 610.602 0.489 0 6.283
+vector moveTo 429.095 620.344
+vector arc 428.606 620.344 0.489 0 6.283
+vector moveTo 433.628 622.175
+vector arc 433.139 622.175 0.489 0 6.283
+vector moveTo 437.314 606.527
+vector arc 436.825 606.527 0.489 0 6.283
+vector moveTo 435.46 617.642
+vector arc 434.971 617.642 0.489 0 6.283
+vector moveTo 435.482 611.06
+vector arc 434.994 611.06 0.489 0 6.283
+vector moveTo 434.349 610.602
+vector arc 433.86 610.602 0.489 0 6.283
+vector moveTo 436.181 606.07
+vector arc 435.692 606.07 0.489 0 6.283
+vector moveTo 438.447 606.985
+vector arc 437.958 606.985 0.489 0 6.283
+vector moveTo 435.047 605.612
+vector arc 434.559 605.612 0.489 0 6.283
+vector moveTo 430.469 616.944
+vector arc 429.98 616.944 0.489 0 6.283
+vector moveTo 435.002 618.775
+vector arc 434.513 618.775 0.489 0 6.283
+vector moveTo 437.074 610.385
+vector arc 436.585 610.385 0.489 0 6.283
+vector moveTo 432.758 611.278
+vector arc 432.269 611.278 0.489 0 6.283
+vector moveTo 437.291 613.109
+vector arc 436.802 613.109 0.489 0 6.283
+vector moveTo 433.193 616.726
+vector arc 432.704 616.726 0.489 0 6.283
+vector moveTo 439.58 607.443
+vector arc 439.091 607.443 0.489 0 6.283
+vector moveTo 430.904 622.393
+vector arc 430.415 622.393 0.489 0 6.283
+vector moveTo 429.771 621.935
+vector arc 429.282 621.935 0.489 0 6.283
+vector moveTo 437.989 608.119
+vector arc 437.5 608.119 0.489 0 6.283
+vector moveTo 434.59 606.745
+vector arc 434.101 606.745 0.489 0 6.283
+vector moveTo 439.122 608.576
+vector arc 438.634 608.576 0.489 0 6.283
+vector moveTo 432.06 616.269
+vector arc 431.571 616.269 0.489 0 6.283
+vector moveTo 434.326 617.184
+vector arc 433.838 617.184 0.489 0 6.283
+vector moveTo 430.927 615.811
+vector arc 430.438 615.811 0.489 0 6.283
+vector moveTo 432.06 616.269
+vector arc 431.571 616.269 0.489 0 6.283
+vector moveTo 434.326 617.184
+vector arc 433.838 617.184 0.489 0 6.283
+vector moveTo 430.927 615.811
+vector arc 430.438 615.811 0.489 0 6.283
+vector moveTo 438.207 610.843
+vector arc 437.718 610.843 0.489 0 6.283
+vector moveTo 432.277 618.993
+vector arc 431.789 618.993 0.489 0 6.283
+vector moveTo 431.144 618.535
+vector arc 430.655 618.535 0.489 0 6.283
+vector moveTo 431.362 621.259
+vector arc 430.873 621.259 0.489 0 6.283
+vector moveTo 430.229 620.801
+vector arc 429.74 620.801 0.489 0 6.283
+vector moveTo 432.495 621.717
+vector arc 432.006 621.717 0.489 0 6.283
+vector moveTo 437.531 609.252
+vector arc 437.042 609.252 0.489 0 6.283
+vector moveTo 434.132 607.878
+vector arc 433.643 607.878 0.489 0 6.283
+vector moveTo 431.82 620.126
+vector arc 431.331 620.126 0.489 0 6.283
+vector moveTo 436.616 611.518
+vector arc 436.127 611.518 0.489 0 6.283
+vector moveTo 433.216 610.145
+vector arc 432.727 610.145 0.489 0 6.283
+vector moveTo 437.749 611.976
+vector arc 437.26 611.976 0.489 0 6.283
+vector moveTo 432.735 617.86
+vector arc 432.246 617.86 0.489 0 6.283
+vector moveTo 431.602 617.402
+vector arc 431.113 617.402 0.489 0 6.283
+vector moveTo 433.869 618.318
+vector arc 433.38 618.318 0.489 0 6.283
+vector moveTo 436.833 614.242
+vector arc 436.344 614.242 0.489 0 6.283
+vector moveTo 433.651 615.593
+vector arc 433.162 615.593 0.489 0 6.283
+vector moveTo 432.518 615.135
+vector arc 432.029 615.135 0.489 0 6.283
+vector moveTo 436.398 608.794
+vector arc 435.909 608.794 0.489 0 6.283
+vector moveTo 435.265 608.336
+vector arc 434.776 608.336 0.489 0 6.283
+vector moveTo 438.665 609.71
+vector arc 438.176 609.71 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 445.425 605.413
+vector arc 444.936 605.413 0.489 0 6.283
+vector moveTo 457.113 608.987
+vector arc 456.624 608.987 0.489 0 6.283
+vector moveTo 444.256 605.056
+vector arc 443.767 605.056 0.489 0 6.283
+vector moveTo 448.931 606.485
+vector arc 448.442 606.485 0.489 0 6.283
+vector moveTo 453.607 607.915
+vector arc 453.118 607.915 0.489 0 6.283
+vector moveTo 447.762 606.128
+vector arc 447.274 606.128 0.489 0 6.283
+vector moveTo 450.1 606.843
+vector arc 449.611 606.843 0.489 0 6.283
+vector moveTo 452.438 607.557
+vector arc 451.949 607.557 0.489 0 6.283
+vector moveTo 448.931 606.485
+vector arc 448.442 606.485 0.489 0 6.283
+vector moveTo 457.016 605.123
+vector arc 456.527 605.123 0.489 0 6.283
+vector moveTo 446.497 601.907
+vector arc 446.008 601.907 0.489 0 6.283
+vector moveTo 458.185 605.48
+vector arc 457.696 605.48 0.489 0 6.283
+vector moveTo 460.619 610.059
+vector arc 460.131 610.059 0.489 0 6.283
+vector moveTo 451.626 606.031
+vector arc 451.137 606.031 0.489 0 6.283
+vector moveTo 450.457 605.674
+vector arc 449.969 605.674 0.489 0 6.283
+vector moveTo 447.405 607.297
+vector arc 446.916 607.297 0.489 0 6.283
+vector moveTo 454.418 609.441
+vector arc 453.929 609.441 0.489 0 6.283
+vector moveTo 446.236 606.939
+vector arc 445.747 606.939 0.489 0 6.283
+vector moveTo 450.457 605.674
+vector arc 449.969 605.674 0.489 0 6.283
+vector moveTo 452.795 606.389
+vector arc 452.306 606.389 0.489 0 6.283
+vector moveTo 449.289 605.316
+vector arc 448.8 605.316 0.489 0 6.283
+vector moveTo 446.69 609.634
+vector arc 446.202 609.634 0.489 0 6.283
+vector moveTo 453.703 611.778
+vector arc 453.214 611.778 0.489 0 6.283
+vector moveTo 454.872 612.136
+vector arc 454.383 612.136 0.489 0 6.283
+vector moveTo 447.859 609.992
+vector arc 447.37 609.992 0.489 0 6.283
+vector moveTo 452.534 611.421
+vector arc 452.046 611.421 0.489 0 6.283
+vector moveTo 445.522 609.277
+vector arc 445.033 609.277 0.489 0 6.283
+vector moveTo 449.646 604.148
+vector arc 449.157 604.148 0.489 0 6.283
+vector moveTo 454.321 605.577
+vector arc 453.832 605.577 0.489 0 6.283
+vector moveTo 448.477 603.79
+vector arc 447.988 603.79 0.489 0 6.283
+vector moveTo 452.892 610.252
+vector arc 452.403 610.252 0.489 0 6.283
+vector moveTo 447.048 608.466
+vector arc 446.559 608.466 0.489 0 6.283
+vector moveTo 454.061 610.61
+vector arc 453.572 610.61 0.489 0 6.283
+vector moveTo 441.204 606.679
+vector arc 440.715 606.679 0.489 0 6.283
+vector moveTo 459.905 612.396
+vector arc 459.416 612.396 0.489 0 6.283
+vector moveTo 451.172 603.336
+vector arc 450.683 603.336 0.489 0 6.283
+vector moveTo 461.691 606.552
+vector arc 461.203 606.552 0.489 0 6.283
+vector moveTo 450.197 610.706
+vector arc 449.708 610.706 0.489 0 6.283
+vector moveTo 451.366 611.064
+vector arc 450.877 611.064 0.489 0 6.283
+vector moveTo 451.269 607.2
+vector arc 450.78 607.2 0.489 0 6.283
+vector moveTo 450.1 606.843
+vector arc 449.611 606.843 0.489 0 6.283
+vector moveTo 452.438 607.557
+vector arc 451.949 607.557 0.489 0 6.283
+vector moveTo 445.328 601.549
+vector arc 444.839 601.549 0.489 0 6.283
+vector moveTo 459.354 605.838
+vector arc 458.865 605.838 0.489 0 6.283
+vector moveTo 444.159 601.192
+vector arc 443.67 601.192 0.489 0 6.283
+vector moveTo 458.282 609.344
+vector arc 457.793 609.344 0.489 0 6.283
+vector moveTo 443.087 604.699
+vector arc 442.598 604.699 0.489 0 6.283
+vector moveTo 459.451 609.701
+vector arc 458.962 609.701 0.489 0 6.283
+vector moveTo 457.47 607.818
+vector arc 456.981 607.818 0.489 0 6.283
+vector moveTo 444.613 603.887
+vector arc 444.124 603.887 0.489 0 6.283
+vector moveTo 458.639 608.175
+vector arc 458.15 608.175 0.489 0 6.283
+vector moveTo 442.633 602.004
+vector arc 442.144 602.004 0.489 0 6.283
+vector moveTo 461.334 607.721
+vector arc 460.845 607.721 0.489 0 6.283
+vector moveTo 450.554 609.538
+vector arc 450.065 609.538 0.489 0 6.283
+vector moveTo 443.899 606.225
+vector arc 443.41 606.225 0.489 0 6.283
+vector moveTo 457.924 610.513
+vector arc 457.436 610.513 0.489 0 6.283
+vector moveTo 442.73 605.867
+vector arc 442.241 605.867 0.489 0 6.283
+vector moveTo 440.846 607.848
+vector arc 440.357 607.848 0.489 0 6.283
+vector moveTo 459.547 613.565
+vector arc 459.059 613.565 0.489 0 6.283
+vector moveTo 451.269 607.2
+vector arc 450.78 607.2 0.489 0 6.283
+vector moveTo 457.21 612.851
+vector arc 456.721 612.851 0.489 0 6.283
+vector moveTo 442.015 608.205
+vector arc 441.526 608.205 0.489 0 6.283
+vector moveTo 458.379 613.208
+vector arc 457.89 613.208 0.489 0 6.283
+vector moveTo 448.834 602.622
+vector arc 448.346 602.622 0.489 0 6.283
+vector moveTo 455.847 604.766
+vector arc 455.358 604.766 0.489 0 6.283
+vector moveTo 447.666 602.264
+vector arc 447.177 602.264 0.489 0 6.283
+vector moveTo 446.139 603.076
+vector arc 445.651 603.076 0.489 0 6.283
+vector moveTo 457.828 606.649
+vector arc 457.339 606.649 0.489 0 6.283
+vector moveTo 444.971 602.718
+vector arc 444.482 602.718 0.489 0 6.283
+vector moveTo 454.775 608.272
+vector arc 454.286 608.272 0.489 0 6.283
+vector moveTo 446.594 605.771
+vector arc 446.105 605.771 0.489 0 6.283
+vector moveTo 455.944 608.629
+vector arc 455.455 608.629 0.489 0 6.283
+vector moveTo 443.087 604.699
+vector arc 442.598 604.699 0.489 0 6.283
+vector moveTo 459.451 609.701
+vector arc 458.962 609.701 0.489 0 6.283
+vector moveTo 441.918 604.341
+vector arc 441.429 604.341 0.489 0 6.283
+vector moveTo 456.301 607.461
+vector arc 455.813 607.461 0.489 0 6.283
+vector moveTo 445.782 604.244
+vector arc 445.293 604.244 0.489 0 6.283
+vector moveTo 457.47 607.818
+vector arc 456.981 607.818 0.489 0 6.283
+vector moveTo 446.594 605.771
+vector arc 446.105 605.771 0.489 0 6.283
+vector moveTo 455.944 608.629
+vector arc 455.455 608.629 0.489 0 6.283
+vector moveTo 445.425 605.413
+vector arc 444.936 605.413 0.489 0 6.283
+vector moveTo 457.113 608.987
+vector arc 456.624 608.987 0.489 0 6.283
+vector moveTo 444.256 605.056
+vector arc 443.767 605.056 0.489 0 6.283
+vector moveTo 458.282 609.344
+vector arc 457.793 609.344 0.489 0 6.283
+vector moveTo 443.445 603.53
+vector arc 442.956 603.53 0.489 0 6.283
+vector moveTo 459.808 608.533
+vector arc 459.319 608.533 0.489 0 6.283
+vector moveTo 442.276 603.172
+vector arc 441.787 603.172 0.489 0 6.283
+vector moveTo 444.353 608.92
+vector arc 443.864 608.92 0.489 0 6.283
+vector moveTo 456.041 612.493
+vector arc 455.552 612.493 0.489 0 6.283
+vector moveTo 443.184 608.562
+vector arc 442.695 608.562 0.489 0 6.283
+vector moveTo 453.51 604.051
+vector arc 453.021 604.051 0.489 0 6.283
+vector moveTo 450.003 602.979
+vector arc 449.514 602.979 0.489 0 6.283
+vector moveTo 454.679 604.408
+vector arc 454.19 604.408 0.489 0 6.283
+vector moveTo 445.879 608.108
+vector arc 445.39 608.108 0.489 0 6.283
+vector moveTo 455.229 610.967
+vector arc 454.741 610.967 0.489 0 6.283
+vector moveTo 444.71 607.751
+vector arc 444.221 607.751 0.489 0 6.283
+vector moveTo 441.918 604.341
+vector arc 441.429 604.341 0.489 0 6.283
+vector moveTo 460.619 610.059
+vector arc 460.131 610.059 0.489 0 6.283
+vector moveTo 451.626 606.031
+vector arc 451.137 606.031 0.489 0 6.283
+vector moveTo 450.912 608.369
+vector arc 450.423 608.369 0.489 0 6.283
+vector moveTo 449.743 608.011
+vector arc 449.254 608.011 0.489 0 6.283
+vector moveTo 452.08 608.726
+vector arc 451.591 608.726 0.489 0 6.283
+vector moveTo 453.607 607.915
+vector arc 453.118 607.915 0.489 0 6.283
+vector moveTo 447.762 606.128
+vector arc 447.274 606.128 0.489 0 6.283
+vector moveTo 454.775 608.272
+vector arc 454.286 608.272 0.489 0 6.283
+vector moveTo 448.574 607.654
+vector arc 448.085 607.654 0.489 0 6.283
+vector moveTo 453.249 609.084
+vector arc 452.76 609.084 0.489 0 6.283
+vector moveTo 447.405 607.297
+vector arc 446.916 607.297 0.489 0 6.283
+vector moveTo 455.49 605.934
+vector arc 455.001 605.934 0.489 0 6.283
+vector moveTo 447.308 603.433
+vector arc 446.819 603.433 0.489 0 6.283
+vector moveTo 456.659 606.292
+vector arc 456.17 606.292 0.489 0 6.283
+vector moveTo 453.964 606.746
+vector arc 453.475 606.746 0.489 0 6.283
+vector moveTo 448.12 604.959
+vector arc 447.631 604.959 0.489 0 6.283
+vector moveTo 455.133 607.103
+vector arc 454.644 607.103 0.489 0 6.283
+vector moveTo 456.398 611.324
+vector arc 455.909 611.324 0.489 0 6.283
+vector moveTo 443.541 607.394
+vector arc 443.052 607.394 0.489 0 6.283
+vector moveTo 457.567 611.682
+vector arc 457.078 611.682 0.489 0 6.283
+vector moveTo 458.996 607.006
+vector arc 458.508 607.006 0.489 0 6.283
+vector moveTo 443.802 602.361
+vector arc 443.313 602.361 0.489 0 6.283
+vector moveTo 460.165 607.364
+vector arc 459.676 607.364 0.489 0 6.283
+vector moveTo 451.984 604.862
+vector arc 451.495 604.862 0.489 0 6.283
+vector moveTo 450.815 604.505
+vector arc 450.326 604.505 0.489 0 6.283
+vector moveTo 453.152 605.22
+vector arc 452.664 605.22 0.489 0 6.283
+vector moveTo 460.523 606.195
+vector arc 460.034 606.195 0.489 0 6.283
+vector moveTo 442.99 600.835
+vector arc 442.501 600.835 0.489 0 6.283
+vector moveTo 449.028 610.349
+vector arc 448.539 610.349 0.489 0 6.283
+vector moveTo 452.08 608.726
+vector arc 451.591 608.726 0.489 0 6.283
+vector moveTo 448.574 607.654
+vector arc 448.085 607.654 0.489 0 6.283
+vector moveTo 453.249 609.084
+vector arc 452.76 609.084 0.489 0 6.283
+vector moveTo 449.385 609.18
+vector arc 448.896 609.18 0.489 0 6.283
+vector moveTo 451.723 609.895
+vector arc 451.234 609.895 0.489 0 6.283
+vector moveTo 448.217 608.823
+vector arc 447.728 608.823 0.489 0 6.283
+vector moveTo 446.951 604.602
+vector arc 446.462 604.602 0.489 0 6.283
+vector moveTo 456.301 607.461
+vector arc 455.813 607.461 0.489 0 6.283
+vector moveTo 445.782 604.244
+vector arc 445.293 604.244 0.489 0 6.283
+vector moveTo 459.093 610.87
+vector arc 458.604 610.87 0.489 0 6.283
+vector moveTo 441.561 605.51
+vector arc 441.072 605.51 0.489 0 6.283
+vector moveTo 460.262 611.228
+vector arc 459.773 611.228 0.489 0 6.283
+vector moveTo 460.977 608.89
+vector arc 460.488 608.89 0.489 0 6.283
+vector moveTo 450.912 608.369
+vector arc 450.423 608.369 0.489 0 6.283
+vector moveTo 449.743 608.011
+vector arc 449.254 608.011 0.489 0 6.283
+vector moveTo 442.372 607.036
+vector arc 441.884 607.036 0.489 0 6.283
+vector moveTo 458.736 612.039
+vector arc 458.247 612.039 0.489 0 6.283
+vector moveTo 452.341 603.694
+vector arc 451.852 603.694 0.489 0 6.283
+vector moveTo 452.795 606.389
+vector arc 452.306 606.389 0.489 0 6.283
+vector moveTo 449.289 605.316
+vector arc 448.8 605.316 0.489 0 6.283
+vector moveTo 453.964 606.746
+vector arc 453.475 606.746 0.489 0 6.283
+vector moveTo 444.613 603.887
+vector arc 444.124 603.887 0.489 0 6.283
+vector moveTo 458.639 608.175
+vector arc 458.15 608.175 0.489 0 6.283
+vector moveTo 443.445 603.53
+vector arc 442.956 603.53 0.489 0 6.283
+vector moveTo 448.12 604.959
+vector arc 447.631 604.959 0.489 0 6.283
+vector moveTo 455.133 607.103
+vector arc 454.644 607.103 0.489 0 6.283
+vector moveTo 446.951 604.602
+vector arc 446.462 604.602 0.489 0 6.283
+vector moveTo 455.587 609.798
+vector arc 455.098 609.798 0.489 0 6.283
+vector moveTo 445.067 606.582
+vector arc 444.579 606.582 0.489 0 6.283
+vector moveTo 456.756 610.156
+vector arc 456.267 610.156 0.489 0 6.283
+vector moveTo 459.808 608.533
+vector arc 459.319 608.533 0.489 0 6.283
+vector moveTo 442.276 603.172
+vector arc 441.787 603.172 0.489 0 6.283
+vector moveTo 460.977 608.89
+vector arc 460.488 608.89 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 447.746 637.153
+vector arc 447.257 637.153 0.489 0 6.283
+vector moveTo 434.959 632.999
+vector arc 434.47 632.999 0.489 0 6.283
+vector moveTo 448.908 637.531
+vector arc 448.419 637.531 0.489 0 6.283
+vector moveTo 437.632 628.727
+vector arc 437.143 628.727 0.489 0 6.283
+vector moveTo 449.256 632.504
+vector arc 448.767 632.504 0.489 0 6.283
+vector moveTo 436.47 628.349
+vector arc 435.981 628.349 0.489 0 6.283
+vector moveTo 440.364 632.185
+vector arc 439.875 632.185 0.489 0 6.283
+vector moveTo 445.014 633.695
+vector arc 444.525 633.695 0.489 0 6.283
+vector moveTo 439.202 631.807
+vector arc 438.713 631.807 0.489 0 6.283
+vector moveTo 442.689 632.94
+vector arc 442.2 632.94 0.489 0 6.283
+vector moveTo 441.526 632.562
+vector arc 441.038 632.562 0.489 0 6.283
+vector moveTo 443.851 633.318
+vector arc 443.362 633.318 0.489 0 6.283
+vector moveTo 448.472 630.964
+vector arc 447.983 630.964 0.489 0 6.283
+vector moveTo 438.01 627.564
+vector arc 437.521 627.564 0.489 0 6.283
+vector moveTo 449.634 631.341
+vector arc 449.145 631.341 0.489 0 6.283
+vector moveTo 434.552 630.296
+vector arc 434.063 630.296 0.489 0 6.283
+vector moveTo 450.826 635.584
+vector arc 450.337 635.584 0.489 0 6.283
+vector moveTo 433.39 629.919
+vector arc 432.901 629.919 0.489 0 6.283
+vector moveTo 450.419 632.881
+vector arc 449.93 632.881 0.489 0 6.283
+vector moveTo 435.307 627.971
+vector arc 434.819 627.971 0.489 0 6.283
+vector moveTo 451.581 633.259
+vector arc 451.092 633.259 0.489 0 6.283
+vector moveTo 436.877 631.052
+vector arc 436.388 631.052 0.489 0 6.283
+vector moveTo 448.501 634.828
+vector arc 448.012 634.828 0.489 0 6.283
+vector moveTo 434.552 630.296
+vector arc 434.063 630.296 0.489 0 6.283
+vector moveTo 439.231 635.672
+vector arc 438.742 635.672 0.489 0 6.283
+vector moveTo 443.881 637.183
+vector arc 443.392 637.183 0.489 0 6.283
+vector moveTo 438.069 635.294
+vector arc 437.58 635.294 0.489 0 6.283
+vector moveTo 446.961 635.613
+vector arc 446.472 635.613 0.489 0 6.283
+vector moveTo 436.499 632.214
+vector arc 436.01 632.214 0.489 0 6.283
+vector moveTo 448.123 635.991
+vector arc 447.634 635.991 0.489 0 6.283
+vector moveTo 440.771 634.887
+vector arc 440.282 634.887 0.489 0 6.283
+vector moveTo 443.096 635.642
+vector arc 442.607 635.642 0.489 0 6.283
+vector moveTo 439.609 634.509
+vector arc 439.12 634.509 0.489 0 6.283
+vector moveTo 446.176 634.073
+vector arc 445.687 634.073 0.489 0 6.283
+vector moveTo 438.039 631.429
+vector arc 437.55 631.429 0.489 0 6.283
+vector moveTo 447.338 634.451
+vector arc 446.85 634.451 0.489 0 6.283
+vector moveTo 436.848 627.187
+vector arc 436.359 627.187 0.489 0 6.283
+vector moveTo 450.796 631.719
+vector arc 450.307 631.719 0.489 0 6.283
+vector moveTo 435.685 626.809
+vector arc 435.196 626.809 0.489 0 6.283
+vector moveTo 448.879 633.666
+vector arc 448.39 633.666 0.489 0 6.283
+vector moveTo 436.092 629.511
+vector arc 435.603 629.511 0.489 0 6.283
+vector moveTo 450.041 634.044
+vector arc 449.552 634.044 0.489 0 6.283
+vector moveTo 445.043 637.56
+vector arc 444.554 637.56 0.489 0 6.283
+vector moveTo 436.906 634.916
+vector arc 436.417 634.916 0.489 0 6.283
+vector moveTo 446.205 637.938
+vector arc 445.717 637.938 0.489 0 6.283
+vector moveTo 445.014 633.695
+vector arc 444.525 633.695 0.489 0 6.283
+vector moveTo 439.202 631.807
+vector arc 438.713 631.807 0.489 0 6.283
+vector moveTo 446.176 634.073
+vector arc 445.687 634.073 0.489 0 6.283
+vector moveTo 449.693 639.071
+vector arc 449.204 639.071 0.489 0 6.283
+vector moveTo 432.257 633.406
+vector arc 431.768 633.406 0.489 0 6.283
+vector moveTo 443.851 633.318
+vector arc 443.362 633.318 0.489 0 6.283
+vector moveTo 435.714 630.674
+vector arc 435.226 630.674 0.489 0 6.283
+vector moveTo 449.663 635.206
+vector arc 449.174 635.206 0.489 0 6.283
+vector moveTo 450.826 635.584
+vector arc 450.337 635.584 0.489 0 6.283
+vector moveTo 434.93 629.134
+vector arc 434.441 629.134 0.489 0 6.283
+vector moveTo 451.203 634.421
+vector arc 450.715 634.421 0.489 0 6.283
+vector moveTo 433.767 628.756
+vector arc 433.278 628.756 0.489 0 6.283
+vector moveTo 444.258 636.02
+vector arc 443.769 636.02 0.489 0 6.283
+vector moveTo 438.446 634.132
+vector arc 437.957 634.132 0.489 0 6.283
+vector moveTo 445.421 636.398
+vector arc 444.932 636.398 0.489 0 6.283
+vector moveTo 444.984 629.83
+vector arc 444.495 629.83 0.489 0 6.283
+vector moveTo 441.497 628.697
+vector arc 441.008 628.697 0.489 0 6.283
+vector moveTo 446.147 630.208
+vector arc 445.658 630.208 0.489 0 6.283
+vector moveTo 451.988 635.961
+vector arc 451.499 635.961 0.489 0 6.283
+vector moveTo 443.067 631.778
+vector arc 442.578 631.778 0.489 0 6.283
+vector moveTo 441.904 631.4
+vector arc 441.415 631.4 0.489 0 6.283
+vector moveTo 433.797 632.621
+vector arc 433.308 632.621 0.489 0 6.283
+vector moveTo 450.07 637.909
+vector arc 449.581 637.909 0.489 0 6.283
+vector moveTo 432.634 632.243
+vector arc 432.145 632.243 0.489 0 6.283
+vector moveTo 452.366 634.799
+vector arc 451.877 634.799 0.489 0 6.283
+vector moveTo 442.311 634.102
+vector arc 441.822 634.102 0.489 0 6.283
+vector moveTo 441.149 633.725
+vector arc 440.66 633.725 0.489 0 6.283
+vector moveTo 446.931 631.748
+vector arc 446.443 631.748 0.489 0 6.283
+vector moveTo 438.795 629.104
+vector arc 438.306 629.104 0.489 0 6.283
+vector moveTo 448.094 632.126
+vector arc 447.605 632.126 0.489 0 6.283
+vector moveTo 435.337 631.836
+vector arc 434.848 631.836 0.489 0 6.283
+vector moveTo 449.286 636.369
+vector arc 448.797 636.369 0.489 0 6.283
+vector moveTo 434.174 631.459
+vector arc 433.685 631.459 0.489 0 6.283
+vector moveTo 448.53 638.693
+vector arc 448.041 638.693 0.489 0 6.283
+vector moveTo 433.419 633.783
+vector arc 432.93 633.783 0.489 0 6.283
+vector moveTo 450.855 639.449
+vector arc 450.366 639.449 0.489 0 6.283
+vector moveTo 441.904 631.4
+vector arc 441.415 631.4 0.489 0 6.283
+vector moveTo 444.229 632.155
+vector arc 443.74 632.155 0.489 0 6.283
+vector moveTo 440.742 631.022
+vector arc 440.253 631.022 0.489 0 6.283
+vector moveTo 437.284 633.754
+vector arc 436.795 633.754 0.489 0 6.283
+vector moveTo 446.583 636.776
+vector arc 446.094 636.776 0.489 0 6.283
+vector moveTo 436.122 633.376
+vector arc 435.633 633.376 0.489 0 6.283
+vector moveTo 434.145 627.594
+vector arc 433.656 627.594 0.489 0 6.283
+vector moveTo 452.743 633.637
+vector arc 452.255 633.637 0.489 0 6.283
+vector moveTo 441.934 635.265
+vector arc 441.445 635.265 0.489 0 6.283
+vector moveTo 433.39 629.919
+vector arc 432.901 629.919 0.489 0 6.283
+vector moveTo 451.988 635.961
+vector arc 451.499 635.961 0.489 0 6.283
+vector moveTo 443.067 631.778
+vector arc 442.578 631.778 0.489 0 6.283
+vector moveTo 438.824 632.969
+vector arc 438.335 632.969 0.489 0 6.283
+vector moveTo 445.798 635.235
+vector arc 445.31 635.235 0.489 0 6.283
+vector moveTo 437.662 632.592
+vector arc 437.173 632.592 0.489 0 6.283
+vector moveTo 451.233 638.286
+vector arc 450.744 638.286 0.489 0 6.283
+vector moveTo 443.822 629.453
+vector arc 443.333 629.453 0.489 0 6.283
+vector moveTo 442.66 629.075
+vector arc 442.171 629.075 0.489 0 6.283
+vector moveTo 443.444 630.615
+vector arc 442.955 630.615 0.489 0 6.283
+vector moveTo 442.282 630.238
+vector arc 441.793 630.238 0.489 0 6.283
+vector moveTo 444.607 630.993
+vector arc 444.118 630.993 0.489 0 6.283
+vector moveTo 443.474 634.48
+vector arc 442.985 634.48 0.489 0 6.283
+vector moveTo 439.986 633.347
+vector arc 439.498 633.347 0.489 0 6.283
+vector moveTo 444.636 634.858
+vector arc 444.147 634.858 0.489 0 6.283
+vector moveTo 440.335 628.32
+vector arc 439.846 628.32 0.489 0 6.283
+vector moveTo 447.309 630.586
+vector arc 446.82 630.586 0.489 0 6.283
+vector moveTo 439.172 627.942
+vector arc 438.683 627.942 0.489 0 6.283
+vector moveTo 435.744 634.539
+vector arc 435.255 634.539 0.489 0 6.283
+vector moveTo 447.368 638.316
+vector arc 446.879 638.316 0.489 0 6.283
+vector moveTo 434.581 634.161
+vector arc 434.093 634.161 0.489 0 6.283
+vector moveTo 441.556 636.427
+vector arc 441.067 636.427 0.489 0 6.283
+vector moveTo 440.393 636.05
+vector arc 439.905 636.05 0.489 0 6.283
+vector moveTo 442.718 636.805
+vector arc 442.229 636.805 0.489 0 6.283
+vector moveTo 448.501 634.828
+vector arc 448.012 634.828 0.489 0 6.283
+vector moveTo 435.714 630.674
+vector arc 435.226 630.674 0.489 0 6.283
+vector moveTo 449.663 635.206
+vector arc 449.174 635.206 0.489 0 6.283
+vector moveTo 445.391 632.533
+vector arc 444.902 632.533 0.489 0 6.283
+vector moveTo 439.579 630.645
+vector arc 439.09 630.645 0.489 0 6.283
+vector moveTo 446.554 632.911
+vector arc 446.065 632.911 0.489 0 6.283
+vector moveTo 442.689 632.94
+vector arc 442.2 632.94 0.489 0 6.283
+vector moveTo 441.526 632.562
+vector arc 441.038 632.562 0.489 0 6.283
+vector moveTo 440.364 632.185
+vector arc 439.875 632.185 0.489 0 6.283
+vector moveTo 438.039 631.429
+vector arc 437.55 631.429 0.489 0 6.283
+vector moveTo 447.338 634.451
+vector arc 446.85 634.451 0.489 0 6.283
+vector moveTo 436.877 631.052
+vector arc 436.388 631.052 0.489 0 6.283
+vector moveTo 451.959 632.097
+vector arc 451.47 632.097 0.489 0 6.283
+vector moveTo 434.523 626.431
+vector arc 434.034 626.431 0.489 0 6.283
+vector moveTo 453.121 632.474
+vector arc 452.632 632.474 0.489 0 6.283
+vector moveTo 450.448 636.746
+vector arc 449.959 636.746 0.489 0 6.283
+vector moveTo 433.012 631.081
+vector arc 432.523 631.081 0.489 0 6.283
+vector moveTo 451.61 637.124
+vector arc 451.122 637.124 0.489 0 6.283
+vector moveTo 438.417 630.267
+vector arc 437.928 630.267 0.489 0 6.283
+vector moveTo 447.716 633.288
+vector arc 447.227 633.288 0.489 0 6.283
+vector moveTo 437.255 629.889
+vector arc 436.766 629.889 0.489 0 6.283
+vector moveTo 441.119 629.86
+vector arc 440.631 629.86 0.489 0 6.283
+vector moveTo 445.769 631.371
+vector arc 445.28 631.371 0.489 0 6.283
+vector moveTo 439.957 629.482
+vector arc 439.468 629.482 0.489 0 6.283
+vector moveTo 439.579 630.645
+vector arc 439.09 630.645 0.489 0 6.283
+vector moveTo 446.554 632.911
+vector arc 446.065 632.911 0.489 0 6.283
+vector moveTo 438.417 630.267
+vector arc 437.928 630.267 0.489 0 6.283
+vector moveTo 444.229 632.155
+vector arc 443.74 632.155 0.489 0 6.283
+vector moveTo 440.742 631.022
+vector arc 440.253 631.022 0.489 0 6.283
+vector moveTo 445.391 632.533
+vector arc 444.902 632.533 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #D55E00
+vector beginPath
+vector moveTo 461.499 619.08
+vector arc 461.01 619.08 0.489 0 6.283
+vector moveTo 460.366 618.622
+vector arc 459.877 618.622 0.489 0 6.283
+vector moveTo 462.632 619.538
+vector arc 462.143 619.538 0.489 0 6.283
+vector moveTo 458.076 624.288
+vector arc 457.588 624.288 0.489 0 6.283
+vector moveTo 460.343 625.204
+vector arc 459.854 625.204 0.489 0 6.283
+vector moveTo 456.943 623.83
+vector arc 456.454 623.83 0.489 0 6.283
+vector moveTo 460.366 618.622
+vector arc 459.877 618.622 0.489 0 6.283
+vector moveTo 462.632 619.538
+vector arc 462.143 619.538 0.489 0 6.283
+vector moveTo 459.232 618.164
+vector arc 458.744 618.164 0.489 0 6.283
+vector moveTo 456.485 624.964
+vector arc 455.996 624.964 0.489 0 6.283
+vector moveTo 461.018 626.795
+vector arc 460.529 626.795 0.489 0 6.283
+vector moveTo 461.499 619.08
+vector arc 461.01 619.08 0.489 0 6.283
+vector moveTo 462.174 620.671
+vector arc 461.685 620.671 0.489 0 6.283
+vector moveTo 458.775 619.298
+vector arc 458.286 619.298 0.489 0 6.283
+vector moveTo 463.307 621.129
+vector arc 462.819 621.129 0.489 0 6.283
+vector moveTo 460.801 624.071
+vector arc 460.312 624.071 0.489 0 6.283
+vector moveTo 457.401 622.697
+vector arc 456.912 622.697 0.489 0 6.283
+vector moveTo 461.934 624.529
+vector arc 461.445 624.529 0.489 0 6.283
+vector moveTo 463.09 618.405
+vector arc 462.601 618.405 0.489 0 6.283
+vector moveTo 459.69 617.031
+vector arc 459.201 617.031 0.489 0 6.283
+vector moveTo 464.223 618.862
+vector arc 463.734 618.862 0.489 0 6.283
+vector moveTo 465.379 612.739
+vector arc 464.89 612.739 0.489 0 6.283
+vector moveTo 461.98 611.365
+vector arc 461.491 611.365 0.489 0 6.283
+vector moveTo 466.512 613.196
+vector arc 466.024 613.196 0.489 0 6.283
+vector moveTo 464.223 618.862
+vector arc 463.734 618.862 0.489 0 6.283
+vector moveTo 461.041 620.213
+vector arc 460.552 620.213 0.489 0 6.283
+vector moveTo 459.908 619.755
+vector arc 459.419 619.755 0.489 0 6.283
+vector moveTo 459.232 618.164
+vector arc 458.744 618.164 0.489 0 6.283
+vector moveTo 463.765 619.996
+vector arc 463.276 619.996 0.489 0 6.283
+vector moveTo 461.957 617.947
+vector arc 461.468 617.947 0.489 0 6.283
+vector moveTo 461.476 625.662
+vector arc 460.987 625.662 0.489 0 6.283
+vector moveTo 464.246 612.281
+vector arc 463.757 612.281 0.489 0 6.283
+vector moveTo 463.113 611.823
+vector arc 462.624 611.823 0.489 0 6.283
+vector moveTo 464.681 617.729
+vector arc 464.192 617.729 0.489 0 6.283
+vector moveTo 460.583 621.346
+vector arc 460.094 621.346 0.489 0 6.283
+vector moveTo 459.45 620.889
+vector arc 458.961 620.889 0.489 0 6.283
+vector moveTo 460.125 622.48
+vector arc 459.636 622.48 0.489 0 6.283
+vector moveTo 458.992 622.022
+vector arc 458.503 622.022 0.489 0 6.283
+vector moveTo 461.259 622.938
+vector arc 460.77 622.938 0.489 0 6.283
+vector moveTo 460.824 617.489
+vector arc 460.335 617.489 0.489 0 6.283
+vector moveTo 463.09 618.405
+vector arc 462.601 618.405 0.489 0 6.283
+vector moveTo 459.69 617.031
+vector arc 459.201 617.031 0.489 0 6.283
+vector moveTo 461.522 612.498
+vector arc 461.033 612.498 0.489 0 6.283
+vector moveTo 466.055 614.33
+vector arc 465.566 614.33 0.489 0 6.283
+vector moveTo 459.21 624.746
+vector arc 458.721 624.746 0.489 0 6.283
+vector moveTo 462.85 622.262
+vector arc 462.361 622.262 0.489 0 6.283
+vector moveTo 462.872 615.68
+vector arc 462.384 615.68 0.489 0 6.283
+vector moveTo 461.739 615.222
+vector arc 461.25 615.222 0.489 0 6.283
+vector moveTo 458.752 625.879
+vector arc 458.263 625.879 0.489 0 6.283
+vector moveTo 457.619 625.421
+vector arc 457.13 625.421 0.489 0 6.283
+vector moveTo 459.885 626.337
+vector arc 459.396 626.337 0.489 0 6.283
+vector moveTo 463.788 613.414
+vector arc 463.299 613.414 0.489 0 6.283
+vector moveTo 462.655 612.956
+vector arc 462.166 612.956 0.489 0 6.283
+vector moveTo 464.921 613.872
+vector arc 464.432 613.872 0.489 0 6.283
+vector moveTo 464.006 616.138
+vector arc 463.517 616.138 0.489 0 6.283
+vector moveTo 460.606 614.765
+vector arc 460.117 614.765 0.489 0 6.283
+vector moveTo 465.139 616.596
+vector arc 464.65 616.596 0.489 0 6.283
+vector moveTo 462.197 614.089
+vector arc 461.708 614.089 0.489 0 6.283
+vector moveTo 464.464 615.005
+vector arc 463.975 615.005 0.489 0 6.283
+vector moveTo 461.064 613.631
+vector arc 460.575 613.631 0.489 0 6.283
+vector moveTo 461.041 620.213
+vector arc 460.552 620.213 0.489 0 6.283
+vector moveTo 459.908 619.755
+vector arc 459.419 619.755 0.489 0 6.283
+vector moveTo 462.174 620.671
+vector arc 461.685 620.671 0.489 0 6.283
+vector moveTo 461.281 616.356
+vector arc 460.792 616.356 0.489 0 6.283
+vector moveTo 463.548 617.271
+vector arc 463.059 617.271 0.489 0 6.283
+vector moveTo 460.148 615.898
+vector arc 459.659 615.898 0.489 0 6.283
+vector moveTo 460.148 615.898
+vector arc 459.659 615.898 0.489 0 6.283
+vector moveTo 464.681 617.729
+vector arc 464.192 617.729 0.489 0 6.283
+vector moveTo 460.583 621.346
+vector arc 460.094 621.346 0.489 0 6.283
+vector moveTo 463.765 619.996
+vector arc 463.276 619.996 0.489 0 6.283
+vector moveTo 461.957 617.947
+vector arc 461.468 617.947 0.489 0 6.283
+vector moveTo 460.824 617.489
+vector arc 460.335 617.489 0.489 0 6.283
+vector moveTo 465.597 615.463
+vector arc 465.108 615.463 0.489 0 6.283
+vector moveTo 459.667 623.613
+vector arc 459.179 623.613 0.489 0 6.283
+vector moveTo 458.534 623.155
+vector arc 458.045 623.155 0.489 0 6.283
+vector moveTo 458.775 619.298
+vector arc 458.286 619.298 0.489 0 6.283
+vector moveTo 463.307 621.129
+vector arc 462.819 621.129 0.489 0 6.283
+vector moveTo 462.415 616.814
+vector arc 461.926 616.814 0.489 0 6.283
+vector moveTo 462.415 616.814
+vector arc 461.926 616.814 0.489 0 6.283
+vector moveTo 461.281 616.356
+vector arc 460.792 616.356 0.489 0 6.283
+vector moveTo 463.548 617.271
+vector arc 463.059 617.271 0.489 0 6.283
+vector moveTo 457.859 621.564
+vector arc 457.37 621.564 0.489 0 6.283
+vector moveTo 462.392 623.395
+vector arc 461.903 623.395 0.489 0 6.283
+vector moveTo 463.33 614.547
+vector arc 462.841 614.547 0.489 0 6.283
+vector moveTo 461.716 621.804
+vector arc 461.228 621.804 0.489 0 6.283
+vector moveTo 458.317 620.431
+vector arc 457.828 620.431 0.489 0 6.283
+vector moveTo 462.85 622.262
+vector arc 462.361 622.262 0.489 0 6.283
+vector moveTo 459.45 620.889
+vector arc 458.961 620.889 0.489 0 6.283
+vector moveTo 461.716 621.804
+vector arc 461.228 621.804 0.489 0 6.283
+vector moveTo 458.317 620.431
+vector arc 457.828 620.431 0.489 0 6.283
+vector fill
+vector restore
+vector save
+vector set:fillStyle #0072B2
+vector beginPath
+vector moveTo 459.933 632.722
+vector arc 459.444 632.722 0.489 0 6.283
+vector moveTo 456.751 634.073
+vector arc 456.262 634.073 0.489 0 6.283
+vector moveTo 455.618 633.615
+vector arc 455.129 633.615 0.489 0 6.283
+vector moveTo 457.884 634.531
+vector arc 457.395 634.531 0.489 0 6.283
+vector moveTo 454.485 633.158
+vector arc 453.996 633.158 0.489 0 6.283
+vector moveTo 459.017 634.989
+vector arc 458.529 634.989 0.489 0 6.283
+vector moveTo 458.125 630.674
+vector arc 457.636 630.674 0.489 0 6.283
+vector moveTo 456.991 630.216
+vector arc 456.502 630.216 0.489 0 6.283
+vector moveTo 459.258 631.131
+vector arc 458.769 631.131 0.489 0 6.283
+vector moveTo 454.942 632.024
+vector arc 454.454 632.024 0.489 0 6.283
+vector moveTo 459.475 633.856
+vector arc 458.986 633.856 0.489 0 6.283
+vector moveTo 457.667 631.807
+vector arc 457.178 631.807 0.489 0 6.283
+vector moveTo 455.858 629.758
+vector arc 455.369 629.758 0.489 0 6.283
+vector moveTo 460.391 631.589
+vector arc 459.902 631.589 0.489 0 6.283
+vector moveTo 456.293 635.206
+vector arc 455.804 635.206 0.489 0 6.283
+vector moveTo 457.209 632.94
+vector arc 456.72 632.94 0.489 0 6.283
+vector moveTo 456.076 632.482
+vector arc 455.587 632.482 0.489 0 6.283
+vector moveTo 458.342 633.398
+vector arc 457.853 633.398 0.489 0 6.283
+vector moveTo 459.716 629.998
+vector arc 459.227 629.998 0.489 0 6.283
+vector moveTo 456.316 628.625
+vector arc 455.827 628.625 0.489 0 6.283
+vector moveTo 460.849 630.456
+vector arc 460.36 630.456 0.489 0 6.283
+vector moveTo 455.16 634.749
+vector arc 454.671 634.749 0.489 0 6.283
+vector moveTo 457.426 635.664
+vector arc 456.938 635.664 0.489 0 6.283
+vector moveTo 454.027 634.291
+vector arc 453.538 634.291 0.489 0 6.283
+vector moveTo 456.751 634.073
+vector arc 456.262 634.073 0.489 0 6.283
+vector moveTo 455.618 633.615
+vector arc 455.129 633.615 0.489 0 6.283
+vector moveTo 457.884 634.531
+vector arc 457.395 634.531 0.489 0 6.283
+vector moveTo 453.569 635.424
+vector arc 453.08 635.424 0.489 0 6.283
+vector moveTo 458.102 637.255
+vector arc 457.613 637.255 0.489 0 6.283
+vector moveTo 457.209 632.94
+vector arc 456.72 632.94 0.489 0 6.283
+vector moveTo 458.56 636.122
+vector arc 458.071 636.122 0.489 0 6.283
+vector moveTo 458.582 629.54
+vector arc 458.094 629.54 0.489 0 6.283
+vector moveTo 457.449 629.082
+vector arc 456.96 629.082 0.489 0 6.283
+vector moveTo 459.475 633.856
+vector arc 458.986 633.856 0.489 0 6.283
+vector moveTo 457.667 631.807
+vector arc 457.178 631.807 0.489 0 6.283
+vector moveTo 456.534 631.349
+vector arc 456.045 631.349 0.489 0 6.283
+vector moveTo 455.835 636.34
+vector arc 455.346 636.34 0.489 0 6.283
+vector moveTo 454.702 635.882
+vector arc 454.213 635.882 0.489 0 6.283
+vector moveTo 456.969 636.798
+vector arc 456.48 636.798 0.489 0 6.283
+vector moveTo 456.534 631.349
+vector arc 456.045 631.349 0.489 0 6.283
+vector moveTo 458.8 632.265
+vector arc 458.311 632.265 0.489 0 6.283
+vector moveTo 455.4 630.891
+vector arc 454.911 630.891 0.489 0 6.283
+vector moveTo 456.076 632.482
+vector arc 455.587 632.482 0.489 0 6.283
+vector moveTo 458.342 633.398
+vector arc 457.853 633.398 0.489 0 6.283
+vector moveTo 454.942 632.024
+vector arc 454.454 632.024 0.489 0 6.283
+vector moveTo 458.8 632.265
+vector arc 458.311 632.265 0.489 0 6.283
+vector moveTo 455.4 630.891
+vector arc 454.911 630.891 0.489 0 6.283
+vector moveTo 459.933 632.722
+vector arc 459.444 632.722 0.489 0 6.283
+vector fill
+vector restore
+main drawImage [canvas vector] 0 0 660 660

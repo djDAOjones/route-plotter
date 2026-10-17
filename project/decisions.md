@@ -19,6 +19,21 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-10-17 — EX-02 — Match day and Reform riot, 1831, join the example projects
+
+**Decision:** On the owner's word, two crowd-only example projects on the PARM aerial of Nottingham join File → Example projects, Match day (fans fill the City Ground's four stands from several routes) and Reform riot, 1831 (a mob passes through the Market Square to the Castle), and both archives are approved for publication.
+
+**Rationale:**
+- **The owner's words, 2026-10-17, verbatim:** "can you create some presets for the examples of crowds going to a football stadium and a mob narrative. the source imagery for the map is attached" and "these can be included in the current build"; "it's nottingham. the crowd should go to the city ground stands in the south. the mob should go through the square, which is the white area in the central north west"; "no wait, two presets. one for football crowds coming from multiple routes into the four stands. a completely different preset shows a historical mob scenario passing through the square". His picks: "1831 Reform riot (Recommended)", "Both bridges (Recommended)" and "Home red, away blue (Recommended)".
+- The attached map is a downscaled copy of the approved `images/PARM_Aerial.jpg`, whose full-size source has the same SHA-256, so no new image bytes are published. The two archives join `public-assets.json` and `.gitignore` on his word.
+- **The filing session's readings, for the owner to confirm:** "presets" are example projects, not an Add crowd offer; "included in the current build" approves publishing both archives and shipping them in the next v3.3 release; the stand outlines, routes, place names and the riot's history are the session's reading of the image, unchecked by a historian.
+- Both use CROWD-08's parts only (A, B, C, D, F, G). Every Finish area seats all its dots at the render reference, so no place is reused; dots are small because the stands are small at city scale.
+- CROWD-08 excluded presets from the MVP only; EX-01 stays blocked on the owner's direction. PLAN-4's presets wish line is retired, paid by these two examples; its unpaid part, offering them from Add crowd, stays as a wish line of its own.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-16 — CROWD-08 — All seven MVP parts shipped; phase closed
 
 **Decision:** CROWD-08's seven-part football and mob MVP is shipped and its

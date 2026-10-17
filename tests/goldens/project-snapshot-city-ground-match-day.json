@@ -1,0 +1,2159 @@
+{
+  "coordVersion": 9,
+  "waypoints": [],
+  "scene": {
+    "flowLayers": [
+      {
+        "id": "ex-fb-trent-crowd",
+        "name": "Trent End",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-fb-trent-square",
+              "x": 0.334,
+              "y": 0.399,
+              "type": "entry",
+              "label": "Market Square",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.022,
+                "height": 0.016,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-trent-station",
+              "x": 0.468,
+              "y": 0.607,
+              "type": "entry",
+              "label": "Station",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.05,
+                "height": 0.016,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-trent-trentBridge",
+              "x": 0.652,
+              "y": 0.99,
+              "type": "entry",
+              "label": "Trent Bridge",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.012,
+                "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-trent-northEast",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-northWest",
+              "x": 0.664,
+              "y": 0.903,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-southWest",
+              "x": 0.646,
+              "y": 0.958,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-stand",
+              "x": 0.657,
+              "y": 0.931,
+              "type": "exit",
+              "label": "Trent End",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.012,
+                "height": 0.03,
+                "turn": 22
+              }
+            },
+            {
+              "id": "ex-fb-trent-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-city-1",
+              "x": 0.352,
+              "y": 0.412,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-city-2",
+              "x": 0.385,
+              "y": 0.445,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-city-3",
+              "x": 0.418,
+              "y": 0.48,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-city-4",
+              "x": 0.419,
+              "y": 0.56,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-city-5",
+              "x": 0.421,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-1",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-2",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-3",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-4",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-5",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-6",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-7",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-8",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-9",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-10",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-11",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-ladybay-12",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-fb-trent-city-e1",
+              "sourceId": "ex-fb-trent-square",
+              "targetId": "ex-fb-trent-city-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-city-e2",
+              "sourceId": "ex-fb-trent-city-1",
+              "targetId": "ex-fb-trent-city-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-city-e3",
+              "sourceId": "ex-fb-trent-city-2",
+              "targetId": "ex-fb-trent-city-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-city-e4",
+              "sourceId": "ex-fb-trent-city-3",
+              "targetId": "ex-fb-trent-city-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-city-e5",
+              "sourceId": "ex-fb-trent-city-4",
+              "targetId": "ex-fb-trent-city-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-city-e6",
+              "sourceId": "ex-fb-trent-city-5",
+              "targetId": "ex-fb-trent-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-station-stationStreet",
+              "sourceId": "ex-fb-trent-station",
+              "targetId": "ex-fb-trent-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e1",
+              "sourceId": "ex-fb-trent-stationStreet",
+              "targetId": "ex-fb-trent-ladybay-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e2",
+              "sourceId": "ex-fb-trent-ladybay-1",
+              "targetId": "ex-fb-trent-ladybay-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e3",
+              "sourceId": "ex-fb-trent-ladybay-2",
+              "targetId": "ex-fb-trent-ladybay-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e4",
+              "sourceId": "ex-fb-trent-ladybay-3",
+              "targetId": "ex-fb-trent-ladybay-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e5",
+              "sourceId": "ex-fb-trent-ladybay-4",
+              "targetId": "ex-fb-trent-ladybay-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e6",
+              "sourceId": "ex-fb-trent-ladybay-5",
+              "targetId": "ex-fb-trent-ladybay-6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e7",
+              "sourceId": "ex-fb-trent-ladybay-6",
+              "targetId": "ex-fb-trent-ladybay-7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e8",
+              "sourceId": "ex-fb-trent-ladybay-7",
+              "targetId": "ex-fb-trent-ladybay-8",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e9",
+              "sourceId": "ex-fb-trent-ladybay-8",
+              "targetId": "ex-fb-trent-ladybay-9",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e10",
+              "sourceId": "ex-fb-trent-ladybay-9",
+              "targetId": "ex-fb-trent-ladybay-10",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e11",
+              "sourceId": "ex-fb-trent-ladybay-10",
+              "targetId": "ex-fb-trent-ladybay-11",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e12",
+              "sourceId": "ex-fb-trent-ladybay-11",
+              "targetId": "ex-fb-trent-ladybay-12",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-ladybay-e13",
+              "sourceId": "ex-fb-trent-ladybay-12",
+              "targetId": "ex-fb-trent-northEast",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-trentBridge-southWest",
+              "sourceId": "ex-fb-trent-trentBridge",
+              "targetId": "ex-fb-trent-southWest",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-northEast-northWest",
+              "sourceId": "ex-fb-trent-northEast",
+              "targetId": "ex-fb-trent-northWest",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-northWest-stand",
+              "sourceId": "ex-fb-trent-northWest",
+              "targetId": "ex-fb-trent-stand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-southWest-stand",
+              "sourceId": "ex-fb-trent-southWest",
+              "targetId": "ex-fb-trent-stand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-fb-trent-fans",
+            "seed": 1865,
+            "dotCount": 102,
+            "speed": 0.07,
+            "speedVariance": 0.3,
+            "dotSize": 0.08,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "collect",
+            "releaseStart": 0,
+            "releaseDuration": 0.6,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          }
+        ]
+      },
+      {
+        "id": "ex-fb-north-crowd",
+        "name": "North stand",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-fb-north-square",
+              "x": 0.334,
+              "y": 0.399,
+              "type": "entry",
+              "label": "Market Square",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.022,
+                "height": 0.016,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-north-station",
+              "x": 0.468,
+              "y": 0.607,
+              "type": "entry",
+              "label": "Station",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.05,
+                "height": 0.016,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-north-trentBridge",
+              "x": 0.652,
+              "y": 0.99,
+              "type": "entry",
+              "label": "Trent Bridge",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.012,
+                "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-north-northEast",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-northWest",
+              "x": 0.664,
+              "y": 0.903,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-southWest",
+              "x": 0.646,
+              "y": 0.958,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-stand",
+              "x": 0.683,
+              "y": 0.92,
+              "type": "exit",
+              "label": "North stand",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.034,
+                "height": 0.015,
+                "turn": 17
+              }
+            },
+            {
+              "id": "ex-fb-north-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-city-1",
+              "x": 0.352,
+              "y": 0.412,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-city-2",
+              "x": 0.385,
+              "y": 0.445,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-city-3",
+              "x": 0.418,
+              "y": 0.48,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-city-4",
+              "x": 0.419,
+              "y": 0.56,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-city-5",
+              "x": 0.421,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-1",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-2",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-3",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-4",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-5",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-6",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-7",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-8",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-9",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-10",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-11",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-ladybay-12",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-fb-north-city-e1",
+              "sourceId": "ex-fb-north-square",
+              "targetId": "ex-fb-north-city-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-city-e2",
+              "sourceId": "ex-fb-north-city-1",
+              "targetId": "ex-fb-north-city-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-city-e3",
+              "sourceId": "ex-fb-north-city-2",
+              "targetId": "ex-fb-north-city-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-city-e4",
+              "sourceId": "ex-fb-north-city-3",
+              "targetId": "ex-fb-north-city-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-city-e5",
+              "sourceId": "ex-fb-north-city-4",
+              "targetId": "ex-fb-north-city-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-city-e6",
+              "sourceId": "ex-fb-north-city-5",
+              "targetId": "ex-fb-north-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-station-stationStreet",
+              "sourceId": "ex-fb-north-station",
+              "targetId": "ex-fb-north-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e1",
+              "sourceId": "ex-fb-north-stationStreet",
+              "targetId": "ex-fb-north-ladybay-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e2",
+              "sourceId": "ex-fb-north-ladybay-1",
+              "targetId": "ex-fb-north-ladybay-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e3",
+              "sourceId": "ex-fb-north-ladybay-2",
+              "targetId": "ex-fb-north-ladybay-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e4",
+              "sourceId": "ex-fb-north-ladybay-3",
+              "targetId": "ex-fb-north-ladybay-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e5",
+              "sourceId": "ex-fb-north-ladybay-4",
+              "targetId": "ex-fb-north-ladybay-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e6",
+              "sourceId": "ex-fb-north-ladybay-5",
+              "targetId": "ex-fb-north-ladybay-6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e7",
+              "sourceId": "ex-fb-north-ladybay-6",
+              "targetId": "ex-fb-north-ladybay-7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e8",
+              "sourceId": "ex-fb-north-ladybay-7",
+              "targetId": "ex-fb-north-ladybay-8",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e9",
+              "sourceId": "ex-fb-north-ladybay-8",
+              "targetId": "ex-fb-north-ladybay-9",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e10",
+              "sourceId": "ex-fb-north-ladybay-9",
+              "targetId": "ex-fb-north-ladybay-10",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e11",
+              "sourceId": "ex-fb-north-ladybay-10",
+              "targetId": "ex-fb-north-ladybay-11",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e12",
+              "sourceId": "ex-fb-north-ladybay-11",
+              "targetId": "ex-fb-north-ladybay-12",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-ladybay-e13",
+              "sourceId": "ex-fb-north-ladybay-12",
+              "targetId": "ex-fb-north-northEast",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-trentBridge-southWest",
+              "sourceId": "ex-fb-north-trentBridge",
+              "targetId": "ex-fb-north-southWest",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-northEast-stand",
+              "sourceId": "ex-fb-north-northEast",
+              "targetId": "ex-fb-north-stand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-southWest-northWest",
+              "sourceId": "ex-fb-north-southWest",
+              "targetId": "ex-fb-north-northWest",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-northWest-stand",
+              "sourceId": "ex-fb-north-northWest",
+              "targetId": "ex-fb-north-stand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-fb-north-fans",
+            "seed": 1866,
+            "dotCount": 159,
+            "speed": 0.07,
+            "speedVariance": 0.3,
+            "dotSize": 0.08,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "collect",
+            "releaseStart": 0,
+            "releaseDuration": 0.6,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          }
+        ]
+      },
+      {
+        "id": "ex-fb-south-crowd",
+        "name": "South stand",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-fb-south-square",
+              "x": 0.334,
+              "y": 0.399,
+              "type": "entry",
+              "label": "Market Square",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.022,
+                "height": 0.016,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-south-station",
+              "x": 0.468,
+              "y": 0.607,
+              "type": "entry",
+              "label": "Station",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.05,
+                "height": 0.016,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-south-trentBridge",
+              "x": 0.652,
+              "y": 0.99,
+              "type": "entry",
+              "label": "Trent Bridge",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.012,
+                "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-south-northEast",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-southWest",
+              "x": 0.646,
+              "y": 0.958,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-southEast",
+              "x": 0.705,
+              "y": 0.974,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-stand",
+              "x": 0.67,
+              "y": 0.959,
+              "type": "exit",
+              "label": "South stand",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.032,
+                "height": 0.014,
+                "turn": 18
+              }
+            },
+            {
+              "id": "ex-fb-south-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-city-1",
+              "x": 0.352,
+              "y": 0.412,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-city-2",
+              "x": 0.385,
+              "y": 0.445,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-city-3",
+              "x": 0.418,
+              "y": 0.48,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-city-4",
+              "x": 0.419,
+              "y": 0.56,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-city-5",
+              "x": 0.421,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-1",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-2",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-3",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-4",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-5",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-6",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-7",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-8",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-9",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-10",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-11",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-ladybay-12",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-fb-south-city-e1",
+              "sourceId": "ex-fb-south-square",
+              "targetId": "ex-fb-south-city-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-city-e2",
+              "sourceId": "ex-fb-south-city-1",
+              "targetId": "ex-fb-south-city-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-city-e3",
+              "sourceId": "ex-fb-south-city-2",
+              "targetId": "ex-fb-south-city-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-city-e4",
+              "sourceId": "ex-fb-south-city-3",
+              "targetId": "ex-fb-south-city-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-city-e5",
+              "sourceId": "ex-fb-south-city-4",
+              "targetId": "ex-fb-south-city-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-city-e6",
+              "sourceId": "ex-fb-south-city-5",
+              "targetId": "ex-fb-south-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-station-stationStreet",
+              "sourceId": "ex-fb-south-station",
+              "targetId": "ex-fb-south-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e1",
+              "sourceId": "ex-fb-south-stationStreet",
+              "targetId": "ex-fb-south-ladybay-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e2",
+              "sourceId": "ex-fb-south-ladybay-1",
+              "targetId": "ex-fb-south-ladybay-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e3",
+              "sourceId": "ex-fb-south-ladybay-2",
+              "targetId": "ex-fb-south-ladybay-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e4",
+              "sourceId": "ex-fb-south-ladybay-3",
+              "targetId": "ex-fb-south-ladybay-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e5",
+              "sourceId": "ex-fb-south-ladybay-4",
+              "targetId": "ex-fb-south-ladybay-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e6",
+              "sourceId": "ex-fb-south-ladybay-5",
+              "targetId": "ex-fb-south-ladybay-6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e7",
+              "sourceId": "ex-fb-south-ladybay-6",
+              "targetId": "ex-fb-south-ladybay-7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e8",
+              "sourceId": "ex-fb-south-ladybay-7",
+              "targetId": "ex-fb-south-ladybay-8",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e9",
+              "sourceId": "ex-fb-south-ladybay-8",
+              "targetId": "ex-fb-south-ladybay-9",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e10",
+              "sourceId": "ex-fb-south-ladybay-9",
+              "targetId": "ex-fb-south-ladybay-10",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e11",
+              "sourceId": "ex-fb-south-ladybay-10",
+              "targetId": "ex-fb-south-ladybay-11",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e12",
+              "sourceId": "ex-fb-south-ladybay-11",
+              "targetId": "ex-fb-south-ladybay-12",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-ladybay-e13",
+              "sourceId": "ex-fb-south-ladybay-12",
+              "targetId": "ex-fb-south-northEast",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-trentBridge-southWest",
+              "sourceId": "ex-fb-south-trentBridge",
+              "targetId": "ex-fb-south-southWest",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-southWest-stand",
+              "sourceId": "ex-fb-south-southWest",
+              "targetId": "ex-fb-south-stand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-northEast-southEast",
+              "sourceId": "ex-fb-south-northEast",
+              "targetId": "ex-fb-south-southEast",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-southEast-stand",
+              "sourceId": "ex-fb-south-southEast",
+              "targetId": "ex-fb-south-stand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-fb-south-fans",
+            "seed": 1867,
+            "dotCount": 144,
+            "speed": 0.07,
+            "speedVariance": 0.3,
+            "dotSize": 0.08,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "collect",
+            "releaseStart": 0,
+            "releaseDuration": 0.6,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          }
+        ]
+      },
+      {
+        "id": "ex-fb-east-crowd",
+        "name": "East stand",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-fb-east-square",
+              "x": 0.334,
+              "y": 0.399,
+              "type": "entry",
+              "label": "Market Square",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.022,
+                "height": 0.016,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-east-station",
+              "x": 0.468,
+              "y": 0.607,
+              "type": "entry",
+              "label": "Station",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.05,
+                "height": 0.016,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-east-trentBridge",
+              "x": 0.652,
+              "y": 0.99,
+              "type": "entry",
+              "label": "Trent Bridge",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.012,
+                "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-east-northEast",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-southWest",
+              "x": 0.646,
+              "y": 0.958,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-southEast",
+              "x": 0.705,
+              "y": 0.974,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-stand",
+              "x": 0.6985,
+              "y": 0.938,
+              "type": "exit",
+              "label": "East stand",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.011,
+                "height": 0.024,
+                "turn": 22
+              }
+            },
+            {
+              "id": "ex-fb-east-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-city-1",
+              "x": 0.352,
+              "y": 0.412,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-city-2",
+              "x": 0.385,
+              "y": 0.445,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-city-3",
+              "x": 0.418,
+              "y": 0.48,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-city-4",
+              "x": 0.419,
+              "y": 0.56,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-city-5",
+              "x": 0.421,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-1",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-2",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-3",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-4",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-5",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-6",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-7",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-8",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-9",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-10",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-11",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-ladybay-12",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-south-1",
+              "x": 0.672,
+              "y": 0.977,
+              "type": "normal",
+              "label": ""
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-fb-east-city-e1",
+              "sourceId": "ex-fb-east-square",
+              "targetId": "ex-fb-east-city-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-city-e2",
+              "sourceId": "ex-fb-east-city-1",
+              "targetId": "ex-fb-east-city-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-city-e3",
+              "sourceId": "ex-fb-east-city-2",
+              "targetId": "ex-fb-east-city-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-city-e4",
+              "sourceId": "ex-fb-east-city-3",
+              "targetId": "ex-fb-east-city-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-city-e5",
+              "sourceId": "ex-fb-east-city-4",
+              "targetId": "ex-fb-east-city-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-city-e6",
+              "sourceId": "ex-fb-east-city-5",
+              "targetId": "ex-fb-east-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-station-stationStreet",
+              "sourceId": "ex-fb-east-station",
+              "targetId": "ex-fb-east-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e1",
+              "sourceId": "ex-fb-east-stationStreet",
+              "targetId": "ex-fb-east-ladybay-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e2",
+              "sourceId": "ex-fb-east-ladybay-1",
+              "targetId": "ex-fb-east-ladybay-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e3",
+              "sourceId": "ex-fb-east-ladybay-2",
+              "targetId": "ex-fb-east-ladybay-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e4",
+              "sourceId": "ex-fb-east-ladybay-3",
+              "targetId": "ex-fb-east-ladybay-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e5",
+              "sourceId": "ex-fb-east-ladybay-4",
+              "targetId": "ex-fb-east-ladybay-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e6",
+              "sourceId": "ex-fb-east-ladybay-5",
+              "targetId": "ex-fb-east-ladybay-6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e7",
+              "sourceId": "ex-fb-east-ladybay-6",
+              "targetId": "ex-fb-east-ladybay-7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e8",
+              "sourceId": "ex-fb-east-ladybay-7",
+              "targetId": "ex-fb-east-ladybay-8",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e9",
+              "sourceId": "ex-fb-east-ladybay-8",
+              "targetId": "ex-fb-east-ladybay-9",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e10",
+              "sourceId": "ex-fb-east-ladybay-9",
+              "targetId": "ex-fb-east-ladybay-10",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e11",
+              "sourceId": "ex-fb-east-ladybay-10",
+              "targetId": "ex-fb-east-ladybay-11",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e12",
+              "sourceId": "ex-fb-east-ladybay-11",
+              "targetId": "ex-fb-east-ladybay-12",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-ladybay-e13",
+              "sourceId": "ex-fb-east-ladybay-12",
+              "targetId": "ex-fb-east-northEast",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-trentBridge-southWest",
+              "sourceId": "ex-fb-east-trentBridge",
+              "targetId": "ex-fb-east-southWest",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-northEast-stand",
+              "sourceId": "ex-fb-east-northEast",
+              "targetId": "ex-fb-east-stand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-southEast-stand",
+              "sourceId": "ex-fb-east-southEast",
+              "targetId": "ex-fb-east-stand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-south-e1",
+              "sourceId": "ex-fb-east-southWest",
+              "targetId": "ex-fb-east-south-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-south-e2",
+              "sourceId": "ex-fb-east-south-1",
+              "targetId": "ex-fb-east-southEast",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-fb-east-fans",
+            "seed": 1868,
+            "dotCount": 90,
+            "speed": 0.07,
+            "speedVariance": 0.3,
+            "dotSize": 0.08,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "collect",
+            "releaseStart": 0,
+            "releaseDuration": 0.6,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          }
+        ]
+      },
+      {
+        "id": "ex-fb-away-crowd",
+        "name": "Away fans",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-fb-away-station",
+              "x": 0.468,
+              "y": 0.607,
+              "type": "entry",
+              "label": "Station",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.05,
+                "height": 0.016,
+                "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-away-coachPark",
+              "x": 0.718,
+              "y": 0.937,
+              "type": "entry",
+              "label": "Coach park",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.018,
+                "height": 0.024,
+                "turn": 20
+              }
+            },
+            {
+              "id": "ex-fb-away-northEast",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-southEast",
+              "x": 0.705,
+              "y": 0.974,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-stand",
+              "x": 0.692,
+              "y": 0.959,
+              "type": "exit",
+              "label": "Away end",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.011,
+                "height": 0.016,
+                "turn": 22
+              }
+            },
+            {
+              "id": "ex-fb-away-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-1",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-2",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-3",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-4",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-5",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-6",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-7",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-8",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-9",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-10",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-11",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-ladybay-12",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-fb-away-station-stationStreet",
+              "sourceId": "ex-fb-away-station",
+              "targetId": "ex-fb-away-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e1",
+              "sourceId": "ex-fb-away-stationStreet",
+              "targetId": "ex-fb-away-ladybay-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e2",
+              "sourceId": "ex-fb-away-ladybay-1",
+              "targetId": "ex-fb-away-ladybay-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e3",
+              "sourceId": "ex-fb-away-ladybay-2",
+              "targetId": "ex-fb-away-ladybay-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e4",
+              "sourceId": "ex-fb-away-ladybay-3",
+              "targetId": "ex-fb-away-ladybay-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e5",
+              "sourceId": "ex-fb-away-ladybay-4",
+              "targetId": "ex-fb-away-ladybay-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e6",
+              "sourceId": "ex-fb-away-ladybay-5",
+              "targetId": "ex-fb-away-ladybay-6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e7",
+              "sourceId": "ex-fb-away-ladybay-6",
+              "targetId": "ex-fb-away-ladybay-7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e8",
+              "sourceId": "ex-fb-away-ladybay-7",
+              "targetId": "ex-fb-away-ladybay-8",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e9",
+              "sourceId": "ex-fb-away-ladybay-8",
+              "targetId": "ex-fb-away-ladybay-9",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e10",
+              "sourceId": "ex-fb-away-ladybay-9",
+              "targetId": "ex-fb-away-ladybay-10",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e11",
+              "sourceId": "ex-fb-away-ladybay-10",
+              "targetId": "ex-fb-away-ladybay-11",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e12",
+              "sourceId": "ex-fb-away-ladybay-11",
+              "targetId": "ex-fb-away-ladybay-12",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-ladybay-e13",
+              "sourceId": "ex-fb-away-ladybay-12",
+              "targetId": "ex-fb-away-northEast",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-coachPark-southEast",
+              "sourceId": "ex-fb-away-coachPark",
+              "targetId": "ex-fb-away-southEast",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-northEast-southEast",
+              "sourceId": "ex-fb-away-northEast",
+              "targetId": "ex-fb-away-southEast",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-away-southEast-stand",
+              "sourceId": "ex-fb-away-southEast",
+              "targetId": "ex-fb-away-stand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-fb-away-fans",
+            "seed": 1869,
+            "dotCount": 48,
+            "speed": 0.07,
+            "speedVariance": 0.3,
+            "dotSize": 0.08,
+            "dotColor": "#0072B2",
+            "lifecycleMode": "collect",
+            "releaseStart": 0,
+            "releaseDuration": 0.6,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          }
+        ]
+      }
+    ]
+  },
+  "styles": {
+    "pathColor": "#E69F00",
+    "pathThickness": 3,
+    "pathStyle": "solid",
+    "pathShape": "line",
+    "markerStyle": "dot",
+    "dotColor": "#D55E00",
+    "dotSize": 10,
+    "beaconStyle": "none",
+    "labelMode": "fade-up",
+    "graphicsScale": 1,
+    "showPathCasing": true,
+    "holdAtEndMs": 0,
+    "pathWidth": 4,
+    "pathHead": {
+      "style": "arrow",
+      "color": "#E69F00",
+      "size": 12,
+      "image": null,
+      "imageAssetId": null,
+      "rotationMode": "auto",
+      "rotationOffset": 0
+    },
+    "pathGlow": {
+      "enabled": false,
+      "intensity": 0.5
+    }
+  },
+  "animationState": {
+    "mode": "constant-speed",
+    "speed": 140,
+    "duration": 20000
+  },
+  "background": {
+    "overlay": 0,
+    "fit": "fit"
+  },
+  "exportSettings": {
+    "frameRate": 30,
+    "pathOnly": false,
+    "resolutionX": 1920,
+    "resolutionY": 1080,
+    "backgroundZoom": 100,
+    "includeCamera": false,
+    "includeText": true
+  },
+  "motionSettings": {
+    "pathVisibility": "show-on-progression",
+    "pathTrail": 0,
+    "waypointVisibility": "show-on-progression",
+    "backgroundVisibility": "always-show",
+    "revealSize": 30,
+    "revealFeather": 40,
+    "revealTrail": 100,
+    "aovAngle": 60,
+    "aovDistance": 40,
+    "aovDropoff": 50
+  },
+  "imageAssets": [],
+  "renderReference": {
+    "width": 1920,
+    "height": 1080
+  },
+  "timingReference": {
+    "width": 1173.333333,
+    "height": 660
+  }
+}

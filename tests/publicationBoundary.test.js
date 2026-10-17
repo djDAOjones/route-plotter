@@ -26,8 +26,9 @@ const approvedAssets = [
 ].map(([path, sha256]) => ({ path, sha256 }));
 
 /**
- * The three example project archives the owner approved for publication on
- * 2026-08-27 (DEMO-01), recorded in `public-assets.json` → `exampleProjects`.
+ * The example project archives the owner approved for publication, three on
+ * 2026-08-27 (DEMO-01) and two on 2026-10-17 (EX-02), recorded in
+ * `public-assets.json` → `exampleProjects`.
  * They are generated, not committed as source, and contain only an approved
  * background plus authored route/crowd data — no user content.
  */
@@ -125,10 +126,12 @@ describe('owner-approved public artifact boundary', () => {
     expect(shippedArchives).toEqual([...approvedExampleArchives].sort());
   });
 
-  test('the approved example archives are exactly the three reviewed ones', () => {
+  test('the approved example archives are exactly the five reviewed ones', () => {
     expect(approvedExampleArchives.sort()).toEqual([
+      'examples/city-ground-match-day.zip',
       'examples/nervous-system-flow.zip',
       'examples/parm-aerial-walk.zip',
+      'examples/reform-riot-1831.zip',
       'examples/uon-open-day.zip',
     ]);
     for (const archive of manifest.exampleProjects.archives) {
