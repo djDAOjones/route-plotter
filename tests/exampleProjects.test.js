@@ -22,6 +22,12 @@ import { PathCalculator } from '../src/services/PathCalculator.js';
 import { CoordinateTransform } from '../src/services/CoordinateTransform.js';
 import { CameraService } from '../src/services/CameraService.js';
 import { SwarmEngine } from '../src/services/SwarmEngine.js';
+import { createFinishPackingContext, packFinishArea } from '../src/utils/finishArea.js';
+import { groupsActive } from '../src/utils/groupSettings.js';
+import { waitingActive } from '../src/utils/waitingSettings.js';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const CANVAS_W = 1280;
 const CANVAS_H = 720;
@@ -83,9 +89,11 @@ const examples = buildExampleProjects();
 const byId = id => examples.find(example => example.id === id);
 
 describe('the example catalogue', () => {
-  test('ships exactly the three approved examples', () => {
-    expect(exampleProjectIds())
-      .toEqual(['parm-aerial-walk', 'uon-open-day', 'nervous-system-flow']);
+  test('ships exactly the approved examples, in menu order', () => {
+    expect(exampleProjectIds()).toEqual([
+      'parm-aerial-walk', 'uon-open-day', 'nervous-system-flow',
+      'city-ground-match-day', 'reform-riot-1831',
+    ]);
   });
 
   test('every example names itself and an approved background', () => {
@@ -118,8 +126,18 @@ describe('the example catalogue', () => {
   });
 });
 
-describe('every example rehydrates and times', () => {
-  for (const example of examples) {
+// The examples with a hero route. The crowd-only ones (EX-02) have no route
+// to time, so they play on their base timeline and are checked further down.
+const routeExamples = examples.filter(example => example.project.waypoints.length >= 2);
+const crowdOnlyExamples = examples.filter(example => example.project.waypoints.length < 2);
+
+describe('every route example rehydrates and times', () => {
+  test('the route examples are the three DEMO-01 ones', () => {
+    expect(routeExamples.map(example => example.id))
+      .toEqual(['parm-aerial-walk', 'uon-open-day', 'nervous-system-flow']);
+  });
+
+  for (const example of routeExamples) {
     describe(example.id, () => {
       test('resolves a valid route structure', () => {
         const app = hydrate(example);
@@ -179,6 +197,121 @@ describe('every example rehydrates and times', () => {
   }
 });
 
+/** The pixel size of a bundled JPEG, read from its start-of-frame marker. */
+function jpegSize(path) {
+  const bytes = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', path));
+  for (let at = 2; at + 9 < bytes.length;) {
+    if (bytes[at] !== 0xFF) throw new Error(`${path}: not a JPEG marker at ${at}`);
+    const marker = bytes[at + 1];
+    if (marker >= 0xC0 && marker <= 0xCF && ![0xC4, 0xC8, 0xCC].includes(marker)) {
+      return { width: bytes.readUInt16BE(at + 7), height: bytes.readUInt16BE(at + 5) };
+    }
+    at += 2 + bytes.readUInt16BE(at + 2);
+  }
+  throw new Error(`${path}: no JPEG frame`);
+}
+
+/** The engine context a crowd-only example plays in: its base timeline and its map. */
+function crowdOnlyContext(example) {
+  const { width, height } = jpegSize(example.backgroundSource);
+  const durationMs = example.project.animationState.duration;
+  return {
+    durationMs,
+    imageAspect: width / height,
+    finishPackingContext: createFinishPackingContext({ imageWidth: width, imageHeight: height }),
+    finishReleaseContext: { durationMs },
+  };
+}
+
+describe('every crowd-only example loads and plays on its base timeline', () => {
+  test('the crowd-only examples are the two EX-02 ones', () => {
+    expect(crowdOnlyExamples.map(example => example.id))
+      .toEqual(['city-ground-match-day', 'reform-riot-1831']);
+  });
+
+  for (const example of crowdOnlyExamples) {
+    describe(example.id, () => {
+      test('passes the load checks, with no route and a positive base timeline', () => {
+        expect(() => Scene.assertValidJSON(example.project.scene)).not.toThrow();
+        expect(example.project.waypoints).toEqual([]);
+        expect(example.project.animationState.duration).toBeGreaterThan(0);
+      });
+
+      test('every crowd can play, shows dots and finishes', () => {
+        const scene = Scene.fromJSON(example.project.scene);
+        const engine = new SwarmEngine();
+        const context = crowdOnlyContext(example);
+        for (const layer of scene.getFlowLayers()) {
+          expect(engine.canRelease(layer, context), layer.name).toBe(true);
+          const seen = [0.25, 0.5, 0.75, 1]
+            .map(fraction => engine.evaluate(context.durationMs * fraction, layer, context).length);
+          expect(Math.max(...seen), layer.name).toBeGreaterThan(0);
+          expect(Number.isFinite(engine.crowdFinishMs(layer, context)), layer.name).toBe(true);
+        }
+      });
+
+      test('every Finish area seats all its dots, so no place is reused', () => {
+        const scene = Scene.fromJSON(example.project.scene);
+        const { finishPackingContext } = crowdOnlyContext(example);
+        for (const layer of scene.getFlowLayers()) {
+          const dots = layer.emitters.reduce((sum, emitter) => sum + emitter.dotCount, 0);
+          const dotSize = Math.max(...layer.emitters.map(emitter => emitter.dotSize));
+          for (const exit of layer.graph.getNodesByType('exit')) {
+            expect(exit.area, `${layer.name} finishes in an area`).toBeTruthy();
+            const { capacity } = packFinishArea(exit.area, exit, finishPackingContext, dotSize, dots);
+            expect(capacity, `${layer.name} holds its ${dots} dots`).toBeGreaterThanOrEqual(dots);
+          }
+        }
+      });
+
+      test('every node leads one way to its crowd\'s Exit, with no dead end or stray node', () => {
+        const scene = Scene.fromJSON(example.project.scene);
+        for (const layer of scene.getFlowLayers()) {
+          const graph = layer.graph;
+          const onward = new Map(graph.getNodes().map(node => [node.id, []]));
+          const reached = new Set();
+          for (const edge of graph.getEdges()) {
+            expect(edge.direction, `${layer.name} ${edge.id}`).toBe('one-way');
+            onward.get(edge.sourceId).push(edge.targetId);
+            reached.add(edge.targetId);
+          }
+          const [exit, ...others] = graph.getNodesByType('exit');
+          expect(others, `${layer.name} has one Exit`).toEqual([]);
+          expect(onward.get(exit.id), `${layer.name}'s Exit ends the walk`).toEqual([]);
+          // No cycle: a dot never comes back to a node it has left.
+          const state = new Map();
+          const visit = id => {
+            expect(state.get(id), `${layer.name}: a cycle through ${id}`).not.toBe('open');
+            if (state.get(id) === 'done') return;
+            state.set(id, 'open');
+            for (const next of onward.get(id)) visit(next);
+            state.set(id, 'done');
+          };
+          for (const node of graph.getNodes()) visit(node.id);
+          for (const node of graph.getNodes()) {
+            if (node.type !== 'entry') expect(reached.has(node.id), `${layer.name} reaches ${node.id}`).toBe(true);
+            const seen = new Set([node.id]);
+            const queue = [node.id];
+            while (queue.length) for (const next of onward.get(queue.shift())) {
+              if (!seen.has(next)) { seen.add(next); queue.push(next); }
+            }
+            expect(seen.has(exit.id), `${layer.name}: ${node.id} reaches the Exit`).toBe(true);
+          }
+        }
+      });
+
+      test('every Entry carries a Start area', () => {
+        const scene = Scene.fromJSON(example.project.scene);
+        for (const layer of scene.getFlowLayers()) {
+          const entries = layer.graph.getNodesByType('entry');
+          expect(entries.length, layer.name).toBeGreaterThan(0);
+          for (const entry of entries) expect(entry.area, `${layer.name} ${entry.label}`).toBeTruthy();
+        }
+      });
+    });
+  }
+});
+
 describe('each example demonstrates what it claims to', () => {
   test('the site walk is a plain unbranched route with no crowd', () => {
     const example = byId('parm-aerial-walk');
@@ -224,5 +357,72 @@ describe('each example demonstrates what it claims to', () => {
     expect(crowd.graph.getEdges().some(edge => edge.weight !== 1)).toBe(true);
     expect(crowd.graph.getNodesByType('entry')).toHaveLength(1);
     expect(crowd.graph.getNodesByType('exit')).toHaveLength(1);
+  });
+
+  test('match day fills the City Ground\'s four stands from several routes, home and away', () => {
+    const scene = Scene.fromJSON(byId('city-ground-match-day').project.scene);
+    const crowds = scene.getFlowLayers();
+
+    expect(crowds.map(crowd => crowd.name))
+      .toEqual(['Trent End', 'North stand', 'South stand', 'East stand', 'Away fans']);
+    const home = crowds.slice(0, 4), [away] = crowds.slice(4);
+    for (const crowd of home) {
+      expect(crowd.graph.getNodesByType('entry').map(entry => entry.label))
+        .toEqual(['Market Square', 'Station', 'Trent Bridge']);
+      // Trent Bridge carries twice the share of each other route.
+      expect(crowd.graph.getNodesByType('entry').map(entry => entry.entryWeight ?? 1)).toEqual([1, 1, 2]);
+    }
+    expect(away.graph.getNodesByType('entry').map(entry => entry.label)).toEqual(['Station', 'Coach park']);
+    expect(new Set(home.map(crowd => crowd.emitters[0].dotColor)).size).toBe(1);
+    expect(away.emitters[0].dotColor).not.toBe(home[0].emitters[0].dotColor);
+    for (const crowd of crowds) {
+      const [fans] = crowd.emitters;
+      expect(fans.lifecycleMode).toBe('collect');
+      expect(groupsActive(crowd, fans), crowd.name).toBe(true);
+      expect(crowd.graph.getEdges().every(edge => edge.direction === 'one-way')).toBe(true);
+    }
+  });
+
+  test('the riot passes through the Market Square, gathers its crowd and ends at the Castle', () => {
+    const scene = Scene.fromJSON(byId('reform-riot-1831').project.scene);
+    const [mob, market] = scene.getFlowLayers();
+
+    expect(mob.graph.getNodesByType('entry').map(entry => entry.label)).toEqual(['From Colwick']);
+    // The mob walks through the square on its way, not to it.
+    expect(mob.graph.getNodes().find(node => node.label === 'Market Square').type).toBe('normal');
+    expect(groupsActive(mob, mob.emitters[0])).toBe(true);
+
+    expect(market.graph.getNodesByType('entry').map(entry => entry.label)).toEqual(['Market Square']);
+    expect(waitingActive(market, market.emitters[0])).toBe(true);
+    // The square's crowd sets off after the mob's release has ended.
+    const mobWindowEnd = mob.emitters[0].releaseStart + mob.emitters[0].releaseDuration;
+    expect(market.emitters[0].releaseStart).toBeGreaterThan(mobWindowEnd);
+
+    // …and, played out, waits in the square until the mob gets there.
+    const example = byId('reform-riot-1831');
+    const context = crowdOnlyContext(example);
+    const engine = new SwarmEngine();
+    const [square] = market.graph.getNodesByType('entry');
+    const inSquare = dot => Math.abs(dot.x - square.x) <= square.area.width / 2
+      && Math.abs(dot.y - square.y) <= square.area.height / 2;
+    const first = (layer, test) => {
+      for (let ms = 0; ms <= context.durationMs; ms += 100) {
+        if (engine.evaluate(ms, layer, context).some(test)) return ms;
+      }
+      return Infinity;
+    };
+    const mobArrives = first(mob, inSquare);
+    const crowdLeaves = first(market, dot => !inSquare(dot));
+    const waiting = engine.evaluate(0, market, context);
+    expect(waiting).toHaveLength(market.emitters[0].dotCount);
+    expect(waiting.every(inSquare)).toBe(true);
+    expect(mobArrives).toBeLessThan(context.durationMs);
+    expect(crowdLeaves).toBeLessThan(context.durationMs);
+    expect(crowdLeaves).toBeGreaterThanOrEqual(mobArrives);
+
+    for (const crowd of [mob, market]) {
+      expect(crowd.emitters[0].lifecycleMode).toBe('collect');
+      expect(crowd.graph.getNodesByType('exit').map(exit => exit.label)[0]).toMatch(/^(Nottingham Castle|Castle gate)$/);
+    }
   });
 });

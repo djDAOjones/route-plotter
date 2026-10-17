@@ -7,6 +7,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## The built-in examples — the owner's word of 2026-10-17
+
+- EX-02 — Match day and Reform riot, 1831 open from File → Example projects on the Nottingham aerial: fans fill the City Ground's four stands from three routes and two bridges, and a mob passes through the Market Square to the Castle (2026-10-17) — see decisions
+
 ## MVP — football crowds and mobs
 
 - RECALL — 7/8 (2026-10-16) — scores: 1,2,2,2 — local — see decisions

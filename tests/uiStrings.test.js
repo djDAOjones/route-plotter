@@ -65,7 +65,9 @@ const ALLOWED_WORDS = new Set([
 ]);
 
 /** Runs of capitalised words that are names, not Title Case. */
-const ALLOWED_PHRASES = new Set(['Route Plotter', 'Nervous System', 'PARM Aerial', 'UoN Map', 'Okabe-Ito', 'GitHub Issues']);
+const ALLOWED_PHRASES = new Set(['Route Plotter', 'Nervous System', 'PARM Aerial', 'UoN Map', 'Okabe-Ito', 'GitHub Issues',
+  // Places in Nottingham the EX-02 example descriptions name.
+  'Market Square', 'Trent Bridge', 'City Ground', 'Friar Lane', 'Nottingham Castle']);
 
 /** Entity names the outline and the list number: "Crowd 1", "Node 2", "Waypoint 1·B1". */
 const ENTITY_WORDS = new Set(['Crowd', 'Node', 'Waypoint', 'Emitter', 'Path', 'Bend', 'Handle', 'Vertex']);

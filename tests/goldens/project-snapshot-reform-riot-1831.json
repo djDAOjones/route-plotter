@@ -1,0 +1,618 @@
+{
+  "coordVersion": 9,
+  "waypoints": [],
+  "scene": {
+    "flowLayers": [
+      {
+        "id": "ex-riot-mob",
+        "name": "Rioters",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-riot-mob-colwick",
+              "x": 0.975,
+              "y": 0.565,
+              "type": "entry",
+              "label": "From Colwick",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.03,
+                "height": 0.03,
+                "turn": -30
+              }
+            },
+            {
+              "id": "ex-riot-mob-square",
+              "x": 0.334,
+              "y": 0.399,
+              "type": "normal",
+              "label": "Market Square"
+            },
+            {
+              "id": "ex-riot-mob-castle",
+              "x": 0.256,
+              "y": 0.537,
+              "type": "exit",
+              "label": "Nottingham Castle",
+              "area": {
+                "shape": "ellipse",
+                "width": 0.036,
+                "height": 0.036,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-riot-mob-town-1",
+              "x": 0.94,
+              "y": 0.59,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-2",
+              "x": 0.888,
+              "y": 0.622,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-3",
+              "x": 0.85,
+              "y": 0.653,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-4",
+              "x": 0.8,
+              "y": 0.673,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-5",
+              "x": 0.74,
+              "y": 0.676,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-6",
+              "x": 0.7,
+              "y": 0.662,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-7",
+              "x": 0.676,
+              "y": 0.62,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-8",
+              "x": 0.66,
+              "y": 0.57,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-9",
+              "x": 0.64,
+              "y": 0.52,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-10",
+              "x": 0.625,
+              "y": 0.487,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-11",
+              "x": 0.59,
+              "y": 0.44,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-12",
+              "x": 0.52,
+              "y": 0.396,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-13",
+              "x": 0.45,
+              "y": 0.4,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-14",
+              "x": 0.42,
+              "y": 0.408,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-town-15",
+              "x": 0.355,
+              "y": 0.404,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-friar-1",
+              "x": 0.324,
+              "y": 0.408,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-friar-2",
+              "x": 0.315,
+              "y": 0.43,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-friar-3",
+              "x": 0.301,
+              "y": 0.463,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-friar-4",
+              "x": 0.29,
+              "y": 0.495,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-mob-friar-5",
+              "x": 0.282,
+              "y": 0.518,
+              "type": "normal",
+              "label": ""
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-riot-mob-town-e1",
+              "sourceId": "ex-riot-mob-colwick",
+              "targetId": "ex-riot-mob-town-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e2",
+              "sourceId": "ex-riot-mob-town-1",
+              "targetId": "ex-riot-mob-town-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e3",
+              "sourceId": "ex-riot-mob-town-2",
+              "targetId": "ex-riot-mob-town-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e4",
+              "sourceId": "ex-riot-mob-town-3",
+              "targetId": "ex-riot-mob-town-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e5",
+              "sourceId": "ex-riot-mob-town-4",
+              "targetId": "ex-riot-mob-town-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e6",
+              "sourceId": "ex-riot-mob-town-5",
+              "targetId": "ex-riot-mob-town-6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e7",
+              "sourceId": "ex-riot-mob-town-6",
+              "targetId": "ex-riot-mob-town-7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e8",
+              "sourceId": "ex-riot-mob-town-7",
+              "targetId": "ex-riot-mob-town-8",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e9",
+              "sourceId": "ex-riot-mob-town-8",
+              "targetId": "ex-riot-mob-town-9",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e10",
+              "sourceId": "ex-riot-mob-town-9",
+              "targetId": "ex-riot-mob-town-10",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e11",
+              "sourceId": "ex-riot-mob-town-10",
+              "targetId": "ex-riot-mob-town-11",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e12",
+              "sourceId": "ex-riot-mob-town-11",
+              "targetId": "ex-riot-mob-town-12",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e13",
+              "sourceId": "ex-riot-mob-town-12",
+              "targetId": "ex-riot-mob-town-13",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e14",
+              "sourceId": "ex-riot-mob-town-13",
+              "targetId": "ex-riot-mob-town-14",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e15",
+              "sourceId": "ex-riot-mob-town-14",
+              "targetId": "ex-riot-mob-town-15",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-town-e16",
+              "sourceId": "ex-riot-mob-town-15",
+              "targetId": "ex-riot-mob-square",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-friar-e1",
+              "sourceId": "ex-riot-mob-square",
+              "targetId": "ex-riot-mob-friar-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-friar-e2",
+              "sourceId": "ex-riot-mob-friar-1",
+              "targetId": "ex-riot-mob-friar-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-friar-e3",
+              "sourceId": "ex-riot-mob-friar-2",
+              "targetId": "ex-riot-mob-friar-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-friar-e4",
+              "sourceId": "ex-riot-mob-friar-3",
+              "targetId": "ex-riot-mob-friar-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-friar-e5",
+              "sourceId": "ex-riot-mob-friar-4",
+              "targetId": "ex-riot-mob-friar-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-mob-friar-e6",
+              "sourceId": "ex-riot-mob-friar-5",
+              "targetId": "ex-riot-mob-castle",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-riot-mob-dots",
+            "seed": 1831,
+            "dotCount": 348,
+            "speed": 0.07,
+            "speedVariance": 0.08,
+            "dotSize": 0.08,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "collect",
+            "releaseStart": 0,
+            "releaseDuration": 0.1,
+            "onsetVariance": 0.3,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 12
+          }
+        ]
+      },
+      {
+        "id": "ex-riot-market",
+        "name": "Market Square crowd",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-riot-market-square",
+              "x": 0.334,
+              "y": 0.399,
+              "type": "entry",
+              "label": "Market Square",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.022,
+                "height": 0.016,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-riot-market-castle",
+              "x": 0.284,
+              "y": 0.54,
+              "type": "exit",
+              "label": "Castle gate",
+              "area": {
+                "shape": "ellipse",
+                "width": 0.02,
+                "height": 0.026,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-riot-market-friar-1",
+              "x": 0.324,
+              "y": 0.408,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-market-friar-2",
+              "x": 0.315,
+              "y": 0.43,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-market-friar-3",
+              "x": 0.301,
+              "y": 0.463,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-market-friar-4",
+              "x": 0.29,
+              "y": 0.495,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-riot-market-friar-5",
+              "x": 0.282,
+              "y": 0.518,
+              "type": "normal",
+              "label": ""
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-riot-market-friar-e1",
+              "sourceId": "ex-riot-market-square",
+              "targetId": "ex-riot-market-friar-1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-market-friar-e2",
+              "sourceId": "ex-riot-market-friar-1",
+              "targetId": "ex-riot-market-friar-2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-market-friar-e3",
+              "sourceId": "ex-riot-market-friar-2",
+              "targetId": "ex-riot-market-friar-3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-market-friar-e4",
+              "sourceId": "ex-riot-market-friar-3",
+              "targetId": "ex-riot-market-friar-4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-market-friar-e5",
+              "sourceId": "ex-riot-market-friar-4",
+              "targetId": "ex-riot-market-friar-5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-riot-market-friar-e6",
+              "sourceId": "ex-riot-market-friar-5",
+              "targetId": "ex-riot-market-castle",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-riot-market-dots",
+            "seed": 1832,
+            "dotCount": 132,
+            "speed": 0.05,
+            "speedVariance": 0.3,
+            "dotSize": 0.08,
+            "dotColor": "#F0E442",
+            "lifecycleMode": "collect",
+            "releaseStart": 0.5,
+            "releaseDuration": 0.25,
+            "onsetVariance": 0.3,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "waitAtStart": true
+          }
+        ]
+      }
+    ]
+  },
+  "styles": {
+    "pathColor": "#E69F00",
+    "pathThickness": 3,
+    "pathStyle": "solid",
+    "pathShape": "line",
+    "markerStyle": "dot",
+    "dotColor": "#D55E00",
+    "dotSize": 10,
+    "beaconStyle": "none",
+    "labelMode": "fade-up",
+    "graphicsScale": 1,
+    "showPathCasing": true,
+    "holdAtEndMs": 0,
+    "pathWidth": 4,
+    "pathHead": {
+      "style": "arrow",
+      "color": "#E69F00",
+      "size": 12,
+      "image": null,
+      "imageAssetId": null,
+      "rotationMode": "auto",
+      "rotationOffset": 0
+    },
+    "pathGlow": {
+      "enabled": false,
+      "intensity": 0.5
+    }
+  },
+  "animationState": {
+    "mode": "constant-speed",
+    "speed": 140,
+    "duration": 24000
+  },
+  "background": {
+    "overlay": 0,
+    "fit": "fit"
+  },
+  "exportSettings": {
+    "frameRate": 30,
+    "pathOnly": false,
+    "resolutionX": 1920,
+    "resolutionY": 1080,
+    "backgroundZoom": 100,
+    "includeCamera": false,
+    "includeText": true
+  },
+  "motionSettings": {
+    "pathVisibility": "show-on-progression",
+    "pathTrail": 0,
+    "waypointVisibility": "show-on-progression",
+    "backgroundVisibility": "always-show",
+    "revealSize": 30,
+    "revealFeather": 40,
+    "revealTrail": 100,
+    "aovAngle": 60,
+    "aovDistance": 40,
+    "aovDropoff": 50
+  },
+  "imageAssets": [],
+  "renderReference": {
+    "width": 1920,
+    "height": 1080
+  },
+  "timingReference": {
+    "width": 1173.333333,
+    "height": 660
+  }
+}

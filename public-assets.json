@@ -34,7 +34,7 @@
   "exampleProjects": {
     "approvedOn": "2026-08-27",
     "approvedBy": "owner",
-    "scope": "The three generated example project archives listed below may be published as downloadable project saves. Their only third-party content is one of the approved background images above, whose bytes are hash-verified separately; the routes, crowds and metadata are authored in src/examples/index.js and contain no user data.",
+    "scope": "The generated example project archives listed below may be published as downloadable project saves: the first three from 2026-08-27, the two marked 2026-10-17 on the owner's word that day. Their only third-party content is one of the approved background images above, whose bytes are hash-verified separately; the routes, crowds and metadata are authored in src/examples/index.js and contain no user data.",
     "archives": [
       {
         "id": "parm-aerial-walk",
@@ -47,6 +47,16 @@
       {
         "id": "nervous-system-flow",
         "background": "images/Nervous_System.jpg"
+      },
+      {
+        "id": "city-ground-match-day",
+        "background": "images/PARM_Aerial.jpg",
+        "approvedOn": "2026-10-17"
+      },
+      {
+        "id": "reform-riot-1831",
+        "background": "images/PARM_Aerial.jpg",
+        "approvedOn": "2026-10-17"
       }
     ]
   }
