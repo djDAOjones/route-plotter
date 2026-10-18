@@ -21,6 +21,201 @@
                 "width": 0.022,
                 "height": 0.016,
                 "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-trent-c1",
+              "x": 0.352,
+              "y": 0.412,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-c2",
+              "x": 0.385,
+              "y": 0.445,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-c3",
+              "x": 0.418,
+              "y": 0.48,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-c4",
+              "x": 0.419,
+              "y": 0.56,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-c5",
+              "x": 0.421,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-lr0",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-lr1",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-s1",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-s2",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-s3",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-s4",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-j",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-b0",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-bN",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-b1",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-bS",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-b2",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-NE",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-hockley",
+              "x": 0.49,
+              "y": 0.395,
+              "type": "entry",
+              "label": "Hockley",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.01,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-trent-h1",
+              "x": 0.522,
+              "y": 0.4,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-h2",
+              "x": 0.524,
+              "y": 0.45,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-h3",
+              "x": 0.529,
+              "y": 0.5,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-h4",
+              "x": 0.531,
+              "y": 0.53,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-h5",
+              "x": 0.535,
+              "y": 0.565,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-bus",
+              "x": 0.397,
+              "y": 0.565,
+              "type": "entry",
+              "label": "Broadmarsh bus station",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.03,
+                "height": 0.016,
+                "turn": 0
               }
             },
             {
@@ -28,13 +223,161 @@
               "x": 0.468,
               "y": 0.607,
               "type": "entry",
-              "label": "Station",
+              "label": "Station (rail and tram)",
               "area": {
                 "shape": "rectangle",
                 "width": 0.05,
                 "height": 0.016,
                 "turn": 0
-              }
+              },
+              "entryWeight": 3
+            },
+            {
+              "id": "ex-fb-trent-north",
+              "x": 0.428,
+              "y": 0.006,
+              "type": "entry",
+              "label": "From the north",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.012,
+                "height": 0.01,
+                "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-trent-n1",
+              "x": 0.42,
+              "y": 0.03,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-n2",
+              "x": 0.413,
+              "y": 0.06,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-n3",
+              "x": 0.397,
+              "y": 0.093,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-n4",
+              "x": 0.402,
+              "y": 0.14,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-n5",
+              "x": 0.405,
+              "y": 0.19,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-n6",
+              "x": 0.401,
+              "y": 0.25,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-n7",
+              "x": 0.4,
+              "y": 0.316,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-n8",
+              "x": 0.4,
+              "y": 0.36,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-n9",
+              "x": 0.4,
+              "y": 0.405,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-n10",
+              "x": 0.375,
+              "y": 0.41,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-east",
+              "x": 0.975,
+              "y": 0.565,
+              "type": "entry",
+              "label": "From Sneinton",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.03,
+                "height": 0.02,
+                "turn": -30
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-trent-e1",
+              "x": 0.94,
+              "y": 0.59,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-e2",
+              "x": 0.888,
+              "y": 0.622,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-e3",
+              "x": 0.85,
+              "y": 0.653,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-e4",
+              "x": 0.8,
+              "y": 0.673,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-e5",
+              "x": 0.74,
+              "y": 0.676,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-e6",
+              "x": 0.714,
+              "y": 0.692,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-e7",
+              "x": 0.692,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
             },
             {
               "id": "ex-fb-trent-trentBridge",
@@ -48,31 +391,63 @@
                 "height": 0.012,
                 "turn": 0
               },
-              "entryWeight": 2
+              "entryWeight": 3
             },
             {
-              "id": "ex-fb-trent-northEast",
-              "x": 0.708,
-              "y": 0.906,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-northWest",
-              "x": 0.664,
-              "y": 0.903,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-southWest",
+              "id": "ex-fb-trent-SW",
               "x": 0.646,
               "y": 0.958,
               "type": "normal",
               "label": ""
             },
             {
-              "id": "ex-fb-trent-stand",
+              "id": "ex-fb-trent-carParkNorth",
+              "x": 0.688,
+              "y": 0.708,
+              "type": "entry",
+              "label": "Meadow Lane car parks",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.02,
+                "height": 0.016,
+                "turn": -35
+              }
+            },
+            {
+              "id": "ex-fb-trent-carPark",
+              "x": 0.722,
+              "y": 0.922,
+              "type": "entry",
+              "label": "Ground car park",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.012,
+                "turn": 20
+              }
+            },
+            {
+              "id": "ex-fb-trent-parkRide",
+              "x": 0.733,
+              "y": 0.905,
+              "type": "entry",
+              "label": "Park and ride drop-off",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.01,
+                "height": 0.016,
+                "turn": 25
+              }
+            },
+            {
+              "id": "ex-fb-trent-NW",
+              "x": 0.664,
+              "y": 0.903,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-trent-trentEnd",
               "x": 0.657,
               "y": 0.931,
               "type": "exit",
@@ -83,179 +458,213 @@
                 "height": 0.03,
                 "turn": 22
               }
-            },
-            {
-              "id": "ex-fb-trent-stationStreet",
-              "x": 0.505,
-              "y": 0.592,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-city-1",
-              "x": 0.352,
-              "y": 0.412,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-city-2",
-              "x": 0.385,
-              "y": 0.445,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-city-3",
-              "x": 0.418,
-              "y": 0.48,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-city-4",
-              "x": 0.419,
-              "y": 0.56,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-city-5",
-              "x": 0.421,
-              "y": 0.592,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-1",
-              "x": 0.538,
-              "y": 0.594,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-2",
-              "x": 0.54,
-              "y": 0.677,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-3",
-              "x": 0.6,
-              "y": 0.677,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-4",
-              "x": 0.645,
-              "y": 0.68,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-5",
-              "x": 0.652,
-              "y": 0.7,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-6",
-              "x": 0.668,
-              "y": 0.728,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-7",
-              "x": 0.679,
-              "y": 0.753,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-8",
-              "x": 0.685,
-              "y": 0.778,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-9",
-              "x": 0.69,
-              "y": 0.807,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-10",
-              "x": 0.7045,
-              "y": 0.83,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-11",
-              "x": 0.716,
-              "y": 0.86,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-trent-ladybay-12",
-              "x": 0.727,
-              "y": 0.887,
-              "type": "normal",
-              "label": ""
             }
           ],
           "edges": [
             {
-              "id": "ex-fb-trent-city-e1",
+              "id": "ex-fb-trent-square-c1",
               "sourceId": "ex-fb-trent-square",
-              "targetId": "ex-fb-trent-city-1",
+              "targetId": "ex-fb-trent-c1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-city-e2",
-              "sourceId": "ex-fb-trent-city-1",
-              "targetId": "ex-fb-trent-city-2",
+              "id": "ex-fb-trent-c1-c2",
+              "sourceId": "ex-fb-trent-c1",
+              "targetId": "ex-fb-trent-c2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-city-e3",
-              "sourceId": "ex-fb-trent-city-2",
-              "targetId": "ex-fb-trent-city-3",
+              "id": "ex-fb-trent-c2-c3",
+              "sourceId": "ex-fb-trent-c2",
+              "targetId": "ex-fb-trent-c3",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-city-e4",
-              "sourceId": "ex-fb-trent-city-3",
-              "targetId": "ex-fb-trent-city-4",
+              "id": "ex-fb-trent-c3-c4",
+              "sourceId": "ex-fb-trent-c3",
+              "targetId": "ex-fb-trent-c4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-city-e5",
-              "sourceId": "ex-fb-trent-city-4",
-              "targetId": "ex-fb-trent-city-5",
+              "id": "ex-fb-trent-c4-c5",
+              "sourceId": "ex-fb-trent-c4",
+              "targetId": "ex-fb-trent-c5",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-city-e6",
-              "sourceId": "ex-fb-trent-city-5",
+              "id": "ex-fb-trent-c5-stationStreet",
+              "sourceId": "ex-fb-trent-c5",
               "targetId": "ex-fb-trent-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-stationStreet-lr0",
+              "sourceId": "ex-fb-trent-stationStreet",
+              "targetId": "ex-fb-trent-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-lr0-lr1",
+              "sourceId": "ex-fb-trent-lr0",
+              "targetId": "ex-fb-trent-lr1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-lr1-s1",
+              "sourceId": "ex-fb-trent-lr1",
+              "targetId": "ex-fb-trent-s1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-s1-s2",
+              "sourceId": "ex-fb-trent-s1",
+              "targetId": "ex-fb-trent-s2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-s2-s3",
+              "sourceId": "ex-fb-trent-s2",
+              "targetId": "ex-fb-trent-s3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-s3-s4",
+              "sourceId": "ex-fb-trent-s3",
+              "targetId": "ex-fb-trent-s4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-s4-j",
+              "sourceId": "ex-fb-trent-s4",
+              "targetId": "ex-fb-trent-j",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-j-b0",
+              "sourceId": "ex-fb-trent-j",
+              "targetId": "ex-fb-trent-b0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-b0-bN",
+              "sourceId": "ex-fb-trent-b0",
+              "targetId": "ex-fb-trent-bN",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-bN-b1",
+              "sourceId": "ex-fb-trent-bN",
+              "targetId": "ex-fb-trent-b1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-b1-bS",
+              "sourceId": "ex-fb-trent-b1",
+              "targetId": "ex-fb-trent-bS",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-bS-b2",
+              "sourceId": "ex-fb-trent-bS",
+              "targetId": "ex-fb-trent-b2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-b2-NE",
+              "sourceId": "ex-fb-trent-b2",
+              "targetId": "ex-fb-trent-NE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-hockley-h1",
+              "sourceId": "ex-fb-trent-hockley",
+              "targetId": "ex-fb-trent-h1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-h1-h2",
+              "sourceId": "ex-fb-trent-h1",
+              "targetId": "ex-fb-trent-h2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-h2-h3",
+              "sourceId": "ex-fb-trent-h2",
+              "targetId": "ex-fb-trent-h3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-h3-h4",
+              "sourceId": "ex-fb-trent-h3",
+              "targetId": "ex-fb-trent-h4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-h4-h5",
+              "sourceId": "ex-fb-trent-h4",
+              "targetId": "ex-fb-trent-h5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-h5-lr0",
+              "sourceId": "ex-fb-trent-h5",
+              "targetId": "ex-fb-trent-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-bus-c4",
+              "sourceId": "ex-fb-trent-bus",
+              "targetId": "ex-fb-trent-c4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
@@ -269,137 +678,209 @@
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e1",
-              "sourceId": "ex-fb-trent-stationStreet",
-              "targetId": "ex-fb-trent-ladybay-1",
+              "id": "ex-fb-trent-north-n1",
+              "sourceId": "ex-fb-trent-north",
+              "targetId": "ex-fb-trent-n1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e2",
-              "sourceId": "ex-fb-trent-ladybay-1",
-              "targetId": "ex-fb-trent-ladybay-2",
+              "id": "ex-fb-trent-n1-n2",
+              "sourceId": "ex-fb-trent-n1",
+              "targetId": "ex-fb-trent-n2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e3",
-              "sourceId": "ex-fb-trent-ladybay-2",
-              "targetId": "ex-fb-trent-ladybay-3",
+              "id": "ex-fb-trent-n2-n3",
+              "sourceId": "ex-fb-trent-n2",
+              "targetId": "ex-fb-trent-n3",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e4",
-              "sourceId": "ex-fb-trent-ladybay-3",
-              "targetId": "ex-fb-trent-ladybay-4",
+              "id": "ex-fb-trent-n3-n4",
+              "sourceId": "ex-fb-trent-n3",
+              "targetId": "ex-fb-trent-n4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e5",
-              "sourceId": "ex-fb-trent-ladybay-4",
-              "targetId": "ex-fb-trent-ladybay-5",
+              "id": "ex-fb-trent-n4-n5",
+              "sourceId": "ex-fb-trent-n4",
+              "targetId": "ex-fb-trent-n5",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e6",
-              "sourceId": "ex-fb-trent-ladybay-5",
-              "targetId": "ex-fb-trent-ladybay-6",
+              "id": "ex-fb-trent-n5-n6",
+              "sourceId": "ex-fb-trent-n5",
+              "targetId": "ex-fb-trent-n6",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e7",
-              "sourceId": "ex-fb-trent-ladybay-6",
-              "targetId": "ex-fb-trent-ladybay-7",
+              "id": "ex-fb-trent-n6-n7",
+              "sourceId": "ex-fb-trent-n6",
+              "targetId": "ex-fb-trent-n7",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e8",
-              "sourceId": "ex-fb-trent-ladybay-7",
-              "targetId": "ex-fb-trent-ladybay-8",
+              "id": "ex-fb-trent-n7-n8",
+              "sourceId": "ex-fb-trent-n7",
+              "targetId": "ex-fb-trent-n8",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e9",
-              "sourceId": "ex-fb-trent-ladybay-8",
-              "targetId": "ex-fb-trent-ladybay-9",
+              "id": "ex-fb-trent-n8-n9",
+              "sourceId": "ex-fb-trent-n8",
+              "targetId": "ex-fb-trent-n9",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e10",
-              "sourceId": "ex-fb-trent-ladybay-9",
-              "targetId": "ex-fb-trent-ladybay-10",
+              "id": "ex-fb-trent-n9-n10",
+              "sourceId": "ex-fb-trent-n9",
+              "targetId": "ex-fb-trent-n10",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e11",
-              "sourceId": "ex-fb-trent-ladybay-10",
-              "targetId": "ex-fb-trent-ladybay-11",
+              "id": "ex-fb-trent-n10-c1",
+              "sourceId": "ex-fb-trent-n10",
+              "targetId": "ex-fb-trent-c1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e12",
-              "sourceId": "ex-fb-trent-ladybay-11",
-              "targetId": "ex-fb-trent-ladybay-12",
+              "id": "ex-fb-trent-east-e1",
+              "sourceId": "ex-fb-trent-east",
+              "targetId": "ex-fb-trent-e1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-ladybay-e13",
-              "sourceId": "ex-fb-trent-ladybay-12",
-              "targetId": "ex-fb-trent-northEast",
+              "id": "ex-fb-trent-e1-e2",
+              "sourceId": "ex-fb-trent-e1",
+              "targetId": "ex-fb-trent-e2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-trentBridge-southWest",
+              "id": "ex-fb-trent-e2-e3",
+              "sourceId": "ex-fb-trent-e2",
+              "targetId": "ex-fb-trent-e3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-e3-e4",
+              "sourceId": "ex-fb-trent-e3",
+              "targetId": "ex-fb-trent-e4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-e4-e5",
+              "sourceId": "ex-fb-trent-e4",
+              "targetId": "ex-fb-trent-e5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-e5-e6",
+              "sourceId": "ex-fb-trent-e5",
+              "targetId": "ex-fb-trent-e6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-e6-e7",
+              "sourceId": "ex-fb-trent-e6",
+              "targetId": "ex-fb-trent-e7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-e7-j",
+              "sourceId": "ex-fb-trent-e7",
+              "targetId": "ex-fb-trent-j",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-trentBridge-SW",
               "sourceId": "ex-fb-trent-trentBridge",
-              "targetId": "ex-fb-trent-southWest",
+              "targetId": "ex-fb-trent-SW",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-northEast-northWest",
-              "sourceId": "ex-fb-trent-northEast",
-              "targetId": "ex-fb-trent-northWest",
+              "id": "ex-fb-trent-carParkNorth-e7",
+              "sourceId": "ex-fb-trent-carParkNorth",
+              "targetId": "ex-fb-trent-e7",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-northWest-stand",
-              "sourceId": "ex-fb-trent-northWest",
-              "targetId": "ex-fb-trent-stand",
+              "id": "ex-fb-trent-carPark-NE",
+              "sourceId": "ex-fb-trent-carPark",
+              "targetId": "ex-fb-trent-NE",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-trent-southWest-stand",
-              "sourceId": "ex-fb-trent-southWest",
-              "targetId": "ex-fb-trent-stand",
+              "id": "ex-fb-trent-parkRide-NE",
+              "sourceId": "ex-fb-trent-parkRide",
+              "targetId": "ex-fb-trent-NE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-NE-NW",
+              "sourceId": "ex-fb-trent-NE",
+              "targetId": "ex-fb-trent-NW",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-NW-trentEnd",
+              "sourceId": "ex-fb-trent-NW",
+              "targetId": "ex-fb-trent-trentEnd",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-trent-SW-trentEnd",
+              "sourceId": "ex-fb-trent-SW",
+              "targetId": "ex-fb-trent-trentEnd",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
@@ -408,16 +889,46 @@
         },
         "emitters": [
           {
-            "id": "ex-fb-trent-fans",
+            "id": "ex-fb-trent-seated",
             "seed": 1865,
-            "dotCount": 102,
-            "speed": 0.07,
+            "dotCount": 21,
+            "speed": 0.08,
             "speedVariance": 0.3,
-            "dotSize": 0.08,
+            "dotSize": 0.15,
             "dotColor": "#D55E00",
             "lifecycleMode": "collect",
             "releaseStart": 0,
             "releaseDuration": 0.6,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          },
+          {
+            "id": "ex-fb-trent-walk-in",
+            "seed": 1965,
+            "dotCount": 240,
+            "speed": 0.08,
+            "speedVariance": 0.3,
+            "dotSize": 0.15,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "disappear",
+            "releaseStart": 0,
+            "releaseDuration": 0.75,
             "onsetVariance": 0.5,
             "intensityRamp": 0,
             "busynessEnvelope": [
@@ -457,6 +968,201 @@
                 "width": 0.022,
                 "height": 0.016,
                 "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-north-c1",
+              "x": 0.352,
+              "y": 0.412,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-c2",
+              "x": 0.385,
+              "y": 0.445,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-c3",
+              "x": 0.418,
+              "y": 0.48,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-c4",
+              "x": 0.419,
+              "y": 0.56,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-c5",
+              "x": 0.421,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-lr0",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-lr1",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-s1",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-s2",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-s3",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-s4",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-j",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-b0",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-bN",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-b1",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-bS",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-b2",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-NE",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-hockley",
+              "x": 0.49,
+              "y": 0.395,
+              "type": "entry",
+              "label": "Hockley",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.01,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-north-h1",
+              "x": 0.522,
+              "y": 0.4,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-h2",
+              "x": 0.524,
+              "y": 0.45,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-h3",
+              "x": 0.529,
+              "y": 0.5,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-h4",
+              "x": 0.531,
+              "y": 0.53,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-h5",
+              "x": 0.535,
+              "y": 0.565,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-bus",
+              "x": 0.397,
+              "y": 0.565,
+              "type": "entry",
+              "label": "Broadmarsh bus station",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.03,
+                "height": 0.016,
+                "turn": 0
               }
             },
             {
@@ -464,13 +1170,161 @@
               "x": 0.468,
               "y": 0.607,
               "type": "entry",
-              "label": "Station",
+              "label": "Station (rail and tram)",
               "area": {
                 "shape": "rectangle",
                 "width": 0.05,
                 "height": 0.016,
                 "turn": 0
-              }
+              },
+              "entryWeight": 3
+            },
+            {
+              "id": "ex-fb-north-north",
+              "x": 0.428,
+              "y": 0.006,
+              "type": "entry",
+              "label": "From the north",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.012,
+                "height": 0.01,
+                "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-north-n1",
+              "x": 0.42,
+              "y": 0.03,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-n2",
+              "x": 0.413,
+              "y": 0.06,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-n3",
+              "x": 0.397,
+              "y": 0.093,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-n4",
+              "x": 0.402,
+              "y": 0.14,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-n5",
+              "x": 0.405,
+              "y": 0.19,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-n6",
+              "x": 0.401,
+              "y": 0.25,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-n7",
+              "x": 0.4,
+              "y": 0.316,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-n8",
+              "x": 0.4,
+              "y": 0.36,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-n9",
+              "x": 0.4,
+              "y": 0.405,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-n10",
+              "x": 0.375,
+              "y": 0.41,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-east",
+              "x": 0.975,
+              "y": 0.565,
+              "type": "entry",
+              "label": "From Sneinton",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.03,
+                "height": 0.02,
+                "turn": -30
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-north-e1",
+              "x": 0.94,
+              "y": 0.59,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-e2",
+              "x": 0.888,
+              "y": 0.622,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-e3",
+              "x": 0.85,
+              "y": 0.653,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-e4",
+              "x": 0.8,
+              "y": 0.673,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-e5",
+              "x": 0.74,
+              "y": 0.676,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-e6",
+              "x": 0.714,
+              "y": 0.692,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-north-e7",
+              "x": 0.692,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
             },
             {
               "id": "ex-fb-north-trentBridge",
@@ -484,31 +1338,56 @@
                 "height": 0.012,
                 "turn": 0
               },
-              "entryWeight": 2
+              "entryWeight": 3
             },
             {
-              "id": "ex-fb-north-northEast",
-              "x": 0.708,
-              "y": 0.906,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-northWest",
-              "x": 0.664,
-              "y": 0.903,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-southWest",
+              "id": "ex-fb-north-SW",
               "x": 0.646,
               "y": 0.958,
               "type": "normal",
               "label": ""
             },
             {
-              "id": "ex-fb-north-stand",
+              "id": "ex-fb-north-carParkNorth",
+              "x": 0.688,
+              "y": 0.708,
+              "type": "entry",
+              "label": "Meadow Lane car parks",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.02,
+                "height": 0.016,
+                "turn": -35
+              }
+            },
+            {
+              "id": "ex-fb-north-carPark",
+              "x": 0.722,
+              "y": 0.922,
+              "type": "entry",
+              "label": "Ground car park",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.012,
+                "turn": 20
+              }
+            },
+            {
+              "id": "ex-fb-north-parkRide",
+              "x": 0.733,
+              "y": 0.905,
+              "type": "entry",
+              "label": "Park and ride drop-off",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.01,
+                "height": 0.016,
+                "turn": 25
+              }
+            },
+            {
+              "id": "ex-fb-north-northStand",
               "x": 0.683,
               "y": 0.92,
               "type": "exit",
@@ -521,177 +1400,218 @@
               }
             },
             {
-              "id": "ex-fb-north-stationStreet",
-              "x": 0.505,
-              "y": 0.592,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-city-1",
-              "x": 0.352,
-              "y": 0.412,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-city-2",
-              "x": 0.385,
-              "y": 0.445,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-city-3",
-              "x": 0.418,
-              "y": 0.48,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-city-4",
-              "x": 0.419,
-              "y": 0.56,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-city-5",
-              "x": 0.421,
-              "y": 0.592,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-1",
-              "x": 0.538,
-              "y": 0.594,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-2",
-              "x": 0.54,
-              "y": 0.677,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-3",
-              "x": 0.6,
-              "y": 0.677,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-4",
-              "x": 0.645,
-              "y": 0.68,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-5",
-              "x": 0.652,
-              "y": 0.7,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-6",
-              "x": 0.668,
-              "y": 0.728,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-7",
-              "x": 0.679,
-              "y": 0.753,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-8",
-              "x": 0.685,
-              "y": 0.778,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-9",
-              "x": 0.69,
-              "y": 0.807,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-10",
-              "x": 0.7045,
-              "y": 0.83,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-11",
-              "x": 0.716,
-              "y": 0.86,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-north-ladybay-12",
-              "x": 0.727,
-              "y": 0.887,
+              "id": "ex-fb-north-NW",
+              "x": 0.664,
+              "y": 0.903,
               "type": "normal",
               "label": ""
             }
           ],
           "edges": [
             {
-              "id": "ex-fb-north-city-e1",
+              "id": "ex-fb-north-square-c1",
               "sourceId": "ex-fb-north-square",
-              "targetId": "ex-fb-north-city-1",
+              "targetId": "ex-fb-north-c1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-city-e2",
-              "sourceId": "ex-fb-north-city-1",
-              "targetId": "ex-fb-north-city-2",
+              "id": "ex-fb-north-c1-c2",
+              "sourceId": "ex-fb-north-c1",
+              "targetId": "ex-fb-north-c2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-city-e3",
-              "sourceId": "ex-fb-north-city-2",
-              "targetId": "ex-fb-north-city-3",
+              "id": "ex-fb-north-c2-c3",
+              "sourceId": "ex-fb-north-c2",
+              "targetId": "ex-fb-north-c3",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-city-e4",
-              "sourceId": "ex-fb-north-city-3",
-              "targetId": "ex-fb-north-city-4",
+              "id": "ex-fb-north-c3-c4",
+              "sourceId": "ex-fb-north-c3",
+              "targetId": "ex-fb-north-c4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-city-e5",
-              "sourceId": "ex-fb-north-city-4",
-              "targetId": "ex-fb-north-city-5",
+              "id": "ex-fb-north-c4-c5",
+              "sourceId": "ex-fb-north-c4",
+              "targetId": "ex-fb-north-c5",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-city-e6",
-              "sourceId": "ex-fb-north-city-5",
+              "id": "ex-fb-north-c5-stationStreet",
+              "sourceId": "ex-fb-north-c5",
               "targetId": "ex-fb-north-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-stationStreet-lr0",
+              "sourceId": "ex-fb-north-stationStreet",
+              "targetId": "ex-fb-north-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-lr0-lr1",
+              "sourceId": "ex-fb-north-lr0",
+              "targetId": "ex-fb-north-lr1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-lr1-s1",
+              "sourceId": "ex-fb-north-lr1",
+              "targetId": "ex-fb-north-s1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-s1-s2",
+              "sourceId": "ex-fb-north-s1",
+              "targetId": "ex-fb-north-s2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-s2-s3",
+              "sourceId": "ex-fb-north-s2",
+              "targetId": "ex-fb-north-s3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-s3-s4",
+              "sourceId": "ex-fb-north-s3",
+              "targetId": "ex-fb-north-s4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-s4-j",
+              "sourceId": "ex-fb-north-s4",
+              "targetId": "ex-fb-north-j",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-j-b0",
+              "sourceId": "ex-fb-north-j",
+              "targetId": "ex-fb-north-b0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-b0-bN",
+              "sourceId": "ex-fb-north-b0",
+              "targetId": "ex-fb-north-bN",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-bN-b1",
+              "sourceId": "ex-fb-north-bN",
+              "targetId": "ex-fb-north-b1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-b1-bS",
+              "sourceId": "ex-fb-north-b1",
+              "targetId": "ex-fb-north-bS",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-bS-b2",
+              "sourceId": "ex-fb-north-bS",
+              "targetId": "ex-fb-north-b2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-b2-NE",
+              "sourceId": "ex-fb-north-b2",
+              "targetId": "ex-fb-north-NE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-hockley-h1",
+              "sourceId": "ex-fb-north-hockley",
+              "targetId": "ex-fb-north-h1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-h1-h2",
+              "sourceId": "ex-fb-north-h1",
+              "targetId": "ex-fb-north-h2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-h2-h3",
+              "sourceId": "ex-fb-north-h2",
+              "targetId": "ex-fb-north-h3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-h3-h4",
+              "sourceId": "ex-fb-north-h3",
+              "targetId": "ex-fb-north-h4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-h4-h5",
+              "sourceId": "ex-fb-north-h4",
+              "targetId": "ex-fb-north-h5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-h5-lr0",
+              "sourceId": "ex-fb-north-h5",
+              "targetId": "ex-fb-north-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-bus-c4",
+              "sourceId": "ex-fb-north-bus",
+              "targetId": "ex-fb-north-c4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
@@ -705,137 +1625,209 @@
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e1",
-              "sourceId": "ex-fb-north-stationStreet",
-              "targetId": "ex-fb-north-ladybay-1",
+              "id": "ex-fb-north-north-n1",
+              "sourceId": "ex-fb-north-north",
+              "targetId": "ex-fb-north-n1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e2",
-              "sourceId": "ex-fb-north-ladybay-1",
-              "targetId": "ex-fb-north-ladybay-2",
+              "id": "ex-fb-north-n1-n2",
+              "sourceId": "ex-fb-north-n1",
+              "targetId": "ex-fb-north-n2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e3",
-              "sourceId": "ex-fb-north-ladybay-2",
-              "targetId": "ex-fb-north-ladybay-3",
+              "id": "ex-fb-north-n2-n3",
+              "sourceId": "ex-fb-north-n2",
+              "targetId": "ex-fb-north-n3",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e4",
-              "sourceId": "ex-fb-north-ladybay-3",
-              "targetId": "ex-fb-north-ladybay-4",
+              "id": "ex-fb-north-n3-n4",
+              "sourceId": "ex-fb-north-n3",
+              "targetId": "ex-fb-north-n4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e5",
-              "sourceId": "ex-fb-north-ladybay-4",
-              "targetId": "ex-fb-north-ladybay-5",
+              "id": "ex-fb-north-n4-n5",
+              "sourceId": "ex-fb-north-n4",
+              "targetId": "ex-fb-north-n5",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e6",
-              "sourceId": "ex-fb-north-ladybay-5",
-              "targetId": "ex-fb-north-ladybay-6",
+              "id": "ex-fb-north-n5-n6",
+              "sourceId": "ex-fb-north-n5",
+              "targetId": "ex-fb-north-n6",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e7",
-              "sourceId": "ex-fb-north-ladybay-6",
-              "targetId": "ex-fb-north-ladybay-7",
+              "id": "ex-fb-north-n6-n7",
+              "sourceId": "ex-fb-north-n6",
+              "targetId": "ex-fb-north-n7",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e8",
-              "sourceId": "ex-fb-north-ladybay-7",
-              "targetId": "ex-fb-north-ladybay-8",
+              "id": "ex-fb-north-n7-n8",
+              "sourceId": "ex-fb-north-n7",
+              "targetId": "ex-fb-north-n8",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e9",
-              "sourceId": "ex-fb-north-ladybay-8",
-              "targetId": "ex-fb-north-ladybay-9",
+              "id": "ex-fb-north-n8-n9",
+              "sourceId": "ex-fb-north-n8",
+              "targetId": "ex-fb-north-n9",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e10",
-              "sourceId": "ex-fb-north-ladybay-9",
-              "targetId": "ex-fb-north-ladybay-10",
+              "id": "ex-fb-north-n9-n10",
+              "sourceId": "ex-fb-north-n9",
+              "targetId": "ex-fb-north-n10",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e11",
-              "sourceId": "ex-fb-north-ladybay-10",
-              "targetId": "ex-fb-north-ladybay-11",
+              "id": "ex-fb-north-n10-c1",
+              "sourceId": "ex-fb-north-n10",
+              "targetId": "ex-fb-north-c1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e12",
-              "sourceId": "ex-fb-north-ladybay-11",
-              "targetId": "ex-fb-north-ladybay-12",
+              "id": "ex-fb-north-east-e1",
+              "sourceId": "ex-fb-north-east",
+              "targetId": "ex-fb-north-e1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-ladybay-e13",
-              "sourceId": "ex-fb-north-ladybay-12",
-              "targetId": "ex-fb-north-northEast",
+              "id": "ex-fb-north-e1-e2",
+              "sourceId": "ex-fb-north-e1",
+              "targetId": "ex-fb-north-e2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-trentBridge-southWest",
+              "id": "ex-fb-north-e2-e3",
+              "sourceId": "ex-fb-north-e2",
+              "targetId": "ex-fb-north-e3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-e3-e4",
+              "sourceId": "ex-fb-north-e3",
+              "targetId": "ex-fb-north-e4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-e4-e5",
+              "sourceId": "ex-fb-north-e4",
+              "targetId": "ex-fb-north-e5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-e5-e6",
+              "sourceId": "ex-fb-north-e5",
+              "targetId": "ex-fb-north-e6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-e6-e7",
+              "sourceId": "ex-fb-north-e6",
+              "targetId": "ex-fb-north-e7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-e7-j",
+              "sourceId": "ex-fb-north-e7",
+              "targetId": "ex-fb-north-j",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-trentBridge-SW",
               "sourceId": "ex-fb-north-trentBridge",
-              "targetId": "ex-fb-north-southWest",
+              "targetId": "ex-fb-north-SW",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-northEast-stand",
-              "sourceId": "ex-fb-north-northEast",
-              "targetId": "ex-fb-north-stand",
+              "id": "ex-fb-north-carParkNorth-e7",
+              "sourceId": "ex-fb-north-carParkNorth",
+              "targetId": "ex-fb-north-e7",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-southWest-northWest",
-              "sourceId": "ex-fb-north-southWest",
-              "targetId": "ex-fb-north-northWest",
+              "id": "ex-fb-north-carPark-NE",
+              "sourceId": "ex-fb-north-carPark",
+              "targetId": "ex-fb-north-NE",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-north-northWest-stand",
-              "sourceId": "ex-fb-north-northWest",
-              "targetId": "ex-fb-north-stand",
+              "id": "ex-fb-north-parkRide-NE",
+              "sourceId": "ex-fb-north-parkRide",
+              "targetId": "ex-fb-north-NE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-NE-northStand",
+              "sourceId": "ex-fb-north-NE",
+              "targetId": "ex-fb-north-northStand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-SW-NW",
+              "sourceId": "ex-fb-north-SW",
+              "targetId": "ex-fb-north-NW",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-north-NW-northStand",
+              "sourceId": "ex-fb-north-NW",
+              "targetId": "ex-fb-north-northStand",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
@@ -844,16 +1836,46 @@
         },
         "emitters": [
           {
-            "id": "ex-fb-north-fans",
+            "id": "ex-fb-north-seated",
             "seed": 1866,
-            "dotCount": 159,
-            "speed": 0.07,
+            "dotCount": 33,
+            "speed": 0.08,
             "speedVariance": 0.3,
-            "dotSize": 0.08,
+            "dotSize": 0.15,
             "dotColor": "#D55E00",
             "lifecycleMode": "collect",
             "releaseStart": 0,
             "releaseDuration": 0.6,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          },
+          {
+            "id": "ex-fb-north-walk-in",
+            "seed": 1966,
+            "dotCount": 300,
+            "speed": 0.08,
+            "speedVariance": 0.3,
+            "dotSize": 0.15,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "disappear",
+            "releaseStart": 0,
+            "releaseDuration": 0.75,
             "onsetVariance": 0.5,
             "intensityRamp": 0,
             "busynessEnvelope": [
@@ -893,6 +1915,201 @@
                 "width": 0.022,
                 "height": 0.016,
                 "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-south-c1",
+              "x": 0.352,
+              "y": 0.412,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-c2",
+              "x": 0.385,
+              "y": 0.445,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-c3",
+              "x": 0.418,
+              "y": 0.48,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-c4",
+              "x": 0.419,
+              "y": 0.56,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-c5",
+              "x": 0.421,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-lr0",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-lr1",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-s1",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-s2",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-s3",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-s4",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-j",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-b0",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-bN",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-b1",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-bS",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-b2",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-NE",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-hockley",
+              "x": 0.49,
+              "y": 0.395,
+              "type": "entry",
+              "label": "Hockley",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.01,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-south-h1",
+              "x": 0.522,
+              "y": 0.4,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-h2",
+              "x": 0.524,
+              "y": 0.45,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-h3",
+              "x": 0.529,
+              "y": 0.5,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-h4",
+              "x": 0.531,
+              "y": 0.53,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-h5",
+              "x": 0.535,
+              "y": 0.565,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-bus",
+              "x": 0.397,
+              "y": 0.565,
+              "type": "entry",
+              "label": "Broadmarsh bus station",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.03,
+                "height": 0.016,
+                "turn": 0
               }
             },
             {
@@ -900,13 +2117,161 @@
               "x": 0.468,
               "y": 0.607,
               "type": "entry",
-              "label": "Station",
+              "label": "Station (rail and tram)",
               "area": {
                 "shape": "rectangle",
                 "width": 0.05,
                 "height": 0.016,
                 "turn": 0
-              }
+              },
+              "entryWeight": 3
+            },
+            {
+              "id": "ex-fb-south-north",
+              "x": 0.428,
+              "y": 0.006,
+              "type": "entry",
+              "label": "From the north",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.012,
+                "height": 0.01,
+                "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-south-n1",
+              "x": 0.42,
+              "y": 0.03,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-n2",
+              "x": 0.413,
+              "y": 0.06,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-n3",
+              "x": 0.397,
+              "y": 0.093,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-n4",
+              "x": 0.402,
+              "y": 0.14,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-n5",
+              "x": 0.405,
+              "y": 0.19,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-n6",
+              "x": 0.401,
+              "y": 0.25,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-n7",
+              "x": 0.4,
+              "y": 0.316,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-n8",
+              "x": 0.4,
+              "y": 0.36,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-n9",
+              "x": 0.4,
+              "y": 0.405,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-n10",
+              "x": 0.375,
+              "y": 0.41,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-east",
+              "x": 0.975,
+              "y": 0.565,
+              "type": "entry",
+              "label": "From Sneinton",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.03,
+                "height": 0.02,
+                "turn": -30
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-south-e1",
+              "x": 0.94,
+              "y": 0.59,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-e2",
+              "x": 0.888,
+              "y": 0.622,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-e3",
+              "x": 0.85,
+              "y": 0.653,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-e4",
+              "x": 0.8,
+              "y": 0.673,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-e5",
+              "x": 0.74,
+              "y": 0.676,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-e6",
+              "x": 0.714,
+              "y": 0.692,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-south-e7",
+              "x": 0.692,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
             },
             {
               "id": "ex-fb-south-trentBridge",
@@ -920,31 +2285,56 @@
                 "height": 0.012,
                 "turn": 0
               },
-              "entryWeight": 2
+              "entryWeight": 3
             },
             {
-              "id": "ex-fb-south-northEast",
-              "x": 0.708,
-              "y": 0.906,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-southWest",
+              "id": "ex-fb-south-SW",
               "x": 0.646,
               "y": 0.958,
               "type": "normal",
               "label": ""
             },
             {
-              "id": "ex-fb-south-southEast",
-              "x": 0.705,
-              "y": 0.974,
-              "type": "normal",
-              "label": ""
+              "id": "ex-fb-south-carParkNorth",
+              "x": 0.688,
+              "y": 0.708,
+              "type": "entry",
+              "label": "Meadow Lane car parks",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.02,
+                "height": 0.016,
+                "turn": -35
+              }
             },
             {
-              "id": "ex-fb-south-stand",
+              "id": "ex-fb-south-carPark",
+              "x": 0.722,
+              "y": 0.922,
+              "type": "entry",
+              "label": "Ground car park",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.012,
+                "turn": 20
+              }
+            },
+            {
+              "id": "ex-fb-south-parkRide",
+              "x": 0.733,
+              "y": 0.905,
+              "type": "entry",
+              "label": "Park and ride drop-off",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.01,
+                "height": 0.016,
+                "turn": 25
+              }
+            },
+            {
+              "id": "ex-fb-south-southStand",
               "x": 0.67,
               "y": 0.959,
               "type": "exit",
@@ -957,177 +2347,218 @@
               }
             },
             {
-              "id": "ex-fb-south-stationStreet",
-              "x": 0.505,
-              "y": 0.592,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-city-1",
-              "x": 0.352,
-              "y": 0.412,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-city-2",
-              "x": 0.385,
-              "y": 0.445,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-city-3",
-              "x": 0.418,
-              "y": 0.48,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-city-4",
-              "x": 0.419,
-              "y": 0.56,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-city-5",
-              "x": 0.421,
-              "y": 0.592,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-1",
-              "x": 0.538,
-              "y": 0.594,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-2",
-              "x": 0.54,
-              "y": 0.677,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-3",
-              "x": 0.6,
-              "y": 0.677,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-4",
-              "x": 0.645,
-              "y": 0.68,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-5",
-              "x": 0.652,
-              "y": 0.7,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-6",
-              "x": 0.668,
-              "y": 0.728,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-7",
-              "x": 0.679,
-              "y": 0.753,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-8",
-              "x": 0.685,
-              "y": 0.778,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-9",
-              "x": 0.69,
-              "y": 0.807,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-10",
-              "x": 0.7045,
-              "y": 0.83,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-11",
-              "x": 0.716,
-              "y": 0.86,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-south-ladybay-12",
-              "x": 0.727,
-              "y": 0.887,
+              "id": "ex-fb-south-SE",
+              "x": 0.705,
+              "y": 0.974,
               "type": "normal",
               "label": ""
             }
           ],
           "edges": [
             {
-              "id": "ex-fb-south-city-e1",
+              "id": "ex-fb-south-square-c1",
               "sourceId": "ex-fb-south-square",
-              "targetId": "ex-fb-south-city-1",
+              "targetId": "ex-fb-south-c1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-city-e2",
-              "sourceId": "ex-fb-south-city-1",
-              "targetId": "ex-fb-south-city-2",
+              "id": "ex-fb-south-c1-c2",
+              "sourceId": "ex-fb-south-c1",
+              "targetId": "ex-fb-south-c2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-city-e3",
-              "sourceId": "ex-fb-south-city-2",
-              "targetId": "ex-fb-south-city-3",
+              "id": "ex-fb-south-c2-c3",
+              "sourceId": "ex-fb-south-c2",
+              "targetId": "ex-fb-south-c3",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-city-e4",
-              "sourceId": "ex-fb-south-city-3",
-              "targetId": "ex-fb-south-city-4",
+              "id": "ex-fb-south-c3-c4",
+              "sourceId": "ex-fb-south-c3",
+              "targetId": "ex-fb-south-c4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-city-e5",
-              "sourceId": "ex-fb-south-city-4",
-              "targetId": "ex-fb-south-city-5",
+              "id": "ex-fb-south-c4-c5",
+              "sourceId": "ex-fb-south-c4",
+              "targetId": "ex-fb-south-c5",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-city-e6",
-              "sourceId": "ex-fb-south-city-5",
+              "id": "ex-fb-south-c5-stationStreet",
+              "sourceId": "ex-fb-south-c5",
               "targetId": "ex-fb-south-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-stationStreet-lr0",
+              "sourceId": "ex-fb-south-stationStreet",
+              "targetId": "ex-fb-south-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-lr0-lr1",
+              "sourceId": "ex-fb-south-lr0",
+              "targetId": "ex-fb-south-lr1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-lr1-s1",
+              "sourceId": "ex-fb-south-lr1",
+              "targetId": "ex-fb-south-s1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-s1-s2",
+              "sourceId": "ex-fb-south-s1",
+              "targetId": "ex-fb-south-s2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-s2-s3",
+              "sourceId": "ex-fb-south-s2",
+              "targetId": "ex-fb-south-s3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-s3-s4",
+              "sourceId": "ex-fb-south-s3",
+              "targetId": "ex-fb-south-s4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-s4-j",
+              "sourceId": "ex-fb-south-s4",
+              "targetId": "ex-fb-south-j",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-j-b0",
+              "sourceId": "ex-fb-south-j",
+              "targetId": "ex-fb-south-b0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-b0-bN",
+              "sourceId": "ex-fb-south-b0",
+              "targetId": "ex-fb-south-bN",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-bN-b1",
+              "sourceId": "ex-fb-south-bN",
+              "targetId": "ex-fb-south-b1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-b1-bS",
+              "sourceId": "ex-fb-south-b1",
+              "targetId": "ex-fb-south-bS",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-bS-b2",
+              "sourceId": "ex-fb-south-bS",
+              "targetId": "ex-fb-south-b2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-b2-NE",
+              "sourceId": "ex-fb-south-b2",
+              "targetId": "ex-fb-south-NE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-hockley-h1",
+              "sourceId": "ex-fb-south-hockley",
+              "targetId": "ex-fb-south-h1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-h1-h2",
+              "sourceId": "ex-fb-south-h1",
+              "targetId": "ex-fb-south-h2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-h2-h3",
+              "sourceId": "ex-fb-south-h2",
+              "targetId": "ex-fb-south-h3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-h3-h4",
+              "sourceId": "ex-fb-south-h3",
+              "targetId": "ex-fb-south-h4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-h4-h5",
+              "sourceId": "ex-fb-south-h4",
+              "targetId": "ex-fb-south-h5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-h5-lr0",
+              "sourceId": "ex-fb-south-h5",
+              "targetId": "ex-fb-south-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-bus-c4",
+              "sourceId": "ex-fb-south-bus",
+              "targetId": "ex-fb-south-c4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
@@ -1141,137 +2572,209 @@
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e1",
-              "sourceId": "ex-fb-south-stationStreet",
-              "targetId": "ex-fb-south-ladybay-1",
+              "id": "ex-fb-south-north-n1",
+              "sourceId": "ex-fb-south-north",
+              "targetId": "ex-fb-south-n1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e2",
-              "sourceId": "ex-fb-south-ladybay-1",
-              "targetId": "ex-fb-south-ladybay-2",
+              "id": "ex-fb-south-n1-n2",
+              "sourceId": "ex-fb-south-n1",
+              "targetId": "ex-fb-south-n2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e3",
-              "sourceId": "ex-fb-south-ladybay-2",
-              "targetId": "ex-fb-south-ladybay-3",
+              "id": "ex-fb-south-n2-n3",
+              "sourceId": "ex-fb-south-n2",
+              "targetId": "ex-fb-south-n3",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e4",
-              "sourceId": "ex-fb-south-ladybay-3",
-              "targetId": "ex-fb-south-ladybay-4",
+              "id": "ex-fb-south-n3-n4",
+              "sourceId": "ex-fb-south-n3",
+              "targetId": "ex-fb-south-n4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e5",
-              "sourceId": "ex-fb-south-ladybay-4",
-              "targetId": "ex-fb-south-ladybay-5",
+              "id": "ex-fb-south-n4-n5",
+              "sourceId": "ex-fb-south-n4",
+              "targetId": "ex-fb-south-n5",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e6",
-              "sourceId": "ex-fb-south-ladybay-5",
-              "targetId": "ex-fb-south-ladybay-6",
+              "id": "ex-fb-south-n5-n6",
+              "sourceId": "ex-fb-south-n5",
+              "targetId": "ex-fb-south-n6",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e7",
-              "sourceId": "ex-fb-south-ladybay-6",
-              "targetId": "ex-fb-south-ladybay-7",
+              "id": "ex-fb-south-n6-n7",
+              "sourceId": "ex-fb-south-n6",
+              "targetId": "ex-fb-south-n7",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e8",
-              "sourceId": "ex-fb-south-ladybay-7",
-              "targetId": "ex-fb-south-ladybay-8",
+              "id": "ex-fb-south-n7-n8",
+              "sourceId": "ex-fb-south-n7",
+              "targetId": "ex-fb-south-n8",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e9",
-              "sourceId": "ex-fb-south-ladybay-8",
-              "targetId": "ex-fb-south-ladybay-9",
+              "id": "ex-fb-south-n8-n9",
+              "sourceId": "ex-fb-south-n8",
+              "targetId": "ex-fb-south-n9",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e10",
-              "sourceId": "ex-fb-south-ladybay-9",
-              "targetId": "ex-fb-south-ladybay-10",
+              "id": "ex-fb-south-n9-n10",
+              "sourceId": "ex-fb-south-n9",
+              "targetId": "ex-fb-south-n10",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e11",
-              "sourceId": "ex-fb-south-ladybay-10",
-              "targetId": "ex-fb-south-ladybay-11",
+              "id": "ex-fb-south-n10-c1",
+              "sourceId": "ex-fb-south-n10",
+              "targetId": "ex-fb-south-c1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e12",
-              "sourceId": "ex-fb-south-ladybay-11",
-              "targetId": "ex-fb-south-ladybay-12",
+              "id": "ex-fb-south-east-e1",
+              "sourceId": "ex-fb-south-east",
+              "targetId": "ex-fb-south-e1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-ladybay-e13",
-              "sourceId": "ex-fb-south-ladybay-12",
-              "targetId": "ex-fb-south-northEast",
+              "id": "ex-fb-south-e1-e2",
+              "sourceId": "ex-fb-south-e1",
+              "targetId": "ex-fb-south-e2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-trentBridge-southWest",
+              "id": "ex-fb-south-e2-e3",
+              "sourceId": "ex-fb-south-e2",
+              "targetId": "ex-fb-south-e3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-e3-e4",
+              "sourceId": "ex-fb-south-e3",
+              "targetId": "ex-fb-south-e4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-e4-e5",
+              "sourceId": "ex-fb-south-e4",
+              "targetId": "ex-fb-south-e5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-e5-e6",
+              "sourceId": "ex-fb-south-e5",
+              "targetId": "ex-fb-south-e6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-e6-e7",
+              "sourceId": "ex-fb-south-e6",
+              "targetId": "ex-fb-south-e7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-e7-j",
+              "sourceId": "ex-fb-south-e7",
+              "targetId": "ex-fb-south-j",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-trentBridge-SW",
               "sourceId": "ex-fb-south-trentBridge",
-              "targetId": "ex-fb-south-southWest",
+              "targetId": "ex-fb-south-SW",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-southWest-stand",
-              "sourceId": "ex-fb-south-southWest",
-              "targetId": "ex-fb-south-stand",
+              "id": "ex-fb-south-carParkNorth-e7",
+              "sourceId": "ex-fb-south-carParkNorth",
+              "targetId": "ex-fb-south-e7",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-northEast-southEast",
-              "sourceId": "ex-fb-south-northEast",
-              "targetId": "ex-fb-south-southEast",
+              "id": "ex-fb-south-carPark-NE",
+              "sourceId": "ex-fb-south-carPark",
+              "targetId": "ex-fb-south-NE",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-south-southEast-stand",
-              "sourceId": "ex-fb-south-southEast",
-              "targetId": "ex-fb-south-stand",
+              "id": "ex-fb-south-parkRide-NE",
+              "sourceId": "ex-fb-south-parkRide",
+              "targetId": "ex-fb-south-NE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-SW-southStand",
+              "sourceId": "ex-fb-south-SW",
+              "targetId": "ex-fb-south-southStand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-NE-SE",
+              "sourceId": "ex-fb-south-NE",
+              "targetId": "ex-fb-south-SE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-south-SE-southStand",
+              "sourceId": "ex-fb-south-SE",
+              "targetId": "ex-fb-south-southStand",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
@@ -1280,16 +2783,46 @@
         },
         "emitters": [
           {
-            "id": "ex-fb-south-fans",
+            "id": "ex-fb-south-seated",
             "seed": 1867,
-            "dotCount": 144,
-            "speed": 0.07,
+            "dotCount": 33,
+            "speed": 0.08,
             "speedVariance": 0.3,
-            "dotSize": 0.08,
+            "dotSize": 0.15,
             "dotColor": "#D55E00",
             "lifecycleMode": "collect",
             "releaseStart": 0,
             "releaseDuration": 0.6,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          },
+          {
+            "id": "ex-fb-south-walk-in",
+            "seed": 1967,
+            "dotCount": 300,
+            "speed": 0.08,
+            "speedVariance": 0.3,
+            "dotSize": 0.15,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "disappear",
+            "releaseStart": 0,
+            "releaseDuration": 0.75,
             "onsetVariance": 0.5,
             "intensityRamp": 0,
             "busynessEnvelope": [
@@ -1329,6 +2862,201 @@
                 "width": 0.022,
                 "height": 0.016,
                 "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-east-c1",
+              "x": 0.352,
+              "y": 0.412,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-c2",
+              "x": 0.385,
+              "y": 0.445,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-c3",
+              "x": 0.418,
+              "y": 0.48,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-c4",
+              "x": 0.419,
+              "y": 0.56,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-c5",
+              "x": 0.421,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-lr0",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-lr1",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-s1",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-s2",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-s3",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-s4",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-j",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-b0",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-bN",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-b1",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-bS",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-b2",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-NE",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-hockley",
+              "x": 0.49,
+              "y": 0.395,
+              "type": "entry",
+              "label": "Hockley",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.01,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-east-h1",
+              "x": 0.522,
+              "y": 0.4,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-h2",
+              "x": 0.524,
+              "y": 0.45,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-h3",
+              "x": 0.529,
+              "y": 0.5,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-h4",
+              "x": 0.531,
+              "y": 0.53,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-h5",
+              "x": 0.535,
+              "y": 0.565,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-bus",
+              "x": 0.397,
+              "y": 0.565,
+              "type": "entry",
+              "label": "Broadmarsh bus station",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.03,
+                "height": 0.016,
+                "turn": 0
               }
             },
             {
@@ -1336,13 +3064,161 @@
               "x": 0.468,
               "y": 0.607,
               "type": "entry",
-              "label": "Station",
+              "label": "Station (rail and tram)",
               "area": {
                 "shape": "rectangle",
                 "width": 0.05,
                 "height": 0.016,
                 "turn": 0
-              }
+              },
+              "entryWeight": 3
+            },
+            {
+              "id": "ex-fb-east-north",
+              "x": 0.428,
+              "y": 0.006,
+              "type": "entry",
+              "label": "From the north",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.012,
+                "height": 0.01,
+                "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-east-n1",
+              "x": 0.42,
+              "y": 0.03,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-n2",
+              "x": 0.413,
+              "y": 0.06,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-n3",
+              "x": 0.397,
+              "y": 0.093,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-n4",
+              "x": 0.402,
+              "y": 0.14,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-n5",
+              "x": 0.405,
+              "y": 0.19,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-n6",
+              "x": 0.401,
+              "y": 0.25,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-n7",
+              "x": 0.4,
+              "y": 0.316,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-n8",
+              "x": 0.4,
+              "y": 0.36,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-n9",
+              "x": 0.4,
+              "y": 0.405,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-n10",
+              "x": 0.375,
+              "y": 0.41,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-east",
+              "x": 0.975,
+              "y": 0.565,
+              "type": "entry",
+              "label": "From Sneinton",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.03,
+                "height": 0.02,
+                "turn": -30
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-east-e1",
+              "x": 0.94,
+              "y": 0.59,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-e2",
+              "x": 0.888,
+              "y": 0.622,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-e3",
+              "x": 0.85,
+              "y": 0.653,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-e4",
+              "x": 0.8,
+              "y": 0.673,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-e5",
+              "x": 0.74,
+              "y": 0.676,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-e6",
+              "x": 0.714,
+              "y": 0.692,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-e7",
+              "x": 0.692,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
             },
             {
               "id": "ex-fb-east-trentBridge",
@@ -1356,31 +3232,56 @@
                 "height": 0.012,
                 "turn": 0
               },
-              "entryWeight": 2
+              "entryWeight": 3
             },
             {
-              "id": "ex-fb-east-northEast",
-              "x": 0.708,
-              "y": 0.906,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-southWest",
+              "id": "ex-fb-east-SW",
               "x": 0.646,
               "y": 0.958,
               "type": "normal",
               "label": ""
             },
             {
-              "id": "ex-fb-east-southEast",
-              "x": 0.705,
-              "y": 0.974,
-              "type": "normal",
-              "label": ""
+              "id": "ex-fb-east-carParkNorth",
+              "x": 0.688,
+              "y": 0.708,
+              "type": "entry",
+              "label": "Meadow Lane car parks",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.02,
+                "height": 0.016,
+                "turn": -35
+              }
             },
             {
-              "id": "ex-fb-east-stand",
+              "id": "ex-fb-east-carPark",
+              "x": 0.722,
+              "y": 0.922,
+              "type": "entry",
+              "label": "Ground car park",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.012,
+                "turn": 20
+              }
+            },
+            {
+              "id": "ex-fb-east-parkRide",
+              "x": 0.733,
+              "y": 0.905,
+              "type": "entry",
+              "label": "Park and ride drop-off",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.01,
+                "height": 0.016,
+                "turn": 25
+              }
+            },
+            {
+              "id": "ex-fb-east-eastStand",
               "x": 0.6985,
               "y": 0.938,
               "type": "exit",
@@ -1393,184 +3294,225 @@
               }
             },
             {
-              "id": "ex-fb-east-stationStreet",
-              "x": 0.505,
-              "y": 0.592,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-city-1",
-              "x": 0.352,
-              "y": 0.412,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-city-2",
-              "x": 0.385,
-              "y": 0.445,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-city-3",
-              "x": 0.418,
-              "y": 0.48,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-city-4",
-              "x": 0.419,
-              "y": 0.56,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-city-5",
-              "x": 0.421,
-              "y": 0.592,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-1",
-              "x": 0.538,
-              "y": 0.594,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-2",
-              "x": 0.54,
-              "y": 0.677,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-3",
-              "x": 0.6,
-              "y": 0.677,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-4",
-              "x": 0.645,
-              "y": 0.68,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-5",
-              "x": 0.652,
-              "y": 0.7,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-6",
-              "x": 0.668,
-              "y": 0.728,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-7",
-              "x": 0.679,
-              "y": 0.753,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-8",
-              "x": 0.685,
-              "y": 0.778,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-9",
-              "x": 0.69,
-              "y": 0.807,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-10",
-              "x": 0.7045,
-              "y": 0.83,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-11",
-              "x": 0.716,
-              "y": 0.86,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-ladybay-12",
-              "x": 0.727,
-              "y": 0.887,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-east-south-1",
+              "id": "ex-fb-east-S2",
               "x": 0.672,
               "y": 0.977,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-east-SE",
+              "x": 0.705,
+              "y": 0.974,
               "type": "normal",
               "label": ""
             }
           ],
           "edges": [
             {
-              "id": "ex-fb-east-city-e1",
+              "id": "ex-fb-east-square-c1",
               "sourceId": "ex-fb-east-square",
-              "targetId": "ex-fb-east-city-1",
+              "targetId": "ex-fb-east-c1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-city-e2",
-              "sourceId": "ex-fb-east-city-1",
-              "targetId": "ex-fb-east-city-2",
+              "id": "ex-fb-east-c1-c2",
+              "sourceId": "ex-fb-east-c1",
+              "targetId": "ex-fb-east-c2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-city-e3",
-              "sourceId": "ex-fb-east-city-2",
-              "targetId": "ex-fb-east-city-3",
+              "id": "ex-fb-east-c2-c3",
+              "sourceId": "ex-fb-east-c2",
+              "targetId": "ex-fb-east-c3",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-city-e4",
-              "sourceId": "ex-fb-east-city-3",
-              "targetId": "ex-fb-east-city-4",
+              "id": "ex-fb-east-c3-c4",
+              "sourceId": "ex-fb-east-c3",
+              "targetId": "ex-fb-east-c4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-city-e5",
-              "sourceId": "ex-fb-east-city-4",
-              "targetId": "ex-fb-east-city-5",
+              "id": "ex-fb-east-c4-c5",
+              "sourceId": "ex-fb-east-c4",
+              "targetId": "ex-fb-east-c5",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-city-e6",
-              "sourceId": "ex-fb-east-city-5",
+              "id": "ex-fb-east-c5-stationStreet",
+              "sourceId": "ex-fb-east-c5",
               "targetId": "ex-fb-east-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-stationStreet-lr0",
+              "sourceId": "ex-fb-east-stationStreet",
+              "targetId": "ex-fb-east-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-lr0-lr1",
+              "sourceId": "ex-fb-east-lr0",
+              "targetId": "ex-fb-east-lr1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-lr1-s1",
+              "sourceId": "ex-fb-east-lr1",
+              "targetId": "ex-fb-east-s1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-s1-s2",
+              "sourceId": "ex-fb-east-s1",
+              "targetId": "ex-fb-east-s2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-s2-s3",
+              "sourceId": "ex-fb-east-s2",
+              "targetId": "ex-fb-east-s3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-s3-s4",
+              "sourceId": "ex-fb-east-s3",
+              "targetId": "ex-fb-east-s4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-s4-j",
+              "sourceId": "ex-fb-east-s4",
+              "targetId": "ex-fb-east-j",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-j-b0",
+              "sourceId": "ex-fb-east-j",
+              "targetId": "ex-fb-east-b0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-b0-bN",
+              "sourceId": "ex-fb-east-b0",
+              "targetId": "ex-fb-east-bN",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-bN-b1",
+              "sourceId": "ex-fb-east-bN",
+              "targetId": "ex-fb-east-b1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-b1-bS",
+              "sourceId": "ex-fb-east-b1",
+              "targetId": "ex-fb-east-bS",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-bS-b2",
+              "sourceId": "ex-fb-east-bS",
+              "targetId": "ex-fb-east-b2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-b2-NE",
+              "sourceId": "ex-fb-east-b2",
+              "targetId": "ex-fb-east-NE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-hockley-h1",
+              "sourceId": "ex-fb-east-hockley",
+              "targetId": "ex-fb-east-h1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-h1-h2",
+              "sourceId": "ex-fb-east-h1",
+              "targetId": "ex-fb-east-h2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-h2-h3",
+              "sourceId": "ex-fb-east-h2",
+              "targetId": "ex-fb-east-h3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-h3-h4",
+              "sourceId": "ex-fb-east-h3",
+              "targetId": "ex-fb-east-h4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-h4-h5",
+              "sourceId": "ex-fb-east-h4",
+              "targetId": "ex-fb-east-h5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-h5-lr0",
+              "sourceId": "ex-fb-east-h5",
+              "targetId": "ex-fb-east-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-bus-c4",
+              "sourceId": "ex-fb-east-bus",
+              "targetId": "ex-fb-east-c4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
@@ -1584,145 +3526,217 @@
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e1",
-              "sourceId": "ex-fb-east-stationStreet",
-              "targetId": "ex-fb-east-ladybay-1",
+              "id": "ex-fb-east-north-n1",
+              "sourceId": "ex-fb-east-north",
+              "targetId": "ex-fb-east-n1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e2",
-              "sourceId": "ex-fb-east-ladybay-1",
-              "targetId": "ex-fb-east-ladybay-2",
+              "id": "ex-fb-east-n1-n2",
+              "sourceId": "ex-fb-east-n1",
+              "targetId": "ex-fb-east-n2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e3",
-              "sourceId": "ex-fb-east-ladybay-2",
-              "targetId": "ex-fb-east-ladybay-3",
+              "id": "ex-fb-east-n2-n3",
+              "sourceId": "ex-fb-east-n2",
+              "targetId": "ex-fb-east-n3",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e4",
-              "sourceId": "ex-fb-east-ladybay-3",
-              "targetId": "ex-fb-east-ladybay-4",
+              "id": "ex-fb-east-n3-n4",
+              "sourceId": "ex-fb-east-n3",
+              "targetId": "ex-fb-east-n4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e5",
-              "sourceId": "ex-fb-east-ladybay-4",
-              "targetId": "ex-fb-east-ladybay-5",
+              "id": "ex-fb-east-n4-n5",
+              "sourceId": "ex-fb-east-n4",
+              "targetId": "ex-fb-east-n5",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e6",
-              "sourceId": "ex-fb-east-ladybay-5",
-              "targetId": "ex-fb-east-ladybay-6",
+              "id": "ex-fb-east-n5-n6",
+              "sourceId": "ex-fb-east-n5",
+              "targetId": "ex-fb-east-n6",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e7",
-              "sourceId": "ex-fb-east-ladybay-6",
-              "targetId": "ex-fb-east-ladybay-7",
+              "id": "ex-fb-east-n6-n7",
+              "sourceId": "ex-fb-east-n6",
+              "targetId": "ex-fb-east-n7",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e8",
-              "sourceId": "ex-fb-east-ladybay-7",
-              "targetId": "ex-fb-east-ladybay-8",
+              "id": "ex-fb-east-n7-n8",
+              "sourceId": "ex-fb-east-n7",
+              "targetId": "ex-fb-east-n8",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e9",
-              "sourceId": "ex-fb-east-ladybay-8",
-              "targetId": "ex-fb-east-ladybay-9",
+              "id": "ex-fb-east-n8-n9",
+              "sourceId": "ex-fb-east-n8",
+              "targetId": "ex-fb-east-n9",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e10",
-              "sourceId": "ex-fb-east-ladybay-9",
-              "targetId": "ex-fb-east-ladybay-10",
+              "id": "ex-fb-east-n9-n10",
+              "sourceId": "ex-fb-east-n9",
+              "targetId": "ex-fb-east-n10",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e11",
-              "sourceId": "ex-fb-east-ladybay-10",
-              "targetId": "ex-fb-east-ladybay-11",
+              "id": "ex-fb-east-n10-c1",
+              "sourceId": "ex-fb-east-n10",
+              "targetId": "ex-fb-east-c1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e12",
-              "sourceId": "ex-fb-east-ladybay-11",
-              "targetId": "ex-fb-east-ladybay-12",
+              "id": "ex-fb-east-east-e1",
+              "sourceId": "ex-fb-east-east",
+              "targetId": "ex-fb-east-e1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-ladybay-e13",
-              "sourceId": "ex-fb-east-ladybay-12",
-              "targetId": "ex-fb-east-northEast",
+              "id": "ex-fb-east-e1-e2",
+              "sourceId": "ex-fb-east-e1",
+              "targetId": "ex-fb-east-e2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-trentBridge-southWest",
+              "id": "ex-fb-east-e2-e3",
+              "sourceId": "ex-fb-east-e2",
+              "targetId": "ex-fb-east-e3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-e3-e4",
+              "sourceId": "ex-fb-east-e3",
+              "targetId": "ex-fb-east-e4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-e4-e5",
+              "sourceId": "ex-fb-east-e4",
+              "targetId": "ex-fb-east-e5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-e5-e6",
+              "sourceId": "ex-fb-east-e5",
+              "targetId": "ex-fb-east-e6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-e6-e7",
+              "sourceId": "ex-fb-east-e6",
+              "targetId": "ex-fb-east-e7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-e7-j",
+              "sourceId": "ex-fb-east-e7",
+              "targetId": "ex-fb-east-j",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-trentBridge-SW",
               "sourceId": "ex-fb-east-trentBridge",
-              "targetId": "ex-fb-east-southWest",
+              "targetId": "ex-fb-east-SW",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-northEast-stand",
-              "sourceId": "ex-fb-east-northEast",
-              "targetId": "ex-fb-east-stand",
+              "id": "ex-fb-east-carParkNorth-e7",
+              "sourceId": "ex-fb-east-carParkNorth",
+              "targetId": "ex-fb-east-e7",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-southEast-stand",
-              "sourceId": "ex-fb-east-southEast",
-              "targetId": "ex-fb-east-stand",
+              "id": "ex-fb-east-carPark-NE",
+              "sourceId": "ex-fb-east-carPark",
+              "targetId": "ex-fb-east-NE",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-south-e1",
-              "sourceId": "ex-fb-east-southWest",
-              "targetId": "ex-fb-east-south-1",
+              "id": "ex-fb-east-parkRide-NE",
+              "sourceId": "ex-fb-east-parkRide",
+              "targetId": "ex-fb-east-NE",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-east-south-e2",
-              "sourceId": "ex-fb-east-south-1",
-              "targetId": "ex-fb-east-southEast",
+              "id": "ex-fb-east-NE-eastStand",
+              "sourceId": "ex-fb-east-NE",
+              "targetId": "ex-fb-east-eastStand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-SW-S2",
+              "sourceId": "ex-fb-east-SW",
+              "targetId": "ex-fb-east-S2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-S2-SE",
+              "sourceId": "ex-fb-east-S2",
+              "targetId": "ex-fb-east-SE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-east-SE-eastStand",
+              "sourceId": "ex-fb-east-SE",
+              "targetId": "ex-fb-east-eastStand",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
@@ -1731,16 +3745,46 @@
         },
         "emitters": [
           {
-            "id": "ex-fb-east-fans",
+            "id": "ex-fb-east-seated",
             "seed": 1868,
-            "dotCount": 90,
-            "speed": 0.07,
+            "dotCount": 21,
+            "speed": 0.08,
             "speedVariance": 0.3,
-            "dotSize": 0.08,
+            "dotSize": 0.15,
             "dotColor": "#D55E00",
             "lifecycleMode": "collect",
             "releaseStart": 0,
             "releaseDuration": 0.6,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          },
+          {
+            "id": "ex-fb-east-walk-in",
+            "seed": 1968,
+            "dotCount": 210,
+            "speed": 0.08,
+            "speedVariance": 0.3,
+            "dotSize": 0.15,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "disappear",
+            "releaseStart": 0,
+            "releaseDuration": 0.75,
             "onsetVariance": 0.5,
             "intensityRamp": 0,
             "busynessEnvelope": [
@@ -1774,7 +3818,7 @@
               "x": 0.468,
               "y": 0.607,
               "type": "entry",
-              "label": "Station",
+              "label": "Station (rail and tram)",
               "area": {
                 "shape": "rectangle",
                 "width": 0.05,
@@ -1784,34 +3828,126 @@
               "entryWeight": 2
             },
             {
-              "id": "ex-fb-away-coachPark",
-              "x": 0.718,
-              "y": 0.937,
-              "type": "entry",
-              "label": "Coach park",
-              "area": {
-                "shape": "rectangle",
-                "width": 0.018,
-                "height": 0.024,
-                "turn": 20
-              }
+              "id": "ex-fb-away-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
             },
             {
-              "id": "ex-fb-away-northEast",
+              "id": "ex-fb-away-lr0",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-lr1",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-s1",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-s2",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-s3",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-s4",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-j",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-b0",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-bN",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-b1",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-bS",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-b2",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-away-NE",
               "x": 0.708,
               "y": 0.906,
               "type": "normal",
               "label": ""
             },
             {
-              "id": "ex-fb-away-southEast",
+              "id": "ex-fb-away-coachPark",
+              "x": 0.716,
+              "y": 0.942,
+              "type": "entry",
+              "label": "Coach park",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.012,
+                "turn": 20
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-away-SE",
               "x": 0.705,
               "y": 0.974,
               "type": "normal",
               "label": ""
             },
             {
-              "id": "ex-fb-away-stand",
+              "id": "ex-fb-away-awayEnd",
               "x": 0.692,
               "y": 0.959,
               "type": "exit",
@@ -1822,97 +3958,6 @@
                 "height": 0.016,
                 "turn": 22
               }
-            },
-            {
-              "id": "ex-fb-away-stationStreet",
-              "x": 0.505,
-              "y": 0.592,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-1",
-              "x": 0.538,
-              "y": 0.594,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-2",
-              "x": 0.54,
-              "y": 0.677,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-3",
-              "x": 0.6,
-              "y": 0.677,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-4",
-              "x": 0.645,
-              "y": 0.68,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-5",
-              "x": 0.652,
-              "y": 0.7,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-6",
-              "x": 0.668,
-              "y": 0.728,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-7",
-              "x": 0.679,
-              "y": 0.753,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-8",
-              "x": 0.685,
-              "y": 0.778,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-9",
-              "x": 0.69,
-              "y": 0.807,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-10",
-              "x": 0.7045,
-              "y": 0.83,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-11",
-              "x": 0.716,
-              "y": 0.86,
-              "type": "normal",
-              "label": ""
-            },
-            {
-              "id": "ex-fb-away-ladybay-12",
-              "x": 0.727,
-              "y": 0.887,
-              "type": "normal",
-              "label": ""
             }
           ],
           "edges": [
@@ -1925,129 +3970,129 @@
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e1",
+              "id": "ex-fb-away-stationStreet-lr0",
               "sourceId": "ex-fb-away-stationStreet",
-              "targetId": "ex-fb-away-ladybay-1",
+              "targetId": "ex-fb-away-lr0",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e2",
-              "sourceId": "ex-fb-away-ladybay-1",
-              "targetId": "ex-fb-away-ladybay-2",
+              "id": "ex-fb-away-lr0-lr1",
+              "sourceId": "ex-fb-away-lr0",
+              "targetId": "ex-fb-away-lr1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e3",
-              "sourceId": "ex-fb-away-ladybay-2",
-              "targetId": "ex-fb-away-ladybay-3",
+              "id": "ex-fb-away-lr1-s1",
+              "sourceId": "ex-fb-away-lr1",
+              "targetId": "ex-fb-away-s1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e4",
-              "sourceId": "ex-fb-away-ladybay-3",
-              "targetId": "ex-fb-away-ladybay-4",
+              "id": "ex-fb-away-s1-s2",
+              "sourceId": "ex-fb-away-s1",
+              "targetId": "ex-fb-away-s2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e5",
-              "sourceId": "ex-fb-away-ladybay-4",
-              "targetId": "ex-fb-away-ladybay-5",
+              "id": "ex-fb-away-s2-s3",
+              "sourceId": "ex-fb-away-s2",
+              "targetId": "ex-fb-away-s3",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e6",
-              "sourceId": "ex-fb-away-ladybay-5",
-              "targetId": "ex-fb-away-ladybay-6",
+              "id": "ex-fb-away-s3-s4",
+              "sourceId": "ex-fb-away-s3",
+              "targetId": "ex-fb-away-s4",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e7",
-              "sourceId": "ex-fb-away-ladybay-6",
-              "targetId": "ex-fb-away-ladybay-7",
+              "id": "ex-fb-away-s4-j",
+              "sourceId": "ex-fb-away-s4",
+              "targetId": "ex-fb-away-j",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e8",
-              "sourceId": "ex-fb-away-ladybay-7",
-              "targetId": "ex-fb-away-ladybay-8",
+              "id": "ex-fb-away-j-b0",
+              "sourceId": "ex-fb-away-j",
+              "targetId": "ex-fb-away-b0",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e9",
-              "sourceId": "ex-fb-away-ladybay-8",
-              "targetId": "ex-fb-away-ladybay-9",
+              "id": "ex-fb-away-b0-bN",
+              "sourceId": "ex-fb-away-b0",
+              "targetId": "ex-fb-away-bN",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e10",
-              "sourceId": "ex-fb-away-ladybay-9",
-              "targetId": "ex-fb-away-ladybay-10",
+              "id": "ex-fb-away-bN-b1",
+              "sourceId": "ex-fb-away-bN",
+              "targetId": "ex-fb-away-b1",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e11",
-              "sourceId": "ex-fb-away-ladybay-10",
-              "targetId": "ex-fb-away-ladybay-11",
+              "id": "ex-fb-away-b1-bS",
+              "sourceId": "ex-fb-away-b1",
+              "targetId": "ex-fb-away-bS",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e12",
-              "sourceId": "ex-fb-away-ladybay-11",
-              "targetId": "ex-fb-away-ladybay-12",
+              "id": "ex-fb-away-bS-b2",
+              "sourceId": "ex-fb-away-bS",
+              "targetId": "ex-fb-away-b2",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-ladybay-e13",
-              "sourceId": "ex-fb-away-ladybay-12",
-              "targetId": "ex-fb-away-northEast",
+              "id": "ex-fb-away-b2-NE",
+              "sourceId": "ex-fb-away-b2",
+              "targetId": "ex-fb-away-NE",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-coachPark-southEast",
+              "id": "ex-fb-away-coachPark-SE",
               "sourceId": "ex-fb-away-coachPark",
-              "targetId": "ex-fb-away-southEast",
+              "targetId": "ex-fb-away-SE",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-northEast-southEast",
-              "sourceId": "ex-fb-away-northEast",
-              "targetId": "ex-fb-away-southEast",
+              "id": "ex-fb-away-NE-SE",
+              "sourceId": "ex-fb-away-NE",
+              "targetId": "ex-fb-away-SE",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
             },
             {
-              "id": "ex-fb-away-southEast-stand",
-              "sourceId": "ex-fb-away-southEast",
-              "targetId": "ex-fb-away-stand",
+              "id": "ex-fb-away-SE-awayEnd",
+              "sourceId": "ex-fb-away-SE",
+              "targetId": "ex-fb-away-awayEnd",
               "weight": 1,
               "direction": "one-way",
               "controlPoints": []
@@ -2056,16 +4101,1211 @@
         },
         "emitters": [
           {
-            "id": "ex-fb-away-fans",
+            "id": "ex-fb-away-seated",
             "seed": 1869,
-            "dotCount": 48,
-            "speed": 0.07,
+            "dotCount": 9,
+            "speed": 0.08,
             "speedVariance": 0.3,
-            "dotSize": 0.08,
+            "dotSize": 0.15,
             "dotColor": "#0072B2",
             "lifecycleMode": "collect",
             "releaseStart": 0,
             "releaseDuration": 0.6,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          },
+          {
+            "id": "ex-fb-away-walk-in",
+            "seed": 1969,
+            "dotCount": 120,
+            "speed": 0.08,
+            "speedVariance": 0.3,
+            "dotSize": 0.15,
+            "dotColor": "#0072B2",
+            "lifecycleMode": "disappear",
+            "releaseStart": 0,
+            "releaseDuration": 0.75,
+            "onsetVariance": 0.5,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 3,
+            "groupWidth": 0.004
+          }
+        ]
+      },
+      {
+        "id": "ex-fb-pubs-crowd",
+        "name": "Pre-match pubs",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-fb-pubs-pubLondonRoad",
+              "x": 0.548,
+              "y": 0.655,
+              "type": "entry",
+              "label": "Pubs on London Road",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.01,
+                "height": 0.02,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-pubs-lr1",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-s1",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-s2",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-s3",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-s4",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-j",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-b0",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-bN",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-b1",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-bS",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-b2",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-NE",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-pubStation",
+              "x": 0.49,
+              "y": 0.585,
+              "type": "entry",
+              "label": "Pubs by the station",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.01,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-pubs-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-lr0",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-pubTrentBridge",
+              "x": 0.668,
+              "y": 0.988,
+              "type": "entry",
+              "label": "Pubs by Trent Bridge",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.016,
+                "height": 0.01,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-pubs-SW",
+              "x": 0.646,
+              "y": 0.958,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-NW",
+              "x": 0.664,
+              "y": 0.903,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-trentEnd",
+              "x": 0.657,
+              "y": 0.931,
+              "type": "exit",
+              "label": "Trent End"
+            },
+            {
+              "id": "ex-fb-pubs-northStand",
+              "x": 0.683,
+              "y": 0.92,
+              "type": "exit",
+              "label": "North stand"
+            },
+            {
+              "id": "ex-fb-pubs-eastStand",
+              "x": 0.6985,
+              "y": 0.938,
+              "type": "exit",
+              "label": "East stand"
+            },
+            {
+              "id": "ex-fb-pubs-S2",
+              "x": 0.672,
+              "y": 0.977,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-SE",
+              "x": 0.705,
+              "y": 0.974,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-pubs-southStand",
+              "x": 0.67,
+              "y": 0.959,
+              "type": "exit",
+              "label": "South stand"
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-fb-pubs-pubLondonRoad-lr1",
+              "sourceId": "ex-fb-pubs-pubLondonRoad",
+              "targetId": "ex-fb-pubs-lr1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-lr1-s1",
+              "sourceId": "ex-fb-pubs-lr1",
+              "targetId": "ex-fb-pubs-s1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-s1-s2",
+              "sourceId": "ex-fb-pubs-s1",
+              "targetId": "ex-fb-pubs-s2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-s2-s3",
+              "sourceId": "ex-fb-pubs-s2",
+              "targetId": "ex-fb-pubs-s3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-s3-s4",
+              "sourceId": "ex-fb-pubs-s3",
+              "targetId": "ex-fb-pubs-s4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-s4-j",
+              "sourceId": "ex-fb-pubs-s4",
+              "targetId": "ex-fb-pubs-j",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-j-b0",
+              "sourceId": "ex-fb-pubs-j",
+              "targetId": "ex-fb-pubs-b0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-b0-bN",
+              "sourceId": "ex-fb-pubs-b0",
+              "targetId": "ex-fb-pubs-bN",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-bN-b1",
+              "sourceId": "ex-fb-pubs-bN",
+              "targetId": "ex-fb-pubs-b1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-b1-bS",
+              "sourceId": "ex-fb-pubs-b1",
+              "targetId": "ex-fb-pubs-bS",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-bS-b2",
+              "sourceId": "ex-fb-pubs-bS",
+              "targetId": "ex-fb-pubs-b2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-b2-NE",
+              "sourceId": "ex-fb-pubs-b2",
+              "targetId": "ex-fb-pubs-NE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-pubStation-stationStreet",
+              "sourceId": "ex-fb-pubs-pubStation",
+              "targetId": "ex-fb-pubs-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-stationStreet-lr0",
+              "sourceId": "ex-fb-pubs-stationStreet",
+              "targetId": "ex-fb-pubs-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-lr0-lr1",
+              "sourceId": "ex-fb-pubs-lr0",
+              "targetId": "ex-fb-pubs-lr1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-pubTrentBridge-SW",
+              "sourceId": "ex-fb-pubs-pubTrentBridge",
+              "targetId": "ex-fb-pubs-SW",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-NE-NW",
+              "sourceId": "ex-fb-pubs-NE",
+              "targetId": "ex-fb-pubs-NW",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-NW-trentEnd",
+              "sourceId": "ex-fb-pubs-NW",
+              "targetId": "ex-fb-pubs-trentEnd",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-SW-trentEnd",
+              "sourceId": "ex-fb-pubs-SW",
+              "targetId": "ex-fb-pubs-trentEnd",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-NE-northStand",
+              "sourceId": "ex-fb-pubs-NE",
+              "targetId": "ex-fb-pubs-northStand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-SW-NW",
+              "sourceId": "ex-fb-pubs-SW",
+              "targetId": "ex-fb-pubs-NW",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-NW-northStand",
+              "sourceId": "ex-fb-pubs-NW",
+              "targetId": "ex-fb-pubs-northStand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-NE-eastStand",
+              "sourceId": "ex-fb-pubs-NE",
+              "targetId": "ex-fb-pubs-eastStand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-SW-S2",
+              "sourceId": "ex-fb-pubs-SW",
+              "targetId": "ex-fb-pubs-S2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-S2-SE",
+              "sourceId": "ex-fb-pubs-S2",
+              "targetId": "ex-fb-pubs-SE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-SW-southStand",
+              "sourceId": "ex-fb-pubs-SW",
+              "targetId": "ex-fb-pubs-southStand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-NE-SE",
+              "sourceId": "ex-fb-pubs-NE",
+              "targetId": "ex-fb-pubs-SE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-SE-southStand",
+              "sourceId": "ex-fb-pubs-SE",
+              "targetId": "ex-fb-pubs-southStand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-pubs-SE-eastStand",
+              "sourceId": "ex-fb-pubs-SE",
+              "targetId": "ex-fb-pubs-eastStand",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-fb-pubs-fans",
+            "seed": 1870,
+            "dotCount": 180,
+            "speed": 0.08,
+            "speedVariance": 0.3,
+            "dotSize": 0.15,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "disappear",
+            "releaseStart": 0.3,
+            "releaseDuration": 0.4,
+            "onsetVariance": 0.3,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "waitAtStart": true
+          }
+        ]
+      },
+      {
+        "id": "ex-fb-cycle-crowd",
+        "name": "Cyclists",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-fb-cycle-riverPath",
+              "x": 0.785,
+              "y": 0.853,
+              "type": "entry",
+              "label": "Riverside cycle path",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.012,
+                "height": 0.01,
+                "turn": -15
+              }
+            },
+            {
+              "id": "ex-fb-cycle-r1",
+              "x": 0.76,
+              "y": 0.857,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-r2",
+              "x": 0.738,
+              "y": 0.872,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-b2",
+              "x": 0.727,
+              "y": 0.887,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-NE",
+              "x": 0.708,
+              "y": 0.906,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-racks",
+              "x": 0.7,
+              "y": 0.903,
+              "type": "exit",
+              "label": "Bike racks"
+            },
+            {
+              "id": "ex-fb-cycle-cycleCity",
+              "x": 0.527,
+              "y": 0.47,
+              "type": "entry",
+              "label": "Cycle route from the city",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.01,
+                "height": 0.012,
+                "turn": 0
+              }
+            },
+            {
+              "id": "ex-fb-cycle-h3",
+              "x": 0.529,
+              "y": 0.5,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-h4",
+              "x": 0.531,
+              "y": 0.53,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-h5",
+              "x": 0.535,
+              "y": 0.565,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-lr0",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-lr1",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-s1",
+              "x": 0.6,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-s2",
+              "x": 0.645,
+              "y": 0.68,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-s3",
+              "x": 0.652,
+              "y": 0.7,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-s4",
+              "x": 0.668,
+              "y": 0.728,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-j",
+              "x": 0.679,
+              "y": 0.753,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-b0",
+              "x": 0.685,
+              "y": 0.778,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-bN",
+              "x": 0.69,
+              "y": 0.807,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-b1",
+              "x": 0.7045,
+              "y": 0.83,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-cycle-bS",
+              "x": 0.716,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-fb-cycle-riverPath-r1",
+              "sourceId": "ex-fb-cycle-riverPath",
+              "targetId": "ex-fb-cycle-r1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-r1-r2",
+              "sourceId": "ex-fb-cycle-r1",
+              "targetId": "ex-fb-cycle-r2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-r2-b2",
+              "sourceId": "ex-fb-cycle-r2",
+              "targetId": "ex-fb-cycle-b2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-b2-NE",
+              "sourceId": "ex-fb-cycle-b2",
+              "targetId": "ex-fb-cycle-NE",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-NE-racks",
+              "sourceId": "ex-fb-cycle-NE",
+              "targetId": "ex-fb-cycle-racks",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-cycleCity-h3",
+              "sourceId": "ex-fb-cycle-cycleCity",
+              "targetId": "ex-fb-cycle-h3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-h3-h4",
+              "sourceId": "ex-fb-cycle-h3",
+              "targetId": "ex-fb-cycle-h4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-h4-h5",
+              "sourceId": "ex-fb-cycle-h4",
+              "targetId": "ex-fb-cycle-h5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-h5-lr0",
+              "sourceId": "ex-fb-cycle-h5",
+              "targetId": "ex-fb-cycle-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-lr0-lr1",
+              "sourceId": "ex-fb-cycle-lr0",
+              "targetId": "ex-fb-cycle-lr1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-lr1-s1",
+              "sourceId": "ex-fb-cycle-lr1",
+              "targetId": "ex-fb-cycle-s1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-s1-s2",
+              "sourceId": "ex-fb-cycle-s1",
+              "targetId": "ex-fb-cycle-s2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-s2-s3",
+              "sourceId": "ex-fb-cycle-s2",
+              "targetId": "ex-fb-cycle-s3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-s3-s4",
+              "sourceId": "ex-fb-cycle-s3",
+              "targetId": "ex-fb-cycle-s4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-s4-j",
+              "sourceId": "ex-fb-cycle-s4",
+              "targetId": "ex-fb-cycle-j",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-j-b0",
+              "sourceId": "ex-fb-cycle-j",
+              "targetId": "ex-fb-cycle-b0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-b0-bN",
+              "sourceId": "ex-fb-cycle-b0",
+              "targetId": "ex-fb-cycle-bN",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-bN-b1",
+              "sourceId": "ex-fb-cycle-bN",
+              "targetId": "ex-fb-cycle-b1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-b1-bS",
+              "sourceId": "ex-fb-cycle-b1",
+              "targetId": "ex-fb-cycle-bS",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-cycle-bS-b2",
+              "sourceId": "ex-fb-cycle-bS",
+              "targetId": "ex-fb-cycle-b2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-fb-cycle-riders",
+            "seed": 1871,
+            "dotCount": 60,
+            "speed": 0.22,
+            "speedVariance": 0.2,
+            "dotSize": 0.15,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "disappear",
+            "releaseStart": 0.05,
+            "releaseDuration": 0.7,
+            "onsetVariance": 0.6,
+            "intensityRamp": 0,
+            "busynessEnvelope": [
+              {
+                "time": 0,
+                "value": 1,
+                "transition": "gradual"
+              },
+              {
+                "time": 1,
+                "value": 1,
+                "transition": "gradual"
+              }
+            ],
+            "wobble": 0,
+            "groups": true,
+            "groupSize": 2,
+            "groupWidth": 0.003
+          }
+        ]
+      },
+      {
+        "id": "ex-fb-bridge-crowd",
+        "name": "To Trent Bridge",
+        "visible": true,
+        "guideType": "graph",
+        "graph": {
+          "nodes": [
+            {
+              "id": "ex-fb-bridge-west",
+              "x": 0.006,
+              "y": 0.874,
+              "type": "entry",
+              "label": "From the west, through the Meadows",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.01,
+                "height": 0.014,
+                "turn": 0
+              },
+              "entryWeight": 3
+            },
+            {
+              "id": "ex-fb-bridge-w1",
+              "x": 0.153,
+              "y": 0.876,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-w2",
+              "x": 0.177,
+              "y": 0.82,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-w3",
+              "x": 0.23,
+              "y": 0.8,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-w4",
+              "x": 0.33,
+              "y": 0.787,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-w5",
+              "x": 0.37,
+              "y": 0.82,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-w6",
+              "x": 0.42,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-w7",
+              "x": 0.47,
+              "y": 0.88,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-w8",
+              "x": 0.52,
+              "y": 0.91,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-tbJ",
+              "x": 0.541,
+              "y": 0.924,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-t1",
+              "x": 0.558,
+              "y": 0.94,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-t2",
+              "x": 0.583,
+              "y": 0.973,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-tbExit",
+              "x": 0.609,
+              "y": 0.995,
+              "type": "exit",
+              "label": "Over Trent Bridge"
+            },
+            {
+              "id": "ex-fb-bridge-station",
+              "x": 0.468,
+              "y": 0.607,
+              "type": "entry",
+              "label": "Station (rail and tram)",
+              "area": {
+                "shape": "rectangle",
+                "width": 0.05,
+                "height": 0.016,
+                "turn": 0
+              },
+              "entryWeight": 2
+            },
+            {
+              "id": "ex-fb-bridge-stationStreet",
+              "x": 0.505,
+              "y": 0.592,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-lr0",
+              "x": 0.538,
+              "y": 0.594,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-lr1",
+              "x": 0.54,
+              "y": 0.677,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-lrS1",
+              "x": 0.54,
+              "y": 0.786,
+              "type": "normal",
+              "label": ""
+            },
+            {
+              "id": "ex-fb-bridge-lrS2",
+              "x": 0.543,
+              "y": 0.86,
+              "type": "normal",
+              "label": ""
+            }
+          ],
+          "edges": [
+            {
+              "id": "ex-fb-bridge-west-w1",
+              "sourceId": "ex-fb-bridge-west",
+              "targetId": "ex-fb-bridge-w1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-w1-w2",
+              "sourceId": "ex-fb-bridge-w1",
+              "targetId": "ex-fb-bridge-w2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-w2-w3",
+              "sourceId": "ex-fb-bridge-w2",
+              "targetId": "ex-fb-bridge-w3",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-w3-w4",
+              "sourceId": "ex-fb-bridge-w3",
+              "targetId": "ex-fb-bridge-w4",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-w4-w5",
+              "sourceId": "ex-fb-bridge-w4",
+              "targetId": "ex-fb-bridge-w5",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-w5-w6",
+              "sourceId": "ex-fb-bridge-w5",
+              "targetId": "ex-fb-bridge-w6",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-w6-w7",
+              "sourceId": "ex-fb-bridge-w6",
+              "targetId": "ex-fb-bridge-w7",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-w7-w8",
+              "sourceId": "ex-fb-bridge-w7",
+              "targetId": "ex-fb-bridge-w8",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-w8-tbJ",
+              "sourceId": "ex-fb-bridge-w8",
+              "targetId": "ex-fb-bridge-tbJ",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-tbJ-t1",
+              "sourceId": "ex-fb-bridge-tbJ",
+              "targetId": "ex-fb-bridge-t1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-t1-t2",
+              "sourceId": "ex-fb-bridge-t1",
+              "targetId": "ex-fb-bridge-t2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-t2-tbExit",
+              "sourceId": "ex-fb-bridge-t2",
+              "targetId": "ex-fb-bridge-tbExit",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-station-stationStreet",
+              "sourceId": "ex-fb-bridge-station",
+              "targetId": "ex-fb-bridge-stationStreet",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-stationStreet-lr0",
+              "sourceId": "ex-fb-bridge-stationStreet",
+              "targetId": "ex-fb-bridge-lr0",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-lr0-lr1",
+              "sourceId": "ex-fb-bridge-lr0",
+              "targetId": "ex-fb-bridge-lr1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-lr1-lrS1",
+              "sourceId": "ex-fb-bridge-lr1",
+              "targetId": "ex-fb-bridge-lrS1",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-lrS1-lrS2",
+              "sourceId": "ex-fb-bridge-lrS1",
+              "targetId": "ex-fb-bridge-lrS2",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            },
+            {
+              "id": "ex-fb-bridge-lrS2-tbJ",
+              "sourceId": "ex-fb-bridge-lrS2",
+              "targetId": "ex-fb-bridge-tbJ",
+              "weight": 1,
+              "direction": "one-way",
+              "controlPoints": []
+            }
+          ]
+        },
+        "emitters": [
+          {
+            "id": "ex-fb-bridge-fans",
+            "seed": 1872,
+            "dotCount": 300,
+            "speed": 0.08,
+            "speedVariance": 0.3,
+            "dotSize": 0.15,
+            "dotColor": "#D55E00",
+            "lifecycleMode": "disappear",
+            "releaseStart": 0,
+            "releaseDuration": 0.7,
             "onsetVariance": 0.5,
             "intensityRamp": 0,
             "busynessEnvelope": [
@@ -2120,7 +5360,7 @@
   "animationState": {
     "mode": "constant-speed",
     "speed": 140,
-    "duration": 20000
+    "duration": 30000
   },
   "background": {
     "overlay": 0,

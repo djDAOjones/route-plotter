@@ -33,6 +33,20 @@
 
 **Deferred:** UI-08
 
+## 2026-10-18 — EX-03 — Match day gets solid dots and fans from all over
+
+**Decision:** On the owner's word, Match day's dots double to 0.15 so they read as solid, each stand seats as many fans as fit and walks the rest in, and fans arrive from every direction and kind of transit, including pubs, park and ride and cycle paths.
+
+**Rationale:**
+- **The owner's words, 2026-10-18, verbatim:** "alrighty, the demos need an upgrade. lets start with the football dots. these need to be more solid (less transparent), and gather at the stadium from all over, such as town square, train station, all directions of transit". His picks: "Bigger + walk-in fans (Recommended)"; arrivals "City centre", "Rail, tram and bus", "On foot, every edge" and "Cars and coaches", then "Park and ride, bikes" and "and pubs!".
+- **The filing session's readings, for the owner to confirm:** the dots were never drawn transparent (the renderer fills them opaque), so "more solid" means larger; the park-and-ride drop-off, pubs, cycle routes and bike racks are illustrative places; walkers who cross Trent Bridge leave the map at its approach and arrive by the Trent Bridge Entry.
+- Built from CROWD-08's parts only. Disappear dots take no seat, so each stand pairs a Collect emitter sized to its capacity with a larger Disappear one; every Finish area still seats all the dots that collect there.
+- Reform riot, 1831 is unchanged; the owner's next demo upgrade gets a wish line.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-18 — REL-723 — v3.3.723 publishes the Match day and Reform riot, 1831 examples
 
 **Decision:** v3.3.723 publishes EX-02's two example projects on the owner's call; only the example definitions changed and the player is byte-identical to v3.3.722's, so no saved-file check is owed.

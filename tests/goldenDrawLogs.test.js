@@ -318,6 +318,12 @@ describe('golden draw logs (TST-02)', () => {
             expect(frames.at(-1)).toEqual(frames[0]);
             shown = frames.reduce((busiest, frame) => (frame.length > busiest.length ? frame : busiest));
           }
+          // `city-ground-match-day` has no route either: its pub crowds wait
+          // from the first instant and its walk-in fans have vanished into
+          // the stands by the last (EX-03), so its busiest instant is checked.
+          if (fixture.id === 'city-ground-match-day') {
+            shown = frames.reduce((busiest, frame) => (frame.length > busiest.length ? frame : busiest));
+          }
           expect(shown.length).toBeGreaterThan(frames[0].length);
           expect(shown.length).toBeGreaterThan(20);
           // The background reaches the canvas in every mode.
