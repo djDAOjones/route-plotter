@@ -19,6 +19,25 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-10-18 — DEF-99 — Video exports frame at their own size, with no editor zoom and path-only placed for the export
+
+**Decision:** On the owner's word, two faults in his Match day MP4s are filed and fixed: a video export draws no editor zoom (DEF-99), and a path-only export hides the background only once the canvas has the export size (DEF-100).
+
+**Items:** DEF-99, DEF-100
+
+**Rationale:**
+- **The owner's words, 2026-10-18, verbatim:** "exports and playback of the football example are coming out weird", with two MP4s; then "Yes, file both as defects and fix them in a scratch clone with a path-only test; stop before pushing or opening a PR."
+- Both MP4s run 27.8 s, Match day's 25.77 s and the export's 2 s start buffer, so they are v3.3.723's; EX-03 (merged as c2a6072, live in v3.3.724) changes only the example, so v3.3.724 carries both faults too.
+- **DEF-99:** the render state gave export frames the editor's viewport, and `_calculateCameraState` dropped the camera under it (DEF-61). In export mode the render state now carries no viewport and the camera stands, as the HTML export's player has always framed. DEF-61 recorded that export mode keeps the author's viewport but decided nothing on whether it should, and its three export checks pinned that framing. Asked whether a video exported while zoomed should ignore the zoom or copy it, the owner picked "Ignore the zoom (Recommended)"; those checks now expect the camera, as at 1×, the map, mask and route still under one transform.
+- **DEF-100:** `exportVideo` cleared the image before `_enterExportMode`, which refits the image only while there is one; the image is now cleared after it.
+- `tests/exportFraming.test.js`: four cases, with text labels on, all failing before the fix; the camera-on case also fails without the `camera.js` change alone. A clock moving 2 s a read lets two apps' camera-on exports match call for call (TST-09's wall-clock zoom limit).
+- Codex r1 asked for the DEF-61 checks, labels in the tests, a visible camera check, a narrower DEF-100 claim and wish lines for open questions; all taken.
+- What looked weird in playback is not yet known: asked, unanswered, a wish line. So is a selected waypoint's selection box drawn into exports.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-18 — EX-03 — Match day gets solid dots and fans from all over
 
 **Decision:** On the owner's word, Match day's dots double to 0.15 so they read as solid, each stand seats as many fans as fit and walks the rest in, and fans arrive from every direction and kind of transit, including pubs, park and ride and cycle paths.

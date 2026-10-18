@@ -304,8 +304,9 @@ export const cameraMixin = {
     // either, and easing it out of sight kept the loop awake (DEF-44). It
     // has still followed the head, and is put where it comes to rest, at its
     // target zoom on the centre for that zoom, so it is in place when the
-    // zoom is undone: that draws one frame and wakes no loop.
-    const hasZoom = this.viewport && this.viewport.zoom > 1;
+    // zoom is undone: that draws one frame and wakes no loop. A video export
+    // draws no viewport zoom (`render`), so there the camera stands (DEF-99).
+    const hasZoom = !this._isExportMode && this.viewport && this.viewport.zoom > 1;
     if (!hasZoom) return cameraState;
     this.cameraService.settle();
     return { zoom: 1, centerX: canvasWidth / 2, centerY: canvasHeight / 2, enabled: false };

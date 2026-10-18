@@ -329,17 +329,20 @@ export const exportingMixin = {
           return;
         }
 
-        if (pathOnly) {
-          // Temporarily hide background for transparent export
-          this.background.image = null;
-        }
-
         // Reset reveal mask for fresh export
         this.motionVisibilityService.resetRevealMask();
 
         // Resize canvas to export resolution so captureStream captures at the
         // correct pixel dimensions (not screen size × DPR)
         this._enterExportMode(this.exportSettings.resolutionX, this.exportSettings.resolutionY);
+        if (pathOnly) {
+          // Temporarily hide background for transparent export. Only once the
+          // canvas has the export size: the image's place on it is worked out
+          // again only while there is an image, and hidden first, the route
+          // and crowds were drawn at the display's size in the frame's
+          // top-left corner (DEF-100).
+          this.background.image = null;
+        }
         // The scene's end, measured again in the space the export draws in
         // (CROWD-05): a crowd bound to a route moment reads that moment there,
         // so its dots finish where the export draws them finish. The base is

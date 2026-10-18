@@ -986,34 +986,44 @@ describe('golden draw logs (TST-02)', () => {
       });
 
       test.each(MODES)('in a video exported while the author is zoomed in (%s)', async (mode) => {
-        // Export mode resizes the canvas but keeps the author's viewport, so
-        // every frame of a video exported at 2× is drawn at 2×, and the map
-        // was drawn under the camera as well, off the route.
-        const app = await appWithFixture(withMode(mode, false));
-        enterMode(app, 'preview');
-        app.setZoom(2, app.waypoints[1]);
-        const download = vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
-        let frame = null;
-        let viewport = null;
-        try {
-          // The real exportVideo(), with only the encoder replaced
-          app.videoExporter = {
-            cancel() {},
-            async export({ renderFrame }) {
-              discardFrame();
-              await renderFrame(0.5);
-              frame = drawn(takeFrame(app, { state: true }));
-              viewport = { ...app.viewport };
-              return new Blob(['video']);
-            },
-          };
-          await app.exportVideo();
-          expect(download).toHaveBeenCalledTimes(1);
-        } finally {
-          download.mockRestore();
-        }
-        expect(viewport.zoom).toBe(2);
-        expectViewport(viewport, frame, mode, 'in the export frame');
+        // Export mode resizes the canvas but kept the author's viewport, so
+        // every frame of a video exported at 2× was drawn at 2×, and the map
+        // was drawn under the camera as well, off the route. A video export
+        // now draws no viewport zoom (DEF-99, the owner's pick "Ignore the
+        // zoom"): the map, its mask and the route are drawn under the camera,
+        // as in the same export made at 1×, and the author keeps the zoom.
+        /** One export frame, mid-way, of the fixture at the author's `zoom`, and the viewport during it. */
+        const exportedAt = async (zoom) => {
+          const app = await appWithFixture(withMode(mode, false));
+          enterMode(app, 'preview');
+          if (zoom > 1) app.setZoom(zoom, app.waypoints[1]);
+          const download = vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
+          let frame = null;
+          let viewport = null;
+          try {
+            // The real exportVideo(), with only the encoder replaced
+            app.videoExporter = {
+              cancel() {},
+              async export({ renderFrame }) {
+                discardFrame();
+                await renderFrame(0.5);
+                frame = drawn(takeFrame(app, { state: true }));
+                viewport = { ...app.viewport };
+                return new Blob(['video']);
+              },
+            };
+            await app.exportVideo();
+            expect(download).toHaveBeenCalledTimes(1);
+          } finally {
+            download.mockRestore();
+          }
+          return { frame, viewport };
+        };
+        const atOne = await exportedAt(1);
+        const zoomed = await exportedAt(2);
+        expect(zoomed.viewport.zoom).toBe(2);
+        expectOneTransform(zoomed.frame, mode, /^1\.7\d* 0 0 1\.7\d* /, 'in the export frame, under the camera');
+        expect(zoomed.frame, 'in the export frame, as at 1×').toEqual(atOne.frame);
       });
     });
 
