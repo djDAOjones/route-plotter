@@ -19,6 +19,23 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-10-19 — REL-724 — v3.3.724 publishes the Match day upgrade
+
+**Decision:** v3.3.724 publishes EX-03's Match day upgrade on the owner's call; only the example definitions changed and the player is byte-identical to v3.3.723's, so no saved-file check is owed.
+
+**Rationale:**
+- **The owner's words, verbatim:** "can we commit / merge" (2026-10-18, after "Once CI is green I'll decide on merge and release."), then "Release v3.3.724 now. I've paused OneDrive syncing." and "I am going to be, so need to you conclude gateless. stop at 01:30 gmt if not done".
+- **Source:** PR #155, squash merge c2a6072186f05cf257c1e725b617aa0c3dc0ca8a, whose tree is the reviewed head 088d5124fbc749c22da2a5950d611714cd74ef44's; independent gpt-6-astra xhigh round 1 approved the same tree; pull_request Verify 39163149154 and push Verify 39163111877 on the head and main push Verify 39169575115 on the merge succeeded.
+- **Release:** from the `route-plotter/` working clone on clean main c2a6072 matching origin/main, Pages source main /docs built at c2a6072, rollback tag rollback-v3.3.723-c2a6072 pushed. release.sh's separate gate was not repeated: the identical tree had passed the full gate on 2026-10-18 (201 files, 4,357 passed, 2 todo), and the session read the owner's 01:30 stop as leaving no room for a second one behind another session's gate, so the resume script ran under the gate lock. Its dry-run passed, npm run push passed its own full check on main's commit (201 files, 4,357 passed, 2 todo; restartSafety; build) and pushed deploy a0256ff "chore: deploy v3.3.724".
+- **Publication:** main-branch Verify 39175594435 and the Pages build, deploy and report checks succeeded; github-pages deployment 7162188451 reached a0256ff; the published comparison of every file under docs/ was match 24, mismatch 0, errors 0.
+- **Live,** after clearing localStorage, sessionStorage and IndexedDB, in a hidden browser pane with a 1280×800 viewport emulated (hidden, it is 0×0 and a route has no duration): the title shows v3.3.724; Open day played to 3,002 ms and on to its end with no queued frame; MP4 9,819,817 bytes, 1920×1080, 29.03 s; HTML 2,070,460 bytes carrying the project, the CSP and the exact live player; no failed resource. Match day opens from File → Example projects: archive served 200 (1,827,687 bytes, as built from the merge), eight crowds on the 3,371-pixel aerial, Play available, its 30 s base timeline playing 35.4 s; 180 fans wait at the pubs at the start, 938 dots are out at the half, and the 117 seated fans remain at the end. Reform riot, 1831 is unchanged (1,821,536 bytes; 132 to 480 dots).
+- Annotated tag v3.3.724 (b5b64b4) at deploy a0256ff3c524b8bae1f8487fd5cb4d0ceb023108.
+- House conventions: positive publication evidence and one owning record per fact.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-18 — EX-03 — Match day gets solid dots and fans from all over
 
 **Decision:** On the owner's word, Match day's dots double to 0.15 so they read as solid, each stand seats as many fans as fit and walks the rest in, and fans arrive from every direction and kind of transit, including pubs, park and ride and cycle paths.
