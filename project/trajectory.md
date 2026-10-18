@@ -9,6 +9,7 @@
 
 ## The built-in examples — the owner's word of 2026-10-17
 
+- EX-03 — Match day's dots double to solid 0.15 and fans converge on the City Ground from the town centre, station, buses, every edge, car parks, park and ride, pubs and cycle paths, each stand seating fans one per seat while more walk in (2026-10-18) — see decisions
 - EX-02 — Match day and Reform riot, 1831 open from File → Example projects on the Nottingham aerial: fans fill the City Ground's four stands from three routes and two bridges, and a mob passes through the Market Square to the Castle (2026-10-17) — see decisions
 
 ## MVP — football crowds and mobs

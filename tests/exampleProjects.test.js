@@ -224,7 +224,7 @@ function crowdOnlyContext(example) {
 }
 
 describe('every crowd-only example loads and plays on its base timeline', () => {
-  test('the crowd-only examples are the two EX-02 ones', () => {
+  test('the crowd-only examples are the two EX-02 ones (Match day upgraded by EX-03)', () => {
     expect(crowdOnlyExamples.map(example => example.id))
       .toEqual(['city-ground-match-day', 'reform-riot-1831']);
   });
@@ -250,11 +250,18 @@ describe('every crowd-only example loads and plays on its base timeline', () => 
         }
       });
 
-      test('every Finish area seats all its dots, so no place is reused', () => {
+      test('every Finish area seats all the dots that collect there, so no place is reused', () => {
         const scene = Scene.fromJSON(example.project.scene);
         const { finishPackingContext } = crowdOnlyContext(example);
+        let seatedCrowds = 0;
         for (const layer of scene.getFlowLayers()) {
-          const dots = layer.emitters.reduce((sum, emitter) => sum + emitter.dotCount, 0);
+          // Only dots that collect take a place; dots that disappear walk in
+          // and vanish (CROWD-08 part C), as Match day's walk-in fans do.
+          const collecting = layer.emitters.filter(emitter => emitter.lifecycleMode === 'collect');
+          if (collecting.length === 0) continue;
+          seatedCrowds += 1;
+          const dots = collecting.reduce((sum, emitter) => sum + emitter.dotCount, 0);
+          // Seats are spaced for the crowd's largest dot, whatever its journey end.
           const dotSize = Math.max(...layer.emitters.map(emitter => emitter.dotSize));
           for (const exit of layer.graph.getNodesByType('exit')) {
             expect(exit.area, `${layer.name} finishes in an area`).toBeTruthy();
@@ -262,9 +269,10 @@ describe('every crowd-only example loads and plays on its base timeline', () => 
             expect(capacity, `${layer.name} holds its ${dots} dots`).toBeGreaterThanOrEqual(dots);
           }
         }
+        expect(seatedCrowds).toBeGreaterThan(0);
       });
 
-      test('every node leads one way to its crowd\'s Exit, with no dead end or stray node', () => {
+      test('every node leads one way to one of its crowd\'s Exits, with no dead end, cycle or stray node', () => {
         const scene = Scene.fromJSON(example.project.scene);
         for (const layer of scene.getFlowLayers()) {
           const graph = layer.graph;
@@ -275,9 +283,9 @@ describe('every crowd-only example loads and plays on its base timeline', () => 
             onward.get(edge.sourceId).push(edge.targetId);
             reached.add(edge.targetId);
           }
-          const [exit, ...others] = graph.getNodesByType('exit');
-          expect(others, `${layer.name} has one Exit`).toEqual([]);
-          expect(onward.get(exit.id), `${layer.name}'s Exit ends the walk`).toEqual([]);
+          const exits = graph.getNodesByType('exit');
+          expect(exits.length, `${layer.name} has an Exit`).toBeGreaterThan(0);
+          for (const exit of exits) expect(onward.get(exit.id), `${layer.name}: ${exit.label} ends the walk`).toEqual([]);
           // No cycle: a dot never comes back to a node it has left.
           const state = new Map();
           const visit = id => {
@@ -295,7 +303,7 @@ describe('every crowd-only example loads and plays on its base timeline', () => 
             while (queue.length) for (const next of onward.get(queue.shift())) {
               if (!seen.has(next)) { seen.add(next); queue.push(next); }
             }
-            expect(seen.has(exit.id), `${layer.name}: ${node.id} reaches the Exit`).toBe(true);
+            expect(exits.some(exit => seen.has(exit.id)), `${layer.name}: ${node.id} reaches an Exit`).toBe(true);
           }
         }
       });
@@ -359,26 +367,45 @@ describe('each example demonstrates what it claims to', () => {
     expect(crowd.graph.getNodesByType('exit')).toHaveLength(1);
   });
 
-  test('match day fills the City Ground\'s four stands from several routes, home and away', () => {
+  test('match day gathers fans from all over into the City Ground\'s four stands, home and away', () => {
     const scene = Scene.fromJSON(byId('city-ground-match-day').project.scene);
     const crowds = scene.getFlowLayers();
 
-    expect(crowds.map(crowd => crowd.name))
-      .toEqual(['Trent End', 'North stand', 'South stand', 'East stand', 'Away fans']);
-    const home = crowds.slice(0, 4), [away] = crowds.slice(4);
+    expect(crowds.map(crowd => crowd.name)).toEqual([
+      'Trent End', 'North stand', 'South stand', 'East stand', 'Away fans',
+      'Pre-match pubs', 'Cyclists', 'To Trent Bridge',
+    ]);
+    const labels = crowd => crowd.graph.getNodesByType('entry').map(entry => entry.label);
+    const [home, away] = [crowds.slice(0, 4), crowds[4]];
     for (const crowd of home) {
-      expect(crowd.graph.getNodesByType('entry').map(entry => entry.label))
-        .toEqual(['Market Square', 'Station', 'Trent Bridge']);
-      // Trent Bridge carries twice the share of each other route.
-      expect(crowd.graph.getNodesByType('entry').map(entry => entry.entryWeight ?? 1)).toEqual([1, 1, 2]);
+      // From the town centre, the station and buses, every edge, the car parks and the park and ride.
+      expect(labels(crowd)).toEqual(expect.arrayContaining([
+        'Market Square', 'Hockley', 'Broadmarsh bus station', 'Station (rail and tram)',
+        'From the north', 'From Sneinton', 'Trent Bridge',
+        'Meadow Lane car parks', 'Ground car park', 'Park and ride drop-off',
+      ]));
     }
-    expect(away.graph.getNodesByType('entry').map(entry => entry.label)).toEqual(['Station', 'Coach park']);
+    expect(labels(away)).toEqual(['Station (rail and tram)', 'Coach park']);
+    expect(labels(crowds[5])).toEqual(['Pubs on London Road', 'Pubs by the station', 'Pubs by Trent Bridge']);
+    expect(labels(crowds[6])).toEqual(['Riverside cycle path', 'Cycle route from the city']);
+    expect(labels(crowds[7])).toEqual(['From the west, through the Meadows', 'Station (rail and tram)']);
+
+    // Each stand's crowd seats some fans and walks the rest in, so the streets stay busy.
+    for (const crowd of crowds.slice(0, 5)) {
+      expect(crowd.emitters.map(emitter => emitter.lifecycleMode)).toEqual(['collect', 'disappear']);
+      expect(crowd.emitters[1].dotCount).toBeGreaterThan(crowd.emitters[0].dotCount);
+      for (const fans of crowd.emitters) expect(groupsActive(crowd, fans), crowd.name).toBe(true);
+    }
+    // The pubs' crowds wait from the start; cyclists ride faster than fans walk.
+    expect(waitingActive(crowds[5], crowds[5].emitters[0])).toBe(true);
+    expect(crowds[6].emitters[0].speed).toBeGreaterThan(crowds[0].emitters[0].speed);
+
+    // Solid dots, all one size; home red and away blue.
+    const emitters = crowds.flatMap(crowd => crowd.emitters);
+    expect(new Set(emitters.map(emitter => emitter.dotSize))).toEqual(new Set([0.15]));
     expect(new Set(home.map(crowd => crowd.emitters[0].dotColor)).size).toBe(1);
     expect(away.emitters[0].dotColor).not.toBe(home[0].emitters[0].dotColor);
     for (const crowd of crowds) {
-      const [fans] = crowd.emitters;
-      expect(fans.lifecycleMode).toBe('collect');
-      expect(groupsActive(crowd, fans), crowd.name).toBe(true);
       expect(crowd.graph.getEdges().every(edge => edge.direction === 'one-way')).toBe(true);
     }
   });
