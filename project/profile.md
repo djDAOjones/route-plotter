@@ -15,8 +15,8 @@
   with a pull request, never `main`
 - Network: listed hosts github.com, registry.npmjs.org
 - Budget: total 4,000 words for the base set; contract 500, profile 400,
-  rules 600, Direction 150, whole backlog 1,000, decisions slice 1,000,
-  trajectory item lines 300
+  rules 600, Direction 150, whole backlog 1,100 for now (UI-08),
+  decisions slice 1,000, trajectory item lines 300
 - Session: 200k tokens of context
 
 ## Stack and infrastructure

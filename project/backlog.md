@@ -24,6 +24,10 @@
 
 ### MVP — football crowds and mobs — the owner's word of 2026-10-13 — CLOSED 2026-10-16
 
+### Next feature — the owner's word of 2026-10-18
+
+- [ ] UI-08 — A toggle in the Background card to hide the background — since 2026-10-18 — (from: UI-08, 2026-10-18)
+
 ### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
 
 - [!] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01 — blocked: the owner's word to retire the source-text assertions its new tests cover (GATELESS-1 bars deleting a test)
