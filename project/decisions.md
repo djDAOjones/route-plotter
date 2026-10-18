@@ -19,6 +19,23 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-10-18 — REL-723 — v3.3.723 publishes the Match day and Reform riot, 1831 examples
+
+**Decision:** v3.3.723 publishes EX-02's two example projects on the owner's call; only the example definitions changed and the player is byte-identical to v3.3.722's, so no saved-file check is owed.
+
+**Rationale:**
+- **The owner's words, verbatim:** "CI is green on #153. Merge it and release v3.3.723." (2026-10-17), and after the second stop, "please see this through".
+- **Source:** PR #153, merge 79362925fdfeef195040b050f2640d26a98eecef, final head d72ebfa1b3b813d6ddad585be5b7cfd40c603574 (the merge's tree), independent gpt-6-astra xhigh round 2 approved, pull_request Verify 39058681590 and push Verify 39058652539 succeeded.
+- **Release:** from the `route-plotter/` working clone on clean main 7936292 matching origin/main, Pages source main /docs built at 7936292, rollback tag rollback-v3.3.722-7936292 pushed. Three attempts stopped before any commit, each on a time limit, not a wrong result, while other work loaded the Mac: the first gate (labelInName's shell test at 10.7 s against 10 s, another project's suite running), then npm run push's own check twice (three keyTable tests at 10.4–11.9 s when that suite restarted; goldenControls' "major" row at its 180 s limit during an OneDrive sync burst). The second attempt's gate had passed (201 files, 4,357 passed, 2 todo). With OneDrive syncing paused by the owner, npm run push passed its check (201 files, 4,357 passed, 2 todo; restartSafety; build) and pushed deploy 806713b "chore: deploy v3.3.723".
+- **Publication:** main-branch Verify 39083599338 and the Pages build, deploy and report checks succeeded; github-pages deployment 7147914039 reached 806713b; the published comparison of every file under docs/ was match 24, mismatch 0, errors 0.
+- **Live,** after clearing localStorage, sessionStorage and IndexedDB: the title shows v3.3.723; Open day played to 3,002 ms and on to its end with no queued frame; MP4 9,910,489 bytes, 1920×1080, 28.77 s; HTML 2,070,479 bytes carrying the project, the CSP and the exact live player; no failed resource. Both new examples open from File → Example projects: archives served 200 (1,823,409 and 1,821,536 bytes), the 3,371-pixel aerial, Play available; Match day goes from 0 to 543 dots, and the riot from 132 waiting in the square to 480.
+- Annotated tag v3.3.723 (4cdd645) at deploy 806713b99520bf69a606319ac98ad730a756e564.
+- The time limits that stopped this release get one wish line. House conventions: positive publication evidence and one owning record per fact.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-17 — EX-02 — Match day and Reform riot, 1831, join the example projects
 
 **Decision:** On the owner's word, two crowd-only example projects on the PARM aerial of Nottingham join File → Example projects, Match day (fans fill the City Ground's four stands from several routes) and Reform riot, 1831 (a mob passes through the Market Square to the Castle), and both archives are approved for publication.

@@ -147,3 +147,4 @@
 - Near-limit ZIPs may grow on Open/re-save while waypoint timestamps and timing are normalised; investigate the observed CROWD-08 QA case (unjudged) — (from: CROWD-08, 2026-10-16)
 
 - A very long imported crowd name can expand the left scope header until Settings has zero height; independently reproduced on the pre-G Part F build, unjudged — (from: CROWD-08, 2026-10-16)
+- The local gate's slowest jsdom tests exceed their time limits when other work or OneDrive sync loads the Mac: labelInName's shell test and three keyTable tests (10 s, Vitest's default, as `vitest.config.js` sets none) and goldenControls' "major" row (180 s); this stopped v3.3.723's release three times before any commit, while CI and a quiet machine passed. Give them headroom, or run releases outside OneDrive — (from: REL-723, 2026-10-18)
