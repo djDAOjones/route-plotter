@@ -4,7 +4,8 @@
  * Version 3.0 - real-stack player (Phase 5 unification)
  *
  * The exported file embeds three things:
- * - the background image as a base64 data URL,
+ * - the background image as a base64 data URL, or, hidden (UI-08), nothing
+ *   but its size, inside the project snapshot,
  * - the full coordVersion-9 project snapshot (waypoints, scene/flow layers,
  *   styles, motion, camera and export settings, custom image assets),
  * - the pre-built player bundle (docs/player.js) — PlayerApp plus the app's
@@ -48,14 +49,18 @@ export class HTMLExportService {
    * @param {Object} options - Export options
    * @param {Object} options.projectData - Full coordVersion-9 project snapshot
    *   (the persistence mixin's _buildProjectSnapshot shape, assets included)
-   * @param {string} options.backgroundDataURL - Exact retained PNG/JPEG/WebP
-   *   source data URL. The service never re-encodes it.
+   * @param {string|null} options.backgroundDataURL - Exact retained PNG/JPEG/WebP
+   *   source data URL. The service never re-encodes it, and never embeds it
+   *   for a project whose background is hidden (UI-08).
    * @param {string} options.title - Project title for the HTML page
    * @returns {Promise<Blob>} HTML file as a Blob
    */
   async exportHTML(options) {
     const { projectData, backgroundDataURL, title = 'Route animation' } = options;
-    const retainedBackground = this._validateBackgroundDataURL(backgroundDataURL);
+    // A hidden background is left out of the page whatever is passed (UI-08)
+    const retainedBackground = projectData?.background?.hidden === true
+      ? null
+      : this._validateBackgroundDataURL(backgroundDataURL);
 
     const playerBundle = await this._fetchPlayerBundle();
     const html = this._generateHTML(title, retainedBackground, this._sharedProjectData(projectData), playerBundle);
@@ -372,14 +377,16 @@ ${playerBundle}
 
   /**
    * Estimate the file size of the export
-   * @param {string} backgroundDataURL - Exact retained source data URL
+   * @param {string|null} backgroundDataURL - Exact retained source data URL,
+   *   or null for a hidden background, which the page leaves out (UI-08)
    * @returns {Promise<Object>} Size estimate { bytes, formatted }
    */
   async estimateSize(backgroundDataURL) {
-    const retainedBackground = this._validateBackgroundDataURL(backgroundDataURL);
     // The data URL is embedded as text, so count its actual UTF-8 footprint;
     // estimating decoded binary bytes would understate the standalone file.
-    const imageSize = new TextEncoder().encode(retainedBackground).length;
+    const imageSize = backgroundDataURL === null
+      ? 0
+      : new TextEncoder().encode(this._validateBackgroundDataURL(backgroundDataURL)).length;
 
     const playerSize = 140000; // ~137KB minified player bundle (docs/player.js)
     const dataSize = 4000;     // project snapshot JSON (typical scene)

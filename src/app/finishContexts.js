@@ -30,8 +30,8 @@ export function finishRenderReference(scene, reference, timing, legacyFallback =
 /**
  * One authored context shared by timing, admission, hints, rendering and both
  * hosts. Bitmap dimensions come from the installed image, not a stale fitted
- * transform. During video export the app freezes this before suppressing the
- * background, and clears it after restoring the real authored image.
+ * transform. During video export the app freezes this for the export's
+ * length, and clears it once the export ends.
  */
 export function getFinishContexts(app) {
   if (app._finishExportContexts) return app._finishExportContexts;

@@ -936,6 +936,11 @@ export class UIController {
       );
       this.eventBus.emit('background:overlay-change', tintValue);
     });
+
+    // Show image: unticked, the image is drawn nowhere (UI-08)
+    this.elements.bgShowImage?.addEventListener('change', (e) => {
+      this.eventBus.emit('background:hidden-change', !e.target.checked);
+    });
     
     this.elements.bgFitToggle?.addEventListener('click', () => {
       const currentMode = this.elements.bgFitToggle.dataset.mode;
@@ -1168,10 +1173,10 @@ export class UIController {
       this.eventBus.emit('video:frame-rate-change', frameRate);
     });
     
-    // Export: include background image (unchecked = path only / transparent)
+    // Export: include background image — the same setting as Background →
+    // Show image (UI-08), so both say background:hidden-change
     this.elements.exportIncludeImage?.addEventListener('change', (e) => {
-      // emits video:layers-change(pathOnly) → main.js sets exportSettings.pathOnly
-      this.eventBus.emit('video:layers-change', !e.target.checked);
+      this.eventBus.emit('background:hidden-change', !e.target.checked);
     });
     
     // Export: include camera movement (per-waypoint zoom/pan)

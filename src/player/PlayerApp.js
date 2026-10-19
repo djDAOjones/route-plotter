@@ -42,6 +42,20 @@ import { viewportMixin } from '../app/viewport.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { resolvePathHeadImage } from '../utils/pathHeadPresets.js';
 
+/**
+ * A hidden background's stand-in (UI-08): the file carries the image's size,
+ * never its bytes, so the image is placed as in the app and everything drawn
+ * over it falls where it would, while nothing of it is drawn.
+ * @param {Object} [background] - The embedded project's background block
+ * @returns {{naturalWidth: number, naturalHeight: number, width: number, height: number}|null}
+ */
+function hiddenImageSize(background) {
+  if (background?.hidden !== true) return null;
+  const { width, height } = background.imageSize ?? {};
+  if (!(Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0)) return null;
+  return { naturalWidth: width, naturalHeight: height, width, height };
+}
+
 export class PlayerApp {
   /**
    * @param {HTMLCanvasElement} canvas - Target canvas inside the exported page
@@ -164,9 +178,10 @@ export class PlayerApp {
       this.exportSettings = { ...this.exportSettings, ...data.exportSettings };
     }
     this.background = {
-      image: backgroundImage || null,
+      image: backgroundImage || hiddenImageSize(data.background),
       overlay: data.background?.overlay ?? 0,
-      fit: data.background?.fit ?? 'fit'
+      fit: data.background?.fit ?? 'fit',
+      hidden: data.background?.hidden === true
     };
     this.coordinateTransform.setBackgroundZoom(this.exportSettings.backgroundZoom / 100);
 

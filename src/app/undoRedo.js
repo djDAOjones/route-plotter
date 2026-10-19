@@ -18,6 +18,7 @@ import {
 } from '../utils/pathHeadPresets.js';
 import { regionOperation } from './regionLines.js';
 import { primeRecoveryImages } from './recoveryImages.js';
+import { syncShowImageControls } from './backgroundLoading.js';
 
 function updatePathHeadPreview(app, asset = null) {
   if (app.elements?.headPreview) app.elements.headPreview.style.display = asset ? 'block' : 'none';
@@ -61,7 +62,9 @@ export const undoRedoMixin = {
       selectedWaypointId: this.selectedWaypoint?.id || null,
       selectedWaypointIds: (this.selectedWaypoints || []).map(wp => wp.id),
       styles: stylesCopy,
-      scene: this.scene.toJSON()
+      scene: this.scene.toJSON(),
+      // Background → Show image unticked (UI-08)
+      backgroundHidden: this.background?.hidden === true
     };
     // With fewer than two route waypoints the base timeline is the author's
     // (its default, or the Duration slider's), so an entry keeps it (CROWD-08
@@ -401,6 +404,12 @@ export const undoRedoMixin = {
       this._syncGlobalStyleUI();
     }
     
+    // Show image, and Include in export → Background image with it (UI-08)
+    if (typeof state.backgroundHidden === 'boolean' && this.background) {
+      this.background.hidden = state.backgroundHidden;
+      syncShowImageControls(this);
+    }
+
     // Invalidate caches
     this._majorWaypointsCache = null;
 

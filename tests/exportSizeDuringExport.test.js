@@ -90,7 +90,7 @@ async function withBackground(pathOnly) {
   expect(await loadBackgroundFile(app, new File(['x'], 'landscape.png', { type: 'image/png' }))).toBe(true);
   app.elements.backgroundZoom.value = '175';
   app.elements.backgroundZoom.dispatchEvent(new Event('input', { bubbles: true }));
-  app.exportSettings.pathOnly = pathOnly;
+  app.background.hidden = pathOnly;
   app.exportSettings.includeCamera = false;
   vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
   vi.stubGlobal('alert', vi.fn());

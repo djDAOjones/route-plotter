@@ -508,7 +508,10 @@ export class RenderingService {
       const bgMode = applyMotion ? motionSettings.backgroundVisibility : BACKGROUND_VISIBILITY.ALWAYS_SHOW;
       const hasPath = state.pathPoints?.length > 0;
 
-      if (bgMode === BACKGROUND_VISIBILITY.ALWAYS_HIDE) {
+      if (state.background.hidden === true) {
+        // Show image unticked (UI-08): no image, margin or tint, in any mode
+        // or export; the image stays placed, so everything else is as with it
+      } else if (bgMode === BACKGROUND_VISIBILITY.ALWAYS_HIDE) {
         // Hide mode: don't render background at all
       } else if (bgMode === BACKGROUND_VISIBILITY.SPOTLIGHT && hasPath && motionVisibilityService) {
         // Spotlight: instant circular mask at head position (resets each frame)
@@ -557,7 +560,9 @@ export class RenderingService {
       }
 
       // 2) Contrast overlay (in zoomed space, under the image's camera) - only affects image area
-      this.renderOverlay(ctx, state.background.overlay, cw, ch, state.background, frameCamera);
+      if (state.background.hidden !== true) {
+        this.renderOverlay(ctx, state.background.overlay, cw, ch, state.background, frameCamera);
+      }
     } finally {
       if (hasZoom) {
         ctx.restore();

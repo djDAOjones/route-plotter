@@ -92,7 +92,7 @@ function makeApp() {
     },
     background: { image: null, overlay: 0, fit: 'fit' },
     exportSettings: {
-      frameRate: 30, pathOnly: false, resolutionX: 1920, resolutionY: 1080,
+      frameRate: 30, resolutionX: 1920, resolutionY: 1080,
       backgroundZoom: 100, includeCamera: true, includeText: true,
     },
     motionSettings: {
@@ -175,7 +175,7 @@ function validProject(overrides = {}) {
     animationState: { mode: 'constant-speed', speed: 5, duration: 0 },
     background: { overlay: 0, fit: 'fit' },
     exportSettings: {
-      frameRate: 30, pathOnly: false, resolutionX: 1920, resolutionY: 1080,
+      frameRate: 30, resolutionX: 1920, resolutionY: 1080,
       backgroundZoom: 100, includeCamera: true, includeText: true,
     },
     motionSettings: {},

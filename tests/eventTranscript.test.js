@@ -1096,13 +1096,15 @@ function projectNow(app) {
  * function: an entry is compared with the project, not with itself.
  */
 function projectAsUndoEntry(app) {
-  const { waypoints, styles, scene, animationState } = app._buildProjectSnapshot({ includeAssets: false });
+  const { waypoints, styles, scene, background, animationState } = app._buildProjectSnapshot({ includeAssets: false });
   return flattened({
     waypoints,
     selectedWaypointId: app.selectedWaypoint?.id || null,
     selectedWaypointIds: (app.selectedWaypoints || []).map(each => each.id),
     styles,
     scene,
+    // UI-08 (reason for the change): an entry keeps Show image, which the saved project holds in its background.
+    backgroundHidden: background.hidden,
     // CROWD-08 part A (reason for the change): with fewer than two route waypoints an entry keeps the base
     // timeline, which the saved project holds as its duration; with a route it keeps none.
     ...(waypoints.length < 2 ? { baseDurationMs: animationState.duration } : {}),
@@ -1301,8 +1303,8 @@ function watchAnnouncer() {
  * the replaced function was called on, not a run of the export.
  */
 function exportEntrySettings(app) {
-  const { format, frameRate, resolutionX, resolutionY, pathOnly } = app.exportSettings;
-  return `format ${JSON.stringify(format)}, ${frameRate} fps, ${resolutionX}x${resolutionY}, path only ${pathOnly}` +
+  const { format, frameRate, resolutionX, resolutionY } = app.exportSettings;
+  return `format ${JSON.stringify(format)}, ${frameRate} fps, ${resolutionX}x${resolutionY}, background hidden ${app.background.hidden}` +
     `, in ${app.previewMode ? 'Preview' : 'Edit'}`;
 }
 
@@ -1362,6 +1364,7 @@ const CONTROLLER_ROWS = [
   },
   { event: 'background:overlay-change', fixture: 'open day', act: app => emit(app, 'background:overlay-change', 40) },
   { event: 'background:mode-change', fixture: 'open day', act: app => emit(app, 'background:mode-change', 'fill') },
+  { event: 'background:hidden-change', fixture: 'open day', act: app => emit(app, 'background:hidden-change', true) },
   {
     event: 'ui:animation:play', fixture: 'open day', given: 'paused at the start, as loaded',
     act: app => emit(app, 'ui:animation:play'),
@@ -1667,7 +1670,6 @@ const CONTROLLER_ROWS = [
     act: app => emit(app, 'waypoint:request-rename', wp(app, 'ex-uon-2')),
   },
   { event: 'video:frame-rate-change', fixture: 'open day', act: app => emit(app, 'video:frame-rate-change', 25) },
-  { event: 'video:layers-change', fixture: 'open day', act: app => emit(app, 'video:layers-change', true) },
   {
     event: 'video:camera-change', fixture: 'open day', given: 'Preview mode',
     setup: app => emit(app, 'motion:preview-mode-change', true),

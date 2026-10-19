@@ -56,11 +56,14 @@ test('path-only video freezes original waiting contexts while background is supp
   expect(original.finishReleaseContext).toBeDefined();
   vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
   app.videoExporter = { async export({ renderFrame }) {
-    expect(app.background.image).toBeNull(); expect(getFinishContexts(app)).toBe(original);
+    expect(app.background).toMatchObject({ image, hidden: true }); expect(getFinishContexts(app)).toBe(original);
+    // The kept image changes no input (UI-08); a zoom meanwhile would, and the frozen contexts stand.
+    const zoom = app.exportSettings.backgroundZoom; app.exportSettings.backgroundZoom = zoom * 2;
+    expect(getFinishContexts(app)).toBe(original); app.exportSettings.backgroundZoom = zoom;
     await renderFrame(0.5); expect(read(app)).toEqual(before);
     return new Blob(['video'], { type: 'video/mp4' });
   } };
-  app.exportSettings.pathOnly = true; app.exportSettings.resolutionX = 1080; app.exportSettings.resolutionY = 1920;
+  app.background.hidden = true; app.exportSettings.resolutionX = 1080; app.exportSettings.resolutionY = 1920;
   await app.exportVideo({ format: 'mp4' });
   expect(app.background.image).toBe(image); expect(app._finishExportContexts).toBeNull(); expect(read(app)).toEqual(before);
 });
@@ -94,11 +97,14 @@ test('B starts on a nonsquare image retain the waiting clock in both hosts, resi
   const frozen = getFinishContexts(app);
   vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
   app.videoExporter = { async export({ renderFrame }) {
-    expect(app.background.image).toBeNull(); expect(getFinishContexts(app)).toBe(frozen);
+    expect(app.background).toMatchObject({ image, hidden: true }); expect(getFinishContexts(app)).toBe(frozen);
+    // The kept image changes no input (UI-08); a zoom meanwhile would, and the frozen contexts stand.
+    const zoom = app.exportSettings.backgroundZoom; app.exportSettings.backgroundZoom = zoom * 2;
+    expect(getFinishContexts(app)).toBe(frozen); app.exportSettings.backgroundZoom = zoom;
     await renderFrame(0.4); expect(read(app)).toEqual(before);
     return new Blob(['video'], { type: 'video/mp4' });
   } };
-  app.exportSettings.pathOnly = true;
+  app.background.hidden = true;
   await app.exportVideo({ format: 'mp4' }); expect(read(app)).toEqual(before);
 });
 

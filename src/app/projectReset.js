@@ -1,5 +1,5 @@
 import { invalidateProjectOperations } from './operationGeneration.js';
-import { releaseBackgroundBusy } from './backgroundLoading.js';
+import { releaseBackgroundBusy, syncShowImageControls } from './backgroundLoading.js';
 import { beginStatusEpisode } from './persistence.js';
 import { resolveRenderReference } from '../utils/renderReference.js';
 import { isBuiltInPathHeadStyle } from '../utils/pathHeadPresets.js';
@@ -49,6 +49,9 @@ function clearProjectSaying(app, cover) {
   app.selectedWaypoints = [];
   app.imageAssetService.clear();
   app.background.image = null;
+  // A new project starts with its image shown (UI-08)
+  app.background.hidden = false;
+  syncShowImageControls(app);
   app.updateImageTransform(null);
   app._autosaveBackgroundCache = null;
   app._autosaveFailureWarningShown = false;

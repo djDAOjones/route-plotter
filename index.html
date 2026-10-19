@@ -989,6 +989,12 @@
                 <span id="background-zoom-value" class="range-readout">100%</span>
               </div>
 
+              <!-- Show image (UI-08): one setting with Include in export → Background image -->
+              <label class="checkbox-label" for="bg-show-image">
+                <input type="checkbox" id="bg-show-image" checked>
+                <span data-tip="Show the background image while editing, in playback and in exports. Unticked, it is hidden everywhere but kept with the project. The same setting as Include in export → Background image.">Show image</span>
+              </label>
+
               <!-- Upload -->
               <div class="upload-row">
                 <span>Upload</span>
@@ -1051,7 +1057,7 @@
                 <legend>Include in export</legend>
                 <label class="checkbox-label" for="export-include-image">
                   <input type="checkbox" id="export-include-image" checked>
-                  <span data-tip="Include the background image. Uncheck to export the path only (transparent).">Background image</span>
+                  <span data-tip="Include the background image. The same setting as Background → Show image: unticked, the image is hidden while editing too.">Background image</span>
                 </label>
                 <label class="checkbox-label" for="export-include-camera">
                   <input type="checkbox" id="export-include-camera" checked>

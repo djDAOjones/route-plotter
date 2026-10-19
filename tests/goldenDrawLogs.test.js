@@ -947,10 +947,10 @@ describe('golden draw logs (TST-02)', () => {
         expect(layers.image[0].split(' ').map(Number), where)
           .toEqual([zoom, 0, 0, zoom, -zoom * panX, -zoom * panY].map(n => Number(n.toFixed(3))));
       };
-      const withMode = (mode, pathOnly) => {
+      const withMode = (mode, hidden) => {
         const fixture = fixtures().find(each => each.id === 'authored-extras');
         fixture.project.motionSettings.backgroundVisibility = mode;
-        if (pathOnly !== undefined) fixture.project.exportSettings.pathOnly = pathOnly;
+        if (hidden !== undefined) fixture.project.background.hidden = hidden;
         return fixture;
       };
 

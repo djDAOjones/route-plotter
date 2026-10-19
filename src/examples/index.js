@@ -487,7 +487,7 @@ function snapshotFrom({ waypoints, scene }, { speed = 140, duration = 0 } = {}) 
     animationState: { mode: 'constant-speed', speed, duration },
     background: { overlay: 0, fit: 'fit' },
     exportSettings: {
-      frameRate: 30, pathOnly: false, resolutionX: 1920, resolutionY: 1080,
+      frameRate: 30, resolutionX: 1920, resolutionY: 1080,
       backgroundZoom: 100, includeCamera: false, includeText: true,
     },
     motionSettings: {

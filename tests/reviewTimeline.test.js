@@ -67,7 +67,6 @@ function makeExportApp(transport, previewMode = false) {
       exportHtmlBtn: document.createElement('button')
     },
     exportSettings: {
-      pathOnly: false,
       resolutionX: 1920,
       resolutionY: 1080,
       frameRate: 25,

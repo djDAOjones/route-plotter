@@ -83,6 +83,8 @@ area:edit-start
   AreaEditService.js#1
 area:vertex-selected
   sceneOutline.js#1
+background:hidden-change
+  wiringControllers.js#1
 background:mode-change
   wiringControllers.js#1
 background:overlay-change
@@ -280,8 +282,6 @@ video:camera-change
 video:export-request
   wiringControllers.js#1
 video:frame-rate-change
-  wiringControllers.js#1
-video:layers-change
   wiringControllers.js#1
 video:resolution-change
   wiringControllers.js#1
