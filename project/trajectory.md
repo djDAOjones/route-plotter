@@ -7,6 +7,11 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Export framing — the owner's word of 2026-10-18
+
+- DEF-100 — a path-only video export draws the route, markers, labels and crowds where the export with its background does (2026-10-18) — see decisions
+- DEF-99 — a video export frames the whole picture, or follows its camera, whatever the editor's zoom (2026-10-18) — see decisions
+
 ## The built-in examples — the owner's word of 2026-10-17
 
 - EX-03 — Match day's dots double to solid 0.15 and fans converge on the City Ground from the town centre, station, buses, every edge, car parks, park and ride, pubs and cycle paths, each stand seating fans one per seat while more walk in (2026-10-18) — see decisions

@@ -1409,8 +1409,10 @@ class RoutePlotter {
         zoom: this.exportSettings.backgroundZoom / 100
       },
       
-      // Viewport (zoom/pan)
-      viewport: this.viewport,
+      // Viewport (zoom/pan): the editor's own. A video export draws none, as
+      // the HTML export's player never zooms: its pan is in display pixels,
+      // so on the export's canvas it framed another part of the map (DEF-99).
+      viewport: this._isExportMode ? null : this.viewport,
       
       // Coordinate transform function (bound to this instance)
       imageToCanvas: (x, y, clamp) => this.imageToCanvas(x, y, clamp),
