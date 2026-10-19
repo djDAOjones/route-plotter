@@ -2084,9 +2084,11 @@ kbd{
   font-size:var(--type-caption);
 }
 
-/* AAA target size (WCAG 2.5.5): each control row is a >=44px target */
+/* AAA target size (WCAG 2.5.5): each control row is a >=44px target;
+   Background → Show image too (UI-08) */
 .path-emphasis .checkbox-label,
-.path-emphasis .sidebar-control-row{
+.path-emphasis .sidebar-control-row,
+#section-background-content .checkbox-label{
   min-height:2.75rem;
   margin-bottom:0!important;
 }

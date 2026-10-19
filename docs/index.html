@@ -7,13 +7,13 @@
   <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; worker-src 'self' blob:">
-  <title>Route Plotter v3.3.725</title>
-  <link rel="stylesheet" href="styles/tokens.css?v=3.3.725">
-  <link rel="stylesheet" href="styles/main.css?v=3.3.725">
-  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.3.725">
-  <link rel="stylesheet" href="styles/tooltip.css?v=3.3.725">
-  <link rel="stylesheet" href="styles/dropdown.css?v=3.3.725">
-  <link rel="stylesheet" href="styles/context-menu.css?v=3.3.725">
+  <title>Route Plotter v3.3.726</title>
+  <link rel="stylesheet" href="styles/tokens.css?v=3.3.726">
+  <link rel="stylesheet" href="styles/main.css?v=3.3.726">
+  <link rel="stylesheet" href="styles/swatch-picker.css?v=3.3.726">
+  <link rel="stylesheet" href="styles/tooltip.css?v=3.3.726">
+  <link rel="stylesheet" href="styles/dropdown.css?v=3.3.726">
+  <link rel="stylesheet" href="styles/context-menu.css?v=3.3.726">
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -992,6 +992,12 @@
                 <span id="background-zoom-value" class="range-readout">100%</span>
               </div>
 
+              <!-- Show image (UI-08): one setting with Include in export → Background image -->
+              <label class="checkbox-label" for="bg-show-image">
+                <input type="checkbox" id="bg-show-image" checked>
+                <span data-tip="Show the background image while editing, in playback and in exports. Unticked, it is hidden everywhere but kept with the project. The same setting as Include in export → Background image.">Show image</span>
+              </label>
+
               <!-- Upload -->
               <div class="upload-row">
                 <span>Upload</span>
@@ -1054,7 +1060,7 @@
                 <legend>Include in export</legend>
                 <label class="checkbox-label" for="export-include-image">
                   <input type="checkbox" id="export-include-image" checked>
-                  <span data-tip="Include the background image. Uncheck to export the path only (transparent).">Background image</span>
+                  <span data-tip="Include the background image. The same setting as Background → Show image: unticked, the image is hidden while editing too.">Background image</span>
                 </label>
                 <label class="checkbox-label" for="export-include-camera">
                   <input type="checkbox" id="export-include-camera" checked>
@@ -1667,6 +1673,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=3.3.725"></script>
+  <script src="app.js?v=3.3.726"></script>
 </body>
 </html>
