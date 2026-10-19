@@ -3330,7 +3330,7 @@
       "format": "esm"
     },
     "src/examples/index.js": {
-      "bytes": 20419,
+      "bytes": 27839,
       "imports": [
         {
           "path": "src/models/Waypoint.js",
@@ -4797,13 +4797,13 @@
     }
   },
   "outputs": {
-    ".docs-build-hSewSN/app.js.map": {
+    ".docs-build-IElqiJ/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 4271765
+      "bytes": 4284690
     },
-    ".docs-build-hSewSN/app.js": {
+    ".docs-build-IElqiJ/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -5133,7 +5133,7 @@
           "bytesInOutput": 2105
         },
         "src/examples/index.js": {
-          "bytesInOutput": 11071
+          "bytesInOutput": 15158
         },
         "src/app/wiringDom.js": {
           "bytesInOutput": 18746
@@ -5235,7 +5235,7 @@
           "bytesInOutput": 28824
         }
       },
-      "bytes": 1289408
+      "bytes": 1293495
     }
   }
 }
