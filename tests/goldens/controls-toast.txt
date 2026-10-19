@@ -26,7 +26,7 @@ ui ~ #label-offset-y-value: span class="range-readout" :text="-12%" → span cla
 ui ~ #toast-container>div[1]: div class="toast is-visible" :text="This label overlaps something." → div class="toast" :text="This label overlaps something."
 settled:
   emit undo:state-change {canUndo: true, canRedo: false, undoCount: 2, redoCount: 0}
-  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10063 chars, 10d3db90] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10060 chars, 983bf850]
+  storage ~ routePlotter_autosave: "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10061 chars, 3b69fc97] → "{\"coordVersion\":9,\"waypoints\":[{\"id\":\"ex-uon-1\",\"imgX\":0.16,\"imgY\":0.63,\"isMajor\":true,\"segmentColor\":\"#0072B2\",\"segmentWidth\":7,\"segmentS…[10058 chars, 0d97bc57]
   ui ~ #app-status: p aria-live="off" class="header-status" role="status" :text="Unsaved changes" → p aria-live="off" class="header-status" role="status" :text="Saved to browser recovery"
   ui - #toast-container>div[1]: div class="toast" :text="This label overlaps something."
   ui - #toast-container>div[1]>button[0]: button class="toast-action" type="button" :text="Auto-position"

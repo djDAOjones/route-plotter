@@ -554,11 +554,11 @@
   },
   "background": {
     "overlay": 0.45,
-    "fit": "fill"
+    "fit": "fill",
+    "hidden": true
   },
   "exportSettings": {
     "frameRate": 60,
-    "pathOnly": true,
     "resolutionX": 1280,
     "resolutionY": 720,
     "backgroundZoom": 175,

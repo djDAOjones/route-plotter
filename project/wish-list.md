@@ -153,3 +153,5 @@
 - The owner reported, with DEF-99's and DEF-100's MP4s, that Match day's playback is "coming out weird" too; what looks weird in playback is not yet known (asked 2026-10-18, unanswered) — (from: DEF-99, 2026-10-18)
 - v3.3.725 changes exports and the player; save and open its MP4 and HTML exports from disk, or obtain the owner's explicit waiver for this release — (from: REL-725, 2026-10-19)
 - The first video export after a project opens draws its middle frame's background differently from every later export of it, zoomed or not (Open day, background on: 524,329 pixels by up to 84 levels; the first and last frames match, path-only frames match); seen in REL-725's live check, unjudged — (from: REL-725, 2026-10-19)
+- UI-08's hidden background in a real browser: what an MP4 and a WebM show where the image was (H.264 carries no transparency; DEF-100 saw black), and a saved HTML export with the image left out opened from disk — (from: UI-08, 2026-10-19)
+- With Show image unticked, Darken / lighten and Zoom stay live: the tint shows nothing until the image is shown, and Zoom still moves the route with the hidden image's place; unjudged — (from: UI-08, 2026-10-19)

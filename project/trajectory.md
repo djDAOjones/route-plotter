@@ -7,6 +7,11 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Next feature — the owner's word of 2026-10-18
+
+- RECALL — 8/8 (2026-10-19) — scores: 2,2,2,2 — local — see decisions
+- UI-08 — Background → Show image hides the background while editing, in playback and in every export, and Include in export → Background image ticks with it; the image is kept and saved, one change is one undo, and an HTML export leaves a hidden image out (2026-10-19) — see decisions
+
 ## Export framing — the owner's word of 2026-10-18
 
 - DEF-100 — a path-only video export draws the route, markers, labels and crowds where the export with its background does (2026-10-18) — see decisions
@@ -14,8 +19,8 @@
 
 ## The built-in examples — the owner's word of 2026-10-17
 
-- EX-03 — Match day's dots double to solid 0.15 and fans converge on the City Ground from the town centre, station, buses, every edge, car parks, park and ride, pubs and cycle paths, each stand seating fans one per seat while more walk in (2026-10-18) — see decisions
 - EX-02 — Match day and Reform riot, 1831 open from File → Example projects on the Nottingham aerial: fans fill the City Ground's four stands from three routes and two bridges, and a mob passes through the Market Square to the Castle (2026-10-17) — see decisions
+- EX-03 — Match day's dots double to solid 0.15 and fans converge on the City Ground from the town centre, station, buses, every edge, car parks, park and ride, pubs and cycle paths, each stand seating fans one per seat while more walk in (2026-10-18) — see decisions
 
 ## MVP — football crowds and mobs
 

@@ -68,6 +68,44 @@ function reportBackgroundFailure(app, error) {
   else app.announce?.(message, 'assertive');
 }
 
+/**
+ * Background → Show image and Include in export → Background image are one
+ * setting (UI-08): both are ticked as the project's background is shown.
+ * @param {Object} app
+ * @param {Object} [background] - The background they follow, the app's by default
+ */
+export function syncShowImageControls(app, background = app.background) {
+  const shown = background?.hidden !== true;
+  if (app.elements?.bgShowImage) app.elements.bgShowImage.checked = shown;
+  if (app.elements?.exportIncludeImage) app.elements.exportIncludeImage.checked = shown;
+}
+
+/**
+ * Show or hide the background image (UI-08). Hidden, it is drawn nowhere,
+ * while editing, in playback or in any export, but kept and saved, so showing
+ * it again needs no upload. One change is one undo step.
+ * @param {Object} app
+ * @param {boolean} hidden
+ * @param {Object} [options]
+ * @param {boolean} [options.autoSave=true] - Save to browser recovery too
+ * @returns {boolean} Whether the setting changed
+ */
+export function setBackgroundHidden(app, hidden, { autoSave = true } = {}) {
+  const next = hidden === true;
+  if ((app.background.hidden === true) === next) {
+    syncShowImageControls(app);
+    return false;
+  }
+  // A slider edit still inside its undo debounce is a step of its own, before this one
+  app._flushPendingUndo?.();
+  app.background.hidden = next;
+  syncShowImageControls(app);
+  app.queueRender?.();
+  app.saveUndoState?.();
+  if (autoSave) app.autoSave?.();
+  return true;
+}
+
 /** The canvas area is busy while a background decodes (UI-06 B-16). */
 function setCanvasBusy(busy) {
   document.getElementById('canvas-area')?.setAttribute('aria-busy', busy ? 'true' : 'false');
@@ -121,6 +159,9 @@ export async function loadBackgroundFile(app, file) {
     // one is stored at once, so the record seldom finds it in flight (DEF-98).
     resolveBackgroundPrompt(app);
     primeRecoveryImages(app);
+    // Chosen while hidden, it is shown, one undo step (UI-08, the owner's
+    // pick); the save below covers it
+    setBackgroundHidden(app, false, { autoSave: false });
     app.autoSave();
     return true;
   } catch (error) {
@@ -164,6 +205,8 @@ export async function loadExampleBackground(app, imagePath, {
     // once, the default map's too (DEF-98).
     resolveBackgroundPrompt(app);
     primeRecoveryImages(app);
+    // As loadBackgroundFile: chosen while hidden, it is shown (UI-08)
+    setBackgroundHidden(app, false, { autoSave: false });
     app.render();
     if (autoSave) app.autoSave();
     console.log(`Example image loaded: ${imagePath}`);

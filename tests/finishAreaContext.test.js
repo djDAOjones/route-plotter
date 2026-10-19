@@ -60,15 +60,18 @@ describe('finish-area context across real hosts', () => {
     let during, rendered;
     app.videoExporter = { cancel() {}, async export({ renderFrame }) {
       during = getFinishContexts(app);
-      expect(app.background.image).toBeNull();
+      expect(app.background).toMatchObject({ image, hidden: true });
       expect(during).toBe(original);
+      // The kept image changes no input (UI-08); a zoom meanwhile would, and the frozen contexts stand.
+      const zoom = app.exportSettings.backgroundZoom; app.exportSettings.backgroundZoom = zoom * 2;
+      expect(getFinishContexts(app)).toBe(original); app.exportSettings.backgroundZoom = zoom;
       await renderFrame(0.5);
       rendered = read(app);
       if (outcome === 'cancel') return null;
       if (outcome === 'failure') throw new Error('forced finishing-video failure');
       return new Blob(['video'], { type: 'video/mp4' });
     } };
-    app.exportSettings.pathOnly = true;
+    app.background.hidden = true;
     app.exportSettings.resolutionX = 1080; app.exportSettings.resolutionY = 1920;
     app.styles.graphicsScale = 2;
     if (outcome === 'failure') allowConsole(/forced finishing-video failure/);

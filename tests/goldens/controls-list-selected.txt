@@ -691,8 +691,8 @@ ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 
 ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, 3c7d9c23)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
-ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
-ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 34 inside, 655cdffb)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 7323c8b1)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
 ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 83 inside, 094c7e26)
@@ -718,8 +718,8 @@ ui + #route-scope>div[0]: div class="settings-section" data-section="head" (and 
 ui + #route-scope>div[1]: div class="settings-section expanded" data-section="pacing" (and 33 inside, 3c7d9c23)
 ui + #route-scope>div[2]: div class="settings-section" data-section="reveal" (and 78 inside, ca37d373)
 ui + #route-scope>div[3]: div class="settings-section" data-section="path-emphasis" (and 27 inside, 28a7416c)
-ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 28 inside, 9de136a0)
-ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 38cbe771)
+ui + #route-scope>div[4]: div class="settings-section expanded" data-section="background" (and 34 inside, 655cdffb)
+ui + #route-scope>div[5]: div class="settings-section" data-section="video" (and 62 inside, 7323c8b1)
 ui ~ #waypoint-list>li[4]: li class="waypoint-item selected is-selected" data-original-index="2" data-route-index="3" draggable="true" → li class="waypoint-item" data-original-index="2" data-route-index="3" draggable="true"
 ui ~ #waypoint-list>li[4]>button[0]: button aria-pressed="true" class="waypoint-row" type="button" → button aria-pressed="false" class="waypoint-row" type="button"
 ui - #waypoint-scope>div[0]: div class="settings-section expanded" data-section="marker" (and 83 inside, 094c7e26)

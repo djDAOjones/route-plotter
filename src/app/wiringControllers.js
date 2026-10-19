@@ -17,7 +17,7 @@ import {
 } from '../utils/routeBranches.js';
 import { boundEntryWaypointIds } from '../utils/routeAnchors.js';
 import { clampImageCoordinate } from '../utils/imageCoordinates.js';
-import { loadBackgroundFile } from './backgroundLoading.js';
+import { loadBackgroundFile, setBackgroundHidden } from './backgroundLoading.js';
 import { refuseWhileExporting } from './exporting.js';
 import { returnFocus } from '../components/ModeBanner.js';
 import { regionOperation } from './regionLines.js';
@@ -131,6 +131,12 @@ export const wiringControllersMixin = {
       this.autoSave();
     });
     
+    // Background → Show image, or Include in export → Background image: one
+    // setting (UI-08)
+    this.eventBus.on('background:hidden-change', (hidden) => {
+      setBackgroundHidden(this, hidden);
+    });
+
     this.eventBus.on('background:mode-change', (mode) => {
       this.background.fit = mode;
       this.coordinateTransform.fitMode = mode;
@@ -901,14 +907,6 @@ export const wiringControllersMixin = {
       console.debug(`🎬 [VideoExport] Frame rate set to ${frameRate} fps`);
     });
     
-    /**
-     * video:layers-change - Toggle between path with image and path only (transparent)
-     */
-    this.eventBus.on('video:layers-change', (pathOnly) => {
-      this.exportSettings.pathOnly = pathOnly;
-      this.autoSave(); // parity with include camera/text — persist the image toggle immediately
-      console.debug(`🎬 [VideoExport] Layers set to ${pathOnly ? 'path only (transparent)' : 'path with image'}`);
-    });
     
     /**
      * video:camera-change - Toggle whether preview/export applies per-waypoint camera zoom/pan.

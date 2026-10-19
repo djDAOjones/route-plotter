@@ -122,10 +122,9 @@ export function authoredExtrasProject() {
   };
 
   project.animationState = { mode: 'constant-time', speed: 275, duration: 31500 };
-  project.background = { overlay: 0.45, fit: 'fill' };
+  project.background = { overlay: 0.45, fit: 'fill', hidden: true };
   project.exportSettings = {
     frameRate: 60,
-    pathOnly: true,
     resolutionX: 1280,
     resolutionY: 720,
     backgroundZoom: 175,

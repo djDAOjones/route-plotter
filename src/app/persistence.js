@@ -28,7 +28,7 @@ import {
   beginAsyncProjectOperation,
   isAsyncProjectOperationCurrent,
 } from './operationGeneration.js';
-import { releaseBackgroundBusy } from './backgroundLoading.js';
+import { releaseBackgroundBusy, syncShowImageControls } from './backgroundLoading.js';
 import { assertSafeStoredColor } from '../utils/safeColor.js';
 import { assertPersistedEntityId, ENTITY_ID_LIMITS } from '../utils/entityId.js';
 import { isImageCoordinateInRange } from '../utils/imageCoordinates.js';
@@ -109,7 +109,6 @@ const CANONICAL_PROJECT_DEFAULTS = Object.freeze({
   exportSettings: Object.freeze({
     frameRate: VIDEO_EXPORT.DEFAULT_FRAME_RATE,
     format: 'mp4',
-    pathOnly: false,
     resolutionX: 1920,
     resolutionY: 1080,
     backgroundZoom: 100,
@@ -566,6 +565,9 @@ async function stageProject(app, projectData, { backgroundBase64 = null, imageAs
       image: backgroundImage,
       overlay: Number(projectData.background?.overlay ?? 0),
       fit: projectData.background?.fit === 'fill' ? 'fill' : 'fit',
+      // Show image unticked (UI-08). A save from before it opens shown, the
+      // owner's word: its exportSettings.pathOnly is no longer read.
+      hidden: projectData.background?.hidden === true,
     },
     exportSettings,
     renderReference,
@@ -588,6 +590,8 @@ function getUndoBaseline(staged) {
       pathHead: staged.styles.pathHead ? { ...staged.styles.pathHead, image: null } : undefined,
     },
     scene: staged.scene.toJSON(),
+    // As `_getUndoableState`, byte for byte (CON-04): Show image (UI-08)
+    backgroundHidden: staged.background.hidden === true,
   };
   // As every undo entry with no route keeps it (`_getUndoableState`, CROWD-08
   // part A): undoing back to the opened project restores its timeline.
@@ -1034,8 +1038,8 @@ function syncLoadedProjectControls(app, staged) {
     if (app.elements.headPreviewImg) app.elements.headPreviewImg.src = asset?.base64 || '';
   }
 
+  syncShowImageControls(app, staged.background);
   const exportSettings = staged.exportSettings;
-  if (app.elements?.exportIncludeImage) app.elements.exportIncludeImage.checked = exportSettings.pathOnly !== true;
   if (app.elements?.exportIncludeCamera) app.elements.exportIncludeCamera.checked = exportSettings.includeCamera !== false;
   if (app.elements?.exportIncludeText) app.elements.exportIncludeText.checked = exportSettings.includeText !== false;
   if (app.elements?.exportFrameRate) app.elements.exportFrameRate.value = exportSettings.frameRate;
@@ -1506,11 +1510,11 @@ export const persistenceMixin = {
       },
       background: {
         overlay: this.background.overlay,
-        fit: this.background.fit
+        fit: this.background.fit,
+        hidden: this.background.hidden === true
       },
       exportSettings: {
         frameRate: this.exportSettings.frameRate,
-        pathOnly: this.exportSettings.pathOnly,
         resolutionX: this.exportSettings.resolutionX,
         resolutionY: this.exportSettings.resolutionY,
         backgroundZoom: this.exportSettings.backgroundZoom,

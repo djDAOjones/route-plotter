@@ -157,7 +157,6 @@ class RoutePlotter {
     this.exportSettings = {
       frameRate: VIDEO_EXPORT.DEFAULT_FRAME_RATE,
       format: 'mp4',    // 'mp4' (H.264, fast) or 'webm' (VP9, supports transparency)
-      pathOnly: false,  // false = with image, true = path only (transparent)
       resolutionX: 1920,  // Export width in pixels
       resolutionY: 1080,  // Export height in pixels
       backgroundZoom: 100, // Background zoom percentage (100 = no zoom)
@@ -266,7 +265,8 @@ class RoutePlotter {
     this.background = {
       image: null,
       overlay: 0,        // -100 (black) .. 0 (none) .. 100 (white)
-      fit: 'fit'         // 'fit' | 'fill'
+      fit: 'fit',        // 'fit' | 'fill'
+      hidden: false      // Show image unticked: drawn nowhere, kept and saved (UI-08)
     };
     
     // Zoom/pan state for canvas navigation
@@ -301,6 +301,7 @@ class RoutePlotter {
       bgUpload: document.getElementById('bg-upload'),
       bgOverlay: document.getElementById('bg-overlay'),
       bgOverlayValue: document.getElementById('bg-overlay-value'),
+      bgShowImage: document.getElementById('bg-show-image'),
       bgFitToggle: document.getElementById('bg-fit-toggle'),
       playBtn: document.getElementById('play-btn'),
       pauseBtn: document.getElementById('pause-btn'),
@@ -1406,6 +1407,8 @@ class RoutePlotter {
       // Background/overlay (include zoom from export settings)
       background: {
         ...this.background,
+        // A video export draws as Show image stood when it began (UI-08)
+        hidden: this._exportBackgroundHidden ?? this.background.hidden === true,
         zoom: this.exportSettings.backgroundZoom / 100
       },
       

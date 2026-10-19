@@ -268,7 +268,7 @@ const LOOKED_UP = {
     area-fade-out-value area-fill-color area-fill-controls area-fill-opacity area-fill-opacity-value
     area-rect-controls area-rect-height area-rect-height-value area-rect-width area-rect-width-value
     area-shape area-visibility area-visibility-controls background-visibility background-zoom
-    background-zoom-value bg-fit-toggle bg-overlay bg-overlay-value bg-upload bg-upload-btn
+    background-zoom-value bg-fit-toggle bg-overlay bg-overlay-value bg-show-image bg-upload bg-upload-btn
     camera-multi-controls camera-next-zoom-value camera-prev-zoom-value camera-selected-zoom
     camera-selected-zoom-value camera-single-controls camera-zoom camera-zoom-mode camera-zoom-value canvas
     canvas clear-btn current-time custom-head-controls custom-head-upload-controls custom-marker-controls

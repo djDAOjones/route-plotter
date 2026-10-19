@@ -85,7 +85,7 @@ function makeAuthoredApp({ motionSettings }) {
     background: { overlay: 10, fit: 'fit', image: null },
     motionSettings,
     exportSettings: {
-      frameRate: 25, pathOnly: false, resolutionX: 1920, resolutionY: 1080,
+      frameRate: 25, resolutionX: 1920, resolutionY: 1080,
       backgroundZoom: 100, includeCamera: true, includeText: true
     },
     previewMode: true,

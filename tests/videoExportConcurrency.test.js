@@ -58,6 +58,14 @@ async function exportingApp() {
   let hold = null;
   const running = new Promise((resolve) => { started = resolve; });
   let exporting = false;
+  // The background the renderer is given for each frame, whose hidden flag it
+  // draws by (UI-08; what it then draws is pinned in showImage.test.js).
+  let given = null;
+  const render = app.renderingService.render.bind(app.renderingService);
+  vi.spyOn(app.renderingService, 'render').mockImplementation((ctx, width, height, state) => {
+    given = state.background;
+    return render(ctx, width, height, state);
+  });
   app.videoExporter = {
     cancel() {
       hold?.reject(new Error('Export cancelled'));
@@ -72,7 +80,7 @@ async function exportingApp() {
             exportMode: app._isExportMode,
             width: app.canvas.width,
             height: app.canvas.height,
-            background: app.background.image ? 'drawn' : 'hidden',
+            background: given?.image && given.hidden !== true ? 'drawn' : 'hidden',
           });
           onProgress(Math.round(progress * 100));
         };
@@ -734,7 +742,7 @@ test.each([
   expect(frames).toHaveLength(3);
 });
 
-test('a transparent export hides the background for its frames only', async () => {
+test('an export with the background hidden draws it in no frame, and keeps the image', async () => {
   const { app, frames, running, finish } = await exportingApp();
   // A background, as a loaded image gives one: jsdom decodes none.
   const image = document.createElement('canvas');
@@ -742,7 +750,7 @@ test('a transparent export hides the background for its frames only', async () =
   image.height = 1000;
   app.background.image = image;
   app.updateImageTransform(image);
-  expect(app.exportSettings.pathOnly).toBe(true);
+  expect(app.background.hidden).toBe(true);
 
   const first = app.exportVideo();
   await running;
@@ -969,7 +977,7 @@ test.each([
   image.width = 1600;
   image.height = 1000;
   app.background.image = image;
-  app.exportSettings.pathOnly = true;
+  app.background.hidden = true;
   const transport = app.animationEngine.state.captureTransportState();
   const label = document.getElementById('export-dropdown-btn').textContent;
   fail(app);
@@ -1114,7 +1122,7 @@ test.each([
   const { app, running, finish } = await exportingApp();
   const image = document.createElement('canvas');
   app.background.image = image;
-  app.exportSettings.pathOnly = true;
+  app.background.hidden = true;
   const transport = app.animationEngine.state.captureTransportState();
   const listening = () => ['video:export-paused', 'video:export-resumed'].map(event => app.eventBus.listenerCount(event));
   const before = listening();

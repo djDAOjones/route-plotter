@@ -79,7 +79,7 @@ async function withBackground({ pathOnly, includeCamera }) {
   const image = Object.assign(new Image(), { naturalWidth: IMAGE.width, naturalHeight: IMAGE.height, ...IMAGE, src: 'framing-under-test.png' });
   vi.spyOn(app, 'loadImageFileAsset').mockResolvedValue({ base64: 'data:image/png;base64,AA==', getImageElement: async () => image });
   expect(await loadBackgroundFile(app, new File(['x'], 'framing.png', { type: 'image/png' }))).toBe(true);
-  app.exportSettings.pathOnly = pathOnly;
+  app.background.hidden = pathOnly;
   app.exportSettings.includeCamera = includeCamera;
   app.exportSettings.includeText = true;
   vi.spyOn(VideoExporter, 'downloadBlob').mockImplementation(() => {});
@@ -108,9 +108,10 @@ function transcriptOf(calls, names) {
  * place on the canvas, what the renderer was given to frame it by (a viewport
  * zoom, and whether the camera was on), every call made on any canvas, and
  * those made on the path's own layer (the renderer's vector canvas: route,
- * markers, labels).
+ * markers, labels), and the format the encoder was asked for. `request` is
+ * what `exportVideo` is given, as an Export menu item gives it.
  */
-async function exportFrames(app) {
+async function exportFrames(app, request) {
   const frames = [];
   let given = null;
   const render = app.renderingService.render.bind(app.renderingService);
@@ -120,7 +121,7 @@ async function exportFrames(app) {
   });
   app.videoExporter = {
     cancel() {},
-    async export({ renderFrame }) {
+    async export({ renderFrame, format }) {
       for (const progress of [0.1, 0.5, 1]) {
         recordCallOrder(true);
         takeOrderedCalls();
@@ -138,12 +139,13 @@ async function exportFrames(app) {
           given: { ...given },
           all: transcriptOf(calls, names),
           path: transcriptOf(calls.filter(([surface]) => surface === vector), names),
+          format,
         });
       }
       return new Blob(['video'], { type: 'video/mp4' });
     },
   };
-  await app.exportVideo();
+  await app.exportVideo(request);
   expect(frames).toHaveLength(3);
   return frames;
 }
@@ -184,6 +186,45 @@ test.each([['off', false], ['on', true]])('a path-only export with Camera moveme
   expect(pathOnly[0].path.some(line => line.startsWith('["vector","lineTo"'))).toBe(true);
   expect(pathOnly[0].path.some(line => line.startsWith('["vector","fillText"'))).toBe(true);
   expect(pathOnly.map(frame => frame.path)).toEqual(withImage.map(frame => frame.path));
+});
+
+/**
+ * What a frame draws of the background on the export's canvas: the image, its
+ * white margins and its tint (the visible canvas's fills; the route, markers
+ * and labels are on the path's layer), and any reveal mask.
+ */
+function backgroundOf(frame) {
+  return frame.all.map(line => JSON.parse(line)).filter(([surface, name, source]) => surface === 'mask' ||
+    (surface === 'main' && (name === 'fillRect' || (name === 'drawImage' && !String(source).startsWith('[canvas')))));
+}
+
+test.each([['an MP4', 'mp4'], ['a WebM', 'webm']])('%s export with Background → Show image unticked draws nothing of the background in any frame, and its route, markers and labels where the export with it does (UI-08)', async (_, format) => {
+  const shown = await exportFrames(await withBackground({ pathOnly: false, includeCamera: true }), { format });
+  const app = await withBackground({ pathOnly: false, includeCamera: true });
+  const image = app.background.image;
+  app.elements.bgShowImage.click();
+  expect([app.background.hidden, app.elements.exportIncludeImage.checked]).toEqual([true, false]);
+  const hidden = await exportFrames(app, { format });
+
+  const { resolutionX, resolutionY, backgroundZoom } = app.exportSettings;
+  const place = fitted(resolutionX, resolutionY, backgroundZoom / 100);
+  for (const frame of [...shown, ...hidden]) {
+    expect(frame.format).toBe(format);
+    expect(frame.size).toEqual([resolutionX, resolutionY]);
+    expect(frame.image).toEqual(place);
+  }
+  // Not vacuous: with its background the export draws the map, its margins,
+  // the tint (0.45) and the spotlight reveal's mask; hidden, none of them.
+  for (const frame of shown) {
+    expect(mapScaleOf(frame)).toBeGreaterThan(0);
+    expect(backgroundOf(frame).some(([surface, name]) => surface === 'main' && name === 'fillRect')).toBe(true);
+    expect(backgroundOf(frame).some(([surface]) => surface === 'mask')).toBe(true);
+  }
+  expect(hidden.map(backgroundOf)).toEqual([[], [], []]);
+  expect(hidden[0].path.some(line => line.startsWith('["vector","lineTo"'))).toBe(true);
+  expect(hidden.map(frame => frame.path)).toEqual(shown.map(frame => frame.path));
+  // The image is kept, still hidden, after the export.
+  expect([app.background.image, app.background.hidden]).toEqual([image, true]);
 });
 
 /**

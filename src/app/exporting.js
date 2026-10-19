@@ -290,9 +290,6 @@ export const exportingMixin = {
         this.announce('Video export resumed');
       };
 
-      // Store original background state for path-only export
-      const pathOnly = this.exportSettings.pathOnly;
-      const originalBackgroundImage = this.background.image;
       const wasPreviewMode = this.previewMode;
 
       // Export steps the shared engine, so suspend it without changing the
@@ -302,6 +299,11 @@ export const exportingMixin = {
       // part of the putting back fails.
       const transportState = this.animationEngine.suspendTransport();
       this._finishExportContexts = getFinishContexts(this);
+      // Every frame shows or hides the background as Show image stood when the
+      // export began (UI-08); a tick meanwhile is the project's, and the
+      // display shows it once the export ends, as a size chosen meanwhile is
+      // used then (DEF-53).
+      this._exportBackgroundHidden = this.background.hidden === true;
       try {
         this.announce('Starting video export — press Esc to cancel');
         window.addEventListener('keydown', onEscapeKey, true); // capture phase
@@ -334,15 +336,10 @@ export const exportingMixin = {
 
         // Resize canvas to export resolution so captureStream captures at the
         // correct pixel dimensions (not screen size × DPR)
+        // A hidden background (UI-08) is not drawn in any frame. The image
+        // stays, so its place on the export's canvas is worked out as with it
+        // and the route and crowds are drawn where they would be (DEF-100).
         this._enterExportMode(this.exportSettings.resolutionX, this.exportSettings.resolutionY);
-        if (pathOnly) {
-          // Temporarily hide background for transparent export. Only once the
-          // canvas has the export size: the image's place on it is worked out
-          // again only while there is an image, and hidden first, the route
-          // and crowds were drawn at the display's size in the frame's
-          // top-left corner (DEF-100).
-          this.background.image = null;
-        }
         // The scene's end, measured again in the space the export draws in
         // (CROWD-05): a crowd bound to a route moment reads that moment there,
         // so its dots finish where the export draws them finish. The base is
@@ -359,7 +356,6 @@ export const exportingMixin = {
           renderFrame: async (progress) => {
             // Seek animation to this progress point
             this.animationEngine.seekToProgress(progress);
-            // Render the frame (with or without background based on pathOnly)
             this.render();
           },
 
@@ -408,13 +404,9 @@ export const exportingMixin = {
         });
         putBack(() => this.eventBus.off('video:export-paused', onExportPaused));
         putBack(() => this.eventBus.off('video:export-resumed', onExportResumed));
-        // Restore background if it was hidden for path-only export: before the
-        // display size, which places the image on the canvas, and, with the
-        // image hidden, left the place it had at the size the export began
-        // with, stale after a size chosen during the export (DEF-53).
         putBack(() => {
-          if (pathOnly) this.background.image = originalBackgroundImage;
           this._finishExportContexts = null;
+          this._exportBackgroundHidden = null;
         });
         // Restore canvas to display resolution (must happen before render)
         putBack(() => this._exitExportMode());
@@ -475,7 +467,10 @@ export const exportingMixin = {
     try {
       // Standalone exports preserve the exact validated source data URL. Never
       // draw the live image to a canvas or silently change its format/bytes.
-      const backgroundDataURL = getRetainedBackgroundDataURL(this, 'exporting HTML');
+      // A hidden background (UI-08) is left out, the owner's pick: the page
+      // carries its size alone, so everything is placed as over the image.
+      const hidden = this.background.hidden === true;
+      const backgroundDataURL = hidden ? null : getRetainedBackgroundDataURL(this, 'exporting HTML');
 
       // Estimate file size first
       const sizeEstimate = await this.htmlExportService.estimateSize(backgroundDataURL);
@@ -486,8 +481,16 @@ export const exportingMixin = {
       // camera, labels, areas and swarm layers from it with the app's own
       // modules. includeCamera/includeText travel inside exportSettings.
       settleSavedTiming(this);
+      const projectData = this._buildProjectSnapshot();
+      if (hidden) {
+        const image = this.background.image;
+        projectData.background.imageSize = {
+          width: image.naturalWidth || image.width,
+          height: image.naturalHeight || image.height,
+        };
+      }
       const blob = await this.htmlExportService.exportHTML({
-        projectData: this._buildProjectSnapshot(),
+        projectData,
         backgroundDataURL,
         title: 'Route animation'
       });
