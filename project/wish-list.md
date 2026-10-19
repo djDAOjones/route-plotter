@@ -151,3 +151,5 @@
 - Upgrade the Reform riot, 1831 example next, after Match day, in the owner's words "the demos need an upgrade. lets start with the football dots"; what the riot upgrade shows awaits his direction — (from: EX-03, 2026-10-18)
 - A selected waypoint's dashed selection box is drawn into video exports (12 calls a frame on the path layer, seen while testing DEF-99); unjudged — (from: DEF-99, 2026-10-18)
 - The owner reported, with DEF-99's and DEF-100's MP4s, that Match day's playback is "coming out weird" too; what looks weird in playback is not yet known (asked 2026-10-18, unanswered) — (from: DEF-99, 2026-10-18)
+- v3.3.725 changes exports and the player; save and open its MP4 and HTML exports from disk, or obtain the owner's explicit waiver for this release — (from: REL-725, 2026-10-19)
+- The first video export after a project opens draws its middle frame's background differently from every later export of it, zoomed or not (Open day, background on: 524,329 pixels by up to 84 levels; the first and last frames match, path-only frames match); seen in REL-725's live check, unjudged — (from: REL-725, 2026-10-19)

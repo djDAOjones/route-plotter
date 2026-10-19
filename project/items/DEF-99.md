@@ -50,3 +50,5 @@ now frames as the HTML export's player does, whose viewport never zooms.
   map, its mask and the route still under one transform.
 - 2026-10-18 — Out of scope, a wish line: a selected waypoint's dashed
   selection box is drawn into video exports too.
+- 2026-10-19 — Shipped in v3.3.725 (PR #158, merge `c5f707a`, deploy
+  `3f3c2da`); see REL-725 for publication evidence and the live check.
