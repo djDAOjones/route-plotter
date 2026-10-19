@@ -36,6 +36,20 @@
 
 **Deferred:** none
 
+## 2026-10-18 — UI-08 — A toggle to hide the background is filed as the next feature, and the backlog budget rises to 1,100 words for now
+
+**Decision:** On the owner's word, UI-08, a toggle in the Background card that hides the background while editing, in playback and in exports, is filed at the top of Current as the next feature; the backlog's hard budget rises from 1,000 to 1,100 words for now, also on the owner's word, so that the filing fits.
+
+**Rationale:**
+- **The owner's words, 2026-10-18, verbatim:** "for the backlog, the background section needs a toggle to hide the background - this could be the next feature added". Picks: "Everywhere (Recommended)", for one switch that hides the image while editing, in playback and in exports, with the export checkbox following it; "Top of Current (Recommended)". On the budget, at 988 of 1,000 words before this filing: "temporarily raise to 1100".
+- **Placement:** a heading of its own, "Next feature — the owner's word of 2026-10-18", above Phase 2. Phase 2 and Phase 3 keep their items and order; EX-03 (PR #155) is unchanged.
+- **Budget:** the profile's Budget line changes above the signature by this decision, as the checker's escalation requires ("a budget the project cannot meet is raised by the owner's recorded decision"). When it returns to 1,000 is not decided; the item file holds the filing session's proposal.
+- The item's criteria and design are the filing session's proposals in `project/items/UI-08.md`, for a plan to settle with the owner.
+
+**Supersedes:** none
+
+**Deferred:** UI-08
+
 ## 2026-10-18 — EX-03 — Match day gets solid dots and fans from all over
 
 **Decision:** On the owner's word, Match day's dots double to 0.15 so they read as solid, each stand seats as many fans as fit and walks the rest in, and fans arrive from every direction and kind of transit, including pubs, park and ride and cycle paths.
