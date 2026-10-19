@@ -3761,7 +3761,7 @@
       "format": "esm"
     },
     "src/app/exporting.js": {
-      "bytes": 25915,
+      "bytes": 26197,
       "imports": [
         {
           "path": "src/app/finishContexts.js",
@@ -3950,7 +3950,7 @@
       "format": "esm"
     },
     "src/app/camera.js": {
-      "bytes": 13145,
+      "bytes": 13262,
       "imports": [
         {
           "path": "src/services/CameraService.js",
@@ -4495,7 +4495,7 @@
       "format": "esm"
     },
     "src/main.js": {
-      "bytes": 71298,
+      "bytes": 71531,
       "imports": [
         {
           "path": "src/app/finishContexts.js",
@@ -4797,13 +4797,13 @@
     }
   },
   "outputs": {
-    ".docs-build-IElqiJ/app.js.map": {
+    ".docs-build-ofd4vy/app.js.map": {
       "imports": [],
       "exports": [],
       "inputs": {},
-      "bytes": 4284690
+      "bytes": 4285361
     },
-    ".docs-build-IElqiJ/app.js": {
+    ".docs-build-ofd4vy/app.js": {
       "imports": [],
       "exports": [],
       "entryPoint": "src/main.js",
@@ -5187,7 +5187,7 @@
           "bytesInOutput": 6651
         },
         "src/app/camera.js": {
-          "bytesInOutput": 4383
+          "bytesInOutput": 4403
         },
         "src/app/viewport.js": {
           "bytesInOutput": 6562
@@ -5232,10 +5232,10 @@
           "bytesInOutput": 1089
         },
         "src/main.js": {
-          "bytesInOutput": 28824
+          "bytesInOutput": 28848
         }
       },
-      "bytes": 1293495
+      "bytes": 1293539
     }
   }
 }
