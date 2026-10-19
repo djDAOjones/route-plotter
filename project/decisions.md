@@ -19,6 +19,24 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-10-19 — REL-725 — v3.3.725 publishes the video export framing fixes
+
+**Decision:** v3.3.725 publishes DEF-99's and DEF-100's video export framing on the owner's call; the player changes, so the owner's MP4 and HTML saved-file check is owed for this release.
+
+**Rationale:**
+- **The owner's words, verbatim:** "CI on #158 is green now. Merge it and fast-forward my checkout." (2026-10-19), then "Release v3.3.725 now. I've paused OneDrive syncing."
+- **Source:** PR #158, squash merge c5f707aad05a5e9c05c7f22f19aacf356b437908, whose tree is the final head 04e94402eb7ee2f84e7d166c1c409ddfee10840a's; independent gpt-6-astra review approved 8773e1e in round 2 and both conflict merges in round 3 (the diff equal to 8773e1e's); pull_request Verify 39232154623 and push Verify 39232147556 on the head and main push Verify 39237394562 on the merge succeeded. Main also carries UI-08's filing (7308885, record only) and REL-724's record (382b8b0).
+- **Release:** from the `route-plotter/` working clone on clean main c5f707a matching origin/main, Pages source main /docs built at c5f707a, rollback tag rollback-v3.3.724-c5f707a pushed. release.sh's gate passed (202 files, 4,361 passed, 2 todo; check 0 failures, 2 warnings); its dry-run passed; npm run push passed its own full check on main's commit (202 files, 4,361 passed, 2 todo; restartSafety; build) and pushed deploy 3f3c2da "chore: deploy v3.3.725", which changes `docs/app.js`, its map, `docs/index.html`, `docs/meta.json`, `docs/player.js` and `version.json`.
+- **Publication:** main-branch Verify 39248792160 and the Pages build, deploy and report checks succeeded; github-pages deployment 7173173748 reached 3f3c2da; the published comparison of every file under docs/ was match 24, mismatch 0, errors 0.
+- **Live,** after clearing localStorage, sessionStorage and IndexedDB, in a hidden browser pane with a 1280×800 viewport emulated: the title shows v3.3.725; Open day played to 3,002 ms and on to its end with no queued frame; MP4 9,819,817 bytes, 1920×1080, 29.03 s (the same size as v3.3.724's, as an unzoomed export with its background should be); HTML 2,070,480 bytes carrying the project, the CSP and the exact live player; no failed resource. Match day (1,827,687 bytes; 180, 938 and 117 dots; 35.4 s) and Reform riot, 1831 (1,821,536 bytes; 132 to 480 dots) are unchanged; a first fetch of the Match day archive failed in the pane once and passed on retry.
+- **The fixes, live,** on Open day with waypoint 3 selected and Camera movement off, exports driven through the app's own `exportVideo` with the encoder replaced by one that reads the canvas at 25 %, 50 % and the end: a path-only export places the image where the export with its background does (1,527 × 1,080 at x 196.5) and draws its route across x 292–1,468, y 214–725 of the 1,920 × 1,080 frame. On v3.3.724, checked the same way before the release, it used the display's placement (558 × 395 at x 71.8) and drew in the top-left 588 × 293. With the editor zoomed to 7.59× by five wheel steps, the renderer gets no viewport, path-only frames are pixel-identical to the 1× export's, and the editor keeps its zoom and pan. A real path-only MP4 from the zoomed editor (2,814,048 bytes, 1920×1080, 29.03 s) decodes at 17.4 s to the same drawn area. Frames with the background drawn from the zoomed editor match the 1× frames too, except for the first export after the project opens: its middle frame's background differs from every later export's, zoomed or not, in 524,329 pixels by up to 84 levels; later exports at 1× and zoomed are pixel-identical. That is a wish line, not DEF-99, as is the owner's saved-file check.
+- Annotated tag v3.3.725 (df39de7) at deploy 3f3c2da3be4616f9e975ae93d5dd3d67c38a88bf.
+- House conventions: positive publication evidence and one owning record per fact; these browser checks do not replace the owner's saved-file check.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-10-19 — REL-724 — v3.3.724 publishes the Match day upgrade
 
 **Decision:** v3.3.724 publishes EX-03's Match day upgrade on the owner's call; only the example definitions changed and the player is byte-identical to v3.3.723's, so no saved-file check is owed.
