@@ -21,8 +21,9 @@ a close can cite it. 4.1.1 Parsing is obsolete and removed in 2.2.
   44 CSS pixels, except an equivalent control of that size on the same
   page, a target inline in text, a user-agent-sized target, or an
   essential presentation. (2.5.8, AA, sets the floor at 24 by 24.)
-- 2.1.3 Keyboard (No Exception), AAA: everything operable by keyboard,
-  with no traps.
+- 2.1.3 Keyboard (No Exception), AAA: all functionality operable by
+  keyboard, path-dependent functions included (2.1.1 exempts them),
+  with no keystroke timing required. No Keyboard Trap is 2.1.2, A.
 - 2.4.12 Focus Not Obscured (Enhanced), AAA: no part of the focused
   component is hidden by author-created content. 2.4.13 Focus
   Appearance, AAA: the indicator is at least as large as a 2 CSS pixel
@@ -32,12 +33,15 @@ a close can cite it. 4.1.1 Parsing is obsolete and removed in 2.2.
   interaction can be disabled unless essential — honour
   `prefers-reduced-motion`. 2.3.2 Three Flashes, AAA: nothing flashes
   more than three times in any one second.
-- 3.2.5 Change on Request, AAA: no change of context on focus or
-  input unless the user asked for it or can turn it off.
-- 1.4.8 Visual Presentation, AAA, for blocks of text: width no more
-  than 80 characters (40 for CJK), line spacing at least
-  space-and-a-half, paragraph spacing at least 1.5 times line spacing,
-  and the user's colour and width choices respected.
+- 3.2.5 Change on Request, AAA: any change of context starts only at
+  the user's request, or the user can turn such changes off.
+- 1.4.8 Visual Presentation, AAA, for blocks of text: a mechanism,
+  possibly the browser's, gives user-chosen foreground and background
+  colours, width at most 80 characters or glyphs (40 for CJK),
+  unjustified text, line spacing at least space-and-a-half, paragraph
+  spacing at least 1.5 times that, and text resizable to 200% without
+  assistive technology or horizontal scrolling to read a line on a
+  full-screen window.
 - 2.2.6 Timeouts, AAA: warn of any inactivity timeout that can lose
   data unless the data is kept for more than 20 hours.
 - 3.3.6 Error Prevention (All), AAA: submissions are reversible,
@@ -51,7 +55,7 @@ a close can cite it. 4.1.1 Parsing is obsolete and removed in 2.2.
 - Controls: 44 by 44 target or a stated exception; keyboard path;
   visible focus of 2 px perimeter and 3:1; no context change on focus.
 - Text and colour: 7:1, or 4.5:1 for large text; no images of text;
-  80-character measure and 1.5 leading for reading blocks.
+  1.4.8's mechanism for reading blocks.
 - Motion: reduced-motion honoured; no flash above three per second;
   interaction animation can be turned off.
 - Forms: errors prevented, then recoverable; submissions reversible or
