@@ -8,6 +8,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## pm-next v3.1 — the owner's relayed word of 2026-10-21
+
+- V31-UPGRADE — the project runs pm-next v3.1: twelve tools, four verbs and the start-notice hook, the archived decisions beside decisions.md, the wish lines stamped, each phase oldest first, the AAA digest repaired, by pull request (2026-10-21) — see decisions
+
 ## Next feature — the owner's word of 2026-10-18
 
 - UI-08 — Background → Show image hides the background while editing, in playback and in every export, and Include in export → Background image ticks with it; the image is kept and saved, one change is one undo, and an HTML export leaves a hidden image out (2026-10-19) — see decisions
