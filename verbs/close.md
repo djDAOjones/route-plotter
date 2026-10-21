@@ -8,10 +8,20 @@ lines from HEAD. Finish the record before checking and committing.
    commit. Exceptions are decisions.
 2. Record: write decisions another session needs — what and one-line
    why on the Decision line, evidence in the Rationale. Remove the
-   open item, add its trajectory line, retire paid lines. Capture
-   outstanding deferrals once. Optional `**Deferred:**` IDs make named
-   targets checkable; review prose, trajectory and commit meaning too.
+   open item, add its trajectory line at the end of its phase,
+   retire paid lines. Capture outstanding deferrals once; a new wish
+   line takes the origin's next unused number. A removed wish is
+   traced by its ID, "ORIGIN.N — retired — reason"; a narrowed one
+   keeps its ID, named as narrowed in the commit body. Optional
+   `**Deferred:**` IDs make named targets checkable; review prose,
+   trajectory and commit meaning too.
    Every removed open line needs a trace.
+   In the item's file, if it has one, add a dated Notes entry quoting
+   verbatim, with dates, the owner's instructions for it still in
+   force, or saying none is recorded; never quote a summary. Then
+   rewrite its Now: date it, name the next step and the open question,
+   `Owner:` before a question for the owner, never status; None where
+   nothing remains.
 3. At phase close, follow Phase close.
 4. Follow Session end if context has passed the profile's Session
    line, after compaction, or wherever a whole-phase run stops.
@@ -23,7 +33,7 @@ lines from HEAD. Finish the record before checking and committing.
    follow Archive. Restage and rerun checks after further record
    edits. Use the checker's messages for budget escalation, trace
    dispositions and Session-end grammar.
-6. Generate `node tools/view.mjs`; commit as `ID: summary` with
+6. Commit as `ID: summary` with
    `Verify:` stating the gate result and harness. A second model
    checking the work is briefed from the record — the item's criteria
    (its file, otherwise its backlog line), the diff, the rules file's
@@ -31,17 +41,20 @@ lines from HEAD. Finish the record before checking and committing.
    a chat prompt; one optional line
    `Checked: <model> — <verdict> — <scope>` records its check.
    Run `node tools/check.mjs --commit HEAD`: declaration shapes cannot
-   prove execution.
+   prove execution. Then generate `node tools/view.mjs`, so the page
+   names this commit; the post-commit hook does it where installed.
 7. Push as the Push line says: by default the harness pushes to the
    project's origin, never to an upstream the project does not own.
-   Report a pending push if it fails or Network blocks it.
+   Report a pending push if it fails or Network blocks it. In a
+   session the owner-started runner opened, the runner pushes instead,
+   between sessions, after its checks.
 
 If the owner is needed, retain an open `[!]` line with the blocker.
 Never mark unfinished work shipped or invent signatures or results.
 
 ## Session end
 
-If the threshold has been passed or this session has compacted, this close is its last: before checks and commit, record any owner instruction still in force that the record lacks, in its existing home — a decision, an item note, a backlog or wish line. Neither a re-read nor a lower reading cancels the end; in an attended session the owner may direct otherwise, recorded, never inferred. At that end, or wherever a whole-phase run stops, put exactly one Session-end line beside `Verify:` and any `Checked:` in the commit body, in the shape `node tools/check.mjs --commit HEAD` states when it refuses one. An attended end with neither trigger, outside a whole-phase stop, needs no line; a session that cannot close writes none and never fakes a close. At a session end, after the push step, repeat the Session-end line in your last message and stop.
+If the threshold has been passed or this session has compacted, this close is its last: before checks and commit, record any owner instruction still in force that the record lacks, in its existing home — a decision, an item note, a backlog or wish line. Neither a re-read nor a lower reading cancels the end; in an attended session the owner may direct otherwise, recorded, never inferred. At that end, or wherever a whole-phase run stops, put exactly one Session-end line beside `Verify:` and any `Checked:` in the commit body, in the shape `node tools/check.mjs --commit HEAD` states when it refuses one. An attended end with neither trigger, outside a whole-phase stop, needs no line; a session that cannot close writes none and never fakes a close. At a session end, after the push step, repeat the Session-end line in your last message and stop. Where the client runs the hooks, a fresh chat opened in this checkout then gets that line from the start notice while it is current, claimed for it or shown as held, with nothing pasted.
 
 ## Phase close
 

@@ -1,7 +1,8 @@
 # Trajectory
 
 <!-- Shipped work, one line per item, under a phase heading, newest
-     phase first: - ID — outcome (YYYY-MM-DD) — see decisions. Rule 1
+     phase first; within a phase oldest first, a new line at the end of
+     its phase: - ID — outcome (YYYY-MM-DD) — see decisions. Rule 1
      reads the latest item lines within the 300-word budget, never
      fewer than the last four shipped. The lines below are the last
      items the canon record shipped before the migration, in v3's form;

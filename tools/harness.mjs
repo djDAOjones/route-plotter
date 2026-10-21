@@ -3,16 +3,17 @@
 // usage: node tools/harness.mjs [--root <dir>] [--harness claude,codex] [--print] [--force] [--hooks-only]
 //
 // Writes, for every harness the profile names, the settings the profile's Push and Network lines ask for (sessions) and a
-// second set with the network open for the intake verb only, each carrying the two session hooks of specification 3.15:
+// second set with the network open for the intake verb only, each carrying the three session hooks of specification 3.15:
 // the compaction hook (SessionStart, source compact) and the sensor (PostToolUse and the other SessionStart sources), both
-// `tools/session.mjs`. `--hooks-only` merges the hooks alone into the existing settings, unrelated settings preserved, for a
-// project that keeps its own permissions. Two facts learned the hard way, still encoded:
+// `tools/session.mjs`, and the start notice (SessionStart, sources startup and clear), `tools/handover.mjs`. `--hooks-only`
+// merges the hooks alone into the existing settings, unrelated settings preserved, for a project that keeps its own
+// permissions. Two facts learned the hard way, still encoded:
 //   * A Codex prefix rule in a rules file is NOT a network control — a compound command walks straight past it. Only
 //     [permissions.<profile>.network] closes the network.
 //   * Codex >=0.134 layers a named profile over user config; trusted project config can override it.
 // Where a harness cannot enforce a value, the line is an instruction and the generated file says so. The owner reviews
 // everything this writes; a generated file is not an enforcement test.
-import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync, mkdirSync, chmodSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
@@ -45,32 +46,48 @@ const pushLine = field(profile, 'Push'), networkLine = field(profile, 'Network')
 const route = pushRoute(pushLine), choice = networkChoice(networkLine);
 if (!route || !choice) { console.error('harness: the profile needs a Push line (the harness pushes to origin or a named host, or owner-operated) and a Network line (closed, listed hosts with host names, or open); neither is defaulted.'); process.exit(2); }
 const harnessPush = route === 'harness', network = choice.kind, hosts = choice.hosts;
-const sessionLine = field(profile, 'Session') || '200k tokens of context';
+const sessionLine = field(profile, 'Session') || '350k tokens of context';
 const pushNote = harnessPush
   ? `Push: ${pushLine} — git push is allowed and runs at every close${network === 'closed' ? '; the Network line is closed, so the push host is unreachable here and each close reports a pending push until Network lists it' : network === 'listed' ? '; the listed hosts must include the push host' : ''}.`
   : `Push: ${pushLine} — the owner pushes from outside; Claude Code denies git push in sessions, Codex has no push control, so there the line is an instruction only.`;
 const networkNote = { closed: 'Network: closed — shell network denied where the client enforces it.', listed: `Network: listed hosts ${hosts.join(', ')} — allowed where the client enforces a host list; where it cannot, this is an instruction and the value degrades to open.`, open: 'Network: open.' }[network];
-const hooksNote = `Session hooks (3.15): SessionStart(compact) adds the re-read and session-end notice; tools/session.mjs on PostToolUse and the other SessionStart sources watches this session's context against the profile's Session line (${sessionLine}). They force nothing and cannot show that a re-read happened; where the client does not run them, or denies them the transcript, the Session line is an instruction only.`;
+const hooksNote = `Session hooks (3.15): SessionStart(compact) adds the re-read and session-end notice; tools/session.mjs on PostToolUse and the other SessionStart sources watches this session's context against the profile's Session line (${sessionLine}); tools/handover.mjs on SessionStart(startup|clear) shows a fresh chat the last session end in this checkout's Git history while it is current, and claims it for that chat in Git's common directory. They force nothing and cannot show that a re-read happened; where the client does not run them, or denies them the transcript, the Session line is an instruction only and a fresh chat starts from the record.`;
 
 const H = homedir();
 const slug = (basename(root) || 'project').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'project';
 // Directories no session should read or write, whichever harness is running. The sensor reads the transcript the hook names
-// as the harness's own process, outside this sandbox; nothing here is weakened for it.
-const secretDirs = [`${H}/.ssh`, `${H}/.aws`, `${H}/.gnupg`, `${H}/.config/gcloud`, `${H}/.claude`, `${H}/.codex`, `${H}/.npmrc`];
-const badPrefixes = ['curl', 'wget', 'gh', 'git clone', 'git fetch', 'git pull', ...(harnessPush ? [] : ['git push']), 'npx -y', 'npx --yes', 'pip install', 'brew'];
+// as the harness's own process, outside this sandbox; nothing here is weakened for it. Claude Code expands `~/` in sandbox
+// paths and permission rules, so its committed settings name no home folder; the Codex profile keeps absolute paths.
+const secretRel = ['.ssh', '.aws', '.gnupg', '.config/gcloud', '.claude', '.codex', '.npmrc'];
+const secretDirs = secretRel.map((d) => `${H}/${d}`), claudeSecret = secretRel.map((d) => `~/${d}`);
+// On macOS gh cannot verify TLS inside Claude Code's sandbox (the trust service is denied; Claude Code 2.1.267) and Codex
+// cannot read its own store there (0.155.1). With github.com listed, gh runs outside the sandbox, and so does Codex when the
+// profile's Harness line names it and the network is not closed; each call still goes through the permission flow.
+const ghOutside = network === 'listed' && hosts.includes('github.com');
+const excluded = [...(ghOutside ? ['gh *'] : []), ...(network !== 'closed' && /codex/i.test(field(profile, 'Harness')) ? ['codex *'] : [])];
+const badPrefixes = ['curl', 'wget', ...(ghOutside ? [] : ['gh', 'git fetch', 'git pull']), 'git clone', ...(harnessPush ? [] : ['git push']), 'npx -y', 'npx --yes', 'pip install', 'brew'];
+const excludedNote = excluded.length ? ` ${excluded.map((c) => c.split(' ')[0]).join(' and ')} run outside the sandbox (excludedCommands), so its filesystem denies and host list do not bind them; each call goes through the permission flow. On macOS gh cannot verify TLS inside it, and Codex cannot read its own store.` : '';
 const out = {}, merged = {}, notes = [];
-const SENSOR = 'tools/session.mjs';
-const OURS = /tools[\\/]session\.mjs['"]? --harness (claude|codex)\b/;
+const SENSOR = 'tools/session.mjs', NOTICE = 'tools/handover.mjs';
+// Ours is a whole command of the shape this generator writes, or wrote: node, one shell word naming tools/session.mjs or
+// tools/handover.mjs, --harness and a harness, and at most a --root word. A word holds no shell operator and no substitution
+// but a braced variable, so a compound command, a substitution or a mention is never ours.
+const WORD = `"(?:[^"\\\\$\`]|\\\\.|\\$\\{[A-Za-z_][A-Za-z0-9_]*\\})*"|'(?:[^']|'"'"')*'|(?:[A-Za-z0-9_./~+@%=,:-]|\\$\\{[A-Za-z_][A-Za-z0-9_]*\\})+`;
+const OURS = new RegExp(`^node (${WORD}) --harness (?:claude|codex)(?: --root (?:${WORD}))?$`);
+const isOurs = (command) => {
+  const m = typeof command === 'string' && command.match(OURS);
+  return !!m && /(?:^|[\\/])tools[\\/](?:session|handover)\.mjs$/.test(m[1].replace(/^["']|["']$/g, ''));
+};
 const hook = (command) => ({ type: 'command', command, timeout: 5 });
 const hookSet = (command, sources) => ({
-  SessionStart: [{ matcher: 'compact', hooks: [hook(command)] }, { matcher: sources, hooks: [hook(command)] }],
-  PostToolUse: [{ hooks: [hook(command)] }],
+  SessionStart: [{ matcher: 'compact', hooks: [hook(command(SENSOR))] }, { matcher: sources, hooks: [hook(command(SENSOR))] }, { matcher: 'startup|clear', hooks: [hook(command(NOTICE))] }],
+  PostToolUse: [{ hooks: [hook(command(SENSOR))] }],
 });
-// Merge our hook entries into an existing hooks object, replacing only entries that run the sensor; unrelated hooks stay.
+// Merge our hook entries into an existing hooks object, replacing only entries that run the sensor or the start notice; unrelated hooks stay.
 const mergeHooks = (existing = {}, ours) => {
   const result = { ...existing };
   for (const [event, groups] of Object.entries(ours)) {
-    const kept = (existing[event] || []).map((g) => ({ ...g, hooks: (g.hooks || []).filter((h) => !(typeof h.command === 'string' && OURS.test(h.command))) })).filter((g) => g.hooks.length);
+    const kept = (existing[event] || []).map((g) => ({ ...g, hooks: (g.hooks || []).filter((h) => !isOurs(h.command)) })).filter((g) => g.hooks.length);
     result[event] = [...kept, ...groups];
   }
   return result;
@@ -83,25 +100,26 @@ const readJson = (rel) => {
 };
 
 if (names.includes('claude')) {
-  const claudeHooks = hookSet(`node "\${CLAUDE_PROJECT_DIR}/${prefix}${SENSOR}" --harness claude`, 'startup|resume|clear|fork');
+  const claudeHooks = hookSet((tool) => `node "\${CLAUDE_PROJECT_DIR}/${prefix}${tool}" --harness claude`, 'startup|resume|clear|fork');
   const deny = [
     ...(network === 'open' ? [] : ['WebFetch', 'WebSearch']), 'RemoteTrigger', 'EnterWorktree', 'ExitWorktree',
     'CronCreate', 'CronDelete', 'CronList', 'ScheduleWakeup', 'SendMessage', 'Workflow', 'ReportFindings',
     ...badPrefixes.map((p) => `Bash(${p} *)`),
-    ...secretDirs.flatMap((d) => [`Read(//${d.replace(/^\//, '')}/**)`, `Edit(//${d.replace(/^\//, '')}/**)`, `Write(//${d.replace(/^\//, '')}/**)`]),
+    ...claudeSecret.flatMap((d) => [`Read(${d}/**)`, `Edit(${d}/**)`]), // Edit rules cover writes; the client reports Write rules inert
   ];
   const sessions = {
     permissions: { deny },
     autoMemoryEnabled: false,
     sandbox: {
       enabled: true, failIfUnavailable: true, autoAllowBashIfSandboxed: true, allowUnsandboxedCommands: false,
-      filesystem: { denyRead: secretDirs, denyWrite: secretDirs },
+      ...(excluded.length ? { excludedCommands: excluded } : {}),
+      filesystem: { denyRead: claudeSecret, denyWrite: claudeSecret },
       network: network === 'open' ? { allowedDomains: ['*'], strictAllowlist: false } : { allowedDomains: hosts, strictAllowlist: true },
       // the documented shape: entries with a name and a mode; v2 wrote an object keyed by deny, which Claude Code rejected along with the whole file
       credentials: { envVars: ['ANTHROPIC_API_KEY', 'CLAUDE_CODE_OAUTH_TOKEN', 'OPENAI_API_KEY', 'GITHUB_TOKEN', 'GH_TOKEN', 'NPM_TOKEN', 'AWS_SECRET_ACCESS_KEY'].map((name) => ({ name, mode: 'deny' })) },
     },
     hooks: claudeHooks,
-    _pm_next_v3: `Sessions. ${pushNote} ${networkNote} Cloud-session and scheduling tools denied; secret directories unreadable; the harness's own auto-memory off (this ledger is the record). ${hooksNote} Claude Code loads these hooks from .claude/settings.json; the desktop app applied no generated setting in the exposed week, so verify in the client. Generated by tools/harness.mjs — review, then commit. Claude Code reads CLAUDE.md, which imports AGENTS.md.`,
+    _pm_next_v3: `Sessions. ${pushNote} ${networkNote}${excludedNote} Cloud-session and scheduling tools denied; secret directories unreadable to sandboxed commands; the harness's own auto-memory off (this ledger is the record). ${hooksNote} Claude Code loads these hooks from .claude/settings.json; the desktop app applied no generated setting in the exposed week, so verify in the client. Generated by tools/harness.mjs — review, then commit. Claude Code reads CLAUDE.md, which imports AGENTS.md.`,
   };
   const intake = JSON.parse(JSON.stringify(sessions));
   intake.permissions.deny = deny.filter((d) => d !== 'WebFetch' && d !== 'WebSearch');
@@ -119,9 +137,12 @@ if (names.includes('claude')) {
 }
 
 if (names.includes('codex')) {
-  const quoted = `'${join(root, SENSOR).replace(/'/g, `'"'"'`)}'`; // the hook's cwd may be a subdirectory: an absolute, shell-quoted path
-  const codexHooks = hookSet(`node ${quoted} --harness codex`, 'startup|resume|clear');
-  const fsDeny = secretDirs.map((d) => `${JSON.stringify(d)} = "deny"`).join('\n');
+  const quoted = (tool) => `'${join(root, tool).replace(/'/g, `'"'"'`)}'`; // the hook's cwd may be a subdirectory: an absolute, shell-quoted path
+  const codexHooks = hookSet((tool) => `node ${quoted(tool)} --harness codex`, 'startup|resume|clear');
+  // Codex's standalone install keeps its binary under the Codex home's packages folder, and the sandbox helper that loads
+  // AGENTS.md re-executes it: with the whole home denied no session starts (0.155.1 and 0.160.1, V31-RESPAWN), so that one
+  // folder is readable and the rest of the home stays denied.
+  const fsDeny = [...secretDirs.map((d) => `${JSON.stringify(d)} = "deny"`), `${JSON.stringify(`${H}/.codex/packages`)} = "read"`].join('\n');
   const domains = hosts.map((h) => `${JSON.stringify(h)} = "allow"`).join('\n');
   const body = (name, net) => `# pm-next-v3 — Codex settings for ${slug}${net ? ' (INTAKE: network open)' : ''}.
 # Generated by tools/harness.mjs; review, then install:
@@ -146,7 +167,7 @@ browser_use_external = false
 computer_use = false
 in_app_browser = false
 image_generation = false
-hooks = true              # the two session hooks in .codex/hooks.json (3.15)
+hooks = true              # the three session hooks in .codex/hooks.json (3.15)
 
 [permissions.${name}]
 extends = ":workspace"
@@ -159,7 +180,7 @@ enabled = ${net || network !== 'closed' ? 'true' : 'false'}${net ? '            
 ${!net && network === 'listed' ? `\n[permissions.${name}.network.domains]\n${domains}\n` : ''}
 # Prefix-rule syntax belongs in .rules files, never TOML. Network permissions are the control.
 
-# The two session hooks (3.15), carried by this profile so that no project layer need be trusted for them; a project
+# The three session hooks (3.15), carried by this profile so that no project layer need be trusted for them; a project
 # that keeps its own permissions installs them with --hooks-only into the project's Codex hooks file instead. Headless: codex exec
 # runs them only with recorded trust or --dangerously-bypass-hook-trust.
 ${toml(codexHooks)}`;
@@ -170,8 +191,27 @@ ${toml(codexHooks)}`;
   } else {
     out[`harness/codex/${slug}.config.toml`] = body(slug, false);
     out[`harness/codex/${slug}-intake.config.toml`] = body(`${slug}-intake`, true);
-    notes.push(`codex    sessions: codex -p ${slug}\n         intake:   codex -p ${slug}-intake   (after copying both files into $CODEX_HOME; the profiles carry the two hooks — trust them in /hooks)`);
+    notes.push(`codex    sessions: codex -p ${slug}\n         intake:   codex -p ${slug}-intake   (after copying both files into $CODEX_HOME; the profiles carry the three hooks — trust them in /hooks)`);
   }
+}
+
+// ---- the status page's post-commit hook (V3-STATUS-VIEW): a Git hook, not a session hook, so no harness runs it and no
+// session sees more than one line of it. It clears inherited GIT_* routing, finds the checkout it runs in — a linked
+// worktree included — and rebuilds the ignored page there; silent on success, one line on failure, never failing a commit.
+if (!hooksOnly) {
+  const at = prefix.replace(/[\\"$`]/g, '\\$&'); // inside the hook's double quotes
+  out['harness/git/post-commit'] = `#!/bin/sh
+# pm-next v3.1 post-commit hook: rebuild the status page, project/view.html, after every commit (V3-STATUS-VIEW).
+# Generated by tools/harness.mjs; review, then install where this checkout's Git looks for hooks:
+#   cp harness/git/post-commit "$(git rev-parse --git-path hooks)/post-commit"
+# It writes nothing but the ignored page, calls no model and no network, prints nothing on success and one line on
+# failure, the checker's own messages, leaving the old page in place; the commit always stands.
+for v in $(env | sed -n 's/^\\(GIT_[A-Za-z0-9_]*\\)=.*/\\1/p'); do unset "$v"; done
+top=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+node "$top/${at}tools/view.mjs" --root "$top/${at}." --quiet 2>&1 | head -n 1
+exit 0
+`;
+  notes.push(`git      status page: review harness/git/post-commit, then cp it to "$(git rev-parse --git-path hooks)/post-commit" in each checkout that should rebuild project/view.html after a commit`);
 }
 
 // Preflight the whole output set. A conflict never leaves a mixed configuration; merged hook files replace by design.
@@ -185,6 +225,7 @@ for (const [rel, body] of Object.entries({ ...out, ...merged })) {
   const p = join(hooksRoot, rel);
   mkdirSync(join(p, '..'), { recursive: true });
   if (!existsSync(p) || readFileSync(p, 'utf8') !== body) writeFileSync(p, body);
+  if (rel === 'harness/git/post-commit') chmodSync(p, 0o755);
   console.log(`harness: ready ${hookPath(rel)}${merged[rel] ? ' (merged)' : ''}`);
 }
 console.log(`\nhow to run (${names.join(' + ')}):\n${notes.join('\n')}`);

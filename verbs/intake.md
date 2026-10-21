@@ -43,7 +43,7 @@ instead.
    existing rulebooks, every guess marked and any migration-only
    constraint carrying `until:`; the profile's Push line (the harness
    pushes to origin after every close unless the owner records
-   otherwise), Network line, Session line (200k unless the owner
+   otherwise), Network line, Session line (350k unless the owner
    records another) and Budget line.
 6. **Remove every placeholder; the Secrets line is a choice, not a
    placeholder. The owner signs** the profile, the brief and the rules

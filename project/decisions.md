@@ -15,9 +15,22 @@
      **Supersedes:** YYYY-MM-DD — ID — title, or "none".
      Optional **Deferred:** comma-separated target IDs, or "none".
      Budget 45 live entries: when the validator warns, tools/archive.mjs
-     moves the oldest entries verbatim to project/archive/ — on the
+     moves the oldest entries verbatim to project/decisions-YYYY-MM.md,
+     beside this file, listed in project/archive-index.md — on the
      owner's word, as the rules file says. -->
 
+
+## 2026-10-21 — V31-UPGRADE — The project runs pm-next v3.1: tools, verbs and the start-notice hook replaced as a set, the record kept
+
+**Decision:** the project runs pm-next v3.1 (PM-Skills lab b5c6f4b) from the commit carrying this entry — its twelve tools and four verbs, the item schema's Now section, the start notice as a third session hook — and, each in a commit of its own after it, the wish lines take permanent IDs, each trajectory phase goes oldest first, and the WCAG 2.2 AAA digest takes v3's repair; because the owner's relayed word of 2026-10-21 approved v3.1 and asked for the upgrade, after this project's day-21 reading was sealed.
+
+**Rationale:** The lab's V31-FIELD-2, by v3.1's upgrade route (lab/next-v31/CHANGELOG.md, "Existing installations — v3 to v3.1", and the lab's V31-DEPLOY procedure). The archived decisions and their index moved beside decisions.md in a commit of its own (27c6f1e: project/decisions-2026-10.md, project/archive-index.md, no byte changed, no entry archived or pruned) and v3.1's migrate tool was committed alone (b8c64e6), both before the snapshot, which refuses chunks under project/archive/. The snapshot at b8c64e6, against the pinned build 155f145: 1112 tracked files; 54 open and 58 shipped lines, 103 decision entries, 137 wish lines, 95 item files, 5 digests, 2 archive files. Its inventory, project/migration/upgrade-v3.1.json, sits beside the canon migration's inventory and census, kept byte for byte. `node tools/migrate.mjs --verify --upgrade v3.1` before the commit: migrate: 0 failure(s), 2 warning(s) — that no commit was named yet, and that .claude/settings.json changed, the hook merge this route calls for, on the owner's word below. project/items/_schema.md was v3's unedited copy and takes v3.1's (V31-NOW). `node tools/harness.mjs --hooks-only --harness claude` merged the start notice (tools/handover.mjs on SessionStart startup and clear) into .claude/settings.json as a third group, every other setting kept; .claude/settings.intake.json, for intake only, is unchanged. The Session line stays at 200k. The comments in wish-list.md, decisions.md and trajectory.md now state v3.1's wish-line form, the archive's place and the order within a phase; structure.md's tools and verbs rows name v3.1's set. The profile, rules file and brief are unchanged and keep the owner's signatures; the profile's Gate line, "the v3 checker", still names the v3 family's checker, and a wording correction is proposed to the owner in the pull request. The 55 live entries stay over the budget of 45: archiving is on the owner's word (the rules file), and the upgrade moves no entry. Between this commit and the stamp, v3.1's checker fails each of the 137 unstamped wish lines, as V31-WISH-IDS's note foresees. This entry supersedes the intake's in its build clause only, "pm-next v3's (PM-Skills-lab commit 155f145)"; the rest of it stands. Authority: the owner's words of 2026-10-21 in the lab's orchestrator chat, relayed and not seen by him in this chat: "I approve all the 3.1 aspects and want AI to proceed through to the upgrade as much as possible, proceeding on the basi of recommendations." (01:05 BST) and "you have permission for everything including model changes, proceed" (about 01:10). The pull request is his to merge. Local edits, each disposed:
+
+- Migration edit: tools/migrate.mjs — re-applied — v3.1's copy, committed alone before the snapshot
+
+**Supersedes:** 2026-10-01 — INTAKE — Route Plotter adopts pm-next v3 from canon 4.7.0
+
+**Deferred:** none
 
 ## 2026-10-19 — REL-726 — v3.3.726 publishes Background → Show image
 
