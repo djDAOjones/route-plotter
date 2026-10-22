@@ -3,9 +3,9 @@
 // `--commit <rev>` adds the commit's shape: title, Verify, an optional Checked line, an optional Session-end line, and the
 // removed-line trace against the parent. Without it, the trace compares the working tree and the staged tree with HEAD.
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { inspect, options, ID, removedLineFlags } from './ledger.mjs';
+import { inspect, options, ID, removedLineFlags, SESSION_END, sessionEndLines, wishChanges, reusedWishIds, wishIds } from './ledger.mjs';
 const LEDGER = { backlog: 'project/backlog.md', wish: 'project/wish-list.md', trajectory: 'project/trajectory.md', decisions: 'project/decisions.md' };
 try {
   const args = options(['audit-prose', 'commit']);
@@ -18,6 +18,19 @@ try {
     return out;
   };
   const working = Object.fromEntries(Object.entries(LEDGER).map(([k, p]) => { try { return [k, readFileSync(join(args.root, p), 'utf8')]; } catch { return [k, '']; } }));
+  // V31-WISH-IDS: for the reuse check, every line the wish list ever held and every commit message up to a revision, and
+  // the archived decisions and item files on disk
+  const history = (rev, before, after) => {
+    if (!wishIds(after.wish).some((id) => !wishIds(before.wish).includes(id))) return '';
+    let out = '';
+    try { out += git('log', '--format=%B', rev) + git('log', '-p', '--format=', rev, '--', LEDGER.wish); } catch { /* no history */ }
+    for (const dir of ['project', 'project/items']) { try { for (const f of readdirSync(join(args.root, dir)).filter((n) => /^decisions-.*\.md$|^[^_].*\.md$/.test(n) && (dir !== 'project' || n.startsWith('decisions-')))) out += '\n' + readFileSync(join(args.root, dir, f), 'utf8'); } catch { /* none */ } }
+    return out;
+  };
+  const wishNotes = (label, before, after, message, rev) => {
+    for (const m of wishChanges(before, after, message)) result.info.push(`${label}${m}`);
+    for (const m of reusedWishIds(before, after, history(rev, before, after))) result.warns.push(`${label}${m}`);
+  };
   let inGit = false; try { git('rev-parse', '--verify', 'HEAD'); inGit = true; } catch { /* not a repository, or no commit yet: no trace to compare */ }
   if (args.commit) {
     const message = git('show', '-s', '--format=%B', '--end-of-options', args.commit);
@@ -27,21 +40,22 @@ try {
     for (const line of message.split('\n').filter((l) => /^Checked:/.test(l))) {
       if (!/^Checked: \S[^—\n]* — \S[^—\n]* — \S.*$/.test(line)) result.fails.push(`commit: Checked line must read "Checked: <model> — <verdict> — <scope>": ${line}`);
     }
-    const ends = message.split('\n').filter((l) => /^Session-end:/.test(l));
+    const ends = sessionEndLines(message);
     if (ends.length > 1) result.fails.push(`commit: ${ends.length} Session-end lines; exactly one marks a session end or a whole-phase stop — continue, done or owner, then next <ID | none>, then the reason (3.15)`);
     for (const line of ends) {
-      const m = line.match(new RegExp(`^Session-end: (continue|done|owner) — next (${ID}|none) — (\\S.*)$`));
+      const m = line.match(SESSION_END);
       if (!m) result.fails.push(`commit: Session-end line must read "Session-end: <continue | done | owner> — next <ID | none> — <reason>" — continue for an end with authorised work left, done for a closed phase, owner when the next step needs the owner; the ID is the next item's, in the ledger's grammar, or none; the reason is one non-empty line naming the next item or unfinished step, where it is recorded and any blocker (3.15): ${line}`);
       else if (m[2] !== 'none' && !result.open.has(m[2])) result.warns.push(`commit: Session-end names ${m[2]} as next, which is not an open backlog item`);
     }
     let parent = null; try { parent = tree(`${args.commit}^`); } catch { /* a root commit: nothing before it */ }
-    if (parent) for (const f of removedLineFlags(parent, tree(args.commit), message)) result.warns.push(`commit: ${f}`);
+    if (parent) { const after = tree(args.commit); for (const f of removedLineFlags(parent, after, message)) result.warns.push(`commit: ${f}`); wishNotes('commit: ', parent, after, message, `${args.commit}^`); }
     result.info.push(`commit shape checked${ends.length ? ', Session-end line present' : ''}; a Verify or Checked declaration is not proof of execution`);
   } else if (inGit) {
     const head = tree('HEAD'), seen = new Set();
     for (const [label, after] of [['staged', tree('')], ['working tree', working]]) {
       for (const f of removedLineFlags(head, after)) if (!seen.has(f)) { seen.add(f); result.warns.push(`${label}: ${f}`); }
     }
+    wishNotes('working tree: ', head, working, '', 'HEAD');
   }
   for (const [key, prefix] of [['info', 'INFO'], ['warns', 'WARN'], ['fails', 'FAIL']]) {
     for (const message of result[key]) console.log(`${prefix}  ${message}`);

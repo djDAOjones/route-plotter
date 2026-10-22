@@ -21,6 +21,14 @@ One paragraph: what changes for whom, and why now.
 
 - one line each, checkable at close
 
+## Now
+
+Updated: YYYY-MM-DD
+
+Next step: the next concrete action, or None.
+
+Open question: the question still unresolved, or None.
+
 ## Context and sources
 
 - the decisions, digests, files or URLs this item derives from, one
@@ -39,6 +47,19 @@ One paragraph: what changes for whom, and why now.
   neither is an orphan and the validator warns. Exactly one top-level
   heading and nonempty intent, criteria and sources are required.
 - Status lives only on the backlog line; the file never repeats it.
+- Now is optional and rewritten, never appended: one `Updated:` date,
+  the date of its last rewrite, then `Next step:` and `Open question:`
+  in that order, each a non-empty paragraph. It never carries status
+  or a backlog mark; a question for the owner begins `Owner:` while
+  its `[!]` mark stays on the backlog line. A new file includes it; an
+  existing file gains it at its next close, with no bulk backfill.
+  Notes stay the history, each entry beginning `- YYYY-MM-DD —`.
+- A session resuming an item reads its heading, Intent, criteria and
+  Now, and opens Notes when the Now does not answer.
+- The checker reports, as information only, a Now updated before the
+  item's latest dated note, or one without a single valid date. It
+  compares dates, so a same-day rewrite that missed a note goes
+  unseen.
 - When the item ships, the file stays where it is: the trajectory line
   says "— see decisions", and the decisions entry cites the item file
   if the criteria matter to the why.

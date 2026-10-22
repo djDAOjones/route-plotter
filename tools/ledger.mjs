@@ -4,6 +4,12 @@ import { join, resolve, relative } from 'node:path';
 
 export const ID = '[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*';
 export const DATE = '\\d{4}-\\d{2}-\\d{2}';
+// V31-WISH-IDS: a wish's permanent ID is its origin item's ID, a full stop and a sequence number — outside the item
+// grammar, so V3-FIELD.1 never reads as an item such as V3-FIELD-1.
+export const WISH_ID = `${ID}\\.[1-9][0-9]*`;
+export const WISH_LINE = new RegExp(`^- (${WISH_ID}) — (.+) — \\(from: (${ID}), (${DATE})\\)$`);
+// A wish ID as a whole token: not inside a longer ID or word, and ORIGIN.1 never matching ORIGIN.10, ORIGIN.1x or ORIGIN.1.2.
+export const wishToken = (id) => new RegExp(`(?<![\\p{L}\\p{N}_.-])${id.replace('.', '\\.')}(?![\\p{L}\\p{N}_-]|\\.[\\p{L}\\p{N}])`, 'u');
 // The counting rule (specification 3.4): whitespace words after removing HTML comments and fenced blocks; the same rule for every file.
 export const words = (s) => active(s).split(/\s+/).filter(Boolean).length;
 export const validDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) &&
@@ -32,13 +38,21 @@ export function networkChoice(line) {
 export const DEFAULT_BUDGETS = { total: 4000, contract: 500, profile: 400, rules: 600, direction: 150, backlog: 1000, slice: 1000, trajectory: 300 };
 export const RULES_ALWAYS_GUIDELINE = 400, BRIEF_GUIDELINE = 1500;
 export const SESSION_LINE = /^([1-9]\d*)k tokens of context$/; // the one Session grammar (3.15), shared with the sensor
+// The Session-end line (3.15): every line of a commit message that starts `Session-end:`, of which a commit carries at most
+// one, in one shape; shared by the checker and the start notice, so neither reads an end the other would refuse.
+export const SESSION_END = new RegExp(`^Session-end: (continue|done|owner) — next (${ID}|none) — (\\S.*)$`);
+export const sessionEndLines = (message) => String(message).split('\n').filter((l) => /^Session-end:/.test(l));
+export function sessionEnd(message) { // { lines, end }: end is { status, next, reason } only for exactly one well-formed line
+  const lines = sessionEndLines(message), m = lines.length === 1 ? lines[0].match(SESSION_END) : null;
+  return { lines, end: m ? { status: m[1], next: m[2], reason: m[3] } : null };
+}
 export function options(values = []) {
   const result = { root: process.cwd() };
   const allowed = new Set(['root', ...values]);
   for (let i = 2; i < process.argv.length; i++) {
     const name = process.argv[i].replace(/^--/, '');
     if (!process.argv[i].startsWith('--') || !allowed.has(name)) throw Error(`unknown option: ${process.argv[i]}`);
-    if (['audit-prose', 'print', 'force', 'hooks-only'].includes(name)) result[name] = true;
+    if (['audit-prose', 'print', 'force', 'hooks-only', 'open', 'quiet'].includes(name)) result[name] = true;
     else {
       const value = process.argv[++i];
       if (!value || value.startsWith('--')) throw Error(`--${name} requires a value`);
@@ -115,7 +129,7 @@ export function signature(text) {
   const all = [...reviewed, ...delegated];
   return all.length === 1 && validDate(all[0].date) ? all[0] : null;
 }
-// A trace for every removed line (3.7): an open backlog line (matched by ID) or wish line (matched verbatim) removed between
+// A trace for every removed line (3.7): an open backlog line (matched by ID) or wish line (by its ID, V31-WISH-IDS; an unstamped one verbatim) removed between
 // two states of the ledger leaves a trajectory line, the line moved verbatim, a new decision entry naming it, or a sentence
 // in the commit body; a bare mention of an ID is not a trace. Warnings, never failures; the writer answers each flag.
 export function removedLineFlags(before, after, message = '') {
@@ -127,7 +141,7 @@ export function removedLineFlags(before, after, message = '') {
   const oldHeads = new Set(decisionEntries(before.decisions || '').map((e) => e.head));
   const newEntries = decisionEntries(after.decisions || '').filter((e) => !oldHeads.has(e.head)); // a decision naming it as superseded or retired, with the reason
   const body = message.split('\n').slice(1); // the commit body, never the title
-  const idRe = (id) => new RegExp(`(^|[^A-Z0-9-])${id}([^A-Z0-9-]|$)`);
+  const idRe = (id) => new RegExp(`(^|[^A-Z0-9-])${id}(?![A-Z0-9-]|\\.[0-9])`); // a wish ID, ORIGIN.N, is no mention of its origin item
   const DISPOSED = /\b(superseded?|supersedes|retired?|retires|withdrawn|withdraws|dropped|drops|cancelled|closed|merged|folded|absorbed|replaced|shipped|done|delivered|promoted|paid|obsolete|duplicate)\b/i;
   const disposition = (text, test) => test(text) && DISPOSED.test(text) && text.trim().split(/\s+/).length >= 5; // the form a tool can see: the line, a disposition word and a reason; the writer still judges
   const sentence = (test) => body.some((l) => disposition(l, test));
@@ -138,8 +152,15 @@ export function removedLineFlags(before, after, message = '') {
       || newEntries.some((e) => disposition(`${e.title} ${e.decision}`, (t) => idRe(id).test(t))) || sentence((l) => idRe(id).test(l));
     if (!traced) flags.push(`removed without a trace: backlog ${id} — a trace is its trajectory line, the line moved verbatim to the backlog or wish-list, a decision naming it superseded or retired with the reason, or a sentence in the commit body giving the reason; a bare mention of the ID is not a trace (3.7)`);
   }
-  const afterWishes = new Set(wishes(after.wish || '').map(idea));
+  const afterWishes = new Set(wishes(after.wish || '').flatMap((l) => [idea(l), idea(l).replace(new RegExp(`^${WISH_ID} — `), '')])), afterIds = new Set(wishIds(after.wish)); // an unstamped line stamped at the v3.1 upgrade is kept
   for (const line of wishes(before.wish || '')) {
+    const wid = line.match(WISH_LINE)?.[1];
+    if (wid) { // V31-WISH-IDS: matched by ID; a line that keeps its ID with new text is reworded or narrowed, not removed (wishChanges)
+      const token = wishToken(wid);
+      if (afterIds.has(wid) || movedLines.has(line.trim()) || newEntries.some((e) => disposition(`${e.title} ${e.decision}`, (t) => token.test(t))) || sentence((l) => token.test(l))) continue;
+      flags.push(`removed without a trace: wish ${wid} — a trace is the line moved verbatim to the backlog, a new decision naming ${wid} with a disposition and the reason, or a commit-body line such as "${wid} — promoted to NEW-ITEM — reason" or "${wid} — retired — reason"; a bare mention is not a trace (3.7)`);
+      continue;
+    }
     const text = idea(line);
     const promoted = new RegExp(`^- \\[( |~|!)\\] ${ID} — ${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} — since `, 'm').test(active(after.backlog || '')); // the plan verb's promotion: the idea becomes the item's title
     if (afterWishes.has(text) || movedLines.has(line.trim()) || promoted || newEntries.some((e) => disposition(`${e.title} ${e.decision}`, (t) => t.includes(text))) || sentence((l) => l.includes(text) && l.trim() !== text)) continue;
@@ -147,17 +168,55 @@ export function removedLineFlags(before, after, message = '') {
   }
   return flags;
 }
-export function inspect(root, { auditProse = false } = {}) {
+// V31-WISH-IDS: the wish IDs of a wish-list text, in order.
+export const wishIds = (t = '') => active(t).split('\n').map((l) => l.match(WISH_LINE)?.[1]).filter(Boolean);
+// A wish that keeps its ID with a new idea text was reworded or narrowed; the checker cannot tell which, so it says so
+// (INFO) unless a new decision or a commit-body line names the ID with the disposition and a reason.
+export function wishChanges(before, after, message = '') {
+  const ideas = (t) => new Map(active(t || '').split('\n').map((l) => l.match(WISH_LINE)).filter(Boolean).map((m) => [m[1], m[2]]));
+  const was = ideas(before.wish), now = ideas(after.wish), out = [];
+  const oldHeads = new Set(decisionEntries(before.decisions || '').map((e) => e.head));
+  const said = [...decisionEntries(after.decisions || '').filter((e) => !oldHeads.has(e.head)).map((e) => `${e.title} ${e.decision}`), ...message.split('\n').slice(1)];
+  for (const [id, text] of now) {
+    if (!was.has(id) || was.get(id) === text) continue;
+    if (said.some((l) => wishToken(id).test(l) && /\b(reworded|rewords?|narrowed|narrows?|widened|clarified|corrected)\b/i.test(l) && l.trim().split(/\s+/).length >= 5)) continue;
+    out.push(`wish ${id} keeps its ID with a new text; the checker cannot tell a rewording from a narrowing — if scope left it, name ${id} as narrowed with the reason in the commit body, and give what left its own line or a retirement`);
+  }
+  return out;
+}
+// A wish ID new in after that the record before it, or the history (the wish list's past lines and the commit messages),
+// already named: IDs are permanent, so a removed wish's number is never issued again.
+export function reusedWishIds(before, after, history = '') {
+  const old = new Set(wishIds(before.wish)), seen = [before.backlog, before.decisions, before.trajectory, active(before.wish || ''), history].join('\n');
+  return wishIds(after.wish).filter((id) => !old.has(id) && wishToken(id).test(seen))
+    .map((id) => `wish ${id} reuses a number the record or the history already used; IDs are permanent — take the origin's next unused number (find shows its wishes)`);
+}
+// Every YYYY-MM-DD date in an open line's title or blocker, never its since or origin date, oldest first, ties in
+// backlog order (V3-STATUS-VIEW): a list of dates mentioned, none of them called a deadline.
+export function datesMentioned(open) {
+  const out = []; let n = 0;
+  for (const i of open.values()) for (const [part, text] of [['title', i.title], ['blocker', i.blocked]]) {
+    if (!text) continue;
+    const clauses = text.split(/ — |; |: |, /);
+    for (const clause of clauses) for (const m of clause.matchAll(/\b(\d{4}-\d{2}-\d{2})\b/g)) out.push({ date: m[1], id: i.id, part, clause: clause.trim(), order: n++ });
+  }
+  return out.sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order);
+}
+
+export function inspect(root, { auditProse = false, checkDate = '' } = {}) {
   const fails = [], warns = [], info = [];
   const fail = (m) => fails.push(m), warn = (m) => warns.push(m);
   const P = (p) => join(root, 'project', p);
+  const sources = new Map(); // every file this inspection read, by root-relative path, as bytes: the view's fingerprint (V3-STATUS-VIEW)
+  const take = (p) => { const bytes = readFileSync(p); sources.set(relative(root, p).split('\\').join('/'), bytes); return bytes.toString('utf8'); };
   const read = (p, required = false) => {
-    try { return readFileSync(p, 'utf8'); }
+    try { return take(p); }
     catch (e) { if (required || e.code !== 'ENOENT') fail(`${relative(root, p)}: ${e.code}`); return ''; }
   };
   const files = Object.fromEntries(['profile', 'brief', 'rules', 'backlog', 'decisions', 'trajectory', 'wish-list'].map((n) => [n, read(P(n + '.md'), true)]));
   const { profile, rules, backlog, trajectory } = files;
-  const today = new Date().toISOString().slice(0, 10);
+  if (checkDate && !validDate(checkDate)) fail(`check date ${checkDate} is not a valid YYYY-MM-DD date`);
+  const today = checkDate && validDate(checkDate) ? checkDate : new Date().toISOString().slice(0, 10); // the one date input
   // Budgets: the profile's Budget line names the total and the per-file hard budgets (3.4).
   const budgets = { ...DEFAULT_BUDGETS };
   const budgetLine = field(profile, 'Budget');
@@ -220,7 +279,7 @@ export function inspect(root, { auditProse = false } = {}) {
     const abs = resolve(root, path);
     if (relative(root, abs).startsWith('..') || !existsSync(abs)) { fail(`project/rules.md: routed document missing: ${path} (${task})`); continue; }
     if (!Number.isInteger(budgetN) || budgetN <= 0) fail(`project/rules.md: routed document needs a word budget: ${path}`);
-    let count; try { count = words(readFileSync(abs, 'utf8')); } catch { fail(`project/rules.md: routed document cannot be read as a file: ${path} (${task})`); continue; }
+    let count; try { count = words(take(abs)); } catch { fail(`project/rules.md: routed document cannot be read as a file: ${path} (${task})`); continue; }
     if (budgetN && count > budgetN) warn(`project/rules.md: routed ${path} is ${count} words, stated budget ${budgetN} (${task})`);
     routed.push({ task, path, words: count, budget: budgetN || 0 });
   }
@@ -250,10 +309,10 @@ export function inspect(root, { auditProse = false } = {}) {
     }
   }
   for (const h of ['Current', 'Next', 'Icebox']) if (!milestones.some((s) => s.name === h)) fail(`project/backlog.md: missing ## ${h}`);
-  const shipped = new Map(), tphases = [], recalls = []; let tp;
+  const shipped = new Map(), tphases = [], recalls = [], late = []; let tp, last;
   for (const line of active(trajectory).split('\n')) {
     let m;
-    if ((m = line.match(/^## (.+)$/))) { tp = { name: m[1], lines: [] }; tphases.push(tp); }
+    if ((m = line.match(/^## (.+)$/))) { tp = { name: m[1], lines: [] }; tphases.push(tp); last = null; }
     else if (/^\s*[-*+] /.test(line)) {
       if (!tp) fail('project/trajectory.md: line outside a phase');
       tp?.lines.push(line.slice(2));
@@ -267,9 +326,12 @@ export function inspect(root, { auditProse = false } = {}) {
       if (!m || !validDate(m[3])) { fail(`project/trajectory.md: line does not parse: ${line}`); continue; }
       if (shipped.has(m[1])) fail(`project/trajectory.md: duplicate shipped ID ${m[1]}`);
       shipped.set(m[1], { id: m[1], outcome: m[2], date: m[3], phase: tp?.name });
+      if (tp) { if (last && m[3] < last.date) { if (late.at(-1)?.tp !== tp) late.push({ tp, id: m[1], date: m[3], above: last, n: 0 }); late.at(-1).n++; } last = { id: m[1], date: m[3] }; }
       if (open.has(m[1])) fail(`drift: ${m[1]} is shipped but still open`);
     }
   }
+  // Rule 1 reads a phase's latest item lines from its end, so a phase keeps them oldest first (V3-READ-ORDER); RECALL lines and equal dates pass.
+  for (const l of late) warn(`project/trajectory.md: ${l.tp.name}: ${l.id} (${l.date}) sits below ${l.above.id} (${l.above.date})${l.n > 1 ? `, and ${l.n - 1} more item line(s) in the phase are dated before the line above` : ''}; a phase's item lines go oldest first, a new line at its end, because rule 1 reads the latest from there — reorder the phase, every line unchanged`);
   const trajectoryRead = trajectoryItemLines(tphases, budgets.trajectory);
   counts.trajectory = trajectoryRead.words;
   over('trajectory', `project/trajectory.md latest item lines (the last ${trajectoryRead.lines.length} shipped, never fewer than four)`, counts.trajectory);
@@ -279,7 +341,7 @@ export function inspect(root, { auditProse = false } = {}) {
   let inheritedHeads = new Set(); // the migration inventory names every entry that predates v3 (3.3); an unusable one fails, never silently exempts
   if (existsSync(P('migration/inventory.json'))) {
     let inv = null, text = '';
-    try { text = readFileSync(P('migration/inventory.json'), 'utf8'); } catch { fail('project/migration/inventory.json: exists but cannot be read; the inherited-entry boundary cannot be read (3.3)'); }
+    try { text = take(P('migration/inventory.json')); } catch { fail('project/migration/inventory.json: exists but cannot be read; the inherited-entry boundary cannot be read (3.3)'); }
     if (text) { try { inv = JSON.parse(text); } catch { fail('project/migration/inventory.json: not valid JSON; the inherited-entry boundary cannot be read (3.3)'); } }
     if (inv !== null) {
       const list = inv?.record?.decisions;
@@ -291,14 +353,14 @@ export function inspect(root, { auditProse = false } = {}) {
   counts.slice = slice.words;
   over('slice', 'project/decisions.md latest ten (heading, Decision, Deferred)', counts.slice);
   const archives = [], all = [...live];
-  if (existsSync(P('archive'))) for (const file of readdirSync(P('archive')).filter((n) => /^decisions-.*\.md$/.test(n)).sort()) {
-    const text = read(P('archive/' + file)), entries = decisionEntries(text, 'project/archive/' + file, fail);
-    if (!entries.length) fail(`project/archive/${file}: no decision entries`);
+  if (existsSync(P(''))) for (const file of readdirSync(P('')).filter((n) => /^decisions-.*\.md$/.test(n)).sort()) { // archived chunks sit beside decisions.md
+    const text = read(P(file)), entries = decisionEntries(text, 'project/' + file, fail);
+    if (!entries.length) fail(`project/${file}: no decision entries`);
     archives.push({ file, entries, text }); all.push(...entries);
   }
-  const index = active(read(P('archive/INDEX.md'), archives.length > 0)).split('\n').filter((l) => l.startsWith('- '));
+  const index = active(read(P('archive-index.md'), archives.length > 0)).split('\n').filter((l) => l.startsWith('- '));
   const expectedRows = archives.map((a) => archiveRow(a.file, a.entries));
-  if (index.length !== expectedRows.length || expectedRows.some((row) => !index.includes(row))) fail('project/archive/INDEX.md: archive coverage, dates, counts or IDs differ; regenerate with tools/archive.mjs');
+  if (index.length !== expectedRows.length || expectedRows.some((row) => !index.includes(row))) fail('project/archive-index.md: archive coverage, dates, counts or IDs differ; regenerate with tools/archive.mjs');
   const heads = new Set();
   for (const e of all) { if (heads.has(e.head)) fail(`graph: duplicate decision heading ${e.head}`); heads.add(e.head); }
   for (const e of all) {
@@ -328,11 +390,13 @@ export function inspect(root, { auditProse = false } = {}) {
     else for (const id of plan.items.split(/,\s*/)) if (!shipped.has(id)) fail(`backlog: closed Phase ${closed[1]} has unfinished planned item ${id}`);
   }
   const wish = active(files['wish-list']).split('\n').filter((l) => /^\s*[-*+] /.test(l));
-  const origins = new Set([...open.values()].map((i) => i.from).filter(Boolean));
+  const origins = new Set([...open.values()].map((i) => i.from).filter(Boolean)), wishIds = new Set();
   for (const line of wish) {
-    const m = line.match(new RegExp(`^- .+ — \\(from: (${ID}), (${DATE})\\)$`));
-    if (!m || !validDate(m[2])) fail(`project/wish-list.md: line needs (from: ID, valid date): ${line}`);
-    else origins.add(`${m[1]}, ${m[2]}`);
+    const m = line.match(WISH_LINE);
+    if (!m || !validDate(m[4])) fail(`project/wish-list.md: line needs "- ORIGIN.N — idea — (from: ORIGIN, valid date)", N the origin's next unused number; an unstamped line from before v3.1 takes its ID from tools/migrate.mjs --stamp-wishes: ${line}`);
+    else if (m[1].slice(0, m[1].lastIndexOf('.')) !== m[3]) fail(`project/wish-list.md: wish ${m[1]} must carry its origin's ID, ${m[3]}: ${line}`);
+    else if (wishIds.has(m[1])) fail(`project/wish-list.md: duplicate wish ID ${m[1]} — two branches gave the same origin the same number; renumber the later line above the origin's highest number and trace the change in its commit body`);
+    else { wishIds.add(m[1]); origins.add(`${m[3]}, ${m[4]}`); }
   }
   if (auditProse) {
     const defer = /\b(later item|separate item|deferred|parked|follow-up|revisit|after launch|next release)\b/i;
@@ -360,7 +424,12 @@ export function inspect(root, { auditProse = false } = {}) {
     if (!new RegExp(`^${ID}$`).test(id) || heads.length !== 1 || !heads[0]?.[1].startsWith(id + ' — ')) fail(`project/items/${f}: needs one heading matching the filename ID`);
     const s = sections(text);
     for (const h of ['Intent', 'Acceptance criteria', 'Context and sources']) if (!s.get(h)) fail(`project/items/${f}: missing or empty ## ${h}`);
-    const criteria = (s.get('Acceptance criteria') || '').split('\n').filter((l) => /^- \S/.test(l)).map((l) => l.slice(2));
+    const criteria = []; let continues = false; // a criterion is its bullet line and the indented lines under it
+    for (const l of (s.get('Acceptance criteria') || '').split('\n')) {
+      if (/^- \S/.test(l)) { criteria.push(l.slice(2)); continues = true; }
+      else if (continues && /^\s+\S/.test(l)) criteria[criteria.length - 1] += ' ' + l.trim();
+      else continues = false;
+    }
     if (!criteria.length) fail(`project/items/${f}: no acceptance criteria`);
     if (!open.has(id) && !shipped.has(id)) warn(`project/items/${f}: orphan; neither open nor shipped`);
     if (/^status:/m.test(text)) fail(`project/items/${f}: status belongs only in backlog`);
@@ -368,7 +437,14 @@ export function inspect(root, { auditProse = false } = {}) {
       const path = resolve(root, m[1]);
       if (relative(root, path).startsWith('..') || !existsSync(path)) warn(`project/items/${f}: local path missing or outside repository: ${m[1]}`);
     }
-    items.set(id, { intent: s.get('Intent'), criteria, words: words(text) });
+    // V31-NOW: a Now section older than the item's latest dated note is information only, never a warning or failure.
+    if (s.has('Now')) {
+      const updated = [...s.get('Now').matchAll(/^Updated:(.*)$/gm)].map((m) => m[1].trim());
+      const noted = [...(s.get('Notes') || '').matchAll(new RegExp(`^- (${DATE}) — `, 'gm'))].map((m) => m[1]).filter(validDate).sort();
+      if ((active(text).match(/^## Now$/gm) || []).length !== 1 || updated.length !== 1 || !validDate(updated[0])) info.push(`project/items/${f}: Now freshness unknown; expected one Now section with one valid Updated: YYYY-MM-DD`);
+      else if (noted.length && updated[0] < noted.at(-1)) info.push(`project/items/${f}: Now updated ${updated[0]} is older than the latest note, ${noted.at(-1)}; the item's next close rewrites it`);
+    }
+    items.set(id, { intent: s.get('Intent'), criteria, now: s.get('Now') || '', words: words(text) });
   }
   const structure = active(read(P('structure.md')));
   if (/\{what lives here/.test(structure)) warn('project/structure.md: directory roles need filling');
@@ -390,5 +466,5 @@ export function inspect(root, { auditProse = false } = {}) {
   if (needsOwner.length) info.push(`needs the owner: ${needsOwner.map((i) => i.id).join(', ')} (already recorded)`);
   const delegated = signatures.filter((s) => s.delegated);
   if (delegated.length) info.push(`delegated signatures needing the owner's review: ${delegated.map((s) => s.file).join(', ')}`);
-  return { fails, warns, info, files, milestones, open, shipped, decisions: live, slice, archives, wish: wish.map((s) => s.slice(2)), tphases, trajectoryRead, recall: recalls.sort((a, b) => b.date.localeCompare(a.date))[0], digests, items, hotWords, counts, budgets, routed, signatures, session: session ? Number(session[1]) * 1000 : 0 };
+  return { fails, warns, info, files, milestones, open, shipped, decisions: live, slice, archives, wish: wish.map((s) => s.slice(2)), tphases, trajectoryRead, recall: recalls.sort((a, b) => b.date.localeCompare(a.date))[0], digests, items, hotWords, counts, budgets, routed, signatures, session: session ? Number(session[1]) * 1000 : 0, today, sources };
 }

@@ -133,6 +133,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "startup|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/tools/handover.mjs\" --harness claude",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PostToolUse": [
