@@ -28,7 +28,9 @@ direction.
 4. **Record** the direction as one decision entry (ID `PLAN-N`) whose
    `**Items:**` line lists every phase item ID, comma-separated, and
    whose Rationale names the review findings the phase answers and the ones
-   it defers. Deferred findings are lines, per rule 5.
+   it defers. Deferred findings are lines, per rule 5. A later PLAN-N
+   entry that changes the list gives the whole list and supersedes the
+   earlier; one without Items changes no membership.
 5. **Generate the view** with `node tools/view.mjs`. The owner signs
    off by starting the first item, or by an existing instruction to
    plan and execute. Otherwise stop for that direction. For authorised

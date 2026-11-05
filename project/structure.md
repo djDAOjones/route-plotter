@@ -41,8 +41,8 @@
 | `tests/fixtures/` | 1 | test fixtures |
 | `tests/goldens/` | 15 | golden frames and draw logs |
 | `tests/helpers/` | 6 | bootApp and the shared helpers |
-| `tools/` | 12 | pm-next v3.1 tools (check, read, find, view, harness, session, structure, archive, migrate, handover, run) |
-| `verbs/` | 4 | pm-next v3.1 verbs (plan, close, recall, intake) |
+| `tools/` | 14 | pm-next v3.1 tools (check, read, find, view, harness, session, structure, archive, ledger, migrate, handover, run, brief, lanes) |
+| `verbs/` | 9 | pm-next v3.1 verbs (plan, close, recall, intake, and the add-ons orchestrate, control, sweep, stocktake, design-review) |
 
 ## Entry points
 

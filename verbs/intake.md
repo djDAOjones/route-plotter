@@ -20,7 +20,13 @@ instead.
    test configuration, CI, any existing docs, README, any existing
    project memory (canon or otherwise) and its rulebooks. Draft the
    profile's Identity, Stack and Conventions from that, and mark every
-   field you had to guess.
+   field you had to guess. Then the hazard check: inventory the owner's
+   live state beyond the repository, asking where you cannot see it —
+   every working checkout and its branch, with work uncommitted or not
+   pushed; open pull requests that write the record; work held only in
+   session transcripts or scratchpads; and saved scheduled prompts or
+   tasks naming the project. Before step 5 each is landed, carried into
+   the record, or set aside on the owner's word, recorded.
 2. **Ask only what you cannot infer**, in one short list: the gate
    command if none exists, hosting, the harness and its surface, the
    Handoff role split (never defaulted), the Secrets store ("none
@@ -64,3 +70,33 @@ sections, do not reproduce text — or, for the owner's own
 conventions, a house digest with a repository source. Show the
 owner the "rules that bite here" block and put the same lines in
 the profile.
+
+## Accessibility testing — with the app flag only
+
+Dormant until V3-APP-FLAG's switch lands: v3.1 carries no app flag,
+so intake never asks this yet, and the pilot's intake, by hand, is
+its first use (specification 3.18). Without the line, none of this
+runs and the project gains no file, read or check.
+
+- **Ask,** with the app flag on and never without it, "Accessibility
+  testing: standard or extended? (standard)". Until the pilot passes,
+  only the pilot takes the pack. An existing project adopts either
+  depth by its own decision; nothing is retrofitted.
+- **Copy** from the source distribution, never a download: `node
+  <source>/a11y/install.mjs --to . --depth <depth> --level <AA or
+  AAA>`, the adopted digest's level. It copies the depth's files,
+  writes the coverage file with every feature unknown, writes nothing
+  if a file differs, and prints the rest.
+- **By hand:** the profile's line and the rules file's By-task row,
+  as the templates' comments give them; the depth's entries from
+  `a11y/package.fragment.json` merged into package.json, nothing
+  overwritten; `eslint.a11y.mjs` imported; `npm run a11y` in the gate;
+  each new dev dependency on the owner's approval; then
+  `node tools/check.mjs`.
+- **The keep decision,** when the app flag's re-ask prompts it: a
+  project on standard is offered extended once. Yes: the helper again
+  with `--depth extended`, which adds files and keeps declarations and
+  evidence, the line rewritten, the extended entries merged, then
+  `npm run a11y:extended` before the keep decision closes. No: a
+  decision, never offered again. A project on extended runs
+  `npm run a11y:extended` before it.

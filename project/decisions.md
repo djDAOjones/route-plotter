@@ -14,11 +14,29 @@
      would need.
      **Supersedes:** YYYY-MM-DD — ID — title, or "none".
      Optional **Deferred:** comma-separated target IDs, or "none".
+     A PLAN-N entry also has **Items:** with its phase IDs. A later
+     PLAN-N Items list replaces the whole list and supersedes the
+     earlier; a closed phase is checked against the list no other
+     supersedes. Optional **Retired:** names items retired unshipped,
+     comma-separated, the reason in the entry: neither open nor
+     shipped, never reopened.
      Budget 45 live entries: when the validator warns, tools/archive.mjs
      moves the oldest entries verbatim to project/decisions-YYYY-MM.md,
      beside this file, listed in project/archive-index.md — on the
      owner's word, as the rules file says. -->
 
+
+## 2026-11-05 — V31-REFRESH — The project takes pm-next v3.1 as the lab now builds it: tools and verbs replaced as a set, the record kept
+
+**Decision:** the project runs pm-next v3.1 at PM-Skills lab 4ab66b5 from the commit carrying this entry: six tools and three verbs replaced, two tools and five add-on verbs added, as v3.1's set; rule 9 asks a Checked line only where a model policy requires one, and this project keeps none; the WCAG 2.2 AAA digest follows in the next commit — because the owner asked on 2026-11-05 to upgrade his projects to the latest pm-skills, the project's first-month test having ended on 2026-11-02.
+
+**Rationale:** The lab's V31-REFRESH-2, by V31-REFRESH-1's route. No route in v3.1's change notes covers a later v3.1 build over an installed v3.1 (the upgrade tool refuses a second snapshot), so this follows the "Existing installations" rules by hand: every installed tool, verb and AGENTS.md matched b5c6f4b's bytes, so no local edit is carried; tools and verbs are replaced as a set from lab/next-v31 at 4ab66b5; the contract merges rule 9's one change; no project template is copied over the record, and the decisions template's sentences on Items and Retired are merged into this file's comment; the status site's outputs, project/view.html, project/view.site/ and project/.view.html.*, are ignored, as the build's hook documents; structure.md's tools and verbs rows name the new set. Replaced: check.mjs and ledger.mjs (a closed phase is checked against the PLAN Items list no other supersedes, a Retired field, traces read in a Rationale, the trajectory read by each line's own date with a phase-order warning), handover.mjs (the start notice's recovery sentences), harness.mjs (the post-commit hook rebuilds the status site), view.mjs (the status site beside view.html), migrate.mjs (the upgrade checks), and the intake, plan and close verbs. Added: brief.mjs and lanes.mjs, for orchestration and parallel writers, and the add-on verbs orchestrate, control, sweep, stocktake and design-review, which no rule reads. The session hooks are unchanged: `harness.mjs --hooks-only --harness claude`, as V31-UPGRADE ran it, writes the same .claude/settings.json at b5c6f4b and at 4ab66b5, byte for byte, and the installed file equals it, so no setting is regenerated. The new checker fails nothing here: no phase-close list stands beside a differing one, so no PLAN entry is restated. It warns three times: the rules file's Always section and the live decisions as before — 57 live decisions, this entry included, against the budget of 45, left because the rules file allows archiving only on the owner's word (the wish line V31-REFRESH.1), and, new with this checker's phase-order rule, the trajectory's phase order, which the next commit repairs. The profile's Gate line still says "the v3 checker"; its wording stays the owner's to sign (the wish line V31-UPGRADE named). Rollback: revert the pull request's merge commit; nothing outside the repository changes.
+
+- Migration edit: none — every replaced file was b5c6f4b's, byte for byte
+
+**Supersedes:** 2026-10-21 — V31-UPGRADE — The project runs pm-next v3.1: tools, verbs and the start-notice hook replaced as a set, the record kept
+
+**Deferred:** none
 
 ## 2026-10-21 — V31-UPGRADE — The project runs pm-next v3.1: tools, verbs and the start-notice hook replaced as a set, the record kept
 

@@ -11,6 +11,7 @@
 ## pm-next v3.1 — the owner's relayed word of 2026-10-21
 
 - V31-UPGRADE — the project runs pm-next v3.1: twelve tools, four verbs and the start-notice hook, the archived decisions beside decisions.md, the wish lines stamped, each phase oldest first, the AAA digest repaired, by pull request (2026-10-21) — see decisions
+- V31-REFRESH — the project takes pm-next v3.1 as the lab builds it at 4ab66b5: six tools and three verbs replaced, two tools and five add-on verbs added, rule 9's Checked wording, no local edit lost, the session hooks unchanged, by pull request (2026-11-05) — see decisions
 
 ## Next feature — the owner's word of 2026-10-18
 
