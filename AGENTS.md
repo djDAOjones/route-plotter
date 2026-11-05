@@ -40,9 +40,10 @@ in `project/profile.md`. Tools enforce what they can; this states it.
    and names, at close, the digest rule it applied. An exception is a
    decision.
 9. **Commit as `ID: summary`** with a `Verify:` line stating the gate
-   result and, optionally, a `Checked: <model> — <verdict> — <scope>`
-   line for a second model's check; commit only this item's files at
-   close; push as the profile's Push line says.
+   result and, where the model policy requires it, a `Checked:
+   <model> — <verdict> — <scope>` line for a second model's check;
+   commit only this item's files at close; push as the profile's Push
+   line says.
 10. **Run `node tools/check.mjs` before closing.** A structural or
     budget failure blocks the close; review warnings, fixing them or
     linking one existing follow-up. Informational messages create no

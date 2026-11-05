@@ -40,6 +40,7 @@ const REPLACED = /^(AGENTS\.md|CLAUDE\.md|tools\/.+|verbs\/.+)$/; // replaced as
 const SETTINGS = /^(\.claude|\.codex|harness)\//; // locally verified harness settings, tracked or ignored: kept, never written over
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const EDIT = (p) => new RegExp(`^- Migration edit: ${esc(p)} — (re-applied|retired) — \\S.+$`, 'm'); // the disposition line, its why mandatory
+const CARRY = /^- Migration edit: ((?:tools|verbs)\/(?:(?!\.{1,2}\/)[^/\\\0\r\n*?[\]]+\/)*) — carried — \S.+$/; // one line carrying a directory's own files, upgrade route only (V31-UPGRADE-CHECKS, 3.10): a literal prefix, recursive, its why mandatory
 const STAMP = new RegExp(`^(${WISH_ID}) — `); // a wish line's permanent ID, ORIGIN.N (V31-WISH-IDS, 3.17), stripped where lines are compared across the stamping; strip below is the one parser
 const blank = (m) => m.replace(/[^\n]/g, '');
 const active = (s) => s.replace(/\r\n/g, '\n').replace(/<!--[\s\S]*?-->/g, blank)
@@ -242,7 +243,7 @@ if (UP && (args.rollback || (args.verify && args['rolled-back'])) && !args.commi
 
 if (args.verify && !args['rolled-back']) {
   const inv = loadInventory(), now = record(tracked()), m = migrationCommit(inv.sourceCommit), DEC = decisionId(inv);
-  let rec = inv.record, targetFiles = inv.target?.files || {}, filesAtS = null; // what the checks compare against: under the upgrade route Git's record at the snapshot, its file list and the target re-hashed, never the inventory's copy
+  let rec = inv.record, targetFiles = inv.target?.files || {}, filesAtS = null, rehashed = false; // what the checks compare against: under the upgrade route Git's record at the snapshot, its file list and the target re-hashed, never the inventory's copy
   if (UP && !inv.to) fails.push(`${INVENTORY} is a v2 inventory, not an upgrade's; name the upgrade's with --inventory`);
   if (UP && !DEC) fails.push(`${INVENTORY} names no item (--item at the snapshot) and no --decision was given, so the upgrade's decision entry has no ID to look for`);
   if (UP && m) checkCommit(m, inv);
@@ -271,7 +272,7 @@ if (args.verify && !args['rolled-back']) {
         const off = [...new Set([...Object.keys(inv.target.files || {}), ...Object.keys(fresh)])].filter((p) => inv.target.files?.[p] !== fresh[p]).sort();
         if (off.length) fails.push(`the inventory's target hashes disagree with ${dir} (${off.join(', ')}); the inventory was edited after the snapshot, or this is not the copy it hashed — name the pristine ${UP} copy with --target`);
         else notes.push(`target re-hashed from ${args.target ? `--target ${dir}` : `the snapshot's target path ${dir}`}: ${Object.keys(fresh).length} replaced files agree with the inventory`);
-        targetFiles = fresh;
+        targetFiles = fresh; rehashed = true;
       }
     }
   }
@@ -338,8 +339,29 @@ if (args.verify && !args['rolled-back']) {
   }
   const blocks = UP ? [migrate] : decisions.split(/^(?=## )/m).filter((b) => (b.match(new RegExp(DATE))?.[0] || '') >= since); // the upgrade's dispositions live in its own entry, the item's or --decision's; the v2 route reads every entry from the MIGRATE one on, as before
   const disposed = (p) => blocks.map((b) => b.match(EDIT(p))?.[0]).find(Boolean);
-  const reapplied = new Set();
-  for (const e of inv.localEdits.filter((x) => x.status !== 'identical')) { // each re-applied or retired by a decision from the migration on, in one grammar, its why mandatory
+  const reapplied = new Set(), carried = new Set();
+  if (UP) { // a directory's files outside pm-next, each held to its bytes at the snapshot; the candidates come from the snapshot, so a deletion cannot shrink the obligation, and an exact line is the exception
+    const said = migrate.split('\n').filter((l) => /^- Migration edit: .* — carried\b/.test(l)), dirs = [...new Set(said.map((l) => l.match(CARRY)?.[1]).filter(Boolean))];
+    for (const l of said) if (!CARRY.test(l)) fails.push(`"${l}": a carry names a directory under tools/ or verbs/, literally, ending in /, and its why (3.10)`);
+    const baseDir = [args.base ? resolve(args.base) : inv.base?.path].find((d) => d && existsSync(join(d, 'AGENTS.md'))) || '', now = new Set(tracked());
+    if (dirs.length && !baseDir) fails.push('a carried directory needs the pristine base, to confirm its files are outside pm-next; name it with --base');
+    if (dirs.length && !rehashed) fails.push('a carried directory needs the target re-hashed, to confirm its files are outside pm-next; name it with --target');
+    const added = new Set(inv.localEdits.filter((e) => e.status === 'added').map((e) => e.path));
+    for (const dir of dirs) {
+      let n = 0;
+      for (const f of inv.files.filter((x) => x.path.startsWith(dir) && added.has(x.path) && !(x.path in targetFiles) && !disposed(x.path))) {
+        n++; if (carried.has(f.path)) continue;
+        carried.add(f.path);
+        const on = join(root, f.path);
+        if (baseDir && existsSync(join(baseDir, f.path))) fails.push(`${f.path}: the inventory says added, yet the pristine base has it; the inventory was edited after the snapshot`);
+        else if (!now.has(f.path) || !existsSync(on)) fails.push(`${f.path}: carried by "${dir}" but gone; restore it or give it its own Migration edit line (3.10)`);
+        else if (!lstatSync(on).isFile() || sha(readFileSync(on)) !== f.sha256) fails.push(`${f.path}: carried by "${dir}" but not its bytes at the snapshot; restore it or give it its own Migration edit line (3.10)`);
+      }
+      if (!n) fails.push(`"${dir}" carries nothing: no file of the snapshot under it is outside pm-next without its own line (3.10)`);
+      else notes.push(`${dir} carried: ${n} files outside pm-next checked against the snapshot's hashes`);
+    }
+  }
+  for (const e of inv.localEdits.filter((x) => x.status !== 'identical' && !carried.has(x.path))) { // each re-applied or retired by a decision from the migration on, in one grammar, its why mandatory
     const line = disposed(e.path);
     if (!line) fails.push(`${e.path} (${e.status}): no decision from the ${UP ? 'upgrade' : 'migration'} carries "- Migration edit: ${e.path} — re-applied | retired — <where or why>" (3.10)`);
     else if (/— re-applied —/.test(line) && !existsSync(join(root, e.path))) fails.push(`${e.path}: declared re-applied but absent; re-applied means the implementation is in the tree, retired means its removal is the decision (3.10)`);
@@ -348,12 +370,16 @@ if (args.verify && !args['rolled-back']) {
   if (UP && inv.target) { // replaced as a set: after the upgrade every file on a replaced path equals the target's or carries a disposition line (an adapter never equals it), and every target file is installed or retired by one
     const snapshotPaths = new Set(filesAtS || inv.files.map((f) => f.path)), retired = [];
     const imports = (p) => [...read(p).matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*)['"](\.\.?\/[^'"]*?tools\/([A-Za-z0-9_.-]+\.mjs))['"]/g)].map((x) => [x[1], `tools/${x[2]}`]); // an adapter's relative import of a tool
-    for (const p of tracked().filter((p) => REPLACED.test(p))) {
+    for (const p of tracked().filter((p) => REPLACED.test(p) && existsSync(join(root, p)))) {
       if (targetFiles[p] === sha(readFileSync(join(root, p)))) continue;
       const line = disposed(p);
-      if (!line) { fails.push(`${p} (${snapshotPaths.has(p) ? 'kept' : 'added'} by the upgrade, not ${UP}'s copy): no decision from the upgrade carries "- Migration edit: ${p} — re-applied | retired — <where or why>"; tools and verbs are replaced as a set (3.10)`); continue; }
-      if (/— retired —/.test(line)) { fails.push(`${p}: retired by a decision yet still in the tree and not ${UP}'s copy; a retired modification means ${UP}'s copy stands, a retired file is absent (3.10)`); continue; }
-      reapplied.add(p);
+      if (!line && !carried.has(p)) { fails.push(`${p} (${snapshotPaths.has(p) ? 'kept' : 'added'} by the upgrade, not ${UP}'s copy): no decision from the upgrade carries "- Migration edit: ${p} — re-applied | retired — <where or why>"; tools and verbs are replaced as a set (3.10)`); continue; }
+      if (line && /— retired —/.test(line)) { fails.push(`${p}: retired by a decision yet still in the tree and not ${UP}'s copy; a retired modification means ${UP}'s copy stands, a retired file is absent (3.10)`); continue; }
+      if (line) reapplied.add(p);
+      if (!line && /^tools\/.+\.mjs$/.test(p)) for (const x of read(p).matchAll(/(?:\bfrom\s*|\bimport\s*\(?\s*)['"](\.\.?\/[^'"]+)['"]/g)) { // a carried tool's relative import of a file the target installs, read from its text: a computed specifier is not seen
+        const f = resolve(root, dirname(p), x[1].replace(/[?#].*$/, '')), name = relative(root, f);
+        if (name in targetFiles && (!existsSync(f) || sha(readFileSync(f)) !== targetFiles[name])) fails.push(`${p}: imports ${x[1]}, which is not ${UP}'s ${name}; a carried tool still points at another version's tool`);
+      }
       if (/^tools\/.+\.mjs$/.test(p)) for (const [spec, name] of imports(p)) { // an adapter left pointing at another version's tool is the hazard: its import target is hashed against the target's
         if (!(name in targetFiles)) continue;
         const f = resolve(root, dirname(p), spec);
@@ -419,6 +445,23 @@ if (args.verify && args['rolled-back']) {
   const Lsha = L ? git('rev-parse', L) : '', later = new Map(); // every path later work touched, with git's status letter
   if (L) for (const l of git('diff', '--name-status', '--no-renames', m, L).split('\n').filter(Boolean)) { const [st, p] = l.split('\t'); if (p.startsWith(prefix)) later.set(p.slice(prefix.length), st[0]); } // no rename pairing: a deleted file and a new one with the same bytes are two events
   const addedByM = new Set(m ? git('diff', '--name-status', '--no-renames', `${m}^`, m).split('\n').filter((l) => /^A\t/.test(l)).map((l) => l.split('\t')[1]).filter((p) => p.startsWith(prefix)).map((p) => p.slice(prefix.length)) : []); // files the migration created: the revert removes them
+  // V3-FIELD-3.2, the v2 route: a record file the migration created and later work edited. The v2-correct resolution deletes it and moves the lines later
+  // work added, verbatim, into a home the snapshot had; so those lines are a pool that may explain a home's surplus, and any left over is later work lost
+  const moved = new Map(), homes = new Set(), replaced = new Set(), carries = (p) => !UP && addedByM.has(p) && later.get(p) === 'M' && /^project\//.test(p) && !/^project\/migration\//.test(p);
+  const noSigned = (t) => { const act = active(t).split('\n'), raw = t.replace(/\r\n/g, '\n').split('\n'), from = act.indexOf('## Signed'); if (from < 0) return t; let to = act.findIndex((l, i) => i > from && /^## /.test(l)); if (to < 0) to = act.length; return [...raw.slice(0, from), ...raw.slice(to)].join('\n'); }; // a later re-signature is the removed file's own, with no home to move to
+  if (L) for (const p of later.keys()) if (carries(p) && !existsSync(join(root, p))) {
+    const at = (rev) => { const c = new Map(); for (const l of lines(noSigned(text8(show(rev, p))))) if (l.trim()) c.set(l, (c.get(l) || 0) + 1); return c; }, was = at(m);
+    for (const [l, n] of at(L)) if (n > (was.get(l) || 0)) moved.set(l, { p, n: (moved.get(l)?.n || 0) + n - (was.get(l) || 0) });
+    for (const [l, n] of was) if (n > (at(L).get(l) || 0)) replaced.add(l); // a line later work took out of that file: its original in a home may go too
+  }
+  const take = (l, home) => { const e = moved.get(l); if (!e?.n) return false; e.n--; homes.add(home); return true; };
+  const movedOnly = (buf, was, home) => { // the snapshot's lines in their order, its blank lines included, and otherwise only moved lines and new blank lines
+    const want = lines(was); let i = 0, gone = 0; const taken = [];
+    for (const l of lines(text8(buf))) { while (l !== want[i] && replaced.has(want[i])) { i++; gone++; } if (l === want[i]) i++; else if (take(l, home)) taken.push(l); else if (l.trim()) { for (const t of taken) moved.get(t).n++; return false; } }
+    while (replaced.has(want[i])) { i++; gone++; }
+    if (i < want.length) { for (const t of taken) moved.get(t).n++; return false; }
+    return taken.length + gone > 0;
+  };
   let same = 0;
   for (const f of inv.files) {
     const p = join(root, f.path);
@@ -426,7 +469,7 @@ if (args.verify && args['rolled-back']) {
     const isItem = UP && /^project\/items\/[^/]+\.md$/.test(f.path), view = isItem ? withoutNow : (t) => t; // an item file's ## Now sections leave the comparison and the line arithmetic (V31-NOW): a kept later Now is correct
     const buf = readFileSync(p), restored = sha(buf) === f.sha256, outsideNow = !restored && isItem && view(text8(buf)) === view(text8(show(inv.sourceCommit, f.path)));
     if (restored) same++;
-    if (!later.has(f.path)) { if (!restored && !outsideNow) fails.push(`${f.path}: differs from the snapshot and no later commit touched it`); else if (outsideNow) notes.push(`${f.path}: equals the snapshot outside its ## Now section; the Now it carries is the current one`); continue; }
+    if (!later.has(f.path)) { if (!restored && !outsideNow && !UP && movedOnly(buf, text8(show(inv.sourceCommit, f.path)), f.path)) continue; if (!restored && !outsideNow) fails.push(`${f.path}: differs from the snapshot and no later commit touched it`); else if (outsideNow) notes.push(`${f.path}: equals the snapshot outside its ## Now section; the Now it carries is the current one`); continue; }
     // later work touched a snapshot file: every original line it kept and every line it added must still be present (reconciled, never
     // discarded); the migration's own rewrites, present at M and absent at S, are what the revert removes; a line later work removed that is back is reported
     const norm = UP && f.path === 'project/wish-list.md' ? (l) => l.replace(/^- (.*)$/, (_, w) => `- ${strip(w)}`) : (l) => l; // a stamped wish line counts as its unstamped self
@@ -440,7 +483,8 @@ if (args.verify && args['rolled-back']) {
     const lost = [], notBack = [], back = [];
     for (const l of keys) {
       const expected = Math.max(0, g(Lt, l) - g(Mt, l) + g(S, l)), floor = g(Lt, l) - Math.max(0, g(Mt, l) - g(S, l));
-      if (g(H, l) < floor) lost.push(l); else if (g(H, l) < expected) notBack.push(l); else if (g(H, l) > expected && g(Lt, l) < g(Mt, l)) back.push(l);
+      for (let n = g(H, l) - expected; n > 0 && take(l, f.path); n--) H.set(l, g(H, l) - 1); // a line moved here from a removed file is not this file's surplus
+      if (g(H, l) < floor && !replaced.has(l)) lost.push(l); else if (g(H, l) < expected && !replaced.has(l)) notBack.push(l); else if (g(H, l) > expected && g(Lt, l) < g(Mt, l)) back.push(l);
     }
     const added = [...Lt].filter(([l, n]) => n > g(Mt, l)).length;
     if (notBack.length) fails.push(`${f.path}: ${notBack.length} original lines the migration changed are not back after the revert (${short(notBack[0])}); restore them, then reconcile later work`);
@@ -449,6 +493,8 @@ if (args.verify && args['rolled-back']) {
     if (!lost.length && !back.length && !notBack.length) warns.push(`${f.path}: ${restored ? 'equals the snapshot' : outsideNow ? 'equals the snapshot outside its ## Now section' : 'differs from the snapshot'} and carries later work (${added} lines it added present${isItem ? ', its ## Now section apart' : ''}); review the reconciliation`);
   }
   for (const [p, st] of later) if (!inv.files.some((f) => f.path === p) && st !== 'D') { // files later work created, and files the migration created that later work edited
+    if (carries(p) && existsSync(join(root, p))) { fails.push(`${p}: created by the migration and edited later, yet still in the tree; the v2 record has no such file: move later work's lines, verbatim, into a home the snapshot had and remove this copy`); continue; }
+    if (carries(p)) continue; // reported below, from the pool
     if (addedByM.has(p)) { // the revert removes it; later work's lines in it are reconciled into a home the restored version has, by hand
       const added = Number(git('diff', '--numstat', m, L, '--', p).split('\t')[0]) || 0; // lines later work added since M, by diff: a replaced line counts; net growth does not
       if (existsSync(join(root, p))) warns.push(`${p}: created by the ${UP ? 'upgrade' : 'migration'} and edited later; the revert removes it, so move later work's lines (${added} added since ${m.slice(0, 7)}) into a home the restored version has and remove this copy, or record why it stays`);
@@ -458,6 +504,10 @@ if (args.verify && args['rolled-back']) {
     if (!existsSync(join(root, p))) fails.push(`${p}: a file later work added is gone after the rollback`);
     else if (sha(readFileSync(join(root, p))) !== sha(show(L, p) || Buffer.alloc(0))) fails.push(`${p}: a file later work added differs from its later state; the revert does not touch it, so restore it`);
   }
+  const unmoved = [...moved].filter(([, e]) => e.n > 0), from = [...new Set([...moved.values()].map((e) => e.p))];
+  if (unmoved.length) fails.push(`${unmoved[0][1].p}: later work lost — ${unmoved.length} lines it added since ${m.slice(0, 7)} are in no home the snapshot had ("${unmoved[0][0].slice(0, 50)}${unmoved[0][0].length > 50 ? '…' : ''}"); move them verbatim, a rewording after the rollback, never discard`);
+  for (const l of replaced) { const still = inv.files.filter((f) => existsSync(join(root, f.path)) && lines(text8(readFileSync(join(root, f.path)))).includes(l)).map((f) => f.path); if (still.length) warns.push(`${still.join(', ')}: still holds "${l.slice(0, 50)}${l.length > 50 ? '…' : ''}", which later work took out of the file the migration created; a rule it replaced is not kept beside its replacement — confirm`); }
+  if (!unmoved.length && from.length) warns.push(`${from.join(', ')}: created by the migration, edited later and removed by the revert; ${moved.size ? `later work's lines moved into ${[...homes].join(', ')}` : 'later work added no line to move'}; review the reconciliation`);
   for (const f of inv.local) if (!existsSync(join(root, f.path)) || sha(readFileSync(join(root, f.path))) !== f.sha256) warns.push(`${f.path}: an ignored settings file changed or is missing; outside the commit, restored by hand`);
   if (UP) {
     const left = [...addedByM].filter((p) => REPLACED.test(p) && existsSync(join(root, p)));
@@ -486,14 +536,15 @@ if (args.rollback) {
   const laterCommits = git('log', '--format=%h %s', `${m}..HEAD`, ...(UP ? [] : ['--', '.'])).split('\n').filter(Boolean); // the upgrade route counts every later commit, repository-wide: one touching only the root settings conflicts with the revert too
   const touched = git('diff', '--name-only', `${m}^`, m).split('\n').filter(Boolean);
   const overlap = laterCommits.length ? git('diff', '--name-only', m, 'HEAD').split('\n').filter((p) => p && touched.includes(p)) : [];
+  const createdEdited = !UP && laterCommits.length ? git('diff', '--name-only', '--diff-filter=A', `${m}^`, m).split('\n').filter((p) => p && overlap.includes(p) && p.startsWith(`${prefix}project/`) && !p.startsWith(`${prefix}project/migration/`)) : [];
   const runner = inv.runner || `${prefix}tools/migrate.mjs`, copy = `/tmp/pm-next-${UP || 'v3'}-migrate.mjs`;
   if (!UP) {
     console.log(`Rollback of the migration commit ${m.slice(0, 7)} (${git('show', '-s', '--format=%s', m)}). The steps; this tool performs none of them:
 1. Stop every other writer; \`git status\` must be clean. Later work since the migration: ${laterCommits.length ? laterCommits.join('; ') : 'none'} — it is reconciled, never discarded.
 2. Keep the tool for the verification, since the revert removes v3's tools: git show ${m}:${runner} > ${copy}
-3. git revert --no-edit ${m}   — never git reset --hard. ${overlap.length ? `Later work also changed ${overlap.join(', ')}: where the revert conflicts, keep the later work's lines inside the pre-migration structure, then git add them and git revert --continue.` : 'No later commit touched a file the migration changed, so no conflict is expected.'}
-4. node ${copy} --verify --rolled-back --root ${root}   — every snapshot file byte for byte; files later work touched reported apart, every line it kept or added present, files it created present.
-5. Reconcile later work written in v3's grammar — the rules file, Direction, Session-end lines, decisions in the slice form — into the v2 record, and run v2's node tools/check.mjs.
+3. git revert --no-edit ${m}   — never git reset --hard. ${overlap.length ? `Later work also changed ${overlap.join(', ')}: where the revert conflicts, keep the later work's lines inside the pre-migration structure, then git add them and git revert --continue.` : 'No later commit touched a file the migration changed, so no conflict is expected.'}${createdEdited.length ? ` Created by the migration and edited by later work: ${createdEdited.join(', ')} — where it conflicts as modify/delete, git rm it and git revert --continue; its later lines move in step 4.` : ''}
+4. Reconcile later work written in v3's grammar — the rules file, Direction, Session-end lines, decisions in the slice form — into the v2 record: the lines later work added to a record file the migration created move verbatim into a home the snapshot had, the file removed; a rewording waits for a commit after the rollback.
+5. node ${copy} --verify --rolled-back --root ${root}   — every snapshot file byte for byte; files later work touched reported apart, every line it kept or added present, files it created present; a record file the migration created gone and each line later work added to it in a home the snapshot had, a home later work did not touch otherwise as it was. Then v2's node tools/check.mjs.
 6. Commit as "MIGRATE: rolled back — <reason>", record the decision, push by the profile's route. The snapshot and the inventory stay in history at ${m.slice(0, 7)}.`);
   } else {
     const status = (a, b) => git('diff', '--name-status', '--no-renames', a, b).split('\n').filter(Boolean).map((l) => l.split('\t'));
@@ -508,7 +559,7 @@ if (args.rollback) {
     const grepHits = removedTools.map((t) => [t, (() => { try { return execFileSync('git', ['grep', '-l', '--full-name', '--fixed-strings', '-e', `${prefix}${t}`, 'HEAD', '--', ':/'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 64 << 20 }).trim().split('\n').map((l) => l.replace(/^HEAD:/, '')).filter((p) => p && !touched.includes(p)); } catch { return []; } })()]).filter(([, ps]) => ps.length); // what else names a removed tool at HEAD, the upgrade commit's own files apart
     const from = inv.from || 'v3', wish = `${prefix}project/wish-list.md`;
     console.log(`Rollback of the upgrade commit ${m.slice(0, 7)} (${git('show', '-s', '--format=%s', m)}), ${from} restored; L = HEAD (${head()}). The steps; this tool performs none of them:
-1. Stop every other writer; \`git status\` must be clean, and anything uncommitted or ignored that matters is kept aside first. Later commits since ${m.slice(0, 7)}: ${laterCommits.length}${laterCommits.length ? ` (${laterCommits.join('; ')})` : ''}; those touching ${m.slice(0, 7)}'s files: ${touching.length ? touching.join('; ') : 'none'}. Later work is reconciled, never discarded.
+1. Stop every other writer; \`git status\` must be clean, and anything uncommitted or ignored that matters is kept aside first. Later commits since ${m.slice(0, 7)}: ${laterCommits.length}${laterCommits.length ? ` (${laterCommits.join('; ')})` : ''}; those touching ${m.slice(0, 7)}'s files: ${touching.length ? touching.join('; ') : 'none'}. Later work is reconciled, never discarded. Then the wish stamp, where it was committed after ${m.slice(0, 7)} and its revert is not yet committed (V31-WISH-IDS): git revert <stamp commit>; where later work appended a wish line it may conflict on ${q(wish)} — keep each stamped line's pre-stamp form where that line survives unchanged, later work's retirements and rewordings as later work left them, and every line it added, then git add it and git revert --continue; then node ${q(join(top, runner))} --verify-stamp --rolled-back --root ${q(root)}. Between the upgrade and stamp commits the checker, read and view refuse the unstamped wish lines, so the two travel together: the gate runs at the stamp commit, and the rollback undoes both, the stamp first.
 2. Keep the tool for the verification, since the revert removes the upgrade's files: git show ${m}:${q(runner)} > ${q(copy)}   (the inventory, ${q(INVENTORY)}, is read from ${m.slice(0, 7)} by the check, never from disk)
 3. git revert --no-commit ${m}   — never git reset --hard. Changed by the upgrade and by later work, where the revert conflicts on content: ${content.length ? content.map(q).join(', ') : 'none'} — keep later work's lines inside the restored ${from} structure, then git add each${content.includes(wish) ? `; ${q(wish)}: take the later side with the stamps kept — ${from}'s ledger reads a stamped line as a wish and traces a removed wish line by its idea, so de-stamping would flag every line` : ''}. Created by the upgrade and edited by later work, where it conflicts as modify/delete: ${modifyDelete.length ? modifyDelete.map(q).join(', ') : 'none'} — move later work's lines into a home the restored version has, then git rm each. The revert removes ${q(INVENTORY)}; keep no copy on disk.
 4. Reconcile later work in ${UP}'s grammar, which stays valid ${from}: ${stamped} stamped wish line(s) (a leading permanent ID; ${from}'s checker reads the line as a wish) and ${nowSections} "## Now" section(s) in item files (${from}'s checker reads no such section) — keep them, each item's latest Now; Session-end lines are ${from}'s too. Files later work created, which the revert leaves in place: ${laterCreated.length ? laterCreated.map(q).join(', ') : 'none'}.

@@ -10,7 +10,9 @@
 // file, or by an exclusive create where links are refused; the holder is a hash of harness and session, so a redelivery
 // to it is idempotent, and any other chat sees the end as held and asks the owner, whose word is the recovery. Claim state
 // that cannot be read or written, or is not a regular file, shows the end as unconfirmed. Separate clones cannot see each
-// other's claims. Exit 0 always: never a denial or a stop. Uses no network; prints no path of its own, no session
+// other's claims. A chat whose claim does not answer by the deadline is told the claim may be its own; an unconfirmed chat
+// that the owner may reassign the end once the former chat has stopped, and that tools/lanes.mjs reset-claim is his reset of
+// an abandoned partial claim. Exit 0 always: never a denial or a stop. Uses no network; prints no path of its own, no session
 // identifier and no transcript text, and withholds a reason holding a local path or an identifier-shaped string. The main
 // thread owns a deadline: Git runs in its own process group and the claim in a worker, and both are ended with the process.
 // A chat that claims an end naming an item gets a title (V31-CHAT-TITLES): the ID, `#` and one more than the first-parent
@@ -90,9 +92,10 @@ async function main(raw, children, emit) {
   if ((await capture(git(['rev-parse', '-q', '--verify', 'HEAD'])))?.trim() !== head) return say(`this checkout's history moved while the start notice was read, so the last session end is not shown or claimed: another session may be committing. Read the rule-1 set (AGENTS.md rule 1) and ask the owner.`);
   const shown = reason.length > MAX_REASON || UNSAFE.some((re) => re.test(reason)) ? `(the reason is not shown: it is too long, or holds a local path or an identifier; read it with git show ${found.short})` : reason;
   const opening = `the last session in this checkout ended at commit ${found.short} (${found.date}) with "Session-end: ${status} — next ${next} — ${shown}".`;
-  const unconfirmed = `${opening} This handover could not be claimed for this chat, so another chat may hold it: read the rule-1 set (AGENTS.md rule 1) and ask the owner before acting on it.`;
+  const asking = (who) => `${opening} This handover could not be claimed for this chat, so ${who}: read the rule-1 set (AGENTS.md rule 1) and ask the owner before acting on it. Once the former chat has stopped, the owner may reassign the end by his word; an abandoned partial claim is his to reset with tools/lanes.mjs.`;
+  const unconfirmed = asking('another chat may hold it');
   const counting = next !== 'none' && shallow === 'false' ? count(git, head, next) : Promise.resolve(null); // beside the claim
-  say(unconfirmed); // stands if the claim does not answer before the deadline
+  say(sid ? asking('another chat may hold it, or the claim may be this chat\'s own, made too late to be confirmed here') : unconfirmed); // stands if the claim does not answer before the deadline
   const claim = sid ? await claimed({ common, end: found.hash, holder: h(`${harness}|${sid}`) }) : { state: 'unconfirmed' };
   if (claim.state === 'held') return say(`${opening} Another chat in this checkout claimed this handover${claim.at ? ` at ${claim.at} UTC` : ''}: do not act on it unless the owner says that chat has finished, for the owner's word is the recovery. Read the rule-1 set (AGENTS.md rule 1) and ask the owner.`);
   if (claim.state !== 'mine') return say(unconfirmed);

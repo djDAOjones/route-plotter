@@ -11,6 +11,7 @@
 ## pm-next v3.1 — the owner's relayed word of 2026-10-21
 
 - V31-UPGRADE — the project runs pm-next v3.1: twelve tools, four verbs and the start-notice hook, the archived decisions beside decisions.md, the wish lines stamped, each phase oldest first, the AAA digest repaired, by pull request (2026-10-21) — see decisions
+- V31-REFRESH — the project takes pm-next v3.1 as the lab builds it at 4ab66b5: six tools and three verbs replaced, two tools and five add-on verbs added, rule 9's Checked wording, no local edit lost, the session hooks unchanged, by pull request (2026-11-05) — see decisions
 
 ## Next feature — the owner's word of 2026-10-18
 
@@ -64,18 +65,6 @@
 - DEF-13 — a focused button, list row, summary, section header or link keeps only Space (a menu item or option also its arrows), so Delete, the nudge arrows, Undo, Save and the timeline keys work after a click, and Cmd+S no longer opens the browser's Save dialog (2026-10-08) — see decisions
 - DEF-32 — activating a waypoint-list row by click, Enter or Space rebuilds the list once, so focus stays on the selected row instead of falling to the page (2026-10-08) — see decisions
 
-## After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05
-
-- DEF-72 — the timeline shortcut is taken only when the timeline is the path: a seek under a comet tail lands where the head is, and a trunk keeps its own time when a branch outlives it (2026-10-05) — see decisions
-- CROWD-05 — the animation runs until every crowd dot that finishes has finished and every beacon has settled, crowd releases still timed against the route, and Duration says what sets the end (2026-10-05) — see decisions
-- RECALL — 8/8 (2026-10-05) — scores: 2,2,2,2 — local — see decisions
-
-## Ahead of Phase 1's pull requests — the owner's order of 2026-10-05
-
-- DEF-77 — "At journey end" acts where it is seen: a new crowd's dots finish, a network with no Exit ends journeys at its ends, Respawn varies each journey, and the panel says when no dot finishes and why (2026-10-05) — see decisions
-- UI-03 — a mouse resting on a hint's text opens it, Escape dismisses it in place, thirteen unclear hints are reworded and every setting has a hint, the scene outline's included (2026-10-05) — see decisions
-- RECALL — 8/8 (2026-10-05) — scores: 2,2,2,2 — local — see decisions
-
 ## Phase 1 — Land the big run's open pull requests
 
 - DEF-06 — what a route scheduled no longer outlives it, and a snapshot times the route at its authoring speed (2026-10-05) — see decisions
@@ -93,6 +82,18 @@
 - TST-04 — every sidebar control's effect is pinned as a golden, credited by the listeners its gestures run, with the instrumentation installed before any app module loads, and readouts pinned per selection (2026-10-05) — see decisions
 - DEF-28 — a session that cannot be restored is kept and offered (Download it, Discard) instead of cleared or overwritten, each further one under a key of its own; Discard and Clear All say what they removed and what they could not (2026-10-06) — see decisions
 - RECALL — 8/8 (2026-10-06) — scores: 2,2,2,2 — local — see decisions
+
+## After TST-16, ahead of Phase 1's other pull requests — the owner's word of 2026-10-05
+
+- DEF-72 — the timeline shortcut is taken only when the timeline is the path: a seek under a comet tail lands where the head is, and a trunk keeps its own time when a branch outlives it (2026-10-05) — see decisions
+- CROWD-05 — the animation runs until every crowd dot that finishes has finished and every beacon has settled, crowd releases still timed against the route, and Duration says what sets the end (2026-10-05) — see decisions
+- RECALL — 8/8 (2026-10-05) — scores: 2,2,2,2 — local — see decisions
+
+## Ahead of Phase 1's pull requests — the owner's order of 2026-10-05
+
+- DEF-77 — "At journey end" acts where it is seen: a new crowd's dots finish, a network with no Exit ends journeys at its ends, Respawn varies each journey, and the panel says when no dot finishes and why (2026-10-05) — see decisions
+- UI-03 — a mouse resting on a hint's text opens it, Escape dismisses it in place, thirteen unclear hints are reworded and every setting has a hint, the scene outline's included (2026-10-05) — see decisions
+- RECALL — 8/8 (2026-10-05) — scores: 2,2,2,2 — local — see decisions
 
 ## The big run — defects outside the waves (released in v3.2.693, 2026-10-05)
 

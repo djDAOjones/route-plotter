@@ -9,7 +9,9 @@ lines from HEAD. Finish the record before checking and committing.
 2. Record: write decisions another session needs — what and one-line
    why on the Decision line, evidence in the Rationale. Remove the
    open item, add its trajectory line at the end of its phase,
-   retire paid lines. Capture outstanding deferrals once; a new wish
+   retire paid lines; an item retired unshipped gets no trajectory
+   line, its decision naming it on `**Retired:**` with why.
+   Capture outstanding deferrals once; a new wish
    line takes the origin's next unused number. A removed wish is
    traced by its ID, "ORIGIN.N — retired — reason"; a narrowed one
    keeps its ID, named as narrowed in the commit body. Optional
@@ -38,11 +40,14 @@ lines from HEAD. Finish the record before checking and committing.
    checking the work is briefed from the record — the item's criteria
    (its file, otherwise its backlog line), the diff, the rules file's
    Always section and any routed document the task fires — not from
-   a chat prompt; one optional line
-   `Checked: <model> — <verdict> — <scope>` records its check.
+   a chat prompt; one line `Checked: <model> — <verdict> — <scope>`
+   records its check, the scope naming the revision checked. Where
+   the project keeps a model policy, the line is due on every step it
+   checks, and a step it skips writes `Checked: none — skipped —
+   <step>: <reason>`; elsewhere the line is optional.
    Run `node tools/check.mjs --commit HEAD`: declaration shapes cannot
-   prove execution. Then generate `node tools/view.mjs`, so the page
-   names this commit; the post-commit hook does it where installed.
+   prove execution. Then generate `node tools/view.mjs`, so the status
+   site names this commit; the post-commit hook does it where installed.
 7. Push as the Push line says: by default the harness pushes to the
    project's origin, never to an upstream the project does not own.
    Report a pending push if it fails or Network blocks it. In a
@@ -58,7 +63,7 @@ If the threshold has been passed or this session has compacted, this close is it
 
 ## Phase close
 
-Reconcile against the PLAN-N `**Items:**` list, mark the backlog phase CLOSED with its date, and record the next phase's first item and reason, or that owner direction is needed. Then run `verbs/recall.md` and store its labelled result.
+Reconcile against the PLAN-N `**Items:**` list. With `Accessibility testing: extended` in the profile, run `npm run a11y:extended` and record its date and outcome as docs/extended.md says before marking the phase closed. Mark the backlog phase CLOSED with its date, and record the next phase's first item and reason, or that owner direction is needed. Then run `verbs/recall.md` and store its labelled result.
 
 ## Archive
 

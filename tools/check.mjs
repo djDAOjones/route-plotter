@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 // Read-only structural and budget check. Warnings do not fail; semantics remain human.
 // `--commit <rev>` adds the commit's shape: title, Verify, an optional Checked line, an optional Session-end line, and the
-// removed-line trace against the parent. Without it, the trace compares the working tree and the staged tree with HEAD.
+// removed-line trace against the parent; where the project keeps a model policy, a commit that ships an item without a
+// Checked line is warned (V31-MODEL-POLICY). Without it, the trace compares the working tree and the staged tree with HEAD.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { inspect, options, ID, removedLineFlags, SESSION_END, sessionEndLines, wishChanges, reusedWishIds, wishIds } from './ledger.mjs';
+const MODEL_POLICY = 'project/model-policy.md';
 const LEDGER = { backlog: 'project/backlog.md', wish: 'project/wish-list.md', trajectory: 'project/trajectory.md', decisions: 'project/decisions.md' };
 try {
   const args = options(['audit-prose', 'commit']);
@@ -35,9 +37,10 @@ try {
   if (args.commit) {
     const message = git('show', '-s', '--format=%B', '--end-of-options', args.commit);
     const match = message.split('\n')[0].match(new RegExp(`^(${ID}): \\S.+$`));
-    if (!match || (!result.open.has(match[1]) && !result.shipped.has(match[1]) && !result.decisions.some((e) => e.id === match[1]) && !result.archives.some((a) => a.entries.some((e) => e.id === match[1])))) result.fails.push('commit: title must be ID: summary with an ID present in the ledger');
+    if (!match || (!result.open.has(match[1]) && !result.shipped.has(match[1]) && !result.retired.has(match[1]) && !result.decisions.some((e) => e.id === match[1]) && !result.archives.some((a) => a.entries.some((e) => e.id === match[1])))) result.fails.push('commit: title must be ID: summary with an ID present in the ledger');
     if (!/^Verify: \S.+$/m.test(message)) result.fails.push('commit: missing substantive Verify declaration');
-    for (const line of message.split('\n').filter((l) => /^Checked:/.test(l))) {
+    const checked = message.split('\n').filter((l) => /^Checked:/.test(l));
+    for (const line of checked) {
       if (!/^Checked: \S[^—\n]* — \S[^—\n]* — \S.*$/.test(line)) result.fails.push(`commit: Checked line must read "Checked: <model> — <verdict> — <scope>": ${line}`);
     }
     const ends = sessionEndLines(message);
@@ -48,7 +51,15 @@ try {
       else if (m[2] !== 'none' && !result.open.has(m[2])) result.warns.push(`commit: Session-end names ${m[2]} as next, which is not an open backlog item`);
     }
     let parent = null; try { parent = tree(`${args.commit}^`); } catch { /* a root commit: nothing before it */ }
-    if (parent) { const after = tree(args.commit); for (const f of removedLineFlags(parent, after, message)) result.warns.push(`commit: ${f}`); wishNotes('commit: ', parent, after, message, `${args.commit}^`); }
+    if (parent) {
+      const after = tree(args.commit); for (const f of removedLineFlags(parent, after, message)) result.warns.push(`commit: ${f}`); wishNotes('commit: ', parent, after, message, `${args.commit}^`);
+      // V31-MODEL-POLICY: the policy names the steps a second model checks; a close is one, so a commit that adds a
+      // trajectory item line carries a Checked line, a skip's included. Shape only: no line proves a check ran.
+      let policy = false; try { git('cat-file', '-e', `${args.commit}:${prefix}${MODEL_POLICY}`); policy = true; } catch { /* no policy kept */ }
+      const ids = (t) => t.split('\n').map((l) => l.match(new RegExp(`^- (${ID}) — `))?.[1]).filter(Boolean); // an edited line ships nothing new
+      const before = new Set(ids(parent.trajectory)), shipped = [...new Set(ids(after.trajectory))].filter((id) => !before.has(id));
+      if (policy && shipped.length && !checked.length) result.warns.push(`commit: ships ${shipped.join(', ')} with no Checked line; ${MODEL_POLICY} asks for one, or "Checked: none — skipped — <step>: <reason>" (rule 9)`);
+    }
     result.info.push(`commit shape checked${ends.length ? ', Session-end line present' : ''}; a Verify or Checked declaration is not proof of execution`);
   } else if (inGit) {
     const head = tree('HEAD'), seen = new Set();
