@@ -22,8 +22,6 @@ ledger in [`project/`](project/); this page is a short summary of it.
   Dependency changes need a decision.
 - The checkout lives on OneDrive. Keep `core.fileMode=false`, or every file
   shows as changed after a sync.
-- A second, stale clone of this repository sits beside it in
-  `../Route Plotter v3/`; work only here.
 - Two local-only branches, `crowd07/cards-a` and `ui06/help-dialog`, hold
   earlier drafts of the squash-merged PRs #123 and #122.
 
