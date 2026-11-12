@@ -6,13 +6,22 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { inspect, options, ID, removedLineFlags, SESSION_END, sessionEndLines, wishChanges, reusedWishIds, wishIds } from './ledger.mjs';
+import { inspect, options, appCommitWarning, ID, removedLineFlags, SESSION_END, sessionEndLines, wishChanges, reusedWishIds, wishIds } from './ledger.mjs';
 const MODEL_POLICY = 'project/model-policy.md';
 const LEDGER = { backlog: 'project/backlog.md', wish: 'project/wish-list.md', trajectory: 'project/trajectory.md', decisions: 'project/decisions.md' };
 try {
-  const args = options(['audit-prose', 'commit']);
-  const result = inspect(args.root, { auditProse: args['audit-prose'] });
+  const args = options(['audit-prose', 'commit', 'date']);
+  const result = inspect(args.root, { auditProse: args['audit-prose'], checkDate: args.date || '' });
+  // V31-C4-MERMAID (3.26): a broken architecture envelope fails here, so a close cannot pass over it; the view still shows it.
+  // V31-C4-FIX: only the record, the file carrying its mark, has an envelope; a project's own file at the path has none.
+  for (const m of result.architecture?.problems || []) result.fails.push(`project/architecture.md: ${m} (3.26)`);
   const git = (...a) => execFileSync('git', a, { cwd: args.root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  // V31-APP-SWITCH (3.28): the App opinion line's commit counts, Git's, read only when the line is there.
+  if (result.app) {
+    let n = NaN; try { n = Number(git('rev-list', '--count', `--since=${result.app.date}T00:00:00`, 'HEAD').trim()); } catch { /* not a repository: the date reads stand */ }
+    const m = appCommitWarning(result.app, n);
+    if (m && !result.warns.includes(m)) result.warns.push(m);
+  }
   let prefix = ''; try { prefix = git('rev-parse', '--show-prefix').trim(); } catch { /* not a repository */ } // the installation may sit below the repository root
   const tree = (rev) => { // the four trace files at a revision ('' = the index); a missing file reads as empty
     const out = {};

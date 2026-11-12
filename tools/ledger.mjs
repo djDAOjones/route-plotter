@@ -27,6 +27,29 @@ export function a11yPack(root) {
   return a11yModules.get(file);
 }
 
+// V31-APP-SWITCH (3.28): the profile's App opinion line, which intake writes for a new web app (or at the opt-out's one re-ask),
+// read here by the installed checker. No line is the flag off: nothing is read, checked or loaded. The line is
+// `- App opinion: <editor|forms|unsure|off>, <YYYY-MM-DD>`, with `, asked again <YYYY-MM-DD>` after off alone. The commit counts
+// ("about 20 commits or a week", "about 50 commits") are Git's, read by check.mjs and handed to appCommitWarning; this module
+// stays free of subprocesses.
+export const APP_FIELD = 'App opinion';
+export const APP_DIGEST = 'project/digests/app-opinion.md';
+export const APP_SET = 'project/app/set1.json';
+export const APP_REASK_DAYS = 7, APP_REASK_COMMITS = 20, APP_KEEPER_COMMITS = 50, APP_SET_DAYS = 183;
+const appDays = (from, to) => Math.round((Date.parse(to) - Date.parse(from)) / 86400000);
+export function appLine(value) {
+  const m = String(value).match(/^(editor|forms|unsure|off), (\d{4}-\d{2}-\d{2})(?:, asked again (\d{4}-\d{2}-\d{2}))?$/);
+  if (!m || !validDate(m[2]) || (m[3] !== undefined && (m[1] !== 'off' || !validDate(m[3]) || m[3] < m[2]))) return null;
+  return { state: m[1], date: m[2], asked: m[3] ?? null };
+}
+const appReaskMessage = (line) => `project/profile.md: App opinion: the opt-out of ${line.date} is due its one re-ask (a week or twenty commits on); ask the owner once, then write ", asked again <date>" after it, or the kind in its place (3.28)`;
+export function appCommitWarning(line, commits) {
+  if (!line || !Number.isFinite(commits)) return '';
+  if (line.state === 'off' && !line.asked && commits >= APP_REASK_COMMITS) return appReaskMessage(line);
+  if (line.state === 'unsure' && commits >= APP_KEEPER_COMMITS) return `project/profile.md: App opinion: unsure since ${line.date}, ${commits} commits on, counts as a keeper; ask the owner the kind, then write it in the line (3.28)`;
+  return '';
+}
+
 export const ID = '[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*';
 export const DATE = '\\d{4}-\\d{2}-\\d{2}';
 // V31-WISH-IDS: a wish's permanent ID is its origin item's ID, a full stop and a sequence number — outside the item
@@ -106,6 +129,37 @@ export function decisionEntries(text, file, fail = () => {}) {
   }
   return entries;
 }
+// The find tool's summary-first read of a decision entry (3.12, V31-FIND-SUMMARY): its heading, Decision line and Deferred
+// line, in rule 1's slice order; the Rationale and the other fields stay in the file and in `find --full`.
+export const summaryText = (e) => [`## ${e.head}`, `**Decision:** ${e.decision}`, e.deferred ? `**Deferred:** ${e.deferred}` : ''].filter(Boolean).join('\n');
+// Which entries a later entry's Supersedes line names (3.12), worked out at read time from `entries`, the live file's and
+// each archived chunk's in whatever order they come (a chunk keeps the order its entries were moved in, not their dates):
+// a Map from the named entry's heading to the headings of the later entries naming it, newest first. "Later" is by date;
+// on one date the naming decides, the entry naming the other being the later, and two naming each other mark neither.
+// A heading is found whole, anywhere in the line; a longer heading that holds a shorter one is taken out first, so the
+// shorter is marked only where named on its own. An entry is never marked by itself or by an older entry. The line does
+// not say whether the supersession is whole or in part (the Rationale does): the mark says "see" and no more. Nothing is
+// stored; no byte of any entry changes.
+export function supersededBy(entries) {
+  const dateOf = (e) => e.date || String(e.head).slice(0, 10);
+  const names = new Map(entries.map((e) => { // the headings each line names, a longer heading taking its text out before a shorter is looked for
+    let rest = String(e.supersedes || ''); const hit = new Map();
+    for (const o of [...entries].sort((a, b) => b.head.length - a.head.length)) { // the entry itself too, so its own longer heading takes its text out
+      if (!rest.includes(o.head)) continue;
+      rest = rest.replaceAll(o.head, '\0');
+      if (o !== e && !hit.has(o.head)) hit.set(o.head, o);
+    }
+    return [e, hit];
+  }));
+  const marks = new Map();
+  for (const e of [...entries].sort((a, b) => dateOf(b).localeCompare(dateOf(a)) || b.head.localeCompare(a.head))) { // newest first; one date by heading, so the order given does not show
+    for (const [head, o] of names.get(e)) {
+      if (dateOf(o) < dateOf(e) || (dateOf(o) === dateOf(e) && !names.get(o).has(e.head))) marks.set(head, [...(marks.get(head) || []), e.head]);
+    }
+  }
+  return marks;
+}
+export const supersededLines = (heads = []) => heads.map((h) => `Superseded — see: ${h}`);
 export function archiveRow(file, entries) {
   const dates = entries.map((e) => e.date).sort();
   return `- ${file} — ${dates[0]}..${dates.at(-1)} — ${entries.length} entries — IDs: ${[...new Set(entries.map((e) => e.id))].sort().join(', ')}`;
@@ -243,6 +297,102 @@ export function datesMentioned(open) {
   }
   return out.sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order);
 }
+
+// V31-C4-MERMAID (3.26): the optional architecture record, project/architecture.md. Only its envelope is parsed, never
+// Mermaid's grammar: one `# Architecture` title, one `Updated: YYYY-MM-DD` line before the first level, then the levels
+// in order, `## System context` and, optionally, `## Containers`; each holds optional prose, exactly one ```mermaid
+// fence whose first non-blank line declares a flowchart, then `### Text alternative` with text. HTML comments outside a
+// fence are dropped; a fence's lines are kept as written. Problems are returned, never thrown or failed here: the checker
+// fails on them and the view still shows the file.
+// V31-C4-FIX: the record is the file that carries ARCHITECTURE_MARK as a whole line outside a fence and an open comment,
+// as the template writes it on adoption; `marked` says so. A project's own document at the path, without the line, is
+// not the record: inspect neither takes it nor fails it.
+export const ARCHITECTURE_LEVELS = ['System context', 'Containers'];
+export const ARCHITECTURE_MARK = '<!-- pm-next architecture record, specification 3.26 — keep this line -->';
+export function architecture(text) {
+  const problems = [], levels = [], intro = [], lines = String(text).replace(/^\ufeff/, '').replace(/\r\n?/g, '\n').split('\n');
+  let title = '', titles = 0, updated = '', updates = 0, level = null, fence = null, comment = false, marked = false, fenced = false;
+  const problem = (n, m) => problems.push(`line ${n}: ${m}`);
+  for (const [k, raw] of lines.entries()) {
+    const n = k + 1;
+    if (fence) { // inside a fence: its own lines, until a closing fence of its character and at least its length
+      const close = raw.match(/^ {0,3}(`{3,}|~{3,})[ \t]*$/);
+      if (close && close[1][0] === fence.mark[0] && close[1].length >= fence.mark.length) { fence = null; continue; }
+      if (fence.level) fence.level.source.push(raw);
+      continue;
+    }
+    let line = raw;
+    if (!comment && raw.trim() === ARCHITECTURE_MARK) marked = true;
+    // a backtick fence's info string holds no backtick; a tilde fence's may. Outside a comment, a fence opener is read
+    // before comment syntax, so `<!--` in its info string opens no comment (V31-C4-FIX, review findings).
+    const fenceOpen = (l) => l.match(/^ {0,3}(`{3,})[ \t]*([^\s`]*)[^`]*$/) || l.match(/^ {0,3}(~{3,})[ \t]*(\S*).*$/);
+    let opened = comment ? null : fenceOpen(raw);
+    if (!opened) {
+      if (comment) { const end = line.indexOf('-->'); if (end < 0) continue; comment = false; line = line.slice(end + 3); }
+      line = line.replace(/<!--[\s\S]*?-->/g, '');
+      const open = line.indexOf('<!--'); if (open >= 0) { comment = true; line = line.slice(0, open); }
+      opened = fenceOpen(line);
+    }
+    if (opened) {
+      fence = { mark: opened[1], n, level: null };
+      if (opened[2] === 'mermaid' && level && !level.ignored) fenced = true; // in a level, placed well or not: the INFO line's shape
+      if (opened[2] !== 'mermaid') problem(n, `a ${opened[2] ? `"${opened[2]}"` : 'plain'} fence; the record holds only mermaid fences, one in each level`);
+      else if (!level) problem(n, 'a mermaid fence outside a level; it belongs under ## System context or ## Containers');
+      else if (level.fences++) problem(n, `a second mermaid fence in ## ${level.name}; each level holds exactly one`);
+      else if (level.alternativeAt) problem(n, `the mermaid fence in ## ${level.name} comes after its ### Text alternative; the fence comes first`);
+      else { fence.level = level; level.fenceAt = n; }
+      continue;
+    }
+    let m;
+    const head = line.replace(/[ \t]+#+[ \t]*$/, ''); // a heading's closing #s, as CommonMark allows, are not its text
+    if ((m = head.match(/^#[ \t]+(.+?)[ \t]*$/))) {
+      if (level) problem(n, 'a top-level heading inside a level; the record has one, # Architecture, first');
+      else if (titles++) problem(n, 'a second top-level heading; the record has one, # Architecture, first');
+      else if (!/^Architecture(?: — \S.*)?$/.test(m[1])) problem(n, `the title must read "# Architecture", optionally "# Architecture — <name>": # ${m[1]}`);
+      else title = m[1];
+      continue;
+    }
+    if ((m = head.match(/^##[ \t]+(.+?)[ \t]*$/))) {
+      const at = ARCHITECTURE_LEVELS.indexOf(m[1]), last = levels.length ? ARCHITECTURE_LEVELS.indexOf(levels.at(-1).name) : -1;
+      if (at < 0) { problem(n, `## ${m[1]} is not a level; the record holds ## System context and, optionally, ## Containers`); level = { name: m[1], ignored: true, fences: 0, prose: [], alternative: [], source: [] }; continue; }
+      if (at <= last) { problem(n, `## ${m[1]} ${at === last ? 'repeats a level' : 'comes after ## Containers'}; the levels are ## System context, then optionally ## Containers, once each`); level = { name: m[1], ignored: true, fences: 0, prose: [], alternative: [], source: [] }; continue; }
+      level = { name: m[1], n, fences: 0, fenceAt: 0, alternativeAt: 0, between: 0, prose: [], alternative: [], source: [] }; levels.push(level);
+      continue;
+    }
+    if ((m = head.match(/^(#{3,6})[ \t]+(.+?)[ \t]*$/))) {
+      const alt = m[1] === '###' && m[2] === 'Text alternative';
+      if (level && !level.ignored && alt && !level.alternativeAt) { level.alternativeAt = n; continue; }
+      problem(n, level && !level.ignored && alt ? `a second ### Text alternative in ## ${level.name}` : `the heading "${m[0].trim()}" is not part of the record; a level holds prose, its mermaid fence and ### Text alternative`);
+      continue;
+    }
+    if (!level) {
+      const u = line.match(/^Updated:[ \t]*(.*?)[ \t]*$/);
+      if (u) { if (updates++) problem(n, 'a second Updated line; the record has one'); else if (!titles) problem(n, 'the Updated line comes before the title; it goes under # Architecture'); else if (!validDate(u[1])) problem(n, `Updated must be a valid YYYY-MM-DD date: ${u[1] || '(empty)'}`); else updated = u[1]; }
+      else if (line.trim() && !titles) problem(n, 'text before the title; the record opens with # Architecture');
+      else intro.push(line);
+      continue;
+    }
+    if (level.ignored) continue;
+    if (level.fenceAt && !level.alternativeAt) { if (line.trim() && !level.between++) problem(n, `text between the mermaid fence in ## ${level.name} and its ### Text alternative, from here; prose goes before the fence`); continue; }
+    (level.alternativeAt ? level.alternative : level.prose).push(line);
+  }
+  if (comment) problems.push('an HTML comment is never closed');
+  if (fence) problem(fence.n, 'this fence is never closed');
+  if (!titles) problems.push('no title; the record opens with # Architecture');
+  if (!updates) problems.push('no Updated line; under the title, "Updated: YYYY-MM-DD", the date the record was last brought up to date');
+  if (!levels.some((l) => l.name === 'System context')) problems.push('no ## System context; it is the one level every architecture record has');
+  for (const l of levels) {
+    if (!l.fenceAt) problem(l.n, `## ${l.name} has no mermaid fence`);
+    else if (!/^flowchart(?:[ \t]+(?:TB|TD|BT|RL|LR))?[ \t]*;?[ \t]*$/.test((l.source.find((s) => s.trim()) || '').trim())) problem(l.fenceAt, `the mermaid fence in ## ${l.name} must declare a flowchart on its first line, "flowchart LR" or another direction; C4 roles are labels, not Mermaid's C4 syntax`);
+    if (!l.alternativeAt) problem(l.n, `## ${l.name} has no ### Text alternative after its fence`);
+    else if (!l.alternative.some((s) => s.trim())) problem(l.alternativeAt, `## ${l.name}'s ### Text alternative is empty; it says in sentences what the diagram shows`);
+  }
+  const at = (m) => Number(m.match(/^line (\d+): /)?.[1] ?? Infinity);
+  problems.sort((a, b) => at(a) - at(b)); // by line, stable; a problem of the whole file last
+  const trim = (a) => a.join('\n').replace(/^\n+|\s+$/g, '');
+  return { title, updated, intro: trim(intro), levels: levels.map((l) => ({ name: l.name, prose: trim(l.prose), source: l.source.join('\n'), alternative: trim(l.alternative) })), problems, marked, fenced };
+}
+export const architectureMarked = (text) => architecture(text).marked;
 
 export function inspect(root, { auditProse = false, checkDate = '' } = {}) {
   const fails = [], warns = [], info = [];
@@ -556,9 +706,52 @@ export function inspect(root, { auditProse = false, checkDate = '' } = {}) {
       a11y = r.a11y;
     }
   }
+  // V31-APP-SWITCH (3.28): with an App opinion line, the line's grammar, the digest the pack copies, the opt-out's re-ask by
+  // date and Set 1's record (T2 and T3). Without the line, nothing is read or checked.
+  let app = null;
+  const appValues = fieldLines(profile, APP_FIELD);
+  if (appValues.length > 1) fail(`project/profile.md: one ${APP_FIELD} line, not ${appValues.length} (3.28)`);
+  else if (appValues.length === 1) {
+    app = appLine(appValues[0]);
+    if (!app) fail(`project/profile.md: the ${APP_FIELD} line must read "<editor, forms, unsure or off>, <YYYY-MM-DD>", with ", asked again <YYYY-MM-DD>" after off alone, not "${appValues[0]}" (3.28)`);
+    else if (app.state === 'off') {
+      if (!app.asked && appDays(app.date, today) >= APP_REASK_DAYS) warn(appReaskMessage(app));
+    } else {
+      if (!existsSync(join(root, APP_DIGEST))) fail(`project/profile.md: the ${APP_FIELD} line needs ${APP_DIGEST}, which is not installed; intake copies the pack when it writes the line (3.28)`);
+      else take(join(root, APP_DIGEST));
+      if (!existsSync(join(root, APP_SET))) warn(`${APP_SET}: Set 1 is not pinned yet; the first app's intake pins it on the owner's word and records it here (3.28)`);
+      else {
+        let set, parsed = true;
+        try { set = JSON.parse(take(join(root, APP_SET))); } catch { parsed = false; fail(`${APP_SET}: not valid JSON`); }
+        if (parsed) {
+          const plain = set !== null && typeof set === 'object' && !Array.isArray(set);
+          const eol = plain && set.endOfLife !== null && typeof set.endOfLife === 'object' && !Array.isArray(set.endOfLife) ? set.endOfLife : null;
+          if (!plain || typeof set.signed !== 'string' || !validDate(set.signed) || !(set.keep === null || (typeof set.keep === 'string' && validDate(set.keep) && set.keep >= set.signed)) || !eol || !Object.values(eol).every((d) => typeof d === 'string' && validDate(d))) fail(`${APP_SET}: must be { "signed": <YYYY-MM-DD>, "keep": <YYYY-MM-DD, not before signed, or null>, "endOfLife": { <package>: <YYYY-MM-DD> } } (3.28)`);
+          else {
+            if (set.keep === null && appDays(set.signed, today) > APP_SET_DAYS) warn(`${APP_SET}: T2: Set 1 was signed ${appDays(set.signed, today)} days ago and no keep decision is recorded; about six months (${APP_SET_DAYS} days) is the limit, so the owner re-certifies it before the keep decision (3.28)`);
+            if (set.keep !== null && appDays(set.signed, set.keep) > APP_SET_DAYS) warn(`${APP_SET}: T2: Set 1 was signed ${appDays(set.signed, set.keep)} days before the keep decision (about six months is ${APP_SET_DAYS}); the owner re-certifies it (3.28)`);
+            for (const [pkg, d] of Object.entries(eol)) if (d <= today) warn(`${APP_SET}: T3: ${pkg} reached its recorded end of life on ${d}; a security advisory needing a major outside the certified ones is the same trigger, which this check cannot see offline (3.28)`);
+          }
+        }
+      }
+    }
+  }
+  // V31-C4-MERMAID (3.26): the optional architecture record, read into the sources so the view's fingerprint covers it;
+  // absent, nothing is shown or checked. Its envelope's problems are returned apart, not failed here: the checker fails
+  // on them, and the view still publishes, showing them. V31-C4-FIX: only a file carrying the mark is the record; any
+  // other file at the path, or a path that does not read as a file, is probed without joining the sources and gets
+  // nothing (a routed read takes and checks it as before), save one INFO line where a level holds a mermaid fence, the
+  // shape a record keeps when its mark is deleted.
+  let archRecord = null, archBytes = null;
+  try { archBytes = readFileSync(P('architecture.md')); } catch { /* absent or not a file: not the record */ }
+  if (archBytes) {
+    const probe = architecture(archBytes.toString('utf8'));
+    if (probe.marked) { sources.set('project/architecture.md', archBytes); archRecord = probe; }
+    else if (probe.fenced) info.push(`project/architecture.md: not read as the architecture record (3.26): it lacks the mark line, though a level holds a mermaid fence; if it is the record, restore the line ${ARCHITECTURE_MARK}`);
+  }
   const needsOwner = [...open.values()].filter((i) => i.mark === '!');
   if (needsOwner.length) info.push(`needs the owner: ${needsOwner.map((i) => i.id).join(', ')} (already recorded)`);
   const delegated = signatures.filter((s) => s.delegated);
   if (delegated.length) info.push(`delegated signatures needing the owner's review: ${delegated.map((s) => s.file).join(', ')}`);
-  return { fails, warns, info, files, milestones, open, shipped, retired, decisions: live, slice, archives, wish: wish.map((s) => s.slice(2)), tphases, trajectoryRead, recall: recalls.sort((a, b) => b.date.localeCompare(a.date))[0], digests, items, hotWords, counts, budgets, routed, signatures, session: session ? Number(session[1]) * 1000 : 0, today, sources, a11y };
+  return { fails, warns, info, files, milestones, open, shipped, retired, decisions: live, slice, archives, wish: wish.map((s) => s.slice(2)), tphases, trajectoryRead, recall: recalls.sort((a, b) => b.date.localeCompare(a.date))[0], digests, items, hotWords, counts, budgets, routed, signatures, session: session ? Number(session[1]) * 1000 : 0, today, sources, a11y, app, architecture: archRecord };
 }

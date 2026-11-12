@@ -26,6 +26,19 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-11-12 — V31-REFRESH-3 — The project takes pm-next v3.1 as the lab builds it after Phase 15: six tools and the intake verb replaced, the record kept
+
+**Decision:** the project runs pm-next v3.1 at PM-Skills lab 8d4e029 from the commit carrying this entry: brief, check, find, ledger, structure and view replaced and verbs/intake.md replaced, as v3.1's set — because the owner released the round on 2026-11-11 ("lets do all the planned steps") and the project's first-month test ended on 2026-11-02.
+
+**Rationale:** The lab's V31-REFRESH-3, by V31-REFRESH-1's and -2's route. The upgrade tool has no route for a later v3.1 build over an installed v3.1, so this follows the change notes' "Existing installations" rules by hand: every installed tool, verb and AGENTS.md matched 4ab66b5's bytes, so no local edit is carried; the six tools and intake.md are replaced as a set from lab/next-v31 at 8d4e029; AGENTS.md, CLAUDE.md and tools/read.mjs are unchanged. The start read is byte-identical before and after (19,226 bytes). No pack is installed and no App opinion line is added: the project is not a new app, and an installation without the line gains nothing. The profile, rules file and brief are signed and are not edited, comments included; the templates' comment changes are not taken. The AAA digest is unchanged: no change note since 4ab66b5 names one. The new checker reads project/architecture.md as the 3.26 record only where it carries the template's mark line; this project's own project/architecture.md, routed by the rules file, is unchanged and is not that record, so the checker shows no failure and the same two warnings as before. The session hooks are not regenerated: harness.mjs is not among the changed files. The warning on live decisions (58 against the budget of 45, this entry included) stays: the rules file allows archiving only on the owner's word (the wish line V31-REFRESH.1). Rollback: revert the pull request's merge commit; nothing outside the repository changes.
+
+- Migration edit: none — every replaced file was 4ab66b5's, byte for byte
+
+**Supersedes:** 2026-11-05 — V31-REFRESH — The project takes pm-next v3.1 as the lab now builds it: tools and verbs replaced as a set, the record kept
+
+**Deferred:** none
+
+
 ## 2026-11-05 — V31-REFRESH — The project takes pm-next v3.1 as the lab now builds it: tools and verbs replaced as a set, the record kept
 
 **Decision:** the project runs pm-next v3.1 at PM-Skills lab 4ab66b5 from the commit carrying this entry: six tools and three verbs replaced, two tools and five add-on verbs added, as v3.1's set; rule 9 asks a Checked line only where a model policy requires one, and this project keeps none; the WCAG 2.2 AAA digest follows in the next commit — because the owner asked on 2026-11-05 to upgrade his projects to the latest pm-skills, the project's first-month test having ended on 2026-11-02.

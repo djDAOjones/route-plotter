@@ -2,7 +2,9 @@
 // pm-next v3.1 status site. Zero dependencies. usage: node tools/view.mjs [--root <dir>] [--out project/view.html] [--date YYYY-MM-DD] [--open] [--quiet]
 // Humans read this; agents read the source. Static, opens locally, no network, no model, no script (V3-STATUS-VIEW).
 // A small site (V31-STATUS-SITE): --out is the dashboard; beside it, view.site/<generation>/ holds its pages: index.html
-// the same dashboard, items/<ID>.html one per item file, record.html the rest of the record.
+// the same dashboard, items/<ID>.html one per item file, record.html the rest of the record, and architecture.html the
+// optional architecture record's levels, only when project/architecture.md is the record, carrying its mark (V31-C4-MERMAID,
+// V31-C4-FIX, 3.26).
 // It reads the ledger only through inspect; Git gives the commit, the ledger's uncommitted changes and the last session end.
 // The check date is its only date input, so two builds from the same ledger, commit, renderer and date are byte-identical
 // while the files its links name, what they are and where the pages are written stay the same (FX-12).
@@ -11,8 +13,9 @@ import { writeFileSync, renameSync, rmSync, mkdirSync, rmdirSync, linkSync, unli
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { join, dirname, basename, resolve, relative, isAbsolute, sep } from 'node:path';
-import { inspect, options, active, datesMentioned, sessionEndLines, sessionEnd, a11yPack } from './ledger.mjs';
+import { inspect, options, active, datesMentioned, sessionEndLines, sessionEnd, a11yPack, supersededBy } from './ledger.mjs';
 export const RENDERER = 'pm-next v3.1 status site 1';
+export const ARCHITECTURE_RENDERER = 'pm-next v3.1 architecture page 1'; // in the fingerprint only with the record, so a site without it is unchanged; its number moves with any change to the page's markup or style, as RENDERER's does
 const GENERATOR = 'pm-next v3.1 status site'; // the mark a folder carries before a build may replace it
 const args = options(['out', 'date', 'open', 'quiet']);
 const root = args.root;
@@ -57,7 +60,8 @@ if (head) {
 const hash = createHash('sha256');
 for (const p of sourcePaths) hash.update(p + '\n').update(state.sources.get(p));
 const a11y = state.a11y ? a11yPack(root) : null; // V31-A11Y (3.18): the pack's section, only with the profile's line
-hash.update(RENDERER); if (a11y) hash.update(a11y.RENDERER);
+const arch = state.architecture; // V31-C4-MERMAID (3.26): null without the record; V31-C4-FIX: a file without its mark is not it
+hash.update(RENDERER); if (a11y) hash.update(a11y.RENDERER); if (arch) hash.update(ARCHITECTURE_RENDERER);
 const fingerprint = hash.digest('hex');
 
 // ---- text: everything from the ledger is escaped; IDs with an item file link to its page, and a Markdown link to a file
@@ -255,11 +259,11 @@ const about = (links) => `<p class="meta">A snapshot as of its last refresh, nev
 // (V31-DESIGN-REVIEW FX-6, V-12).
 // links: home, the dashboard of the same build; latest, the refreshed dashboard, only on a generation's pages; gen, the
 // generation a top dashboard names, so the next build knows which one to keep beside its own.
-const shell = (heading, up, links, nav, body) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="${esc(RENDERER)}">${links.gen ? `<meta name="pm-next-generation" content="${links.gen}">` : ''}<title>${esc(heading.startsWith(title) ? heading : `${heading} — ${title}`)}</title>
+const shell = (heading, up, links, nav, body, css = '') => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="${esc(RENDERER)}">${links.gen ? `<meta name="pm-next-generation" content="${links.gen}">` : ''}<title>${esc(heading.startsWith(title) ? heading : `${heading} — ${title}`)}</title>
 <style>
-${CSS}
+${CSS}${css}
 </style></head><body><div class="wrap">
-<nav class="site" aria-label="Site"><a href="${links.home}">${links.latest ? 'This refresh' : 'Dashboard'}</a><a href="${up}record.html">Record</a><a href="${up}record.html#items">Item pages</a>${links.latest ? `<a href="${links.latest}">Dashboard</a>` : ''}</nav>
+<nav class="site" aria-label="Site"><a href="${links.home}">${links.latest ? 'This refresh' : 'Dashboard'}</a><a href="${up}record.html">Record</a><a href="${up}record.html#items">Item pages</a>${arch ? `<a href="${up}architecture.html">Architecture</a>` : ''}${links.latest ? `<a href="${links.latest}">Dashboard</a>` : ''}</nav>
 <main>
 <h1>${esc(heading)}</h1>
 ${typeof body === 'function' ? '' : `${about(links)}\n`}${nav.length ? `<nav aria-label="Contents" id="contents-nav"><ul>${nav.map(([id, name]) => `<li><a href="#${id}">${esc(name)}</a></li>`).join('')}</ul></nav>\n` : ''}${typeof body === 'function' ? body(about(links)) : body}
@@ -283,7 +287,7 @@ ${about}
 <h2 id="session">Last session end</h2>
 ${!head ? '<p class="meta">No Git history to read.</p>' : !lastEnd ? '<p class="meta">No commit among the latest ' + SEARCH + ' on the first-parent history carries a Session-end line.</p>' : `<div class="card">${lastEnd.end ? `<p>${ids(esc(`Session-end: ${lastEnd.end.status} — next ${lastEnd.end.next} — ${lastEnd.end.reason}`), up)}</p><p class="meta">Commit <span class="stamp">${lastEnd.hash}</span>; next item ${lastEnd.end.next === 'none' ? 'none' : idCell(lastEnd.end.next, up)}. History, not an instruction: a session continues only as the record says.</p>` : `<p><strong>The nearest Session-end lines are malformed</strong> in commit <span class="stamp">${lastEnd.hash}</span>:</p><ul>${lastEnd.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`}</div>`}
 ${recall ? `<div class="card ${recall.score === '8' ? 'ok' : 'owner'}"><strong>Last recall check:</strong> ${recall.score}/8 on ${recall.date} (${recall.mode})</div>` : ''}
-${state.warns.length ? `<div class="card warns"><strong>Maintenance warnings</strong><ul>${state.warns.map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>` : ''}
+${state.warns.length || arch?.problems.length ? `<div class="card warns"><strong>Maintenance warnings</strong><ul>${[...state.warns, ...(arch?.problems.length ? [`${ARCH_SRC}: ${arch.problems.length} problem(s) in its envelope, which the checker fails; the architecture page lists them`] : [])].map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>` : ''}
 <h2 id="open">Open work</h2>
 <p class="meta">State is the line's mark alone; a blocker is shown apart and does not make a line the owner's. An ID with an item file opens its page: its acceptance criteria, its notes.</p>
 ${milestones.map((m) => { const closed = m.phases.filter(shut); return `<h3>${m.name}</h3>${m.phases.filter((p) => !shut(p)).map((p) => `${p.name ? `<div class="meta">${esc(p.name)}</div>` : ''}${tw(esc(`Open work: ${m.name}${p.name ? `, ${p.name}` : ''}`), `<table><tr><th>ID</th><th>Item</th><th>State</th><th>Since</th></tr>${p.items.map((i) => { const it = state.items.get(i.id); return `<tr id="item-${i.id}"><td>${idCell(i.id, up)}</td><td>${inline(i.title, up, SRC.backlog)}${meta(i, up)}${it?.now ? `<div class="now"><strong>Now:</strong>${paras(it.now, up, itemSrc(i.id))}</div>` : ''}${it ? `<br><a class="meta" href="${page(i.id, up)}#acceptance-criteria">${i.id}: acceptance criteria (${it.criteria.length})</a>` : ''}</td><td><span class="tag${i.mark === '!' ? ' owner' : ''}">${markLabel[i.mark]}</span></td><td>${i.since}</td></tr>`; }).join('') || '<tr><td colspan="4" class="meta">none</td></tr>'}</table>`)}`).join('')}${closed.length ? `<p class="meta">Closed, nothing open: ${closed.map((p) => esc(p.name)).join('; ')}.</p>` : ''}`; }).join('')}
@@ -299,17 +303,49 @@ ${tw('Dates mentioned', `<table><tr><th>Date</th><th>ID</th><th>Where</th><th>Cl
 const itemIds = [...state.items.keys()].sort();
 const where = (id) => state.open.has(id) ? `open, ${markLabel[state.open.get(id).mark]}` : state.shipped.has(id) ? `recorded ${state.shipped.get(id).date}` : state.retired?.has(id) ? `retired unshipped ${state.retired.get(id).date}, by ${esc(state.retired.get(id).head)}` : 'neither open nor in the trajectory';
 const backToContents = '<p class="meta"><a href="#contents-nav">Back to contents</a></p>';
-const entryCard = (from, back = true) => (d) => `<div class="card" id="${decisionAnchor(d)}"><h3>${inline(d.head, '', from)}</h3><p><strong>Decision:</strong> ${inline(d.decision, '', from)}</p><p><strong>Rationale:</strong> ${inline(d.rationale, '', from)}</p><p class="meta">Supersedes: ${inline(d.supersedes || 'none', '', from)}</p>${back ? backToContents : ''}</div>`;
+// The architecture record (V31-C4-MERMAID, 3.26): its own page, each level's prose, its Mermaid source escaped in a
+// named, scrollable keyboard stop, as tables are, and its text alternative; nothing drawn, no script, no image. A file
+// whose envelope does not parse is shown whole and escaped under its problems, so the site never stalls on it. The
+// record page's contents gain a section pointing there, and every page's site bar a link, only with the file.
+const ARCH_SRC = 'project/architecture.md';
+const ARCH_CSS = '\npre.src{margin:0;white-space:pre;overflow-wrap:normal;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;font:.85rem/1.45 ui-monospace,monospace}';
+const srcBox = (name, text) => `<div class="tw" tabindex="0" role="region" aria-label="${esc(name)}"><pre class="src">\n${esc(text)}</pre></div>`; // the newline after the tag is dropped by HTML
+const archSection = arch ? `<h2 id="architecture">Architecture</h2>
+<p><a href="architecture.html">The architecture page</a>: ${arch.problems.length ? `<strong>${ARCH_SRC} has ${arch.problems.length} problem(s) in its envelope</strong>, listed there above the file as written; the checker fails until they are fixed.` : `the recorded ${arch.levels.map((l) => l.name.toLowerCase()).join(' and ')}, each as Mermaid source and a text alternative, as of ${esc(arch.updated)}.`}</p>
+${backToContents}
+` : '';
+const archPage = () => {
+  const broken = arch.problems.length > 0, levels = broken ? [] : arch.levels.map((l) => [slug(l.name), l]);
+  const text = (t, name) => nameTables(md(t, '', ARCH_SRC), name);
+  const body = broken ? `<h2 id="problems">Problems</h2>
+<div class="card owner"><p><strong>The envelope does not parse</strong>, so the levels are not shown one by one; the checker fails until it is fixed (specification 3.26).</p><ul>${arch.problems.map((m) => `<li>${esc(m)}</li>`).join('')}</ul></div>
+<h2 id="file">The file as written</h2>
+${srcBox(`${ARCH_SRC}, as written`, state.sources.get(ARCH_SRC).toString('utf8').replace(/\r\n?/g, '\n'))}`
+    : `<p class="meta">Recorded as of ${esc(arch.updated)}: the record's own date, not a check that it matches the code. This site draws no diagram and runs no script. Each level shows its Mermaid source, which draws as a picture where Mermaid is read, as GitHub does when it shows ${ARCH_SRC}, then its text alternative, which says in sentences what the diagram shows.</p>
+${arch.intro ? text(arch.intro, 'Architecture') : ''}
+${levels.map(([id, l]) => `<h2 id="${id}">${esc(l.name)}</h2>
+${l.prose ? text(l.prose, l.name) : ''}
+<h3 id="${id}-source">Mermaid source</h3>
+${srcBox(`${l.name}, Mermaid source`, l.source)}
+<h3 id="${id}-text">Text alternative</h3>
+${text(l.alternative, `${l.name}, text alternative`)}`).join('\n')}`;
+  return shell(`${title} — architecture`, '', genLinks(''), broken ? [['problems', 'Problems'], ['file', 'The file as written']] : levels.map(([id, l]) => [id, l.name]), body, ARCH_CSS);
+};
+// An entry that a later entry's Supersedes line names says so, with a link to the later entry's card; worked out here from
+// the live file and the archived chunks together, nothing stored (V31-FIND-SUMMARY, 3.12).
+const allEntries = [...decisions, ...archives.flatMap((a) => a.entries)], superseded = supersededBy(allEntries);
+const supersededNote = (d) => (superseded.get(d.head) || []).map((h) => `<p class="meta"><strong>Superseded</strong> — see <a href="#${decisionAnchor(allEntries.find((e) => e.head === h))}">${esc(h)}</a></p>`).join('');
+const entryCard = (from, back = true) => (d) => `<div class="card" id="${decisionAnchor(d)}"><h3>${inline(d.head, '', from)}</h3>${supersededNote(d)}<p><strong>Decision:</strong> ${inline(d.decision, '', from)}</p><p><strong>Rationale:</strong> ${inline(d.rationale, '', from)}</p><p class="meta">Supersedes: ${inline(d.supersedes || 'none', '', from)}</p>${back ? backToContents : ''}</div>`;
 // The site's own terms, the ones the owner's journeys meet undefined (V31-SITE-FIX, V-13's audit).
 const GLOSSARY = [['Item file', 'one work item\'s criteria, current state and notes, under project/items/.'], ['Now', 'an item file\'s dated state: its next step and open question.'], ['Trajectory', 'each item\'s outcome in one line, by phase.'], ['Wish-list', 'deferred ideas, not yet work.'], ['Session-end', 'a commit\'s line saying how a session ended and what comes next.'], ['Recall check', 'a fresh reader\'s score out of 8 on what the record says at a phase close.'], ['Ledger fingerprint', 'a hash of the files this site was built from; it changes when they do.'], ['Refresh', 'one build of this site; its pages are kept as a copy for a time.']];
 const glossary = `<h2 id="terms">Terms</h2><dl>${GLOSSARY.map(([t, d]) => `<dt><strong>${t}</strong></dt><dd>${esc(d)}</dd>`).join('')}</dl>`;
-const recordNav = [['terms', 'Terms'], ['items', 'Item pages'], ['decisions', 'Decisions'], ['archives', 'Archived decisions'], ['shipped', 'Trajectory'], ['wish', 'Wish-list'], ['standards', 'Standards adopted'], ...(a11y ? [[a11y.SECTION.id, a11y.SECTION.name]] : []), ['profile', 'Profile']];
+const recordNav = [['terms', 'Terms'], ['items', 'Item pages'], ...(arch ? [['architecture', 'Architecture']] : []), ['decisions', 'Decisions'], ['archives', 'Archived decisions'], ['shipped', 'Trajectory'], ['wish', 'Wish-list'], ['standards', 'Standards adopted'], ...(a11y ? [[a11y.SECTION.id, a11y.SECTION.name]] : []), ['profile', 'Profile']];
 const href = (name) => esc(encodeURIComponent(name)); // an output file or folder name, safe in an attribute and a URL
 const genLinks = (up) => ({ home: `${up}index.html`, latest: `${up}../../${href(basename(out))}` });
 const record = shell(`${title} — record`, '', genLinks(''), recordNav, `${glossary}
 <h2 id="items">Item pages <span class="meta">(${itemIds.length})</span></h2>
 ${tw('Item pages', `<table><tr><th>ID</th><th>Item</th><th>Where</th></tr>${itemIds.map((id) => `<tr><td>${idCell(id)}</td><td>${inline(state.items.get(id).title, '', itemSrc(id))}</td><td>${where(id)}</td></tr>`).join('') || '<tr><td colspan="3" class="meta">No item has a file.</td></tr>'}</table>`)}
-<h2 id="decisions">Decisions <span class="meta">(${decisions.length}, newest first)</span></h2>
+${arch ? archSection : ''}<h2 id="decisions">Decisions <span class="meta">(${decisions.length}, newest first)</span></h2>
 ${decisions.map(entryCard(SRC.decisions)).join('')}
 <h2 id="archives">Archived decisions <span class="meta">(${archives.reduce((n, a) => n + a.entries.length, 0)})</span></h2>
 ${archives.map((a) => `<h3>${esc(a.file)} (${a.entries.length})</h3>${a.entries.map(entryCard(`project/${a.file}`, false)).join('')}`).join('') || '<p class="meta">none</p>'}
@@ -334,7 +370,7 @@ const itemPage = (id) => {
   return shell(`${id} — ${it.title}`, '../', genLinks('../'), shown.map(([s, name]) => [s, name]), `${status}\n${shown.map(([s, name, body]) => `<h2 id="${s}">${esc(name)}</h2>\n${nameTables(md(body, '../', itemSrc(id)), name)}`).join('\n')}`);
 };
 const copyPage = (c) => shell(c.rel, '../', genLinks('../'), [], `<p class="meta">A copy of <code>${esc(c.rel)}</code> as of this build, declared UTF-8 so every browser reads it alike. <a href="${fileHref(c.target, '../')}">The file itself</a> opens in the browser's own reading of it.</p>\n<pre class="file">\n${esc(c.text)}</pre>`); // the newline after the tag is dropped by HTML, so a file's own first line break survives
-const rendered = [['index.html', dashboardAt('', genLinks(''))], ['record.html', record], ...itemIds.map((id) => [`items/${id}.html`, itemPage(id)])];
+const rendered = [['index.html', dashboardAt('', genLinks(''))], ['record.html', record], ...(arch ? [['architecture.html', archPage()]] : []), ...itemIds.map((id) => [`items/${id}.html`, itemPage(id)])];
 const copied = () => [...copies.values()].filter(Boolean).sort((x, y) => x.name < y.name ? -1 : 1);
 const pages = [...rendered, ...copied().map((c) => [`files/${c.name}`, copyPage(c)])];
 const copyCount = copied().length;
