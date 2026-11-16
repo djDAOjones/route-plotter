@@ -26,6 +26,19 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-11-16 — V31-REFRESH-4 — The project takes the lab's pm-skills 5 candidate b875c63 by the refresh route: seventeen files replaced, tools/VERSION added, the record kept
+
+**Decision:** The project runs PM-Skills lab b875c63, the candidate for pm-skills 5.0.0, from 8d4e029, by the lab's refresh route, in the commit before the one carrying this entry: seventeen tools, verbs and CLAUDE.md replaced and tools/VERSION added, reading 5.0.0, as a set; no pack installed and no App opinion line added; AGENTS.md and the project's files unchanged. The owner's signed Harness sentence is not taken: it makes the profile 402 words against its hard budget of 400, so it waits on his decision (wish V31-REFRESH-4.1). Because the owner released the round on 2026-11-16.
+
+**Rationale:** The lab's V31-REFRESH-4, this project's share, on the owner's words of 2026-11-16 for the round, "Yes, merge on green (Recommended)" and "Yes, use gh (Recommended)". The route ran once and refused nothing: no project file sits on a replaced path. Every installed tool and verb equalled 8d4e029's bytes before it, so no local edit is carried; every installed tool, verb and the contract now equal b875c63's bytes. The checker gave the same result before and after, no failure and two warnings; the start read is byte-identical over the unchanged record. The signed Harness sentence, signed by the owner for all four profiles on 2026-11-12, is left out because adding it, or raising the budget or trimming other words, changes the signed profile beyond that signature. The profile, rules file and brief are untouched. Rollback: `git revert --no-edit` of the refresh commit, or revert the pull request's merge commit; nothing outside the repository changes.
+
+- Migration edit: none — no project file sits on a replaced path
+
+**Supersedes:** 2026-11-12 — V31-REFRESH-3 — The project takes pm-next v3.1 as the lab builds it after Phase 15: six tools and the intake verb replaced, the record kept
+
+**Deferred:** none
+
+
 ## 2026-11-12 — V31-REFRESH-3 — The project takes pm-next v3.1 as the lab builds it after Phase 15: six tools and the intake verb replaced, the record kept
 
 **Decision:** the project runs pm-next v3.1 at PM-Skills lab 8d4e029 from the commit carrying this entry: brief, check, find, ledger, structure and view replaced and verbs/intake.md replaced, as v3.1's set — because the owner released the round on 2026-11-11 ("lets do all the planned steps") and the project's first-month test ended on 2026-11-02.
