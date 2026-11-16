@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// pm-next-v3 harness configuration generator. Zero dependencies.
+// pm-skills 5 harness configuration generator. Zero dependencies.
 // usage: node tools/harness.mjs [--root <dir>] [--harness claude,codex] [--print] [--force] [--hooks-only]
 //
 // Writes, for every harness the profile names, the settings the profile's Push and Network lines ask for (sessions) and a
@@ -13,8 +13,8 @@
 //   * Codex >=0.134 layers a named profile over user config; trusted project config can override it.
 // Where a harness cannot enforce a value, the line is an instruction and the generated file says so. The owner reviews
 // everything this writes; a generated file is not an enforcement test.
-import { readFileSync, existsSync, writeFileSync, mkdirSync, chmodSync } from 'node:fs';
-import { join, basename } from 'node:path';
+import { readFileSync, readdirSync, existsSync, writeFileSync, mkdirSync, chmodSync } from 'node:fs';
+import { join, basename, posix } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { options, field, pushRoute, networkChoice } from './ledger.mjs';
@@ -47,11 +47,12 @@ const route = pushRoute(pushLine), choice = networkChoice(networkLine);
 if (!route || !choice) { console.error('harness: the profile needs a Push line (the harness pushes to origin or a named host, or owner-operated) and a Network line (closed, listed hosts with host names, or open); neither is defaulted.'); process.exit(2); }
 const harnessPush = route === 'harness', network = choice.kind, hosts = choice.hosts;
 const sessionLine = field(profile, 'Session') || '350k tokens of context';
-const pushNote = harnessPush
-  ? `Push: ${pushLine} — git push is allowed and runs at every close${network === 'closed' ? '; the Network line is closed, so the push host is unreachable here and each close reports a pending push until Network lists it' : network === 'listed' ? '; the listed hosts must include the push host' : ''}.`
+const pushNoteFor = (nw) => harnessPush
+  ? `Push: ${pushLine} — git push is allowed and runs at every close${nw === 'closed' ? '; the Network line is closed, so the push host is unreachable here and each close reports a pending push until Network lists it' : nw === 'listed' ? '; the listed hosts must include the push host' : ''}.`
   : `Push: ${pushLine} — the owner pushes from outside; Claude Code denies git push in sessions, Codex has no push control, so there the line is an instruction only.`;
-const networkNote = { closed: 'Network: closed — shell network denied where the client enforces it.', listed: `Network: listed hosts ${hosts.join(', ')} — allowed where the client enforces a host list; where it cannot, this is an instruction and the value degrades to open.`, open: 'Network: open.' }[network];
-const hooksNote = `Session hooks (3.15): SessionStart(compact) adds the re-read and session-end notice; tools/session.mjs on PostToolUse and the other SessionStart sources watches this session's context against the profile's Session line (${sessionLine}); tools/handover.mjs on SessionStart(startup|clear) shows a fresh chat the last session end in this checkout's Git history while it is current, and claims it for that chat in Git's common directory. They force nothing and cannot show that a re-read happened; where the client does not run them, or denies them the transcript, the Session line is an instruction only and a fresh chat starts from the record.`;
+const networkNoteFor = (nw) => ({ closed: 'Network: closed — shell network denied where the client enforces it.', listed: `Network: listed hosts ${hosts.join(', ')} — allowed where the client enforces a host list; where it cannot, this is an instruction and the value degrades to open.`, open: 'Network: open.' }[nw]);
+const pushNote = pushNoteFor(network), networkNote = networkNoteFor(network);
+const hooksNote = `Session hooks (3.15): SessionStart(compact) adds the re-read notice; tools/session.mjs on PostToolUse and the other SessionStart sources reports this session's context against the profile's Session line (${sessionLine}); tools/handover.mjs on SessionStart(startup|clear) shows a fresh chat the last session end in this checkout's Git history while it is current, and claims it for that chat in Git's common directory. They force nothing and cannot show that a re-read happened; where the client does not run them, or denies them the transcript, nothing reports the context and a fresh chat starts from the record.`;
 
 const H = homedir();
 const slug = (basename(root) || 'project').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'project';
@@ -99,6 +100,213 @@ const readJson = (rel) => {
   try { return JSON.parse(readFileSync(join(hooksRoot, rel), 'utf8')); } catch { console.error(`harness: ${hookPath(rel)} exists but is not valid JSON; repair it first. Nothing written.`); process.exit(1); }
 };
 
+// ---- V31-GEN-KEEP: printing over a project's own settings keeps every restriction they hold. The existing files are the
+// Claude pair the print writes and every reviewed Codex profile in harness/codex/, whose name it keeps (a name ending -intake is
+// the intake profile, any other the sessions one). A key only the existing file holds is kept as written; a key both hold
+// keeps the narrower value where the order is known; a difference with no known order refuses, naming it, and nothing is
+// printed or written. The print never widens what an existing file narrows; to widen, the owner edits or removes the file.
+const kept = [], refuse = [];
+// A TOML subset, line by line: comments, [table], [[array]] and key = value on one line. Anything else refuses.
+function parseToml(text) {
+  const lines = text.split('\n'), root = { id: '[]', display: '', array: false, header: -1, last: -1, keys: new Map() }, sections = [root];
+  const seen = new Set(['[]']);
+  let cur = root;
+  const unq = (k) => (k.startsWith('"') ? JSON.parse(k) : k.startsWith("'") ? k.slice(1, -1) : k);
+  const SEG = /\s*("(?:[^"\\]|\\.)*"|'[^']*'|[A-Za-z0-9_-]+)\s*/y;
+  const segments = (s) => { const out = []; SEG.lastIndex = 0; for (;;) { const m = SEG.exec(s); if (!m) return null; out.push(unq(m[1])); if (SEG.lastIndex === s.length) return out; if (s[SEG.lastIndex] !== '.') return null; SEG.lastIndex++; } };
+  const value = (rest) => { // the value text before any comment outside quotes
+    let q = '', i = 0;
+    for (; i < rest.length; i++) { const c = rest[i]; if (q) { if (c === '\\' && q === '"') i++; else if (c === q) q = ''; } else if (c === '"' || c === "'") q = c; else if (c === '#') break; }
+    const raw = rest.slice(0, i).trim();
+    if (!raw || q || /^("""|''')/.test(raw) || (/^[[{]/.test(raw) && !/[\]}]$/.test(raw))) return null;
+    if (/^"/.test(raw)) { try { return { raw, v: JSON.parse(raw) }; } catch { return null; } }
+    if (/^'/.test(raw)) return { raw, v: raw.slice(1, -1) };
+    if (raw === 'true' || raw === 'false') return { raw, v: raw === 'true' };
+    if (/^[+-]?\d[\d_]*$/.test(raw)) return { raw, v: Number(raw.replace(/_/g, '')) };
+    return { raw, v: { raw } };
+  };
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (!t || t.startsWith('#')) continue;
+    const h = t.match(/^(\[\[?)\s*(.*?)\s*(\]\]?)\s*(?:#.*)?$/);
+    if (h && h[1].length === h[3].length) {
+      const segs = segments(h[2]); if (!segs) return { error: `line ${i + 1} is a table header this print cannot read` };
+      const id = JSON.stringify(segs), array = h[1] === '[[';
+      if (!array && seen.has(id)) return { error: `line ${i + 1} repeats the table [${h[2]}]` };
+      seen.add(id); cur = { id, display: h[2], array, header: i, last: i, keys: new Map() }; sections.push(cur); continue;
+    }
+    const k = t.match(/^("(?:[^"\\]|\\.)*"|'[^']*'|[A-Za-z0-9_-]+)\s*=\s*(.*)$/);
+    const v = k && value(k[2]);
+    if (!v) return { error: `line ${i + 1} is not a one-line key = value this print can read` };
+    if (v.raw.startsWith('{')) return { error: `line ${i + 1}: ${k[1]} is an inline table, which this print cannot merge with the tables it writes` };
+    const key = unq(k[1]);
+    if (cur.keys.has(key)) return { error: `line ${i + 1} repeats the key ${k[1]}` };
+    cur.keys.set(key, { idx: i, rawKey: k[1], raw: v.raw, value: v.v }); cur.last = i;
+  }
+  return { lines, sections, table: (segs) => sections.find((s) => !s.array && s.id === JSON.stringify(segs)) };
+}
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// Known orders, narrowest first; no other shared key has one. approval_policy and extends have none.
+const tomlOrder = (id, key) => {
+  const segs = JSON.parse(id);
+  if (segs[0] === 'features' && segs.length === 1) return [false, true];
+  if (key === 'enabled') return [false, true];
+  if (segs[0] === 'permissions' && segs.at(-1) === 'filesystem') return ['deny', 'read', 'write'];
+  if (segs[0] === 'permissions' && segs.at(-2) === 'network' && segs.at(-1) === 'domains') return ['deny', 'allow'];
+  if (!segs.length && key === 'web_search') return ['disabled', 'cached', 'live'];
+  if (!segs.length && key === 'sandbox_mode') return ['read-only', 'workspace-write', 'danger-full-access'];
+  return null;
+};
+// The generated profile with the reviewed one's restrictions written in: untouched lines stay byte for byte.
+function keepCodex(E, gText, file) {
+  const G = parseToml(gText), out = { kept: [], refuse: [] };
+  if (G.error) throw new Error(`harness: the generated ${file} does not parse: ${G.error}`);
+  const replace = new Map(), drop = new Set(), after = new Map(), tail = [];
+  const add = (i, line) => after.set(i, [...(after.get(i) || []), line]);
+  for (const s of E.sections) {
+    const where = s.display ? `[${s.display}] ` : '';
+    const segs = JSON.parse(s.id);
+    if (segs[0] === 'hooks') { // only the shape this generator writes, running its own commands, is replaced; anything else refuses
+      const shape = s.array && segs.length === 2 ? ['matcher'] : s.array && segs.length === 3 && segs[2] === 'hooks' ? ['type', 'command', 'timeout'] : null;
+      if (!shape) { out.refuse.push(`${file}: ${s.array ? `[[${s.display}]]` : `[${s.display}]`} is a hooks table this print cannot carry; merge it by hand`); continue; }
+      for (const [k, e] of s.keys) {
+        if (!shape.includes(k)) out.refuse.push(`${file}: [[${s.display}]] holds ${k}, which this print does not write; merge it by hand`);
+        else if (k === 'command' && !isOurs(e.value)) out.refuse.push(`${file}: [[${s.display}]] runs ${e.raw}, a hook this print does not carry; merge it by hand`);
+      }
+      // a whole group: each [[hooks.E]] holds at least one hook, and each hook is a command of ours
+      if (segs.length === 2) { const next = E.sections.slice(E.sections.indexOf(s) + 1).find((x) => JSON.parse(x.id)[0] === 'hooks' && JSON.parse(x.id)[1] === segs[1]); if (!next || JSON.parse(next.id).length !== 3) out.refuse.push(`${file}: [[${s.display}]] has no hook of its own; merge it by hand`); }
+      else if (s.keys.get('type')?.value !== 'command' || !s.keys.has('command')) out.refuse.push(`${file}: [[${s.display}]] runs no command of the shape this print writes; merge it by hand`);
+      continue; // our own hooks are written afresh, or left out with [features] hooks off
+    }
+    if (s.array) { out.refuse.push(`${file}: [[${s.display}]] is an array of tables this print cannot carry; merge it by hand`); continue; }
+    const g = G.sections.find((x) => !x.array && x.id === s.id);
+    if (!g) {
+      if (!s.keys.size) continue;
+      tail.push('', E.lines[s.header]);
+      for (const [, e] of s.keys) { tail.push(E.lines[e.idx]); out.kept.push(`${file}: ${where}${e.rawKey} = ${e.raw}`); }
+      continue;
+    }
+    for (const [k, e] of s.keys) {
+      const ge = g.keys.get(k);
+      if (!ge) { add(g.last, E.lines[e.idx]); out.kept.push(`${file}: ${where}${e.rawKey} = ${e.raw}`); continue; }
+      if (same(e.value, ge.value)) continue;
+      const order = tomlOrder(s.id, k), re = order ? order.indexOf(e.value) : -1, rg = order ? order.indexOf(ge.value) : -1;
+      if (re < 0 || rg < 0) { out.refuse.push(`${file}: ${where}${k} is ${e.raw} there and ${ge.raw} in the print, with no known order; settle it by hand`); continue; }
+      if (re < rg) { replace.set(ge.idx, E.lines[e.idx]); out.kept.push(`${file}: ${where}${e.rawKey} = ${e.raw} (the print had ${ge.raw})`); }
+    }
+    // A reviewed host list: a host the print would allow and the list lacks is left out.
+    if (segs[0] === 'permissions' && segs.at(-2) === 'network' && segs.at(-1) === 'domains') {
+      for (const [k, ge] of g.keys) if (!s.keys.has(k) && ge.value !== 'deny') { drop.add(ge.idx); out.kept.push(`${file}: ${where}${ge.rawKey} = ${ge.raw} left out: the reviewed host list lacks it`); }
+    }
+    // A generated grant under a folder the reviewed profile restricts more, with no entry of its own there, is left out.
+    if (tomlOrder(s.id, '')?.[0] === 'deny' && JSON.parse(s.id).at(-1) === 'filesystem') {
+      const order = ['deny', 'read', 'write'];
+      for (const [k, ge] of g.keys) {
+        if (s.keys.has(k)) continue;
+        const norm = (x) => posix.normalize(x).replace(/(.)\/$/, '$1'); // the same folder however it is spelled
+        const parent = [...s.keys.entries()].filter(([a]) => norm(k) === norm(a) || norm(k).startsWith(norm(a) + '/')).sort((x, y) => norm(y[0]).length - norm(x[0]).length)[0];
+        if (parent && order.indexOf(parent[1].value) < order.indexOf(ge.value)) { drop.add(ge.idx); out.kept.push(`${file}: ${where}${parent[1].rawKey} = ${parent[1].raw} kept whole; the print's ${ge.rawKey} = ${ge.raw} left out`); }
+      }
+    }
+  }
+  if (out.refuse.length) return out;
+  const lines = [];
+  G.lines.forEach((line, i) => { if (!drop.has(i)) lines.push(replace.get(i) ?? line); lines.push(...(after.get(i) || [])); });
+  if (tail.length) { const end = lines.pop(); lines.push('', '# Kept from the reviewed profile: tables this print does not write.', ...tail.slice(1), end); }
+  out.text = lines.join('\n');
+  return out;
+}
+// Claude Code's settings: deny lists join; allow lists and exemptions narrow to what both hold; switches keep the narrower.
+const UNION = new Set(['permissions.deny', 'permissions.ask', 'sandbox.filesystem.denyRead', 'sandbox.filesystem.denyWrite']);
+const NARROW = new Set(['permissions.allow', 'permissions.additionalDirectories', 'sandbox.excludedCommands', 'sandbox.network.allowedDomains', 'sandbox.filesystem.allowWrite', 'sandbox.filesystem.allowRead']);
+const NARROW_BOOL = { autoMemoryEnabled: false, 'sandbox.enabled': true, 'sandbox.failIfUnavailable': true, 'sandbox.autoAllowBashIfSandboxed': false, 'sandbox.allowUnsandboxedCommands': false, 'sandbox.network.strictAllowlist': true };
+const plain = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+function keepClaude(e, g, file, path = '') {
+  const out = {};
+  for (const k of new Set([...Object.keys(g), ...Object.keys(e)])) {
+    const p = path ? `${path}.${k}` : k, ev = e[k], gv = g[k];
+    if (p === '_pm_next_v3') { out[k] = gv; continue; }
+    if (!(k in e)) {
+      // a reviewed sandbox with no exemptions has none: the print adds none
+      if (p === 'sandbox.excludedCommands') { kept.push(`${file}: ${p} none (the print had ${JSON.stringify(gv)})`); continue; }
+      out[k] = gv; continue;
+    }
+    if (!(k in g)) { out[k] = ev; kept.push(`${file}: ${p} ${JSON.stringify(ev)}`); continue; }
+    if (p === 'hooks' && plain(ev) && plain(gv)) { out[k] = mergeHooks(ev, gv); continue; } // ours replaced, theirs kept, as --hooks-only
+    if (same(ev, gv)) { out[k] = gv; continue; }
+    if (UNION.has(p) && Array.isArray(ev) && Array.isArray(gv)) {
+      const extra = ev.filter((x) => !gv.some((y) => same(x, y)));
+      out[k] = [...gv, ...extra]; for (const x of extra) kept.push(`${file}: ${p} ${typeof x === 'string' ? x : JSON.stringify(x)}`); continue;
+    }
+    if (NARROW.has(p) && Array.isArray(ev) && Array.isArray(gv)) {
+      const both = ev.includes('*') ? gv : gv.includes('*') ? ev : gv.filter((x) => ev.some((y) => same(x, y)));
+      if (!same(both, gv)) kept.push(`${file}: ${p} ${JSON.stringify(both)} (the print had ${JSON.stringify(gv)})`);
+      if (both.length || p !== 'sandbox.excludedCommands') out[k] = both;
+      continue;
+    }
+    if (p === 'sandbox.credentials.envVars' && Array.isArray(ev) && Array.isArray(gv) && [...ev, ...gv].every((x) => plain(x) && typeof x.name === 'string')) {
+      const merged = gv.map((x) => ({ ...x }));
+      for (const x of ev) {
+        const y = merged.find((m) => m.name === x.name);
+        if (!y) { merged.push(x); kept.push(`${file}: ${p} ${x.name} ${x.mode}`); } else if (!same(x, y)) { if (x.mode === 'deny' || y.mode === 'deny') { if (y.mode !== 'deny') kept.push(`${file}: ${p} ${x.name} deny (the print had ${y.mode})`); y.mode = 'deny'; } else refuse.push(`${file}: ${p} ${x.name} is ${JSON.stringify(x)} there and ${JSON.stringify(y)} in the print, with no known order; settle it by hand`); }
+      }
+      out[k] = merged; continue;
+    }
+    if (p in NARROW_BOOL && typeof ev === 'boolean' && typeof gv === 'boolean') {
+      out[k] = NARROW_BOOL[p]; if (ev === NARROW_BOOL[p]) kept.push(`${file}: ${p} ${ev} (the print had ${gv})`); continue;
+    }
+    if (plain(ev) && plain(gv)) { out[k] = keepClaude(ev, gv, file, p); continue; }
+    refuse.push(`${file}: ${p} is ${JSON.stringify(ev)} there and ${JSON.stringify(gv)} in the print, with no known order; settle it by hand`);
+    out[k] = gv;
+  }
+  return out;
+}
+// The reviewed Codex profiles, by role, read before anything is generated.
+const reviewedCodex = {};
+const codexDenies = []; // folder and file denials a reviewed Codex profile holds, carried into Claude Code's print too
+if (!hooksOnly && existsSync(join(root, 'harness/codex'))) {
+  for (const f of readdirSync(join(root, 'harness/codex')).filter((x) => x.endsWith('.config.toml')).sort((a, b) => a.endsWith('-intake.config.toml') - b.endsWith('-intake.config.toml') || (a < b ? -1 : a > b ? 1 : 0))) { // sessions first
+    const name = f.slice(0, -'.config.toml'.length), role = name.endsWith('-intake') ? 'intake' : 'sessions', file = `harness/codex/${f}`;
+    if (reviewedCodex[role]) { refuse.push(`harness/codex/: two profiles for the ${role} role, ${reviewedCodex[role].file} and ${file}; leave one, or merge by hand`); continue; }
+    const parsed = parseToml(readFileSync(join(root, file), 'utf8'));
+    if (parsed.error) { refuse.push(`${file}: ${parsed.error}; merge it by hand`); continue; }
+    const dp = parsed.sections[0].keys.get('default_permissions')?.value;
+    if (dp !== name) { refuse.push(`${file}: default_permissions is ${JSON.stringify(dp)}, not the file's name ${name}; settle it by hand`); continue; }
+    reviewedCodex[role] = { file, name, parsed };
+    for (const s of parsed.sections) {
+      const segs = JSON.parse(s.id);
+      if (s.array || segs[0] !== 'permissions' || segs.at(-1) !== 'filesystem') continue;
+      for (const [path, e] of s.keys) {
+        if (e.value !== 'deny' || codexDenies.some((d) => d.path === path)) continue;
+        if (path.startsWith('/') || path.startsWith('~/')) codexDenies.push({ path: path.startsWith('~/') ? H + path.slice(1) : path, from: file });
+        else if (names.includes('claude')) refuse.push(`${file}: [${s.display}] ${e.rawKey} = "deny" cannot be carried into the Claude Code print: not an absolute path; settle it by hand`);
+      }
+    }
+  }
+}
+// The rules file's sentence forbidding an install outside the project, if any: the print then proposes none.
+const rulesPath = join(root, 'project', 'rules.md');
+const forbidInstall = (existsSync(rulesPath) ? readFileSync(rulesPath, 'utf8') : '').replace(/\s+/g, ' ').split(/(?<=[.;])\s+/)
+  .find((s) => /CODEX_HOME|globally|global (?:install|client|user|config|profile)|outside (?:the|this|its) (?:project|repository|folder)|only (?:inside|within|in) (?:the|this|its) (?:project|repository|folder)/i.test(s)
+    && /\b(?:install|copy|copied|profiles?|settings|config)/i.test(s) && /\b(?:never|not|no|nothing|only)\b|n't\b/i.test(s))
+  ?.replace(/^[-*]\s+/, '').replace(/"/g, "'").slice(0, 200) || null;
+// Carry a reviewed Codex profile's denials into a Claude Code print: the sandbox's read and write denies and both forms of Read
+// and Edit rule, a folder's and a file's. Home paths as ~/; elsewhere the sandbox takes /abs and a rule //abs.
+function carry(obj, file) {
+  for (const { path, from } of codexDenies) {
+    const form = path === H || path.startsWith(H + '/') ? '~' + path.slice(H.length) : path, rule = form.startsWith('~') ? form : '/' + form;
+    if (claudeSecret.includes(form)) continue; // the secret folders are denied already
+    const fs = ((obj.sandbox ||= {}).filesystem ||= {}), perms = (obj.permissions ||= {});
+    // fresh arrays: the generated settings share the secret-folder list between both denies and both files
+    const lists = { denyRead: [...(fs.denyRead || [])], denyWrite: [...(fs.denyWrite || [])], deny: [...(perms.deny || [])] };
+    const adds = [['denyRead', form], ['denyWrite', form], ...['Read', 'Edit'].flatMap((t) => [['deny', `${t}(${rule})`], ['deny', `${t}(${rule}/**)`]])].filter(([list, x]) => !lists[list].includes(x));
+    if (!adds.length) continue;
+    for (const [list, x] of adds) lists[list].push(x);
+    [fs.denyRead, fs.denyWrite, perms.deny] = [lists.denyRead, lists.denyWrite, lists.deny];
+    kept.push(`${file}: sandbox.filesystem.denyRead ${form} (from ${from}), with denyWrite and its Read and Edit denies`);
+  }
+}
+
 if (names.includes('claude')) {
   const claudeHooks = hookSet((tool) => `node "\${CLAUDE_PROJECT_DIR}/${prefix}${tool}" --harness claude`, 'startup|resume|clear|fork');
   const deny = [
@@ -130,8 +338,13 @@ if (names.includes('claude')) {
     merged['.claude/settings.json'] = JSON.stringify({ ...existing, hooks: mergeHooks(existing.hooks, claudeHooks) }, null, 2) + '\n';
     notes.push(`claude   hooks merged into ${hookPath('.claude/settings.json')} (existing settings kept); Claude Code loads them from there in every session`);
   } else {
-    out['.claude/settings.json'] = JSON.stringify(sessions, null, 2) + '\n';
-    out['.claude/settings.intake.json'] = JSON.stringify(intake, null, 2) + '\n';
+    for (const [rel, generated] of [['.claude/settings.json', sessions], ['.claude/settings.intake.json', intake]]) {
+      const existing = readJson(rel);
+      if (existing !== null && !plain(existing)) refuse.push(`${rel}: not a JSON object; settle it by hand`);
+      const settings = plain(existing) ? keepClaude(existing, generated, rel) : generated;
+      carry(settings, rel);
+      out[rel] = JSON.stringify(settings, null, 2) + '\n';
+    }
     notes.push(`claude   sessions: default (.claude/settings.json is picked up automatically)\n         intake:   claude --settings .claude/settings.intake.json`);
   }
 }
@@ -144,12 +357,15 @@ if (names.includes('codex')) {
   // folder is readable and the rest of the home stays denied.
   const fsDeny = [...secretDirs.map((d) => `${JSON.stringify(d)} = "deny"`), `${JSON.stringify(`${H}/.codex/packages`)} = "read"`].join('\n');
   const domains = hosts.map((h) => `${JSON.stringify(h)} = "allow"`).join('\n');
-  const body = (name, net) => `# pm-next-v3 — Codex settings for ${slug}${net ? ' (INTAKE: network open)' : ''}.
-# Generated by tools/harness.mjs; review, then install:
+  // o.closed: a reviewed profile keeps its network closed; o.hooksOff: it keeps [features] hooks off, so no hook table is
+  // carried; o.forbid: the rules file's sentence forbidding an install outside the project (V31-GEN-KEEP).
+  const body = (name, net, o = {}) => { const nw = o.closed ? 'closed' : network; return `# pm-skills 5 — Codex settings for ${slug}${net ? (o.closed ? ' (INTAKE: network kept closed)' : ' (INTAKE: network open)') : ''}.
+${o.forbid ? `# Generated by tools/harness.mjs; review, then keep it in this project: the rules file forbids an install outside it
+# ("${o.forbid}"). Run it by the project's own route, a command the owner names.` : `# Generated by tools/harness.mjs; review, then install:
 #   cp harness/codex/${name}.config.toml "\${CODEX_HOME:-$HOME/.codex}/${name}.config.toml"
-# and run with:  codex -p ${name}
+# and run with:  codex -p ${name}`}
 # Codex >=0.134: -p layers this file over user config. Trusted project config may override it.
-# ${net ? 'Intake: the network is open, whatever the Network line says for sessions.' : `${pushNote} ${networkNote}`}
+# ${net ? (o.closed ? 'Intake: the reviewed profile keeps the network closed.' : 'Intake: the network is open, whatever the Network line says for sessions.') : `${pushNoteFor(nw)} ${networkNoteFor(nw)}`}
 # ${hooksNote}
 # These hooks ride this profile; a project's own hooks file (written by --hooks-only) loads only when its .codex layer is
 # trusted. Codex runs a hook only once it has recorded trust in that hook's hash (/hooks); review any other hook trusted there. --dangerously-bypass-hook-trust is for automation
@@ -176,22 +392,36 @@ extends = ":workspace"
 ${fsDeny}
 
 [permissions.${name}.network]
-enabled = ${net || network !== 'closed' ? 'true' : 'false'}${net ? '            # intake only, owner present' : network === 'closed' ? '           # sessions: closed. Installs happen in intake, or by the owner.' : network === 'listed' ? '            # listed hosts below; a client without domain rules treats this as open' : '            # open'}
-${!net && network === 'listed' ? `\n[permissions.${name}.network.domains]\n${domains}\n` : ''}
+enabled = ${!o.closed && (net || network !== 'closed') ? 'true' : 'false'}${o.closed ? '           # kept closed: the reviewed profile closes it' : net ? '            # intake only, owner present' : nw === 'closed' ? '           # sessions: closed. Installs happen in intake, or by the owner.' : nw === 'listed' ? '            # listed hosts below; a client without domain rules treats this as open' : '            # open'}
+${!net && nw === 'listed' ? `\n[permissions.${name}.network.domains]\n${domains}\n` : ''}
 # Prefix-rule syntax belongs in .rules files, never TOML. Network permissions are the control.
-
+${o.hooksOff ? '' : `
 # The three session hooks (3.15), carried by this profile so that no project layer need be trusted for them; a project
 # that keeps its own permissions installs them with --hooks-only into the project's Codex hooks file instead. Headless: codex exec
 # runs them only with recorded trust or --dangerously-bypass-hook-trust.
-${toml(codexHooks)}`;
+${toml(codexHooks)}`}`; };
   if (hooksOnly) {
     const existing = readJson('.codex/hooks.json') || {};
     merged['.codex/hooks.json'] = JSON.stringify({ ...existing, hooks: mergeHooks(existing.hooks, codexHooks) }, null, 2) + '\n';
     notes.push(`codex    hooks merged into ${hookPath('.codex/hooks.json')} (existing hooks kept); set \`hooks = true\` under [features] in the profile you run, trust this project's .codex layer, then trust each hook in /hooks`);
   } else {
-    out[`harness/codex/${slug}.config.toml`] = body(slug, false);
-    out[`harness/codex/${slug}-intake.config.toml`] = body(`${slug}-intake`, true);
-    notes.push(`codex    sessions: codex -p ${slug}\n         intake:   codex -p ${slug}-intake   (after copying both files into $CODEX_HOME; the profiles carry the three hooks — trust them in /hooks)`);
+    const chosen = {}; let hooksKeptOff = false;
+    for (const [role, net] of [['sessions', false], ['intake', true]]) {
+      const own = net ? `${slug}-intake` : slug, r = reviewedCodex[role], name = r ? r.name : own, file = `harness/codex/${name}.config.toml`;
+      chosen[role] = name;
+      if (!r) { out[file] = body(name, net, { forbid: forbidInstall }); continue; }
+      const closed = r.parsed.table(['permissions', name, 'network'])?.keys.get('enabled')?.value === false && (net || network !== 'closed');
+      const hooksOff = r.parsed.table(['features'])?.keys.get('hooks')?.value === false; hooksKeptOff ||= hooksOff;
+      if (name !== own) kept.push(`${file}: profile name ${name} (the print's own name ${own} not used)`);
+      if (closed) kept.push(`${file}: [permissions.${name}.network] enabled = false (the print would open it${!net && network === 'listed' ? ` to ${hosts.join(', ')}` : ''}${!net && harnessPush ? '; each close reports a pending push' : ''})`);
+      if (hooksOff) kept.push(`${file}: the session hooks left out, [features] hooks being off; turning them on is the owner's word`);
+      const k = keepCodex(r.parsed, body(name, net, { forbid: forbidInstall, closed, hooksOff }), file);
+      refuse.push(...k.refuse); kept.push(...k.kept);
+      if (k.text !== undefined) out[file] = k.text;
+    }
+    notes.push(forbidInstall
+      ? `codex    sessions: profile ${chosen.sessions}\n         intake:   profile ${chosen.intake}   (both stay in harness/codex/: the rules file forbids an install outside the project, so they run by the project's own route, a command the owner names; trust any hooks they carry in /hooks)`
+      : `codex    sessions: codex -p ${chosen.sessions}\n         intake:   codex -p ${chosen.intake}   (after copying both files into $CODEX_HOME; ${hooksKeptOff ? 'a reviewed profile with hooks off carries none of the three hooks' : 'the profiles carry the three hooks — trust them in /hooks'})`);
   }
 }
 
@@ -201,7 +431,7 @@ ${toml(codexHooks)}`;
 if (!hooksOnly) {
   const at = prefix.replace(/[\\"$`]/g, '\\$&'); // inside the hook's double quotes
   out['harness/git/post-commit'] = `#!/bin/sh
-# pm-next v3.1 post-commit hook: rebuild the status site, project/view.html and project/view.site/, after every commit (V3-STATUS-VIEW, V31-STATUS-SITE).
+# pm-skills 5 post-commit hook: rebuild the status site, project/view.html and project/view.site/, after every commit (V3-STATUS-VIEW, V31-STATUS-SITE).
 # Generated by tools/harness.mjs; review, then install where this checkout's Git looks for hooks:
 #   cp harness/git/post-commit "$(git rev-parse --git-path hooks)/post-commit"
 # It writes nothing but the ignored site, calls no model and no network, prints nothing on success and one line on
@@ -214,6 +444,10 @@ exit 0
   notes.push(`git      status site: review harness/git/post-commit, then cp it to "$(git rev-parse --git-path hooks)/post-commit" in each checkout that should rebuild project/view.html and project/view.site/ after a commit; ignore project/view.html, project/view.site/ and project/.view.html.* there`);
 }
 
+if (refuse.length) {
+  console.error(`harness: the existing settings hold what this print cannot keep (V31-GEN-KEEP):\n${refuse.map((r) => `  ${r}`).join('\n')}\nNothing printed or written.`);
+  process.exit(1);
+}
 // Preflight the whole output set. A conflict never leaves a mixed configuration; merged hook files replace by design.
 const conflicts = Object.entries(out).filter(([rel, body]) => existsSync(join(root, rel)) && readFileSync(join(root, rel), 'utf8') !== body);
 if (!print && !force && conflicts.length) {
@@ -228,6 +462,7 @@ for (const [rel, body] of Object.entries({ ...out, ...merged })) {
   if (rel === 'harness/git/post-commit') chmodSync(p, 0o755);
   console.log(`harness: ready ${hookPath(rel)}${merged[rel] ? ' (merged)' : ''}`);
 }
+if (kept.length) console.log(`\nkept from the existing settings, line by line (V31-GEN-KEEP); to widen one, the owner edits or removes the file:\n${kept.map((k) => `kept     ${k}`).join('\n')}`);
 console.log(`\nhow to run (${names.join(' + ')}):\n${notes.join('\n')}`);
 if (names.length > 1) {
   console.log(`
@@ -236,10 +471,10 @@ item file; one writer per checkout at a time, a second session in its own clone 
 profile's Handoff line.`);
 }
 console.log(`\nheadless forms (3.15): Claude Code loads a project's own settings only once the workspace is trusted, so a runner passes
-the generated file by \`claude -p --settings <a copy outside the project>\`; Codex skips an untrusted project layer, so a
-runner passes the profile's [hooks] table by \`-c\` or installs the profile, and runs hooks only with recorded trust or
+the generated file by \`claude -p --settings ${forbidInstall ? '<the project\'s file>' : '<a copy outside the project>'}\`; Codex skips an untrusted project layer, so a
+runner passes the profile's [hooks] table by \`-c\`${forbidInstall ? '' : ' or installs the profile'}, and runs hooks only with recorded trust or
 --dangerously-bypass-hook-trust. The desktop app applied no generated setting in the exposed week; verify in each client.`);
 console.log(`\nreview before use: these files are proposed settings, not evidence of effective isolation. Verify the client version,
 merged config, sandbox availability, inherited tools, plugins and local network needs. ${pushNote} ${networkNote}
 ${hooksNote} Review the deny lists, the secret directories, and any sibling checkout in the parent folder
-that this project's sessions must not read (add it to denyRead / filesystem deny).`);
+that this project's sessions must not read (add it to denyRead / filesystem deny).${kept.length ? ' The Push and Network notes here are the profile\'s; where a kept line above narrows a file, that file\'s narrower setting stands.' : ''}`);

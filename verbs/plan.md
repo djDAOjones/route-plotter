@@ -41,9 +41,8 @@ direction.
 
 When the owner authorises execution, the session may run the phase's
 items in order to the phase close or to the first line that needs the
-owner, closing each item as the close verb says; the run also stops at
-the close where the close verb ends the session. An owner-started runner,
-`node tools/run.mjs`, may carry the run across those ends: it starts
+owner, closing each item as the close verb says. An owner-started
+runner, `node tools/run.mjs`, may carry the run across sessions: it starts
 each next session only from a close whose one Session-end line is
 continue, or once as a retry after a session that ended without a
 valid close, and stops at the first line that needs the owner.

@@ -3,7 +3,7 @@
 // Non-Git fallback skips common generated directories; never follows symlinks.
 // --map exports [--path <file or dir>] [--max-words N] prints each JavaScript or TypeScript file's exports instead and
 // writes nothing (V31-REPO-MAP, specification 3.24): a pattern match over source with comments, strings, templates and
-// regular-expression literals blanked, never a parser; names, signature heads and JSDoc first sentences, never values.
+// regular-expression literals blanked, never a parser; names, signature heads and JSDoc first sentences; no initialiser or declaration body, though a parameter list's text, a class's heritage clause and the head of a function, arrow or class initialiser print.
 import { readFileSync, existsSync, writeFileSync, readdirSync, lstatSync, realpathSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, relative, basename, sep } from 'node:path';
@@ -91,7 +91,7 @@ function exportMap() {
     blocks.push(block); row.names += found.length; row.words += words(block);
   }
   const title = basename(realpathSync(root));
-  const head = `# Exports — ${shown(title)}\n\n<!-- Printed by node tools/structure.mjs --map exports; not a record and not read at start. A pattern match, not a parser: each line is a line number and a signature head, never a value; a string prints as an ellipsis. -->\n`;
+  const head = `# Exports — ${shown(title)}\n\n<!-- Printed by node tools/structure.mjs --map exports; not a record and not read at start. A pattern match, not a parser: each line is a line number and a signature head: no initialiser or declaration body, but what a parameter list or class heritage clause holds prints, a string in it as an ellipsis. -->\n`;
   const tail = `${none.length ? `\nNo export found: ${none.join(', ')}.\n` : ''}${skipped.length ? `\n## Skipped\n\n${skipped.join('\n')}\n` : ''}`;
   let body = blocks.join('\n'), end = tail;
   const total = words(head + body + tail), over = total > maxWords;

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// pm-next-v3.1 brief tool (specification 3.19). Zero dependencies; an add-on outside the core that no rule reads.
+// pm-skills 5 brief tool (specification 3.19). Zero dependencies; an add-on outside the core that no rule reads.
 //   node tools/brief.mjs [--root <dir>] <ID>
 // Prints one open item's start packet, for the orchestrate verb's brief, from the ledger alone — the project/ files,
 // never Git, the network or anything outside the installation: the item's backlog line, milestone and phase, its

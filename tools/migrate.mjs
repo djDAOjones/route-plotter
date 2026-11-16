@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// pm-next-v3 migrate tool (specification 3.10, 8): the snapshot, the preservation inventory, the census skeleton, the
-// checks after the migration and after a rollback, and the printed rollback. It never performs the migration's edits (but the v3.1 wish stamp, below) and
+// pm-skills 5 migrate tool (specification 3.10, 8): the snapshot, the preservation inventory, the census skeleton, the
+// checks after the migration and after a rollback, and the printed rollback. It never performs the migration's edits (but the pm-skills 5 wish stamp, below) and
 // never performs the rollback: a session does both, following the migration note in CHANGELOG.md. Self-contained on
 // purpose — after `git revert <migration>` the tree is v2's again, so a copy of this file taken from the migration commit
 // with `git show` must run alone. The snapshot is the commit: Git holds the bytes, the inventory holds their hashes and
@@ -18,17 +18,23 @@
 //        node tools/migrate.mjs [--root <dir>] --verify [--commit <rev>]          after the migration commit
 //        node tools/migrate.mjs [--root <dir>] --verify --rolled-back [--commit <rev>]   after the revert
 //        node tools/migrate.mjs [--root <dir>] --rollback [--commit <rev>]        prints the steps; performs nothing
-//        node tools/migrate.mjs [--root <dir>] --stamp-wishes                     v3.1: writes each wish line's ID (V31-WISH-IDS)
+//        node tools/migrate.mjs [--root <dir>] --stamp-wishes                     pm-skills 5: writes each wish line's ID (V31-WISH-IDS)
 //        node tools/migrate.mjs [--root <dir>] --verify-stamp [--rolled-back] [--commit <rev>]   the stamp commit, or its revert
 // It never edits but for the stamp, its one edit by decision (V31-WISH-IDS, 2026-10-21): it inserts `ORIGIN.N — ` after each wish
 // line's `- `, numbered per origin in file order, and changes no other byte; the commit and any revert are the session's.
-// upgrade route (an installed v3 to v3.1; <to> is the version label, v3.1; --inventory defaults to project/migration/upgrade-<to>.json):
+// upgrade route (an installed v3 to pm-skills 5; <to> is the version label, v3.1; --inventory defaults to project/migration/upgrade-<to>.json):
 //        node tools/migrate.mjs [--root <dir>] --snapshot --upgrade <to> --item <ID> --base <pristine installed-version dir> --target <pristine <to> dir> [--from v3] [--inventory <path>]
 //        node tools/migrate.mjs [--root <dir>] --verify --upgrade <to> [--commit <rev>] [--decision <ID>] [--target <pristine <to> dir>] [--inventory <path>]   before the commit, at the snapshot's HEAD, or with the commit named and the tree at it
 //        node tools/migrate.mjs [--root <dir>] --verify --rolled-back --upgrade <to> --commit <rev> [--inventory <path>]
 //        node tools/migrate.mjs [--root <dir>] --rollback --upgrade <to> --commit <rev> [--decision <ID>] [--inventory <path>]
-import { readFileSync, writeFileSync, existsSync, mkdirSync, lstatSync, readdirSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+// refresh route (V31-UPGRADE-ROUTE, 3.10 amended): a later pm-skills 5 build over an installed pm-skills 5, run from the source's copy:
+//        node <source>/tools/migrate.mjs --root <installation> --refresh --source <pm-skills 5 source dir in a Git checkout> [--installed <rev>] [--build <rev>] [--item <ID>]
+// It writes the candidate into the working tree, tools and verbs replaced as a set from the build's Git objects (and, with the
+// profile's Accessibility testing line, the pack's files), never a byte under project/ nor an inventory; every check runs before
+// the first write, and it prints the commands that discard the candidate or revert its commit.
+import { readFileSync, writeFileSync, existsSync, mkdirSync, lstatSync, readdirSync, unlinkSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { dirname, isAbsolute, join, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -65,14 +71,17 @@ const fails = [], warns = [], notes = [];
 const args = { root: process.cwd() };
 for (let i = 2; i < process.argv.length; i++) {
   const name = process.argv[i].replace(/^--/, '');
-  if (!process.argv[i].startsWith('--') || !['root', 'snapshot', 'verify', 'rolled-back', 'rollback', 'base', 'rules', 'commit', 'stamp-wishes', 'verify-stamp', 'upgrade', 'from', 'target', 'inventory', 'decision', 'item'].includes(name)) { console.error(`migrate: unknown option ${process.argv[i]}`); process.exit(2); }
-  if (['snapshot', 'verify', 'rolled-back', 'rollback', 'stamp-wishes', 'verify-stamp'].includes(name)) args[name] = true;
+  if (!process.argv[i].startsWith('--') || !['root', 'snapshot', 'verify', 'rolled-back', 'rollback', 'base', 'rules', 'commit', 'stamp-wishes', 'verify-stamp', 'upgrade', 'from', 'target', 'inventory', 'decision', 'item', 'refresh', 'source', 'installed', 'build'].includes(name)) { console.error(`migrate: unknown option ${process.argv[i]}`); process.exit(2); }
+  if (['snapshot', 'verify', 'rolled-back', 'rollback', 'stamp-wishes', 'verify-stamp', 'refresh'].includes(name)) args[name] = true;
   else { const v = process.argv[++i]; if (!v || v.startsWith('--')) { console.error(`migrate: --${name} requires a value`); process.exit(2); } args[name] = v; }
 }
 const root = resolve(args.root);
-if ([args.snapshot, args.verify, args.rollback, args['stamp-wishes'], args['verify-stamp']].filter(Boolean).length !== 1) { console.error('migrate: one of --snapshot, --verify, --rollback, --stamp-wishes or --verify-stamp'); process.exit(2); }
+if ([args.snapshot, args.verify, args.rollback, args['stamp-wishes'], args['verify-stamp'], args.refresh].filter(Boolean).length !== 1) { console.error('migrate: one of --snapshot, --verify, --rollback, --stamp-wishes, --verify-stamp or --refresh'); process.exit(2); }
+if (!args.refresh && (args.source || args.installed || args.build)) { console.error('migrate: --source, --installed and --build belong to the refresh route; name it with --refresh'); process.exit(2); }
+if (args.refresh && (args.upgrade || args.from || args.target || args.inventory || args.decision || args.base || args.rules || args.commit || args['rolled-back'])) { console.error('migrate: the refresh route takes --source, --installed, --build and --item only'); process.exit(2); }
 const UP = args.upgrade || ''; // the upgrade route, its target's label (v3.1)
-if (!UP && (args.from || args.target || args.inventory || args.decision || args.item)) { console.error('migrate: --from, --target, --inventory, --decision and --item belong to the upgrade route; name it with --upgrade <to>'); process.exit(2); }
+if (!UP && !args.refresh && (args.from || args.target || args.inventory || args.decision || args.item)) { console.error('migrate: --from, --target, --inventory, --decision and --item belong to the upgrade route; name it with --upgrade <to>'); process.exit(2); }
+if (args.refresh && args.item && !new RegExp(`^${ID}$`).test(args.item)) { console.error(`migrate: --item takes the item's ID, such as V31-REFRESH-4; got ${args.item}`); process.exit(2); }
 if (UP && !/^v?\d+(\.\d+)*$/.test(UP)) { console.error(`migrate: --upgrade takes the version label being installed, such as v3.1; got ${UP}`); process.exit(2); }
 if (UP && args.item && !new RegExp(`^${ID}$`).test(args.item)) { console.error(`migrate: --item takes the item's ID, such as V31-DEPLOY; got ${args.item}`); process.exit(2); }
 const INVENTORY = UP ? (args.inventory || `project/migration/upgrade-${UP}.json`) : V2_INVENTORY;
@@ -155,7 +164,132 @@ function censusRows(sources) {
   return rows;
 }
 const censusTable = (rows, sources) => `# Migration census\n\nEvery obligation-shaped unit of the pre-migration rulebooks (${sources.join(', ')}), one row each (specification 8): a list item with its continuation lines, a numbered rule, a table body row, a prose paragraph, a heading, a fenced block. A row holding more than one obligation names every destination. Fill Destination — where v3 holds it: rules Always; rules By task → path; profile; Direction; a digest; a decision; an item; or retired by a decision — and Applicability: always; by task: type; migration-only until: date or event; or n/a: why (descriptive, not an obligation). The verify step fails on any row left empty, deleted or altered in its first three cells. The table shows where each obligation of these sources went; closing the source list and reading each destination in context are the session's, stated in the MIGRATE decision.\n\n| Row | Source | Obligation | Destination | Applicability |\n| --- | --- | --- | --- | --- |\n${rows.map((r, i) => `| C${i + 1} | ${r.source} | ${r.text.replace(/\|/g, '\\|')} | | |`).join('\n')}\n`;
-const censusParse = (text) => [...active(text).matchAll(/^\| (C\d+) \|([^|]*)\|((?:[^|\\]|\\\|)*)\|([^|]*)\|([^|]*)\|$/gm)].map((m) => ({ row: m[1], source: m[2].trim(), text: m[3].trim().replace(/\\\|/g, '|'), destination: m[4].trim(), applicability: m[5].trim() }));
+const censusParse = (text) => [...active(text).matchAll(/^\| (C\d+) \|([^|]*)\|((?:[^|\\]|\\\|)*)\|([^|]*)\|([^|]*)\|$/gm)].map((m) => ({ row: m[1], source: m[2].trim(), text: m[3].replace(/^ /, '').trimEnd().replace(/\\\|/g, '|'), destination: m[4].trim(), applicability: m[5].trim() }));
+
+// ---- the refresh route (V31-UPGRADE-ROUTE, 3.10 amended): a later pm-skills 5 build over an installed pm-skills 5, no snapshot and no inventory.
+// Both builds are read from the source checkout's Git objects, never its working tree. A file of the installation is pm-skills's own
+// where its bytes equal a version of its source path in the build's history: it takes the build's bytes, or goes where the build
+// retired the path. Any other file on a managed path is a local edit, kept only by a decision's `- Migration edit:` line, the
+// newest per path: an adapter as it is; an edit to pm-skills's file merged three ways onto the build's copy, its base the version
+// of the file in the build's history nearest the edited one by changed lines (the oldest on a tie, so a doubt merges or refuses
+// rather than keeping), a conflict refused; a file of the project's own under a carried folder or its own line. Anything else refuses, naming
+// it. Every check runs before the first write, and nothing under project/ is written. With the profile's Accessibility testing
+// line the pack's files are managed the same way, each read from a11y/<path> in the source: its depth's files as a11y/install.mjs
+// lists them, but tests/a11y/project.mjs and the pack's files under project/, which are the project's own or the ledger's.
+// The installed build defaults to the tag v<number> of the source where the installation's own tools/VERSION holds <number> (VERSION-STAMP): one line, MAJOR.MINOR.PATCH,
+// read only where --installed is not given; a missing or malformed stamp, or a number with no tag, is refused before any write, never guessed from the files.
+const PACK_EXTENDED = [...['a11y-doctor', 'a11y-extended', 'a11y-vo', 'a11y-touch', 'a11y-media', 'a11y-flash', 'a11y-review'].map((t) => `tools/${t}.mjs`), 'docs/extended.md'];
+const packFile = (p, depth) => Boolean(depth) && p !== 'tests/a11y/project.mjs' && (PACK_EXTENDED.includes(p) ? depth === 'extended' : /^(tools\/a11y-[A-Za-z0-9-]+\.mjs|docs\/accessibility\.md|eslint\.a11y\.mjs|tests\/a11y\/.+)$/.test(p));
+function refreshRoute() {
+  const refuse = (list) => { for (const m of list) console.log(`FAIL  ${m}`); console.log(`migrate: refresh refused, ${list.length} reason(s); nothing written`); process.exit(1); };
+  if (!args.source) { console.error('migrate: the refresh needs --source <a pm-skills 5 source folder inside a Git checkout>; --installed <the build the installation runs, a commit of that checkout> defaults to the tag its tools/VERSION names'); process.exit(2); }
+  const dirty = git('status', '--porcelain', '--untracked-files=all', '--', '.').split('\n').filter(Boolean).map((l) => l.slice(3));
+  if (dirty.length) refuse([`the installation has uncommitted changes (${dirty.slice(0, 8).join(', ')}${dirty.length > 8 ? ', …' : ''}); the refresh is a candidate over a clean commit, so commit or discard them first`]);
+  if (!existsSync(join(root, 'project/rules.md'))) refuse(['project/rules.md is missing, so this is not an installed v3 or later; a v2 installation takes the v2 route (--snapshot without --upgrade)']);
+  const srcDir = resolve(args.source), MAX = 256 << 20;
+  let stop = '', sp = '';
+  try { stop = execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: srcDir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); sp = execFileSync('git', ['rev-parse', '--show-prefix'], { cwd: srcDir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { refuse([`--source ${args.source} is not a folder inside a Git checkout; the builds are read from its history`]); }
+  const sgit = (...a) => execFileSync('git', a, { cwd: stop, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: MAX });
+  const commitIn = (r, flag) => { try { return sgit('rev-parse', '--verify', '--quiet', `${r}^{commit}`).trim(); } catch { return refuse([`--${flag} ${r} is not a commit of the source checkout at ${stop}`]); } };
+  let stamped = ''; // VERSION-STAMP: where --installed is not given, the build is the source's tag v<number>, the number the installation's own tools/VERSION holds; a given --installed is used as it is and the stamp is not read
+  const stampBuild = () => {
+    const f = join(root, 'tools/VERSION'), st = (() => { try { return lstatSync(f); } catch { return null; } })(), name = 'name the build with --installed <rev>';
+    if (!st) return refuse([`tools/VERSION is missing, so no installed build can be taken from it; ${name}`]);
+    if (st.isSymbolicLink() || !st.isFile()) return refuse([`tools/VERSION is ${st.isSymbolicLink() ? 'a symbolic link' : 'not a file'}, so it is not read as the stamp; ${name}`]);
+    const n = readFileSync(f, 'utf8').match(/^((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))\n$/)?.[1]; // one line, MAJOR.MINOR.PATCH, a final newline and no other byte
+    if (!n) return refuse([`tools/VERSION must be one line, MAJOR.MINOR.PATCH with no leading zero, and a final newline, with no other byte; ${name}`]);
+    try { const c = sgit('rev-parse', '--verify', '--quiet', `refs/tags/v${n}^{commit}`).trim(); stamped = `installed build from tools/VERSION ${n}: the tag v${n} at ${c.slice(0, 7)}`; return c; } // a tag only, never a branch or another name of that form
+    catch { return refuse([`tools/VERSION names ${n}, and the source has no tag v${n}; a build before its release is named by commit: --installed <rev>`]); }
+  };
+  const A = args.installed ? commitIn(args.installed, 'installed') : stampBuild(), B = commitIn(args.build || 'HEAD', 'build'), s7 = (c) => c.slice(0, 7);
+  const isAncestor = (x, y) => spawnSync('git', ['merge-base', '--is-ancestor', x, y], { cwd: stop, stdio: 'ignore' }).status === 0;
+  if (A === B) refuse([`the installation is already at build ${s7(B)}; nothing to refresh`]);
+  if (isAncestor(B, A)) refuse([`the source build ${s7(B)} is older than the installed build ${s7(A)}; a refresh never goes back — revert the commit that took ${s7(A)} instead`]);
+  if (!isAncestor(A, B)) refuse([`the builds diverge: ${s7(A)} is not in ${s7(B)}'s history, so ${s7(B)} cannot be shown to be later; name a build that contains the installed one`]);
+  const listAt = (r) => new Map(sgit('ls-tree', '-r', '-z', r, '--', sp || '.').split('\0').filter(Boolean).map((l) => { const [meta, path] = l.split('\t'); const [, type, blob] = meta.split(' '); return [path.slice(sp.length), { type, blob }]; }).filter(([, e]) => e.type === 'blob'));
+  const lsA = listAt(A), lsB = listAt(B);
+  const depth = (active(read('project/profile.md')).match(/^- Accessibility testing: (standard|extended)[ \t]*$/m) || [])[1] || '';
+  const managed = (ls) => new Map([...ls].flatMap(([p, e]) => REPLACED.test(p) && !packFile(p, depth) ? [[p, e]] : p.startsWith('a11y/') && packFile(p.slice(5), depth) ? [[p.slice(5), e]] : [])); // a project path and its source's object
+  const srcOf = (p) => packFile(p, depth) ? `a11y/${p}` : p, atA = managed(lsA), atB = managed(lsB);
+  for (const [r, at] of [[A, lsA], [B, lsB]]) if (!at.has('AGENTS.md') || !at.has('tools/handover.mjs')) refuse([`--source ${args.source} at ${s7(r)} is not a pm-skills 5 source: it has no ${at.has('AGENTS.md') ? 'tools/handover.mjs, pm-skills 5\'s start notice' : 'AGENTS.md'}`]);
+  // the decisions' disposition lines, the newest per path; a carried folder covers the project's own files beneath it
+  const said = new Map();
+  const decisionFiles = ['project/decisions.md', ...(existsSync(join(root, 'project')) ? readdirSync(join(root, 'project')).filter((n) => /^decisions-.*\.md$/.test(n)).sort().reverse().map((n) => `project/${n}`) : [])];
+  for (const f of decisionFiles) for (const b of active(read(f)).split(/^(?=## )/m)) {
+    const d = b.match(new RegExp(`^## (${DATE}) — `))?.[1]; if (!d) continue;
+    for (const m of b.matchAll(/^- Migration edit: (\S(?:.*?\S)?) — (re-applied|retired|carried) — \S.*$/gm)) if (!said.has(m[1]) || d > said.get(m[1]).date) said.set(m[1], { kind: m[2], line: m[0], date: d });
+  }
+  const carriedBy = (p) => [...said].find(([dir, l]) => l.kind === 'carried' && CARRY.test(l.line) && p.startsWith(dir))?.[0];
+  const installed = tracked().filter((p) => REPLACED.test(p) || packFile(p, depth));
+  if (!installed.includes('tools/handover.mjs') && said.get('tools/handover.mjs')?.kind !== 'retired') refuse(['not an installed pm-skills 5: tools/handover.mjs, pm-skills 5\'s start notice, is absent and no decision retires it; an installed v3 takes the upgrade route (--snapshot --upgrade v3.1)']);
+  const versions = (src, ...range) => [...new Set(sgit('log', '--format=', '--raw', '--no-abbrev', '--no-renames', ...range, '--', `${sp}${src}`).split('\n').flatMap((l) => { const m = l.match(/^:\d+ \d+ ([0-9a-f]+) ([0-9a-f]+) /); return m ? [m[2], m[1]] : []; }).filter((x) => !/^0+$/.test(x)))]; // newest first
+  const hist = (src, ...range) => new Set(versions(src, ...range));
+  const introduced = (src, blob) => { let c = ''; for (const l of sgit('log', '--format=%H', '--raw', '--no-abbrev', '--no-renames', B, '--', `${sp}${src}`).split('\n')) { if (/^[0-9a-f]{40,64}$/.test(l)) c = l; else if (l.match(/^:\d+ \d+ [0-9a-f]+ ([0-9a-f]+) /)?.[1] === blob) return c; } return c; }; // the newest commit that wrote that version
+  const inWay = (p) => { let at = root; const parts = p.split('/'); for (let i = 0; i < parts.length; i++) { at = join(at, parts[i]); let st; try { st = lstatSync(at); } catch { return ''; } const here = parts.slice(0, i + 1).join('/'); if (st.isSymbolicLink()) return `${here} is a symbolic link`; if (i < parts.length - 1 && !st.isDirectory()) return `${here} is not a folder`; if (i === parts.length - 1) return `${here} exists, untracked or ignored`; } return ''; }; // what an untracked or ignored entry puts in a new file's way, its folders included
+  const format = (() => { try { return sgit('rev-parse', '--show-object-format').trim(); } catch { return 'sha1'; } })();
+  const blobOf = (buf) => createHash(format === 'sha256' ? 'sha256' : 'sha1').update(`blob ${buf.length}\0`).update(buf).digest('hex');
+  const cat = (blob) => execFileSync('git', ['cat-file', 'blob', blob], { cwd: stop, stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: MAX });
+  const isAdapter = (p, buf) => /^tools\/[^/]+\.mjs$/.test(p) && [...buf.toString('utf8').matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*)['"](\.\.?\/[^'"]+)['"]/g)].some((m) => { const f = resolve(root, dirname(p), m[1]); return relative(root, f).startsWith('..') && f.split('\\').join('/').endsWith(`/tools/${p.slice(6)}`) && existsSync(f); }); // its relative import runs a tool of the same name outside the installation
+  const nearest = (buf, src) => { // the build's version of the file the edit most likely started from: fewest changed lines, the oldest on a tie
+    const d = mkdtempSync(join(tmpdir(), 'pm-next-refresh-')); let best = null;
+    try { writeFileSync(join(d, 'ours'), buf); for (const v of versions(src, B)) { writeFileSync(join(d, 'v'), cat(v)); const r = spawnSync('git', ['diff', '--no-index', '--numstat', '--', join(d, 'v'), join(d, 'ours')], { encoding: 'utf8' }); const n = r.stdout.trim().split(/\s+/).slice(0, 2).reduce((x, y) => x + (Number(y) || 0), 0); if (!best || n <= best.n) best = { v, n }; } }
+    finally { rmSync(d, { recursive: true, force: true }); }
+    return best?.v;
+  };
+  const merge3 = (ours, base, theirs) => { const d = mkdtempSync(join(tmpdir(), 'pm-next-refresh-')); try { for (const [n, b] of [['ours', ours], ['base', base], ['theirs', theirs]]) writeFileSync(join(d, n), b); const r = spawnSync('git', ['merge-file', '-p', join(d, 'ours'), join(d, 'base'), join(d, 'theirs')], { maxBuffer: MAX }); return { out: r.stdout, conflicts: r.status }; } finally { rmSync(d, { recursive: true, force: true }); } };
+  const plan = [], kept = [], skipped = [], refusals = [], basedOn = [];
+  for (const p of [...new Set([...installed, ...atB.keys()])].sort()) {
+    const a = atA.get(p), b = atB.get(p), l = said.get(p), here = installed.includes(p);
+    if (!here) {
+      if (l?.kind === 'retired') { skipped.push(p); continue; }
+      if (a) { refusals.push(`${p}: the installed build's file is absent and no decision retires it; restore it, or record "- Migration edit: ${p} — retired — <why>"`); continue; }
+      const way = inWay(p); if (way) { refusals.push(`${p}: the build installs a new file here, and ${way}; move it aside first`); continue; }
+      plan.push({ p, op: 'add', bytes: cat(b.blob) }); continue;
+    }
+    if (lstatSync(join(root, p)).isSymbolicLink()) { refusals.push(`${p}: a symbolic link; the refresh writes files only`); continue; }
+    const buf = readFileSync(join(root, p)), blob = blobOf(buf);
+    if (l?.kind === 're-applied' && blob !== a?.blob && blob !== b?.blob && hist(srcOf(p), B).has(blob)) { refusals.push(`${p}: its bytes are the pm-skills version at ${introduced(srcOf(p), blob).slice(0, 7)}, yet a decision re-applies an edit; restore the installed build's copy and re-apply the edit over it, or retire the line`); continue; } // a project keeping an older text on purpose
+    if (hist(srcOf(p), B).has(blob)) { if (!b) plan.push({ p, op: 'remove' }); else if (b.blob !== blob) plan.push({ p, op: 'replace', bytes: cat(b.blob) }); continue; } // pm-skills's own bytes, of this build or an earlier one
+    if (hist(srcOf(p), '--all').has(blob)) { refusals.push(`${p}: its bytes are a version of pm-skills's ${srcOf(p)} from a commit that ${s7(B)} does not contain; the source build is older than the installed one, or on another line — name a later build`); continue; }
+    if (!a && !b) { if (l?.kind === 're-applied' || carriedBy(p)) kept.push(`${p} (${l?.kind === 're-applied' ? 'its own line' : `carried by ${carriedBy(p)}`})`); else refusals.push(`${p}: a file of the project's own on a replaced path, and no decision carries it; record "- Migration edit: ${p} — re-applied — <why>" or carry its folder`); continue; }
+    if (!l || l.kind === 'carried') { refusals.push(`${p}: a local edit no decision carries; record "- Migration edit: ${p} — re-applied — <why>", or restore the pm-skills copy`); continue; }
+    if (l.kind === 'retired') { refusals.push(`${p}: its newest line retires the local edit, yet the file differs from every pm-skills version; restore the pm-skills copy, or record its re-application`); continue; }
+    if (isAdapter(p, buf)) { if (b) kept.push(`${p} (an adapter, kept as it is)`); else refusals.push(`${p}: an adapter on a tool the build retires; retire the adapter by a decision first`); continue; } // a declared adapter stays even on a path the build adds: it runs the source's own tool
+    if (!a) { refusals.push(`${p}: the project's own file, and the build now ships a file at this path; move the project's aside, or reconcile the two in a reviewed commit first`); continue; }
+    if (!b) { refusals.push(`${p}: a local edit on a file the build retires; record the edit's retirement, or carry it under a path of the project's own`); continue; }
+    const base = nearest(buf, srcOf(p));
+    if (!base || base === b.blob) { kept.push(`${p} (a local edit over the build's own copy, kept as it is)`); continue; }
+    const m = merge3(buf, cat(base), cat(b.blob));
+    if (m.conflicts !== 0) refusals.push(`${p}: the local edit and the build's change conflict${m.conflicts > 0 ? ` (${m.conflicts} hunk${m.conflicts > 1 ? 's' : ''})` : ''}, merged from the version at ${base.slice(0, 7)}; merge them by hand in a reviewed commit first`);
+    else if (m.out.equals(buf)) kept.push(`${p} (a local edit already holding the build's change)`);
+    else { plan.push({ p, op: 'merge', bytes: m.out }); if (base !== a.blob) basedOn.push(`${p} from ${introduced(srcOf(p), base).slice(0, 7)}`); }
+  }
+  if (refusals.length) refuse(refusals);
+  const ledger = tracked().filter((p) => p.startsWith('project/')), hashes = new Map(ledger.map((p) => [p, sha(readFileSync(join(root, p)))])); // the ledger and its signed files, held to their bytes
+  const restore = plan.filter((x) => x.op !== 'add').map((x) => x.p), added = plan.filter((x) => x.op === 'add').map((x) => x.p);
+  const discard = [...(restore.length ? [`git -C ${q(root)} restore --source=HEAD --staged --worktree -- ${restore.map(q).join(' ')}`] : []), ...(added.length ? [`rm -f -- ${added.map((p) => q(join(root, p))).join(' ')}`] : [])];
+  const done = [];
+  try { for (const x of plan) { if (x.op === 'remove') unlinkSync(join(root, x.p)); else { mkdirSync(dirname(join(root, x.p)), { recursive: true }); writeFileSync(join(root, x.p), x.bytes); } done.push(x.p); } }
+  catch (e) { console.log(`FAIL  writing ${plan[done.length].p}: ${e.message}; written before it: ${done.join(', ') || 'none'}. Discard the partial candidate:\n${discard.map((c) => `    ${c}`).join('\n')}`); process.exit(3); }
+  const moved = ledger.filter((p) => !existsSync(join(root, p)) || sha(readFileSync(join(root, p))) !== hashes.get(p));
+  if (moved.length) { console.log(`FAIL  the ledger changed during the refresh (${moved.join(', ')}); discard the candidate:\n${discard.map((c) => `    ${c}`).join('\n')}`); process.exit(1); }
+  const by = (op) => plan.filter((x) => x.op === op).map((x) => x.p);
+  console.log(`${stamped ? `INFO  ${stamped}\n` : ''}INFO  refresh: build ${s7(A)} → ${s7(B)}, from ${stop}${sp ? ` (${sp})` : ''}${args.item ? `, item ${args.item}` : ''}`);
+  console.log(`INFO  written: ${plan.length ? [['replaced', by('replace')], ['merged', by('merge')], ['added', by('add')], ['removed', by('remove')]].filter(([, ps]) => ps.length).map(([k, ps]) => `${ps.length} ${k} (${ps.join(', ')})`).join('; ') : 'nothing: every file is the build\'s already'}`);
+  if (by('merge').length) console.log(`INFO  merged, for the session's review — the tool merges lines, not behaviour: ${by('merge').join(', ')}`);
+  if (basedOn.length) console.log(`WARN  merged from a version other than the installed build's, the nearest to the edit: ${basedOn.join('; ')}; check that the build's changes between them are kept`);
+  if (kept.length) console.log(`INFO  kept by decision: ${kept.join('; ')}`);
+  if (skipped.length) console.log(`INFO  not installed, retired by decision: ${skipped.join(', ')}`);
+  if (plan.some((x) => x.p === 'AGENTS.md')) console.log(`WARN  AGENTS.md takes the build's text: the contract every session reads at its start changes, which reaches a project on its owner's word`);
+  if (depth) console.log(`INFO  the accessibility pack at ${depth}: its files refreshed from ${sp}a11y/ with the set; tests/a11y/project.mjs and the pack's files under project/ are the project's own or the ledger's, never written`);
+  const ledgerPack = depth ? [...lsB].filter(([p, e]) => /^a11y\/project\//.test(p) && lsA.get(p)?.blob !== e.blob).map(([p]) => p.slice(5)) : [];
+  if (ledgerPack.length) console.log(`WARN  the build changes the pack's ${ledgerPack.join(', ')}; the refresh writes nothing under project/, so take it by a reviewed migration edit in a commit of its own`);
+  console.log(`INFO  ledger: ${ledger.length} files under project/ byte-equal, the signed files among them; nothing written there and no inventory`);
+  console.log(`Revert commands for this candidate; the refresh performs none of them:\n  before it is committed, to discard it:\n${discard.length ? discard.map((c) => `    ${c}`).join('\n') : '    nothing to discard'}\n  after it is committed alone as "${args.item || '<ID>'}: refresh to build ${s7(B)}", to undo it:\n    git -C ${q(root)} revert --no-edit <the refresh commit>   — one revert of that one commit, never a reset; later work is reconciled, never discarded`);
+  console.log(`Next: review the diff; run node tools/check.mjs and the project's gate on the candidate; commit it alone, with no product or record work, then record the decision in a commit of its own.`);
+  process.exit(0);
+}
+if (args.refresh) refreshRoute();
 
 if (args.snapshot) {
   if (git('status', '--porcelain', '--', '.')) { console.error('migrate: the installation has uncommitted changes; the snapshot is the commit, so commit or discard them first'); process.exit(1); }
@@ -163,7 +297,7 @@ if (args.snapshot) {
     if (!existsSync(join(root, 'project/rules.md'))) { console.error('migrate: the upgrade route is for an installed v3, and project/rules.md is missing; a v2 installation migrates by the v2 route (--snapshot without --upgrade)'); process.exit(1); }
     if (existsSync(join(root, INVENTORY))) { console.error(`migrate: ${INVENTORY} exists; a second snapshot would hide the first — before upgrading, move that one file aside and run the snapshot again; after upgrading, there is no second snapshot`); process.exit(1); }
     if (!args.base || !args.target) { console.error('migrate: the upgrade snapshot needs --base <a pristine copy of the installed version> and --target <a pristine copy of the version being installed>, so every replaced file has a status and the contract check has both sides'); process.exit(1); }
-    for (const [flag, dir] of [['base', args.base], ['target', args.target]]) if (!existsSync(join(resolve(dir), 'AGENTS.md'))) { console.error(`migrate: --${flag} ${dir} has no AGENTS.md; name a pristine pm-next source directory`); process.exit(1); }
+    for (const [flag, dir] of [['base', args.base], ['target', args.target]]) if (!existsSync(join(resolve(dir), 'AGENTS.md'))) { console.error(`migrate: --${flag} ${dir} has no AGENTS.md; name a pristine pm-skills source directory`); process.exit(1); }
     if (sha(readFileSync(join(resolve(args.base), 'AGENTS.md'))) !== sha(readFileSync(join(resolve(args.target), 'AGENTS.md')))) { console.error(`migrate: AGENTS.md differs between --base and --target, so ${UP} changes the contract: that is a migration with a census (3.10, 8), not an upgrade; this route refuses it`); process.exit(1); }
     if (!args.item) { console.error('migrate: the upgrade snapshot needs --item <ID>, the item whose commit carries the upgrade: its decision entry, the upgrade commit\'s title and the rollback commit are checked against that ID'); process.exit(1); }
     if (prefix) { // a nested installation's hook merge rides the upgrade commit, so the repository root's settings files are clean at the snapshot too
@@ -303,7 +437,7 @@ if (args.verify && !args['rolled-back']) {
     const backlog = active(read('project/backlog.md'));
     for (const w of rec.wishes) {
       const idea = w.replace(/\s+— \(from: [^)]*\)\s*$/, '');
-      const origin = w.match(new RegExp(`— \\(from: (${ID}), ${DATE}\\)$`))?.[1], stamped = origin && now.wishes.some((n) => new RegExp(`^${esc(origin)}\\.[1-9][0-9]* — ${esc(w)}$`).test(n)); // a v3.1 migration stamps the line (V31-WISH-IDS)
+      const origin = w.match(new RegExp(`— \\(from: (${ID}), ${DATE}\\)$`))?.[1], stamped = origin && now.wishes.some((n) => new RegExp(`^${esc(origin)}\\.[1-9][0-9]* — ${esc(w)}$`).test(n)); // a pm-skills 5 migration stamps the line (V31-WISH-IDS)
       if (!now.wishes.includes(w) && !stamped && !new RegExp(`^- \\[( |~|!)\\] ${ID} — ${esc(idea)} — since `, 'm').test(backlog)) fails.push(`wish line lost or changed (trim at the first close, not here): ${w.slice(0, 60)}${w.length > 60 ? '…' : ''}`);
     }
   }
@@ -340,12 +474,12 @@ if (args.verify && !args['rolled-back']) {
   const blocks = UP ? [migrate] : decisions.split(/^(?=## )/m).filter((b) => (b.match(new RegExp(DATE))?.[0] || '') >= since); // the upgrade's dispositions live in its own entry, the item's or --decision's; the v2 route reads every entry from the MIGRATE one on, as before
   const disposed = (p) => blocks.map((b) => b.match(EDIT(p))?.[0]).find(Boolean);
   const reapplied = new Set(), carried = new Set();
-  if (UP) { // a directory's files outside pm-next, each held to its bytes at the snapshot; the candidates come from the snapshot, so a deletion cannot shrink the obligation, and an exact line is the exception
+  if (UP) { // a directory's files outside pm-skills, each held to its bytes at the snapshot; the candidates come from the snapshot, so a deletion cannot shrink the obligation, and an exact line is the exception
     const said = migrate.split('\n').filter((l) => /^- Migration edit: .* — carried\b/.test(l)), dirs = [...new Set(said.map((l) => l.match(CARRY)?.[1]).filter(Boolean))];
     for (const l of said) if (!CARRY.test(l)) fails.push(`"${l}": a carry names a directory under tools/ or verbs/, literally, ending in /, and its why (3.10)`);
     const baseDir = [args.base ? resolve(args.base) : inv.base?.path].find((d) => d && existsSync(join(d, 'AGENTS.md'))) || '', now = new Set(tracked());
-    if (dirs.length && !baseDir) fails.push('a carried directory needs the pristine base, to confirm its files are outside pm-next; name it with --base');
-    if (dirs.length && !rehashed) fails.push('a carried directory needs the target re-hashed, to confirm its files are outside pm-next; name it with --target');
+    if (dirs.length && !baseDir) fails.push('a carried directory needs the pristine base, to confirm its files are outside pm-skills; name it with --base');
+    if (dirs.length && !rehashed) fails.push('a carried directory needs the target re-hashed, to confirm its files are outside pm-skills; name it with --target');
     const added = new Set(inv.localEdits.filter((e) => e.status === 'added').map((e) => e.path));
     for (const dir of dirs) {
       let n = 0;
@@ -357,8 +491,8 @@ if (args.verify && !args['rolled-back']) {
         else if (!now.has(f.path) || !existsSync(on)) fails.push(`${f.path}: carried by "${dir}" but gone; restore it or give it its own Migration edit line (3.10)`);
         else if (!lstatSync(on).isFile() || sha(readFileSync(on)) !== f.sha256) fails.push(`${f.path}: carried by "${dir}" but not its bytes at the snapshot; restore it or give it its own Migration edit line (3.10)`);
       }
-      if (!n) fails.push(`"${dir}" carries nothing: no file of the snapshot under it is outside pm-next without its own line (3.10)`);
-      else notes.push(`${dir} carried: ${n} files outside pm-next checked against the snapshot's hashes`);
+      if (!n) fails.push(`"${dir}" carries nothing: no file of the snapshot under it is outside pm-skills without its own line (3.10)`);
+      else notes.push(`${dir} carried: ${n} files outside pm-skills checked against the snapshot's hashes`);
     }
   }
   for (const e of inv.localEdits.filter((x) => x.status !== 'identical' && !carried.has(x.path))) { // each re-applied or retired by a decision from the migration on, in one grammar, its why mandatory
@@ -407,7 +541,7 @@ if (args.verify && !args['rolled-back']) {
       const byRow = new Map(censusParse(census).map((r) => [r.row, r]));
       for (const [i, r] of (inv.census?.rows || []).entries()) {
         const n = byRow.get(`C${i + 1}`);
-        if (!n || n.source !== r.source || n.text !== r.text) fails.push(`${CENSUS}: C${i + 1} (${r.source}) deleted or altered; rows keep their identity`);
+        if (!n || n.source !== r.source || n.text !== r.text.trimEnd()) fails.push(`${CENSUS}: C${i + 1} (${r.source}) deleted or altered; rows keep their identity`);
         else if (!n.destination || !n.applicability) fails.push(`${CENSUS}: C${i + 1} has no destination or applicability; zero omitted is the threshold (8)`);
       }
     }
@@ -540,7 +674,7 @@ if (args.rollback) {
   const runner = inv.runner || `${prefix}tools/migrate.mjs`, copy = `/tmp/pm-next-${UP || 'v3'}-migrate.mjs`;
   if (!UP) {
     console.log(`Rollback of the migration commit ${m.slice(0, 7)} (${git('show', '-s', '--format=%s', m)}). The steps; this tool performs none of them:
-1. Stop every other writer; \`git status\` must be clean. Later work since the migration: ${laterCommits.length ? laterCommits.join('; ') : 'none'} — it is reconciled, never discarded.
+1. Stop every other writer; \`git status\` must be clean. Later work since the migration: ${laterCommits.length ? laterCommits.join('; ') : 'none'} — it is reconciled, never discarded. First the wish stamp, where it was committed after ${m.slice(0, 7)} and its revert is not yet committed (V31-WISH-IDS): git revert <stamp commit>; where later work appended a wish line it may conflict on ${q(`${prefix}${WISHES}`)} — keep each stamped line's pre-stamp form where that line survives unchanged, later work's retirements and rewordings as later work left them, and every line it added, then git add it and git revert --continue; then node ${q(join(top, runner))} --verify-stamp --rolled-back --root ${q(root)}. The rollback undoes the stamp first, then the migration (steps 2 and 3).
 2. Keep the tool for the verification, since the revert removes v3's tools: git show ${m}:${runner} > ${copy}
 3. git revert --no-edit ${m}   — never git reset --hard. ${overlap.length ? `Later work also changed ${overlap.join(', ')}: where the revert conflicts, keep the later work's lines inside the pre-migration structure, then git add them and git revert --continue.` : 'No later commit touched a file the migration changed, so no conflict is expected.'}${createdEdited.length ? ` Created by the migration and edited by later work: ${createdEdited.join(', ')} — where it conflicts as modify/delete, git rm it and git revert --continue; its later lines move in step 4.` : ''}
 4. Reconcile later work written in v3's grammar — the rules file, Direction, Session-end lines, decisions in the slice form — into the v2 record: the lines later work added to a record file the migration created move verbatim into a home the snapshot had, the file removed; a rewording waits for a commit after the rollback.
@@ -570,7 +704,7 @@ if (args.rollback) {
   }
 }
 
-// ---- V31-WISH-IDS: the wish IDs stamped at the v3.1 upgrade, and their check
+// ---- V31-WISH-IDS: the wish IDs stamped at the upgrade to pm-skills 5, and their check
 // The stamp of a wish-list text: each active unstamped line `- idea — (from: ORIGIN, date)` gains `ORIGIN.N — `, N one
 // above the highest number the origin has in the file or in `floors` (every number its wish list ever held, and the commit
 // messages, up to the parent), in file order; returns the text, the pairs of lines and any line it refuses.

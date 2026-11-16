@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// pm-next-v3 session sensor and compaction notice (specification 3.15). Zero dependencies.
+// pm-skills 5 session sensor and compaction notice (specification 3.15). Zero dependencies.
 // The generated hooks run it as `node <checkout>/tools/session.mjs --harness claude|codex` with the hook's JSON on stdin,
 // on PostToolUse and on every SessionStart source. Exit 0 always: never a denial or a stop. Writes nothing to the ledger.
 // Prints no path, identifier or transcript text. Reads only the transcript the hook names, every complete record since its
@@ -8,8 +8,11 @@
 // $XDG_STATE_HOME/pm-next/session, else ~/.local/state/pm-next/session), keyed by harness, checkout and session, written
 // atomically under a short lock; a resume keeps it, a clear or a new session starts afresh, a fork judges its inherited
 // context on its own. It speaks once per session while state can be written, and would rather repeat a notice than miss
-// one when it cannot; the compaction notice repeats a pending end, and a redelivered compaction event cannot be told from a
-// second compaction, so it speaks on each. A Codex rollout that is not verified as this session's root changes no state;
+// one: a one-time notice is saved as given (spoke, saidUnknown, saidUsage) only once the main thread has printed it and said
+// so, the worker holding the lock meanwhile, so a worker stopped before then repeats it on a later run, never loses it; a
+// redelivered compaction event cannot be told from a second compaction, so the compaction notice speaks on each. Since
+// 2026-11-15 (3.15 reversed, SESSION-END-OUT) the notices neither order nor deny a session end, so they hold under a close verb with
+// the session end and one without (the lab's adapter runs this tool under its own); the pending flag records a notice given. A Codex rollout that is not verified as this session's root changes no state;
 // one verified as another session's, or a subagent's, is ignored. Detection can lag: transcripts are written asynchronously.
 import { readFileSync, writeFileSync, renameSync, mkdirSync, openSync, readSync, closeSync, fstatSync, statSync, rmdirSync, constants } from 'node:fs';
 import { join, resolve, dirname, isAbsolute } from 'node:path';
@@ -24,20 +27,29 @@ export const SESSION_LINE = /^([1-9]\d*)k tokens of context$/; // the one Sessio
 
 if (isMainThread) {
   // The main thread owns the deadline: it reads stdin, runs the sensor in a worker, prints what the worker decided, and ends.
-  let out = null;
-  const end = () => { if (out) process.stdout.write(JSON.stringify(out) + '\n'); process.exit(0); };
+  let printed = false, writing = false, finished = false;
+  const end = () => process.exit(0);
   const timer = setTimeout(end, DEADLINE_MS);
+  const settle = () => { if (finished && !writing) { clearTimeout(timer); end(); } }; // the worker is done; a print still in flight is waited for, inside the deadline
   const parts = [];
   process.stdin.on('data', (d) => parts.push(d));
   process.stdin.on('error', end);
+  process.stdout.on('error', () => {}); // a closed stdout is a failed print, answered below, never a crash
   process.stdin.on('end', () => {
     const argv = process.argv.slice(2), harness = argv[argv.indexOf('--harness') + 1];
     if (!['claude', 'codex'].includes(harness)) return end();
     const at = argv.indexOf('--root'), value = at < 0 ? '' : argv[at + 1];
     const root = value && !value.startsWith('--') ? resolve(value) : resolve(dirname(SELF), '..'); // adapters supply the installation; never infer it from the hook's cwd
     let worker; try { worker = new Worker(SELF, { workerData: { raw: Buffer.concat(parts).toString('utf8'), harness, root, start: Date.now() } }); } catch { return end(); }
-    worker.on('message', (m) => { if (m?.notice) out = m.notice; if (m?.done) { clearTimeout(timer); end(); } });
-    worker.on('error', end); worker.on('exit', end);
+    // A notice is printed the moment it arrives and the worker told whether the print was accepted; only then does it save the notice as given.
+    worker.on('message', (m) => {
+      if (m?.notice && !printed) {
+        printed = writing = true;
+        process.stdout.write(JSON.stringify(m.notice) + '\n', (err) => { writing = false; try { worker.postMessage({ ack: !err }); } catch { /* the worker has gone */ } settle(); });
+      }
+      if (m?.done) { finished = true; settle(); }
+    });
+    worker.on('error', () => { finished = true; settle(); }); worker.on('exit', () => { finished = true; settle(); });
   });
 } else {
   sense(workerData).catch(() => {}).finally(() => parentPort.postMessage({ done: true }));
@@ -80,8 +92,18 @@ async function sense({ raw, harness, root: ROOT, start }) {
       if (!canWrite || (harness === 'codex' && !state.verified)) return; // an unverified Codex root changes no state
       try { const tmp = `${file}.${process.pid}.tmp`; writeFileSync(tmp, JSON.stringify(state)); renameSync(tmp, file); } catch { canWrite = false; }
     };
-    const notice = (text) => parentPort.postMessage({ notice: { hookSpecificOutput: { hookEventName: event, additionalContext: text } } });
-    const endText = () => `pm-next: this session's context was last observed at ${state.last} tokens, and an observation passed the profile's Session line (${threshold / 1000}k). End this session at its next close: record any owner instruction the record lacks first (verbs/close.md step 4), commit with the Session-end line, say so, and stop. A re-read or a lower reading does not cancel this.`;
+    const post = (text) => parentPort.postMessage({ notice: { hookSpecificOutput: { hookEventName: event, additionalContext: text } } });
+    // A one-time notice: its flag stays unsaid while the notice is posted, holding the lock, and is saved only when the main
+    // thread has printed it. A worker stopped between the two saves nothing, so the next run repeats the notice; the lock
+    // it leaves goes stale. Where state cannot be written there is nothing to save and nothing to wait for.
+    const say = async (flag, text) => {
+      save();
+      const answered = new Promise((r) => parentPort.once('message', (m) => r(m?.ack === true)));
+      post(text);
+      if (!canWrite || (harness === 'codex' && !state.verified)) return;
+      if (await answered) { if (flag) state[flag] = true; save(); }
+    };
+    const endText = () => `pm-skills: this session's context was last observed at ${state.last} tokens, and an observation passed the profile's Session line (${threshold / 1000}k).`;
     // A clear, a fork or a start begins an epoch; the same event delivered again does not begin another.
     if (source === 'startup' || source === 'clear' || source === 'fork') {
       const epoch = h(`${source}|${raw}`);
@@ -96,11 +118,11 @@ async function sense({ raw, harness, root: ROOT, start }) {
     if (state.peak > threshold) state.pending = true; // the Session line is read at run time: a lowered line counts earlier observations, a raised one cancels nothing
     const writable = canWrite && (harness !== 'codex' || state.verified);
     if (source === 'compact') {
-      state.pending = true; state.spoke = true; save();
-      notice(`pm-next: this session was compacted. Read the rule-1 set again before your next change (AGENTS.md rule 1): the record files survive only as the summary describes them. End this session at its next close (verbs/close.md step 4); a pending end is not cancelled by the re-read or by a lower reading.`);
-    } else if (state.pending && (!state.spoke || !writable)) { state.spoke = true; save(); notice(endText()); }
-    else if (status === 'unknown' && (!state.saidUnknown || !writable)) { state.saidUnknown = true; save(); notice(`pm-next: the session sensor cannot read this session's transcript, so the profile's Session line (${threshold / 1000}k tokens) is an instruction only: judge your own context, and once past it end this session at its next close (verbs/close.md step 4).`); }
-    else if (state.badUsage > 0 && (!state.saidUsage || !writable)) { state.saidUsage = true; save(); notice(`pm-next: some of this session's usage records cannot be read, so the sensor's readings may lag; the profile's Session line (${threshold / 1000}k tokens) still applies — judge your own context too.`); }
+      state.pending = true;
+      await say('spoke', `pm-skills: this session was compacted. Read the rule-1 set again before your next change (AGENTS.md rule 1): the record files survive only as the summary describes them.`);
+    } else if (state.pending && (!state.spoke || !writable)) { await say('spoke', endText()); }
+    else if (status === 'unknown' && (!state.saidUnknown || !writable)) { await say('saidUnknown', `pm-skills: the session sensor cannot read this session's transcript, so it cannot report whether this session's context has passed the profile's Session line (${threshold / 1000}k tokens).`); }
+    else if (state.badUsage > 0 && (!state.saidUsage || !writable)) { await say('saidUsage', `pm-skills: some of this session's usage records cannot be read, so the sensor's readings against the profile's Session line (${threshold / 1000}k tokens) may lag.`); }
     else save();
   } catch { /* the sensor never blocks work */ } finally { try { unlock(); } catch { /* nothing held */ } }
 }

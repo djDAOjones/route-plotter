@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// pm-next v3.1 status site. Zero dependencies. usage: node tools/view.mjs [--root <dir>] [--out project/view.html] [--date YYYY-MM-DD] [--open] [--quiet]
+// pm-skills 5 status site. Zero dependencies. usage: node tools/view.mjs [--root <dir>] [--out project/view.html] [--date YYYY-MM-DD] [--open] [--quiet]
 // Humans read this; agents read the source. Static, opens locally, no network, no model, no script (V3-STATUS-VIEW).
 // A small site (V31-STATUS-SITE): --out is the dashboard; beside it, view.site/<generation>/ holds its pages: index.html
 // the same dashboard, items/<ID>.html one per item file, record.html the rest of the record, and architecture.html the
@@ -14,9 +14,9 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { join, dirname, basename, resolve, relative, isAbsolute, sep } from 'node:path';
 import { inspect, options, active, datesMentioned, sessionEndLines, sessionEnd, a11yPack, supersededBy } from './ledger.mjs';
-export const RENDERER = 'pm-next v3.1 status site 1';
-export const ARCHITECTURE_RENDERER = 'pm-next v3.1 architecture page 1'; // in the fingerprint only with the record, so a site without it is unchanged; its number moves with any change to the page's markup or style, as RENDERER's does
-const GENERATOR = 'pm-next v3.1 status site'; // the mark a folder carries before a build may replace it
+export const RENDERER = 'pm-skills 5 status site 1';
+export const ARCHITECTURE_RENDERER = 'pm-skills 5 architecture page 1'; // in the fingerprint only with the record, so a site without it is unchanged; its number moves with any change to the page's markup or style, as RENDERER's does
+const GENERATOR = 'pm-skills 5 status site'; // the mark a folder carries before a build may replace it
 const args = options(['out', 'date', 'open', 'quiet']);
 const root = args.root;
 const out = args.out || join(root, 'project', 'view.html');

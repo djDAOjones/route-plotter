@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// pm-next-v3.1 start notice (specification 3.15, the start notice). Zero dependencies.
+// pm-skills 5 start notice (specification 3.15, the start notice). Zero dependencies.
 // The generated hooks run it as `node <checkout>/tools/handover.mjs --harness claude|codex` with the hook's JSON on stdin,
 // on SessionStart with the source startup or clear. It reads only this repository's Git: the nearest first-parent commit
 // carrying a Session-end line, within 256 commits and 1 MiB, and whether that end is still current — no commit in
@@ -65,7 +65,7 @@ async function main(raw, children, emit) {
   const input = JSON.parse(raw || '{}');
   if (input.hook_event_name !== 'SessionStart' || !['startup', 'clear'].includes(input.source) || 'agent_id' in input) return;
   const sid = typeof input.session_id === 'string' ? input.session_id : '';
-  const say = (text, title = '') => emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: `pm-next start notice: ${text}`, ...(title ? { sessionTitle: title } : {}) } });
+  const say = (text, title = '') => emit({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: `pm-skills start notice: ${text}`, ...(title ? { sessionTitle: title } : {}) } });
   const git = (args) => spawnGit(root, args, children);
   // One snapshot of HEAD; the walk and the currency check read from it, and HEAD is read again before claiming.
   const snap = (await capture(git(['rev-parse', '--path-format=absolute', '--git-common-dir', '--is-shallow-repository', 'HEAD'])))?.split('\n');
@@ -89,7 +89,9 @@ async function main(raw, children, emit) {
     if (stale) return; // retired by the first commit titled with its next item
     if (walked !== 'done') return unknown();
   }
-  if ((await capture(git(['rev-parse', '-q', '--verify', 'HEAD'])))?.trim() !== head) return say(`this checkout's history moved while the start notice was read, so the last session end is not shown or claimed: another session may be committing. Read the rule-1 set (AGENTS.md rule 1) and ask the owner.`);
+  const again = (await capture(git(['rev-parse', '-q', '--verify', 'HEAD'])))?.trim(); // null: Git did not answer, which is not a move
+  if (again === undefined) return say(`whether this checkout's history is still at commit ${found.short} cannot be confirmed here (Git did not answer), so the last session end is not shown or claimed; read the rule-1 set (AGENTS.md rule 1) and ask the owner.`);
+  if (again !== head) return say(`this checkout's history moved while the start notice was read, so the last session end is not shown or claimed: another session may be committing. Read the rule-1 set (AGENTS.md rule 1) and ask the owner.`);
   const shown = reason.length > MAX_REASON || UNSAFE.some((re) => re.test(reason)) ? `(the reason is not shown: it is too long, or holds a local path or an identifier; read it with git show ${found.short})` : reason;
   const opening = `the last session in this checkout ended at commit ${found.short} (${found.date}) with "Session-end: ${status} — next ${next} — ${shown}".`;
   const asking = (who) => `${opening} This handover could not be claimed for this chat, so ${who}: read the rule-1 set (AGENTS.md rule 1) and ask the owner before acting on it. Once the former chat has stopped, the owner may reassign the end by his word; an abandoned partial claim is his to reset with tools/lanes.mjs.`;
