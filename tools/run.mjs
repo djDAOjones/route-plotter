@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// pm-next-v3.1 runner (specification 3.15, the runner). Zero dependencies; an add-on outside the core that no rule reads.
+// pm-skills 5 runner (specification 3.15, the runner). Zero dependencies; an add-on outside the core that no rule reads.
 // The owner starts it by hand, in a terminal, for one named backlog phase, with a budget of sessions and hours:
 //   node <installation>/tools/run.mjs --phase "Phase 2" --sessions 4 --hours 3 --usd 5
 //     [--harness claude|codex] [--bin <client>] [--settings <file>] [--profile <name>] [--out <dir>] [--pause <seconds>]
-// It drives a v3.1 installation, or a v3 one such as the lab's unchanged, at the repository root or below it (--root).
+// It drives a pm-skills 5 installation, or a v3 one such as the lab's unchanged, at the repository root or below it (--root).
 // Each cycle starts one fresh headless session at the repository root, the session hooks of 3.15 on, in a terminal's
 // environment that carries no login token: Claude Code `-p` in auto permission mode, the session settings passed by
 // --settings and --max-budget-usd as the per-session cap; or Codex `exec` with the generated profile. Between sessions it
@@ -307,7 +307,7 @@ function release() { // before the retry, the run's ended sessions give up their
 }
 // The checker, in a process group of its own like the gate, within the hours left: { hours } when they ran out, else
 // { ok, fails, first }, ok only for an exit of 0 within its own deadline. Its output is in check-<tag>.log. It runs from the
-// installation's root with no --root, which v3.1's checker takes from its working directory and a v3 adapter, such as the
+// installation's root with no --root, which pm-skills 5's checker takes from its working directory and a v3 adapter, such as the
 // lab's, refuses, fixing its own.
 async function checker(tag, rev) {
   const file = join(out, `check-${tag}.log`), ms = Math.min(CHECK_MS, left());
@@ -342,7 +342,7 @@ function prompt(n, from, retry) {
   const at0 = (p) => join(installed, p), contract = at0('AGENTS.md');
   const at = from ? ` The last close, ${from.hash.slice(0, 7)}, ended continue, next ${from.next}: continue as ${startNotice ? `the start notice and ${contract} say` : `${contract} says`}.` : '';
   const again = retry ? ` This is the one retry: runner session ${n - 1} ended without a valid close (${retry}).` : '';
-  return `The owner started ${relative(realpathSync(top), realpathSync(SELF))} for the backlog phase "${o.phase}"; this is runner session ${n} of at most ${maxSessions}, run ${stamp}.${at}${again} Read the rule-1 set (${contract} rule 1), then run the phase's items in order as ${at0('verbs/plan.md')} "Step 5 — Execute the phase" allows, closing each as ${at0('verbs/close.md')} says, to the phase close, the first line that needs the owner, or the session end 3.15 sets. End every commit's Verify line with "— runner session ${n}, run ${stamp}". Your last close carries exactly one Session-end line. Do not push: the runner pushes between sessions as the Push line says. Nobody is watching: where you would ask the owner, record the question in the record and end at that close with an owner Session-end line; if you cannot close, write no line and stop.`;
+  return `The owner started ${relative(realpathSync(top), realpathSync(SELF))} for the backlog phase "${o.phase}"; this is runner session ${n} of at most ${maxSessions}, run ${stamp}.${at}${again} Read the rule-1 set (${contract} rule 1), then run the phase's items in order as ${at0('verbs/plan.md')} "Step 5 — Execute the phase" allows, closing each as ${at0('verbs/close.md')} says, to the phase close or the first line that needs the owner. End every commit's Verify line with "— runner session ${n}, run ${stamp}". Your last close carries exactly one Session-end line. Do not push: the runner pushes between sessions as the Push line says. Nobody is watching: where you would ask the owner, record the question in the record and end at that close with an owner Session-end line; if you cannot close, write no line and stop.`;
 }
 async function launch(n, text, { resume = '', cap = usd, tag = '' } = {}) {
   const env = { ...Object.fromEntries(KEEP.filter((k) => process.env[k] !== undefined).map((k) => [k, process.env[k]])), PM_NEXT_RUN: stamp };

@@ -72,13 +72,20 @@ export const field = (s, name) => (active(s).match(new RegExp(`^- ${name}: (.+(?
 export const fieldLines = (s, name) => [...active(s).matchAll(new RegExp(`^- ${name}:(.*)$`, 'gm'))].map((m) => m[1].trim());
 // The Push and Network lines (3.5): three Push routes, three Network values; listed hosts must name at least one host.
 export function pushRoute(line) {
-  if (/\bnever push|\bno push/i.test(line)) return '';
+  if (/\b(?:never|no|not|cannot|\w+n['’]t)\s+(?:\w+\s+)?push/i.test(line)) return ''; // any negated push: "must not push", "does not push", "won't push"
   if (/\bowner[- ]operated\b|\bthe owner pushes\b/i.test(line)) return 'owner';
   return /\bharness\b.*\bpush(?:es)? to (?:the project's origin|origin|[A-Za-z0-9*][A-Za-z0-9.*-]*\.[A-Za-z0-9-]+|a named host|the named host)\b/i.test(line) ? 'harness' : '';
 }
+export const OUTSIDE_PHASES = /^Outside the phases(?:\s+[—–-]\s+.*)?$/i;
 export function networkChoice(line) {
   const kind = /^open\b/i.test(line) ? 'open' : /^closed\b/i.test(line) ? 'closed' : /^listed hosts?\b/i.test(line) ? 'listed' : '';
-  if (!kind || (kind !== 'listed' && /\b(?:or|and)\b.*\b(open|closed|listed)\b/i.test(line))) return null; // one choice, not a hedge
+  // One choice, not a hedge. A listed line may say "and" between hosts and name other hosts in prose, so only an "or"/"and"
+  // that goes on to "open" or "closed" as a word of its own hedges it, past brackets, quotes and one of a few filler words
+  // ("or else open", "or (closed)"); a host name that starts with the word, open-source.example.org, is no hedge.
+  const hedged = kind === 'listed'
+    ? /\b(?:or|and)\b[\s,(["'“‘]*(?:(?:else|maybe|perhaps|possibly)\b[\s,(["'“‘]*)*(?:open|closed)(?![\p{L}\p{N}_-]|\.[\p{L}\p{N}])/iu.test(line)
+    : /\b(?:or|and)\b.*\b(open|closed|listed)\b/i.test(line);
+  if (!kind || hedged) return null;
   const hosts = kind === 'listed' ? [...line.replace(/^listed hosts?:?\s*/i, '').matchAll(/[A-Za-z0-9*][A-Za-z0-9.*-]*\.[A-Za-z0-9-]+/g)].map((m) => m[0]) : [];
   return kind === 'listed' && !hosts.length ? null : { kind, hosts };
 }
@@ -247,7 +254,7 @@ export function removedLineFlags(before, after, message = '') {
       || newEntries.some((e) => disposes(e, (t) => idRe(id).test(t))) || sentence((l) => idRe(id).test(l));
     if (!traced) flags.push(`removed without a trace: backlog ${id} — a trace is its trajectory line, the line moved verbatim to the backlog or wish-list, a decision naming it superseded or retired with the reason, or a sentence in the commit body giving the reason; a bare mention of the ID is not a trace (3.7)`);
   }
-  const afterWishes = new Set(wishes(after.wish || '').flatMap((l) => [idea(l), idea(l).replace(new RegExp(`^${WISH_ID} — `), '')])), afterIds = new Set(wishIds(after.wish)); // an unstamped line stamped at the v3.1 upgrade is kept
+  const afterWishes = new Set(wishes(after.wish || '').flatMap((l) => [idea(l), idea(l).replace(new RegExp(`^${WISH_ID} — `), '')])), afterIds = new Set(wishIds(after.wish)); // an unstamped line stamped at the upgrade to pm-skills 5 is kept
   for (const line of wishes(before.wish || '')) {
     const wid = line.match(WISH_LINE)?.[1];
     if (wid) { // V31-WISH-IDS: matched by ID; a line that keeps its ID with new text is reworded or narrowed, not removed (wishChanges)
@@ -301,7 +308,9 @@ export function datesMentioned(open) {
 // V31-C4-MERMAID (3.26): the optional architecture record, project/architecture.md. Only its envelope is parsed, never
 // Mermaid's grammar: one `# Architecture` title, one `Updated: YYYY-MM-DD` line before the first level, then the levels
 // in order, `## System context` and, optionally, `## Containers`; each holds optional prose, exactly one ```mermaid
-// fence whose first non-blank line declares a flowchart, then `### Text alternative` with text. HTML comments outside a
+// fence whose first non-blank line declares a flowchart (`flowchart`, an optional direction, then nothing or a semicolon and
+// statements: the owner's ruling of 2026-11-13, V31-ARCH-FIXES), then `### Text alternative` with text. An `Updated:` line
+// outside a fence and a comment is the record's one line, before the levels, wherever it sits. HTML comments outside a
 // fence are dropped; a fence's lines are kept as written. Problems are returned, never thrown or failed here: the checker
 // fails on them and the view still shows the file.
 // V31-C4-FIX: the record is the file that carries ARCHITECTURE_MARK as a whole line outside a fence and an open comment,
@@ -372,6 +381,7 @@ export function architecture(text) {
       else intro.push(line);
       continue;
     }
+    if (/^Updated:/.test(line)) { problem(n, updates ? 'a second Updated line; the record has one' : `an Updated line inside ## ${level.name}; it goes under # Architecture, before the levels`); continue; } // V31-ARCH-FIXES: anywhere outside a fence and a comment
     if (level.ignored) continue;
     if (level.fenceAt && !level.alternativeAt) { if (line.trim() && !level.between++) problem(n, `text between the mermaid fence in ## ${level.name} and its ### Text alternative, from here; prose goes before the fence`); continue; }
     (level.alternativeAt ? level.alternative : level.prose).push(line);
@@ -383,7 +393,7 @@ export function architecture(text) {
   if (!levels.some((l) => l.name === 'System context')) problems.push('no ## System context; it is the one level every architecture record has');
   for (const l of levels) {
     if (!l.fenceAt) problem(l.n, `## ${l.name} has no mermaid fence`);
-    else if (!/^flowchart(?:[ \t]+(?:TB|TD|BT|RL|LR))?[ \t]*;?[ \t]*$/.test((l.source.find((s) => s.trim()) || '').trim())) problem(l.fenceAt, `the mermaid fence in ## ${l.name} must declare a flowchart on its first line, "flowchart LR" or another direction; C4 roles are labels, not Mermaid's C4 syntax`);
+    else if (!/^flowchart(?:[ \t]+(?:TB|TD|BT|RL|LR))?[ \t]*(?:;.*)?$/.test((l.source.find((s) => s.trim()) || '').trim())) problem(l.fenceAt, `the mermaid fence in ## ${l.name} must declare a flowchart on its first non-blank line, "flowchart" or "flowchart LR" or another direction, then nothing or a semicolon and statements; C4 roles are labels, not Mermaid's C4 syntax`);
     if (!l.alternativeAt) problem(l.n, `## ${l.name} has no ### Text alternative after its fence`);
     else if (!l.alternative.some((s) => s.trim())) problem(l.alternativeAt, `## ${l.name}'s ### Text alternative is empty; it says in sentences what the diagram shows`);
   }
@@ -526,7 +536,8 @@ export function inspect(root, { auditProse = false, checkDate = '' } = {}) {
   for (const l of late) warn(`project/trajectory.md: ${l.tp.name}: ${l.id} (${l.date}) sits below ${l.above.id} (${l.above.date})${l.n > 1 ? `, and ${l.n - 1} more item line(s) in the phase are dated before the line above` : ''}; a phase's item lines go oldest first, a new line at its end, and rule 1 breaks equal dates by that order — reorder the phase, every line unchanged`);
   // Phases stand newest first, a new phase at the top (V31-TRAJ-ORDER): a phase whose newest item line is dated after the
   // newest of the phase above it is out of order. Rule 1 reads by date whatever the order; the file is read by people too.
-  const newest = tphases.map((ph) => ({ name: ph.name, date: ph.lines.filter((l) => !l.startsWith('RECALL — ')).map(lineDate).sort().at(-1) || '' })).filter((ph) => ph.date);
+  // A block headed "Outside the phases", with or without a spaced dash and a note, is no phase (V31-CHECKER-FIXES): it takes no place in the order.
+  const newest = tphases.filter((ph) => !OUTSIDE_PHASES.test(ph.name)).map((ph) => ({ name: ph.name, date: ph.lines.filter((l) => !l.startsWith('RECALL — ')).map(lineDate).sort().at(-1) || '' })).filter((ph) => ph.date);
   const below = newest.flatMap((ph, i) => i && ph.date > newest[i - 1].date ? [{ ph, above: newest[i - 1] }] : []);
   if (below.length) warn(`project/trajectory.md: ${below[0].ph.name} (newest ${below[0].ph.date}) stands below ${below[0].above.name} (newest ${below[0].above.date})${below.length > 1 ? `, and ${below.length - 1} more phase(s) stand below an older one` : ''}; phases go newest first, a new phase at the top — rule 1 reads by date whatever the order, but people read from the top: move the phases, every line unchanged`);
   const trajectoryRead = trajectoryItemLines(tphases, budgets.trajectory);
@@ -618,7 +629,7 @@ export function inspect(root, { auditProse = false, checkDate = '' } = {}) {
   const origins = new Set([...open.values()].map((i) => i.from).filter(Boolean)), wishIds = new Set();
   for (const line of wish) {
     const m = line.match(WISH_LINE);
-    if (!m || !validDate(m[4])) fail(`project/wish-list.md: line needs "- ORIGIN.N — idea — (from: ORIGIN, valid date)", N the origin's next unused number; an unstamped line from before v3.1 takes its ID from tools/migrate.mjs --stamp-wishes: ${line}`);
+    if (!m || !validDate(m[4])) fail(`project/wish-list.md: line needs "- ORIGIN.N — idea — (from: ORIGIN, valid date)", N the origin's next unused number; an unstamped line from before pm-skills 5 takes its ID from tools/migrate.mjs --stamp-wishes: ${line}`);
     else if (m[1].slice(0, m[1].lastIndexOf('.')) !== m[3]) fail(`project/wish-list.md: wish ${m[1]} must carry its origin's ID, ${m[3]}: ${line}`);
     else if (wishIds.has(m[1])) fail(`project/wish-list.md: duplicate wish ID ${m[1]} — two branches gave the same origin the same number; renumber the later line above the origin's highest number and trace the change in its commit body`);
     else { wishIds.add(m[1]); origins.add(`${m[3]}, ${m[4]}`); }

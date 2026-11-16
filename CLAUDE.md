@@ -1,4 +1,4 @@
-# Claude Code — pm-next-v3
+# Claude Code — pm-skills 5
 
 The contract is `AGENTS.md`; Claude Code loads it through the import below.
 

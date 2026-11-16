@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// pm-next-v3.1 parallel writers (specification 3.19, V31-WRITERS). Zero dependencies; an add-on outside the core that no rule reads.
+// pm-skills 5 parallel writers (specification 3.19, V31-WRITERS). Zero dependencies; an add-on outside the core that no rule reads.
 //   node tools/lanes.mjs [--root <dir>] overlap <brief-file> <brief-file> ...
 //   node tools/lanes.mjs [--root <dir>] union project/decisions.md|project/trajectory.md
 //   node tools/lanes.mjs [--root <dir>] reset-claim <end-commit> --starts-quiet

@@ -7,6 +7,14 @@ the Network line says for sessions. It is the route for a canon or bare
 project; a v2 installation follows the migration note in `CHANGELOG.md`
 instead.
 
+The install copy comes first, for a new installation only: from the
+source distribution, never a download, `node <source>/install.mjs --to .`
+copies `AGENTS.md`, `CLAUDE.md`, `project/`, `verbs/` and `tools/`. It
+writes nothing on a conflict, naming each file the repository holds
+with other bytes, its own AGENTS.md or CLAUDE.md among them: the owner
+moves it aside, the helper runs again (a repeat is a no-op), and the
+old contents are merged into the installed file by hand.
+
 0. **Prepare the harness settings.** Run `node tools/harness.mjs`
    (it reads the profile's Harness line, or takes `--harness`),
    review the client version and merged settings, then use the intake
@@ -16,6 +24,10 @@ instead.
    Sessions use the settings written from the profile's Push and
    Network lines. Generated files do not prove enforcement. Confirm
    sandbox availability and permitted surfaces in each actual client.
+   On a bare repository the profile still holds the template, and the
+   tool exits 2 writing nothing while its Network line is a
+   placeholder: ask the Network line and the harness first (step 2),
+   write both, then run this step.
 1. **Read the repository first.** Package and build files, lint and
    test configuration, CI, any existing docs, README, any existing
    project memory (canon or otherwise) and its rulebooks. Draft the
@@ -74,7 +86,9 @@ retrieved date and next-check date, then the four sections; cite
 sections, do not reproduce text — or, for the owner's own
 conventions, a house digest with a repository source. Show the
 owner the "rules that bite here" block and put the same lines in
-the profile.
+the profile. A digest copied from a pack arrives with its `source:`
+already naming its own path first, the pack's pointer after it; leave
+the line as it is.
 
 ## The app flag — new web apps only
 
@@ -134,7 +148,8 @@ read or check.
 
 - **Ask,** with the app flag on and never without it, "Accessibility
   testing: standard or extended? (standard)". An existing project
-  adopts either depth by its own decision; nothing is retrofitted.
+  adopts either depth by its own decision, after a client test; nothing
+  is retrofitted.
 - **Copy** from the source distribution, never a download: `node
   <source>/a11y/install.mjs --to . --depth <depth> --level <AA or
   AAA>`, the adopted digest's level. It copies the depth's files,
@@ -169,14 +184,14 @@ gains no file, read or check.
   dev dependency.
 - **TypeScript declined:** copy `jsdoc/project/digests/jsdoc.md` alone,
   overwriting no file that differs, adopt it in Standards with its
-  By-task row, and write no line: no ratchet, configuration or
-  compiler check.
+  By-task row, and write no line: no ratchet, configuration or compiler check.
 - **TypeScript approved:** copy from the source distribution, never a
   download, overwriting no file that differs,
   `jsdoc/project/digests/jsdoc.md`, `jsdoc/tools/jsdoc-ratchet.mjs` and
   `jsdoc/tsconfig.jsdoc.json`, each to its path without the `jsdoc/`
-  prefix. By hand: the configuration's include and lib fitted to the
-  source; the `typecheck` script from `jsdoc/package.fragment.json`
+  prefix. By hand: the
+  configuration's include and lib fitted to the source; the
+  `typecheck` script from `jsdoc/package.fragment.json`
   merged, nothing overwritten; the profile's line, the Standards block
   and the By-task row as the templates' comments give them; `npm run
   typecheck` in the Gate line; the ratchet's `--init` once, the count
@@ -220,7 +235,8 @@ read, shown and checked as before. Such a project adopts only by
 moving its document first, by its own decision.
 
 - **Offer,** only when step 1 found more than one container — an
-  application or data store that runs on its own — or an outside
+  application or data store that runs on its own, not a file an
+  application keeps, an SQLite file for instance — or an outside
   system the project talks to, never inferred from directories alone:
   "Record the system's context and containers as diagrams in
   project/architecture.md? (no)". Declined, nothing is written.
