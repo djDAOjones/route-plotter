@@ -539,3 +539,174 @@ The session's calls, for the owner to confirm: the owner's two items first, then
 
 **Deferred:** none
 
+## 2026-10-08 — REL-710 — v3.2.710 ships UI-06's words PR
+
+**Decision:** v3.2.710 is live from deploy commit `72fcaf9` (tag `v3.2.710`), released under GATELESS-1 because UI-06's words merge (`9adb695`, PR #115) changed `src/`, `index.html` and `styles/`; the build ends in 0, so the owner's export-save rule makes a disk save owed (a wish line tracks it).
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.709-9adb695`, gate green (129 files, 3,003 tests), dry run, push, Verify and the Pages build and deploy green, 22 of 22 live files SHA-256-identical. Live smoke at 1280×800 with the pane's visibility overridden: title v3.2.710, Open day played 3,002 ms, then to its end at 27,283 ms with no frame queued; MP4 1920×1080 29.3 s `ftypisom` (9.66 MB); HTML (2.04 MB) with its CSP, the project and the live `player.js`; no failed resource or console error. The PR changed the exported player's words (`src/services/HTMLExportService.js`, `src/player/playerAccessibility.js`: the player's Skip to start button and announcement), so `docs/player.js` changed, and the build ends in 0: both halves of the owner's export-save rule apply, and the disk save is owed on both counts. Codex reviewed the PR in three rounds (r1: one blocking, the test harness released every disconnected canvas, and four real; r2: one blocking, ownership inferred from timing, and two real; r3: approve), all fixed before the merge, and the PR was rebased onto v3.2.709 with its control golden regenerated (one line) and its path-weight error text moved to the new error-text token. The words PR made two wish lines, retired here with their text: "The help screen still says Alt+Click force-adds a major waypoint (`src/config/helpContent.js`), but Alt+click on a major waypoint now forks a branch, and it says nothing of crowds, networks or branching (a candidate, unverified) — (from: DEF-77, 2026-10-05)" and "The Zoom transition option "Quick — on arrival" zooms in the incoming leg's first 500 ms, not on arrival: its label misdescribes it, as its hint did (Codex, UI-03 review r2) — (from: UI-03, 2026-10-05)".
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — REL-709 — v3.2.709 ships UI-06's colour and tokens PR; DEF-94 closes
+
+**Decision:** v3.2.709 is live from deploy commit `6b7f861` (tag `v3.2.709`), released under GATELESS-1 because UI-06's colour and tokens merge (`1bc07cd`, PR #114) changed `styles/` and one line of `src/`; DEF-94 (the outline's error marks) closes with it, since the tokens the stylesheets used are now defined.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.708-1bc07cd`, gate green (127 files, 2,976 tests), dry run, push, Verify and the Pages build and deploy green, 22 of 22 live files SHA-256-identical. Live smoke at 1280×800 with the pane's visibility overridden: title v3.2.709, Open day played 3,002 ms, then to its end at 27,283 ms with no frame queued; MP4 1920×1080 29.3 s `ftypisom` (9.66 MB); HTML (2.04 MB) with its CSP, the project and the live `player.js`; no failed resource or console error. The PR changes no export code and 709 does not end in 0, so no disk save is owed. Codex reviewed the PR in three rounds (one blocking: the primary Play button lost its fill under the icon hover rule; eight real, in the stylesheets and the new test helper), all fixed before the merge. The pane's after-shots are in `reviews/design-review-2026-10-08-shots/after/`.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — PLAN-3 — Phase 3 reviews the GUI and the crowd features; the review half ran read-only ahead of Phase 2's last defects
+
+**Decision:** UI-06 (the app GUI against UI-STANDARDS.md) and CROWD-07 (the crowd features for novices and experts) are Phase 3, after Phase 2 and ahead of W4 and the found defects; breaches of the standards are fixed without asking, judgement calls go to the owner as one question round with screenshots; the review half of both ran on 2026-10-08 against live v3.2.707 (= main a312b55) without touching the repo, because Phase 2's DEF-20, DEF-13 and DEF-32 were in flight in another chat.
+
+**Items:** UI-06, CROWD-07, DEF-83, DEF-84, DEF-85, DEF-86, DEF-87, DEF-88, DEF-89, DEF-90, DEF-91, DEF-92, DEF-93, DEF-94
+
+**Rationale:** the owner, 2026-10-06: "please add a task to review and tweak the app gui as per the design requirements, and another to review the layout, interface, and functionality of the crowd features to ensure is useful, usable for novices, depth available for experts, and meets the design criteria. please advance this work to take place relatively soon at a suitable point"; his picks "After Phase 2 (Recommended)" (option text: "New Phase 3, ahead of W4 and the found defects. The reviews see every Phase 2 UI fix, and the tweaks don't clash with them. About 8 items away.") and "Fix breaches, ask on taste (Recommended)" (option text: "The run fixes clear breaches of the UI standards directly (contrast, target size, labels, sentence case). Layout and feature changes come to you as one question round, with screenshots."); and on 2026-10-08: "run UI-06 and CROWD-07, but without modifying the code base, since there is another chat that is modifying files. please do necessary groundwork, analysis, etc, and pause at the point of code editing so I can halt the other work and give you unfettered control". Reading the option texts as the placement (ahead of W4 and the found defects) and the method (one question round with screenshots), "the design requirements" as UI-STANDARDS.md plus the brief's constraints, "breaches" as a hard rule broken and everything else as a judgement, and the five novice tasks as the walk are the filing session's calls, for him to confirm; a wish line tracks that confirmation. The reviews found 28 breaches and 28 judgements app-wide, 10 breaches and 26 judgements on the crowd features, 15 behaviour-defect candidates, and triaged 20 wish-list lines (each item file's Notes). Codex (gpt-6-astra, read-only) reviewed the findings: 27 breaches confirmed, two refuted, two moved to judgement, three judgements moved to breach, four breaches added; its answer is `reviews/design-review-second-opinion-2026-10-08.md`. Wish-list lines 55 (scheduleDots counting Disappear/Collect dots and unreachable Exits as finishing) and 69 (the journey-end hint refreshing only when the timeline length changes) are retired: CROWD-05's `ends` flag excludes unreachable ends while `finishes` has no live application consumer (its two readers, `waitForCrowdMs` and `lastArrivalMs` in `crowdArrival.js`, are unused utilities), and the hint no longer depends on the timeline (crowd review §9). The tweak PRs follow the owner's question round and DEF-20/13/32; DEF candidates become rows only on his acceptance.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — REL-708 — v3.2.708 ships DEF-20, DEF-13 and DEF-32
+
+**Decision:** v3.2.708 is live from deploy commit `acbf290` (tag `v3.2.708`), released under GATELESS-1 because DEF-20's, DEF-13's and DEF-32's merges (`72164a1`, `7355522`, `93b647b`; PRs #109, #111, #110) changed `src/`; one release for the three, the run's reading of the owner's "deploy", for him to confirm.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.707-93b647b`, gate green, dry run, push, Verify and the Pages build and deploy green, 22 of 22 live files SHA-256-identical. Live smoke at 1280×800: title v3.2.708, Open day played 3,002 ms, then to its end at 27,283 ms with no frame queued; MP4 1920×1080 29.3 s `ftypisom`; HTML with its CSP, the project and the live `player.js`; no failed resource or console error. None of the three changes export and the build does not end in 0, so no disk save is owed. This in-page export check pays v3.2.707's owed one, which the hidden pane had suspended: the same export code, and 707 is no longer live; the run's call, for the owner to confirm.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — GATELESS-1 — The owner closes chat 13 after DEF-20, DEF-13 and DEF-32 ship; Phase 3 runs in another chat
+
+**Decision:** On the owner's word, chat 13 landed DEF-20, DEF-13 and DEF-32, deployed them, ran past the profile's 200k line and closed out; one release for the three is the run's reading, for him to confirm; these are one-offs for this chat, and the grant's standing conditions are unchanged; Phase 3 (UI-06, CROWD-07) runs in another chat, which writes once this run has paused; this run resumes Phase 2 at DEF-15 when he opens a fresh chat.
+
+**Rationale:** the owner, 8 October ~11:45: "phase 3 is starting in another chat. it wont edit files until you have paused, so keep going through other items until asked"; ~13:00: "halt when reach end of current ticket"; ~13:10: "conclude DEF-13, DEF-20, and DEF-32, the commit, push, deploy, and close out this chat"; ~13:15: "dont worry about going beyond 200k context". The run's calls, for him to confirm: the later instruction replaced "halt when reach end of current ticket"; "deploy" as one release for the three merges in place of one each; and Phase 3's record, UI-06 and CROWD-07 included, belongs to that other chat, so this run files neither.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — DEF-32 — Activating a list row keeps focus on that row
+
+**Decision:** DEF-32 lands: a row's selection rebuilds the waypoint list once, by the app's `waypoint:selected` handler, whose restore puts focus back on the selected row; the row rebuilds the list itself only when nothing else has. It merges after DEF-13.
+
+**Rationale:** the row's own second rebuild replaced the row the app's restore was about to focus, after focus had already fallen to the page, so every activation left focus on `<body>` (WCAG 2.4.3; REV-02 added the restore's "focus was in the list" guard). 4 tests fail on main; 3 of 3 mutants are killed. Codex r1: with the second rebuild gone, the restore frame also overrode a move to another row before it ran; it now restores only focus that was dropped (to the page or a removed node), 3 tests, 5 mutants killed. 25 control-golden rows gain a settled focus line on the row, all single selections. With focus kept on a row, main's key guard ignores Delete, the arrows and Cmd+Z/S there (TST-13's table), where today focus on the page lets them work: so DEF-13 lands first, the run's call. Multi-selection clicks still leave focus on the page, as the restore has always excluded them: the narrowest reading, the run's call. Digest rules: wcag-2.2-aaa (2.4.3 focus order); nielsen 1.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — DEF-13 — A focused control keeps only its own keys; every other shortcut runs
+
+**Decision:** DEF-13 lands: `handleKeyDown`'s guard keeps every key in a field (input, textarea, select, contenteditable) and for a control inside a modal dialog, as before; any other focused control (button, link, summary, `role=button`) keeps only Space, a menu item or option also the four arrows; every other shortcut runs and is prevented. DEF-32 merges after it.
+
+**Rationale:** the guard returned early for every key on any button, link, summary or menu item, and Chromium keeps focus on a clicked button, so Delete, the arrows, Undo and Save did nothing after a click and Cmd+S opened the browser's Save dialog (round 2, C2). 8 tests fail on main; every mutant is killed. TST-13's key table moves on purpose: those keys now run from a control, and its listener sweeps set the page's handler aside. The run's calls: an open dropdown menu keeps only Space and its arrows (the register's "in-widget arrows"), so Delete and Cmd+S act there, while a waypoint context menu keeps every key through its own capture listener, as before; a modal dialog's controls keep every key, as today. Codex r1 found two newly reachable actions, fixed in r2: Escape on a focused hint "?" also deselected (the hint now cancels the Escape it consumes, and the dispatcher skips cancelled keys, so Escape on the page with a hint open keeps the selection too); Delete on an unselected row deleted the selected waypoint (a row whose waypoint is not selected, and its × and move buttons, cancel Delete, Backspace, the arrows, T and Cmd/Ctrl+D when something is selected; the run's call, T and Cmd/Ctrl+D included because they too act on a waypoint the row does not name). Found on main: a dialog's heading passes shortcuts to the editor behind (DEF-82). Digest rules: wcag-2.2-aaa (2.1.1 keyboard; 2.1.2 no trap); nielsen 3 (user control).
+
+**Supersedes:** none
+
+**Deferred:** DEF-82
+
+## 2026-10-08 — DEF-20 — After Open, rollback and Clear All, the controls show the project they hold
+
+**Decision:** DEF-20 lands: a load (Open, and a failed Open's rollback, through `syncLoadedProjectControls`) writes the Duration thumb on the slider that exists and the reveal and Angle of View sliders; Clear All leaves Preview through the one mode setter, after its own non-restoring cancel of a held gesture; the 50 ms `isUpdatingSlider` flag, which dropped real Duration input, is deleted.
+
+**Rationale:** the load wrote the Duration thumb only when the removed left slider existed, so after Open the thumb stayed where the last project left it (3,901 under a 12.7 s readout) and one +5 nudge made the duration hundreds of seconds; the reveal and Angle of View sliders were never written; Clear All sent `mode:changed`, which nothing hears, so the switch still said Preview. `angleToSlider` is recovered from `2fb72ff`. 7 tests fail on main; 13 of 14 mutants are killed, the 14th equivalent (the handler skips a missing slider). Thirteen control goldens move on purpose: the Duration thumb reads the fixture's 275 px/s, the Angle of View thumbs follow it, and the Spotlight rows show in the route context. Codex r1 found Clear All mid-drag restoring the deleted waypoint as the selection when the mode switch ran first; fixed by order, with a test. Start-up still leaves the Angle of View and trail thumbs at the markup: outside the item, a wish line, the run's call. Digest rules: nielsen 1 (status visible); house conventions (speed via `ui:slider:update-speed`).
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — GATELESS-1 — The owner paused chat 12 for the weekly reset, then let it run to his stop time
+
+**Decision:** Chat 12 paused on 6 October and resumed on 7 October with no context line, under the owner's stop time, then stopped; nothing was scheduled to resume it. After the weekly reset the run may launch its items' agents together, one each, within the grant's limit of up to three in flight; gates, merges and releases stay one at a time.
+
+**Rationale:** the owner, 6 October ~12:15: "lets pause at suitable moment until usage resets, then you can go whole hog with agents"; 7 October 00:08: "resume, and allow an unrestricted context window for this chat, but, importantly, cease at 01:59 tonight"; ~01:09: "you can go for one more hour or until usage is maxed. dont come back on when the usage resets". The run's calls, for him to confirm: "whole hog" as launching up to three items' agents together, within the grant; "tonight" as 01:59 on 7 October; and the last as scheduling no resumption, so a chat he opens after the reset carries on. The pause followed the usage tool's reading of 97% of the weekly plan.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-08 — DEF-81 — TST-03's cancelled run stopped at 15m18s
+
+**Decision:** DEF-81's Rationale is corrected in one fact: TST-03's pull_request run on `ec83404` was cancelled at 15m18s, and TST-11's on `c95c85e` at 15m17s; the decision is unchanged.
+
+**Rationale:** Codex's review of DEF-81 found the timing; an old entry is never edited, so this supersedes it for that one fact.
+
+**Supersedes:** 2026-10-07 — DEF-81 — Verify gets 30 minutes, since the suite reached 15
+
+**Deferred:** none
+
+## 2026-10-07 — TST-11 — Behavioural tests stand beside the source-text assertions; retiring those waits on the owner
+
+**Decision:** TST-11's first round lands: 25 behavioural tests pin every source-text assertion its row names that has behaviour, on the booted editor or by running `build.js` in the SPL-06 harness's copy; the source-text assertions stay unchanged, and the item stays open, `[!]`, until the owner says they may go.
+
+**Rationale:** the row says "Replace", but GATELESS-1 bars deleting a test and the record does not say whether a replacement counts, so the narrowest reading adds and keeps (the run's call, for the owner to confirm; Codex, asked first: "corrected A—add coverage; keep TST-11 open pending explicit replacement authority"). Of 64 source mutants, all 49 that break behaviour fail the suite (48 on the new tests, the version predicate on `buildScript`'s), 18 of them missed by the old reads (the rollback made unreachable among them); all 15 moves counted neutral (an extracted `isCurrent()`, renamed locals) pass the new tests and fail the old reads, though one, the rollback's cleanup before its restore (RS-N14), keeps the final state but not the order, which only the old read pins (Codex). Two contracts are comments and stay source-only. `publicationBoundary`'s check build also runs in the copy now, beside the original. One candidate defect is a wish line. Digest rule applied: house conventions → Testing and persistence.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-07 — DEF-81 — Verify gets 30 minutes, since the suite reached 15
+
+**Decision:** DEF-81 lands: the Verify job's limit (`.github/workflows/ci.yml`, `timeout-minutes`) rises from 15 to 30 minutes, the only change, because the suite now runs about 14 minutes on GitHub and runs were being cancelled at 15.
+
+**Rationale:** on 6–7 October both pull_request runs, TST-03's on `ec83404` and TST-11's on `c95c85e`, were cancelled at 15m17s with tests still running; TST-03's re-run passed in 14m06s; main's own runs took about 13 minutes, and TST-11 adds a minute more. Nothing is skipped, sharded or changed in the suite; a faster one is a wish line. The record does not cover CI's limit, so this narrowest fix is the run's call under GATELESS-1, for the owner to confirm; Codex checked it. CI configuration ships nothing, so no release.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-07 — TST-03 — Every visibility mode is pinned as a golden table, and seek equals play for each
+
+**Decision:** TST-03 lands: three suites (179 tests; goldens `tests/goldens/visibility-*.json`, regenerated with UPDATE_VISIBILITY_GOLDENS=1) pin `getPathVisibleRange` for all five path modes and the comet trail, `getWaypointVisibility` for all five waypoint modes, and both reveal-mask builders, as they stand, and show seek equal to play for every mode.
+
+**Rationale:** the plan row asks for "a mode-matrix golden table; seek == sequential for every mode": each mode is sampled at every window edge and clamp, on bare inputs and along a real engine timeline with waits, intro and tail, cold against one instance run forwards, backwards and scrambled; no mode differed, so nothing was pinned as a difference. 117 of 138 source mutants fail it (every mode branch, swapped hide windows, edges, easings, trail length, mask radius); the 21 survivors are equivalent at a boundary or by construction, unreachable, dead code, or killed by `revealTrail`. Codex's review found the mask goldens blind to drawing state (an alpha of 0, or a 1×1 clip, set before the clear passed every test): each draw now carries the state it draws with and a clip on the mask fails, and those mutants and an alpha of 0 at each build's clear now fail it. Area, text and the non-reveal background modes are not MVS code (§8.4). Six candidates are wish lines until verified, one a DEL-02 note. Digest rule applied: house conventions → Testing and persistence.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-06 — REL-707 — v3.2.707 ships UI-04 and DEF-14
+
+**Decision:** v3.2.707 is live from deploy commit `6f4c731` (tag `v3.2.707`), released under GATELESS-1 because UI-04's merge (`7298e65`, PR #103, closing DEF-14) changed `src/`, `styles/` and `index.html`.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.706-7298e65`, gate green (116 files, 2,698 tests), dry run, push, the Pages deploy green, 22 of 22 live files SHA-256-identical; the deploy commit's Verify was cancelled in the one-job queue and re-run. Live smoke, partial: title v3.2.707, 90 hint triggers, Open day loaded (27,028 ms) and played to its end, no failed resource; the MP4 and HTML export did not finish because the hidden browser pane suspends the page, so that check is owed (a wish line). UI-04 does not change export, so no disk save is owed for it.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-06 — REL-706 — v3.2.706 ships CROWD-06
+
+**Decision:** v3.2.706 is live from deploy commit `24cdfa8` (tag `v3.2.706`), released under GATELESS-1 because CROWD-06's merge (`ea9b09a`, PR #101) changed `src/`, `styles/` and `index.html`.
+
+**Rationale:** release.sh: rollback tag `rollback-v3.2.705-ea9b09a`, gate green (110 files, 2,628 tests), dry run, push, Verify and the Pages deploy green, 22 of 22 live files SHA-256-identical. Live smoke: Open day, a saved project, opens with no hold and reads as before (27,028 ms, MP4 1920×1080 29.0 s); the HTML export carries `holdAtEndMs`; no failed resource or console error. CROWD-06 changes export, so a disk save of the smoke exports is owed through the owner's Chrome with his word (a wish line, beside v3.2.703's).
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-06 — UI-04 — Each hint has a "?" of its own, and DEF-14 closes with it
+
+**Decision:** UI-04 lands: every parameter hint gets a visible "?" button beside its label, opened by hover after UI-03's delay, keyboard focus or tap, described to screen readers as before, so a click on a label toggles or focuses its control; DEF-14 closes with it, every range now naming its readout through `aria-describedby` and `setRangeReadout`.
+
+**Rationale:** the hint's delegated click handler cancelled every click on a `[data-tip]` label (`ParamTooltip.js`), so six hinted checkboxes never toggled from their text and about 70 labels never focused their control; 28 ranges lacked their readout. The "?" sits in a 44 px slot after the label, a Carbon ghost icon button in UoN tokens with a forced-colours rule; rows added later gain and lose theirs. Two adjacent fixes the "?" needs, the run's call: a hidden label hides (the reveal-trail row always showed), and ranges may shrink to keep rows inside the sidebar. 36 tests fail on main; six mutants are killed. UI-STANDARDS gains no "?" line, at 1,848 of its 1,850 words (a wish line). Digest rules applied: WCAG 2.2 AAA → 2.5.5 Target Size, 2.1.3 Keyboard, 2.4.13 Focus Appearance; Nielsen → 4, consistency; Carbon → productive; house conventions → Testing and persistence, and Patterns to follow (readouts through `setRangeReadout`).
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-06 — TST-09 — Camera, dots, curvature, minor-end and time domains are pinned as they stand
+
+**Decision:** TST-09 lands: five suites (41 tests, goldens under `tests/goldens/domains-*.json`, regenerated with UPDATE_DOMAIN_GOLDENS=1) pin today's camera, dot positions, curvature cache, minor-end timing and the time domains from before the start to past the playback end, on the branched Open day route, so the fixes they gate (DEF-05, DEF-07, DEF-10, DEF-11, DEF-12, DEF-79) each move a baseline on purpose.
+
+**Rationale:** each domain compares play, seek and export where the harness allows; eight source mutants (camera state kept across seeks, a frame-late dot, a cache key ignoring the middle point, a minor end counted as major, the tail evaluated on B, releases on F, beacons ignoring the intro, a rate limit never released) fail it. It confirmed DEF-79 (a linear-route video export re-measures a bound crowd's arrival, 5,915 ms against 2,292 ms) and found four candidates, wish lines until verified. The checker asks for an archive at 46 live entries, but the oldest is now GATELESS-1's founding grant, which open lines cite and the run works under, so it stays live under the owner's prune bar (2026-08-27: budgets yield to context feeding open work); the run's call. It ran alongside UI-04 and CROWD-06, which PLAN-2 orders first, under GATELESS-1's rule of up to three items in flight with merges one at a time; it lands when ready. Digest rule applied: house conventions → Testing and persistence.
+
+**Supersedes:** none
+
+**Deferred:** none

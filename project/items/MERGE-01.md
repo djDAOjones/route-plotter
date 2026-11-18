@@ -22,6 +22,7 @@ The owner wants the next major version, v4, to merge routes and crowds. In his w
 - The plan states where it departs from the v3 founding decision of 2026-08-17 (the frozen canon log; `project/history.md`) and from the brief's Direction. It brings the brief's amendment for the owner to sign.
 - The owner answers one question round on the plan before any code.
 - Codex reviews the plan before the owner's question round.
+- The plan gives every line on the stock take's held list (`reviews/v4-stock-take-2026-11-18.md`) a v4 item that must pass or weigh it, or brings it back to the owner to retire.
 
 ## Context and sources
 
@@ -49,3 +50,4 @@ The owner wants the next major version, v4, to merge routes and crowds. In his w
 - 2026-10-14 — On the owner's word, REFACTOR-01 comes first after CROWD-08: a major refactor in light of PM-Skills 3.1's frameworks, so that v4's merge lands on more modular code (the decisions: REFACTOR-01).
 - 2026-10-15 — AI-01, AI-editable saves, is filed as a medium-term feature on the owner's word. It would document the save format that v4 settles; its filing session proposes that the plan weigh a schema-first save (`project/items/AI-01.md`).
 - 2026-11-18 — The owner asked, verbatim: "have we got on the roadmap a major phase of development to unify the standard routes and crowd route technology, and pair it with a modular feature set that users can add as needed, to simplify the UI and back end whilst enabling more advanced functionality, but only on demand?" The session found the merge and the features pop-up recorded here, with REFACTOR-01's modularity ahead of it, but no criterion on options built as modules in the code, on advanced functionality staying hidden until added, or on simplifying the back end. Asked "Add the back-end modules and on-demand principle to MERGE-01's criteria?", he answered "Yes, draft it". The session added three criteria to the plan's list and a §16 test for a module design; their wording is the session's. Of the draft he said: "text is good, add to the record but dont start the work".
+- 2026-11-18 — The stock take. On the owner's ruling ("as per your recommendation", of the option "One held list (Recommended)") the held list in `reviews/v4-stock-take-2026-11-18.md` is merged into this item: checks v4 must pass, inputs to v4's interface design and candidate features, with five lost defects (DEF-05, DEF-07, DEF-10, DEF-11, DEF-12) to verify first. The last criterion above was added on that ruling. Q14 answers the criterion on v3 projects carrying over: they do not.

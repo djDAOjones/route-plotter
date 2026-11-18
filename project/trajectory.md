@@ -8,6 +8,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## The stock take against the v4 vision — the owner's ruling of 2026-11-18
+- UI-06 — the app's interface was reviewed against the UI standards and every breach found was fixed and released by v3.3.726; the judgement rows left open are kept as inputs to v4's interface, v3 being frozen (2026-11-18) — see decisions
+- CROWD-07 — the crowd features were reviewed for novices and experts and both card changes were released by v3.3.726; the rows left open are kept as inputs to v4's interface, v3 being frozen (2026-11-18) — see decisions
+- TST-11 — behavioural tests stand beside the source-text assertions they cover; retiring those assertions is left undone in v3's frozen suite and kept as a note for the port (2026-11-18) — see decisions
 ## pm-skills 5.0.1 — the owner's word of 2026-11-18
 
 - REFRESH-501 — the project runs pm-skills 5.0.1: seven tools and the intake verb replaced as a set, tools/VERSION reading 5.0.1, no pack, no signed file touched, no local edit lost, by pull request (2026-11-18) — see decisions
