@@ -36,7 +36,6 @@
 
 ### Phase 6 — v4's foundations — the owner's overnight word of 2026-11-18 (PLAN-6)
 
-- [ ] STACK-01 — Move v3 aside into v3/, frozen and still building — since 2026-11-18 — (from: PLAN-5, 2026-11-18)
 - [ ] STACK-02 — v4's skeleton on the editor stack — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] STACK-03 — Accessibility testing, standard depth, at AAA — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] STACK-04 — The architecture record, the enforced edges and the measures — since 2026-11-18 — (from: PLAN-6, 2026-11-18)

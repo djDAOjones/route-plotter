@@ -8,6 +8,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Phase 6 — v4's foundations — the owner's overnight word of 2026-11-18 (PLAN-6)
+
+- STACK-01 — frozen v3 lives in `v3/`, moved by `git mv`: it builds the same 24 files as 3.3.726 and passes its whole suite from there in CI; the root `docs/` and `version.json` are untouched, the gate sorts `v3/**` as v3, and the root is free for v4, by pull request (2026-11-18) — see decisions
+
 ## Phase 5 — v4: the architecture plan, before any code — the owner's word of 2026-11-18
 
 - GATE-01 — the gate sorts each push by what it changed: a record-only change runs the record checker alone, frozen v3 its whole suite, anything unplaced everything; v4's lane waits for STACK-01, `npm run check` still runs everything, by pull request (2026-11-18) — see decisions
