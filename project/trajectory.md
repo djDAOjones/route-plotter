@@ -8,6 +8,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## pm-skills 5.0.1 — the owner's word of 2026-11-18
+
+- REFRESH-501 — the project runs pm-skills 5.0.1: seven tools and the intake verb replaced as a set, tools/VERSION reading 5.0.1, no pack, no signed file touched, no local edit lost, by pull request (2026-11-18) — see decisions
+
 ## pm-next v3.1 — the owner's relayed word of 2026-10-21
 
 - V31-UPGRADE — the project runs pm-next v3.1: twelve tools, four verbs and the start-notice hook, the archived decisions beside decisions.md, the wish lines stamped, each phase oldest first, the AAA digest repaired, by pull request (2026-10-21) — see decisions

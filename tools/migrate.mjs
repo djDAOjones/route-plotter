@@ -81,9 +81,9 @@ if (!args.refresh && (args.source || args.installed || args.build)) { console.er
 if (args.refresh && (args.upgrade || args.from || args.target || args.inventory || args.decision || args.base || args.rules || args.commit || args['rolled-back'])) { console.error('migrate: the refresh route takes --source, --installed, --build and --item only'); process.exit(2); }
 const UP = args.upgrade || ''; // the upgrade route, its target's label (v3.1)
 if (!UP && !args.refresh && (args.from || args.target || args.inventory || args.decision || args.item)) { console.error('migrate: --from, --target, --inventory, --decision and --item belong to the upgrade route; name it with --upgrade <to>'); process.exit(2); }
-if (args.refresh && args.item && !new RegExp(`^${ID}$`).test(args.item)) { console.error(`migrate: --item takes the item's ID, such as V31-REFRESH-4; got ${args.item}`); process.exit(2); }
-if (UP && !/^v?\d+(\.\d+)*$/.test(UP)) { console.error(`migrate: --upgrade takes the version label being installed, such as v3.1; got ${UP}`); process.exit(2); }
-if (UP && args.item && !new RegExp(`^${ID}$`).test(args.item)) { console.error(`migrate: --item takes the item's ID, such as V31-DEPLOY; got ${args.item}`); process.exit(2); }
+if (args.refresh && args.item && !new RegExp(`^${ID}$`).test(args.item)) { console.error(`migrate: --item takes the item's ID, such as REFRESH-1; got ${args.item}`); process.exit(2); }
+if (UP && !/^v?\d+(\.\d+)*$/.test(UP)) { console.error(`migrate: --upgrade takes the version label being installed, such as v5; got ${UP}`); process.exit(2); }
+if (UP && args.item && !new RegExp(`^${ID}$`).test(args.item)) { console.error(`migrate: --item takes the item's ID, such as UPGRADE-1; got ${args.item}`); process.exit(2); }
 const INVENTORY = UP ? (args.inventory || `project/migration/upgrade-${UP}.json`) : V2_INVENTORY;
 if (UP && (relative(root, resolve(root, INVENTORY)).startsWith('..') || resolve(root, INVENTORY) === resolve(root, V2_INVENTORY))) { console.error(`migrate: --inventory names a path inside the installation other than ${V2_INVENTORY}, which is the kept v2 inventory`); process.exit(2); }
 const git = (...a) => execFileSync('git', a, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 << 20 }).trim();
@@ -170,9 +170,8 @@ const censusParse = (text) => [...active(text).matchAll(/^\| (C\d+) \|([^|]*)\|(
 // Both builds are read from the source checkout's Git objects, never its working tree. A file of the installation is pm-skills's own
 // where its bytes equal a version of its source path in the build's history: it takes the build's bytes, or goes where the build
 // retired the path. Any other file on a managed path is a local edit, kept only by a decision's `- Migration edit:` line, the
-// newest per path: an adapter as it is; an edit to pm-skills's file merged three ways onto the build's copy, its base the version
-// of the file in the build's history nearest the edited one by changed lines (the oldest on a tie, so a doubt merges or refuses
-// rather than keeping), a conflict refused; a file of the project's own under a carried folder or its own line. Anything else refuses, naming
+// newest per path: an adapter as it is; an edit to pm-skills's file merged three ways onto the build's copy, its base the installed
+// build's version of the file, a conflict refused unless the edit is the build's own text with lines added (BUGS-1); a file of the project's own under a carried folder or its own line. Anything else refuses, naming
 // it. Every check runs before the first write, and nothing under project/ is written. With the profile's Accessibility testing
 // line the pack's files are managed the same way, each read from a11y/<path> in the source: its depth's files as a11y/install.mjs
 // lists them, but tests/a11y/project.mjs and the pack's files under project/, which are the project's own or the ledger's.
@@ -203,7 +202,7 @@ function refreshRoute() {
   };
   const A = args.installed ? commitIn(args.installed, 'installed') : stampBuild(), B = commitIn(args.build || 'HEAD', 'build'), s7 = (c) => c.slice(0, 7);
   const isAncestor = (x, y) => spawnSync('git', ['merge-base', '--is-ancestor', x, y], { cwd: stop, stdio: 'ignore' }).status === 0;
-  if (A === B) refuse([`the installation is already at build ${s7(B)}; nothing to refresh`]);
+  if (A === B) { console.log(`${stamped ? `INFO  ${stamped}\n` : ''}INFO  already at build ${s7(B)}; nothing to refresh`); process.exit(0); } // not a failure (rehearsal finding 12): nothing is written and the exit is 0
   if (isAncestor(B, A)) refuse([`the source build ${s7(B)} is older than the installed build ${s7(A)}; a refresh never goes back — revert the commit that took ${s7(A)} instead`]);
   if (!isAncestor(A, B)) refuse([`the builds diverge: ${s7(A)} is not in ${s7(B)}'s history, so ${s7(B)} cannot be shown to be later; name a build that contains the installed one`]);
   const listAt = (r) => new Map(sgit('ls-tree', '-r', '-z', r, '--', sp || '.').split('\0').filter(Boolean).map((l) => { const [meta, path] = l.split('\t'); const [, type, blob] = meta.split(' '); return [path.slice(sp.length), { type, blob }]; }).filter(([, e]) => e.type === 'blob'));
@@ -230,14 +229,15 @@ function refreshRoute() {
   const blobOf = (buf) => createHash(format === 'sha256' ? 'sha256' : 'sha1').update(`blob ${buf.length}\0`).update(buf).digest('hex');
   const cat = (blob) => execFileSync('git', ['cat-file', 'blob', blob], { cwd: stop, stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: MAX });
   const isAdapter = (p, buf) => /^tools\/[^/]+\.mjs$/.test(p) && [...buf.toString('utf8').matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*)['"](\.\.?\/[^'"]+)['"]/g)].some((m) => { const f = resolve(root, dirname(p), m[1]); return relative(root, f).startsWith('..') && f.split('\\').join('/').endsWith(`/tools/${p.slice(6)}`) && existsSync(f); }); // its relative import runs a tool of the same name outside the installation
-  const nearest = (buf, src) => { // the build's version of the file the edit most likely started from: fewest changed lines, the oldest on a tie
-    const d = mkdtempSync(join(tmpdir(), 'pm-next-refresh-')); let best = null;
-    try { writeFileSync(join(d, 'ours'), buf); for (const v of versions(src, B)) { writeFileSync(join(d, 'v'), cat(v)); const r = spawnSync('git', ['diff', '--no-index', '--numstat', '--', join(d, 'v'), join(d, 'ours')], { encoding: 'utf8' }); const n = r.stdout.trim().split(/\s+/).slice(0, 2).reduce((x, y) => x + (Number(y) || 0), 0); if (!best || n <= best.n) best = { v, n }; } }
-    finally { rmSync(d, { recursive: true, force: true }); }
-    return best?.v;
+  /** @param {any} x @param {any} y @returns {string[]} the added (+) and removed (-) lines of a zero-context diff, its headers dropped (BUGS-1) */
+  const udiff = (x, y) => { const d = mkdtempSync(join(tmpdir(), 'pm-next-refresh-')); try { writeFileSync(join(d, 'x'), x); writeFileSync(join(d, 'y'), y); const out = /** @type {string[]} */ (spawnSync('git', ['diff', '--no-index', '-U0', '--', join(d, 'x'), join(d, 'y')], { encoding: 'utf8', maxBuffer: MAX }).stdout.split('\n')); return out.slice(Math.max(0, out.findIndex((z) => z.startsWith('@@')))).filter((z) => /^[-+]/.test(z)); } finally { rmSync(d, { recursive: true, force: true }); } };
+  /** @param {any} buf @param {string} a @param {string} b whether the file is the build's own text with lines added, none of them a line the build took out, so it holds the whole of the build's change */
+  const onlyAdds = (buf, a, b) => {
+    const over = udiff(cat(b), buf), taken = new Set(udiff(cat(a), cat(b)).filter((l) => l[0] === '-' && l.slice(1).trim()).map((l) => l.slice(1))); // a file the build's change was part-applied to puts an old line back
+    return over.every((l) => l[0] === '+' && !taken.has(l.slice(1)));
   };
   const merge3 = (ours, base, theirs) => { const d = mkdtempSync(join(tmpdir(), 'pm-next-refresh-')); try { for (const [n, b] of [['ours', ours], ['base', base], ['theirs', theirs]]) writeFileSync(join(d, n), b); const r = spawnSync('git', ['merge-file', '-p', join(d, 'ours'), join(d, 'base'), join(d, 'theirs')], { maxBuffer: MAX }); return { out: r.stdout, conflicts: r.status }; } finally { rmSync(d, { recursive: true, force: true }); } };
-  const plan = [], kept = [], skipped = [], refusals = [], basedOn = [];
+  const plan = [], kept = [], skipped = [], refusals = [];
   for (const p of [...new Set([...installed, ...atB.keys()])].sort()) {
     const a = atA.get(p), b = atB.get(p), l = said.get(p), here = installed.includes(p);
     if (!here) {
@@ -249,7 +249,7 @@ function refreshRoute() {
     if (lstatSync(join(root, p)).isSymbolicLink()) { refusals.push(`${p}: a symbolic link; the refresh writes files only`); continue; }
     const buf = readFileSync(join(root, p)), blob = blobOf(buf);
     if (l?.kind === 're-applied' && blob !== a?.blob && blob !== b?.blob && hist(srcOf(p), B).has(blob)) { refusals.push(`${p}: its bytes are the pm-skills version at ${introduced(srcOf(p), blob).slice(0, 7)}, yet a decision re-applies an edit; restore the installed build's copy and re-apply the edit over it, or retire the line`); continue; } // a project keeping an older text on purpose
-    if (hist(srcOf(p), B).has(blob)) { if (!b) plan.push({ p, op: 'remove' }); else if (b.blob !== blob) plan.push({ p, op: 'replace', bytes: cat(b.blob) }); continue; } // pm-skills's own bytes, of this build or an earlier one
+    if (blob === a?.blob || blob === b?.blob || hist(srcOf(p), B).has(blob)) { if (!b) plan.push({ p, op: 'remove' }); else if (b.blob !== blob) plan.push({ p, op: 'replace', bytes: cat(b.blob) }); continue; } // pm-skills's own bytes, of this build or an earlier one, or the installed build's own object where it is a merge's resolution that no diff in the log shows
     if (hist(srcOf(p), '--all').has(blob)) { refusals.push(`${p}: its bytes are a version of pm-skills's ${srcOf(p)} from a commit that ${s7(B)} does not contain; the source build is older than the installed one, or on another line — name a later build`); continue; }
     if (!a && !b) { if (l?.kind === 're-applied' || carriedBy(p)) kept.push(`${p} (${l?.kind === 're-applied' ? 'its own line' : `carried by ${carriedBy(p)}`})`); else refusals.push(`${p}: a file of the project's own on a replaced path, and no decision carries it; record "- Migration edit: ${p} — re-applied — <why>" or carry its folder`); continue; }
     if (!l || l.kind === 'carried') { refusals.push(`${p}: a local edit no decision carries; record "- Migration edit: ${p} — re-applied — <why>", or restore the pm-skills copy`); continue; }
@@ -257,12 +257,11 @@ function refreshRoute() {
     if (isAdapter(p, buf)) { if (b) kept.push(`${p} (an adapter, kept as it is)`); else refusals.push(`${p}: an adapter on a tool the build retires; retire the adapter by a decision first`); continue; } // a declared adapter stays even on a path the build adds: it runs the source's own tool
     if (!a) { refusals.push(`${p}: the project's own file, and the build now ships a file at this path; move the project's aside, or reconcile the two in a reviewed commit first`); continue; }
     if (!b) { refusals.push(`${p}: a local edit on a file the build retires; record the edit's retirement, or carry it under a path of the project's own`); continue; }
-    const base = nearest(buf, srcOf(p));
-    if (!base || base === b.blob) { kept.push(`${p} (a local edit over the build's own copy, kept as it is)`); continue; }
-    const m = merge3(buf, cat(base), cat(b.blob));
-    if (m.conflicts !== 0) refusals.push(`${p}: the local edit and the build's change conflict${m.conflicts > 0 ? ` (${m.conflicts} hunk${m.conflicts > 1 ? 's' : ''})` : ''}, merged from the version at ${base.slice(0, 7)}; merge them by hand in a reviewed commit first`);
+    const m = merge3(buf, cat(a.blob), cat(b.blob)); // BUGS-1: from the installed build, whose changes the stamp or --installed names; the nearest version's merge once kept an edit that held part of the build's change and dropped the rest
+    if (m.conflicts !== 0 && onlyAdds(buf, a.blob, b.blob)) kept.push(`${p} (a local edit over the build's own copy, kept as it is)`); // lines added to the build's text, so it holds the whole of the build's change
+    else if (m.conflicts !== 0) refusals.push(`${p}: the local edit and the build's change conflict${m.conflicts > 0 ? ` (${m.conflicts} hunk${m.conflicts > 1 ? 's' : ''})` : ''}, merged from the installed build's version at ${a.blob.slice(0, 7)}; merge them by hand in a reviewed commit first`);
     else if (m.out.equals(buf)) kept.push(`${p} (a local edit already holding the build's change)`);
-    else { plan.push({ p, op: 'merge', bytes: m.out }); if (base !== a.blob) basedOn.push(`${p} from ${introduced(srcOf(p), base).slice(0, 7)}`); }
+    else plan.push({ p, op: 'merge', bytes: m.out });
   }
   if (refusals.length) refuse(refusals);
   const ledger = tracked().filter((p) => p.startsWith('project/')), hashes = new Map(ledger.map((p) => [p, sha(readFileSync(join(root, p)))])); // the ledger and its signed files, held to their bytes
@@ -277,7 +276,6 @@ function refreshRoute() {
   console.log(`${stamped ? `INFO  ${stamped}\n` : ''}INFO  refresh: build ${s7(A)} → ${s7(B)}, from ${stop}${sp ? ` (${sp})` : ''}${args.item ? `, item ${args.item}` : ''}`);
   console.log(`INFO  written: ${plan.length ? [['replaced', by('replace')], ['merged', by('merge')], ['added', by('add')], ['removed', by('remove')]].filter(([, ps]) => ps.length).map(([k, ps]) => `${ps.length} ${k} (${ps.join(', ')})`).join('; ') : 'nothing: every file is the build\'s already'}`);
   if (by('merge').length) console.log(`INFO  merged, for the session's review — the tool merges lines, not behaviour: ${by('merge').join(', ')}`);
-  if (basedOn.length) console.log(`WARN  merged from a version other than the installed build's, the nearest to the edit: ${basedOn.join('; ')}; check that the build's changes between them are kept`);
   if (kept.length) console.log(`INFO  kept by decision: ${kept.join('; ')}`);
   if (skipped.length) console.log(`INFO  not installed, retired by decision: ${skipped.join(', ')}`);
   if (plan.some((x) => x.p === 'AGENTS.md')) console.log(`WARN  AGENTS.md takes the build's text: the contract every session reads at its start changes, which reaches a project on its owner's word`);
@@ -286,7 +284,7 @@ function refreshRoute() {
   if (ledgerPack.length) console.log(`WARN  the build changes the pack's ${ledgerPack.join(', ')}; the refresh writes nothing under project/, so take it by a reviewed migration edit in a commit of its own`);
   console.log(`INFO  ledger: ${ledger.length} files under project/ byte-equal, the signed files among them; nothing written there and no inventory`);
   console.log(`Revert commands for this candidate; the refresh performs none of them:\n  before it is committed, to discard it:\n${discard.length ? discard.map((c) => `    ${c}`).join('\n') : '    nothing to discard'}\n  after it is committed alone as "${args.item || '<ID>'}: refresh to build ${s7(B)}", to undo it:\n    git -C ${q(root)} revert --no-edit <the refresh commit>   — one revert of that one commit, never a reset; later work is reconciled, never discarded`);
-  console.log(`Next: review the diff; run node tools/check.mjs and the project's gate on the candidate; commit it alone, with no product or record work, then record the decision in a commit of its own.`);
+  console.log(`Next: review the diff; run node tools/check.mjs and the project's gate on the candidate; open ${args.item || 'the item'} in the backlog and commit that first, since a commit title is ID: summary with the ID open in the ledger; then commit this candidate alone, with no product or record work, and record the decision in a commit of its own.`);
   process.exit(0);
 }
 if (args.refresh) refreshRoute();
