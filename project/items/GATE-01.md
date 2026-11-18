@@ -18,9 +18,9 @@ Every push waits about 34 minutes, because v3's 4,385 tests run one file at a ti
 
 Updated: 2026-11-18
 
-Next step: On the owner's word, a chat of its own, in its own worktree, builds the sorting in `.github/workflows/ci.yml` and `package.json` while the architecture plan is written.
+Next step: None in this item; STACK-01 fills v4's lane (`V4` in `scripts/gate.mjs` and a `check:v4` script) when it puts v4 at the root.
 
-Open question: Which paths count as record-only; the item proposes the list.
+Open question: Owner: confirm the record-only list, and sign the redrafted Gate line in GATE-01's decision.
 
 ## Context and sources
 
@@ -33,3 +33,4 @@ Open question: Which paths count as record-only; the item proposes the list.
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-5. The owner's instructions in force, verbatim: "Gate by what changed (Recommended)" (Q23), whose option text stands in the vision file and is paraphrased in the Intent; of where the item sits, "Alongside the plan (Recommended)" (P4); and, from his task message as the programme file quotes it, "Propose a faster gate, and say whether a record-only change needs the app suite". CI run 44322370111 took 2,260 seconds, 2,139 of them inside the tests: 203 files, 4,385 tests, one worker. The stock take kept REV-07 (CI maturity) in the Icebox, to be raised when this item is planned.
+- 2026-11-18 — Built and closed by GATE-01's pull request. The owner's instructions in force, verbatim, unchanged since the note above: "Gate by what changed (Recommended)" (Q23); "Alongside the plan (Recommended)" (P4); "Propose a faster gate, and say whether a record-only change needs the app suite" (his task message). His overnight answers of the same day govern the close, verbatim: "accrue decisions that come up but dont stop dev unless impossible", and the option labels "Merge when checks pass (Recommended)" and "Proceed on recommendations (Recommended)" (GATELESS-2). So the record-only list and the Gate line's redraft are provisional, put to him in the night's decisions list, and the merge is made under G2's conditions. `npm run check` stayed the full gate because `push.js` runs it as one; REV-07 is untouched.
