@@ -22,7 +22,9 @@
  * - A script run (`node build.js ...`) runs the copy's build.js, in the copy.
  *
  * The copy holds every file at the repository's top level except hidden ones
- * (so no .git) and the five directories the build reads or writes; its
+ * (so no .git), the four directories the build reads, and the docs/ a release
+ * replaces: the last release's, which since STACK-01 is the committed docs/ at
+ * the root above v3/, as v3's own docs/ is ignored build output; its
  * node_modules is a link to the repository's. What a test finds changed in
  * it is the evidence; the repository is never reached.
  */
@@ -47,7 +49,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 export const projectRoot = join(here, '..', '..');
 const HOST = pathToFileURL(join(here, 'buildScriptHost.mjs')).href;
-const BUILD_DIRECTORIES = new Set(['docs', 'images', 'scripts', 'src', 'styles']);
+const BUILD_DIRECTORIES = new Set(['images', 'scripts', 'src', 'styles']);
+const PUBLISHED_DOCS = join(projectRoot, '..', 'docs');
 // Node 24 keeps vm modules behind a flag, and warns when they are used.
 const VM_FLAGS = ['--experimental-vm-modules', '--disable-warning=ExperimentalWarning'];
 const SPAWN_TIMEOUT = 120000;
@@ -62,6 +65,7 @@ export function copyRepository() {
       cpSync(join(projectRoot, entry.name), join(root, entry.name), { recursive: true, dereference: true });
     }
   }
+  cpSync(PUBLISHED_DOCS, join(root, 'docs'), { recursive: true, dereference: true });
   symlinkSync(realpathSync(join(projectRoot, 'node_modules')), join(root, 'node_modules'), 'dir');
   return root;
 }

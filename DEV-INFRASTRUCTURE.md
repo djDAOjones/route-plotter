@@ -225,6 +225,10 @@ breaking change.
 
 ## Deployment
 
+- **Since STACK-01 the release steps below are historical:** run from `v3/`,
+  `npm run push` stops before committing (git names `v3/version.json`, outside
+  its allowlist) and `v3/docs/` is ignored, so a v3 release needs its own
+  decided step (wish STACK-01.1).
 - **Target:** GitHub Pages served from `/docs` on the selected branch. The live
   site selects `main` — restored at the v3.2.690 release on 2026-09-22. From
   2026-08-26 to that release it selected `review-remediation`, so every push to
