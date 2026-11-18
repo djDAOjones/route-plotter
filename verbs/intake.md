@@ -4,8 +4,8 @@ Builds the ledger, the profile and the rules file for a repository,
 new or existing, from what can be inferred and what the owner
 supplies. Runs with the network on, with the owner present, whatever
 the Network line says for sessions. It is the route for a canon or bare
-project; a v2 installation follows the migration note in `CHANGELOG.md`
-instead.
+project; a v2 installation takes the migrate tool's route
+(`tools/migrate.mjs`, its header) instead.
 
 The install copy comes first, for a new installation only: from the
 source distribution, never a download, `node <source>/install.mjs --to .`
@@ -40,7 +40,10 @@ old contents are merged into the installed file by hand.
    tasks naming the project. Before step 5 each is landed, carried into
    the record, or set aside on the owner's word, recorded.
 2. **Ask only what you cannot infer**, in one short list: the gate
-   command if none exists, hosting, the harness and its surface, the
+   command if none exists (for an existing project, its own gate
+   command also runs `node tools/check.mjs`, so a fault in the ledger
+   fails the gate wherever it runs; say so in the adoption decision),
+   hosting, the harness and its surface, the
    Handoff role split (never defaulted), the Secrets store ("none
    held" allowed), the Network line — proposed from the recorded
    practice, confirmed by the owner, never defaulted — and which
