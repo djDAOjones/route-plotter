@@ -19,6 +19,8 @@
  *                                          nothing (a range is git diff's)
  *   node scripts/gate.mjs --ci --plan      CI: sort the push or pull request,
  *                                          write the lanes to GITHUB_OUTPUT
+ *                                          (a push to main reads GitHub's API
+ *                                          with GITHUB_TOKEN)
  *   node scripts/gate.mjs --lane <name>    run one lane (CI runs each in a step)
  *
  * No dependency: Node and git only, so the record-only path needs no npm ci.
@@ -152,29 +154,69 @@ export function pathsOfRange(range, cwd) {
   return output === null ? null : splitZ(output);
 }
 
+const isSha = value => typeof value === 'string' && /^[0-9a-f]{40}$/.test(value) && !/^0+$/.test(value);
+
 /**
  * The range CI should read for this event, or null when none is safe.
  *
  * A pull request is read from where it left its base. A push to a branch
  * other than the default is read against the default branch, not against the
  * push before it, because a cancelled run would otherwise leave a change
- * unchecked. A push to the default branch is read from the commit before it;
- * the workflow never cancels those runs.
- * @param {{ eventName: string, event: object, ref: string, sha: string }} ci
+ * unchecked. A push to the default branch is read from the last commit on it
+ * whose run passed, not from the commit before it: a run that was replaced,
+ * cancelled or failed leaves its change in every later range until one passes.
+ * @param {{ eventName: string, event: object, ref: string, sha: string, lastGreen?: string|null }} ci
  * @returns {string[]|null}
  */
-export function ciRange({ eventName, event, ref, sha }) {
+export function ciRange({ eventName, event, ref, sha, lastGreen = null }) {
   const main = event?.repository?.default_branch || 'main';
-  const isSha = value => typeof value === 'string' && /^[0-9a-f]{40}$/.test(value) && !/^0+$/.test(value);
   if (eventName === 'pull_request') {
     const base = event?.pull_request?.base?.sha;
     const head = event?.pull_request?.head?.sha;
     return isSha(base) && isSha(head) ? [`${base}...${head}`] : null;
   }
   if (eventName !== 'push' || !isSha(sha)) return null;
-  if (ref === `refs/heads/${main}`) return isSha(event?.before) ? [event.before, sha] : null;
+  if (ref === `refs/heads/${main}`) return isSha(lastGreen) ? [lastGreen, sha] : null;
   if (ref?.startsWith('refs/heads/')) return [`origin/${main}...${sha}`];
   return null;
+}
+
+/**
+ * The commit of the newest push to the default branch whose run of this
+ * workflow passed, from GitHub's API; null when it cannot be had, which makes
+ * the push run everything.
+ * @param {object} env the CI environment
+ * @param {typeof fetch} [fetchImpl]
+ * @returns {Promise<string|null>}
+ */
+export async function lastGreenSha(env, fetchImpl = globalThis.fetch) {
+  const { GITHUB_TOKEN: token, GITHUB_REPOSITORY: repo, GITHUB_API_URL: api = 'https://api.github.com' } = env;
+  const workflow = env.GITHUB_WORKFLOW_REF?.match(/\.github\/workflows\/([^@/]+)@/)?.[1] ?? 'ci.yml';
+  if (!token || !repo || !env.DEFAULT_BRANCH) return null;
+  const query = new URLSearchParams({ branch: env.DEFAULT_BRANCH, event: 'push', status: 'success', per_page: '1' });
+  try {
+    const response = await fetchImpl(`${api}/repos/${repo}/actions/workflows/${workflow}/runs?${query}`, {
+      headers: { accept: 'application/vnd.github+json', authorization: `Bearer ${token}` }
+    });
+    if (!response.ok) return null;
+    const sha = (await response.json())?.workflow_runs?.[0]?.head_sha;
+    return isSha(sha) ? sha : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Every tracked symbolic link. A link can make a v3 path and a record path
+ * the same file, so that a record-only change alters what v3 reads or ships;
+ * links can chain, so rather than trust a resolution of them the gate's tests
+ * refuse them all. The repository holds none.
+ * @returns {string[]|null}
+ */
+export function trackedLinks(cwd) {
+  const listing = git(['ls-files', '--stage', '-z'], cwd);
+  if (listing === null) return null;
+  return splitZ(listing).filter(entry => entry.startsWith('120000 ')).map(entry => entry.split('\t')[1]).sort();
 }
 
 /**
@@ -226,7 +268,7 @@ export function runLane(name, { env = process.env, log = console.log, lanes = LA
   return 0;
 }
 
-function main(argv, env) {
+async function main(argv, env) {
   const has = flag => argv.includes(flag);
   const valueOf = flag => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined);
 
@@ -240,9 +282,13 @@ function main(argv, env) {
   } else if (has('--ci')) {
     let event = {};
     try { event = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, 'utf8')); } catch { /* read as no range */ }
-    const range = ciRange({ eventName: env.GITHUB_EVENT_NAME, event, ref: env.GITHUB_REF, sha: env.GITHUB_SHA });
+    const main = event?.repository?.default_branch || 'main';
+    const onMain = env.GITHUB_EVENT_NAME === 'push' && env.GITHUB_REF === `refs/heads/${main}`;
+    const lastGreen = onMain ? await lastGreenSha({ ...env, DEFAULT_BRANCH: main }) : null;
+    const range = ciRange({ eventName: env.GITHUB_EVENT_NAME, event, ref: env.GITHUB_REF, sha: env.GITHUB_SHA, lastGreen });
     paths = range ? pathsOfRange(range) : null;
-    source = `${env.GITHUB_EVENT_NAME} ${range ? range.join(' ') : 'with no readable range'}`;
+    source = `${env.GITHUB_EVENT_NAME} ${range ? range.join(' ') : 'with no readable range'}` +
+      (onMain ? `, from the last passing run on ${main}${lastGreen ? '' : ', which could not be read'}` : '');
   } else if (has('--range')) {
     const range = valueOf('--range');
     paths = range ? pathsOfRange([range]) : null;
@@ -272,5 +318,5 @@ function main(argv, env) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  process.exitCode = main(process.argv.slice(2), process.env);
+  process.exitCode = await main(process.argv.slice(2), process.env);
 }

@@ -8,13 +8,14 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, extname, join } from 'node:path';
 
 import {
   LANES, RECORD, ROOT, V3, V4, V4_BUDGET_SECONDS,
-  ciRange, classify, describe as describePlan, git, localPaths, pathsOfRange, plan, runLane
+  ciRange, classify, describe as describePlan, git, lastGreenSha, localPaths, pathsOfRange, plan, runLane,
+  trackedLinks
 } from './gate.mjs';
 
 const EVERYTHING = ['gate', 'v3', 'record'];
@@ -122,15 +123,19 @@ describe('ciRange', () => {
       [`origin/main...${SHA_B}`]);
   });
 
-  test('a push to the default branch is read from the commit before it', () => {
+  test("a push to the default branch is read from main's last passing run, not the commit before it", () => {
     const event = { repository, before: SHA_A };
-    assert.deepEqual(ciRange({ eventName: 'push', event, ref: 'refs/heads/main', sha: SHA_B }), [SHA_A, SHA_B]);
+    const lastGreen = 'c'.repeat(40);
+    assert.deepEqual(ciRange({ eventName: 'push', event, ref: 'refs/heads/main', sha: SHA_B, lastGreen }),
+      [lastGreen, SHA_B]);
   });
 
   test('anything without a safe range has none, so it runs everything', () => {
-    assert.equal(ciRange({ eventName: 'push', event: { repository, before: ZERO }, ref: 'refs/heads/main', sha: SHA_B }),
+    // On main, with no passing run to read from, `before` alone is not trusted.
+    assert.equal(ciRange({ eventName: 'push', event: { repository, before: SHA_A }, ref: 'refs/heads/main', sha: SHA_B }),
       null);
-    assert.equal(ciRange({ eventName: 'push', event: { repository }, ref: 'refs/heads/main', sha: SHA_B }), null);
+    assert.equal(ciRange({ eventName: 'push', event: { repository }, ref: 'refs/heads/main', sha: SHA_B, lastGreen: ZERO }),
+      null);
     assert.equal(ciRange({ eventName: 'push', event: { repository, before: SHA_A }, ref: 'refs/tags/v1', sha: SHA_B }),
       null);
     assert.equal(ciRange({ eventName: 'push', event: { repository, before: SHA_A }, ref: 'refs/heads/x', sha: 'HEAD' }),
@@ -138,6 +143,35 @@ describe('ciRange', () => {
     assert.equal(ciRange({ eventName: 'pull_request', event: { pull_request: { base: { sha: SHA_A } } } }), null);
     assert.equal(ciRange({ eventName: 'workflow_dispatch', event: {}, ref: 'refs/heads/main', sha: SHA_B }), null);
     assert.equal(ciRange({ eventName: undefined, event: {}, ref: undefined, sha: undefined }), null);
+  });
+});
+
+describe('lastGreenSha', () => {
+  const env = { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r', DEFAULT_BRANCH: 'main',
+    GITHUB_WORKFLOW_REF: 'o/r/.github/workflows/ci.yml@refs/heads/main' };
+  const answer = (body, ok = true) => async () => ({ ok, json: async () => body });
+
+  test("reads the newest passing push run of this workflow on main", async () => {
+    let asked;
+    const fetchImpl = async (url, options) => {
+      asked = { url, options };
+      return { ok: true, json: async () => ({ workflow_runs: [{ head_sha: SHA_A }] }) };
+    };
+    assert.equal(await lastGreenSha(env, fetchImpl), SHA_A);
+    const url = new URL(asked.url);
+    assert.equal(url.pathname, '/repos/o/r/actions/workflows/ci.yml/runs');
+    assert.deepEqual(Object.fromEntries(url.searchParams),
+      { branch: 'main', event: 'push', status: 'success', per_page: '1' });
+    assert.equal(asked.options.headers.authorization, 'Bearer t');
+  });
+
+  test('anything it cannot read is null, so the push runs everything', async () => {
+    assert.equal(await lastGreenSha(env, answer({ workflow_runs: [] })), null);
+    assert.equal(await lastGreenSha(env, answer({ workflow_runs: [{ head_sha: 'not-a-sha' }] })), null);
+    assert.equal(await lastGreenSha(env, answer({}, false)), null);
+    assert.equal(await lastGreenSha(env, async () => { throw new Error('offline'); }), null);
+    assert.equal(await lastGreenSha({ ...env, GITHUB_TOKEN: undefined }, answer({ workflow_runs: [{ head_sha: SHA_A }] })),
+      null);
   });
 });
 
@@ -213,10 +247,10 @@ describe('reading a change from git', () => {
     }
   });
 
-  test('a push to the default branch reads every commit it brings, merges included', () => {
+  test('a push to main reads every commit since the last passing run, merges included', () => {
     const repo = scratch();
     try {
-      const before = repo.run('rev-parse', 'HEAD');
+      const green = repo.run('rev-parse', 'HEAD');
       repo.write('src/a.js', 'export const a = 4;\n');
       repo.run('commit', '-q', '-am', 'v3');
       repo.run('switch', '-q', 'main');
@@ -224,8 +258,47 @@ describe('reading a change from git', () => {
       repo.run('commit', '-q', '-am', 'record on main');
       repo.run('merge', '-q', '--no-edit', 'work');
       const after = repo.run('rev-parse', 'HEAD');
-      const range = ciRange({ eventName: 'push', event: { before }, ref: 'refs/heads/main', sha: after });
+      const range = ciRange({ eventName: 'push', event: {}, ref: 'refs/heads/main', sha: after, lastGreen: green });
       assert.deepEqual(pathsOfRange(range, repo.dir).sort(), ['project/backlog.md', 'src/a.js']);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test("a v3 push whose run was replaced or failed is read again by the record-only push after it", () => {
+    // Codex's sequence: main passed at P; push B changes v3 and its run is
+    // replaced while it waits (or fails); push C changes only the record.
+    const repo = scratch();
+    try {
+      repo.run('switch', '-q', 'main');
+      const passed = repo.run('rev-parse', 'HEAD');
+      repo.write('src/b.js', 'export const b = 5;\n');
+      repo.run('commit', '-q', '-am', 'B: v3');
+      const b = repo.run('rev-parse', 'HEAD');
+      repo.write('project/backlog.md', '# Backlog\n- [ ] C\n');
+      repo.run('commit', '-q', '-am', 'C: record');
+      const c = repo.run('rev-parse', 'HEAD');
+      const range = ciRange({ eventName: 'push', event: { before: b }, ref: 'refs/heads/main', sha: c, lastGreen: passed });
+      assert.deepEqual(plan(pathsOfRange(range, repo.dir)).lanes, ['gate', 'v3', 'record']);
+      // Read from the commit before it, C alone would have looked record-only.
+      assert.deepEqual(plan(pathsOfRange([b, c], repo.dir)).lanes, ['record']);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test('every tracked link is found, chained ones included', () => {
+    // Codex's chain: src/alias -> ../images, then LICENSE -> src/alias/../project/license.txt,
+    // which a lexical reading places in src/ but the file system places in the record.
+    const repo = scratch();
+    try {
+      repo.write('project/license.txt', 'terms\n');
+      mkdirSync(join(repo.dir, 'images'));
+      symlinkSync('../images', join(repo.dir, 'src', 'alias'));
+      symlinkSync('src/alias/../project/license.txt', join(repo.dir, 'LICENSE'));
+      symlinkSync('a.js', join(repo.dir, 'src', 'c.js'));
+      repo.run('add', '-A');
+      assert.deepEqual(trackedLinks(repo.dir), ['LICENSE', 'src/alias', 'src/c.js']);
     } finally {
       repo.done();
     }
@@ -306,6 +379,10 @@ describe('the gate as wired in this repository', () => {
     assert.deepEqual(found, []);
   });
 
+  test('no file is a tracked link, so no v3 path can be a record path in disguise', () => {
+    assert.deepEqual(trackedLinks(), []);
+  });
+
   test("npm run check still runs v3's whole suite and the record checker, as the release helper expects", () => {
     const { scripts } = JSON.parse(read('package.json'));
     const asText = ([command, args]) => [command === process.execPath ? 'node' : command, ...args].join(' ');
@@ -319,8 +396,13 @@ describe('the gate as wired in this repository', () => {
     const steps = workflow.split(/\n\s+- name: /).slice(1);
     const stepRunning = text => steps.filter(step => step.includes(text));
     assert.match(workflow, /fetch-depth: 0/);
+    // Runs on main never share a group, so none is replaced while it waits.
+    assert.match(workflow, /group: verify-\$\{\{ github\.ref == 'refs\/heads\/main' && github\.run_id \|\| github\.ref \}\}/);
     assert.match(workflow, /cancel-in-progress: \$\{\{ github\.ref != 'refs\/heads\/main' \}\}/);
-    assert.equal(stepRunning('node scripts/gate.mjs --ci --plan').length, 1);
+    assert.match(workflow, /\n {2}actions: read\n/);
+    const sort = stepRunning('node scripts/gate.mjs --ci --plan');
+    assert.equal(sort.length, 1);
+    assert.match(sort[0], /GITHUB_TOKEN: \$\{\{ github\.token \}\}/);
     assert.match(stepRunning('npm ci')[0], /if: steps\.sort\.outputs\.install == 'true'/);
     for (const lane of ['gate', 'v3', 'v4']) {
       const [step] = stepRunning(`node scripts/gate.mjs --lane ${lane}`);

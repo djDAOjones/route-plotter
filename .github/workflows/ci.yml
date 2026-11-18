@@ -6,12 +6,15 @@ on:
 
 permissions:
   contents: read
+  # GATE-01: a push to main reads which of main's runs last passed.
+  actions: read
 
 # A newer push to a branch or pull request replaces the older run, which is
-# safe because each run reads the whole change against main (GATE-01). Runs
-# on main are never cancelled: each reads only the commits its push brought.
+# safe because each run reads the whole change against main (GATE-01). Each
+# run on main has a group of its own, so none is cancelled or replaced while
+# it waits, and each reads everything since main's last passing run.
 concurrency:
-  group: verify-${{ github.ref }}
+  group: verify-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
@@ -36,6 +39,8 @@ jobs:
       - name: Sort the change by what it touches
         id: sort
         run: node scripts/gate.mjs --ci --plan
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Install frozen dependencies
         if: steps.sort.outputs.install == 'true'
