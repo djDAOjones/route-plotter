@@ -8,6 +8,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Phase 5 — v4: the architecture plan, before any code — the owner's word of 2026-11-18
+
+- GATE-01 — the gate sorts each push by what it changed: a record-only change runs the record checker alone, frozen v3 its whole suite, anything unplaced everything; v4's lane waits for STACK-01, `npm run check` still runs everything, by pull request (2026-11-18) — see decisions
+
 ## The stock take against the v4 vision — the owner's ruling of 2026-11-18
 - UI-06 — the app's interface was reviewed against the UI standards and every breach found was fixed and released by v3.3.726; the judgement rows left open are kept as inputs to v4's interface, v3 being frozen (2026-11-18) — see decisions
 - CROWD-07 — the crowd features were reviewed for novices and experts and both card changes were released by v3.3.726; the rows left open are kept as inputs to v4's interface, v3 being frozen (2026-11-18) — see decisions
