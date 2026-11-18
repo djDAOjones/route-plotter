@@ -26,80 +26,35 @@
 
 ### Next feature — the owner's word of 2026-10-18 — CLOSED 2026-10-19
 
-### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
+### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held — CLOSED 2026-11-18
 
-- [!] TST-11 — Behavioural tests for source-text assertions — since 2026-10-01 — blocked: the owner's word to retire the source-text assertions its new tests cover (GATELESS-1 bars deleting a test)
-- [ ] DEF-15 — L resumes at the old J/K/L speed · Live defect P2 — since 2026-10-01
-- [ ] DEF-19 — Camera-zoom edits skip undo · Live defect P2 — since 2026-10-01
-- [ ] DEF-22 — An inserted waypoint splits a branch run · Live defect P2 — since 2026-10-01
-
-### Phase 3 — Design reviews — the owner's word of 2026-10-06
-
-- [~] UI-06 — Review and tweak the app GUI against the UI standards — since 2026-10-06
-- [~] CROWD-07 — Review the crowd features for novices and experts — since 2026-10-06
-- [ ] UI-07 — Review the layout and order of cards, sidebars and header — since 2026-10-08
-
-### Review assurance — owner evidence
-
-- [!] REV-03 — Unified pointer transactions · Review assurance — since 2026-10-01 — blocked: owner evidence — physical Android Chrome
-- [!] REV-05 — Accessibility assurance · Accessibility assurance — since 2026-10-01 — blocked: owner evidence — NVDA/VoiceOver + forced-colours + reduced-motion emulation
+### Phase 3 — Design reviews — the owner's word of 2026-10-06 — CLOSED 2026-11-18
 
 ### pm-skills 5.0.1 — the owner's word of 2026-11-18 — CLOSED 2026-11-18
 
+### Phase 5 — v4: the architecture plan, before any code — the owner's word of 2026-11-18
+
+- [ ] MERGE-01 — Plan v4's merge of routes and crowds — since 2026-10-13 — (from: PLAN-4, 2026-10-13)
+- [ ] REFACTOR-01 — Plan the port of v3's engine into v4 — since 2026-10-14 — (from: REFACTOR-01, 2026-10-14)
+- [ ] GATE-01 — Gate by what changed — since 2026-11-18 — (from: PLAN-5, 2026-11-18)
+
 ## Next
 
-**After CROWD-08: a refactor, then v4 — the owner's words of 2026-10-13 and 2026-10-14**
+**The v4 programme's later phases, in order (PLAN-5); each opens under Current by its own PLAN entry, once the architecture plan has named its items**
 
-- [ ] REFACTOR-01 — Refactor in light of PM-Skills 3.1's frameworks — since 2026-10-14 — (from: REFACTOR-01, 2026-10-14)
-- [ ] MERGE-01 — Plan v4's merge of routes and crowds — since 2026-10-13 — (from: PLAN-4, 2026-10-13)
+**Phase 6, proposed — v4's foundations: v4 at the root on the editor stack, its own gate running**
 
-**The built-in examples — the owner's word of 2026-10-05**
+- [ ] STACK-01 — v4 at the root on the editor stack — since 2026-11-18 — (from: PLAN-5, 2026-11-18)
 
-- [!] EX-01 — Overhaul the built-in examples — since 2026-10-05 — blocked: the owner's direction on what each example shows — (from: CROWD-05, 2026-10-05)
+**Phase 7, proposed — the core, end to end, and the first v4 on Pages**
 
-**W4 — remove clearly dead code (§20 Q8; mutate every branch of anything moved, and account for every survivor)**
+- [ ] PUB-01 — Each app merge the owner orders publishes v4 — since 2026-11-18 — (from: PLAN-5, 2026-11-18)
 
-- [ ] DEL-02 — Render dead code · Dead code P1 — since 2026-10-01
-- [ ] DEL-03 — Engine, geometry and bus dead code · Dead code P1 — since 2026-10-01
-- [ ] DEL-04 — Wiring dead code · Dead code P1 — since 2026-10-01
-- [ ] DEL-05 — UI, config and CSS dead code · Dead code P1 — since 2026-10-01
-- [ ] DEL-06 — Services dead API · Dead code P2 — since 2026-10-01
-- [ ] DEL-01 — Unused barrels · Dead code P2 — since 2026-10-01
+**Phase 8, proposed — features, the five presets and v4.0 (EX-01 from the owner's word of 2026-10-05; REV-03 and REV-05 parked until v4 by his ruling of 2026-11-18)**
 
-**Found defects**
-
-- [ ] DEF-50 — Autosave failure unseen — since 2026-10-05
-- [ ] DEF-51 — Failed load leaves caches — since 2026-10-05
-- [ ] DEF-54 — Outside drop moves rows — since 2026-10-05
-- [ ] DEF-55 — List drop sends branch last — since 2026-10-05
-- [ ] DEF-56 — Constant-time open unscheduled — since 2026-10-05
-- [ ] DEF-57 — Branch majors lack clock — since 2026-10-05
-- [ ] DEF-58 — Export edits change scene — since 2026-10-05
-- [ ] DEF-60 — Refused rejoin half-restored — since 2026-10-05
-- [ ] DEF-62 — Space at end stalls — since 2026-10-05
-- [ ] DEF-63 — Shortcuts take modifier chords — since 2026-10-05
-- [ ] DEF-65 — Branch place: two undos — since 2026-10-05
-- [ ] DEF-66 — Export settings skip autosave — since 2026-10-05
-- [ ] DEF-67 — Open announces "paused" — since 2026-10-05
-- [ ] DEF-68 — Paused camera controls sleep — since 2026-10-05
-- [ ] DEF-69 — Zoom warning unattached — since 2026-10-05
-- [ ] DEF-70 — Menu item drops focus — since 2026-10-05
-- [ ] DEF-71 — Unknown build flag releases — since 2026-10-05
-- [ ] DEF-73 — Leg card misnames waypoint — since 2026-10-05
-- [ ] DEF-74 — Redo restores no selection — since 2026-10-05
-- [ ] DEF-75 — Index check misses references — since 2026-10-05
-- [ ] DEF-76 — Leg-speed edit stales timing — since 2026-10-05
-- [ ] DEF-78 — Comet tail retimes crowds — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
-- [ ] DEF-79 — Render space moves crowd anchors — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
-- [ ] DEF-80 — Player retimes constant-time projects — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
-- [ ] DEF-85 — Anchored window start misreads — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
-- [ ] DEF-87 — Traced node drag no-op — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
-- [ ] DEF-88 — Branch keeps crowd inspector — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
-- [ ] DEF-90 — Window length readout unclipped — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
-- [ ] DEF-92 — Crowd sliders undo on timer — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
-- [ ] DEF-93 — Journey-end hint misadvises — since 2026-10-08 — (from: CROWD-07, 2026-10-08)
-- [ ] DEF-95 — Network loop sway varies per lap — since 2026-10-11 — (from: CROWD-07, 2026-10-11)
-- [ ] DEF-97 — Busyness fields drop typed values — since 2026-10-12 — (from: CROWD-07, 2026-10-12)
+- [ ] EX-01 — One built-in scene for each of the five presets, in v4 — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
+- [!] REV-03 — Unified pointer transactions · Review assurance — since 2026-10-01 — blocked: v4's pointer input, then owner evidence — physical Android Chrome
+- [!] REV-05 — Accessibility assurance · Accessibility assurance — since 2026-10-01 — blocked: v4's extended accessibility depth before v4.0 is declared, then owner evidence — NVDA/VoiceOver + forced-colours + reduced-motion emulation
 
 **Medium term — the owner's word of 2026-10-15**
 

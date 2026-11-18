@@ -22,6 +22,24 @@ The owner wants the next major version, v4, to merge routes and crowds. In his w
 - The plan states where it departs from the v3 founding decision of 2026-08-17 (the frozen canon log; `project/history.md`) and from the brief's Direction. It brings the brief's amendment for the owner to sign.
 - The owner answers one question round on the plan before any code.
 - Codex reviews the plan before the owner's question round.
+- The plan gives every line on the stock take's held list (`reviews/v4-stock-take-2026-11-18.md`) a v4 item that must pass or weigh it, or brings it back to the owner to retire.
+- Added by PLAN-5 on 2026-11-18, from the owner's answers:
+  - it is one written document with REFACTOR-01's port plan, and it rules how v3's source moves aside at the root and stays recoverable at tag v3.3.726;
+  - it lists every feature with its home, the scene or a route, by what an author would expect, with the reason for each (Q10);
+  - it names the core's contact points, each used by at least two real v4.0 features (Q12);
+  - it gives measures the owner can check, for example that adding a feature touches only its own module (Q1);
+  - it names, in order, the items of the phases that follow, so that each phase can open by its own PLAN entry;
+  - it holds as checks on v4 the save fault DEF-101 described and, once verified, the five lost defects;
+  - it brings to its question round the two readings the owner left unticked: whether v4 keeps browser storage keys of its own, and whether the Xerte copy's readiness is a condition for v4 replacing v3 on Pages;
+  - it brings the amendment of the brief's "What we are building" and "Platform and deployment" sections, which still describe v3.
+
+## Now
+
+Updated: 2026-11-18
+
+Next step: On the owner's word, write the architecture plan in `reviews/` as one document with REFACTOR-01's port plan; Codex reviews it read-only; then the owner's question round, before any code.
+
+Open question: None before the plan is written; the plan's question round carries the two unticked readings.
 
 ## Context and sources
 
@@ -49,3 +67,5 @@ The owner wants the next major version, v4, to merge routes and crowds. In his w
 - 2026-10-14 — On the owner's word, REFACTOR-01 comes first after CROWD-08: a major refactor in light of PM-Skills 3.1's frameworks, so that v4's merge lands on more modular code (the decisions: REFACTOR-01).
 - 2026-10-15 — AI-01, AI-editable saves, is filed as a medium-term feature on the owner's word. It would document the save format that v4 settles; its filing session proposes that the plan weigh a schema-first save (`project/items/AI-01.md`).
 - 2026-11-18 — The owner asked, verbatim: "have we got on the roadmap a major phase of development to unify the standard routes and crowd route technology, and pair it with a modular feature set that users can add as needed, to simplify the UI and back end whilst enabling more advanced functionality, but only on demand?" The session found the merge and the features pop-up recorded here, with REFACTOR-01's modularity ahead of it, but no criterion on options built as modules in the code, on advanced functionality staying hidden until added, or on simplifying the back end. Asked "Add the back-end modules and on-demand principle to MERGE-01's criteria?", he answered "Yes, draft it". The session added three criteria to the plan's list and a §16 test for a module design; their wording is the session's. Of the draft he said: "text is good, add to the record but dont start the work".
+- 2026-11-18 — The stock take. On the owner's ruling ("as per your recommendation", of the option "One held list (Recommended)") the held list in `reviews/v4-stock-take-2026-11-18.md` is merged into this item: checks v4 must pass, inputs to v4's interface design and candidate features, with five lost defects (DEF-05, DEF-07, DEF-10, DEF-11, DEF-12) to verify first. The last criterion above was added on that ruling. Q14 answers the criterion on v3 projects carrying over: they do not.
+- 2026-11-18 — PLAN-5 makes this the v4 programme's first item, the architecture plan. The owner's instructions in force, verbatim, from his task message of 2026-11-18: "The first item is the architecture plan (MERGE-01 and REFACTOR-01's written plan, reviewed by Codex, then my question round), before any code." His vision and his answers Q1 to Q24 are word for word in `reviews/v4-vision-question-rounds-2026-11-18.md`, and his answers on the programme in `reviews/v4-programme-2026-11-18.md`. Confirmed there: if another feature depends on the one being removed, the app names it and asks first; a preset is a starting point for one route, and the built-in examples stay whole demonstration scenes. Of DEF-101 he said "drop this fix, concentrate on building new" and chose "No v3 fix, v4 check kept (Recommended)".
