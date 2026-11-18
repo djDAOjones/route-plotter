@@ -44,9 +44,7 @@
 - [!] REV-03 — Unified pointer transactions · Review assurance — since 2026-10-01 — blocked: owner evidence — physical Android Chrome
 - [!] REV-05 — Accessibility assurance · Accessibility assurance — since 2026-10-01 — blocked: owner evidence — NVDA/VoiceOver + forced-colours + reduced-motion emulation
 
-### pm-skills 5.0.1 — the owner's word of 2026-11-18
-
-- [~] REFRESH-501 — The project takes pm-skills 5.0.1 by the refresh — since 2026-11-18
+### pm-skills 5.0.1 — the owner's word of 2026-11-18 — CLOSED 2026-11-18
 
 ## Next
 

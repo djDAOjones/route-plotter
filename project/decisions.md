@@ -26,6 +26,18 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-11-18 — REFRESH-501 — The project takes pm-skills 5.0.1 by the refresh route: seven files replaced, the record kept
+
+**Decision:** The project runs pm-skills 5.0.1, build fd5fb94 (the tag v5.0.1 of canon), from 5.0.0 (a2a4b37), by the release's own refresh route, in the commit before the one carrying this entry: tools/check.mjs, harness.mjs, ledger.mjs, migrate.mjs and read.mjs and verbs/intake.md replaced and tools/VERSION now reading 5.0.1, as a set; no pack installed; AGENTS.md, CLAUDE.md and every file under project/ unchanged. Because the owner's word of 2026-11-18 sends the seven projects to 5.0.1, this one first.
+
+**Rationale:** The first use of the released instructions: pm-skills 5.0.1's Upgrade action 1 and the shipped README's "Refresh to a later 5.x". The route first ran on a disposable clone, its printed rollback tried and the tree found back as before; then here, once, and refused nothing: no project file sits on a replaced path, and the 117 files under project/ were byte-equal and written nothing. The installed build was found by the tag v5.0.0 alone. Every installed tool, verb, AGENTS.md and CLAUDE.md now equals v5.0.1's bytes (26 files). The checker gives the same result before and after, no failure and the same two warnings; the start read differs only by the item's backlog line and 5.0.1's own leaving out of a closed phase heading with nothing under it. No signed file changes: the profile, rules file and brief are untouched, and the signed Harness sentence stays as the earlier entry left it. Rollback: `git revert --no-edit` of the refresh commit, or revert the pull request's merge commit; nothing outside the repository changes.
+
+- Migration edit: none — no project file sits on a replaced path
+
+**Supersedes:** 2026-11-16 — V31-REFRESH-4 — The project takes the lab's pm-skills 5 candidate b875c63 by the refresh route: seventeen files replaced, tools/VERSION added, the record kept
+
+**Deferred:** none
+
 ## 2026-11-16 — V31-REFRESH-4 — The project takes the lab's pm-skills 5 candidate b875c63 by the refresh route: seventeen files replaced, tools/VERSION added, the record kept
 
 **Decision:** The project runs PM-Skills lab b875c63, the candidate for pm-skills 5.0.0, from 8d4e029, by the lab's refresh route, in the commit before the one carrying this entry: seventeen tools, verbs and CLAUDE.md replaced and tools/VERSION added, reading 5.0.0, as a set; no pack installed and no App opinion line added; AGENTS.md and the project's files unchanged. The owner's signed Harness sentence is not taken: it makes the profile 402 words against its hard budget of 400, so it waits on his decision (wish V31-REFRESH-4.1). Because the owner released the round on 2026-11-16.
