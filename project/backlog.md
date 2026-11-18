@@ -36,7 +36,6 @@
 
 - [ ] MERGE-01 — Plan v4's merge of routes and crowds — since 2026-10-13 — (from: PLAN-4, 2026-10-13)
 - [ ] REFACTOR-01 — Plan the port of v3's engine into v4 — since 2026-10-14 — (from: REFACTOR-01, 2026-10-14)
-- [ ] GATE-01 — Gate by what changed — since 2026-11-18 — (from: PLAN-5, 2026-11-18)
 
 ## Next
 
