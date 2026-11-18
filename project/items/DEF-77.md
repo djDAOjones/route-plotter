@@ -15,10 +15,10 @@ A crowd's "At journey end" setting (Disappear, Collect, Respawn, Repeat journey)
 ## Context and sources
 
 - The owner's answers, relayed verbatim by the Backlog status session (2026-10-05, about 08:20): on the timing fix, "your choice but no backwards compatibility needed"; on Respawn against Repeat journey, "Make Respawn vary".
-- `src/services/SwarmEngine.js` — the mode read at an Exit or a true dead end (:400-413), the entry fallback (:363-366), Respawn on route crowds (:318-333), `scheduleDots` (:149)
-- `src/services/NetworkEditService.js` (:350-353) — pen nodes pass through, edges run both ways; `src/utils/graphRouting.js` (:27-29) — the turn back at a dead end
-- `src/models/Emitter.js` (:63) — crowd speed; `src/app/pathTiming.js` (:543-550) — the timeline; `src/app/crowds.js` (:630-636) — new-crowd defaults
-- `tests/swarmEngine.test.js` (:452-466) — the count-only Respawn check; `tests/authorableLoadable.test.js` (:632) — `lifecycle: 'collect'`, an ignored key
+- `v3/src/services/SwarmEngine.js` — the mode read at an Exit or a true dead end (:400-413), the entry fallback (:363-366), Respawn on route crowds (:318-333), `scheduleDots` (:149)
+- `v3/src/services/NetworkEditService.js` (:350-353) — pen nodes pass through, edges run both ways; `v3/src/utils/graphRouting.js` (:27-29) — the turn back at a dead end
+- `v3/src/models/Emitter.js` (:63) — crowd speed; `v3/src/app/pathTiming.js` (:543-550) — the timeline; `v3/src/app/crowds.js` (:630-636) — new-crowd defaults
+- `v3/tests/swarmEngine.test.js` (:452-466) — the count-only Respawn check; `v3/tests/authorableLoadable.test.js` (:632) — `lifecycle: 'collect'`, an ignored key
 
 ## Notes
 

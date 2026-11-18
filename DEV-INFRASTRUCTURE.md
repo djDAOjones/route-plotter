@@ -11,7 +11,7 @@ scripts, configuration, or deployment.
 
 Package manager: **npm**
 
-- `package.json` lives in the project root.
+- Frozen v3 lives in `v3/` (STACK-01); run the commands below from there.
 - **Runtime dependencies:** `jszip` (project archives) and `mediabunny`
   (MP4/WebM mux layer). Do not add runtime packages without explicit
   approval.
@@ -34,8 +34,8 @@ Package manager: **npm**
 | `build` | `NODE_ENV=production node build.js` | Production build (minified, sourcemap) | Before deploy |
 | `build:deploy` | `npm run build` | Alias of `build` — outputs straight to `docs/` (the GitHub Pages dir) | When deploying |
 | `build:check` | `NODE_ENV=production node build.js --check` | Validate a temporary production build without changing `docs/` or `version.json` | CI / close-out |
-| `check` | `npm test && npm run test:shell && npm run build:check && node tools/check.mjs` | Canonical JS, maintainer-script, build and record gate | Before commit and release |
-| `check:changed` | `node scripts/gate.mjs` | The gate sorted by what changed (Quality gate) | Close-out; CI |
+| `check` | `npm test && npm run test:shell && npm run build:check && cd .. && node tools/check.mjs` | Canonical JS, maintainer-script, build and record gate | Before commit and release |
+| `check:changed` | `node ../scripts/gate.mjs` | The gate sorted by what changed (Quality gate) | Close-out; CI |
 | `test` | `vitest run --pool=threads --no-file-parallelism` | Run tests once | After every change |
 | `test:shell` | `bash tests/restartSafety.test.sh` | Project-scoped dev-server PID/cleanup contract | After restart-script changes / in CI |
 | `test:watch` | `vitest watch --pool=threads --no-file-parallelism` | Tests in watch mode | During development |
@@ -72,8 +72,8 @@ close.
   `.github/workflows/ci.yml`) sort the change (GATE-01: the lists are in
   `scripts/gate.mjs`, beside its tests): a record-only change runs the record
   checker alone; any other also runs the gate's tests and v3's suite (v4's lane
-  waits for STACK-01). CI then fails if `docs/` or `version.json` differ from
-  the commit.
+  waits for STACK-02). CI then fails if `docs/`, `version.json` or
+  `v3/version.json` differ from the commit.
 - There is no linter, formatter check, type checker or Markdown link checker,
   so report only what the gate runs. The verify-line format is in
   `pm_skills/project/conventions.md` → Commit messages.
@@ -132,10 +132,10 @@ serving `docs/` over HTTP. Reaching a known-good state is one command
   entirely in the browser.
 - **Generated output:** `docs/` and the `version.json` build field, both
   produced by `build.js`. Never hand-edit them (see Files agents must not
-  hand-edit below). A deleted `docs/` is recovered with
-  `git restore docs`; a dev build does not recreate the committed release
-  output. Never delete `version.json`: the counter would restart, and the next
-  build would write build 1.
+  hand-edit below). `docs/` here is ignored output, rebuilt by the next
+  build; the live site is the root's `docs/`, which no v3 build touches.
+  Never delete `version.json`: the counter would restart, and the next build
+  would write build 1.
 - **Health / readiness:** the app is *ready* — not merely launched —
   when `http://localhost:3000` loads with no console errors and the
   version stamp renders. A blank page or console error means not-ready.
@@ -146,11 +146,9 @@ serving `docs/` over HTTP. Reaching a known-good state is one command
   `npm run check`. Its `build:check` proves the production build without
   touching tracked files, but not readiness: when a task changed what the app
   does at runtime, check readiness as above or report it as not verified. An
-  interactive boot (`npm run dev` or `./scripts/restart.sh`) rewrites
-  `docs/`, bumps `version.json` and leaves an untracked
-  `docs/player.js.map`. Before committing, stop that server (the watcher
-  would rewrite them again), run `git restore docs version.json` and delete
-  the map.
+  interactive boot (`npm run dev` or `./scripts/restart.sh`) rewrites the
+  ignored `docs/` and bumps `version.json`. Before committing, stop that
+  server (the watcher would bump it again) and run `git restore version.json`.
 - **Recovery playbook** — server wedged or port stuck. One command stops any
   running dev server, reboots, and waits for HTTP 200:
 

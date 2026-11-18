@@ -2,7 +2,7 @@
 
 ## Intent
 
-A crowd whose emitter carries a `releaseAnchor` (today only the built-in Open day Visitors crowd, `src/examples/index.js` line 119) releases at the anchored route moment, but the Release card's Window start slider shows the authored `releaseStart` (0%) and moving it changes nothing while the anchor resolves (`src/utils/routeAnchors.js` lines 138-150). Probe: authored 80%, effective 10%. UI-STANDARDS Recognition over recall: "Slider readouts show the value the renderer or timeline consumes". **P2**
+A crowd whose emitter carries a `releaseAnchor` (today only the built-in Open day Visitors crowd, `v3/src/examples/index.js` line 119) releases at the anchored route moment, but the Release card's Window start slider shows the authored `releaseStart` (0%) and moving it changes nothing while the anchor resolves (`v3/src/utils/routeAnchors.js` lines 138-150). Probe: authored 80%, effective 10%. UI-STANDARDS Recognition over recall: "Slider readouts show the value the renderer or timeline consumes". **P2**
 
 ## Acceptance criteria
 
@@ -13,9 +13,9 @@ A crowd whose emitter carries a `releaseAnchor` (today only the built-in Open da
 
 ## Context and sources
 
-- `src/app/crowds.js` (:821-822) — `syncCrowdEditor` writes `releaseStart`
-- `src/utils/routeAnchors.js` (:102-150) — the anchor wins while it resolves
-- `src/examples/index.js` (:119) — the anchored example
+- `v3/src/app/crowds.js` (:821-822) — `syncCrowdEditor` writes `releaseStart`
+- `v3/src/utils/routeAnchors.js` (:102-150) — the anchor wins while it resolves
+- `v3/src/examples/index.js` (:119) — the anchored example
 - [The crowd review](../../reviews/crowd-07-crowd-review-2026-10-08.md) — F3, F27
 - [Codex's verdict](../../reviews/design-review-second-opinion-2026-10-08.md) — CONFIRMED; distinct from DEF-79
 - [UI-06](./UI-06.md) and [CROWD-07](./CROWD-07.md) — the reviews that found it

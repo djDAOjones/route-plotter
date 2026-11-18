@@ -2,7 +2,7 @@
 
 ## Intent
 
-`hasJourneyEnd` is false when no end is reachable from any entry (`src/services/SwarmEngine.js` lines 286-293 and 426-447), including a network that has an Exit on a part the dots cannot reach; the hint under "At journey end" still says "Set a node's Type to Exit to see this setting act." (`src/app/crowds.js` lines 49-50). Repro (Codex): a reachable loop A, B, A with an Exit C no path leads to; adding another Exit elsewhere changes nothing, the fix is an edge direction. **P3**
+`hasJourneyEnd` is false when no end is reachable from any entry (`v3/src/services/SwarmEngine.js` lines 286-293 and 426-447), including a network that has an Exit on a part the dots cannot reach; the hint under "At journey end" still says "Set a node's Type to Exit to see this setting act." (`v3/src/app/crowds.js` lines 49-50). Repro (Codex): a reachable loop A, B, A with an Exit C no path leads to; adding another Exit elsewhere changes nothing, the fix is an edge direction. **P3**
 
 ## Acceptance criteria
 
@@ -12,8 +12,8 @@
 
 ## Context and sources
 
-- `src/services/SwarmEngine.js` (:286-293, :410, :426-447) — reachability
-- `src/app/crowds.js` (:49-50, :866-875) — the hint
+- `v3/src/services/SwarmEngine.js` (:286-293, :410, :426-447) — reachability
+- `v3/src/app/crowds.js` (:49-50, :866-875) — the hint
 - [The crowd review](../../reviews/crowd-07-crowd-review-2026-10-08.md) — F20, F36
 - [Codex's verdict](../../reviews/design-review-second-opinion-2026-10-08.md) — mechanism real, repro corrected
 - [UI-06](./UI-06.md) and [CROWD-07](./CROWD-07.md) — the reviews that found it

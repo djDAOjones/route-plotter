@@ -2,7 +2,7 @@
 
 ## Intent
 
-The engine clips the release window to the timeline (the window end is the lesser of start plus length and 1, `src/services/SwarmEngine.js` lines 475-476), but the Release card shows the authored length: at Window start 60% and Window length 100% the readout says "100%" while the effective window is 40%. UI-STANDARDS Recognition over recall (readouts show the value the renderer consumes). **P3**
+The engine clips the release window to the timeline (the window end is the lesser of start plus length and 1, `v3/src/services/SwarmEngine.js` lines 475-476), but the Release card shows the authored length: at Window start 60% and Window length 100% the readout says "100%" while the effective window is 40%. UI-STANDARDS Recognition over recall (readouts show the value the renderer consumes). **P3**
 
 ## Acceptance criteria
 
@@ -12,8 +12,8 @@ The engine clips the release window to the timeline (the window end is the lesse
 
 ## Context and sources
 
-- `src/services/SwarmEngine.js` (:474-481) — the clip
-- `src/app/crowds.js` (:258-261) — the readout
+- `v3/src/services/SwarmEngine.js` (:474-481) — the clip
+- `v3/src/app/crowds.js` (:258-261) — the readout
 - [The crowd review](../../reviews/crowd-07-crowd-review-2026-10-08.md) — F29
 - [Codex's verdict](../../reviews/design-review-second-opinion-2026-10-08.md) — CONFIRMED
 - [UI-06](./UI-06.md) and [CROWD-07](./CROWD-07.md) — the reviews that found it

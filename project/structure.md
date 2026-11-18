@@ -8,45 +8,34 @@
 | `_Joe/design docs/` | 36 | the owner's design documents |
 | `_Joe/dev helper scripts/` | 2 | the owner's helper scripts (DEL-07 deletes two) |
 | `_Joe/dev notes/` | 6 | the dev guide, routed for code changes until DOC-08 retires it |
-| `./` | 16 | the app shell (`index.html`), `build.js` and `push.js`, the workspace file, the v3 contract (`AGENTS.md`, `CLAUDE.md`), the kept rulebooks `UI-STANDARDS.md` and `DEV-INFRASTRUCTURE.md`, `version.json` (build-managed) |
-| `docs/` | 22 | generated build output and the GitHub Pages root — never hand-edited; only npm run push commits it |
-| `docs/examples/` | 3 | built-in example projects, built |
+| `./` | 9 | the workspace file, the contract (`AGENTS.md`, `CLAUDE.md`), the kept rulebooks `UI-STANDARDS.md` and `DEV-INFRASTRUCTURE.md`, `README.md`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, and the live site's `version.json`, which only a release changes |
+| `docs/` | 24 | generated build output and the GitHub Pages root — never hand-edited; only npm run push commits it |
+| `docs/examples/` | 5 | built-in example projects, built |
 | `docs/images/` | 6 | the example images, copied |
 | `docs/styles/` | 6 | the shipped stylesheets, copied |
-| `images/` | 6 | the six built-in example images (source) |
 | `pm_skills/` | 35 | the frozen canon 4.7.0 record and framework copy, pinned by `project/migration/inventory.json`; never edited (`project/history.md`) |
 | `pm_skills/integrations/` | 6 | canon workflows, frozen |
 | `pm_skills/prompts/` | 14 | canon prompts, frozen |
 | `pm_skills/scaffold/` | 2 | canon scaffold scripts, frozen |
 | `pm_skills/templates/` | 4 | canon templates, frozen |
-| `reviews/` | 16 | review dossiers, the abstraction plan (each big-run item's detail) and the continuation prompts |
-| `scripts/` | 5 | maintainer shell scripts (restart, build), the perf harness, the example builder |
+| `reviews/` | 371 | review dossiers, the abstraction plan (each big-run item's detail) and the continuation prompts |
+| `reviews/design-review-2026-10-08-shots/` | 344 | the design review's screenshots, before and after (2026-10-08) |
+| `scripts/` | 2 | the gate sorted by what changed (`scripts/gate.mjs`, GATE-01) and its tests; CI runs it from the root |
 | `specs/` | 15 | absorbed specifications |
 | `specs/dot-crowd-navigator/` | 15 | the crowd-flow fork's spec, absorbed into v3's flow layers |
-| `src/` | 100 | the app |
-| `src/app/` | 20 | the RoutePlotter orchestrator's mixins — durable model changes, persistence, wiring |
-| `src/assets/` | 2 | bundled assets |
-| `src/components/` | 5 | UI widgets outside the EventBus rule |
-| `src/config/` | 4 | constants, keybindings, help content, tooltips — every tuneable value |
-| `src/controllers/` | 3 | UIController, SectionController, SceneOutlineController |
-| `src/core/` | 2 | PlayerCore — the deterministic timeline |
-| `src/examples/` | 1 | the example registry |
-| `src/handlers/` | 1 | InteractionHandler — the one pointer transaction |
-| `src/models/` | 10 | Waypoint, Scene, FlowLayer, Emitter and the rest of the model |
-| `src/player/` | 3 | the exported-HTML player, bundled to `docs/player.js` |
-| `src/services/` | 21 | AnimationEngine, PathCalculator, RenderingService, CoordinateTransform, VideoExporter and the other services |
-| `src/utils/` | 27 | pure utilities: image coordinates, scene semantics, focus trap |
-| `styles/` | 6 | the shipped stylesheets and `styles/tokens.css` (UoN and Okabe-Ito) |
-| `tests/` | 117 | the Vitest suite: goldens, fixtures, helpers, the restart-script shell contract |
-| `tests/fixtures/` | 1 | test fixtures |
-| `tests/goldens/` | 15 | golden frames and draw logs |
-| `tests/helpers/` | 6 | bootApp and the shared helpers |
-| `tools/` | 14 | pm-next v3.1 tools (check, read, find, view, harness, session, structure, archive, ledger, migrate, handover, run, brief, lanes) |
+| `tools/` | 15 | pm-next v3.1 tools (check, read, find, view, harness, session, structure, archive, ledger, migrate, handover, run, brief, lanes) |
+| `v3/` | 456 | frozen v3 at 3.3.726, moved here by STACK-01: its app set, its own `v3/package.json` and lockfile, copies of `v3/version.json`, `v3/LICENSE` and the notices; it builds into the ignored v3/docs/, and the tag v3.3.726 recovers it |
+| `v3/images/` | 6 | the six built-in example images (source) |
+| `v3/scripts/` | 5 | maintainer shell scripts (restart, build), the perf harness, the example builder |
+| `v3/src/` | 122 | the app: the orchestrator's mixins (app), services, models, PlayerCore (core), the exported player (player), config, utils, controllers, components, InteractionHandler (handlers), the example registry (examples) |
+| `v3/styles/` | 6 | the shipped stylesheets and `v3/styles/tokens.css` (UoN and Okabe-Ito) |
+| `v3/tests/` | 307 | the Vitest suite: goldens, fixtures, helpers, the restart-script shell contract |
 | `verbs/` | 9 | pm-next v3.1 verbs (plan, close, recall, intake, and the add-ons orchestrate, control, sweep, stocktake, design-review) |
 
 ## Entry points
 
-- [`index.html`](../index.html) → [`src/main.js`](../src/main.js) — the orchestrator core; its mixins in `src/app/`
-- [`src/player/playerEntry.js`](../src/player/playerEntry.js) — the exported player bundle
-- [`build.js`](../build.js) — the esbuild bundler, dev server and version management; [`push.js`](../push.js) — the release helper
-- [`package.json`](../package.json) — the scripts; npm run check is the gate
+- [`v3/index.html`](../v3/index.html) → [`v3/src/main.js`](../v3/src/main.js) — the orchestrator core; its mixins in `v3/src/app/`
+- [`v3/src/player/playerEntry.js`](../v3/src/player/playerEntry.js) — the exported player bundle
+- [`v3/build.js`](../v3/build.js) — the esbuild bundler, dev server and version management; [`v3/push.js`](../v3/push.js) — the release helper; both run from `v3/`
+- [`v3/package.json`](../v3/package.json) — v3's scripts; from `v3/`, npm run check is its whole gate
+- [`scripts/gate.mjs`](../scripts/gate.mjs) — the gate sorted by what changed, which CI runs from the root

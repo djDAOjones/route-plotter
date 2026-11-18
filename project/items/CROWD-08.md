@@ -8,15 +8,15 @@ Asked when his client needs these features working, the owner picked "Within a w
 
 - **A — Crowds without a route.**
   - With fewer than two route waypoints and a crowd whose network can release dots, Play (the button, Space and J/K/L) plays the crowds over the base timeline. The end waits for crowds that finish, as it does with a route (CROWD-05).
-  - A project with no route keeps a positive base timeline. Clear All sets it to zero (`src/app/projectReset.js` (:76)); when a crowd is added to such a project, or one is opened with a crowd, no route and a zero base timeline, it takes the default of 10 s (`ANIMATION.DEFAULT_DURATION`, `src/config/constants.js` (:10)). A positive base timeline is kept as it is. The Duration control sets it with no route.
-  - Export video and Export HTML accept such a project (`src/app/exporting.js` (:213), (:421)), and the exported HTML player plays it.
+  - A project with no route keeps a positive base timeline. Clear All sets it to zero (`v3/src/app/projectReset.js` (:76)); when a crowd is added to such a project, or one is opened with a crowd, no route and a zero base timeline, it takes the default of 10 s (`ANIMATION.DEFAULT_DURATION`, `v3/src/config/constants.js` (:10)). A positive base timeline is kept as it is. The Duration control sets it with no route.
+  - Export video and Export HTML accept such a project (`v3/src/app/exporting.js` (:213), (:421)), and the exported HTML player plays it.
   - With no route and no crowd that can release dots, Play and both exports stay refused, with an accessible reason that names what to add.
   - Adding or removing route waypoints changes this without a reload.
   - DEF-84 closes with this part, by playing rather than by disabling Play, which its criteria left to the run.
 - **B — Start areas.**
-  - An Entry node can carry an area: a rectangle or an ellipse, with a width, a height and a turn. It is set in the node's card and in the scene outline, and is drawn on the map while editing, as the network is (`src/services/RenderingService.js` (:1342–1349)).
+  - An Entry node can carry an area: a rectangle or an ellipse, with a width, a height and a turn. It is set in the node's card and in the scene outline, and is drawn on the map while editing, as the network is (`v3/src/services/RenderingService.js` (:1342–1349)).
   - Each dot that sets off from that Entry starts at its own point inside the area. The point comes from the crowd's seed, so it is the same on every play, scrub and export. The dot walks straight to the node at its own pace, then walks the network as today.
-  - The scene end (`crowdFinishMs`, `src/services/SwarmEngine.js` (:313)) counts the walk to the node.
+  - The scene end (`crowdFinishMs`, `v3/src/services/SwarmEngine.js` (:313)) counts the walk to the node.
 - **C — Finish areas.**
   - An Exit node can carry an area of the same kind.
   - With At journey end set to Collect at the end, a dot that reaches that Exit walks on to its own place inside the area and stays there.
@@ -24,13 +24,13 @@ Asked when his client needs these features working, the owner picked "Within a w
   - Places, their order, the capacity and every finishing time are the same whatever the viewport, the export size or Graphics scale. Dots are promised not to overlap only when drawn at the render reference with Graphics scale 1. Elsewhere dot sizes and the map scale by different rules, so dots may touch or overlap, and the area's hint says so. Tests check that landscape, portrait and Graphics scale 2 give the same places and finishing times. Places are ordered from the node outward, row by row. The area's capacity is the number of places. Past capacity, later dots take the places again from the first. An area too small for one place collects at the node as today. In both cases the area's hint says so.
   - Every dot of the crowd that reaches the Exit, from all its emitters, takes a place in order of its arrival at the Exit node. Ties are broken by emitter order, then dot index. The ranking is worked out from the project alone, as the scene end's cached journeys are: a cold evaluation, a backward seek and an edit that changes arrival times all give the same places as evaluating from scratch.
   - The scene end waits for the walk into place.
-  - An Exit with no area collects as today (`_sampleNode`, `src/services/SwarmEngine.js` (:956)). This part answers CROWD-07's row X-16 (collected dots render as one disc) for Exits with an area.
+  - An Exit with no area collects as today (`_sampleNode`, `v3/src/services/SwarmEngine.js` (:956)). This part answers CROWD-07's row X-16 (collected dots render as one disc) for Exits with an area.
 - **D — Entry shares.**
   - Each Entry node has a weight, as paths do. Its card and the scene outline show each Entry's share of the crowd's dots as a percentage, as Path weights does for paths (`index.html` (:1303)).
-  - Dots choose their Entry in proportion to the shares. With equal shares and groups off, every dot chooses the same Entry as today (`_pickEntry`, `src/services/SwarmEngine.js` (:868)): a test compares each dot's choice before and after for several seeds and Entry counts. With groups on, each group chooses, as part F says.
+  - Dots choose their Entry in proportion to the shares. With equal shares and groups off, every dot chooses the same Entry as today (`_pickEntry`, `v3/src/services/SwarmEngine.js` (:868)): a test compares each dot's choice before and after for several seeds and Entry counts. With groups on, each group chooses, as part F says.
 - **E — Duplicate a crowd.**
   - A crowd can be duplicated from the Layers strip and the scene outline. The copy keeps the network, areas, shares and settings, with new ids and a new pattern seed. It sits above the original, is selected, and is one undo step.
-  - The copy is admitted only if the whole project would still load: every scene limit is checked, not only the 32 crowds (`Scene.assertValidJSON`, `src/models/Scene.js` (:145), among them the total of 20,000 dots at (:6)). A refusal gives its reason and leaves the scene, the selection, the undo history and the saved project as they were.
+  - The copy is admitted only if the whole project would still load: every scene limit is checked, not only the 32 crowds (`Scene.assertValidJSON`, `v3/src/models/Scene.js` (:145), among them the total of 20,000 dots at (:6)). A refusal gives its reason and leaves the scene, the selection, the undo history and the saved project as they were.
 - **F — Groups.**
   - A crowd setting, off by default, moves its dots in groups. It has two values: the group's size, in dots, and its width.
   - Group *k* holds the dots whose index *i* satisfies *k* × size ≤ *i* < min((*k* + 1) × size, count). The group, not each dot, picks the Entry (by its shares), the release time (by the crowd's release settings, applied to groups), the pace (by Pace variation) and the choice at every junction.
@@ -50,7 +50,7 @@ Asked when his client needs these features working, the owner picked "Within a w
 - **All parts:**
   - With every new setting off or absent, each saved project's dots, timings and scene end are exactly as before, and the existing goldens stay unchanged. A project that uses no new setting saves byte for byte as before. The one exception is part A's default for a project that has crowds, no route and a zero base timeline, which could not play before.
   - Dot positions stay a pure function of the timeline instant, the project and the seed (the brief's mandate). The parts add no disagreement between play, scrub, video export and the HTML player. Those that exist today stay open under their own IDs (DEF-78, DEF-79, DEF-80).
-  - The new settings are saved additively; load validates them within stated limits. Tests author every new setting through the node or crowd card and through the scene outline, at its minimum, its maximum and a middle value, then save, load and compare. The existing authorable-loadable fixture leaves crowd controls inert (`tests/authorableLoadable.test.js` (:18–22)), so it does not cover them alone.
+  - The new settings are saved additively; load validates them within stated limits. Tests author every new setting through the node or crowd card and through the scene outline, at its minimum, its maximum and a middle value, then save, load and compare. The existing authorable-loadable fixture leaves crowd controls inert (`v3/tests/authorableLoadable.test.js` (:18–22)), so it does not cover them alone.
   - The new settings appear in the scene outline under the same names, are undoable and autosaved, and meet the profile's standards (labels, 44 px targets, keyboard).
   - Specialised: no option beyond these parts, no ready-made presets (a wish line) and no general feature pop-up (MERGE-01).
   - No new dependency. Every existing test stays green, and none is deleted, skipped or weakened.
@@ -63,11 +63,11 @@ Asked when his client needs these features working, the owner picked "Within a w
 - [The crowd review](../../reviews/crowd-07-crowd-review-2026-10-08.md): F19, F30 and F31, and the "Uniform entry choice" row
 - [CROWD-05](./CROWD-05.md): the scene end waits for every journey that ends
 - [DEF-78](./DEF-78.md), [DEF-79](./DEF-79.md) and [DEF-80](./DEF-80.md): today's disagreements between outputs
-- `src/services/SwarmEngine.js`: entry choice (:868), the graph walk (:714), collected dots (:956), the scene end (:313)
-- `src/app/playback.js` (:288) and `src/app/exporting.js` (:213), (:421): the guards part A removes
-- `src/app/projectReset.js` (:76) and `src/config/constants.js` (:10): Clear All's zero timeline and the default duration
-- `src/models/Scene.js` (:4–6), (:145): the scene's limits
-- `src/models/GraphNode.js` (:13): node types
+- `v3/src/services/SwarmEngine.js`: entry choice (:868), the graph walk (:714), collected dots (:956), the scene end (:313)
+- `v3/src/app/playback.js` (:288) and `v3/src/app/exporting.js` (:213), (:421): the guards part A removes
+- `v3/src/app/projectReset.js` (:76) and `v3/src/config/constants.js` (:10): Clear All's zero timeline and the default duration
+- `v3/src/models/Scene.js` (:4–6), (:145): the scene's limits
+- `v3/src/models/GraphNode.js` (:13): node types
 - `DEV-INFRASTRUCTURE.md`: versioning, where `major.minor` is set in `package.json`
 
 ## Notes

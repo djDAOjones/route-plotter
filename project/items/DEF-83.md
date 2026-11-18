@@ -13,7 +13,7 @@ A keyboard user who tabs onto a collapsed left-sidebar card header sees no focus
 
 ## Context and sources
 
-- `styles/main.css` (:885-891, :935-941, :1515-1519, :3926-3930) — the section clip, the header ring, the list clip, the forced-colours block
+- `v3/styles/main.css` (:885-891, :935-941, :1515-1519, :3926-3930) — the section clip, the header ring, the list clip, the forced-colours block
 - `index.html` — the 17 `.section-header` elements
 - [The GUI review](../../reviews/ui-06-gui-review-2026-10-08.md) — B-02, C-1
 - [Codex's verdict](../../reviews/design-review-second-opinion-2026-10-08.md) — CONFIRMED
@@ -22,4 +22,4 @@ A keyboard user who tabs onto a collapsed left-sidebar card header sees no focus
 ## Notes
 
 - 2026-10-08 — Filed from the design reviews' defect candidates on the owner's acceptance of the twelve proposed rows ("Accept all as proposed (Recommended)", 2026-10-08). Found by UI-06's static half, confirmed in the pane; Codex: CONFIRMED. UI-06's targets-and-focus PR makes the fix with B-21's native `<h2><button>` headers; this row is the defect's record and closes with that PR. The priority is the reviewing session's proposal, accepted with the row.
-- 2026-10-08 — Shipped in UI-06's targets PR (#118, `c0e9213`, v3.2.711): each card header is a native button inside its heading with an inset focus ring the card's clip cannot take, the sidebar's scroller leaves 6 px for the last-used card's ring, and in forced colours the outline sits inside the header; pinned through the cascade in `tests/uiTargetsFocus.test.js` (clipping ancestors cannot cut off the inset focus ring), seen in Chromium collapsed and expanded (`reviews/design-review-2026-10-08-shots/after/pr2-header-focus-collapsed-after-1440.png` and the expanded pair).
+- 2026-10-08 — Shipped in UI-06's targets PR (#118, `c0e9213`, v3.2.711): each card header is a native button inside its heading with an inset focus ring the card's clip cannot take, the sidebar's scroller leaves 6 px for the last-used card's ring, and in forced colours the outline sits inside the header; pinned through the cascade in `v3/tests/uiTargetsFocus.test.js` (clipping ancestors cannot cut off the inset focus ring), seen in Chromium collapsed and expanded (`reviews/design-review-2026-10-08-shots/after/pr2-header-focus-collapsed-after-1440.png` and the expanded pair).

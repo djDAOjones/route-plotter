@@ -8,7 +8,7 @@ v4 saves its own format, written schema-first, and opens no v3 file (Q14). This 
 
 - A project saves as a ZIP holding `project.json` (marked as v4's format, with a version) and its images, and opens through the ported preflight, limits, forbidden-key guard, colour grammar, asset admission and staged open, which leaves nothing behind if it fails (DEF-51, inverted from v3's pins).
 - A v3 file is recognised and refused with a message naming v3; a file from a newer v4 version, or holding an unknown feature or field, is refused before anything changes, listing what it did not know.
-- DEF-101's check: an emoji placed across each 16,384-unit boundary survives save and reopen by every save path (the table of v3's `tests/archiveText.test.js`).
+- DEF-101's check: an emoji placed across each 16,384-unit boundary survives save and reopen by every save path (the table of v3's `v3/tests/archiveText.test.js`).
 - Open after save gives the same project, as a fast-check property; open then save is stable near the limits (CROWD-08.7).
 - It changes only these paths: src/adapters/io/**.
 - Its held lines in the plan's §16 are passed or weighed, each named in the pull request.

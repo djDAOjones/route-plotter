@@ -23,12 +23,12 @@ now frames as the HTML export's player does, whose viewport never zooms.
 
 ## Context and sources
 
-- `src/main.js`: the render state's viewport
-- `src/app/camera.js`: `_calculateCameraState`, where the editor's zoom takes
+- `v3/src/main.js`: the render state's viewport
+- `v3/src/app/camera.js`: `_calculateCameraState`, where the editor's zoom takes
   the camera's place (DEF-61)
-- `src/player/PlayerApp.js`: the HTML export's viewport, fixed at 1×
-- `tests/exportFraming.test.js`: the regression tests
-- `tests/cameraDomain.test.js`: why camera frames are not compared call for
+- `v3/src/player/PlayerApp.js`: the HTML export's viewport, fixed at 1×
+- `v3/tests/exportFraming.test.js`: the regression tests
+- `v3/tests/cameraDomain.test.js`: why camera frames are not compared call for
   call across apps (DEF-07)
 
 ## Notes
@@ -40,7 +40,7 @@ now frames as the HTML export's player does, whose viewport never zooms.
   editor 48× on the City Ground and exporting. Zooming needs a selected
   waypoint and Match day has none, so the filing session reads that the owner
   added one at the stadium (proposed, unconfirmed).
-- 2026-10-18 — DEF-61's export checks (`tests/goldenDrawLogs.test.js`) pinned
+- 2026-10-18 — DEF-61's export checks (`v3/tests/goldenDrawLogs.test.js`) pinned
   the old framing: every frame of a video exported at 2× drawn at 2×, the
   pan in display pixels. DEF-61 recorded that export mode keeps the author's
   viewport but decided nothing on whether it should. Asked whether a video
