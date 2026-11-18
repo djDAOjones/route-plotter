@@ -38,6 +38,16 @@
 
 **Deferred:** none
 
+## 2026-11-18 — MERGE-01 — v4's plan also covers options built as modules and added only on demand
+
+**Decision:** MERGE-01's plan gains three criteria and a §16 test: how the code holds each option as a module a layer takes on only when the author adds it, how advanced functionality stays on demand, and how v4 is shown to be simpler than v3 in the interface and the code. Because on 2026-11-18 the owner paired the merge with a modular feature set added as needed.
+
+**Rationale:** The owner's question and answer are verbatim in the item's Notes of 2026-11-18. The record held the merge (PLAN-4), the features pop-up in MERGE-01's criteria and REFACTOR-01's modularity ahead of it, but nothing on options built as modules in the code, on advanced functionality staying hidden until added, or on simplifying the back end. The abstraction plan's §16 warns against a generic registry, flags or mode strings and an abstraction for a hypothetical consumer, so a module design must answer §16.1 and §16.2 with the options v4.0 ships, or record a departure for the owner. The criteria's wording is the session's, which the owner accepted, for the plan to weigh. The work is not begun, on his word; REFACTOR-01 still comes first; nothing else in PLAN-4 or REFACTOR-01 changes. The criteria are in `project/items/MERGE-01.md`.
+
+**Supersedes:** none
+
+**Deferred:** none
+
 ## 2026-11-16 — V31-REFRESH-4 — The project takes the lab's pm-skills 5 candidate b875c63 by the refresh route: seventeen files replaced, tools/VERSION added, the record kept
 
 **Decision:** The project runs PM-Skills lab b875c63, the candidate for pm-skills 5.0.0, from 8d4e029, by the lab's refresh route, in the commit before the one carrying this entry: seventeen tools, verbs and CLAUDE.md replaced and tools/VERSION added, reading 5.0.0, as a set; no pack installed and no App opinion line added; AGENTS.md and the project's files unchanged. The owner's signed Harness sentence is not taken: it makes the profile 402 words against its hard budget of 400, so it waits on his decision (wish V31-REFRESH-4.1). Because the owner released the round on 2026-11-16.
