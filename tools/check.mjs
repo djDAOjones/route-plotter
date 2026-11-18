@@ -3,14 +3,18 @@
 // `--commit <rev>` adds the commit's shape: title, Verify, an optional Checked line, an optional Session-end line, and the
 // removed-line trace against the parent; where the project keeps a model policy, a commit that ships an item without a
 // Checked line is warned (V31-MODEL-POLICY). Without it, the trace compares the working tree and the staged tree with HEAD.
+// By default it prints its failures, warnings, the read estimate and the summary, and one line counting its other INFO
+// lines; `--verbose` prints them all (5.0.1, the efficiency review's F2: 280–406 words on a clean pass, twice per close, its
+// smallest fix as the owner took it). `--audit-prose` prints the hints it asks for.
 import { execFileSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { inspect, options, appCommitWarning, ID, removedLineFlags, SESSION_END, sessionEndLines, wishChanges, reusedWishIds, wishIds } from './ledger.mjs';
 const MODEL_POLICY = 'project/model-policy.md';
+const SHOWN = [/^read estimate: /], ASKED = [/^REVIEW /, /^Prose scan is incomplete/]; // printed without --verbose; ASKED only with --audit-prose
 const LEDGER = { backlog: 'project/backlog.md', wish: 'project/wish-list.md', trajectory: 'project/trajectory.md', decisions: 'project/decisions.md' };
 try {
-  const args = options(['audit-prose', 'commit', 'date']);
+  const args = options(['audit-prose', 'commit', 'date', 'verbose']);
   const result = inspect(args.root, { auditProse: args['audit-prose'], checkDate: args.date || '' });
   // V31-C4-MERMAID (3.26): a broken architecture envelope fails here, so a close cannot pass over it; the view still shows it.
   // V31-C4-FIX: only the record, the file carrying its mark, has an envelope; a project's own file at the path has none.
@@ -46,7 +50,7 @@ try {
   if (args.commit) {
     const message = git('show', '-s', '--format=%B', '--end-of-options', args.commit);
     const match = message.split('\n')[0].match(new RegExp(`^(${ID}): \\S.+$`));
-    if (!match || (!result.open.has(match[1]) && !result.shipped.has(match[1]) && !result.retired.has(match[1]) && !result.decisions.some((e) => e.id === match[1]) && !result.archives.some((a) => a.entries.some((e) => e.id === match[1])))) result.fails.push('commit: title must be ID: summary with an ID present in the ledger');
+    if (!match || (!result.open.has(match[1]) && !result.shipped.has(match[1]) && !result.retired.has(match[1]) && !result.decisions.some((e) => e.id === match[1]) && !result.archives.some((a) => a.entries.some((e) => e.id === match[1])))) result.fails.push('commit: title must be ID: summary with an ID present in the ledger — amend the title (git commit --amend, if this is the latest commit; an older one is reworded by a rebase), then check again');
     if (!/^Verify: \S.+$/m.test(message)) result.fails.push('commit: missing substantive Verify declaration');
     const checked = message.split('\n').filter((l) => /^Checked:/.test(l));
     for (const line of checked) {
@@ -76,6 +80,12 @@ try {
       for (const f of removedLineFlags(head, after)) if (!seen.has(f)) { seen.add(f); result.warns.push(`${label}: ${f}`); }
     }
     wishNotes('working tree: ', head, working, '', 'HEAD');
+  }
+  if (!args.verbose) {
+    const shown = (m) => SHOWN.some((re) => re.test(m)) || (args['audit-prose'] && ASKED.some((re) => re.test(m)));
+    const hidden = result.info.filter((m) => !shown(m)).length;
+    result.info = result.info.filter(shown);
+    if (hidden) result.info.push(`${hidden} more INFO line${hidden === 1 ? '' : 's'} with --verbose`);
   }
   for (const [key, prefix] of [['info', 'INFO'], ['warns', 'WARN'], ['fails', 'FAIL']]) {
     for (const message of result[key]) console.log(`${prefix}  ${message}`);

@@ -66,6 +66,19 @@ export const validDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) &&
 const blank = (m) => m.replace(/[^\n]/g, '');
 export const active = (s) => s.replace(/\r\n/g, '\n').replace(/<!--[\s\S]*?-->/g, blank)
   .replace(/^([ \t]*)(`{3,})[^\n]*\n[\s\S]*?^\1\2`*[ \t]*$/gm, blank).replace(/^([ \t]*)(~{3,})[^\n]*\n[\s\S]*?^\1\2~*[ \t]*$/gm, blank);
+// The backlog as rule 1 reads it and the estimate counts it: a closed phase's heading with nothing under it is left out
+// (5.0.1, the efficiency review's F3); a closed phase that holds any text is kept whole.
+export const backlogRead = (s) => {
+  const lines = active(s).split('\n'), out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (/^### Phase \d+ — .+ — CLOSED \d{4}-\d{2}-\d{2}[ \t]*$/.test(lines[i])) {
+      let j = i + 1; while (j < lines.length && !lines[j].trim()) j++;
+      if (j === lines.length || /^#{1,3} /.test(lines[j])) { i = j - 1; continue; } // only a heading of its level or above ends it
+    }
+    out.push(lines[i]);
+  }
+  return out.join('\n');
+};
 export const sections = (s) => new Map([...active(s).matchAll(/^## ([^\n]+)\n([\s\S]*?)(?=^## |$(?![\s\S]))/gm)]
   .map((m) => [m[1], m[2].trim()]));
 export const field = (s, name) => (active(s).match(new RegExp(`^- ${name}: (.+(?:\\n[ \\t]+\\S.*)*)`, 'm')) || [])[1]?.replace(/\n\s+/g, ' ') || '';
@@ -107,7 +120,7 @@ export function options(values = []) {
   for (let i = 2; i < process.argv.length; i++) {
     const name = process.argv[i].replace(/^--/, '');
     if (!process.argv[i].startsWith('--') || !allowed.has(name)) throw Error(`unknown option: ${process.argv[i]}`);
-    if (['audit-prose', 'print', 'force', 'hooks-only', 'open', 'quiet'].includes(name)) result[name] = true;
+    if (['audit-prose', 'print', 'force', 'hooks-only', 'open', 'quiet', 'verbose'].includes(name)) result[name] = true;
     else {
       const value = process.argv[++i];
       if (!value || value.startsWith('--')) throw Error(`--${name} requires a value`);
@@ -217,7 +230,7 @@ export function signature(text) {
   const reviewed = [...signed.matchAll(/^- Owner: ([^\n,]+), (\d{4}-\d{2}-\d{2})\.?$/gm)].map((m) => ({ name: m[1], date: m[2], delegated: false, authority: '' }));
   const delegated = [...signed.matchAll(/^- Owner \(delegated, not reviewed\): ([^\n,]+), (\d{4}-\d{2}-\d{2}) — see (\S.*)$/gm)].map((m) => ({ name: m[1], date: m[2], delegated: true, authority: m[3].trim() }));
   const all = [...reviewed, ...delegated];
-  return all.length === 1 && validDate(all[0].date) ? all[0] : null;
+  return all.length === 1 && validDate(all[0].date) && !/\bunsigned\b/i.test(all[0].name) ? all[0] : null; // a line that says UNSIGNED, the owner's signature not yet given, is no signature
 }
 // The disposition form a tool can see (3.7): the ID or text, a disposition word and a reason of five words or more, in one
 // statement; the writer still judges.
@@ -445,7 +458,7 @@ export function inspect(root, { auditProse = false, checkDate = '' } = {}) {
       else if (m[1] < today) warn(`project/${n}.md: until: ${m[1]} has passed; retire or ratify the constraint by a decision (3.8)`);
     }
   }
-  const counts = { contract: 0, profile: words(profile), rules: words(rules), direction: 0, backlog: words(backlog), slice: 0, trajectory: 0 };
+  const counts = { contract: 0, profile: words(profile), rules: words(rules), direction: 0, backlog: words(backlogRead(backlog)), slice: 0, trajectory: 0 };
   const ESCALATION = 'move detail into item files, the Rationale or the archive; shorten a Decision line written this session or supersede an earlier entry; never delete a line without a trace or edit a past entry; a budget the project cannot meet is raised by the owner\'s recorded decision';
   const over = (key, label, count) => { if (count > budgets[key]) fail(`${label}: ${count} words, hard budget ${budgets[key]} (3.4) — ${ESCALATION}`); };
   over('profile', 'project/profile.md', counts.profile);
@@ -511,13 +524,16 @@ export function inspect(root, { auditProse = false, checkDate = '' } = {}) {
     }
   }
   for (const h of ['Current', 'Next', 'Icebox']) if (!milestones.some((s) => s.name === h)) fail(`project/backlog.md: missing ## ${h}`);
+  /** @param {string} text */
+  const placeholder = (text) => /(?<![$@\w{])\{[A-Za-z][^}\n]*\}/.test(text.replace(/(?<!`)(`+)(?!`)[^\n]*?(?<!`)\1(?!`)/g, '')); // a {word …} the template leaves, not a stash@{0}, a ${HOME}, a {0} or a code span of any backtick length (final-QC ease 8)
   const shipped = new Map(), tphases = [], recalls = [], late = []; let tp, last;
   for (const line of active(trajectory).split('\n')) {
     let m;
-    if ((m = line.match(/^## (.+)$/))) { tp = { name: m[1], lines: [] }; tphases.push(tp); last = null; }
+    if ((m = line.match(/^## (.+)$/))) { tp = { name: m[1], lines: [] }; tphases.push(tp); last = null; if (placeholder(m[1])) fail(`project/trajectory.md: unresolved template placeholder in the phase heading ${m[1]}`); } // the template's own "## Phase 1 — {name}" left in
     else if (/^\s*[-*+] /.test(line)) {
       if (!tp) fail('project/trajectory.md: line outside a phase');
       tp?.lines.push(line.slice(2));
+      if (placeholder(line)) fail(`project/trajectory.md: unresolved template placeholder in an item line: ${line.trim().slice(0, 80)}`);
       if (line.startsWith('- RECALL — ')) {
         m = line.match(new RegExp(`^- RECALL — ([0-8])/8 \\((${DATE})\\) — scores: ([012]),([012]),([012]),([012]) — (fresh|local) — see decisions$`));
         if (!m || !validDate(m[2]) || Number(m[1]) !== m.slice(3, 7).reduce((n, s) => n + Number(s), 0)) fail('project/trajectory.md: invalid recall date, component scores, total or mode');
@@ -764,5 +780,6 @@ export function inspect(root, { auditProse = false, checkDate = '' } = {}) {
   if (needsOwner.length) info.push(`needs the owner: ${needsOwner.map((i) => i.id).join(', ')} (already recorded)`);
   const delegated = signatures.filter((s) => s.delegated);
   if (delegated.length) info.push(`delegated signatures needing the owner's review: ${delegated.map((s) => s.file).join(', ')}`);
+  if (['profile', 'brief', 'rules'].every((n) => fails.includes(`project/${n}.md: unresolved template placeholder`))) fails.unshift('not set up yet: follow verbs/intake.md, which fills the template and takes the owner\'s review; the failures below are its to mend'); // the three files still the template: a fresh install, before intake
   return { fails, warns, info, files, milestones, open, shipped, retired, decisions: live, slice, archives, wish: wish.map((s) => s.slice(2)), tphases, trajectoryRead, recall: recalls.sort((a, b) => b.date.localeCompare(a.date))[0], digests, items, hotWords, counts, budgets, routed, signatures, session: session ? Number(session[1]) * 1000 : 0, today, sources, a11y, app, architecture: archRecord };
 }
