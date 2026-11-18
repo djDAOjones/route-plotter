@@ -1,0 +1,33 @@
+# CORE-03 — Save and open
+
+## Intent
+
+v4 saves its own format, written schema-first, and opens no v3 file (Q14). This item ports v3's file-safety trust boundary into src/adapters/io around v4's format (the plan's §13 and §15).
+
+## Acceptance criteria
+
+- A project saves as a ZIP holding `project.json` (marked as v4's format, with a version) and its images, and opens through the ported preflight, limits, forbidden-key guard, colour grammar, asset admission and staged open, which leaves nothing behind if it fails (DEF-51, inverted from v3's pins).
+- A v3 file is recognised and refused with a message naming v3; a file from a newer v4 version, or holding an unknown feature or field, is refused before anything changes, listing what it did not know.
+- DEF-101's check: an emoji placed across each 16,384-unit boundary survives save and reopen by every save path (the table of v3's `tests/archiveText.test.js`).
+- Open after save gives the same project, as a fast-check property; open then save is stable near the limits (CROWD-08.7).
+- It changes only these paths: src/adapters/io/**.
+- Its held lines in the plan's §16 are passed or weighed, each named in the pull request.
+- The item's gate is green in CI, Codex (gpt-6-astra) has reviewed it read-only, and `node tools/check.mjs` and `--commit HEAD` give 0 failures.
+
+## Now
+
+Updated: 2026-11-18
+
+Next step: Start once CORE-01 has merged; it may run beside CORE-02.
+
+Open question: None.
+
+## Context and sources
+
+- [The decisions](../decisions.md): PLAN-6
+- `reviews/v4-architecture-plan-2026-11-18.md`: §13, §15, §16, §19
+- `reviews/v4-stock-take-2026-11-18.md`: the held list
+
+## Notes
+
+- 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: "v3 files stay with v3" (Q14); of DEF-101, "drop this fix, concentrate on building new" and "No v3 fix, v4 check kept (Recommended)" (P3, P10). Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A12, A13 (the plan's §18; the night's decisions list).
