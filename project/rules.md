@@ -14,12 +14,12 @@
 - `InteractionHandler` owns one Pointer Events transaction for mouse, touch and pen; no competing canvas mutation path.
 - Search the full source tree before proposing a change; check `src/config/constants.js` and `index.html` before adding anything.
 - All imports at the top; `docs/` is generated output, never hand-edited.
-- Runtime dependencies: jszip and mediabunny only; no package without explicit approval.
+- Runtime dependencies: v3's jszip and mediabunny, and v4's editor stack as adopted (PLAN-5); no other package without explicit approval.
 - Okabe-Ito map palette apart from UoN UI tokens; Carbon productive, WCAG 2.2 AAA (the digests).
 - Speed-slider updates use `ui:slider:update-speed`, never `.value`; no synonyms for EventBus events (search the `emit` and `on` call sites).
 - Stable paused views queue no animation frame; export keeps its single synchronous frame loop.
 - Runtime recovery: one documented, ownership-safe command verifying readiness.
-- `main` is the live site: a branch per concern and a pull request. Never commit to or push `main` except a merge the owner ordered or `npm run push` for a release he called; an advance grant is a decision stating conditions (the big run's, 2026-09-28). Only `npm run push` commits `docs/` and `version.json`.
+- `main` is the live site: a branch per concern and a pull request. Never commit to or push `main` except a merge the owner ordered or `npm run push` for a release he called; an advance grant is a decision stating conditions (PLAN-5's publish-on-merge, 2026-11-18). Only `npm run push`, or the publishing step that grant sets up, commits `docs/` and `version.json`.
 - Never delete, skip or weaken a test to pass; re-pointing an import with assertions unchanged is not.
 - Archive or prune the record only on the owner's word (2026-08-27).
 - Protected paths: `docs/`, `_Joe/`, `version.json`, `node_modules/`, `pm_skills/` (frozen canon record, `project/history.md`).

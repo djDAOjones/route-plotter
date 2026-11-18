@@ -26,35 +26,39 @@
 
 ### Next feature — the owner's word of 2026-10-18 — CLOSED 2026-10-19
 
-### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held
+### Phase 2 — The owner's after-TST-04 items, then W5 and the defects it held — CLOSED 2026-11-18
 
-### Phase 3 — Design reviews — the owner's word of 2026-10-06
+### Phase 3 — Design reviews — the owner's word of 2026-10-06 — CLOSED 2026-11-18
 
 ### pm-skills 5.0.1 — the owner's word of 2026-11-18 — CLOSED 2026-11-18
 
+### Phase 5 — v4: the architecture plan, before any code — the owner's word of 2026-11-18
+
+- [ ] MERGE-01 — Plan v4's merge of routes and crowds — since 2026-10-13 — (from: PLAN-4, 2026-10-13)
+- [ ] REFACTOR-01 — Plan the port of v3's engine into v4 — since 2026-10-14 — (from: REFACTOR-01, 2026-10-14)
+- [ ] GATE-01 — Gate by what changed — since 2026-11-18 — (from: PLAN-5, 2026-11-18)
+
 ## Next
 
-**After CROWD-08: a refactor, then v4 — the owner's words of 2026-10-13 and 2026-10-14**
+**The v4 programme's later phases, in order (PLAN-5); each opens under Current by its own PLAN entry, once the architecture plan has named its items**
 
-- [ ] REFACTOR-01 — Plan the port of v3's engine into v4 — since 2026-10-14 — (from: REFACTOR-01, 2026-10-14)
-- [ ] MERGE-01 — Plan v4's merge of routes and crowds — since 2026-10-13 — (from: PLAN-4, 2026-10-13)
+**Phase 6, proposed — v4's foundations: v4 at the root on the editor stack, its own gate running**
 
-**The built-in examples — the owner's word of 2026-10-05**
+- [ ] STACK-01 — v4 at the root on the editor stack — since 2026-11-18 — (from: PLAN-5, 2026-11-18)
+
+**Phase 7, proposed — the core, end to end, and the first v4 on Pages**
+
+- [ ] PUB-01 — Each app merge the owner orders publishes v4 — since 2026-11-18 — (from: PLAN-5, 2026-11-18)
+
+**Phase 8, proposed — features, the five presets and v4.0 (EX-01 from the owner's word of 2026-10-05; REV-03 and REV-05 parked until v4 by his ruling of 2026-11-18)**
 
 - [ ] EX-01 — One built-in scene for each of the five presets, in v4 — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
-
-**A v3 fix the freeze allows — the owner's word of 2026-11-18**
-
-- [ ] DEF-101 — Save can split a character across ZIP text chunks — since 2026-11-18 — (from: CROWD-08, 2026-10-15)
+- [!] REV-03 — Unified pointer transactions · Review assurance — since 2026-10-01 — blocked: v4's pointer input, then owner evidence — physical Android Chrome
+- [!] REV-05 — Accessibility assurance · Accessibility assurance — since 2026-10-01 — blocked: v4's extended accessibility depth before v4.0 is declared, then owner evidence — NVDA/VoiceOver + forced-colours + reduced-motion emulation
 
 **Medium term — the owner's word of 2026-10-15**
 
 - [ ] AI-01 — AI-editable saves — since 2026-10-15
-
-**Parked until v4 — the owner's ruling of 2026-11-18**
-
-- [!] REV-03 — Unified pointer transactions · Review assurance — since 2026-10-01 — blocked: v4's pointer input, then owner evidence — physical Android Chrome
-- [!] REV-05 — Accessibility assurance · Accessibility assurance — since 2026-10-01 — blocked: v4's extended accessibility depth before v4.0 is declared, then owner evidence — NVDA/VoiceOver + forced-colours + reduced-motion emulation
 
 ## Icebox
 
