@@ -59,8 +59,11 @@ question round itself is section 22.
   offers, each used by at least two real v4.0 features. The gate enforces
   this with dependency-cruiser rules beside the PM-Skills pack's own layers.
 - **Where it lives.** v3's app moves into `v3/` with its own package and
-  lockfile, building `docs/` byte for byte as before and still recoverable at
-  tag v3.3.726. v4 takes the root on the PM-Skills editor layout.
+  lockfile, its build and release scripts unchanged; it builds into `v3/`,
+  its output proved identical to the tag's, while the committed `docs/` (the
+  live 3.3.726 site) stays untouched until v4's first publish. v3 stays
+  recoverable at tag v3.3.726. v4 takes the root on the PM-Skills editor
+  layout.
 - **The port.** v3's pure engine is ported to strict TypeScript with its
   tests: geometry, timing, crowds, visibility maths, the drawing stack split
   by layer, video export, and the file-safety trust boundary. v3's interface,
@@ -1790,6 +1793,8 @@ owner.**
   names in `meta.json`) and keeping the build's output, applied.
 - Round 7, APPROVE: the fix confirmed against `build.js`, and this record of
   rounds 5 and 6 found accurate; no new finding.
+- Round 8, APPROVE: the summary's "Where it lives" corrected to agree with §14
+  (v3 builds into `v3/`; the committed `docs/` untouched).
 
 
 ## Appendix A — the owner's words this plan relies on that are not yet in the repository
