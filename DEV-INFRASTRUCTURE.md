@@ -34,7 +34,8 @@ Package manager: **npm**
 | `build` | `NODE_ENV=production node build.js` | Production build (minified, sourcemap) | Before deploy |
 | `build:deploy` | `npm run build` | Alias of `build` — outputs straight to `docs/` (the GitHub Pages dir) | When deploying |
 | `build:check` | `NODE_ENV=production node build.js --check` | Validate a temporary production build without changing `docs/` or `version.json` | CI / close-out |
-| `check` | `npm test && npm run test:shell && npm run build:check` | Canonical JS, maintainer-script and build gate | Before commit |
+| `check` | `npm test && npm run test:shell && npm run build:check && node tools/check.mjs` | Canonical JS, maintainer-script, build and record gate | Before commit and release |
+| `check:changed` | `node scripts/gate.mjs` | The gate sorted by what changed (Quality gate) | Close-out; CI |
 | `test` | `vitest run --pool=threads --no-file-parallelism` | Run tests once | After every change |
 | `test:shell` | `bash tests/restartSafety.test.sh` | Project-scoped dev-server PID/cleanup contract | After restart-script changes / in CI |
 | `test:watch` | `vitest watch --pool=threads --no-file-parallelism` | Tests in watch mode | During development |
@@ -56,8 +57,9 @@ Do not add scripts without updating this table.
 ## Quality gate
 
 The one-command gate is `npm run check`: the Vitest suite, the restart-script
-shell contract, then `build:check` (rows in Canonical scripts above). It is
-non-mutating, so run it after every change and at task close.
+shell contract, `build:check`, then the record checker (rows in Canonical
+scripts above). It is non-mutating, so run it after every change and at task
+close.
 
 - The suite fails a run in which fewer than 72 test files or 1,000 tests ran,
   because a setup mistake once disabled it silently and still exited 0. It
@@ -66,9 +68,12 @@ non-mutating, so run it after every change and at task close.
 - `build:check` builds production output into a temporary directory,
   validates it (file inventory, local references, stylesheet version stamps)
   and discards it. It never writes `docs/` or `version.json`.
-- CI runs the same command on every push and pull request (the **Verify**
-  workflow, `.github/workflows/ci.yml`), then fails if `docs/` or
-  `version.json` differ from the commit.
+- `npm run check:changed` and CI (the **Verify** workflow,
+  `.github/workflows/ci.yml`) sort the change (GATE-01: the lists are in
+  `scripts/gate.mjs`, beside its tests): a record-only change runs the record
+  checker alone; any other also runs the gate's tests and v3's suite (v4's lane
+  waits for STACK-01). CI then fails if `docs/` or `version.json` differ from
+  the commit.
 - There is no linter, formatter check, type checker or Markdown link checker,
   so report only what the gate runs. The verify-line format is in
   `pm_skills/project/conventions.md` → Commit messages.

@@ -7,9 +7,12 @@ on:
 permissions:
   contents: read
 
+# A newer push to a branch or pull request replaces the older run, which is
+# safe because each run reads the whole change against main (GATE-01). Runs
+# on main are never cancelled: each reads only the commits its push brought.
 concurrency:
   group: verify-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   test-and-build:
@@ -17,8 +20,10 @@ jobs:
     timeout-minutes: 90
 
     steps:
-      - name: Check out source
+      - name: Check out source, with the history the sort reads
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Use pinned Node version
         uses: actions/setup-node@v4
@@ -26,11 +31,31 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      # GATE-01: a record-only change runs the record checker alone; anything
+      # the sort cannot place, or cannot read, runs every lane.
+      - name: Sort the change by what it touches
+        id: sort
+        run: node scripts/gate.mjs --ci --plan
+
       - name: Install frozen dependencies
+        if: steps.sort.outputs.install == 'true'
         run: npm ci
 
-      - name: Run canonical verification
-        run: npm run check
+      - name: Test the gate's own sorting
+        if: steps.sort.outputs.gate == 'true'
+        run: node scripts/gate.mjs --lane gate
+
+      - name: Run frozen v3's whole suite, shell contract and build check
+        if: steps.sort.outputs.v3 == 'true'
+        run: node scripts/gate.mjs --lane v3
+
+      # STACK-01 fills v4's gate; a run over 10 minutes is reported as a finding.
+      - name: Run v4's gate
+        if: steps.sort.outputs.v4 == 'true'
+        run: node scripts/gate.mjs --lane v4
+
+      - name: Run the record checker
+        run: node scripts/gate.mjs --lane record
 
       - name: Prove verification did not rewrite Pages output
         run: git diff --exit-code -- docs version.json
