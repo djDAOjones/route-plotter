@@ -35,6 +35,15 @@ async function offline({ page }) {
     ? route.fulfill({ status: 200, contentType: 'text/html', body: STAND_IN })
     : route.abort()));
 }
+// The shell as a reader meets it once it has settled. React draws it after the page's load event, and its bundled IBM
+// Plex fonts load only then: on CI's Linux runner, whose fallback font is wider, the link moved 63 px when they arrived,
+// after the focus test had measured it (wish STACK-03.6). Each state opens offline and settled: drawn, laid out, and its
+// fonts loaded.
+async function settled({ page }) {
+  await offline({ page });
+  await page.locator('main h1').waitFor();
+  await page.evaluate(async () => { void document.body.getBoundingClientRect(); await document.fonts.ready; });
+}
 const arrives = (page, url) => page.waitForURL(url, { timeout: 5000 }).then(() => true, () => false);
 const named = async (locator) => (await locator.ariaSnapshot()).split('\n')[0].replace(/^- /, '').replace(/:$/, '');
 const progressLink = (page) => page.getByRole('link', { name: 'GitHub' });
@@ -74,7 +83,7 @@ export default {
     {
       name: 'shell',
       path: '/',
-      setup: offline,
+      setup: settled,
       snapshot: [
         '- main:',
         '  - heading "Route Plotter" [level=1]',
