@@ -78,6 +78,7 @@ interface Run {
 
 const SQUARE: Size = { width: 1, height: 1 };
 const NO_VIEWING: Viewing = { zoom: 1, panX: 0, panY: 0 };
+const UNMOVED = [1, 0, 0, 1, 0, 0] as const;
 
 const reasonOf = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
@@ -274,7 +275,8 @@ function drawStage(context: DrawContext, run: Run, evaluated: readonly Evaluated
  * and pan), to place an image point on screen by, and each route as every module saw it, by its id.
  */
 function screenOf({ frame, matrix }: ReturnType<typeof viewStage>, routes: ReturnType<typeof routesStage>['routes']): Screen {
-  const [zoom, , , , dx, dy] = matrix;
+  // A canvas ignores a transform that is not finite (a pan or a zoom out of range), so the layers were drawn unmoved.
+  const [zoom, , , , dx, dy] = matrix.every((value) => Number.isFinite(value)) ? matrix : UNMOVED;
   const place: Screen['place'] = (point) => {
     const at = imageToCanvas(frame.bounds, point);
     const x = zoom * at.x + dx;

@@ -97,6 +97,9 @@ const VIEWINGS = {
     catalogue: withCamera({ centre: { x: 0.55, y: 0.45 }, zoom: 2 }),
     viewing: { zoom: 1.5, panX: 40, panY: -25 },
   },
+  // A canvas ignores a transform that is not finite: the layers are drawn unmoved, and so is what an overlay places.
+  'a further zoom whose pan across is not a number': { catalogue: CATALOGUE, viewing: { zoom: 2, panX: Number.NaN, panY: 0 } },
+  'a further zoom whose pan down is not finite': { catalogue: CATALOGUE, viewing: { zoom: 2, panX: 0, panY: Number.NEGATIVE_INFINITY } },
 };
 
 test('a ring an overlay places on a stop lands on screen where the markers’ layer drew that stop’s marker', () => {
@@ -137,7 +140,9 @@ test('an overlay is handed the frame’s one zoom, and each route as the modules
   const camera = withCamera({ centre: { x: 0.5, y: 0.5 }, zoom: 2 });
   draw(request(scene, { overlays: [keep] }), { route: [capture], scene: [] });
   draw(request(scene, { overlays: [keep], viewing: { zoom: 1.5, panX: 0, panY: 0 } }), { route: [capture], scene: camera.scene });
-  expect(screens.map((screen) => screen.zoom)).toEqual([1, 3]);
+  draw(request(scene, { overlays: [keep], viewing: { zoom: 2, panX: Number.POSITIVE_INFINITY, panY: 0 } }), { route: [capture], scene: [] });
+  expect(screens.map((screen) => screen.zoom)).toEqual([1, 3, 1]);
+  expect(screens[2]?.place({ x: 0.5, y: 0.5 })).toEqual({ x: 960, y: 540 });
   const route = scene.routes[0];
   expect(screens[0]?.routes.size).toBe(1);
   expect(screens[0]?.routes.get(route?.id ?? '')).toBe(seen[0]);
