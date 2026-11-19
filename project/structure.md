@@ -19,7 +19,7 @@
 | `pm_skills/templates/` | 4 | canon templates, frozen |
 | `reviews/` | 372 | review dossiers, the abstraction plan (each big-run item's detail) and the continuation prompts |
 | `reviews/design-review-2026-10-08-shots/` | 344 | the design review's screenshots, before and after (2026-10-08) |
-| `scripts/` | 4 | the gate sorted by what changed (`scripts/gate.mjs`, GATE-01), the publishing step (`scripts/publish.mjs`, PUB-01) and their tests; CI runs the gate from the root |
+| `scripts/` | 5 | the gate sorted by what changed (`scripts/gate.mjs`, GATE-01), the publishing step (`scripts/publish.mjs`, PUB-01) and their tests, and v4's measures (`scripts/measures.mjs`, STACK-04); CI runs the gate from the root |
 | `specs/` | 15 | absorbed specifications |
 | `specs/dot-crowd-navigator/` | 15 | the crowd-flow fork's spec, absorbed into v3's flow layers |
 | `src/` | 7 | v4's source (STACK-02): `src/main.tsx` mounts the editor; the layers the PM-Skills editor pack lays out, each added by the item that first needs it |
@@ -27,11 +27,12 @@
 | `src/editor/` | 1 | v4's editor, React and Carbon React (one blank page until CORE-05) |
 | `src/exported/` | 1 | the exported player's entry, built in Vite's player mode into one script with no package inside (A20) |
 | `src/ui/` | 1 | v4's theme: Carbon's Sass, IBM Plex bundled, the tokens strengthened toward 7:1 |
-| `tests/` | 28 | v4's tests that are not beside their modules |
+| `tests/` | 120 | v4's tests that are not beside their modules |
 | `tests/a11y/` | 24 | the accessibility pack's standard run (STACK-03): its Playwright configuration, helpers, four specs and known-bad pages, the project's own declarations (`tests/a11y/project.mjs`), and the planted-fault proof |
+| `tests/architecture/` | 92 | the architecture's proofs (STACK-04): each dependency rule broken by a planted fixture, the exported player's closure on its build, each measure on a plant |
 | `tests/bundle/` | 4 | the exported player's check on the built file, with planted faults (Node's own runner) |
 | `tools/` | 18 | pm-next v3.1 tools (check, read, find, view, harness, session, structure, archive, ledger, migrate, handover, run, brief, lanes); the accessibility pack's a11y-run, a11y-report and a11y-coverage (STACK-03) |
-| `v3/` | 456 | frozen v3 at 3.3.726, moved here by STACK-01: its app set, its own `v3/package.json` and lockfile, copies of `v3/version.json`, `v3/LICENSE` and the notices; it builds into the ignored v3/docs/, and the tag v3.3.726 recovers it |
+| `v3/` | 457 | frozen v3 at 3.3.726, moved here by STACK-01: its app set, its own `v3/package.json` and lockfile, copies of `v3/version.json`, `v3/LICENSE` and the notices, and its architecture file `v3/ARCHITECTURE.md` (STACK-04); it builds into the ignored v3/docs/, and the tag v3.3.726 recovers it |
 | `v3/images/` | 6 | the six built-in example images (source) |
 | `v3/scripts/` | 5 | maintainer shell scripts (restart, build), the perf harness, the example builder |
 | `v3/src/` | 122 | the app: the orchestrator's mixins (app), services, models, PlayerCore (core), the exported player (player), config, utils, controllers, components, InteractionHandler (handlers), the example registry (examples) |

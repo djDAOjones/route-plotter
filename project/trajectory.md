@@ -14,6 +14,8 @@
 - STACK-02 — v4's skeleton stands at the root on the PM-Skills editor stack, every package pinned exactly: one blank Carbon page, an exported player built as one script holding no package, and v4's own gate in CI's v4 lane; v3 still builds the same files, by pull request (2026-11-19) — see decisions
 - PUB-01 — v4 reaches Pages only through the publishing step, after a passing Verify run when v4 has changed or by hand on main, its literal references checked in the forms its tests list; a take-back is written down, its live trial due straight after the merge; the gate reads the step's commits as running nothing and fails a hand change, by pull request (2026-11-19) — see decisions
 - STACK-03 — v4's gate tests the shell at AAA in headless Chromium with the accessibility pack's standard run, its output outside the checkout; planted 5:1 text and a 30 px target fail it, and one link gives the shell a control to focus, by pull request (2026-11-19) — see decisions
+- STACK-04 — v4's layers and edges are enforced by dependency-cruiser and proved for good by 27 planted violations and a legal tree, the built player's closure is tested, and `npm run measures` prints M1 to M11 into every v4 run's summary; v3's architecture file lives in `v3/`, v4's record at `project/architecture.md`, by pull request (2026-11-19) — see decisions
+- RECALL — 8/8 (2026-11-19) — scores: 2,2,2,2 — fresh — see decisions
 
 ## Phase 5 — v4: the architecture plan, before any code — the owner's word of 2026-11-18
 
