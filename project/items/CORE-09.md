@@ -16,11 +16,11 @@ v3's browser autosaves stay untouched (Q8). This item gives v4 autosave and reco
 
 ## Now
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
-Next step: Start once CORE-03 and CORE-05 have merged; built late in Phase 7, its storage being the least settled.
+Next step: Start once CORE-03 and CORE-05 have merged; built late in Phase 7, where the plan placed it while its storage was the least settled.
 
-Open question: Owner: whether v4 keeps browser storage of its own (round 1, Q3); provisionally yes (A15).
+Open question: None; his answer on v4's browser storage (round 1, Q3), "open to reccomendation but no backwards compatibility needed", keeps v4's own storage (A15), as PLAN-6 of 2026-11-19 reads it.
 
 ## Context and sources
 
@@ -31,3 +31,4 @@ Open question: Owner: whether v4 keeps browser storage of its own (round 1, Q3);
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: "Leave them alone" (Q8). He left the reading "v4 has its own storage" unticked (P6), so it is round 1's third question. Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A15 (the plan's §18; the night's decisions list).
+- 2026-11-19 — The owner answered the plan's round 1, Q3 (v4's browser storage, A15; `reviews/v4-plan-question-round-answers-2026-11-19.md`), verbatim: "open to reccomendation but no backwards compatibility needed". Read by PLAN-6 of 2026-11-19, a reading his to correct: the recommended option stands, and v4 need not read, import or migrate v3's browser autosaves; this item's check that no v3 key is read, written or deleted stands. It is not read as changing A13 (older v4 files keep opening), which he was not asked about.

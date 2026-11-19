@@ -19,11 +19,11 @@ The owner asked for routes and crowds to become "one thing with options" because
 
 ## Now
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
 Next step: Start once FEAT-01 has merged; it may run beside FEAT-02, FEAT-03 and CORE-11.
 
-Open question: Owner: whether a repeating crowd repeats exactly (round 2, Q8); provisionally yes (A24).
+Open question: None; his answer to round 2, Q8, "q8) as recommended for now, but future feature may include expressions that make it varied", keeps every lap the same at v4.0 (A24), as PLAN-6 of 2026-11-19 reads it; laps that vary are a wish-list line for later.
 
 ## Context and sources
 
@@ -34,3 +34,4 @@ Open question: Owner: whether a repeating crowd repeats exactly (round 2, Q8); p
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: "I want the next major version to be a merge" (PLAN-4); "One route, travellers as features (Recommended)" (Q11). Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A1, A24, A30, A31 (the plan's §18; the night's decisions list).
+- 2026-11-19 — The owner answered the plan's round 1, Q2 (route shape, A1), verbatim: "recommendation good"; and its round 2, Q8 (a repeating crowd, A24), verbatim: "q8) as recommended for now, but future feature may include expressions that make it varied" (`reviews/v4-plan-question-round-answers-2026-11-19.md`). Read by PLAN-6 of 2026-11-19, a reading his to correct, as ruling A1 and A24 as recommended: a crowd uses a whole network, and each dot's laps are identical at v4.0, so this item's criterion "provisionally identical" now reads as ruled. His addition is a wish for a later feature, one wish-list line; what "expressions" means is his to say when it is planned. A30 and A31 stay provisional under G3.
