@@ -150,6 +150,52 @@ test('“fade in”: a stop the walk never reaches is as one not yet reached, hi
   expect(opacities('ABCE', ROW, ROW_AT, 9_000, 'fade in')).toEqual({ A: 1, B: 1, C: 1, E: 0 });
 });
 
+test('“fade in and out”: in as “fade in”, whole over a pause, out over the window after; the first and last stops', () => {
+  const at = (t: number) => opacities('ABC', ROW, ROW_AT, t, 'fade in and out');
+  // v3 on the row: A, the first stop, whole at 0, out from the start: 0.25 at 250, 0.04 at 400, 0 at 500.
+  expect([0, 250, 400, 500].map((t) => at(t).A)).toEqual([1, expect.closeTo(0.25, 9), expect.closeTo(0.04, 9), 0]);
+  // B in as under fade in (0.875 at 1,750), whole at 2,000, out after: 0.25 at 2,250, 0.04 at 2,400, 0 at 2,600.
+  const b = [1_750, 2_000, 2_250, 2_400, 2_600].map((t) => at(t).B);
+  expect(b).toEqual([expect.closeTo(0.875, 9), 1, expect.closeTo(0.25, 9), expect.closeTo(0.04, 9), 0]);
+  // C, the last stop: in (0.875 at 3,750), then whole, and still whole once the lead has finished (v3's fallback).
+  expect([3_750, 4_000, 9_000].map((t) => at(t).C)).toEqual([expect.closeTo(0.875, 9), 1, 1]);
+  // B pauses 1 s (base 5 s, a 400 ms window): whole in its pause, 0.25 at 3,200, 200 moving ms on.
+  const paused: Reached = { A: [0, 0], B: [2_000, 3_000], C: [5_000, 5_000] };
+  const walk: Walked[] = [
+    ['A', 'B', 0, 2_000],
+    ['B', 'C', 3_000, 5_000],
+  ];
+  expect(opacities('ABC', walk, paused, 2_500, 'fade in and out').B).toBe(1);
+  expect(opacities('ABC', walk, paused, 3_200, 'fade in and out').B).toBeCloseTo(0.25, 9);
+  // The join's walk: J out on to D, 0.25 at 3,250; B (way 3 s by J, window 375 ms) 0.2177778 at 1,200 and gone by
+  // 2,000, its line in to J arrived and the lead waiting there, as v3's progress stands.
+  const join: Walked[] = [
+    ['A', 'B', 0, 1_000],
+    ['B', 'J', 1_000, 2_000],
+    ['J', 'D', 3_000, 4_000],
+    ['A', 'C', 0, 500],
+    ['C', 'J', 500, 3_000],
+  ];
+  const joined: Reached = { A: [0, 0], B: [1_000, 1_000], C: [500, 500], J: [3_000, 3_000], D: [4_000, 4_000] };
+  const meet = (t: number) => opacities('ABCJD', join, joined, t, 'fade in and out');
+  expect(meet(3_250).J).toBeCloseTo(0.25, 9);
+  expect(meet(1_200).B).toBeCloseTo(0.2177777777777775, 9);
+  expect(meet(2_000).B).toBe(0);
+});
+
+test('“fade in and out”: a stop closer after another than the fade, each in and out over the other', () => {
+  // The close walk of “fade in” (base 5.2 s, way 4.2 s): at 3,300, C 100 moving ms past, B 300 (v3).
+  const walk: Walked[] = [
+    ['A', 'B', 0, 2_000],
+    ['B', 'C', 3_000, 3_200],
+    ['C', 'D', 3_200, 5_200],
+  ];
+  const reached: Reached = { A: [0, 0], B: [2_000, 3_000], C: [3_200, 3_200], D: [5_200, 5_200] };
+  const at = opacities('ABCD', walk, reached, 3_300, 'fade in and out');
+  expect(at.C).toBeCloseTo(0.5660770975056686, 9);
+  expect(at.B).toBeCloseTo(0.06612244897959142, 9);
+});
+
 /** `count` stops in a row, s0 to s9999 for 10,000, each labelled, the lead starting at s0, fading in. */
 function stopsRoute(count: number): Route {
   const ids = Array.from({ length: count }, (_, i) => `s${i}`);

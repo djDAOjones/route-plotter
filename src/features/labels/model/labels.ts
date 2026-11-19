@@ -56,9 +56,9 @@ function evaluate({ settings, route, timeMs }: RouteInput<Settings>): Evaluation
   const { appearance } = settings;
   // v3 draws nothing under `off` or for a stop with no text (:2536).
   if (appearance === 'off') return { ok: true, value: { look, labels: [] } };
-  // Whole under `on`. Until the second fade is built (CORE-04 stage 5b-2's last step), `fade in and out` shows whole
-  // too, at every moment.
-  const faded = appearance === 'fade in' ? fadesOf(route.timeline, timeMs) : () => 1;
+  // Whole under `on`; under a fade, as the labels' timing works it out.
+  const fades = appearance === 'on' ? null : { opacityOf: fadesOf(route.timeline, timeMs), fade: appearance };
+  const faded = (pointId: string) => (fades === null ? 1 : fades.opacityOf(pointId, fades.fade));
   const labels = route.shape.points
     .filter((point) => point.kind === 'stop' && point.label !== '')
     .map((point) => ({ pointId: point.id, at: { x: point.x, y: point.y }, text: point.label, opacity: faded(point.id) }))

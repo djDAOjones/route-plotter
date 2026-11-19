@@ -1,5 +1,5 @@
-// CORE-04 stage 5b-2: how solid a stop's label is under `fade in`, from the plan's P2 alone: when the lead walks each
-// line and the pauses it takes. Ported from v3's getTextVisibility (v3/src/services/TextLabelService.js:319–383), as
+// CORE-04 stage 5b-2: how solid a stop's label is under `fade in` and `fade in and out`, from the plan's P2 alone: when the lead walks each
+// line and the pauses it takes. Ported from v3's getTextVisibility (v3/src/services/TextLabelService.js:319–405), as
 // renderLabel hands it its figures (v3/src/services/RenderingService.js:2536–2556): the lead's progress along the path
 // against the stop's, which stands still in a pause, and a fade of 500 ms as a share of the base timeline. Progress
 // times the way's moving time is the lead's moving ms, which v4's timeline holds as each line's depart and arrive, so
@@ -19,6 +19,15 @@ const FIRST = 0.001;
 
 /** v3's Easing.cubicOut (v3/src/utils/Easing.js:30–33). */
 const cubicOut = (t: number) => (t - 1) ** 3 + 1;
+
+/** v3's Easing.quadIn (Easing.js:17–19). */
+const quadIn = (t: number) => t * t;
+
+/** The fade out, `pastMs` on from where it starts (TextLabelService.js:369–376, 391–399). */
+const fadeOut = (pastMs: number, windowMs: number) => (pastMs >= windowMs ? 0 : quadIn(1 - pastMs / windowMs));
+
+/** The appearances that change over time; `on` and `off` need no timing. */
+export type Fade = 'fade in' | 'fade in and out';
 
 type Times = Pick<Timeline, 'start' | 'lines' | 'points' | 'endMs'>;
 type LineTime = Times['lines'][number];
@@ -88,14 +97,30 @@ function behindOf(times: Times, into: ReadonlyMap<string, LineTime>, order: read
   return behind;
 }
 
-/** Back over the points: each one's moving time on, along its first lines out to their end. */
-function aheadOf(outs: Outs, order: readonly string[]) {
-  const onMs = new Map<string, number>();
+/** A point's figures on along its first lines out, at the frame's moment. */
+interface Ahead {
+  /** The moving time on to their end: with the moving time back, v3's path duration. */
+  readonly onMs: number;
+  /** How much of it the lead has walked at `t` since it left the point: a pause stands still. */
+  readonly movedMs: number;
+}
+
+const NOTHING_ON: Ahead = { onMs: 0, movedMs: 0 };
+
+/** Back over the points: each one's moving time on, and how much of it the lead has walked at `t`. */
+function aheadOf(outs: Outs, order: readonly string[], t: number) {
+  const ahead = new Map<string, Ahead>();
   for (const id of [...order].reverse()) {
     const first = outs.get(id)?.[0];
-    onMs.set(id, first === undefined ? 0 : durationOf(first) + (onMs.get(first.to) ?? 0));
+    const next = first === undefined ? NOTHING_ON : (ahead.get(first.to) ?? NOTHING_ON);
+    if (first === undefined) ahead.set(id, NOTHING_ON);
+    else {
+      const sinceMs = intoLine(first, t);
+      const movedMs = t >= first.arriveMs ? sinceMs + next.movedMs : sinceMs;
+      ahead.set(id, { onMs: durationOf(first) + next.onMs, movedMs });
+    }
   }
-  return onMs;
+  return ahead;
 }
 
 /**
@@ -106,24 +131,28 @@ export function fadesOf(times: Times, t: number) {
   const { into, outs } = linesOf(times);
   const order = orderOf(times, outs);
   const behind = behindOf(times, into, order, t);
-  const ahead = aheadOf(outs, order);
+  const ahead = aheadOf(outs, order, t);
   // v3's base timeline: the lead's own walk, its pauses in (v3/src/utils/branchTiming.js:107), what the scene waits
   // for after it out (RenderingService.js:2543–2546).
   const startMs = times.start === null ? 0 : (times.points.get(times.start)?.arriveMs ?? 0);
   const baseMs = times.endMs - startMs > 0 ? times.endMs - startMs : NO_BASE_MS;
-  return (pointId: string): number => {
+  return (pointId: string, fade: Fade): number => {
     const back = behind.get(pointId);
     // A stop the walk never reaches is as one not yet reached (D136): hidden.
     if (back === undefined) return 0;
     // The moving time of the stop's own way, v3's path duration: on a straight route, the whole walk's.
-    const wayMs = back.backMs + (ahead.get(pointId) ?? 0);
-    // v3's first stop shows from the start (:344–347).
-    if (back.backMs <= FIRST * wayMs) return 1;
+    const on = ahead.get(pointId) ?? NOTHING_ON;
+    const wayMs = back.backMs + on.onMs;
     const windowMs = (FADE_MS * wayMs) / baseMs;
+    const out = fade === 'fade in and out' && on.movedMs > 0;
+    // v3's first stop shows from the start (:344–347); under fade in and out it fades out as the lead's progress from
+    // the start of the way passes, not from the stop (:365–378).
+    if (back.backMs <= FIRST * wayMs) return out ? fadeOut(back.backMs + on.movedMs, windowMs) : 1;
     const toGoMs = back.backMs - back.walkedMs;
-    // Hidden before the window, then the fade in (:349–356), then whole once the lead is there.
+    // Hidden before the window, then the fade in (:349–356 and :381–390), then whole once the lead is there and over its
+    // pause; under fade in and out, out as it moves on (:391–399). A last stop stays whole (v3's fallback, :401–404).
     if (toGoMs >= windowMs) return 0;
     if (toGoMs > 0) return cubicOut(1 - toGoMs / windowMs);
-    return 1;
+    return out ? fadeOut(on.movedMs, windowMs) : 1;
   };
 }
