@@ -563,6 +563,8 @@ describe('the gate as wired in this repository', () => {
     const [v4Lane] = stepRunning('node scripts/gate.mjs --lane v4');
     for (const step of [browser[0], v4Lane]) {
       assert.match(step, /PLAYWRIGHT_BROWSERS_PATH: \$\{\{ runner\.temp \}\}\/ms-playwright$/m);
+      // ubuntu-latest is newer than the pinned Playwright names; both steps take the build for the newest it supports.
+      assert.match(step, /PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: ubuntu24\.04-x64$/m);
     }
     assert.ok(steps.indexOf(browser[0]) < steps.indexOf(v4Lane), 'the browser is installed before the lane');
     assert.match(v4Lane, /git status --porcelain --untracked-files=all > "\$RUNNER_TEMP\/checkout-before-v4"\n/);

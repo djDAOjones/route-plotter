@@ -66,12 +66,15 @@ jobs:
       # revision the locked Playwright names, fetched by Playwright's own installer
       # from its own download host; the run itself never downloads. Its folder is
       # outside the checkout and named for both steps, as the pack's run looks in
-      # macOS's cache unless told.
+      # macOS's cache unless told. ubuntu-latest is Ubuntu 26.04, which the
+      # pinned Playwright (1.56.1) does not name, so both steps take its Ubuntu
+      # 24.04 build, the newest it supports; v3's lane is not touched.
       - name: Install Playwright's Chromium for the accessibility run
         if: steps.sort.outputs.v4 == 'true'
         run: node node_modules/@playwright/test/cli.js install --only-shell chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
+          PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: ubuntu24.04-x64
 
       - name: Test the gate's own sorting
         if: steps.sort.outputs.gate == 'true'
@@ -94,6 +97,7 @@ jobs:
           node scripts/gate.mjs --lane v4
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
+          PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: ubuntu24.04-x64
 
       - name: Prove v4's gate wrote nothing in the checkout
         if: steps.sort.outputs.v4 == 'true'
