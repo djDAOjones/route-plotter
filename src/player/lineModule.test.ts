@@ -201,7 +201,7 @@ test('the style’s colour and width at two frame sizes, drawn where the frame p
 
 test('the drawing takes each dash and a per-line style, scaled by the frame (the model gives solid: D135)', () => {
   const size = { width: 200, height: 200 };
-  const frame: Frame = { size, bounds: { x: 0, y: 0, ...size, scale: 1 }, picture: null, scale: 2, view: null };
+  const frame: Frame = { size, bounds: { x: 0, y: 0, ...size, scale: 1 }, picture: null, scale: 2, view: null, images: new Map() };
   const stroke = (dash: string, colour: string, width: number) => ({
     points: [{ x: 0.1, y: 0.1 }, { x: 0.5, y: 0.5 }],
     style: { colour, width, dash },

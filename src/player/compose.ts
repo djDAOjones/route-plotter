@@ -49,6 +49,8 @@ export interface FrameRequest {
   readonly surface: (size: Size) => Surface;
   readonly viewing?: Viewing;
   readonly overlays?: readonly Overlay[];
+  /** The pictures modules draw besides the background, by the name a module gives (an image head's), decoded. */
+  readonly images?: ReadonlyMap<string, CanvasImageSource>;
 }
 
 /** A module that drew nothing this frame, and why. */
@@ -201,9 +203,11 @@ function sceneStage(run: Run, { routes, scenes, contentEnd, contentMs }: ReturnT
   return { evaluated, view: view ?? null, placement: placement !== undefined && sound(placement, 0) ? placement : 1 };
 }
 
+const NO_IMAGES: ReadonlyMap<string, CanvasImageSource> = new Map();
+
 /** 3. The view: the picture placed, the scene's view (the whole picture, without one), then the further zoom and pan. */
 function viewStage(run: Run, view: View | null, placement: number) {
-  const { size, image, viewing } = run.request;
+  const { size, image, viewing, images = NO_IMAGES } = run.request;
   const bounds = imageBounds(size, image ?? SQUARE, placement);
   const centre = { x: size.width / 2, y: size.height / 2 };
   const camera = view !== null && sound(view.zoom, 0) ? { zoom: view.zoom, at: imageToCanvas(bounds, view.centre) } : null;
@@ -211,7 +215,14 @@ function viewStage(run: Run, view: View | null, placement: number) {
   const zoom = further.zoom * (camera?.zoom ?? 1);
   const at = camera?.at ?? centre;
   const matrix = [zoom, 0, 0, zoom, centre.x + further.panX - zoom * at.x, centre.y + further.panY - zoom * at.y] as const;
-  const frame: Frame = { size, bounds, picture: image?.source ?? null, scale: run.scale, view: camera === null ? null : view };
+  const frame: Frame = {
+    size,
+    bounds,
+    picture: image?.source ?? null,
+    scale: run.scale,
+    view: camera === null ? null : view,
+    images,
+  };
   return { frame, matrix };
 }
 

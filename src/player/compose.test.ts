@@ -88,8 +88,9 @@ describe('compose', () => {
     // What it is asked with names no asker: a field added to the request fails to compile here.
     const asked: Record<keyof FrameRequest, true> = {
       scene: true, sceneMs: true, seed: true, size: true, image: true, surface: true, viewing: true, overlays: true,
+      images: true,
     };
-    expect(Object.keys(asked)).toHaveLength(8);
+    expect(Object.keys(asked)).toHaveLength(9);
     // What it gives each module names none either, whether the frame has a further zoom and overlays or not.
     const given: string[][] = [];
     const catalogue = {

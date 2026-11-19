@@ -23,8 +23,9 @@ export type Layer = (typeof LAYERS)[number];
 
 /**
  * What every drawing is told of the frame: its size in canvas pixels, where the picture lies in it (image to canvas),
- * the picture to draw there (the caller's, or null with none), the render scale, and the scene's view (the camera's
- * centre and zoom, or null for the whole picture), which Reveal background follows (P4).
+ * the picture to draw there (the caller's, or null with none), the render scale, the scene's view (the camera's
+ * centre and zoom, or null for the whole picture), which Reveal background follows (P4), and the other pictures the
+ * caller hands in by name, such as an image head's picture, none of them loaded by a module.
  */
 export interface Frame {
   readonly size: Size;
@@ -32,6 +33,7 @@ export interface Frame {
   readonly picture: CanvasImageSource | null;
   readonly scale: number;
   readonly view: View | null;
+  readonly images: ReadonlyMap<string, CanvasImageSource>;
 }
 
 /** One module's drawing in one layer, from its evaluation. Declared as a method, so a list may hold any module's. */
