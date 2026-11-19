@@ -140,6 +140,7 @@ function own(value: object, key: string | number | symbol): Own {
 
 /** Reports each own key of `value`, hidden and symbol keys included, that `known` does not accept, by its own path. */
 function reportUnknownKeys(walk: Walk, value: object, path: string, known: (key: string) => boolean): void {
+  walk.at = path;
   for (const key of [...Object.getOwnPropertyNames(value), ...Object.getOwnPropertySymbols(value)]) {
     const name = typeof key === 'string' ? key : String(key);
     if (typeof key === 'string' && known(key)) continue;

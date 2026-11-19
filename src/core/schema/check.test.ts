@@ -265,6 +265,11 @@ describe('check reads each own data property once, in plain objects and lists on
     });
   });
 
+  it('a value whose keys cannot be listed is reported by its own path', () => {
+    const style = new Proxy({ shown: false }, { ownKeys: () => { throw new Error('trap'); } });
+    expect(check(BOX, { ...box(), style })).toMatchObject({ ok: false, problems: [{ path: 'style', rule: 'type' }] });
+  });
+
   it('what cannot be read as plain data is refused with a report, never thrown', () => {
     const trap = new Proxy({}, { getPrototypeOf: () => { throw new Error('trap'); } });
     const unreadable = { ok: false, problems: [{ path: 'style', rule: 'type', expected: 'plain data' }] };
