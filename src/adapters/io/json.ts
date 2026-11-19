@@ -15,25 +15,37 @@ export type Parsed = { readonly ok: true; readonly value: unknown } | { readonly
 const unsafe = (why: string): Parsed => ({ ok: false, refusal: { reason: 'unsafe', message: WORDS.openedUnsafe(why) } });
 const tooLarge = (what: string): Parsed => ({ ok: false, refusal: { reason: 'too-large', message: WORDS.openedTooLarge(what) } });
 
-/** Why the parsed tree is refused, or null. JSON.parse gives plain data only, with no cycles, getters or symbols. */
-function treeRefusal(root: unknown): Parsed | null {
+/** Why a parsed tree is refused: too large or unsafe, and why, in words that follow "because" or a colon. */
+export interface TreeProblem {
+  readonly reason: 'too-large' | 'unsafe';
+  readonly why: string;
+}
+
+const large = (why: string): TreeProblem => ({ reason: 'too-large', why });
+const risky = (why: string): TreeProblem => ({ reason: 'unsafe', why });
+
+/**
+ * Why the parsed tree is refused, or null. JSON.parse gives plain data only, with no cycles, getters or symbols. Save
+ * applies it to what it writes as well, so it never writes a file Open would refuse.
+ */
+export function treeProblem(root: unknown): TreeProblem | null {
   const stack: { value: unknown; depth: number }[] = [{ value: root, depth: 0 }];
   const encoder = new TextEncoder();
   let values = 0;
   let textBytes = 0;
-  const text = (value: string): Parsed | null => {
+  const text = (value: string): TreeProblem | null => {
     if (value.length > TREE_LIMITS.textLength) {
-      return tooLarge(`one of its texts is longer than ${TREE_LIMITS.textLength.toLocaleString('en-GB')} characters`);
+      return large(`one of its texts is longer than ${TREE_LIMITS.textLength.toLocaleString('en-GB')} characters`);
     }
     textBytes += encoder.encode(value).byteLength;
-    return textBytes > TREE_LIMITS.textBytes ? tooLarge('its texts come to more than 2 MB') : null;
+    return textBytes > TREE_LIMITS.textBytes ? large('its texts come to more than 2 MB') : null;
   };
   for (let item = stack.pop(); item !== undefined; item = stack.pop()) {
     const { value, depth } = item;
     values += 1;
-    if (values > TREE_LIMITS.values) return tooLarge(`it holds more than ${TREE_LIMITS.values.toLocaleString('en-GB')} values`);
-    if (depth > TREE_LIMITS.depth) return unsafe(`its settings are nested more than ${TREE_LIMITS.depth} deep`);
-    if (typeof value === 'number' && !Number.isFinite(value)) return unsafe('it holds a number too large to use');
+    if (values > TREE_LIMITS.values) return large(`it holds more than ${TREE_LIMITS.values.toLocaleString('en-GB')} values`);
+    if (depth > TREE_LIMITS.depth) return risky(`its settings are nested more than ${TREE_LIMITS.depth} deep`);
+    if (typeof value === 'number' && !Number.isFinite(value)) return risky('it holds a number too large to use');
     if (typeof value === 'string') {
       const refused = text(value);
       if (refused !== null) return refused;
@@ -41,7 +53,7 @@ function treeRefusal(root: unknown): Parsed | null {
     }
     if (typeof value !== 'object' || value === null) continue;
     for (const [key, child] of Object.entries(value)) {
-      if (FORBIDDEN_KEYS.has(key)) return unsafe(`it holds the setting name "${key}", which Route Plotter never writes`);
+      if (FORBIDDEN_KEYS.has(key)) return risky(`it holds the setting name "${key}", which Route Plotter never writes`);
       const refused = text(key);
       if (refused !== null) return refused;
       stack.push({ value: child, depth: depth + 1 });
@@ -64,5 +76,7 @@ export function parseProjectJson(bytes: Uint8Array): Parsed {
   } catch {
     return { ok: false, refusal: { reason: 'not-a-project', message: WORDS.openedNotAProject } };
   }
-  return treeRefusal(value) ?? { ok: true, value };
+  const problem = treeProblem(value);
+  if (problem === null) return { ok: true, value };
+  return problem.reason === 'too-large' ? tooLarge(problem.why) : unsafe(problem.why);
 }

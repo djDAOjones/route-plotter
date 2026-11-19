@@ -43,6 +43,7 @@ export const WORDS = {
     `This project could not be saved, because some of it is outside what Route Plotter allows (${listed(problems)}). ` +
     'Nothing was saved.',
   savedTooLarge: (what: string) => `This project is too large to save: ${what}. Nothing was saved.`,
+  savedUnsafe: (why: string) => `This project could not be saved, because ${why}. Nothing was saved.`,
   openedNotAProject: 'This file is not a Route Plotter project, or it is damaged. Nothing was opened.',
   openedUnsafe: (why: string) => `This file cannot be opened safely, because ${why}. Nothing was opened.`,
   openedTooLarge: (what: string) => `This file is too large to open: ${what}. Nothing was opened.`,

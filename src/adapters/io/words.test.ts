@@ -12,6 +12,7 @@ const problem: Problem = { path: 'scene.routes[0].points[0].x', rule: 'range', e
 const MESSAGES: Readonly<Record<keyof typeof WORDS, string>> = {
   savedInvalid: WORDS.savedInvalid([problem]),
   savedTooLarge: WORDS.savedTooLarge('it needs 51 MB, and a file holds at most 50 MB'),
+  savedUnsafe: WORDS.savedUnsafe('its settings are nested more than 64 deep'),
   openedNotAProject: WORDS.openedNotAProject,
   openedUnsafe: WORDS.openedUnsafe('it is encrypted'),
   openedTooLarge: WORDS.openedTooLarge('image 1 is over 16 MB'),

@@ -2,12 +2,13 @@
 // written and a project the schema does not allow is refused, never written. It goes into the ZIP as UTF-8 bytes
 // encoded once, never a string JSZip cuts in 16,384-unit chunks, which could split an emoji across a chunk (DEF-101).
 // Its images pass the same admission Open applies, decoding included (images.ts), so Save never writes a file Open
-// would refuse.
+// would refuse; and what project.json holds passes Open's own limits on it (json.ts).
 import JSZip from 'jszip/dist/jszip.min.js';
 import { check } from '../../core/schema/check';
 import { FORMAT_VERSION, PROJECT_FILE, PROJECT_FILE_NAME, imageEntryName } from './format';
 import type { Project } from './format';
 import { admitImages } from './images';
+import { treeProblem } from './json';
 import type { Decode } from './images';
 import { ARCHIVE_LIMITS } from './limits';
 import { WORDS } from './words';
@@ -48,10 +49,19 @@ export async function saveProject(project: Project, decode: Decode): Promise<Sav
         : { reason: 'invalid', message: WORDS.savedInvalid(admitted.problems), problems: admitted.problems },
     };
   }
-  const json = new TextEncoder().encode(JSON.stringify(checked.value));
+  const text = JSON.stringify(checked.value);
+  const json = new TextEncoder().encode(text);
   if (json.byteLength > ARCHIVE_LIMITS.projectJsonBytes) {
     const what = `its routes and settings need ${megabytes(json.byteLength)}, and a file holds at most ${megabytes(ARCHIVE_LIMITS.projectJsonBytes)}`;
     return { ok: false, refusal: { reason: 'too-large', message: WORDS.savedTooLarge(what) } };
+  }
+  // Open's own limits on what project.json holds (json.ts), applied to what is written: how many values, how deep, how
+  // long each text and the texts in all. A scene the schema allows can pass 2 MB and still hold more than Open takes.
+  const written: unknown = JSON.parse(text);
+  const problem = treeProblem(written);
+  if (problem !== null) {
+    const message = problem.reason === 'too-large' ? WORDS.savedTooLarge(problem.why) : WORDS.savedUnsafe(problem.why);
+    return { ok: false, refusal: { reason: problem.reason, message } };
   }
   const zip = new JSZip();
   zip.file(PROJECT_FILE_NAME, json, { binary: true, createFolders: false, date: SAVED_AT });
