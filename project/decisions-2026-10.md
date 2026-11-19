@@ -939,3 +939,13 @@ Standards: house event ownership and regression/mutation checks; nielsen 1 and 9
 **Supersedes:** 2026-10-05 — GATELESS-1 — The run goes gateless: each merge lands and ships as it goes, with Codex reviewing
 
 **Deferred:** none
+
+## 2026-10-14 — CROWD-08 — Part B: seeded starts inside centred node areas
+
+**Decision:** Entry nodes gain rectangle or ellipse start areas, centred on the node and set by width, height and turn, so Disappear and Collect dots walk from seeded points to the unchanged network.
+
+**Rationale:** The independently approved Part B brief applies the owner's centred-area MVP choice and gateless preference. The lead chooses image fractions 0.01–0.8 (default 0.1), clockwise degrees -180–180 (default 0), and intrinsic image-plane rotation; without an image the fixed square plane keeps playback independent of viewport size, with an explanatory hint. Rectangle draws are uniform and ellipse radius uses sqrt; a separate seed namespace preserves every old graph, onset and pace draw. At the outer stored-coordinate bounds, clipping the centre-to-point ray keeps samples inside both the shape and allowed box, intentionally sacrificing uniformity there. Shared journey totals include the approach; total terminal state wins over coincident onset/Entry boundaries. Walking variation is suppressed through the exact Entry instant, then resumes its old network value: the lead accepts the resulting sideways step as the easier MVP, pinned in adjacent-instant tests and Chromium. Respawn, Repeat journey, Follow route and non-Entry Types retain inactive data. Absent areas preserve old JSON and node event payloads. The app owns both card and outline edits through one validation/undo/autosave path, separate from the pen's older mutation exception; stable owner identity preserves drafts through unrelated sync and discards drafts superseded by an accepted outline edit. Image replacement refreshes timing only when its relevant intrinsic aspect changes; late-load rollback restores the old context. The Edit-only overlay uses shared geometry below guide edges. Standards: carbon's native select/number fields and single More disclosure; nielsen 1, 3, 4 and 9 for matching state, reversible edits and specific errors; wcag-2.2-aaa 2.5.5, 2.1.3 and 2.4.12 for 44 px controls, keyboard paths and retained focus; house-conventions' app ownership, additive persistence and regression tests. Physical-device and screen-reader evidence remain REV-03/REV-05. The source PR owns gate, mutant, golden-trace and browser evidence; publication belongs to its release record. CROWD-08 remains open for C–G under the owner's continuation instruction recorded by REL-719.
+
+**Supersedes:** none
+
+**Deferred:** none

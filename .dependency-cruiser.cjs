@@ -18,6 +18,11 @@
 // in src/core/ import their runners and are outside the core rule.
 const PACKAGES = [];
 
+// CORE-03, provisional under grant G3 (its decision entry): the ZIP library, for the ZIP adapter's save and open. It is
+// listed for the adapters alone, never in PACKAGES, which would open it to the core and the features too; the player
+// and exported code are still barred from it by NEVER_IN_PLAYER below, whatever any list says.
+const ADAPTER_PACKAGES = ['jszip'];
+
 // STACK-04, the plan's §8 rule 6: what the exported player never holds, directly or through another file, whatever
 // PACKAGES lists: React, React DOM, Carbon, the ZIP library and the video encoder.
 const NEVER_IN_PLAYER = /(^|\/)node_modules\/(react|react-dom|@carbon\/[^/]+|jszip|mediabunny)\//;
@@ -46,7 +51,7 @@ const PLAYER = [
 module.exports = {
   forbidden: [
     { name: 'core-reaches-only-core', severity: 'error', comment: 'src/core reaches only itself and the packages listed above: no adapter, interface, editor, player, exported code, other folder or UI framework', from: { path: '^src/core/', pathNot: TESTS }, to: { pathNot: ok('core'), reachable: true } },
-    { name: 'adapters-reach-only-core-and-adapters', severity: 'error', comment: 'an adapter reaches only the core and adapters, so it is part of "core plus adapters"', from: { path: '^src/adapters/', pathNot: TESTS }, to: { pathNot: ok('core', 'adapters'), reachable: true } },
+    { name: 'adapters-reach-only-core-and-adapters', severity: 'error', comment: 'an adapter reaches only the core and adapters, so it is part of "core plus adapters"', from: { path: '^src/adapters/', pathNot: TESTS }, to: { pathNot: [...ok('core', 'adapters'), ...packages(ADAPTER_PACKAGES)], reachable: true } },
     { name: 'player-reaches-only-its-closure', severity: 'error', comment: "rule 6, replacing the pack's player rule: the player reaches the core, the renderer's kit, itself, the player-safe catalogue and the features' model/ and draw/ parts; never the other adapters (ZIP and assets, storage, video, HTML export), an editor/ part, jszip, mediabunny, React, React DOM or Carbon", from: { path: '^src/player/', pathNot: TESTS }, to: { pathNot: PLAYER, reachable: true } },
     { name: 'exported-reaches-only-the-players-closure', severity: 'error', comment: "rule 7, replacing the pack's exported rule: exported code reaches what rule 6 allows the player, and itself", from: { path: '^src/exported/', pathNot: TESTS }, to: { pathNot: [...PLAYER, '^src/exported/'], reachable: true } },
     { name: 'feature-model-reaches-only-core-and-its-own-model', severity: 'error', comment: "rule 1: a feature's model/ is pure: the core and its own model/, nothing else", from: { path: '^src/features/([^/]+)/model/', pathNot: TESTS }, to: { pathNot: ['^src/core/', '^src/features/$1/model/', ...packages(PACKAGES)], reachable: true } },
