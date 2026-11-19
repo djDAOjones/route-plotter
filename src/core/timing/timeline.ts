@@ -146,9 +146,10 @@ interface LeadMoment {
   readonly main: Head | null;
 }
 
+/** A line's progress at a moment: one that takes no time is done at its own moment, as the lead is at its other end. */
 function progressOf(line: LineTime, contentMs: number): number {
-  if (contentMs <= line.departMs) return 0;
   if (contentMs >= line.arriveMs) return 1;
+  if (contentMs <= line.departMs) return 0;
   return (contentMs - line.departMs) / (line.arriveMs - line.departMs);
 }
 
@@ -159,12 +160,18 @@ function progressOf(line: LineTime, contentMs: number): number {
  */
 export function leadAt(timeline: Timeline, contentMs: number): LeadMoment {
   const t = Number.isFinite(contentMs) ? contentMs : 0;
-  const goesOn = new Set(timeline.lines.map((line) => line.from));
+  const ways = new Map<string, LineTime[]>();
+  for (const line of timeline.lines) ways.set(line.from, [...(ways.get(line.from) ?? []), line]);
+  // The lead has left a point it goes on from once past its departure, or at it when every line out takes no time.
+  const left = (pointId: string, departMs: number) => {
+    const out = ways.get(pointId);
+    return out !== undefined && (t > departMs || (t === departMs && out.every((line) => line.arriveMs <= t)));
+  };
   const heads: Head[] = [];
   const rested = new Set<string>();
   const restAt = (pointId: string, lineId: string | null) => {
     const { arriveMs, departMs } = got(timeline.points, pointId);
-    if (rested.has(pointId) || (t > departMs && goesOn.has(pointId))) return;
+    if (rested.has(pointId) || left(pointId, departMs)) return;
     rested.add(pointId);
     const pause = t >= arriveMs && t < departMs ? { elapsedMs: t - arriveMs, totalMs: departMs - arriveMs } : null;
     heads.push({ at: got(timeline.places, pointId), lineId, pointId, pause });

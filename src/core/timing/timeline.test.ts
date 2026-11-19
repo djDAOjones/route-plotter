@@ -322,6 +322,26 @@ describe('a stop’s authored point: the lead arrives, pauses and leaves there (
   });
 });
 
+describe('a line that takes no time: the lead is at once at its other end (Codex, whole diff)', () => {
+  it('a route of one line with no length ends at its last point, on the frame Hold at end keeps', () => {
+    const base = routeOf(['a>b']);
+    const timeline = composeTimeline({ ...base, points: base.points.map((p) => ({ ...p, x: 0.5, y: 0.5 })) }, 0.75);
+    expect(timeline.endMs).toBe(0);
+    const end = leadAt(timeline, contentTime({ ...defaultsOf(CLOCK_SETTINGS), holdAtEndMs: 2_000 }, 0, 1_000));
+    expect(end.progress.get('a>b')).toBe(1);
+    expect(end.heads.map((head) => head.pointId)).toEqual(['b']);
+    expect(end.main?.at).toEqual(timeline.places.get('b'));
+  });
+
+  it('leaves a point at once when its only line out takes no time, and rests where a line with length goes on', () => {
+    const timeline = timelineOf(routeOf(['a>b', 'b>c']), { 'a>b': 0, 'b>c': 0.5 });
+    const start = leadAt(timeline, 0);
+    expect(start.progress.get('a>b')).toBe(1);
+    expect(start.progress.get('b>c')).toBe(0);
+    expect(start.heads.map((head) => head.pointId)).toEqual(['b']);
+  });
+});
+
 describe('a route of 2,000 points, timed end to end (INTAKE.12)', () => {
   it('samples within its budget, times every line and ends at its last point, in under a second', () => {
     const specs = Array.from({ length: 1_999 }, (_, i) => `p${i}>p${i + 1}`);
