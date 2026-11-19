@@ -52,9 +52,9 @@ that `npm run test:architecture` shows failing on every v4 change.
   and the HTML export builder. They reach the core and each other.
 - `src/features/<id>/`: one folder per feature. Its `model/` is pure and reaches the core and itself; its `draw/`
   reaches the core, the renderer's kit and its own model; its `editor/` reaches the shared control kit
-  (`src/editor/kit`), `src/ui`, its own model, React and Carbon React. No feature reaches another or a catalogue; only
-  `src/features/catalogue.ts` (definitions and drawing, safe for the player) and `catalogue.editor.ts` (panels) name
-  several. The core and the adapters never reach a feature.
+  (`src/editor/kit`), `src/ui`, its own model, React and Carbon React. No feature reaches another or a catalogue; outside a
+  feature's own folder, only `src/features/catalogue.ts` (definitions and drawing, safe for the player) and
+  `catalogue.editor.ts` (panels) import one. The core and the adapters never reach a feature.
 - `src/player`: the playback runtime and the composer (`compose.ts`). It reaches the core, the renderer's kit, itself,
   `catalogue.ts` and the features' `model/` and `draw/` parts; never another adapter, an editor part, jszip,
   mediabunny, React, React DOM or Carbon, directly or through another file. A closure test checks the built bundle too.

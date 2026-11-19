@@ -10,7 +10,7 @@
 // STACK-04 (Route Plotter v4), from the architecture plan's §8 (A7), provisional under the owner's overnight grant G3:
 // the pack's core and adapters rules, PACKAGES and the unresolvable rule are kept as written; its player and exported
 // rules are replaced by the plan's narrower closure (rules 6 and 7); src/features/ gains the plan's rules 1 to 5, which
-// the pack does not have; and a cycle rule holds the plan's measure M3 at zero. Every rule is proved by a planted
+// the pack does not have, rule 4 as two entries; and a cycle rule holds the plan's measure M3 at zero. Every rule is proved by a planted
 // violation in tests/architecture/fixtures/, which `npm run test:architecture` runs on every v4 change.
 
 // Signed 2026-11-11 (P-boundaries): the packages the four areas may import, none until a project names one here; a package
@@ -53,6 +53,7 @@ module.exports = {
     { name: 'feature-draw-reaches-only-core-render-and-its-own-model', severity: 'error', comment: "rule 2: a feature's draw/ reaches the core, the renderer's kit, its own model/ and itself", from: { path: '^src/features/([^/]+)/draw/', pathNot: TESTS }, to: { pathNot: ['^src/core/', RENDER, '^src/features/$1/(model|draw)/', ...packages(PACKAGES)], reachable: true } },
     { name: 'feature-editor-reaches-only-kit-ui-and-its-own-model', severity: 'error', comment: "rule 3: a feature's editor/ reaches the shared control kit, src/ui, its own model/ and itself; never the editor's store or app, its own draw/ or another adapter", from: { path: '^src/features/([^/]+)/editor/', pathNot: TESTS }, to: { pathNot: ['^src/(core|ui|editor/kit)/', '^src/features/$1/(model|editor)/', ...packages([...PACKAGES, ...EDITOR_PACKAGES])], reachable: true } },
     { name: 'no-feature-reaches-another-or-a-catalogue', severity: 'error', comment: 'rule 4: no file in features/<x>, tests included, reaches features/<y> or a catalogue; only the two catalogues import several features', from: { path: '^src/features/([^/]+)/' }, to: { path: ['^src/features/[^/]+/', '^src/features/catalogue(\\.editor)?\\.ts$'], pathNot: '^src/features/$1/', reachable: true } },
+    { name: 'only-the-catalogues-import-a-feature', severity: 'error', comment: "rule 4's second half: outside a feature's own folder only the two catalogues import a feature, so adding one touches its folder and a line in each catalogue and nothing else (M1)", from: { pathNot: ['^src/features/[^/]+/', '^src/features/catalogue(\\.editor)?\\.ts$'] }, to: { path: '^src/features/[^/]+/' } },
     { name: 'core-and-adapters-never-reach-features', severity: 'error', comment: 'rule 5: src/core and src/adapters, tests included, never reach src/features', from: { path: '^src/(core|adapters)/' }, to: { path: '^src/features/', reachable: true } },
     { name: 'no-cycles', severity: 'error', comment: "measure M3: v4 keeps v3's zero import cycles", from: {}, to: { circular: true } },
     { name: 'no-unresolvable', severity: 'error', comment: 'an import the cruiser cannot resolve could hide a crossing', from: {}, to: { couldNotResolve: true } },
