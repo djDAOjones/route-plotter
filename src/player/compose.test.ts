@@ -190,6 +190,23 @@ describe('compose', () => {
     expect(lines.slice(lines.indexOf(drawn[1] ?? '') + 1).every((line) => /^(beginPath|restore)\b/.test(line))).toBe(true);
   });
 
+  test('every view and placement offered is asked for: the first given is kept, and a later one that throws is reported', () => {
+    const catalogue = {
+      route: [routeModule('line', { lines: (context, _value, frame) => context.fillText(`zoom${frame.view?.zoom} width${frame.bounds.width}`, 0, 0) })],
+      scene: [
+        sceneModule('a', { view: () => ({ centre: { x: 0.5, y: 0.5 }, zoom: 2 }), placement: () => 2 }),
+        sceneModule('b', { view: () => { throw new Error('no view'); }, placement: () => { throw new Error('no placement'); } }),
+      ],
+    };
+    const { lines, reports } = draw(catalogue, request(sceneOf(1)));
+    expect(reports).toEqual([
+      { routeId: null, featureId: 'b', reason: 'no view' },
+      { routeId: null, featureId: 'b', reason: 'no placement' },
+    ]);
+    // 400 × 300 fitted to 1920 × 1080 is 1440 wide; placed at 2, 2880.
+    expect(texts(lines)[0]).toContain('zoom2 width2880');
+  });
+
   test('an export frame holds no overlay: with none in the request, none is drawn', () => {
     const catalogue = { route: [routeModule('line', { lines: tag('line') })], scene: [] };
     const scene = sceneOf(1);

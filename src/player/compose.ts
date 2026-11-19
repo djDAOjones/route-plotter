@@ -192,8 +192,11 @@ function sceneStage(run: Run, { routes, scenes, contentEnd, contentMs }: ReturnT
     }
     const { value } = result;
     evaluated.push({ routeId: null, featureId: feature.id, layers: feature.layers, value });
-    if (feature.view !== undefined) view ??= given(feature.id, () => feature.view?.(value));
-    if (feature.placement !== undefined) placement ??= given(feature.id, () => feature.placement?.(value));
+    // Every module's offer is asked for, so a later one that throws is still reported; the first given is kept.
+    const offered = feature.view === undefined ? undefined : given(feature.id, () => feature.view?.(value));
+    const placed = feature.placement === undefined ? undefined : given(feature.id, () => feature.placement?.(value));
+    view ??= offered;
+    placement ??= placed;
   }
   return { evaluated, view: view ?? null, placement: placement !== undefined && sound(placement, 0) ? placement : 1 };
 }
