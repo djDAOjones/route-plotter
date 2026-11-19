@@ -10,12 +10,18 @@ import { lookOf, type MarkerLook } from './look';
 import { timingOf } from './timing';
 
 type Settings = Values<typeof MARKER_SETTINGS>;
+type Shape = RouteInput<Settings>['route']['shape'];
 
-/** One stop's marker in a frame: where it stands, and its size as a share of the look's (v3's waypointScale). */
+/** Two places on the picture, from and to: the drawing measures the course's angle on the canvas, as the head's does. */
+export type Course = readonly [ImagePoint, ImagePoint];
+
+/** One stop's marker in a frame: where it stands, its size as a share of the look's (v3's waypointScale), its course. */
 interface Marker {
   readonly pointId: string;
   readonly at: ImagePoint;
   readonly scale: number;
+  /** The way a picture turned under `auto` points, or null for a stop on no line. */
+  readonly course: Course | null;
 }
 
 /** What the markers draw in a frame: one look, and a marker for each stop shown. */
@@ -24,17 +30,42 @@ export interface MarkersDrawing {
   readonly markers: readonly Marker[];
 }
 
+/**
+ * Each stop's course, where v3's renderWaypoints (:2414–2427) took it from its list of waypoints: toward the point at
+ * the other end of the stop's first line out, in the route's saved order of lines (on a straight route v3's next
+ * waypoint, a bend counting); with no line out, on from the point its first line in comes from (v3's one before); on
+ * no line, none. On a fork a stop points along its first line out. Once a frame, over the lines once.
+ */
+function coursesOf({ points, lines }: Shape): (point: Shape['points'][number]) => Course | null {
+  const placeOf = new Map(points.map((point) => [point.id, { x: point.x, y: point.y }]));
+  const out = new Map<string, ImagePoint>();
+  const into = new Map<string, ImagePoint>();
+  for (const line of lines) {
+    const [from, to] = [placeOf.get(line.from), placeOf.get(line.to)];
+    if (from === undefined || to === undefined) continue;
+    if (!out.has(line.from)) out.set(line.from, to);
+    if (!into.has(line.to)) into.set(line.to, from);
+  }
+  return ({ id, x, y }) => {
+    const [next, before] = [out.get(id), into.get(id)];
+    if (next !== undefined) return [{ x, y }, next];
+    return before === undefined ? null : [before, { x, y }];
+  };
+}
+
 function evaluate({ settings, route, timeMs }: RouteInput<Settings>): Evaluation<MarkersDrawing> {
   const look = lookOf(settings);
   const { appearance } = settings;
   if (appearance === 'never') return { ok: true, value: { look, markers: [] } };
   const stops = route.shape.points.filter((point) => point.kind === 'stop');
   const scaleOf = timingOf(route.timeline, new Set(stops.map((point) => point.id)), timeMs);
+  const courseOf = coursesOf(route.shape);
   const markers = stops
     .map((point) => ({
       pointId: point.id,
       at: { x: point.x, y: point.y },
       scale: appearance === 'always' ? 1 : scaleOf(point.id, appearance),
+      course: courseOf(point),
     }))
     .filter((marker) => marker.scale > 0);
   return { ok: true, value: { look, markers } };

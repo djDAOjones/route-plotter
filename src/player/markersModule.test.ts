@@ -164,12 +164,21 @@ const FRAME: Frame = {
   images: new Map([['asset:pin', pin]]),
 };
 
+/** A marker's course as the model gives it: two places on the picture, from and to. */
+type Course = readonly [{ readonly x: number; readonly y: number }, { readonly x: number; readonly y: number }];
+
+interface Drawn {
+  readonly scale?: number;
+  readonly images?: Frame['images'];
+  readonly course?: Course | null;
+}
+
 /** One marker in the middle, (100, 50) on the canvas, of look size 5 (10 there at scale 1), straight through the layer. */
-function drawn(look: Partial<Look>, { scale = 1, images = FRAME.images } = {}) {
+function drawn(look: Partial<Look>, { scale = 1, images = FRAME.images, course = null }: Drawn = {}) {
   const recorder = new Recorder();
   const value = {
     look: { style: 'dot', colour: '#0072b2', size: 5, image: null, rotation: 'fixed', offsetDegrees: 0, ...look },
-    markers: [{ pointId: 'p', at: { x: 0.5, y: 0.5 }, scale }],
+    markers: [{ pointId: 'p', at: { x: 0.5, y: 0.5 }, scale, course }],
   } as const;
   markersLayer?.(recorder, value, { ...FRAME, images });
   return recorder.take();
@@ -236,4 +245,74 @@ test('a picture handed in is drawn twice the size, centred, unfilled and unedged
   expect(calls(drawn({ style: 'custom', image: 'asset:pin' }, { images: new Map() }))).toEqual(aDot);
   expect(calls(drawn({ style: 'custom', image: null }))).toEqual(aDot);
   expect(calls(drawn({}))).toEqual(aDot);
+});
+
+const turned = (entries: readonly string[]) =>
+  entries.filter((entry) => entry.startsWith('rotate ')).map((entry) => Number(entry.split(' ')[1]));
+
+test('a picture under “auto” turns to its course on the canvas, then by the offset; under “fixed”, not at all', () => {
+  const pictured = { style: 'custom', image: 'asset:pin' } as const;
+  // Toward (1, 1) from the middle of a 200 × 100 canvas: atan2(50, 100), not the picture's 45°.
+  const diagonal: Course = [
+    { x: 0.5, y: 0.5 },
+    { x: 1, y: 1 },
+  ];
+  expect(turned(drawn({ ...pictured, rotation: 'auto' }, { course: diagonal }))).toEqual([0.464]);
+  expect(turned(drawn({ ...pictured, rotation: 'auto', offsetDegrees: 90 }, { course: diagonal }))).toEqual([2.034]);
+  // A stop on no line: v3's angle 0, the offset still added (:2420, :2431–2432).
+  expect(turned(drawn({ ...pictured, rotation: 'auto', offsetDegrees: 90 }))).toEqual([1.571]);
+  // Fixed, v3's default: no turn, the offset not read (v3's markers; the head reads it in both modes).
+  expect(turned(drawn({ ...pictured, offsetDegrees: 90 }, { course: diagonal }))).toEqual([]);
+  // Only a picture turns: a square under auto records none.
+  expect(turned(drawn({ style: 'square', rotation: 'auto' }, { course: diagonal }))).toEqual([]);
+});
+
+/** The value's markers, if it is the markers' drawing: the catalogue's modules give `unknown`. */
+const isDrawing = (value: unknown): value is { readonly markers: readonly unknown[] } =>
+  typeof value === 'object' && value !== null && 'markers' in value && Array.isArray(value.markers);
+
+/** The real catalogue with the markers' look made a picture under “auto”, which no setting can ask for yet (D144). */
+const picturing: Catalogue = {
+  ...CATALOGUE,
+  route: CATALOGUE.route.map((feature) => {
+    if (feature.id !== 'markers') return feature;
+    const look = { style: 'custom', colour: '#0072b2', size: 8, image: 'asset:pin', rotation: 'auto', offsetDegrees: 0 };
+    const wrapped: Catalogue['route'][number] = {
+      ...feature,
+      evaluate: (input) => {
+        const result = feature.evaluate(input);
+        return result.ok && isDrawing(result.value) ? { ok: true, value: { ...result.value, look } } : result;
+      },
+    };
+    return wrapped;
+  }),
+};
+
+test('each stop’s course through the model: its first line out’s end, else from its first line in; a fork’s first', () => {
+  const turns = (route: Route) => {
+    const recorder = new Recorder();
+    const scene = { ...newScene(counter()), routes: [route] };
+    const image = { width: 400, height: 300, source };
+    const surface = () => ({ context: new Recorder(), image: source });
+    const images = new Map([['asset:pin', pin]]);
+    compose(recorder, { scene, sceneMs: 0, seed: 7, size: HD, image, surface, images }, picturing);
+    return turned(recorder.take());
+  };
+  // On the 1,440 × 1,080 drawing: the first stop toward the bend, atan2(−270, 360); the last on from it, atan2(270, 360).
+  // At 0 ms the lead has no head yet, so every turn recorded is a marker's.
+  expect(turns(routeOf(ROW, { appearance: 'always' }))).toEqual([-0.644, 0.644]);
+  // A fork from the first stop: it points along its first line out in the route's saved order.
+  const fork = routeOf(
+    [
+      [0.25, 0.5],
+      [0.5, 0.25],
+      [0.5, 0.75],
+    ],
+    { appearance: 'always' },
+  );
+  const [a, b, c] = fork.points.map((point) => point.id);
+  const lines = (order: readonly (readonly [string | undefined, string | undefined])[]) =>
+    order.map(([from = '', to = ''], i) => ({ ...newLine(counter(), from, to), id: `line${i}` }));
+  expect(turns({ ...fork, lines: lines([[a, b], [a, c]]) })).toEqual([-0.644, -0.644, 0.644]);
+  expect(turns({ ...fork, lines: lines([[a, c], [a, b]]) })).toEqual([0.644, -0.644, 0.644]);
 });

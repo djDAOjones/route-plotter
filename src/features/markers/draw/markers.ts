@@ -4,10 +4,10 @@
 // a white edge two reference pixels wide, or the author's picture with neither; nothing for `none` or a transparent
 // colour. v3's selection drawing between those lines is the editor's (stage 6), not drawn here.
 import type { DrawContext } from '../../../adapters/render/context';
-import type { Drawings } from '../../../adapters/render/layers';
+import type { Drawings, Frame } from '../../../adapters/render/layers';
 import { imageToCanvas } from '../../../core/geometry/transform';
-import type { MarkerStyle } from '../model/look';
-import type { MarkersDrawing } from '../model/markers';
+import type { MarkerLook, MarkerStyle } from '../model/look';
+import type { Course, MarkersDrawing } from '../model/markers';
 
 /** v3's edge: white, two reference pixels wide whatever the marker's size (RenderingService.js:2402–2403). */
 const EDGE = { colour: '#ffffff', width: 2 };
@@ -52,10 +52,32 @@ const flag: Shape = (context, x, y, size) => {
 /** The drawn styles. A custom marker with no picture handed in is a dot, as v3's with no image was (:2477–2482). */
 const SHAPES: Record<Exclude<MarkerStyle, 'none'>, Shape> = { dot, square, flag, custom: dot };
 
-/** A custom marker's picture (:2407–2437): twice its size, centred on the stop, with no fill or edge. */
-function picture(context: DrawContext, x: number, y: number, size: number, source: CanvasImageSource) {
+/** A course's angle on the canvas, where v3 measured it, so a picture wider than tall turns a diagonal flatter. */
+function angleOf(frame: Frame, [from, to]: Course): number {
+  const [a, b] = [imageToCanvas(frame.bounds, from), imageToCanvas(frame.bounds, to)];
+  return Math.atan2(b.y - a.y, b.x - a.x);
+}
+
+/**
+ * A picture's turn (v3's :2414–2433): under `auto`, its course's angle (0 for a stop on no line) and then the offset;
+ * under `fixed`, v3's default, none, and the offset is not read. The head adds its offset in both modes (draw/lead.ts):
+ * each keeps v3's own rule.
+ */
+function turnOf(look: MarkerLook, course: Course | null, frame: Frame): number | null {
+  if (look.rotation === 'fixed') return null;
+  return (course === null ? 0 : angleOf(frame, course)) + (look.offsetDegrees * Math.PI) / 180;
+}
+
+/** A custom marker's picture (:2407–2437): twice its size, centred on the stop, with no fill or edge; turned or not. */
+function picture(
+  context: DrawContext,
+  [x, y, size]: readonly [number, number, number],
+  source: CanvasImageSource,
+  turn: number | null,
+) {
   context.save();
   context.translate(x, y);
+  if (turn !== null) context.rotate(turn);
   context.drawImage(source, -size, -size, size * 2, size * 2);
   context.restore();
 }
@@ -73,7 +95,7 @@ export const MARKER_DRAWINGS: Drawings<MarkersDrawing> = {
       const size = look.size * frame.scale * marker.scale;
       if (!Number.isFinite(x) || !Number.isFinite(y) || !(size > 0)) continue;
       if (source === undefined) SHAPES[style](context, x, y, size);
-      else picture(context, x, y, size, source);
+      else picture(context, [x, y, size], source, turnOf(look, marker.course, frame));
     }
   },
 };
