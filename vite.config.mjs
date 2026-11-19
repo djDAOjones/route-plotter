@@ -91,7 +91,9 @@ const editor = {
   // jsdom, forked workers capped at three (repeated as `--maxWorkers=3` in `npm test`), a stray `only` failing the run,
   // no test found failing it, no watch. Advice: spawn Vitest detached and stop it by its process group.
   test: {
-    include: ['src/core/**/*.test.ts'],
+    // CORE-03, provisional under grant G3 (its decision entry): the ZIP adapter's tests run here too, in Node, since it
+    // touches no page (DOM-free bytes in, bytes out); without them its tests would never run and knip would call it unused.
+    include: ['src/core/**/*.test.ts', 'src/adapters/io/**/*.test.ts'],
     exclude: ['v3/**', 'node_modules/**', 'dist/**'],
     environment: 'node',
     pool: 'forks',

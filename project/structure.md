@@ -22,7 +22,8 @@
 | `scripts/` | 5 | the gate sorted by what changed (`scripts/gate.mjs`, GATE-01), the publishing step (`scripts/publish.mjs`, PUB-01) and their tests, and v4's measures (`scripts/measures.mjs`, STACK-04); CI runs the gate from the root |
 | `specs/` | 15 | absorbed specifications |
 | `specs/dot-crowd-navigator/` | 15 | the crowd-flow fork's spec, absorbed into v3's flow layers |
-| `src/` | 32 | v4's source (STACK-02): `src/main.tsx` mounts the editor; the layers the PM-Skills editor pack lays out, each added by the item that first needs it |
+| `src/` | 51 | v4's source (STACK-02): `src/main.tsx` mounts the editor; the layers the PM-Skills editor pack lays out, each added by the item that first needs it |
+| `src/adapters/` | 19 | v4's adapters, the core's edges to the outside: `src/adapters/io` saves and opens v4's project file through v3's ported file-safety guards (CORE-03), its tests beside it |
 | `src/core/` | 28 | v4's core: pure TypeScript, no DOM, React or clock: the project model, its schema helper and v3's limits (CORE-01), each module's tests beside it |
 | `src/editor/` | 1 | v4's editor, React and Carbon React (one blank page until CORE-05) |
 | `src/exported/` | 1 | the exported player's entry, built in Vite's player mode into one script with no package inside (A20) |
