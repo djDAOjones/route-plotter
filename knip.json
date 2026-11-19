@@ -4,6 +4,7 @@
     "eslint.base.mjs",
     "eslint.a11y.mjs",
     "tests/bundle/*.test.mjs",
+    "tests/architecture/*.test.mjs",
     "tests/a11y/**/*.{ts,mjs}"
   ],
   "project": [
@@ -12,7 +13,8 @@
   ],
   "ignore": [
     "v3/**",
-    "tests/bundle/fixtures/**"
+    "tests/bundle/fixtures/**",
+    "tests/architecture/fixtures/**"
   ],
   "vitest": {
     "config": [

@@ -86,16 +86,21 @@ jobs:
         run: node scripts/gate.mjs --lane v3
 
       # v4's gate from the root: typecheck, lint, boundaries, dead code, tests,
-      # build, the player's check and the accessibility run at AAA with its
-      # planted faults (npm run check:v4); a run over 10 minutes is reported as a
-      # finding. The build writes dist/, which git ignores; the accessibility run
-      # writes only in the system's temporary folder. The next step proves the
-      # checkout as git sees it, ignored paths included, is as it was, dist/ aside.
+      # build, the player's check, the architecture's planted violations and the
+      # player's closure, and the accessibility run at AAA with its planted
+      # faults (npm run check:v4); a run over 10 minutes is reported as a
+      # finding. STACK-04: then the measures, M1 to M11, with the lane's own time
+      # as M9, printed into this run's summary. The build writes dist/, which git
+      # ignores; the accessibility run writes only in the system's temporary
+      # folder. The next step proves the checkout as git sees it, ignored paths
+      # included, is as it was, dist/ aside.
       - name: Run v4's gate
         if: steps.sort.outputs.v4 == 'true'
         run: |
           git status --porcelain --ignored=matching --untracked-files=all | sed '/^!! dist\/$/d' > "$RUNNER_TEMP/checkout-before-v4"
+          started=$(date +%s)
           node scripts/gate.mjs --lane v4
+          npm run measures -- --gate-seconds "$(( $(date +%s) - started ))"
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
           PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: ubuntu24.04-x64

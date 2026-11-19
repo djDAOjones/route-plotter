@@ -485,8 +485,9 @@ describe('the gate as wired in this repository', () => {
     assert.deepEqual(LANES.v4.commands, [['npm', ['run', 'check:v4']]]);
     // STACK-03: the accessibility run comes after the build it serves, then the proof that it fails on the two
     // planted faults the item names.
+    // STACK-04: the architecture's planted violations and the player's closure, after the build they read.
     assert.equal(scripts['check:v4'], ['typecheck', 'lint', 'boundaries', 'deadcode', 'test', 'build', 'test:bundle',
-      'a11y', 'a11y:known-bad'].map(name => (name === 'test' ? 'npm test' : `npm run ${name}`)).join(' && '));
+      'test:architecture', 'a11y', 'a11y:known-bad'].map(name => (name === 'test' ? 'npm test' : `npm run ${name}`)).join(' && '));
     assert.equal(scripts.test, 'vitest run --maxWorkers=3');
     assert.equal(scripts.build, 'vite build && vite build --mode player');
     assert.equal(scripts.a11y, 'node tools/a11y-run.mjs');
@@ -580,6 +581,8 @@ describe('the gate as wired in this repository', () => {
     assert.ok(steps.indexOf(browser[0]) < steps.indexOf(v4Lane), 'the browser is installed before the lane');
     const status = "git status --porcelain --ignored=matching --untracked-files=all | sed '/^!! dist\\/$/d'";
     assert.ok(v4Lane.includes(`${status} > "$RUNNER_TEMP/checkout-before-v4"\n`), 'the checkout is noted before the lane');
+    // STACK-04: the measures follow the lane in its step, timed, so the proof below covers them too.
+    assert.ok(v4Lane.includes('node scripts/gate.mjs --lane v4\n          npm run measures -- --gate-seconds '), 'the measures follow the lane');
     const [unchanged] = stepRunning(`${status} | diff "$RUNNER_TEMP/checkout-before-v4" -`);
     assert.ok(unchanged && steps.indexOf(unchanged) === steps.indexOf(v4Lane) + 1, 'the proof follows the lane');
     assert.match(unchanged, /if: steps\.sort\.outputs\.v4 == 'true'/);
