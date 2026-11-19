@@ -8,7 +8,7 @@
 | `_Joe/design docs/` | 36 | the owner's design documents |
 | `_Joe/dev helper scripts/` | 2 | the owner's helper scripts (DEL-07 deletes two) |
 | `_Joe/dev notes/` | 6 | the dev guide, routed for code changes until DOC-08 retires it |
-| `./` | 9 | the workspace file, the contract (`AGENTS.md`, `CLAUDE.md`), the kept rulebooks `UI-STANDARDS.md` and `DEV-INFRASTRUCTURE.md`, `README.md`, `LICENSE`, `THIRD_PARTY_NOTICES.md`, and the live site's `version.json`, which only a release changes |
+| `./` | 21 | the workspace file, the contract (`AGENTS.md`, `CLAUDE.md`), the kept rulebooks `UI-STANDARDS.md` and `DEV-INFRASTRUCTURE.md`, `README.md`, `LICENSE`, v4's `THIRD_PARTY_NOTICES.md`, the live site's `version.json`, which only a release changes, and v4's package, page and settings (`package.json`, `index.html`, the four tsconfig files, `vite.config.mjs`, the three ESLint files, `knip.json`, `.dependency-cruiser.cjs`; STACK-02) |
 | `docs/` | 24 | generated build output and the GitHub Pages root — never hand-edited; only npm run push commits it |
 | `docs/examples/` | 5 | built-in example projects, built |
 | `docs/images/` | 6 | the example images, copied |
@@ -18,11 +18,18 @@
 | `pm_skills/prompts/` | 14 | canon prompts, frozen |
 | `pm_skills/scaffold/` | 2 | canon scaffold scripts, frozen |
 | `pm_skills/templates/` | 4 | canon templates, frozen |
-| `reviews/` | 371 | review dossiers, the abstraction plan (each big-run item's detail) and the continuation prompts |
+| `reviews/` | 372 | review dossiers, the abstraction plan (each big-run item's detail) and the continuation prompts |
 | `reviews/design-review-2026-10-08-shots/` | 344 | the design review's screenshots, before and after (2026-10-08) |
 | `scripts/` | 2 | the gate sorted by what changed (`scripts/gate.mjs`, GATE-01) and its tests; CI runs it from the root |
 | `specs/` | 15 | absorbed specifications |
 | `specs/dot-crowd-navigator/` | 15 | the crowd-flow fork's spec, absorbed into v3's flow layers |
+| `src/` | 7 | v4's source (STACK-02): `src/main.tsx` mounts the editor; the layers the PM-Skills editor pack lays out, each added by the item that first needs it |
+| `src/core/` | 3 | v4's core: pure TypeScript, no DOM, React or clock; Vitest's (an inert scaffold until CORE-01) |
+| `src/editor/` | 1 | v4's editor, React and Carbon React (one blank page until CORE-05) |
+| `src/exported/` | 1 | the exported player's entry, built in Vite's player mode into one script with no package inside (A20) |
+| `src/ui/` | 1 | v4's theme: Carbon's Sass, IBM Plex bundled, the tokens strengthened toward 7:1 |
+| `tests/` | 4 | v4's tests that are not beside their modules |
+| `tests/bundle/` | 4 | the exported player's check on the built file, with planted faults (Node's own runner) |
 | `tools/` | 15 | pm-next v3.1 tools (check, read, find, view, harness, session, structure, archive, ledger, migrate, handover, run, brief, lanes) |
 | `v3/` | 456 | frozen v3 at 3.3.726, moved here by STACK-01: its app set, its own `v3/package.json` and lockfile, copies of `v3/version.json`, `v3/LICENSE` and the notices; it builds into the ignored v3/docs/, and the tag v3.3.726 recovers it |
 | `v3/images/` | 6 | the six built-in example images (source) |

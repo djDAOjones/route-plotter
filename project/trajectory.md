@@ -11,6 +11,7 @@
 ## Phase 6 — v4's foundations — the owner's overnight word of 2026-11-18 (PLAN-6)
 
 - STACK-01 — frozen v3 lives in `v3/`, moved by `git mv`: it builds the same 24 files as 3.3.726 and passes its whole suite from there in CI; the root `docs/` and `version.json` are untouched, the gate sorts `v3/**` as v3, and the root is free for v4, by pull request (2026-11-18) — see decisions
+- STACK-02 — v4's skeleton stands at the root on the PM-Skills editor stack, every package pinned exactly: one blank Carbon page, an exported player built as one script holding no package, and v4's own gate in CI's v4 lane; v3 still builds the same files, by pull request (2026-11-19) — see decisions
 
 ## Phase 5 — v4: the architecture plan, before any code — the owner's word of 2026-11-18
 

@@ -91,12 +91,22 @@ describe("the player's build check", () => {
     assert.match(playerFindings({ a: chunk([], { dynamicImports: ['lazy.js'] }) })[0], /imports lazy\.js/);
   });
 
+  test('refuses emitted code that loads more at run time, or keeps a module statement', () => {
+    const findings = (code) => playerFindings({ a: chunk([], { code }) });
+    assert.deepEqual(findings('var P=(function(e){return e.clamp=function(a){return a},e})({});'), []);
+    assert.match(findings('var P=(function(e){return e.load=e=>import(e),e})({});')[0], /calls import\(\)/);
+    assert.match(findings('var P=require("x");')[0], /calls require\(\)/);
+    assert.match(findings('import{a}from"./a.js";var P=a;')[0], /keeps an import or export statement/);
+    assert.match(findings('var P=1;export{P};')[0], /keeps an import or export statement/);
+  });
+
   const scratch = mkdtempSync(join(tmpdir(), 'route-plotter-player-'));
   after(() => rmSync(scratch, { recursive: true, force: true }));
 
   for (const [name, fixture, pattern] of [
     ['React', 'planted-react.mjs', /holds the package react /],
     ['Carbon', 'planted-carbon.mjs', /holds the package @carbon\/react /],
+    ['an unresolvable import()', 'planted-dynamic-import.mjs', /calls import\(\)/],
   ]) {
     test(`fails a real player build that imports ${name}`, async () => {
       const outDir = join(scratch, name);

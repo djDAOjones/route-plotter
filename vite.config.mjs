@@ -21,9 +21,17 @@ export const PLAYER_PACKAGES = [];
 
 const PACKAGE = /[\\/]node_modules[\\/]((?:@[^\\/]+[\\/])?[^\\/]+)/;
 
+// What a self-contained script never does once built: load code at run time, by `import()` (one the bundler cannot
+// resolve, such as `import(/* @vite-ignore */ url)`, stays in the output) or by `require()`, or keep a module statement.
+const LOADS = [
+  [/\bimport\s*\(/, 'calls import()'],
+  [/\brequire\s*\(/, 'calls require()'],
+  [/(^|[;}\s])(import|export)\s*[{*\w]/m, 'keeps an import or export statement'],
+];
+
 /**
  * Why a player bundle is not one self-contained script free of React and Carbon; empty when it is.
- * @param {Record<string, { type: string, fileName: string, imports?: string[], dynamicImports?: string[], moduleIds?: string[] }>} bundle
+ * @param {Record<string, { type: string, fileName: string, code?: string, imports?: string[], dynamicImports?: string[], moduleIds?: string[] }>} bundle
  * @returns {string[]}
  */
 export function playerFindings(bundle) {
@@ -36,6 +44,7 @@ export function playerFindings(bundle) {
       continue;
     }
     for (const id of [...(file.imports ?? []), ...(file.dynamicImports ?? [])]) findings.push(`${file.fileName} imports ${id}`);
+    for (const [pattern, words] of LOADS) if (pattern.test(file.code ?? '')) findings.push(`${file.fileName} ${words}`);
     for (const id of file.moduleIds ?? []) {
       const name = PACKAGE.exec(id)?.[1]?.replaceAll('\\', '/');
       if (name !== undefined && !PLAYER_PACKAGES.includes(name)) findings.push(`${file.fileName} holds the package ${name} (${id})`);

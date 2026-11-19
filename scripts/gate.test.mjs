@@ -410,11 +410,24 @@ describe('the gate as wired in this repository', () => {
     }
   });
 
+  // A record-only path named in a file; a folder counts when a path follows it, so `/Failed to load project/` (a
+  // regular expression) does not.
+  const escape = name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const recordPath = new RegExp(`(?<![\\w.-])(${RECORD.files.map(escape).join('|')}|` +
+    `(?:${RECORD.dirs.map(dir => escape(dir.slice(0, -1))).join('|')})/(?=[\\w.-]))`, 'g');
+  // v3's code and v4's: scripts, TypeScript, React, markup, styles, settings, shell.
+  const CODE = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.html', '.css', '.scss', '.json', '.sh']);
+
+  test('the record-path guard reads v4\'s TypeScript, React and Sass, and finds a planted record dependency', () => {
+    for (const ext of ['.ts', '.tsx', '.scss', '.mjs', '.json']) assert.ok(CODE.has(ext), ext);
+    const found = text => [...text.matchAll(recordPath)].map(([, name]) => name);
+    assert.deepEqual(found("import set from '../../project/app/set1.json';"), ['project/']);
+    assert.deepEqual(found("@use '../../tools/theme';"), ['tools/']);
+    assert.deepEqual(found("fetch('README.md')"), ['README.md']);
+    assert.deepEqual(found('/Failed to load project/; projects/x; myproject/x'), []);
+  });
+
   test("no v3 or v4 code, test or build file names a record-only path, so the record cannot change their result", () => {
-    const escape = name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // A folder counts when a path follows it, so `/Failed to load project/` (a regular expression) does not.
-    const pattern = new RegExp(`(?<![\\w.-])(${RECORD.files.map(escape).join('|')}|` +
-      `(?:${RECORD.dirs.map(dir => escape(dir.slice(0, -1))).join('|')})/(?=[\\w.-]))`, 'g');
     // Mentions in comments, read by hand on 2026-11-18: none reads a record file. v3's
     // package.json names tools/ in its `check` script, which ends by running the record
     // checker from the root, the record lane's own command; the v3 lane does not run it.
@@ -426,11 +439,10 @@ describe('the gate as wired in this repository', () => {
       'v3/package.json tools/',
       '.dependency-cruiser.cjs README.md', 'eslint.base.mjs README.md', 'vite.config.mjs README.md'
     ]);
-    const code = new Set(['.js', '.mjs', '.cjs', '.html', '.css', '.json', '.sh']);
     const found = [];
     for (const path of tracked) {
-      if (!['v3', 'v4'].includes(classify(path)) || !code.has(extname(path))) continue;
-      for (const [, name] of read(path).matchAll(pattern)) {
+      if (!['v3', 'v4'].includes(classify(path)) || !CODE.has(extname(path))) continue;
+      for (const [, name] of read(path).matchAll(recordPath)) {
         if (!known.has(`${path} ${name}`)) found.push(`${path} ${name}`);
       }
     }
