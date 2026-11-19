@@ -26,3 +26,15 @@ export const IMAGE_LIMITS = Object.freeze({
   /** All images' pixels together (MAX_IMAGE_PIXELS_TOTAL, v3/src/services/ImageAssetService.js:24–32). */
   totalPixels: 48 * 1000 * 1000,
 });
+
+/** project.json once parsed, before any field is checked (v3/src/app/persistence.js:63–78, PROJECT_MODEL_LIMITS). */
+export const TREE_LIMITS = Object.freeze({
+  /** Objects, lists and values, all counted (MAX_TREE_NODES). */
+  values: 100_000,
+  /** Nesting, the whole file at depth 0 (MAX_TREE_DEPTH). */
+  depth: 64,
+  /** One text, in UTF-16 units (MAX_STRING_LENGTH). */
+  textLength: 100_000,
+  /** All texts and keys together, as UTF-8 bytes (MAX_STRING_BYTES_TOTAL). */
+  textBytes: 2 * 1024 * 1024,
+});

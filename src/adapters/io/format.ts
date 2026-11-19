@@ -8,7 +8,11 @@ import { LIMITS } from '../../core/config/limits';
 import { SCENE } from '../../core/model/scene';
 import type { Scene } from '../../core/model/scene';
 import { choice, group, id, list, number } from '../../core/schema/field';
+import type { Values } from '../../core/schema/field';
 import { IMAGE_LIMITS } from './limits';
+
+/** The ZIP entry holding project.json. */
+export const PROJECT_FILE_NAME = 'project.json';
 
 /** The save format's version: until v4.0, a file of any other version is refused whole (PLAN-7, D82). */
 export const FORMAT_VERSION = 1;
@@ -42,6 +46,9 @@ export const PROJECT_FILE = group({
   },
   description: 'A saved project’s project.json.',
 });
+
+/** project.json as the declaration's check gives it back: declared fields only. */
+export type ProjectFile = Values<typeof PROJECT_FILE.of>;
 
 /** An image the project holds: its id, its type and its bytes, exactly as they were added. */
 interface ProjectImage {

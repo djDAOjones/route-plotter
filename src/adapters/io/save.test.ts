@@ -2,13 +2,14 @@ import JSZip from 'jszip/dist/jszip.min.js';
 import { describe, expect, it } from 'vitest';
 import { newPoint, newScene } from '../../core/model/scene';
 import type { Scene } from '../../core/model/scene';
+import { jpeg, png } from './fixtures';
 import { FORMAT_VERSION } from './format';
 import type { Project } from './format';
 import { saveProject } from './save';
 import { SAVE_NOTICE } from './words';
 
-const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3]);
-const JPEG = Uint8Array.from([0xff, 0xd8, 0xff, 4, 5, 6]);
+const PNG = png(2, 1);
+const JPEG = jpeg(1, 2);
 
 function ids(): () => string {
   let next = 0;

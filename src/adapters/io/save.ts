@@ -1,10 +1,12 @@
 // CORE-03: Save (the plan's §13). project.json is the declaration's own checked copy, so only declared fields are
 // written and a project the schema does not allow is refused, never written. It goes into the ZIP as UTF-8 bytes
 // encoded once, never a string JSZip cuts in 16,384-unit chunks, which could split an emoji across a chunk (DEF-101).
+// Its images pass the same admission Open applies (images.ts), so Save never writes a file Open would refuse.
 import JSZip from 'jszip/dist/jszip.min.js';
 import { check } from '../../core/schema/check';
-import { FORMAT_VERSION, PROJECT_FILE, imageEntryName } from './format';
+import { FORMAT_VERSION, PROJECT_FILE, PROJECT_FILE_NAME, imageEntryName } from './format';
 import type { Project } from './format';
+import { admitImages } from './images';
 import { ARCHIVE_LIMITS } from './limits';
 import { WORDS } from './words';
 import type { Refusal } from './words';
@@ -29,13 +31,22 @@ export async function saveProject(project: Project): Promise<Saved> {
   if (!checked.ok) {
     return { ok: false, refusal: { reason: 'invalid', message: WORDS.savedInvalid(checked.problems), problems: checked.problems } };
   }
+  const admitted = admitImages(project.images);
+  if (!admitted.ok) {
+    return {
+      ok: false,
+      refusal: 'tooLarge' in admitted
+        ? { reason: 'too-large', message: WORDS.savedTooLarge(admitted.tooLarge) }
+        : { reason: 'invalid', message: WORDS.savedInvalid(admitted.problems), problems: admitted.problems },
+    };
+  }
   const json = new TextEncoder().encode(JSON.stringify(checked.value));
   if (json.byteLength > ARCHIVE_LIMITS.projectJsonBytes) {
     const what = `its routes and settings need ${megabytes(json.byteLength)}, and a file holds at most ${megabytes(ARCHIVE_LIMITS.projectJsonBytes)}`;
     return { ok: false, refusal: { reason: 'too-large', message: WORDS.savedTooLarge(what) } };
   }
   const zip = new JSZip();
-  zip.file('project.json', json, { binary: true, createFolders: false, date: SAVED_AT });
+  zip.file(PROJECT_FILE_NAME, json, { binary: true, createFolders: false, date: SAVED_AT });
   project.images.forEach((image, index) => {
     zip.file(imageEntryName(index, image.type), image.bytes, { binary: true, createFolders: false, date: SAVED_AT });
   });
