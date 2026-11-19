@@ -112,7 +112,8 @@ const straight = () =>
   );
 
 test('the lead is second in CATALOGUE.route, draws in the lead’s head layer and adds no time of its own', () => {
-  expect(CATALOGUE.route.map((feature) => feature.id)).toEqual(['line', 'lead']);
+  // The lead is second; the modules after it (the markers, from stage 5b-1) are their own tests' to place.
+  expect(CATALOGUE.route.map((feature) => feature.id).slice(0, 2)).toEqual(['line', 'lead']);
   expect(Object.keys(lead.layers)).toEqual(['leadHead']);
   expect(evaluated(straight(), 0).end).toBeNull();
 });
@@ -182,7 +183,9 @@ test('a hidden lead draws no head, still times its route and is still found, and
   const { entries, heads: drawn, reports } = framed(route, 5_000);
   expect(reports).toEqual([]);
   expect(drawn).toEqual([]);
-  expect(entries.filter((entry) => entry.startsWith('stroke '))).toHaveLength(1);
+  // The line's stroke: the markers' white edges (stage 5b-1) are not the line's.
+  const lines = entries.filter((entry) => entry.startsWith('stroke ') && !entry.includes('strokeStyle=#ffffff'));
+  expect(lines).toHaveLength(1);
 });
 
 test('the head’s size is the setting in reference pixels times the frame’s scale, at two frame sizes', () => {

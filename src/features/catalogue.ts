@@ -1,6 +1,6 @@
 // CORE-04: the catalogue (the plan's §8): the two typed, ordered lists of modules, definitions and drawing, safe for
 // the player. Their order is the panel's fixed order (Q17) and the drawing order within a layer. The core's own
-// modules come first: on a route the line, then the lead (stage 5a), then markers, labels and pauses (stage 5b);
+// modules come first: on a route the line, then the lead (stage 5a), then the markers (5b-1), then labels and pauses;
 // on the scene the background, the clock and the export settings, in §8's order, the background first so it is drawn
 // first in its layers. The editor's panels are another list, src/features/catalogue.editor.ts, built with the editor.
 // A module's model types are in src/core/feature/contract.ts.
@@ -15,6 +15,8 @@ import { LEAD_DRAWINGS } from './lead/draw/lead';
 import { LEAD } from './lead/model/lead';
 import { LINE_DRAWINGS } from './line/draw/line';
 import { LINE } from './line/model/line';
+import { MARKER_DRAWINGS } from './markers/draw/markers';
+import { MARKERS } from './markers/model/markers';
 
 /** A route module: its model and what it draws, layer by layer. */
 export interface RouteFeature<S extends Fields, R> extends RouteFeatureModel<S, R> {
@@ -35,6 +37,7 @@ export const CATALOGUE: Catalogue = {
   route: [
     { ...LINE, layers: LINE_DRAWINGS },
     { ...LEAD, layers: LEAD_DRAWINGS },
+    { ...MARKERS, layers: MARKER_DRAWINGS },
   ],
   scene: [{ ...BACKGROUND, layers: BACKGROUND_DRAWINGS }, CLOCK, EXPORT],
 };

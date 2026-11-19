@@ -305,7 +305,10 @@ test('the trail draws at full strength from tail to head through the recorder, a
     surface: () => ({ context: new Recorder(), image: source }),
   });
   expect(reports).toEqual([]);
-  const strokes = recorder.take().filter((entry) => entry.startsWith('stroke '));
+  // The line's strokes: the markers' white edges (stage 5b-1) are not the line's.
+  const strokes = recorder
+    .take()
+    .filter((entry) => entry.startsWith('stroke ') && !entry.includes('strokeStyle=#ffffff'));
   expect(strokes).toHaveLength(1);
   // The recorder names a style only where it differs from its default, so no `globalAlpha` here is full strength.
   expect(strokes[0]).toMatch(/^stroke \| .* strokeStyle=#d55e00 lineWidth=2\.778 /);
