@@ -100,7 +100,7 @@ describe('compose', () => {
     draw(catalogue, request(sceneOf(1)));
     const route = ['lead', 'route', 'scale', 'seed', 'settings', 'timeMs'];
     const shape = ['leadStart', 'lines', 'marks', 'points'];
-    const scene = ['scale', 'seed', 'settings', 'timeMs', 'travellerAt'];
+    const scene = ['contentEndMs', 'scale', 'seed', 'settings', 'timeMs', 'travellerAt'];
     expect(given).toEqual([route, shape, scene, route, shape, scene]);
   });
 

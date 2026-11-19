@@ -4,7 +4,7 @@
 // a layer: they are a separate list the editor alone draws, after these and in screen space, so no export or player
 // frame can hold one (DEF-99.1).
 import type { View } from '../../core/feature/contract';
-import type { ImageBounds } from '../../core/geometry/transform';
+import type { ImageBounds, Size } from '../../core/geometry/transform';
 import type { DrawContext } from './context';
 
 export const LAYERS = [
@@ -22,11 +22,14 @@ export const LAYERS = [
 export type Layer = (typeof LAYERS)[number];
 
 /**
- * What every drawing is told of the frame: where the picture lies in it (image to canvas), the render scale, and the
- * scene's view (the camera's centre and zoom, or null for the whole picture), which Reveal background follows (P4).
+ * What every drawing is told of the frame: its size in canvas pixels, where the picture lies in it (image to canvas),
+ * the picture to draw there (the caller's, or null with none), the render scale, and the scene's view (the camera's
+ * centre and zoom, or null for the whole picture), which Reveal background follows (P4).
  */
 export interface Frame {
+  readonly size: Size;
   readonly bounds: ImageBounds;
+  readonly picture: CanvasImageSource | null;
   readonly scale: number;
   readonly view: View | null;
 }

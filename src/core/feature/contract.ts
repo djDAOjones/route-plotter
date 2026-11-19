@@ -61,6 +61,8 @@ export interface SceneInput<V> {
   readonly scale: number;
   /** Where a traveller this module declared through `refersTo` is at a time; null for any other or none. */
   readonly travellerAt: (ref: TravellerRef, timeMs: number) => ImagePoint | null;
+  /** When the content ends (P3): the latest of every route's lead and every module's end, the core's one sum. */
+  readonly contentEndMs: number;
 }
 
 /** Where the picture is looked at from, and how close: a centre in image coordinates and a zoom (P4). */
@@ -87,9 +89,14 @@ export interface RouteFeatureModel<S extends Fields, R> extends FeatureBase<S> {
 export interface SceneFeatureModel<S extends Fields, R> extends FeatureBase<S> {
   select(settings: Scene['settings']): Values<S>;
   evaluate(input: SceneInput<Values<S>>): Evaluation<R>;
-  end(input: Omit<SceneInput<Values<S>>, 'timeMs' | 'travellerAt'>): Part | null;
+  end(input: Omit<SceneInput<Values<S>>, 'timeMs' | 'travellerAt' | 'contentEndMs'>): Part | null;
   /** The routes' travellers its settings point at, so the app can name dependants before a removal. */
   refersTo(settings: Values<S>): readonly TravellerRef[];
   /** The view it gives, from its evaluation: the camera's. */
   view?(value: R): View;
+  /**
+   * How large the picture is placed, from its evaluation: a factor on the image fitted to the frame (the background's
+   * zoom). It places routes with the picture, as v3's coordinate transform did, and leaves sizes as they are.
+   */
+  placement?(value: R): number;
 }
