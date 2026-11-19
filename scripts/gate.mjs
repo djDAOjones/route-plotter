@@ -435,43 +435,62 @@ export async function authenticateStep(candidate, env, fetchImpl = globalThis.fe
 }
 
 /**
- * The commit on main's first-parent line, after `from` when given and up to
- * `to`, that last changed the live site, with the site's paths it changed;
- * null when none did. That line is the states main has been in, one per push,
- * so this commit is the one that left the site as `to` holds it, whatever an
- * older commit held (GATE-02, from Codex's review). A commit whose change
- * cannot be read counts as changing the whole site.
- * @returns {{ sha: string, paths: string[] }|null}
+ * The commit that made the live site what `to` holds, read back from `to`:
+ * while a commit holds the same site (docs/ and version.json, by object id)
+ * as one of its parents, the first such parent is followed, through a merge
+ * on either side; the first commit that holds it and no parent does made it.
+ * Once the walk reaches `from` or a commit before it, the site came from
+ * before the range ({ outside }). So the commit that last put the site there
+ * is the one found, whatever an older commit held, and however main got to
+ * `to`, by a merge or a fast-forward (GATE-02, from Codex's reviews).
+ * @returns {{ sha: string|null, outside?: string }} sha null when git cannot say
  */
-export function lastSiteChange(from, to, cwd = ROOT) {
-  const site = [...PAGES.files, ...PAGES.dirs];
-  const line = git(['rev-list', '--first-parent', from ? `${from}..${to}` : to], cwd);
-  if (line === null) return { sha: null, paths: site };
-  for (const sha of line.split('\n').filter(Boolean)) {
-    const changed = pathsOfRange([`${sha}^`, sha], cwd);
-    const paths = changed === null ? site : pagesPaths(changed);
-    if (paths.length) return { sha, paths };
+export function siteIntroducer(from, to, cwd = ROOT) {
+  const names = [...PAGES.files, ...PAGES.dirs.map(dir => dir.replace(/\/$/, ''))];
+  const held = new Map();
+  const siteOf = commit => {
+    if (!held.has(commit)) held.set(commit, git(['ls-tree', '--full-tree', commit, '--', ...names], cwd));
+    return held.get(commit);
+  };
+  let at = git(['rev-parse', '--verify', '--quiet', '--end-of-options', `${to}^{commit}`], cwd)?.trim();
+  while (isSha(at)) {
+    if (from && isAncestor(at, from, cwd)) return { sha: null, outside: at };
+    const parents = git(['rev-list', '--parents', '-n', '1', at], cwd)?.trim().split(' ').slice(1);
+    const here = siteOf(at);
+    if (!parents || here === null) return { sha: null };
+    const same = parents.find(parent => siteOf(parent) === here);
+    if (!same) return { sha: at };
+    at = same;
   }
-  return null;
+  return { sha: null };
 }
 
 /**
- * Who left the live site as a push to main leaves it, judged by the commit on
- * main's line that last changed it (lastSiteChange): 'step' when that commit
- * is shaped as the step's and GitHub's record of its run vouches for it;
- * 'unverified' when it is so shaped but the record cannot be read; 'hand'
- * otherwise; 'none' when nothing after `from` changed the site. The gate
- * refuses 'hand' and 'unverified' on main (GATE-02). A step commit after a
- * hand change still makes the site the step's again.
+ * Who left the live site as a push to main leaves it, judged by the commit
+ * that made it (siteIntroducer): 'step' when that commit is shaped as the
+ * step's and GitHub's record of its run vouches for it; 'unverified' when it
+ * is so shaped but the record cannot be read; 'hand' otherwise, or when the
+ * site came from before the range but is not the one `from` holds; 'none'
+ * when the site is still the one `from` holds. The gate refuses 'hand' and
+ * 'unverified' on main (GATE-02). A step commit after a hand change makes
+ * the site the step's again.
  * @returns {Promise<{ provenance: 'step'|'unverified'|'hand'|'none', paths: string[] }>}
  */
 export async function siteProvenance(from, to, env, fetchImpl = globalThis.fetch, cwd = ROOT) {
-  const change = lastSiteChange(from, to, cwd);
-  if (!change) return { provenance: 'none', paths: [] };
-  const [candidate] = change.sha ? stepCommits(`${change.sha}^`, change.sha, cwd) : [];
-  if (!candidate || candidate.sha !== change.sha) return { provenance: 'hand', paths: change.paths };
+  const site = [...PAGES.files, ...PAGES.dirs];
+  const made = siteIntroducer(from, to, cwd);
+  if (made.outside) {
+    const changed = pathsOfRange([from, to], cwd);
+    if (changed !== null && pagesPaths(changed).length === 0) return { provenance: 'none', paths: [] };
+    return { provenance: 'hand', paths: changed === null ? site : pagesPaths(changed) };
+  }
+  if (!made.sha) return { provenance: 'hand', paths: site };
+  const changed = pathsOfRange([`${made.sha}^`, made.sha], cwd);
+  const paths = changed === null ? site : pagesPaths(changed).length ? pagesPaths(changed) : site;
+  const [candidate] = stepCommits(`${made.sha}^`, made.sha, cwd);
+  if (!candidate || candidate.sha !== made.sha) return { provenance: 'hand', paths };
   const said = await authenticateStep(candidate, env, fetchImpl, cwd);
-  return { provenance: said === true ? 'step' : said === null ? 'unverified' : 'hand', paths: change.paths };
+  return { provenance: said === true ? 'step' : said === null ? 'unverified' : 'hand', paths };
 }
 
 /**
@@ -581,9 +600,9 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
     const range = ciRange({ eventName: env.GITHUB_EVENT_NAME, event, ref: env.GITHUB_REF, sha: env.GITHUB_SHA, lastGreen });
     paths = range ? pathsOfRange(range, cwd) : null;
     if (onMain && isSha(env.GITHUB_SHA)) {
-      // GATE-02: on main, the commit that last changed the live site, within the range read or, when no last passing
-      // run can be read, on all of main's line, is checked against its run's record, whether or not the site differs
-      // at the range's two ends (a forged commit can put back an older site).
+      // GATE-02: on main, the commit that made the live site what this push holds, found within the range read or,
+      // when no last passing run can be read, before it, is checked against its run's record, whether or not the site
+      // differs at the range's two ends (a forged commit can put back an older site).
       ({ provenance, paths: siteChanged } = await siteProvenance(range ? range[0] : null, env.GITHUB_SHA, env,
         fetchImpl, cwd));
     }
@@ -616,10 +635,11 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
     const said = provenance === 'unverified'
       ? "the live site's change looks like the publishing step's (PUB-01), but GitHub's record of its run cannot " +
         'vouch for it (a job still running, a log missing, or GitHub not answering), so it is not trusted: ' +
-        `${sitePaths.join(', ')}. Re-run this run once the Publish run has finished; if it fails again, run the ` +
-        'Publish workflow by hand on main so that the step rewrites the site'
+        `${sitePaths.join(', ')}. Re-run this run once the Publish run has finished`
       : `docs/ and version.json are the live site, which only the publishing step writes (PUB-01), on main; this change edits them by hand: ${sitePaths.join(', ')}` +
-        (has('--ci') && env.GITHUB_REF?.endsWith('/main') ? '. Run the Publish workflow by hand on main (publish, or take-back) so that the step rewrites the site'
+        (has('--ci') && env.GITHUB_REF?.endsWith('/main')
+          ? '. Run the Publish workflow by hand on main so that the step rewrites the site: mode take-back, ' +
+            "naming the step's last commit before this change (a publish commits nothing when v4's build is unchanged)"
           : !has('--ci') && !shapeOnly ? '. If they came from main, fetch origin first' : '');
     const level = refuse ? 'error' : 'warning';
     const title = !refuse ? 'Live site'

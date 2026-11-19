@@ -23,7 +23,7 @@ import {
   stepMade
 } from './gate.mjs';
 // GATE-02: the accessibility pack's files and the publishing step's own class.
-import { A11Y, PUBLISHING, lastSiteChange } from './gate.mjs';
+import { A11Y, PUBLISHING, siteIntroducer } from './gate.mjs';
 
 const EVERYTHING = ['gate', 'v3', 'v4', 'record'];
 const NO_V4 = { files: [], dirs: [] };
@@ -1094,7 +1094,7 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
       const e = repo.commit('E: record');
       const record = runs(stepRun(6, repo.start, b), stepRun(7, repo.start, c));
       const env = { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'djDAOjones/route-plotter' };
-      assert.equal(lastSiteChange(repo.start, e, repo.dir).sha, d);
+      assert.equal(siteIntroducer(repo.start, e, repo.dir).sha, d);
       assert.equal(await mainProvenance(repo.start, e, env, github(record), repo.dir), 'hand');
       const sorted = await sortPush(repo, e, record);
       assert.equal(sorted.status, 1, sorted.said);
@@ -1121,6 +1121,42 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
       assert.equal(sorted.status, 1, sorted.said);
       assert.match(sorted.said, /record\s+project\/backlog\.md/);
       assert.match(sorted.said, /::error title=Hand change to the live site::/);
+    } finally {
+      repo.done();
+    }
+    repo = site();
+    try {
+      // Main reached by a fast-forward to a branch's merge of main (Codex's third review). The branch left main
+      // before the publish G (run 6) and changed only the record; G passed. Its merge of G, if it keeps the old site,
+      // puts back a site main had left, which fails; if it takes G's site, the site is G's, vouched for by G's run.
+      const g = repo.publish('snapshot 1', { trailer: trailer(6) });
+      const record = stepRun(6, repo.start, g);
+      repo.run(['switch', '-q', '-c', 'branch', repo.start]);
+      repo.write('project/backlog.md', '# Backlog\n- [x] F\n');
+      repo.commit('F: record');
+      repo.run(['merge', '-q', '--no-ff', '--no-commit', g]);
+      repo.run(['checkout', 'HEAD', '--', 'docs', 'version.json']);
+      const kept = repo.commit('F: bring main in, keeping the old site');
+      repo.run(['switch', '-q', 'main']);
+      repo.run(['merge', '-q', '--ff-only', kept]);
+      const env = { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'djDAOjones/route-plotter' };
+      assert.equal(siteIntroducer(g, kept, repo.dir).outside, repo.start);
+      let sorted = await ciSort(repo, g, kept, { eventName: 'push', fetchImpl: github({ green: [g], ...record }) });
+      assert.equal(sorted.status, 1, sorted.said);
+      assert.match(sorted.said, /::error title=Hand change to the live site::.*docs\/index\.html/);
+      repo.run(['reset', '-q', '--hard', g]);
+      repo.run(['switch', '-q', 'branch']);
+      repo.run(['reset', '-q', '--hard', 'HEAD^']);
+      repo.run(['merge', '-q', '--no-ff', '--no-edit', g]);
+      const took = repo.run(['rev-parse', 'HEAD']);
+      repo.run(['switch', '-q', 'main']);
+      repo.run(['merge', '-q', '--ff-only', took]);
+      assert.equal(siteIntroducer(repo.start, took, repo.dir).sha, g);
+      assert.equal(await mainProvenance(repo.start, took, env, github(record), repo.dir), 'step');
+      sorted = await ciSort(repo, repo.start, took, { eventName: 'push',
+        fetchImpl: github({ green: [repo.start], ...record }) });
+      assert.equal(sorted.status, 0, sorted.said);
+      assert.match(sorted.said, /runs the record checker, because every path is record-only or the publishing step's/);
     } finally {
       repo.done();
     }
