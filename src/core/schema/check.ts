@@ -196,6 +196,7 @@ function checkList(declared: Declaration & { readonly max: number }, value: read
   }
   const copy: unknown[] = [];
   for (let i = 0; i < length; i += 1) {
+    walk.at = `${path}[${i}]`;
     const read = own(value, i);
     if (read.found === 'value') copy.push(checkRecord(declared, read.value, `${path}[${i}]`, walk, frames));
     else report(walk, `${path}[${i}]`, 'missing', 'an object', read.found === 'none' ? 'a hole' : 'a getter');
