@@ -46,10 +46,15 @@ interface Drawing {
 const isDrawing = (value: unknown): value is Drawing =>
   typeof value === 'object' && value !== null && 'strokes' in value && Array.isArray(value.strokes);
 
-/** The line's evaluation of a route at a content time, its clock time given as `timeMs` (never read). */
-function evaluated(route: Route, contentMs: number | 'end', timeMs = Number.NaN) {
+/**
+ * The line's evaluation of a route at a content time, or with each walked line's progress given in walk order; its
+ * clock time is `timeMs`, never read.
+ */
+function evaluated(route: Route, at: number | 'end' | readonly number[], timeMs = Number.NaN) {
   const timeline = composeTimeline(route, 1);
-  const lead = leadAt(timeline, contentMs === 'end' ? timeline.endMs : contentMs);
+  const moment = leadAt(timeline, typeof at === 'number' ? at : timeline.endMs);
+  const given = (shares: readonly number[]) => new Map(timeline.lines.map((each, i) => [each.lineId, shares[i] ?? 0]));
+  const lead = Array.isArray(at) ? { ...moment, progress: given(at) } : moment;
   const shape = { points: route.points, lines: route.lines, leadStart: route.leadStart, marks: route.marks };
   if (line === undefined) throw new Error('no route module');
   const settings = line.select(route.settings);
@@ -60,7 +65,26 @@ function evaluated(route: Route, contentMs: number | 'end', timeMs = Number.NaN)
   return { drawing: result.value, lead, timeline, samples };
 }
 
-const key = (point: ImagePoint) => `${point.x},${point.y}`;
+const must = (point: ImagePoint | null) => {
+  if (point === null) throw new Error('no point');
+  return point;
+};
+/** A line's samples up to a share, and from it, read by index as the head is: a whole position ends on its sample. */
+const upTo = (samples: readonly ImagePoint[], share: number) => {
+  const at = share * (samples.length - 1);
+  const k = Math.floor(at);
+  return at === k ? samples.slice(0, k + 1) : [...samples.slice(0, k + 1), must(pointAt(samples, share))];
+};
+const downFrom = (samples: readonly ImagePoint[], share: number) => {
+  const at = share * (samples.length - 1);
+  const k = Math.floor(at);
+  return at === k ? samples.slice(k) : [must(pointAt(samples, share)), ...samples.slice(k + 1)];
+};
+/** Pieces that meet, as one polyline: each piece after the first starts where the last ended. */
+const chain = (...pieces: (readonly ImagePoint[])[]) =>
+  pieces.reduce<ImagePoint[]>((all, piece) => (all.length === 0 ? [...piece] : [...all, ...piece.slice(1)]), []);
+/** Each stroke's points, so strokes compare by where they run. */
+const runs = (drawing: Drawing) => drawing.strokes.map((stroke) => stroke.points);
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -95,23 +119,60 @@ test('each appearance at a line’s start, part way and end, from progress alone
   expect(head).toEqual(lead.main?.at);
   const [grown] = strokes('grows', partWay);
   const [shrunk] = strokes('shrinks', partWay);
-  expect([grown?.points[0], grown?.points.at(-1)]).toEqual([whole[0], head]);
-  expect([shrunk?.points[0], shrunk?.points.at(-1)]).toEqual([head, whole.at(-1)]);
-  expect((grown?.points.length ?? 0) + (shrunk?.points.length ?? 0)).toBeLessThanOrEqual(whole.length + 2);
+  const share = lead.progress.get(first.lineId) ?? Number.NaN;
+  expect([grown?.points.at(-1), shrunk?.points[0]]).toEqual([head, head]);
+  expect(grown?.points).toEqual(upTo(samples(first.lineId), share));
+  expect(shrunk?.points).toEqual(chain(downFrom(samples(first.lineId), share), samples(second.lineId)));
   // The clock's time is not read: the same lead at any time draws the same.
   expect(evaluated(route('grows'), partWay, 0).drawing).toEqual(evaluated(route('grows'), partWay, 9e9).drawing);
 });
 
-test('CROWD-07.1: at 0 a trunk and a rejoined branch show alike, as does a line the lead never walks', () => {
-  for (const appearance of ['whole', 'grows', 'shrinks'] as const) {
-    const { drawing, timeline, samples } = evaluated(routeOf({ appearance }, true), 0);
-    expect(timeline.walk.leftOut).toHaveLength(1);
-    const drawn = new Set(drawing.strokes.flatMap((stroke) => stroke.points.map(key)));
-    const inner = (lineId: string) => samples(lineId).slice(1, -1);
-    const shown = [...timeline.shapes.keys()].map((lineId) => inner(lineId).every((p) => drawn.has(key(p))));
-    expect(shown).toEqual(Array.from({ length: 7 }, () => appearance !== 'grows'));
-    if (appearance === 'grows') expect(drawn.size).toBe(0);
+test('part way through either line, sample for sample, at a whole and a part sample position and at the ends', () => {
+  const route = (appearance: Appearance) => routeOf({ appearance });
+  const { timeline, samples } = evaluated(route('whole'), 0);
+  const [s0, s1] = timeline.lines.map((each) => samples(each.lineId));
+  if (!s0 || !s1) throw new Error('two walked lines');
+  const last = s1.length - 1;
+  const k = Array.from({ length: last - 1 }, (_, i) => i + 1).find((j) => (j / last) * last === j) ?? Number.NaN;
+  const strokes = (appearance: Appearance, shares: readonly number[]) =>
+    runs(evaluated(route(appearance), shares).drawing);
+  for (const share of [k / last, 0.37]) {
+    expect(strokes('grows', [1, share])).toEqual([chain(s0, upTo(s1, share))]);
+    expect(strokes('shrinks', [1, share])).toEqual([downFrom(s1, share)]);
+    expect(strokes('grows', [share, 0])).toEqual([upTo(s0, share)]);
+    expect(strokes('shrinks', [share, 0])).toEqual([chain(downFrom(s0, share), s1)]);
   }
+  expect(upTo(s1, k / last)).toHaveLength(k + 1);
+  // At the first line's end and the second's start.
+  expect(strokes('grows', [1, 0])).toEqual([s0]);
+  expect(strokes('shrinks', [1, 0])).toEqual([s1]);
+});
+
+test('CROWD-07.1: at 0 a trunk and a rejoined branch show alike, as does a line the lead never walks', () => {
+  const branched = (appearance: Appearance) => routeOf({ appearance }, true);
+  const { timeline, samples } = evaluated(branched('whole'), 0);
+  const name = new Map(branched('whole').points.map((point, i) => [point.id, 'abcdef'.charAt(i)]));
+  const named = (lineId: string) => {
+    const found = branched('whole').lines.find((each) => each.id === lineId);
+    return `${name.get(found?.from ?? '') ?? '?'}${name.get(found?.to ?? '') ?? '?'}`;
+  };
+  // The walk order: the trunk, then each branch, then the line that closes the loop, which the lead never walks.
+  expect([...timeline.lines.map((each) => named(each.lineId)), ...timeline.walk.leftOut.map(named)]).toEqual(
+    ['ab', 'bc', 'cd', 'df', 'ce', 'ef', 'fa'],
+  );
+  const [ab, bc, cd, df, ce, ef] = timeline.lines.map((each) => samples(each.lineId));
+  const fa = samples(timeline.walk.leftOut[0] ?? '');
+  if (!ab || !bc || !cd || !df || !ce || !ef) throw new Error('six walked lines');
+  // Touching pieces join; the second branch starts back at c, a stroke of its own, which the loop's line joins.
+  const all = [chain(ab, bc, cd, df), chain(ce, ef, fa)];
+  expect(runs(evaluated(branched('whole'), 0).drawing)).toEqual(all);
+  expect(runs(evaluated(branched('shrinks'), 0).drawing)).toEqual(all);
+  expect(evaluated(branched('grows'), 0).drawing.strokes).toEqual([]);
+  // Each branch shows from its own progress: half of one, a quarter of the other.
+  expect(runs(evaluated(branched('grows'), [1, 1, 0.5, 0, 0.25, 0]).drawing)).toEqual([
+    chain(ab, bc, upTo(cd, 0.5)),
+    upTo(ce, 0.25),
+  ]);
 });
 
 test('the style’s colour and width at two frame sizes, drawn where the frame places the picture', () => {
