@@ -1,16 +1,31 @@
-// CORE-01: the model's properties (the plan's §19 checks), each drawn from the schema's own declarations, so a field
-// added to a declaration is covered without a test changing: every scene the schema allows opens, unchanged; the
-// defaults are valid; and any one number pushed past its range is refused, the report naming that field.
+// CORE-01: the model's properties (the plan's §19 checks). Every value is drawn from the schema's own declarations, so
+// a setting added to one is covered without a test changing; the shape (ids, the lines' and marks' points, leadStart)
+// is drawn here, and a structural field added to a declaration fails the first property until it is drawn too. The
+// draws reach v3's limits where a run can afford it: up to 32 routes, and a label at its full length at times. The
+// totals' exact boundaries are in scene.test.ts.
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import { checkFields } from '../schema/check';
-import { defaultsOf, type Field, type Fields, type Groups } from '../schema/field';
+import { LIMITS } from '../config/limits';
+import { check } from '../schema/check';
+import { defaultsOf, type Field, type Fields } from '../schema/field';
 import { checkScene } from './checkScene';
-import { LINE_FIELDS, MARK_FIELDS, POINT_FIELDS, ROUTE_SETTINGS, SCENE_SETTINGS, newScene } from './scene';
+import { LINE_FIELDS, MARK_FIELDS, POINT_FIELDS, ROUTE_FIELDS, SCENE_FIELDS, newScene } from './scene';
 
 const RUNS = 100;
 
-function valueOf(field: Field): fc.Arbitrary<unknown> {
+/** A text up to its full length, mostly short, now and then exactly at `maxLength`. */
+function textOf(maxLength: number): fc.Arbitrary<string> {
+  const full = fc.string({ minLength: 1, maxLength: 3 }).map((unit) => unit.repeat(maxLength).slice(0, maxLength));
+  return fc.oneof({ arbitrary: fc.string({ maxLength: 40 }), weight: 30 }, { arbitrary: full, weight: 1 });
+}
+
+/** A colour in v3's grammar, `#rrggbb`, each digit in either case; drawn from numbers, a pattern is slow. */
+const colourOf = fc.tuple(fc.integer({ min: 0, max: 0xffffff }), fc.array(fc.boolean(), { minLength: 6, maxLength: 6 }))
+  .map(([rgb, upper]) => [...rgb.toString(16).padStart(6, '0')].map((d, i) => (upper[i] ? d.toUpperCase() : d)))
+  .map((digits) => `#${digits.join('')}`);
+
+/** Any value the field accepts, for a field holding a value or a group of them; the shape is drawn by hand. */
+function valueOf(field: Field): fc.Arbitrary<unknown> | null {
   switch (field.kind) {
     case 'number':
       return field.integer
@@ -21,20 +36,28 @@ function valueOf(field: Field): fc.Arbitrary<unknown> {
     case 'choice':
       return fc.constantFrom(...field.choices);
     case 'colour':
-      return fc.stringMatching(/^#[0-9a-fA-F]{6}$/);
+      return colourOf;
     case 'text':
-      return fc.string({ maxLength: Math.min(field.maxLength, 40) });
+      return textOf(field.maxLength);
+    case 'group':
+      return valuesOf(field.of);
+    default:
+      return null;
   }
 }
 
-const fieldsOf = (fields: Fields) =>
-  fc.record(Object.fromEntries(Object.entries(fields).map(([name, field]) => [name, valueOf(field)])));
-const groupsOf = (groups: Groups) =>
-  fc.record(Object.fromEntries(Object.entries(groups).map(([name, fields]) => [name, fieldsOf(fields)])));
+/** Every value field of `fields`, each drawn as `valueOf` draws it. */
+function valuesOf(fields: Fields): fc.Arbitrary<Record<string, unknown>> {
+  const drawn = Object.entries(fields).flatMap(([name, field]) => {
+    const value = valueOf(field);
+    return value === null ? [] : [[name, value] as const];
+  });
+  return fc.record(Object.fromEntries(drawn));
+}
 
 function linesOf(r: number, pair: fc.Arbitrary<[number, number]>) {
-  return fc.array(fc.tuple(pair, fieldsOf(LINE_FIELDS)), { maxLength: 12 }).map((lines) =>
-    lines.map(([[a, b], fields], l) => ({ id: `r${r}l${l}`, from: `r${r}p${a}`, to: `r${r}p${b}`, ...fields })),
+  return fc.array(fc.tuple(pair, valuesOf(LINE_FIELDS)), { maxLength: 12 }).map((lines) =>
+    lines.map(([[a, b], values], l) => ({ id: `r${r}l${l}`, from: `r${r}p${a}`, to: `r${r}p${b}`, ...values })),
   );
 }
 
@@ -42,37 +65,26 @@ function linesOf(r: number, pair: fc.Arbitrary<[number, number]>) {
 function routeOf(r: number) {
   return fc.integer({ min: 0, max: 8 }).chain((size) => {
     const ids = Array.from({ length: size }, (_, p) => `r${r}p${p}`);
-    const last = Math.max(0, size - 1);
-    const index = fc.integer({ min: 0, max: last });
+    const index = fc.integer({ min: 0, max: Math.max(0, size - 1) });
     const pair = fc.tuple(index, index).filter(([a, b]) => a !== b);
     const kinds = MARK_FIELDS.end.choices;
     return fc.record({
       id: fc.constant(`r${r}`),
-      points: fc.tuple(...ids.map((id) => fieldsOf(POINT_FIELDS).map((fields) => ({ id, ...fields })))),
+      points: fc.tuple(...ids.map((id) => valuesOf(POINT_FIELDS).map((values) => ({ id, ...values })))),
       lines: size < 2 ? fc.constant([]) : linesOf(r, pair),
       marks: fc.subarray(ids.flatMap((point) => kinds.map((end) => ({ point, end })))),
       leadStart: size === 0 ? fc.constant(null) : fc.constantFrom(...ids),
-      settings: groupsOf(ROUTE_SETTINGS),
+      settings: valuesOf(ROUTE_FIELDS.settings.of),
     });
   });
 }
 
-const sceneOf = fc
-  .integer({ min: 0, max: 3 })
-  .chain((count) =>
-    fc.record({
-      routes: fc.tuple(...Array.from({ length: count }, (_, r) => routeOf(r))),
-      settings: groupsOf(SCENE_SETTINGS),
-    }),
-  );
-
-const EVERY_GROUP: readonly Fields[] = [
-  POINT_FIELDS,
-  LINE_FIELDS,
-  MARK_FIELDS,
-  ...Object.values(ROUTE_SETTINGS),
-  ...Object.values(SCENE_SETTINGS),
-];
+const sceneOf = fc.integer({ min: 0, max: LIMITS.routes }).chain((count) =>
+  fc.record({
+    routes: fc.tuple(...Array.from({ length: count }, (_, r) => routeOf(r))),
+    settings: valuesOf(SCENE_FIELDS.settings.of),
+  }),
+);
 
 describe('the model’s properties', () => {
   it('every scene the schema allows is valid, and opens unchanged', () => {
@@ -85,27 +97,12 @@ describe('the model’s properties', () => {
   });
 
   it('the defaults are valid: every group’s, and a new scene’s with any ids', () => {
-    for (const fields of EVERY_GROUP) expect(checkFields(fields, defaultsOf(fields), 'g').ok).toBe(true);
+    for (const fields of [ROUTE_FIELDS.settings.of, SCENE_FIELDS.settings.of]) {
+      expect(check(fields, defaultsOf(fields)).ok).toBe(true);
+    }
     fc.assert(
-      fc.property(fc.string({ minLength: 1, maxLength: 256 }), (id) => {
+      fc.property(fc.string({ minLength: 1, maxLength: LIMITS.idLength }), (id) => {
         expect(checkScene(newScene(() => id)).ok).toBe(true);
-      }),
-      { numRuns: RUNS },
-    );
-  });
-
-  it('any number pushed past its range is refused, the report naming that field', () => {
-    const distance = fc.double({ min: 1e-6, max: 1e9, noNaN: true });
-    const numbers = EVERY_GROUP.flatMap((fields) =>
-      Object.entries(fields).flatMap(([name, field]) => (field.kind === 'number' ? [{ fields, name, field }] : [])),
-    );
-    fc.assert(
-      fc.property(fc.constantFrom(...numbers), fc.boolean(), distance, (one, up, by) => {
-        const { fields, name, field } = one;
-        const past = (end: number) => by * Math.max(1, Math.abs(end));
-        const value = up ? field.max + past(field.max) : field.min - past(field.min);
-        const result = checkFields(fields, { ...defaultsOf(fields), [name]: value }, 'g');
-        expect(result).toMatchObject({ ok: false, problems: [{ path: `g.${name}`, rule: 'range' }] });
       }),
       { numRuns: RUNS },
     );

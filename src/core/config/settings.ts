@@ -18,9 +18,10 @@ export const LINE_SETTINGS = {
     default: 'grows',
     description: 'How the route appears over time: whole, growing behind the lead, shrinking, as a trail, or hidden.',
   }),
-  // v3/src/config/constants.js:270–271; default from the slider's default position (v3/index.html:877) on its scale.
+  // v3/src/config/constants.js:270–271; default v3's model default, 0.20 (v3/src/config/constants.js:269), which
+  // v3/src/main.js:171 gives every new project.
   trailLength: number({
-    default: 0.6,
+    default: 0.2,
     min: 0.04,
     max: 4,
     unit: 'times',

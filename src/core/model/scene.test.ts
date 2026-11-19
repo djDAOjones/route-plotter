@@ -1,21 +1,12 @@
-// CORE-01: the model's examples, the held lines INTAKE.29 and DEF-20.2, and what no single field can check.
+// CORE-01: the model's examples, the held lines INTAKE.29 and DEF-20.2, what no declaration says, and v3's limits at
+// their boundaries. Every field the scene declares is found by walking its declarations, so a field added to one is
+// covered here without this file changing.
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { LIMITS } from '../config/limits';
-import { checkFields } from '../schema/check';
-import { defaultsOf, type Field, type Fields } from '../schema/field';
+import { isList, isRecord, type Fields, type NumberField } from '../schema/field';
 import { checkScene } from './checkScene';
-import {
-  LINE_FIELDS,
-  MARK_FIELDS,
-  POINT_FIELDS,
-  ROUTE_SETTINGS,
-  SCENE_SETTINGS,
-  newLine,
-  newPoint,
-  newRoute,
-  newScene,
-  type Scene,
-} from './scene';
+import { SCENE_FIELDS, newLine, newPoint, newRoute, newScene, type Scene } from './scene';
 
 /** Ids from a counter: what a test injects in place of the editor's ids. */
 function counter(prefix = 'id'): () => string {
@@ -30,7 +21,7 @@ function itemAt<T>(list: readonly T[], index: number): T {
   return item;
 }
 
-/** A route of three stops, A→B→C, its lead starting at A. */
+/** A route of three stops, A→B→C, its lead starting at A, A marked as a start. */
 function chainScene(): Scene {
   const nextId = counter();
   const scene = newScene(nextId);
@@ -39,23 +30,60 @@ function chainScene(): Scene {
   if (!a || !b || !c) throw new Error('three points');
   route.points.push(a, b, c);
   route.lines.push(newLine(nextId, a.id, b.id), newLine(nextId, b.id, c.id));
+  route.marks.push({ point: a.id, end: 'start' });
   route.leadStart = a.id;
   return scene;
 }
 
-const EVERY_GROUP: readonly [string, Fields][] = [
-  ['point', POINT_FIELDS],
-  ['line', LINE_FIELDS],
-  ['mark', MARK_FIELDS],
-  ...Object.entries(ROUTE_SETTINGS).map(([name, fields]): [string, Fields] => [`route.${name}`, fields]),
-  ...Object.entries(SCENE_SETTINGS).map(([name, fields]): [string, Fields] => [`scene.${name}`, fields]),
-];
+/** Routes of `points[r]` bends each, with `lines[r]` lines between their first two points. */
+function sized(points: readonly number[], lines: readonly number[] = []): Scene {
+  const nextId = counter();
+  const scene = newScene(nextId);
+  scene.routes = points.map((count, r) => {
+    const route = newRoute(nextId);
+    route.points = Array.from({ length: count }, () => newPoint(nextId, { x: 0, y: 0, kind: 'bend' }));
+    const [a, b] = route.points;
+    if (a && b) route.lines = Array.from({ length: lines[r] ?? 0 }, () => newLine(nextId, a.id, b.id));
+    route.leadStart = a?.id ?? null;
+    return route;
+  });
+  return scene;
+}
 
-const numberFields = EVERY_GROUP.flatMap(([group, fields]) =>
+/** Each problem as `path rule`, or `opens` when there is none. */
+function rulesBroken(value: unknown): string[] {
+  const result = checkScene(value);
+  return result.ok ? ['opens'] : result.problems.map(({ path, rule }) => `${path} ${rule}`);
+}
+
+const join = (where: string, name: string) => (where === '' ? name : `${where}.${name}`);
+
+/** Every group of fields the scene declares, with where its first one sits in a chain scene. */
+function groupsIn(fields: Fields, where: string): [string, Fields][] {
+  const inner = Object.entries(fields).flatMap(([name, field]) => {
+    if (field.kind === 'list') return groupsIn(field.of, `${join(where, name)}[0]`);
+    return field.kind === 'group' ? groupsIn(field.of, join(where, name)) : [];
+  });
+  return [[where, fields], ...inner];
+}
+
+const numberFields = groupsIn(SCENE_FIELDS, '').flatMap(([where, fields]) =>
   Object.entries(fields)
-    .filter((entry): entry is [string, Extract<Field, { kind: 'number' }>] => entry[1].kind === 'number')
-    .map(([name, field]) => ({ group, name, fields, field })),
+    .filter((entry): entry is [string, NumberField] => entry[1].kind === 'number')
+    .map(([name, field]) => ({ where, name, field })),
 );
+
+/** What a chain scene opens as, with one field set to `value` where the field sits. */
+function placed(where: string, name: string, value: number): string[] {
+  const scene = chainScene();
+  let at: unknown = scene;
+  for (const step of where.split(/[.[\]]+/).filter((part) => part !== '')) {
+    at = isList(at) ? at[Number(step)] : isRecord(at) ? at[step] : undefined;
+  }
+  if (typeof at !== 'object' || at === null) throw new Error(`nothing at ${where}`);
+  Object.assign(at, { [name]: value });
+  return rulesBroken(scene);
+}
 
 describe('a new scene', () => {
   it('holds one empty route at default settings, every id from the injected source', () => {
@@ -79,9 +107,11 @@ describe('a new scene', () => {
     expect(checkScene(scene)).toEqual({ ok: true, value: scene });
   });
 
-  it('a chain of three stops opens as it was made', () => {
+  it('a chain of three stops opens as it was made, as a copy', () => {
     const scene = chainScene();
-    expect(checkScene(scene)).toEqual({ ok: true, value: scene });
+    const result = checkScene(scene);
+    expect(result).toEqual({ ok: true, value: scene });
+    expect(result.ok && result.value).not.toBe(scene);
   });
 });
 
@@ -115,96 +145,144 @@ describe('INTAKE.29 and DEF-20.2: a value that opens is always one its control c
     expect(checkScene(scene)).toMatchObject(refused);
   });
 
-  it.each(numberFields)('DEF-20.2: $group.$name opens exactly within its control’s range', (one) => {
-    const { fields, name, field } = one;
-    const at = (value: number) => checkFields(fields, { ...defaultsOf(fields), [name]: value }, 'g');
-    expect(at(field.min).ok).toBe(true);
-    expect(at(field.max).ok).toBe(true);
+  it.each(numberFields)('DEF-20.2: $where.$name opens exactly within its control’s range', ({ where, name, field }) => {
+    expect(placed(where, name, field.min)).toEqual(['opens']);
+    expect(placed(where, name, field.max)).toEqual(['opens']);
     const below = field.min - Math.max(1, Math.abs(field.min)) * 1e-6;
     const above = field.max + Math.max(1, Math.abs(field.max)) * 1e-6;
-    for (const value of [below, above, Number.POSITIVE_INFINITY, Number.NaN]) {
-      expect(at(value)).toMatchObject({ ok: false, problems: [{ path: `g.${name}` }] });
+    for (const value of [below, above]) expect(placed(where, name, value)).toEqual([`${join(where, name)} range`]);
+    for (const value of [Number.POSITIVE_INFINITY, Number.NaN]) {
+      expect(placed(where, name, value)).toEqual([`${join(where, name)} type`]);
     }
+  });
+
+  it('DEF-20.2: any number pushed past its range, wherever it sits, is refused, the report naming that field', () => {
+    const distance = fc.double({ min: 1e-6, max: 1e9, noNaN: true });
+    fc.assert(
+      fc.property(fc.constantFrom(...numberFields), fc.boolean(), distance, ({ where, name, field }, up, by) => {
+        const past = (end: number) => by * Math.max(1, Math.abs(end));
+        const value = up ? field.max + past(field.max) : field.min - past(field.min);
+        expect(placed(where, name, value)).toEqual([`${join(where, name)} range`]);
+      }),
+      { numRuns: 100 },
+    );
   });
 });
 
-describe('what no single field can check', () => {
-  it('a line must join two points of its own route', () => {
+describe('the scene’s shape: ids, references, lists', () => {
+  it('a line joins two points of its own route, never a point to itself', () => {
     const scene = chainScene();
     const route = itemAt(scene.routes, 0);
-    route.lines.push({ ...newLine(counter('x'), 'nowhere', itemAt(route.points, 0).id) });
-    route.lines.push({ ...newLine(counter('y'), itemAt(route.points, 1).id, itemAt(route.points, 1).id) });
+    const [a, b] = [itemAt(route.points, 0).id, itemAt(route.points, 1).id];
+    route.lines.push(newLine(counter('x'), 'nowhere', a));
+    expect(rulesBroken(scene)).toEqual(['routes[0].lines[2].from reference']);
+    const other = newRoute(counter('r'));
+    other.points.push(newPoint(counter('q'), { x: 0, y: 0, kind: 'stop' }));
+    other.leadStart = itemAt(other.points, 0).id;
+    scene.routes.push(other);
+    route.lines[2] = newLine(counter('x'), a, itemAt(other.points, 0).id);
+    expect(rulesBroken(scene)).toEqual(['routes[0].lines[2].to reference']);
+    route.lines[2] = newLine(counter('x'), b, b);
     expect(checkScene(scene)).toMatchObject({
       ok: false,
       problems: [
-        { path: 'routes[0].lines[2].from', rule: 'reference' },
-        { path: 'routes[0].lines[3].to', rule: 'reference' },
+        { path: 'routes[0].lines[2].to', rule: 'reference', expected: 'a point other than the line’s `from`' },
       ],
     });
   });
 
-  it('ids are unique across the scene, and of 1 to 256 characters', () => {
+  it('ids are unique across the whole scene, and of 1 to 256 characters', () => {
     const scene = chainScene();
     const route = itemAt(scene.routes, 0);
-    itemAt(route.points, 1).id = itemAt(route.points, 0).id;
+    const twin = newRoute(counter('r'));
+    twin.points.push({ ...newPoint(counter('q'), { x: 0, y: 0, kind: 'bend' }), id: itemAt(route.lines, 0).id });
+    twin.leadStart = itemAt(route.lines, 0).id;
+    scene.routes.push(twin);
     route.id = 'r'.repeat(LIMITS.idLength + 1);
-    const result = checkScene(scene);
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.problems.map(({ path, rule }) => `${path} ${rule}`)).toEqual(
-      expect.arrayContaining(['routes[0].id id', 'routes[0].points[1].id duplicate']),
-    );
+    expect(rulesBroken(scene)).toEqual(['routes[0].id id', 'routes[1].points[0].id duplicate']);
   });
 
-  it('leadStart names a point of the route, or is null while the route has none', () => {
+  it('leadStart names a point of its route, and is null exactly while the route has none', () => {
     const scene = chainScene();
     const route = itemAt(scene.routes, 0);
-    route.leadStart = 'gone';
-    const refused = { ok: false, problems: [{ path: 'routes[0].leadStart', rule: 'reference' }] };
-    expect(checkScene(scene)).toMatchObject(refused);
+    for (const leadStart of ['gone', null]) {
+      route.leadStart = leadStart;
+      expect(rulesBroken(scene)).toEqual(['routes[0].leadStart reference']);
+    }
     const empty = newScene(counter());
     itemAt(empty.routes, 0).leadStart = 'anything';
-    expect(checkScene(empty)).toMatchObject(refused);
+    expect(rulesBroken(empty)).toEqual(['routes[0].leadStart reference']);
   });
 
-  it('a mark names a point of the route, once for each kind; several starts, two-way lines and loops open (A1)', () => {
+  it('a mark names a point of its route, once for each kind; several starts, two-way lines and loops open (A1)', () => {
     const scene = chainScene();
     const route = itemAt(scene.routes, 0);
     const [a, c] = [itemAt(route.points, 0).id, itemAt(route.points, 2).id];
-    route.marks.push({ point: a, end: 'start' }, { point: c, end: 'start' }, { point: c, end: 'end' });
+    route.marks.push({ point: c, end: 'start' }, { point: c, end: 'end' });
     route.lines.push({ ...newLine(counter('l'), c, a), direction: 'both ways' });
-    expect(checkScene(scene).ok).toBe(true);
-    route.marks.push({ point: c, end: 'end' }, { point: 'gone', end: 'start' });
-    expect(checkScene(scene)).toMatchObject({
-      ok: false,
-      problems: [
-        { path: 'routes[0].marks[3]', rule: 'duplicate' },
-        { path: 'routes[0].marks[4].point', rule: 'reference' },
-      ],
-    });
-  });
-
-  it('v3’s limits on counts and totals hold: routes, and a route’s pauses together', () => {
-    const scene = newScene(counter());
-    const route = itemAt(scene.routes, 0);
-    scene.routes = Array.from({ length: LIMITS.routes + 1 }, (_, i) => ({ ...route, id: `route${i}` }));
-    expect(checkScene(scene)).toMatchObject({ ok: false, problems: [{ path: 'routes', rule: 'count' }] });
-    const paused = chainScene();
-    for (const point of itemAt(paused.routes, 0).points) point.pauseMs = LIMITS.pauseMs;
-    const stop = (i: number) => newPoint(counter(`p${i}-`), { x: 0, y: 0, kind: 'stop' });
-    const many = Array.from({ length: 150 }, (_, i) => ({ ...stop(i), pauseMs: LIMITS.pauseMs }));
-    itemAt(paused.routes, 0).points.push(...many);
-    expect(checkScene(paused)).toMatchObject({ ok: false, problems: [{ path: 'routes[0].points', rule: 'total' }] });
+    expect(rulesBroken(scene)).toEqual(['opens']);
+    route.marks.push({ point: 'gone', end: 'start' });
+    expect(rulesBroken(scene)).toEqual(['routes[0].marks[3].point reference']);
+    route.marks[3] = { point: c, end: 'end' };
+    expect(rulesBroken(scene)).toEqual(['routes[0].marks[3] duplicate']);
   });
 
   it('an unknown field anywhere is reported, never kept or dropped silently (INTAKE.13)', () => {
     const scene = { ...chainScene(), extra: true, routes: [{ ...chainScene().routes[0], colourful: 1 }] };
-    expect(checkScene(scene)).toMatchObject({
-      ok: false,
-      problems: [
-        { path: 'extra', rule: 'unknown' },
-        { path: 'routes[0].colourful', rule: 'unknown' },
-      ],
-    });
+    expect(rulesBroken(scene)).toEqual(['routes[0].colourful unknown', 'extra unknown']);
+  });
+
+  it('only the scene’s own fields are read: an inherited scene or id is refused, a hole in a list reported', () => {
+    const whole = { ok: false, problems: [{ path: '', rule: 'type' }] };
+    expect(checkScene(Object.create(chainScene()))).toMatchObject(whole);
+    const scene = chainScene();
+    const { id, ...rest } = itemAt(scene.routes, 0);
+    const inherits: unknown = Object.create({ id }, Object.getOwnPropertyDescriptors(rest));
+    expect(rulesBroken({ ...scene, routes: [inherits] })).toEqual(['routes[0] type']);
+    const holed = chainScene();
+    holed.routes.length = 2;
+    expect(rulesBroken(holed)).toEqual(['routes[1] missing']);
+  });
+});
+
+describe('v3’s limits on counts and totals, at each boundary: the limit opens, one past is refused', () => {
+  it(`routes in a scene: ${LIMITS.routes}`, () => {
+    expect(rulesBroken(sized(Array.from({ length: LIMITS.routes }, () => 1)))).toEqual(['opens']);
+    expect(rulesBroken(sized(Array.from({ length: LIMITS.routes + 1 }, () => 1)))).toEqual(['routes count']);
+  });
+
+  it(`points in all routes together: ${LIMITS.points}`, () => {
+    const half = LIMITS.points / 2;
+    expect(rulesBroken(sized([half, half]))).toEqual(['opens']);
+    const expected = 'at most 10000 points in all';
+    const refused = { ok: false, problems: [{ path: 'routes', rule: 'count', expected }] };
+    expect(checkScene(sized([half, half + 1]))).toMatchObject(refused);
+    expect(rulesBroken(sized([LIMITS.points + 1]))).toEqual(['routes[0].points count']);
+  });
+
+  it(`lines in all routes together: ${LIMITS.lines}`, () => {
+    const half = LIMITS.lines / 2;
+    expect(rulesBroken(sized([2, 2], [half, half]))).toEqual(['opens']);
+    const expected = 'at most 20000 lines in all';
+    const refused = { ok: false, problems: [{ path: 'routes', rule: 'count', expected }] };
+    expect(checkScene(sized([2, 2], [half, half + 1]))).toMatchObject(refused);
+    expect(rulesBroken(sized([2], [LIMITS.lines + 1]))).toEqual(['routes[0].lines count']);
+  });
+
+  it(`a route’s stops’ pauses together: ${LIMITS.routePausesMs} ms, a bend’s pause not counted`, () => {
+    const scene = sized([LIMITS.routePausesMs / LIMITS.pauseMs + 1]);
+    const [bend, ...stops] = itemAt(scene.routes, 0).points;
+    for (const point of stops) Object.assign(point, { kind: 'stop', pauseMs: LIMITS.pauseMs });
+    Object.assign(bend ?? {}, { pauseMs: LIMITS.pauseMs });
+    expect(rulesBroken(scene)).toEqual(['opens']);
+    Object.assign(bend ?? {}, { kind: 'stop', pauseMs: 1 });
+    expect(rulesBroken(scene)).toEqual(['routes[0].points total']);
+  });
+
+  it(`marks on a route: at most ${2 * LIMITS.points}, one of each kind on each point`, () => {
+    const scene = sized([1]);
+    const route = itemAt(scene.routes, 0);
+    route.marks = Array.from({ length: 2 * LIMITS.points + 1 }, () => ({ point: route.leadStart ?? '', end: 'start' }));
+    expect(rulesBroken(scene)).toEqual(['routes[0].marks count']);
   });
 });
