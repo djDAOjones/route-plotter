@@ -1162,6 +1162,32 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
     }
     repo = site();
     try {
+      // A hand change, then another putting back exactly the publish B's files (Codex's fourth review): refused, and
+      // since a take-back to B would then commit nothing, the refusal says to go through an earlier site first. Two
+      // take-backs by the step (runs 9 and 10), to the start's site and then to B's, make the site the step's again.
+      const b = repo.publish('snapshot 1', { trailer: trailer(6) });
+      repo.write('docs/index.html', 'by hand');
+      repo.commit('X: edit the site');
+      repo.write('docs/index.html', 'snapshot 1');
+      const d = repo.commit('D: put the site back by hand');
+      assert.deepEqual(pathsOfRange([b, d], repo.dir), []);
+      let sorted = await sortPush(repo, d, stepRun(6, repo.start, b));
+      assert.equal(sorted.status, 1, sorted.said);
+      assert.match(sorted.said, /::error title=Hand change to the live site::.*take it back first to an earlier one/);
+      repo.write('docs/index.html', 'v3');
+      repo.write('version.json', '{"build":726}\n');
+      const t1 = repo.commit(`PUB-01: take the site back\n\nVerify: test\n${trailer(9)}`, repo.bot);
+      repo.write('docs/index.html', 'snapshot 1');
+      repo.write('version.json', '{"site":"snapshot 1"}\n');
+      const t2 = repo.commit(`PUB-01: take the site back\n\nVerify: test\n${trailer(10)}`, repo.bot);
+      const record = runs(stepRun(6, repo.start, b), stepRun(9, repo.start, t1), stepRun(10, repo.start, t2));
+      sorted = await sortPush(repo, t2, record);
+      assert.equal(sorted.status, 0, sorted.said);
+    } finally {
+      repo.done();
+    }
+    repo = site();
+    try {
       // A hand change, then a publish (run 8) that rewrites the site: the site is the step's again, as before.
       repo.write('docs/index.html', 'by hand');
       repo.commit('X: edit the site');

@@ -639,7 +639,9 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
       : `docs/ and version.json are the live site, which only the publishing step writes (PUB-01), on main; this change edits them by hand: ${sitePaths.join(', ')}` +
         (has('--ci') && env.GITHUB_REF?.endsWith('/main')
           ? '. Run the Publish workflow by hand on main so that the step rewrites the site: mode take-back, ' +
-            "naming the step's last commit before this change (a publish commits nothing when v4's build is unchanged)"
+            "naming the step's last commit before this change; if the site already holds that commit's files, a " +
+            'take-back to it commits nothing, so take it back first to an earlier one, then to it (a publish commits ' +
+            "nothing when v4's build is unchanged)"
           : !has('--ci') && !shapeOnly ? '. If they came from main, fetch origin first' : '');
     const level = refuse ? 'error' : 'warning';
     const title = !refuse ? 'Live site'
