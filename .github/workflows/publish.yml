@@ -1,0 +1,254 @@
+# PUB-01: the publishing step, the only way v4 reaches GitHub Pages, under the
+# owner's advance word of 2026-11-18 (PLAN-6, 2026-11-19), until v4.0.
+#
+# Pages serves the root docs/ on main; this workflow never changes that
+# setting, or any other. It is the only writer of docs/ and the root
+# version.json, through scripts/publish.mjs:
+#
+# - After each push to main whose Verify run passed, it builds main's v4 and
+#   publishes it if anything that changes v4 has landed since the last publish.
+#   A record-only or v3-only change publishes nothing; an app change whose own
+#   publish was queued out or failed is published by the next run.
+# - Run by hand on main (Actions -> Publish -> Run workflow), mode "publish"
+#   publishes main's v4 at any point, once main's newest passing Verify run
+#   holds the same v4; mode "take-back" puts back docs/ and version.json as a
+#   commit or tag on main had them, such as v3.3.726.
+# - Anywhere else, and in mode "dry-run" (the default), it builds, checks and
+#   says what a publish would change, and changes nothing in docs/ or
+#   version.json, commits and pushes nothing.
+# - It refuses to publish or take back once v4.0 is declared (V40-01 in the
+#   trajectory), when the advance word ends.
+#
+# Its commits are the Actions bot's and carry "Published-by: PUB-01" with this
+# run's number; on main the gate checks that number against GitHub's record
+# and sorts them as the step's own, so a publish never makes the next change
+# run v3's suite. The gate refuses docs/ or version.json changed in a pull
+# request or a branch, and fails a hand change on main. A push made with this
+# run's token starts no other workflow, so a publish starts no Verify run.
+
+name: Publish
+
+on:
+  workflow_run:
+    workflows: [Verify]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run writes nothing; publish puts main's v4 on Pages; take-back restores an earlier site"
+        type: choice
+        options: [dry-run, publish, take-back]
+        default: dry-run
+      take_back_to:
+        description: 'take-back only: a commit or tag on main, such as v3.3.726'
+        type: string
+        default: ''
+      what_to_try:
+        description: 'publish only: what to try in this preview, one item a line'
+        type: string
+        default: ''
+  push:
+    branches-ignore: [main]
+    paths:
+      - .github/workflows/publish.yml
+      - scripts/publish*.mjs
+      - scripts/gate.mjs
+
+permissions:
+  contents: read
+
+jobs:
+  # Writes nothing: on a branch, the only job that runs.
+  dry-run:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && (github.ref != 'refs/heads/main' || inputs.mode == 'dry-run'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    concurrency:
+      group: publish-dry-run-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Use pinned Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # As CI installs v4 (STACK-02): install scripts off, IBM's telemetry off.
+      - name: Install v4's dependencies
+        run: npm ci --ignore-scripts
+        env:
+          IBM_TELEMETRY_DISABLED: 'true'
+
+      - name: Build v4
+        run: npm run build
+
+      - name: Check the build and say what a publish would change, writing nothing
+        run: node scripts/publish.mjs --dry-run
+
+      # Verify runs these tests before v4 is built; here the two that read the real build run too.
+      - name: Run the step's own tests on this build
+        run: node --test scripts/publish.test.mjs
+
+      - name: Prove the dry run wrote nothing
+        run: git diff --exit-code -- docs version.json && test -z "$(git status --porcelain -- docs version.json)"
+
+  publish:
+    if: >-
+      github.ref == 'refs/heads/main' && (
+        (github.event_name == 'workflow_run' &&
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main' &&
+          github.event.workflow_run.head_repository.full_name == github.repository) ||
+        (github.event_name == 'workflow_dispatch' && inputs.mode == 'publish'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # commit docs/ and version.json to main
+      actions: read # read Verify's runs
+      pull-requests: read # read "What to try" from the merged pull requests
+    # One write to main at a time; a waiting publish is never cancelled.
+    concurrency:
+      group: publish-main
+      cancel-in-progress: false
+    steps:
+      - name: Check out main's tip
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Use pinned Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Decide whether this run publishes
+        id: decide
+        run: node scripts/publish.mjs --decide
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WHAT_TO_TRY: ${{ inputs.what_to_try }}
+
+      - name: Install v4's dependencies
+        if: steps.decide.outputs.publish == 'true'
+        run: npm ci --ignore-scripts
+        env:
+          IBM_TELEMETRY_DISABLED: 'true'
+
+      - name: Build v4
+        if: steps.decide.outputs.publish == 'true'
+        run: npm run build
+
+      # Commits as the step and pushes to main, never forced; if main moves on meanwhile with
+      # no change to v4, it writes again on the new tip, up to three times. Its log names the
+      # pushed commit, which the gate reads once this job has finished, so the job ends here.
+      - name: Put the build in docs/, commit it as the step and push it to main
+        id: publish
+        if: steps.decide.outputs.publish == 'true'
+        run: node scripts/publish.mjs --publish --source "$SOURCE" --verified "$VERIFIED" --try-file "$TRY_FILE"
+        env:
+          SOURCE: ${{ steps.decide.outputs.source }}
+          VERIFIED: ${{ steps.decide.outputs.verified }}
+          TRY_FILE: ${{ steps.decide.outputs.try_file }}
+    outputs:
+      changed: ${{ steps.publish.outputs.changed }}
+      commit: ${{ steps.publish.outputs.commit }}
+
+  watch-publish:
+    needs: publish
+    if: needs.publish.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pages: write # read Pages' builds, and ask for one if the push started none
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Use pinned Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: See Pages build it and serve it
+        run: node scripts/publish.mjs --watch-pages --commit "$COMMIT"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          COMMIT: ${{ needs.publish.outputs.commit }}
+
+  take-back:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.mode == 'take-back'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # commit docs/ and version.json to main
+    concurrency:
+      group: publish-main
+      cancel-in-progress: false
+    steps:
+      - name: Check out main's tip, with its tags
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Use pinned Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Put back docs/ and version.json as the named commit had them, commit them as the step and push
+        id: take-back
+        run: node scripts/publish.mjs --take-back "$TAKE_BACK_TO"
+        env:
+          TAKE_BACK_TO: ${{ inputs.take_back_to }}
+    outputs:
+      changed: ${{ steps.take-back.outputs.changed }}
+      commit: ${{ steps.take-back.outputs.commit }}
+
+  watch-take-back:
+    needs: take-back
+    if: needs.take-back.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pages: write # read Pages' builds, and ask for one if the push started none
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Use pinned Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: See Pages build it and serve it
+        run: node scripts/publish.mjs --watch-pages --commit "$COMMIT"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          COMMIT: ${{ needs.take-back.outputs.commit }}

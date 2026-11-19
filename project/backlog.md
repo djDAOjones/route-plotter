@@ -36,7 +36,6 @@
 
 ### Phase 6 — v4's foundations — the owner's overnight word of 2026-11-18 (PLAN-6)
 
-- [ ] PUB-01 — Each app item publishes v4 to Pages, on the owner's advance word — since 2026-11-18 — (from: PLAN-5, 2026-11-18)
 - [ ] STACK-03 — Accessibility testing, standard depth, at AAA — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] STACK-04 — The architecture record, the enforced edges and the measures — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 
