@@ -33,8 +33,11 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          # STACK-01: frozen v3's package and lockfile live in v3/.
-          cache-dependency-path: v3/package-lock.json
+          # STACK-01: frozen v3's package and lockfile live in v3/; STACK-02:
+          # v4's live at the root.
+          cache-dependency-path: |
+            v3/package-lock.json
+            package-lock.json
 
       # GATE-01: a record-only change runs the record checker alone; anything
       # the sort cannot place, or cannot read, runs every lane.
@@ -45,9 +48,19 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Install frozen v3's dependencies
-        if: steps.sort.outputs.install == 'true'
+        if: steps.sort.outputs.v3 == 'true'
         working-directory: v3
         run: npm ci
+
+      # STACK-02: v4's packages, from the committed lockfile, with install
+      # scripts off. Carbon's and IBM Plex's run IBM's telemetry, which
+      # collects in CI alone (the variable turns it off as well); the one
+      # other, @parcel/watcher's, builds what npm installs prebuilt.
+      - name: Install v4's dependencies
+        if: steps.sort.outputs.v4 == 'true'
+        run: npm ci --ignore-scripts
+        env:
+          IBM_TELEMETRY_DISABLED: 'true'
 
       - name: Test the gate's own sorting
         if: steps.sort.outputs.gate == 'true'
@@ -58,7 +71,9 @@ jobs:
         if: steps.sort.outputs.v3 == 'true'
         run: node scripts/gate.mjs --lane v3
 
-      # STACK-02 fills v4's gate; a run over 10 minutes is reported as a finding.
+      # v4's gate from the root: typecheck, lint, boundaries, dead code, tests,
+      # build and the player's check (npm run check:v4); a run over 10 minutes
+      # is reported as a finding. The build writes dist/, which git ignores.
       - name: Run v4's gate
         if: steps.sort.outputs.v4 == 'true'
         run: node scripts/gate.mjs --lane v4

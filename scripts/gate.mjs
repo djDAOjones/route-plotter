@@ -12,7 +12,8 @@
  *
  *   node scripts/gate.mjs                  sort this checkout's change against
  *                                          origin/main and run what it needs
- *                                          (from v3/, npm run check:changed)
+ *                                          (at the root, npm run check; from
+ *                                          v3/, npm run check:changed)
  *   node scripts/gate.mjs --all            run everything
  *   node scripts/gate.mjs --plan [--range A...B]
  *                                          say what a change would run, run
@@ -58,11 +59,19 @@ export const V3 = {
 };
 
 /**
- * v4's paths: empty until STACK-02 puts v4's skeleton at the root. While it is
- * empty the v4 lane never runs, and STACK-02 fills both this list and
- * `check:v4`.
+ * v4's paths (STACK-02): the root package, its lockfile and the editor stack's
+ * settings, the page, and v4's code and tests. The root `npm run check:v4`
+ * runs v4's whole gate; v4's settings exclude v3/. LICENSE and the root
+ * THIRD_PARTY_NOTICES.md stay other, as STACK-01 left them.
  */
-export const V4 = { files: [], dirs: [] };
+export const V4 = {
+  files: [
+    'package.json', 'package-lock.json', 'index.html', 'tsconfig.json', 'tsconfig.base.json', 'tsconfig.app.json',
+    'tsconfig.core.json', 'vite.config.mjs', 'eslint.config.mjs', 'eslint.base.mjs', 'eslint.a11y.mjs', 'knip.json',
+    '.dependency-cruiser.cjs'
+  ],
+  dirs: ['src/', 'tests/']
+};
 
 /** v4's gate has a 10-minute budget; exceeding it is a finding, not a failure. */
 export const V4_BUDGET_SECONDS = 600;
@@ -305,8 +314,8 @@ async function main(argv, env) {
   console.log(words);
 
   if (has('--ci')) {
-    const outputs = [`lanes=${decided.lanes.join(' ')}`, ...ORDER.map(lane => `${lane}=${decided.lanes.includes(lane)}`),
-      `install=${decided.lanes.includes('v3') || decided.lanes.includes('v4')}`];
+    // Each lane's step, and each package's install, reads its own lane's output (STACK-02).
+    const outputs = [`lanes=${decided.lanes.join(' ')}`, ...ORDER.map(lane => `${lane}=${decided.lanes.includes(lane)}`)];
     if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, `${outputs.join('\n')}\n`);
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `## Gate by what changed\n\n\`\`\`\n${words}\n\`\`\`\n`);
   }

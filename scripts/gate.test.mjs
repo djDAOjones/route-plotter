@@ -18,7 +18,8 @@ import {
   trackedLinks
 } from './gate.mjs';
 
-const EVERYTHING = ['gate', 'v3', 'record'];
+const EVERYTHING = ['gate', 'v3', 'v4', 'record'];
+const NO_V4 = { files: [], dirs: [] };
 const SHA_A = 'a'.repeat(40);
 const SHA_B = 'b'.repeat(40);
 const ZERO = '0'.repeat(40);
@@ -46,39 +47,49 @@ describe('classify', () => {
     ]) assert.equal(classify(path), 'v3', path);
   });
 
-  test('the paths v3 left at the root are not v3 any more, so a new file there runs everything', () => {
+  test('the paths v3 left at the root are not v3 any more: v4 took src/, tests/, index.html and the package', () => {
     const left = [
-      'src/app/main.js', 'src/core/model.ts', 'styles/main.css', 'tests/governance.test.js', 'tests/a11y/x.spec.ts',
-      'images/Court.png', 'index.html', 'build.js', 'push.js', 'vitest.config.js', 'public-assets.json',
+      'styles/main.css', 'images/Court.png', 'build.js', 'push.js', 'vitest.config.js', 'public-assets.json',
       'LICENSE', 'THIRD_PARTY_NOTICES.md', 'scripts/restart.sh', 'scripts/build.sh', 'scripts/perf-harness.js',
       'scripts/build-examples.mjs', 'scripts/README.md'
     ];
     for (const path of left) assert.equal(classify(path), 'other', path);
     for (const path of left) assert.deepEqual(plan([path]).lanes, EVERYTHING, path);
+    for (const path of ['src/app/main.js', 'tests/governance.test.js', 'index.html', 'package.json']) {
+      assert.equal(classify(path), 'v4', path);
+    }
   });
 
   test('everything else is other, near misses included', () => {
     for (const path of [
       '.github/workflows/ci.yml', 'scripts/gate.mjs', 'scripts/gate.test.mjs', 'scripts/new-script.sh',
-      'package.json', 'package-lock.json', '.nvmrc', '.gitignore', '.editorconfig', '.claude/settings.json',
+      '.npmrc', 'vitest.config.mjs', 'playwright.config.ts', 'dist/index.html', '.nvmrc', '.gitignore', '.editorconfig', '.claude/settings.json',
       'docs/index.html', 'version.json', 'specs/dot-crowd-navigator/README.md', '_Joe/dev notes/task list.md',
       'Route Plotter v3.code-workspace',
       // Near misses: only the exact spelling at the root counts.
       'project', 'Project/backlog.md', 'readme.md', 'README.md.orig', 'docs/AGENTS.md', 'tools',
       'toolsx/check.mjs', 'reviews.md', 'LICENSE.txt', 'scripts/gate.sh',
-      'v3', 'V3/src/a.js', 'v3x/src/a.js', 'docs/v3/app.js', 'src/v3/a.js', '.github/workflows/v3.yml'
+      'v3', 'V3/src/a.js', 'v3x/src/a.js', 'docs/v3/app.js', '.github/workflows/v3.yml',
+      'src', 'Src/main.tsx', 'srcx/a.ts', 'testsx/a.mjs', 'docs/src/a.js', 'tsconfig.json.orig'
     ]) assert.equal(classify(path), 'other', path);
     // A record folder's name below the root is not the record.
     assert.equal(classify('v3/src/project/x.js'), 'v3');
     assert.equal(classify('v3/project/backlog.md'), 'v3');
   });
 
-  test("v4's paths are other until STACK-02 lists them", () => {
-    assert.deepEqual(V4, { files: [], dirs: [] });
+  test("v4's paths, listed by STACK-02: the root package, the stack's settings, the page, src/ and tests/", () => {
+    for (const path of [
+      'package.json', 'package-lock.json', 'index.html', 'tsconfig.json', 'tsconfig.base.json', 'tsconfig.app.json',
+      'tsconfig.core.json', 'vite.config.mjs', 'eslint.config.mjs', 'eslint.base.mjs', 'eslint.a11y.mjs', 'knip.json', '.dependency-cruiser.cjs',
+      'src/main.tsx', 'src/core/model.ts', 'src/exported/player.ts', 'src/features/crowd/model/x.ts',
+      'tests/bundle/player.test.mjs', 'tests/a11y/states.spec.ts'
+    ]) assert.equal(classify(path), 'v4', path);
+    // A v3 or record path keeps its class whatever v4 lists.
+    assert.equal(classify('v3/src/app/main.js'), 'v3');
+    assert.equal(classify('v3/package.json'), 'v3');
+    assert.equal(classify('project/app/set1.json'), 'record');
     assert.equal(classify('app/main.tsx'), 'other');
     assert.equal(classify('app/main.tsx', { v4: SOME_V4 }), 'v4');
-    assert.equal(classify('tsconfig.json', { v4: SOME_V4 }), 'v4');
-    assert.equal(classify('v3/src/app/main.js', { v4: SOME_V4 }), 'v3');
   });
 });
 
@@ -96,7 +107,7 @@ describe('plan', () => {
 
   test('mixed pushes run every lane any of their paths asks for', () => {
     assert.deepEqual(plan(['project/backlog.md', 'v3/src/app/main.js']).lanes, ['gate', 'v3', 'record']);
-    assert.deepEqual(plan(['project/backlog.md', 'package.json']).lanes, EVERYTHING);
+    assert.deepEqual(plan(['project/backlog.md', '.nvmrc']).lanes, EVERYTHING);
     assert.deepEqual(plan(['v3/src/app/main.js', '.github/workflows/ci.yml']).lanes, EVERYTHING);
     assert.deepEqual(plan(['v3/src/app/main.js', 'scripts/gate.mjs']).lanes, EVERYTHING);
     assert.deepEqual(plan(['project/backlog.md', 'v3/src/app/main.js', 'specs/x.md']).lanes, EVERYTHING);
@@ -107,9 +118,22 @@ describe('plan', () => {
     assert.deepEqual(plan(null).lanes, EVERYTHING);
   });
 
+  test("a v4 change runs v4's gate and the record checker, never v3's suite (STACK-02)", () => {
+    assert.deepEqual(plan(['src/main.tsx']).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['src/core/model.ts', 'tests/bundle/player.test.mjs', 'package-lock.json']).lanes,
+      ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['src/main.tsx', 'project/backlog.md']).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['src/main.tsx', 'v3/src/app/main.js']).lanes, ['gate', 'v3', 'v4', 'record']);
+    assert.deepEqual(plan(['v3/src/app/main.js']).lanes, ['gate', 'v3', 'record']);
+    for (const path of ['.github/workflows/ci.yml', 'scripts/gate.mjs', 'scripts/gate.test.mjs']) {
+      assert.deepEqual(plan([path]).lanes, EVERYTHING, path);
+    }
+  });
+
   test("v4's lane runs only once v4 has paths", () => {
     const v4 = SOME_V4;
-    assert.ok(!plan(['package.json']).lanes.includes('v4'));
+    assert.ok(!plan(['package.json'], { v4: NO_V4 }).lanes.includes('v4'));
+    assert.deepEqual(plan(null, { v4: NO_V4 }).lanes, ['gate', 'v3', 'record']);
     assert.deepEqual(plan(['app/main.tsx'], { v4 }).lanes, ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['app/main.tsx', 'project/backlog.md'], { v4 }).lanes, ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['app/main.tsx', 'v3/src/app/main.js'], { v4 }).lanes, ['gate', 'v3', 'v4', 'record']);
@@ -118,9 +142,10 @@ describe('plan', () => {
   });
 
   test('the plan says why, path by path', () => {
-    const words = describePlan(plan(['project/backlog.md', 'package.json']), 'a test');
+    const words = describePlan(plan(['project/backlog.md', '.nvmrc', 'src/main.tsx']), 'a test');
     assert.match(words, /record\s+project\/backlog\.md/);
-    assert.match(words, /other\s+package\.json/);
+    assert.match(words, /other\s+\.nvmrc/);
+    assert.match(words, /v4\s+src\/main\.tsx/);
     assert.match(words, /outside the record, v3 and v4 lists/);
   });
 });
@@ -379,13 +404,13 @@ describe('the gate as wired in this repository', () => {
   const read = path => readFileSync(join(ROOT, path), 'utf8');
 
   test('every listed file and folder exists, so a typo cannot hide a path', () => {
-    for (const list of [RECORD, V3]) {
+    for (const list of [RECORD, V3, V4]) {
       for (const file of list.files) assert.ok(tracked.includes(file), file);
       for (const dir of list.dirs) assert.ok(tracked.some(path => path.startsWith(dir)), dir);
     }
   });
 
-  test("no v3 code, test or build file names a record-only path, so the record cannot change v3's result", () => {
+  test("no v3 or v4 code, test or build file names a record-only path, so the record cannot change their result", () => {
     const escape = name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     // A folder counts when a path follows it, so `/Failed to load project/` (a regular expression) does not.
     const pattern = new RegExp(`(?<![\\w.-])(${RECORD.files.map(escape).join('|')}|` +
@@ -393,10 +418,13 @@ describe('the gate as wired in this repository', () => {
     // Mentions in comments, read by hand on 2026-11-18: none reads a record file. v3's
     // package.json names tools/ in its `check` script, which ends by running the record
     // checker from the root, the record lane's own command; the v3 lane does not run it.
+    // Three of v4's settings, copied from the PM-Skills app pack (STACK-02), cite in a comment
+    // the pack's own `lab/next-v31/app/README.md`, not this repository's README.md.
     const known = new Set([
       'v3/src/services/HTMLExportService.js UI-STANDARDS.md', 'v3/src/app/privacy.js project/',
       'v3/scripts/restart.sh DEV-INFRASTRUCTURE.md', 'v3/scripts/perf-harness.js DEV-INFRASTRUCTURE.md',
-      'v3/package.json tools/'
+      'v3/package.json tools/',
+      '.dependency-cruiser.cjs README.md', 'eslint.base.mjs README.md', 'vite.config.mjs README.md'
     ]);
     const code = new Set(['.js', '.mjs', '.cjs', '.html', '.css', '.json', '.sh']);
     const found = [];
@@ -424,6 +452,35 @@ describe('the gate as wired in this repository', () => {
     assert.equal(scripts['check:changed'], 'node ../scripts/gate.mjs');
   });
 
+  test("the root's npm run check is the sorted gate, and check:v4 is v4's whole gate, as the v4 lane runs it", () => {
+    const { scripts, dependencies, devDependencies } = JSON.parse(read('package.json'));
+    assert.equal(scripts.check, 'node scripts/gate.mjs');
+    assert.deepEqual(LANES.v4.commands, [['npm', ['run', 'check:v4']]]);
+    assert.equal(scripts['check:v4'], ['typecheck', 'lint', 'boundaries', 'deadcode', 'test', 'build', 'test:bundle']
+      .map(name => (name === 'test' ? 'npm test' : `npm run ${name}`)).join(' && '));
+    assert.equal(scripts.test, 'vitest run --maxWorkers=3');
+    assert.equal(scripts.build, 'vite build && vite build --mode player');
+    // Every package at an exact version: no range, tag or path.
+    for (const [name, version] of Object.entries({ ...dependencies, ...devDependencies })) {
+      assert.match(version, /^\d+\.\d+\.\d+$/, name);
+    }
+  });
+
+  test("v4's settings leave frozen v3 and the record's tools/ alone", () => {
+    // v3's esbuild reads the nearest tsconfig.json above each file and would take v4's strict as "use strict" in its
+    // player: the root one names only v4's two projects and sets no option (STACK-02).
+    assert.deepEqual(JSON.parse(read('tsconfig.json')),
+      { files: [], references: [{ path: './tsconfig.app.json' }, { path: './tsconfig.core.json' }] });
+    assert.deepEqual(JSON.parse(read('tsconfig.app.json')).include, ['src']);
+    assert.deepEqual(JSON.parse(read('tsconfig.core.json')).include, ['src/core']);
+    const knip = JSON.parse(read('knip.json'));
+    assert.ok(knip.ignore.includes('v3/**'));
+    assert.equal(knip.node, false, "knip's Node test-runner plugin would sweep v3's and the gate's tests");
+    for (const glob of [...knip.entry, ...knip.project]) assert.match(glob, /^(src|tests)\/|^eslint\.(base|a11y)\.mjs$/, glob);
+    const { scripts } = JSON.parse(read('package.json'));
+    for (const name of ['lint', 'boundaries']) assert.match(scripts[name], / src$/, name);
+  });
+
   test('CI sorts first, runs each lane in its own step, and runs the record checker on every push', () => {
     const workflow = read('.github/workflows/ci.yml');
     const steps = workflow.split(/\n\s+- name: /).slice(1);
@@ -436,11 +493,18 @@ describe('the gate as wired in this repository', () => {
     const sort = stepRunning('node scripts/gate.mjs --ci --plan');
     assert.equal(sort.length, 1);
     assert.match(sort[0], /GITHUB_TOKEN: \$\{\{ github\.token \}\}/);
-    const [install] = stepRunning('npm ci');
-    assert.match(install, /if: steps\.sort\.outputs\.install == 'true'/);
-    // v3's package and lockfile live in v3/ (STACK-01).
-    assert.match(install, /working-directory: v3\n/);
-    assert.match(workflow, /cache-dependency-path: v3\/package-lock\.json\n/);
+    const installs = stepRunning('npm ci');
+    assert.equal(installs.length, 2);
+    // v3's package and lockfile live in v3/ (STACK-01), v4's at the root (STACK-02); each installs for its own lane.
+    const [v3Install] = installs.filter(step => /working-directory: v3\n/.test(step));
+    assert.match(v3Install, /if: steps\.sort\.outputs\.v3 == 'true'/);
+    assert.match(v3Install, /run: npm ci\n/);
+    const [v4Install] = installs.filter(step => !/working-directory/.test(step));
+    assert.match(v4Install, /if: steps\.sort\.outputs\.v4 == 'true'/);
+    // Install scripts off: Carbon's and IBM Plex's run IBM's telemetry in CI.
+    assert.match(v4Install, /run: npm ci --ignore-scripts\n/);
+    assert.match(v4Install, /IBM_TELEMETRY_DISABLED: 'true'/);
+    assert.match(workflow, /cache-dependency-path: \|\n\s+v3\/package-lock\.json\n\s+package-lock\.json\n/);
     for (const lane of ['gate', 'v3', 'v4']) {
       const [step] = stepRunning(`node scripts/gate.mjs --lane ${lane}`);
       assert.ok(step, lane);

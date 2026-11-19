@@ -1,0 +1,32 @@
+{
+  "entry": [
+    "src/exported/*.ts",
+    "eslint.base.mjs",
+    "eslint.a11y.mjs",
+    "tests/bundle/*.test.mjs"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "tests/**/*.{ts,mjs}"
+  ],
+  "ignore": [
+    "v3/**",
+    "tests/bundle/fixtures/**"
+  ],
+  "vitest": {
+    "config": [
+      "vite.config.mjs"
+    ],
+    "entry": [
+      "src/core/**/*.test.ts"
+    ]
+  },
+  "node": false,
+  "playwright": false,
+  "ignoreDependencies": [
+    "@ibm/plex",
+    "@types/prop-types",
+    "jszip",
+    "mediabunny"
+  ]
+}
