@@ -8,6 +8,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
+
+- GATE-02 — the gate sorts the accessibility pack's files as v4, runs the publishing step's own files through the gate's tests and v4's gate, not v3's suite, places the measures script with v4, and fails on `main` a site change its run's record cannot vouch for; PUB-01's live trial is in its Notes, by pull request (2026-11-19) — see decisions
+
 ## Phase 6 — v4's foundations — the owner's overnight word of 2026-11-18 (PLAN-6)
 
 - STACK-01 — frozen v3 lives in `v3/`, moved by `git mv`: it builds the same 24 files as 3.3.726 and passes its whole suite from there in CI; the root `docs/` and `version.json` are untouched, the gate sorts `v3/**` as v3, and the root is free for v4, by pull request (2026-11-18) — see decisions
