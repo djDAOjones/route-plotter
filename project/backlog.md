@@ -39,7 +39,6 @@
 ### Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
 
 - [ ] CORE-01 — The project model and the schema helper — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
-- [ ] GATE-02 — The gate's loose ends after the foundations — since 2026-11-19 — (from: PLAN-7, 2026-11-19)
 - [ ] CORE-02 — Geometry, the lead's timing and the clock — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-03 — Save and open — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-04 — The renderer and the core's drawing — since 2026-11-18 — (from: PLAN-6, 2026-11-18)

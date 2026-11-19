@@ -20,9 +20,9 @@ The gate (`scripts/gate.mjs`) sorts each change by its paths, so that a record-o
 
 Updated: 2026-11-19
 
-Next step: Start when the orchestrator starts it, once STACK-04 has merged (STACK-04 adds scripts/measures.mjs and edits `scripts/gate.test.mjs`); it may run beside CORE-01, CORE-02 and CORE-03.
+Next step: None.
 
-Open question: None.
+Open question: Owner: whether a change to the publishing step's own files alone should keep publishing a preview, as the step does now, or publish nothing, as PUB-01's wording "a path of the gate's v4 or unplaced classes" reads once those files are placed (GATE-02's decision).
 
 ## Context and sources
 
@@ -35,3 +35,4 @@ Open question: None.
 ## Notes
 
 - 2026-11-19 — Filed by PLAN-7, promoting three wish lines, each now one criterion here: STACK-03.1 (the first), PUB-01.3 (the second) and PUB-01.6 (the fifth); their text stands in the wish list's history and in PLAN-7's commit. The third criterion comes from STACK-04's brief, which left scripts/gate.mjs to a later gate item, and the fourth from PUB-01's hand-over. Wishes PUB-01.4 and PUB-01.5 stay the owner's calls and are not part of this item.
+- 2026-11-19 — Built and closed by GATE-02's pull request. The owner's instructions in force, verbatim: "Gate by what changed (Recommended)" (Q23); on publishing, "re publishing to github pages, just go ahead and publish to it at any point (and after any work item is developed, so long as doesn't cause untoward delay or overhead)" (2026-11-18); overnight, "Merge when checks pass (Recommended)" (G2), "Proceed on recommendations (Recommended)" (G3) and, typed by him, "accrue decisions that come up but dont stop dev unless impossible". So each choice is provisional and put to him in the night's decisions list. Three go beyond the criteria's letter, each recorded in GATE-02's decision: removing the guard's four entries needed it to read a folder's mention with the path after it and to pass over web addresses, and it gained one known entry, the measures script's comment citing two reviews; the step's class runs v4's gate as well as the gate's tests, as v4's dead-code check reads the step's scripts; and on `main` a site change its run's record cannot vouch for now fails rather than warns (Codex's review). Nothing under `src/`, `tests/`, `tools/`, `v3/`, `docs/` or `version.json` changed.
