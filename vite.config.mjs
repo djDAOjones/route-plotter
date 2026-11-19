@@ -93,7 +93,15 @@ const editor = {
   test: {
     // CORE-03, provisional under grant G3 (its decision entry): the ZIP adapter's tests run here too, in Node, since it
     // touches no page (DOM-free bytes in, bytes out); without them its tests would never run and knip would call it unused.
-    include: ['src/core/**/*.test.ts', 'src/adapters/io/**/*.test.ts'],
+    // CORE-04, provisional under grant G3 (D127): the renderer's kit, the composer and the features' drawing run here too,
+    // in Node, since they touch no page (the draw recorder stands in for a canvas); without them knip calls them unused.
+    include: [
+      'src/core/**/*.test.ts',
+      'src/adapters/io/**/*.test.ts',
+      'src/adapters/render/**/*.test.ts',
+      'src/player/**/*.test.ts',
+      'src/features/**/*.test.ts',
+    ],
     exclude: ['v3/**', 'node_modules/**', 'dist/**'],
     environment: 'node',
     pool: 'forks',
