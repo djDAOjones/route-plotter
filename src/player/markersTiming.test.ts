@@ -163,6 +163,41 @@ test('“until arrival” is whole until the lead leaves, then shrinks away as v
   expect(scales('ABC', short, { A: [0, 0], B: [4_000, 4_000] }, 9_000, 'at arrival').C).toBe(0);
 });
 
+test('Codex 33’s cases: a long run of bends, a shrink over the next pause, a branch’s end, an unrelated branch', () => {
+  // A stop before 9,999 bends: the walk forward needs no call stack of its own. v3: 0.875.
+  const ids = ['A', ...Array.from({ length: 9_999 }, (_, i) => `b${i}`)];
+  const run: Walked[] = ids.slice(1).map((to, i) => [ids[i] ?? '', to, i, i + 1]);
+  const runReached: Reached = Object.fromEntries(ids.map((id, i) => [id, [i, i]]));
+  expect(scales('A', run, runReached, 125, 'until arrival').A).toBeCloseTo(0.875, 6);
+  // B shrinks over C 50 ms on and stands still through C's 1 s pause, in moving time. v3: 0.875 at 1,100 and 2,000.
+  const paused: Walked[] = [
+    ['A', 'B', 0, 1_000],
+    ['B', 'C', 1_000, 1_050],
+    ['C', 'D', 2_050, 11_000],
+  ];
+  const pausedReached: Reached = { A: [0, 0], B: [1_000, 1_000], C: [1_050, 2_050], D: [11_000, 11_000] };
+  const shrink = (t: number) => scales('ABCD', paused, pausedReached, t, 'until arrival').B;
+  expect(shrink(1_100)).toBeCloseTo(0.875, 6);
+  expect(shrink(2_000)).toBeCloseTo(0.875, 6);
+  expect(shrink(2_100)).toBe(0); // v3: hidden
+  // B 50 ms before a branch's end at a bend: v3's window ends with the walk. v3: 0.984375 at 9,975, then hidden.
+  const ending: Walked[] = [
+    ['A', 'B', 0, 9_950],
+    ['B', 'X', 9_950, 10_000],
+  ];
+  const endingReached: Reached = { A: [0, 0], B: [9_950, 9_950], X: [10_000, 10_000] };
+  expect(scales('AB', ending, endingReached, 9_975, 'until arrival').B).toBeCloseTo(0.984375, 6);
+  expect(scales('AB', ending, endingReached, 12_000, 'until arrival').B).toBe(0);
+  // A branch B is not on leaves B's grow alone: v3 on A to B alone, 1 s, gives hidden at 900 and 0.875 at 960.
+  const forked: Walked[] = [
+    ['A', 'B', 0, 1_000],
+    ['A', 'C', 0, 100_000],
+  ];
+  const forkedReached: Reached = { A: [0, 0], B: [1_000, 1_000], C: [100_000, 100_000] };
+  expect(scales('ABC', forked, forkedReached, 900).B).toBe(0);
+  expect(scales('ABC', forked, forkedReached, 960).B).toBeCloseTo(0.875, 6);
+});
+
 /** A, a bend, C, walked in 10 s by total time; each frame through the composer at 1080p, its markers' arcs. */
 function framed(sceneMs: number) {
   let n = 0;
