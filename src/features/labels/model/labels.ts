@@ -7,6 +7,7 @@ import { LABEL_SETTINGS } from '../../../core/config/settings';
 import type { Evaluation, RouteFeatureModel, RouteInput } from '../../../core/feature/contract';
 import type { ImagePoint } from '../../../core/geometry/units';
 import type { Values } from '../../../core/schema/field';
+import { fadesOf } from './timing';
 
 type Settings = Values<typeof LABEL_SETTINGS>;
 
@@ -50,20 +51,19 @@ function lookOf(settings: Settings): LabelLook {
   return { size, width, offsetX, offsetY, textColour, backgroundColour, backgroundOpacity };
 }
 
-function evaluate({ settings, route }: RouteInput<Settings>): Evaluation<LabelsDrawing> {
+function evaluate({ settings, route, timeMs }: RouteInput<Settings>): Evaluation<LabelsDrawing> {
   const look = lookOf(settings);
+  const { appearance } = settings;
   // v3 draws nothing under `off` or for a stop with no text (:2536).
-  if (settings.appearance === 'off') return { ok: true, value: { look, labels: [] } };
+  if (appearance === 'off') return { ok: true, value: { look, labels: [] } };
+  // Whole under `on`. Until the second fade is built (CORE-04 stage 5b-2's last step), `fade in and out` shows whole
+  // too, at every moment.
+  const faded = appearance === 'fade in' ? fadesOf(route.timeline, timeMs) : () => 1;
   const labels = route.shape.points
     .filter((point) => point.kind === 'stop' && point.label !== '')
-    .map((point) => ({
-      pointId: point.id,
-      at: { x: point.x, y: point.y },
-      text: point.label,
-      // Whole under `on`. Until the fades are built (CORE-04 stage 5b-2's second piece), `fade in` and `fade in and
-      // out` show whole too, at every moment.
-      opacity: 1,
-    }));
+    .map((point) => ({ pointId: point.id, at: { x: point.x, y: point.y }, text: point.label, opacity: faded(point.id) }))
+    // v3 draws nothing at no opacity (:2558).
+    .filter((label) => label.opacity > 0);
   return { ok: true, value: { look, labels } };
 }
 
