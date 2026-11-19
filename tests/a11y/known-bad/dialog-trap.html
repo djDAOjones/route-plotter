@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Known-bad: a dialog that traps focus</title><style>body{font:16px/1.5 sans-serif;color:#111;background:#fff;margin:1rem}button,input{min-height:48px;min-width:48px;font-size:16px}[role=dialog]{border:2px solid #111;padding:1rem}</style></head><body><main>
+<h1>Dialog trap</h1><button type="button" id="open">Open settings</button>
+<div role="dialog" aria-modal="true" aria-labelledby="t" id="d" hidden><h2 id="t">Settings</h2><label>Name <input id="a"></label> <label>Town <input id="b"></label></div>
+<script>
+const d=document.getElementById("d"),o=document.getElementById("open"),a=document.getElementById("a"),b=document.getElementById("b");
+o.addEventListener("click",()=>{d.hidden=false;a.focus();});
+d.addEventListener("keydown",(e)=>{if(e.key==="Tab"){e.preventDefault();(document.activeElement===a?b:a).focus();}if(e.key==="Escape"){e.preventDefault();}});
+</script>
+</main></body></html>

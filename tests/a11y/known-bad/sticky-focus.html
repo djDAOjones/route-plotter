@@ -1,0 +1,3 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Known-bad: focus hidden under a sticky header</title><style>body{font:16px/1.5 sans-serif;color:#111;background:#fff;margin:1rem}header{position:fixed;top:0;left:0;right:0;height:120px;background:#003a65;color:#fff;padding:1rem;z-index:2}main{margin:0}#hidden-link{display:inline-block;margin-top:24px;padding:12px}</style></head><body><main>
+<header>Site header, fixed over the page</header><a href="#x" id="hidden-link">A link under the header</a><h1 style="margin-top:160px">Focus hidden</h1><p>The first link sits wholly under the fixed header (2.4.11).</p>
+</main></body></html>

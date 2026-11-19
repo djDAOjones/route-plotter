@@ -120,6 +120,14 @@ IBM Plex is listed above, as its font files ship.
 | `@types/react` | 19.1.17 | `MIT` | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
 | `@types/react-dom` | 19.1.11 | `MIT` | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
 | `@types/prop-types` | 15.7.15 | `MIT` | [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) |
+| `@playwright/test` | 1.56.1 | `Apache-2.0` | [microsoft/playwright](https://github.com/microsoft/playwright) |
+| `@axe-core/playwright` | 4.13.0 | `MPL-2.0` | [dequelabs/axe-core-npm](https://github.com/dequelabs/axe-core-npm) |
+| `axe-core` | 4.13.0 | `MPL-2.0` | [dequelabs/axe-core](https://github.com/dequelabs/axe-core) |
+
+The accessibility run (STACK-03) also uses Chromium's headless shell, which
+Playwright's own installer fetches at the revision `@playwright/test` names
+(1194, Chromium 141.0.7390.37). It is not an npm package, is not in the
+lockfile, and never ships.
 
 ## Dependency inventory
 

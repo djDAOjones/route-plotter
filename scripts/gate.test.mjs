@@ -433,11 +433,19 @@ describe('the gate as wired in this repository', () => {
     // checker from the root, the record lane's own command; the v3 lane does not run it.
     // Three of v4's settings, copied from the PM-Skills app pack (STACK-02), cite in a comment
     // the pack's own `lab/next-v31/app/README.md`, not this repository's README.md.
+    // STACK-03, a known gap and not a comment: the accessibility pack keeps its run and report in
+    // tools/ and its catalogue and coverage file in project/a11y/, where the pack's own refresh
+    // looks for them. v4's gate runs them (package.json's `a11y` script) and its helpers read the
+    // catalogue and coverage file, so a change to those alone sorts as record and skips the v4
+    // lane until the gate sorts them as v4 (wish STACK-03.1). project.mjs and the Playwright
+    // configuration only name them in comments.
     const known = new Set([
       'v3/src/services/HTMLExportService.js UI-STANDARDS.md', 'v3/src/app/privacy.js project/',
       'v3/scripts/restart.sh DEV-INFRASTRUCTURE.md', 'v3/scripts/perf-harness.js DEV-INFRASTRUCTURE.md',
       'v3/package.json tools/',
-      '.dependency-cruiser.cjs README.md', 'eslint.base.mjs README.md', 'vite.config.mjs README.md'
+      '.dependency-cruiser.cjs README.md', 'eslint.base.mjs README.md', 'vite.config.mjs README.md',
+      'package.json tools/', 'tests/a11y/helpers.ts project/', 'tests/a11y/project.mjs project/',
+      'tests/a11y/playwright.config.ts tools/'
     ]);
     const found = [];
     for (const path of tracked) {
@@ -468,14 +476,36 @@ describe('the gate as wired in this repository', () => {
     const { scripts, dependencies, devDependencies } = JSON.parse(read('package.json'));
     assert.equal(scripts.check, 'node scripts/gate.mjs');
     assert.deepEqual(LANES.v4.commands, [['npm', ['run', 'check:v4']]]);
-    assert.equal(scripts['check:v4'], ['typecheck', 'lint', 'boundaries', 'deadcode', 'test', 'build', 'test:bundle']
-      .map(name => (name === 'test' ? 'npm test' : `npm run ${name}`)).join(' && '));
+    // STACK-03: the accessibility run comes after the build it serves, then the proof that it fails on the two
+    // planted faults the item names.
+    assert.equal(scripts['check:v4'], ['typecheck', 'lint', 'boundaries', 'deadcode', 'test', 'build', 'test:bundle',
+      'a11y', 'a11y:known-bad'].map(name => (name === 'test' ? 'npm test' : `npm run ${name}`)).join(' && '));
     assert.equal(scripts.test, 'vitest run --maxWorkers=3');
     assert.equal(scripts.build, 'vite build && vite build --mode player');
-    // Every package at an exact version: no range, tag or path.
-    for (const [name, version] of Object.entries({ ...dependencies, ...devDependencies })) {
+    assert.equal(scripts.a11y, 'node tools/a11y-run.mjs');
+    assert.equal(scripts['a11y:known-bad'], 'node tests/a11y/non-vacuity.mjs');
+    // Every package at an exact version: no range, tag or path; an override too.
+    const overrides = Object.values(JSON.parse(read('package.json')).overrides ?? {}).flatMap(Object.entries);
+    for (const [name, version] of [...Object.entries({ ...dependencies, ...devDependencies }), ...overrides]) {
       assert.match(version, /^\d+\.\d+\.\d+$/, name);
     }
+  });
+
+  test("the accessibility run (STACK-03) writes outside the checkout, from the pack's files, at level AAA", () => {
+    // Playwright's configuration sends every output to the run folder the gate makes in the system's temporary folder.
+    const config = read('tests/a11y/playwright.config.ts');
+    assert.match(config, /outputDir: join\(run, 'output'\)/);
+    assert.match(config, /outputFile: join\(run, 'playwright\.json'\)/);
+    assert.match(config, /updateSnapshots: 'none'/);
+    assert.match(read('tools/a11y-run.mjs'), /mkdtempSync\(join\(real\(tmpdir\(\)\), 'a11y-run-'\)\)/);
+    // The level is AAA, and the shell is declared, with the server the gate starts.
+    assert.equal(JSON.parse(read('project/a11y/coverage.json')).level, 'AAA');
+    const project = read('tests/a11y/project.mjs');
+    assert.match(project, /name: 'shell',\n\s+path: '\/'/);
+    assert.match(project, /command: 'npm run preview -- --port 4173 --strictPort'/);
+    // The routed document stays out of the live site's folder.
+    assert.ok(tracked.includes('project/a11y/accessibility.md'));
+    assert.ok(!tracked.some(path => /^docs\/(accessibility|extended)\.md$/.test(path)));
   });
 
   test("v4's settings leave frozen v3 and the record's tools/ alone", () => {
@@ -522,6 +552,23 @@ describe('the gate as wired in this repository', () => {
       assert.ok(step, lane);
       assert.match(step, new RegExp(`if: steps\\.sort\\.outputs\\.${lane} == 'true'`), lane);
     }
+    // STACK-03: the accessibility run's browser is installed by Playwright's own installer, never npx, only when v4's
+    // lane runs, before it, into a folder outside the checkout that the lane is told of; then the checkout is proved
+    // unchanged by v4's gate.
+    const browser = stepRunning('cli.js install');
+    assert.equal(browser.length, 1);
+    assert.match(browser[0], /run: node node_modules\/@playwright\/test\/cli\.js install --only-shell chromium\n/);
+    assert.match(browser[0], /if: steps\.sort\.outputs\.v4 == 'true'/);
+    assert.ok(!/npx/.test(workflow), 'no step runs npx');
+    const [v4Lane] = stepRunning('node scripts/gate.mjs --lane v4');
+    for (const step of [browser[0], v4Lane]) {
+      assert.match(step, /PLAYWRIGHT_BROWSERS_PATH: \$\{\{ runner\.temp \}\}\/ms-playwright$/m);
+    }
+    assert.ok(steps.indexOf(browser[0]) < steps.indexOf(v4Lane), 'the browser is installed before the lane');
+    assert.match(v4Lane, /git status --porcelain --untracked-files=all > "\$RUNNER_TEMP\/checkout-before-v4"\n/);
+    const [unchanged] = stepRunning('| diff "$RUNNER_TEMP/checkout-before-v4" -');
+    assert.ok(unchanged && steps.indexOf(unchanged) === steps.indexOf(v4Lane) + 1, 'the proof follows the lane');
+    assert.match(unchanged, /if: steps\.sort\.outputs\.v4 == 'true'/);
     const [record] = stepRunning('node scripts/gate.mjs --lane record');
     assert.ok(record && !/\bif:/.test(record), 'the record checker runs unconditionally');
     // The live site and both version files are proven untouched on every push.

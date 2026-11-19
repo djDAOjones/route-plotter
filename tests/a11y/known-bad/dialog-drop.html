@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Known-bad: a dialog that drops focus</title><style>body{font:16px/1.5 sans-serif;color:#111;background:#fff;margin:1rem}button,input{min-height:48px;min-width:48px;font-size:16px}[role=dialog]{border:2px solid #111;padding:1rem}</style></head><body><main>
+<h1>Dialog drops focus</h1><button type="button" id="open">Open settings</button>
+<div role="dialog" aria-modal="true" aria-labelledby="t" id="d" hidden><h2 id="t">Settings</h2><label>Name <input id="a"></label></div>
+<script>
+const d=document.getElementById("d"),o=document.getElementById("open");
+o.addEventListener("click",()=>{d.hidden=false;document.getElementById("a").focus();});
+d.addEventListener("keydown",(e)=>{if(e.key==="Escape"){d.hidden=true;document.activeElement.blur();}});
+</script>
+</main></body></html>

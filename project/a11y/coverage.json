@@ -1,0 +1,1015 @@
+{
+  "catalogue": 1,
+  "level": "AAA",
+  "features": {
+    "media": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "live-media": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "autoplay-audio": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "pdf": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "native-ios": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "native-android": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "flashing": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "moving-content": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "authentication": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "multi-step": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "timers": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "interruptions": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "pointer-gestures": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "device-motion": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "hover-focus-content": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "keyboard-shortcuts": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "user-input": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "page-set": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "languages": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "canvas": {
+      "state": "unknown",
+      "evidence": ""
+    },
+    "exports": {
+      "state": "unknown",
+      "evidence": ""
+    }
+  },
+  "rows": {
+    "1.1.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.2.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.2.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.2.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.2.4": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.2.5": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.2.6": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.2.7": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.2.8": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.2.9": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.3.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.3.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.3.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.3.4": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.3.5": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.3.6": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.4": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.5": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.6": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.7": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.8": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.9": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.10": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.11": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.12": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "1.4.13": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.1.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.1.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.1.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.1.4": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.2.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.2.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.2.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.2.4": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.2.5": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.2.6": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.3.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.3.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.3.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.4": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.5": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.6": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.7": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.8": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.9": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.10": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.11": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.12": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.4.13": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.5.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.5.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.5.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.5.4": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.5.5": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.5.6": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.5.7": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "2.5.8": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.1.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.1.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.1.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.1.4": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.1.5": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.1.6": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.2.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.2.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.2.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.2.4": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.2.5": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.2.6": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.3.1": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.3.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.3.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.3.4": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.3.5": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.3.6": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.3.7": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.3.8": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "3.3.9": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "4.1.2": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "4.1.3": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P01": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P02": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P03": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P04": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P05": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P06": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P07": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P08": {
+      "adoption": "advisory",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P09": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P10": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "P11": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "SUP01": {
+      "adoption": "advisory",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "SUP02": {
+      "adoption": "advisory",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "SUP03": {
+      "adoption": "advisory",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "SUP04": {
+      "adoption": "advisory",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "SUP05": {
+      "adoption": "advisory",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "CONF01": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "CONF02": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "CONF03": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "CONF04": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "CONF05": {
+      "adoption": "required",
+      "applicability": {
+        "state": "applicable"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "N01": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "N02": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "N03": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "N04": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "N05": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "N06": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "N07": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    },
+    "N08": {
+      "adoption": "required",
+      "applicability": {
+        "state": "unresolved"
+      },
+      "evidence": [],
+      "results": []
+    }
+  },
+  "runs": {
+    "extended": null
+  }
+}
