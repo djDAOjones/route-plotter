@@ -28,9 +28,10 @@
 | `src/editor/` | 1 | v4's editor, React and Carbon React (one blank page until CORE-05) |
 | `src/exported/` | 1 | the exported player's entry, built in Vite's player mode into one script with no package inside (A20) |
 | `src/ui/` | 1 | v4's theme: Carbon's Sass, IBM Plex bundled, the tokens strengthened toward 7:1 |
-| `tests/` | 4 | v4's tests that are not beside their modules |
+| `tests/` | 28 | v4's tests that are not beside their modules |
+| `tests/a11y/` | 24 | the accessibility pack's standard run (STACK-03): its Playwright configuration, helpers, four specs and known-bad pages, the project's own declarations (`tests/a11y/project.mjs`), and the planted-fault proof |
 | `tests/bundle/` | 4 | the exported player's check on the built file, with planted faults (Node's own runner) |
-| `tools/` | 15 | pm-next v3.1 tools (check, read, find, view, harness, session, structure, archive, ledger, migrate, handover, run, brief, lanes) |
+| `tools/` | 18 | pm-next v3.1 tools (check, read, find, view, harness, session, structure, archive, ledger, migrate, handover, run, brief, lanes); the accessibility pack's a11y-run, a11y-report and a11y-coverage (STACK-03) |
 | `v3/` | 456 | frozen v3 at 3.3.726, moved here by STACK-01: its app set, its own `v3/package.json` and lockfile, copies of `v3/version.json`, `v3/LICENSE` and the notices; it builds into the ignored v3/docs/, and the tag v3.3.726 recovers it |
 | `v3/images/` | 6 | the six built-in example images (source) |
 | `v3/scripts/` | 5 | maintainer shell scripts (restart, build), the perf harness, the example builder |

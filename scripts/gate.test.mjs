@@ -567,8 +567,9 @@ describe('the gate as wired in this repository', () => {
       assert.match(step, /PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: ubuntu24\.04-x64$/m);
     }
     assert.ok(steps.indexOf(browser[0]) < steps.indexOf(v4Lane), 'the browser is installed before the lane');
-    assert.match(v4Lane, /git status --porcelain --untracked-files=all > "\$RUNNER_TEMP\/checkout-before-v4"\n/);
-    const [unchanged] = stepRunning('| diff "$RUNNER_TEMP/checkout-before-v4" -');
+    const status = "git status --porcelain --ignored=matching --untracked-files=all | sed '/^!! dist\\/$/d'";
+    assert.ok(v4Lane.includes(`${status} > "$RUNNER_TEMP/checkout-before-v4"\n`), 'the checkout is noted before the lane');
+    const [unchanged] = stepRunning(`${status} | diff "$RUNNER_TEMP/checkout-before-v4" -`);
     assert.ok(unchanged && steps.indexOf(unchanged) === steps.indexOf(v4Lane) + 1, 'the proof follows the lane');
     assert.match(unchanged, /if: steps\.sort\.outputs\.v4 == 'true'/);
     const [record] = stepRunning('node scripts/gate.mjs --lane record');

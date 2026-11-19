@@ -15,6 +15,11 @@ const READING = ['Route Plotter', 'Version 4 is being built here.'];
 const FOCUS = ['link "GitHub"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
 const PROGRESS = 'https://github.com/djDAOjones/route-plotter';
+// The processes the shell presents (CONF03): none. A process is a series of steps toward a goal inside the app; the
+// shell has no form and no link to another of the app's pages, and its one link leaves Route Plotter for a page it does
+// not own, which is no step of a Route Plotter process and is not tested here. The item that adds a process names it
+// here and writes the journey that runs every step.
+const PROCESSES = [];
 
 // What the journeys look for: every control a pointer or Tab reaches (the pack's target selector); fields and
 // settings; content a control opens; status regions.
@@ -201,10 +206,10 @@ export default {
       },
     },
     {
-      // With real key events: 2.4.3, Tab meets the reviewed controls in order; 3.2.2, no setting to change; 3.2.5, left alone for 3 s nothing changes context, nothing
-      // refreshes the page and no link opens another window, so the one change comes on request; P06 and CONF03, the
-      // shell's one task and process, following the progress link, runs by keyboard to its destination (stood in
-      // locally), and Back recovers the shell.
+      // With real key events: 2.4.3, Tab meets the reviewed controls in order; 3.2.2, no setting to change; 3.2.5, left
+      // alone for 3 s nothing changes context, nothing refreshes the page and no link opens another window, so the one
+      // change comes on request; P06, the shell's one task, following the progress link, runs by Tab and Enter and Back
+      // recovers the shell (the destination stood in, not tested); CONF03, the shell presents no process (PROCESSES).
       name: 'keyboard-task',
       method: 'keyboard',
       rows: ['2.4.3', '3.2.2', '3.2.5', 'P06', 'CONF03'],
@@ -228,8 +233,13 @@ export default {
         if (arrived) { await page.goBack(); restored = page.url() === start && await page.getByRole('heading', { level: 1, name: 'Route Plotter' }).isVisible(); }
         const change = [!idle && 'the context changed while the shell was left alone', refresh && 'a meta refresh', windows && `${windows} link(s) or form(s) open another window`, !arrived && 'Enter on the progress link did not follow it'].filter(Boolean);
         record('3.2.5', !change.length, change.length ? change.join('; ') : 'left alone for 3 s nothing changed context; no refresh and no link opening another window; the one change came on Enter');
-        record('P06', arrived && restored, !reached ? 'Tab did not reach the progress link' : !arrived ? 'Enter on the progress link did not follow it' : !restored ? 'Back did not bring the shell back' : 'the shell\'s one task, following the progress link, runs by Tab and Enter to its destination, and Back recovers the shell');
-        record('CONF03', arrived, arrived ? 'the shell\'s one process is a single step, following the progress link; it runs by keyboard to its destination (GitHub\'s own page stood in locally, not tested)' : 'the progress link could not be followed by keyboard');
+        record('P06', arrived && restored, !reached ? 'Tab did not reach the progress link' : !arrived ? 'Enter on the progress link did not follow it' : !restored ? 'Back did not bring the shell back' : 'the shell\'s one task, following the progress link, runs by Tab and Enter, and Back recovers the shell (the destination, GitHub\'s page, stood in locally and not tested)');
+        // CONF03: the shell's process boundary, observed. A form, or a link to another of the app's pages, means a process
+        // may be presented: it is declared in PROCESSES and its journey runs every step.
+        await open('shell');
+        const forms = await page.locator('form').count();
+        const inApp = await page.evaluate((origin) => [...document.querySelectorAll('a[href]')].filter((a) => a.origin === origin && a.pathname !== location.pathname).length, ORIGIN);
+        record('CONF03', !PROCESSES.length && !forms && !inApp, PROCESSES.length ? `${PROCESSES.length} declared process(es): write the journey that runs every step of each` : forms || inApp ? `${forms} form(s) and ${inApp} link(s) to other pages of the app: declare the process they present in PROCESSES and run every step` : 'the shell presents no process: no form and no link to another of the app\'s pages; its one link leaves Route Plotter, so its destination is no step of a Route Plotter process');
       },
     },
   ],
@@ -255,7 +265,7 @@ export default {
     date: '2026-11-19',
     rows: {
       P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment has changed since. CORE-05, the editor shell, is a shared-component change and flags a wider run here' },
-      P10: { state: 'pass', note: 'no open finding: the first run\'s one product failure, a shell with no control for the focus test, was fixed by its progress link and retested in the same run (STACK-03); a failure stays a failure until fixed' },
+      P10: { state: 'pass', note: 'no open finding: the first run\'s one product failure, a shell with no control for the focus test, was fixed by its progress link and retested in the same run (STACK-03, pull request #178, which shows both runs); a failure stays a failure until fixed' },
     },
   },
 };

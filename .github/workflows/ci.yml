@@ -89,11 +89,12 @@ jobs:
       # build, the player's check and the accessibility run at AAA with its
       # planted faults (npm run check:v4); a run over 10 minutes is reported as a
       # finding. The build writes dist/, which git ignores; the accessibility run
-      # writes only in the system's temporary folder, which the next step proves.
+      # writes only in the system's temporary folder. The next step proves the
+      # checkout as git sees it, ignored paths included, is as it was, dist/ aside.
       - name: Run v4's gate
         if: steps.sort.outputs.v4 == 'true'
         run: |
-          git status --porcelain --untracked-files=all > "$RUNNER_TEMP/checkout-before-v4"
+          git status --porcelain --ignored=matching --untracked-files=all | sed '/^!! dist\/$/d' > "$RUNNER_TEMP/checkout-before-v4"
           node scripts/gate.mjs --lane v4
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
@@ -101,7 +102,7 @@ jobs:
 
       - name: Prove v4's gate wrote nothing in the checkout
         if: steps.sort.outputs.v4 == 'true'
-        run: git status --porcelain --untracked-files=all | diff "$RUNNER_TEMP/checkout-before-v4" -
+        run: git status --porcelain --ignored=matching --untracked-files=all | sed '/^!! dist\/$/d' | diff "$RUNNER_TEMP/checkout-before-v4" -
 
       - name: Run the record checker
         run: node scripts/gate.mjs --lane record
