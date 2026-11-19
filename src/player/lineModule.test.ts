@@ -242,8 +242,6 @@ test('a line module that fails is reported, never thrown, and the scene’s modu
   });
   for (const [request, catalogue, reason] of [
     [ask(routeOf({ appearance: 'whole' })), throwing, /the line broke/],
-    // Until stage 4b the trail is a structured report too, and draws nothing.
-    [ask(routeOf({ appearance: 'trail' })), CATALOGUE, /stage 4b/],
   ] as const) {
     const recorder = new Recorder();
     const reports = compose(recorder, request, catalogue);
