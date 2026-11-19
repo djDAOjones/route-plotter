@@ -198,6 +198,102 @@ test('Codex 33’s cases: a long run of bends, a shrink over the next pause, a b
   expect(scales('ABC', forked, forkedReached, 960).B).toBeCloseTo(0.875, 6);
 });
 
+test('Codex 33’s second round: a final stop ends the shrink of the stop before it, as the walk’s end does in v3', () => {
+  // A, B, C reached at 0, 9,950 and 10,000 ms, no pauses: B's window would run 100 ms on, past C, where the walk ends.
+  // v3 (animOutEnd = min(1, …)): 0.984375 at 9,975, hidden from 10,000 on, both hiding after and before and after.
+  const lines: Walked[] = [
+    ['A', 'B', 0, 9_950],
+    ['B', 'C', 9_950, 10_000],
+  ];
+  const reached: Reached = { A: [0, 0], B: [9_950, 9_950], C: [10_000, 10_000] };
+  for (const appearance of ['until arrival', 'at arrival'] as const) {
+    const at = (t: number) => scales('ABC', lines, reached, t, appearance).B;
+    expect(at(9_975)).toBeCloseTo(0.984375, 6);
+    expect(at(10_000)).toBe(0);
+    expect(at(12_000)).toBe(0); // was 0.875, held for ever
+  }
+});
+
+test('Codex 33’s second round: after a join each way runs back by the latest line in, whatever the walk’s order', () => {
+  // The core walks depth first: A to B, B to J, J to D, then A to C and C to J, the latest line into J. So D's way
+  // and C's are both A, C, J, D: 1,100 ms. v3 on that way: D 0.488 at 1,060 (was 0); C 0.90608565 at 460 growing
+  // (was 0.875) and 0.875 at 544 shrinking (was 0.833625).
+  const lines: Walked[] = [
+    ['A', 'B', 0, 100],
+    ['B', 'J', 100, 200],
+    ['J', 'D', 1_000, 1_100],
+    ['A', 'C', 0, 500],
+    ['C', 'J', 500, 1_000],
+  ];
+  const reached: Reached = { A: [0, 0], B: [100, 100], C: [500, 500], J: [1_000, 1_000], D: [1_100, 1_100] };
+  expect(scales('ABCJD', lines, reached, 1_060).D).toBeCloseTo(0.488, 6);
+  expect(scales('ABCJD', lines, reached, 460).C).toBeCloseTo(0.90608565, 6);
+  expect(scales('ABCJD', lines, reached, 544, 'until arrival').C).toBeCloseTo(0.875, 6);
+});
+
+/** `count` stops in a row, s0 to s9999 for 10,000, the lead starting at s0, hiding after. */
+function stopsRoute(count: number): Route {
+  const ids = Array.from({ length: count }, (_, i) => `s${i}`);
+  const points = ids.map((id, i) => ({ ...newPoint(() => id, { x: i / count, y: 0.5, kind: 'stop' }), pauseMs: 0 }));
+  const plain = { ...newRoute(() => 'route'), points, leadStart: 's0' };
+  const markers = { ...plain.settings.markers, appearance: 'until arrival' } as const;
+  return { ...plain, settings: { ...plain.settings, markers } };
+}
+
+/**
+ * Each stop's marker scale at `t` through the catalogue's markers module, stop i reached from stop i − 1 by a line of
+ * `legMs(i)`, no pauses, and how many times the frame read a line's or a point's time: a count of steps, not a clock.
+ */
+function manyStops(count: number, legMs: (i: number) => number, t: number) {
+  const markers = CATALOGUE.route.find((each) => each.id === 'markers');
+  if (markers === undefined) throw new Error('a markers module');
+  const route = stopsRoute(count);
+  const real = composeTimeline(route, 1);
+  let reads = 0;
+  const read = (ms: number) => {
+    reads += 1;
+    return ms;
+  };
+  const at = [0];
+  for (let i = 1; i < count; i += 1) at.push((at[i - 1] ?? 0) + legMs(i));
+  const ids = route.points.map((point) => point.id);
+  const lines = ids.slice(1).map((to, i) => {
+    const [departMs, arriveMs] = [at[i] ?? 0, at[i + 1] ?? 0];
+    return { lineId: `L${i}`, from: ids[i] ?? '', to, get departMs() { return read(departMs); }, get arriveMs() { return read(arriveMs); } };
+  });
+  const points = new Map(
+    ids.map((id, i) => {
+      const ms = at[i] ?? 0;
+      return [id, { get arriveMs() { return read(ms); }, get departMs() { return read(ms); } }];
+    }),
+  );
+  const shape = { points: route.points, lines: route.lines, leadStart: route.leadStart, marks: route.marks };
+  const timeline = { ...real, lines, points };
+  const input = { settings: markers.select(route.settings), route: { shape, timeline }, seed: 1, scale: 1, timeMs: t };
+  const result = markers.evaluate({ ...input, lead: leadAt(real, 0) });
+  if (!result.ok || !isDrawing(result.value)) throw new Error('a markers drawing');
+  return { scales: new Map(result.value.markers.map((marker) => [marker.pointId, marker.scale])), reads };
+}
+
+test('Codex 33’s second round: a frame’s work grows with the stops, not their square, each stop keeping v3’s figure', () => {
+  // Codex's case: 10,000 stops, 9,998 lines of no moving time, then one of 10 s; each stop walked on alone, some 5 s
+  // a frame. The bound is a count of reads of the lines' and points' times, about 15 a stop now and some 20,000 a stop
+  // before, so it cannot fail by chance in CI as a time could.
+  const count = 10_000;
+  const still = (i: number) => (i === count - 1 ? 10_000 : 0);
+  expect(manyStops(count, still, 20_000).reads).toBeLessThan(40 * count);
+  // Every line 1 ms, which took some 100 ms a frame before: each stop walked on 100 lines.
+  expect(manyStops(count, () => 1, 20_000).reads).toBeLessThan(40 * count);
+  // v3 on the same walk: a stop with its next no moving time on 0.875 at 50 ms and hidden at 125; s9998, 10 s from
+  // the last, 0.992 at 50; the last, not yet reached, whole.
+  const early = manyStops(count, still, 50).scales;
+  expect(early.get('s0')).toBeCloseTo(0.875, 6);
+  expect(early.get('s5000')).toBeCloseTo(0.875, 6);
+  expect(early.get('s9998')).toBeCloseTo(0.992, 6);
+  expect(early.get('s9999')).toBe(1);
+  expect(manyStops(count, still, 125).scales.get('s0') ?? 0).toBe(0);
+});
+
 /** A, a bend, C, walked in 10 s by total time; each frame through the composer at 1080p, its markers' arcs. */
 function framed(sceneMs: number) {
   let n = 0;
