@@ -1,5 +1,10 @@
 # The v4 architecture plan — MERGE-01 with REFACTOR-01's port plan — 18 November 2026
 
+**Phase 7 opened on 19 November 2026 by PLAN-7.** That entry changes A13
+(§13, §18), adds GATE-02 to Phase 7 and the accessibility files to the shared
+files (§19), and gives every core item three duties Phase 6 taught; each
+change is provisional under the owner's grant G3.
+
 **Brought up to date on 19 November 2026 by PLAN-6 (the entry of that
 date).** The owner answered the question round of section 22 on the evening
 of 18 November and gave his word on publishing v4 to GitHub Pages; his words
@@ -795,7 +800,13 @@ bindings, if anyone uses them (the key table is new, CORE-05).
   code: no new package (the profile's Dependencies line).
 - **Versions (A13).** Before the first publish the format may change freely.
   From the first publish on, every older v4 format version keeps opening,
-  through a tested step from each version to the next. A file from a newer
+  through a tested step from each version to the next. *Changed by PLAN-7
+  (2026-11-19), provisionally: v4 was published early, before anything could
+  be saved, so until v4.0 is declared the format may change between previews;
+  a file from any other version, older or newer, is refused whole, and the
+  editor says plainly wherever it offers Save that a preview's file may not
+  open in a later preview. From v4.0 on, every older version opens through a
+  tested step, as written here.* A file from a newer
   version than the build opening it, or holding a feature or field this build
   does not know, is refused before anything in the open project changes, with
   a message saying a newer v4 made it; it is never half read. Within a
@@ -1203,7 +1214,7 @@ publishing; each is marked below. The rest stay provisional under G3.
 | A10 | The five presets' contents, and Blank | §12 | PRESET-01 |
 | A11 | Before v4.0 only what v4's model and the presets need; the after-v4.0 order of §12 (round 2, Q6). **Ruled 18 Nov: as recommended (§22).** | §12 | None; items are added |
 | A12 | Schema-first save with our own helper, no new package | §13 | CORE-01, CORE-03 |
-| A13 | Format versions: free until the first publish; then older versions open by tested steps, newer ones are refused whole | §13 | CORE-03 |
+| A13 | Format versions: free until the first publish; then older versions open by tested steps, newer ones are refused whole. **Changed 19 Nov by PLAN-7, provisionally: free until v4.0, another version refused whole meanwhile (§13).** | §13 | CORE-03 |
 | A14 | v3 moves into `v3/` with its own package; its build and release scripts unchanged; root `docs/` and `version.json` untouched, v3 given copies | §14 | STACK-01 and the paths of everything after it; grounded in Q5's option text |
 | A15 | v4 keeps its own browser storage, autosaving to IndexedDB under names that do not begin `routePlotter_` (round 1, Q3). **Ruled 18 Nov: as recommended (§22).** | §11 | CORE-09 |
 | A16 | The Xerte copy working, with Gary holding its address, is a condition for the first publish (round 1, Q4). **Overturned 18 Nov by his word on publishing (§22): no condition; v4 may be published at any point, PUB-01 straight after STACK-02.** | §11 | PUB-01's first-publish step only |
@@ -1246,6 +1257,20 @@ side by side, each changes only its own folder, and the catalogue lines are
 added by each in turn as it merges: the second to merge brings `main` in,
 adds its line, and merges only once CI is green and Codex has approved that
 exact head, as G2 requires.
+
+*Added by PLAN-7 (2026-11-19):* since STACK-03, `tests/a11y/project.mjs` and
+`project/a11y/coverage.json` are shared files too: every item that adds a
+screen or control declares it there. The pairs below that both add controls
+(CORE-06 with CORE-12, CORE-07 with CORE-08, CORE-10 with CORE-09) still run
+side by side, on the catalogues' terms: each adds only its own entries, and
+the second to merge brings `main` in, keeps both sides' entries, runs v4's
+whole gate with the accessibility run on the joined head, and merges only once
+CI is green and Codex has approved that head. The accessibility run holds port
+4173 on the machine that runs it, so two items cannot run it locally at the
+same moment; the second waits for the first. Every core item's pull request
+also carries a `## What to try` section, which the publishing step copies to
+the live `version.json`, and every merge leaves the published page working,
+since every app merge publishes.
 
 ### Phase 6 — v4's foundations
 
@@ -1345,7 +1370,17 @@ A7, A9, A34.
 model the schema allows is valid; defaults are valid); a value outside a
 field's range is refused with a report naming the field. Writes:
 `src/core/model/**`, `src/core/schema/**`, `src/core/config/**`. Parallel:
-none. Redo: A1, A2a, A12.
+with GATE-02 (added by PLAN-7). Redo: A1, A2a, A12.
+
+**GATE-02 — The gate's loose ends after the foundations.** Added by PLAN-7
+(2026-11-19). Delivers, as its item file says: the accessibility pack's files
+sorted as v4; the publishing step's files in a class of their own; STACK-04's
+scripts/measures.mjs placed; the publishing commit's check made to skip jobs
+that did not run; PUB-01's trial recorded in its Notes. Depends on: STACK-04.
+Checks: a gate test for each change that fails without it. Writes:
+`scripts/gate.mjs`, `scripts/gate.test.mjs`, `project/items/PUB-01.md`
+(Notes). Parallel: with CORE-01, CORE-02 and CORE-03, which touch none of its
+files. Redo: none.
 
 **CORE-02 — Geometry, the lead's timing and the clock.** Delivers: §15's
 timing and geometry ports; the lead's walk; `composeTimeline` and
@@ -1544,7 +1579,7 @@ Depends on: A11Y-03, REV-03, REV-05. Waits on the owner's declaration.
 | 6.2 | STACK-02 | — |
 | 6.3 | PUB-01, STACK-03 | yes |
 | 6.4 | STACK-04 | — |
-| 7.1 | CORE-01 | — |
+| 7.1 | CORE-01, GATE-02 | yes; GATE-02 may run on beside 7.2 |
 | 7.2 | CORE-02, CORE-03 | yes |
 | 7.3 | CORE-04 | — |
 | 7.4 | CORE-05 | — |
@@ -1560,7 +1595,7 @@ Depends on: A11Y-03, REV-03, REV-05. Waits on the owner's declaration.
 | 9.3 | A11Y-03, REV-03, REV-05 | the owner's |
 | 9.4 | V40-01 | the owner's |
 
-That is 28 build items, with the owner's two existing assurance items
+That is 28 build items (29 with GATE-02, added by PLAN-7), with the owner's two existing assurance items
 (REV-03, REV-05) in Phase 9.
 
 **Waiting on the owner:** his signature on the brief's redrafted sections
@@ -1575,7 +1610,7 @@ Everything else can be built overnight on the recommended options.
 | Phase | Direction | Items |
 | --- | --- | --- |
 | 6 — v4's foundations | v4 at the root on the editor stack, its own gate and edges enforced, before any feature; from STACK-02 on, each build published on the owner's advance word (PLAN-6, 2026-11-19) | STACK-01, STACK-02, PUB-01, STACK-03, STACK-04 |
-| 7 — the core, end to end | Draw, play, save and reopen, export; autosave last, its storage having been the least settled | CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-12, CORE-07, CORE-08, CORE-10, CORE-09 |
+| 7 — the core, end to end | Draw, play, save and reopen, export; autosave last, its storage having been the least settled; opened by PLAN-7 (2026-11-19), which adds GATE-02 beside the first items | CORE-01, GATE-02, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-12, CORE-07, CORE-08, CORE-10, CORE-09 |
 | 8 — features as modules | The Add feature list and v4.0's features, each a module; the camera and free crowd areas last, being the least settled | FEAT-01, FEAT-02, FEAT-03, FEAT-04, CORE-11, FEAT-05, FEAT-06, FEAT-07 |
 | 9 — presets and v4.0 | The five presets, a scene for each, the extended accessibility depth, v4.0 declared | PRESET-01, EX-01, A11Y-03, REV-03, REV-05, V40-01 |
 | After v4.0 | What his answers place later, in §12's order | wishes PLAN-5.1 and EX-03.1; AI-01 (medium term); the candidates of §12 |

@@ -12,6 +12,7 @@ An author draws routes on the canvas (the plan's §3). This item ports v3's poin
 - A point inserted on a fork's run joins that run (DEF-22, v3's pin at `v3/tests/branchAuthoring.test.js` :469 inverted); a drag that moves nothing records no undo (DEF-87).
 - It changes only these paths: src/editor/canvas/** and src/core/model/commands/**.
 - Its held lines in the plan's §16 are passed or weighed, each named in the pull request.
+- Its pull request has a `## What to try` section for the owner; whatever screen or control it adds is covered in `tests/a11y/project.mjs` and `project/a11y/coverage.json`, shared files where it may add its own entries beyond its own paths; and its merge, which publishes, leaves the published page working (PLAN-7).
 - The item's gate is green in CI, Codex (gpt-6-astra) has reviewed it read-only, and `node tools/check.mjs` and `--commit HEAD` give 0 failures.
 
 ## Now
@@ -32,3 +33,4 @@ Open question: None; his answer on route shape (round 1, Q2), "recommendation go
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: "Core with storytelling basics" (Q9); "One route, travellers as features (Recommended)" (Q11). Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A1 (the plan's §18; the night's decisions list).
 - 2026-11-19 — The owner answered the plan's round 1, Q2 (route shape, A1; `reviews/v4-plan-question-round-answers-2026-11-19.md`), verbatim: "recommendation good". Read by PLAN-6 of 2026-11-19, a reading his to correct, as ruling A1 as recommended: drawing gains two-way lines, loops and several starts, with no rule refusing them.
+- 2026-11-19 — PLAN-7 opens Phase 7 and adds the criterion on the pull request's `## What to try` section, accessibility coverage and the published page, from what Phase 6 taught: every app merge now publishes (PUB-01), the publishing step copies the section to the live `version.json`, and v4's gate runs the accessibility run at AAA (STACK-03). Each new screen or control is declared in `tests/a11y/project.mjs` (its state, snapshot, interactions and kept functions; a journey that meets something it cannot check is extended in the same pull request) and each feature it adds or rules out is recorded in `project/a11y/coverage.json`, never the catalogue.

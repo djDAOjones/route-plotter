@@ -14,11 +14,13 @@ v4's editor is React and Carbon React, pushed to the AAA bar (Q21, Q22). This it
 - The shell has named slots for the panels, the points list, the outline and the export panel, which later items fill.
 - It changes only these paths: src/editor/shell/**, src/editor/store/**, src/editor/kit/**, src/editor/transport/**, src/player/transport/** and src/ui/**.
 - Its held lines in the plan's §16 are passed or weighed, each named in the pull request; the open findings of UI-06 and UI-07 are read as inputs to the shell.
+- If the shell replaces the link to GitHub that STACK-03 added so the AAA focus test has a control (wish STACK-03.5), it keeps a control that takes focus, and the entries in `tests/a11y/project.mjs` that name the link change in the same pull request: the shell state's snapshot, its interaction and kept function, the keyboard function `follow-progress-link`, and the journeys `reading-and-focus-order`, `pointer-cancellation` and `keyboard-task`; as a shared component, it updates record P09 and flags a wider run.
+- Its pull request has a `## What to try` section for the owner; whatever screen or control it adds is covered in `tests/a11y/project.mjs` and `project/a11y/coverage.json`, shared files where it may add its own entries beyond its own paths; and its merge, which publishes, leaves the published page working (PLAN-7).
 - The item's gate is green in CI, Codex (gpt-6-astra) has reviewed it read-only, and `node tools/check.mjs` and `--commit HEAD` give 0 failures.
 
 ## Now
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
 Next step: Start once CORE-03 and CORE-04 have merged.
 
@@ -34,3 +36,4 @@ Open question: None.
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: "Adopt the editor stack whole (Recommended)" (Q21); "Standard now, extended before v4.0 (Recommended)" (Q22). Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A19 (the plan's §18; the night's decisions list).
+- 2026-11-19 — PLAN-7 opens Phase 7 and adds the criterion on the pull request's `## What to try` section, accessibility coverage and the published page, from what Phase 6 taught: every app merge now publishes (PUB-01), the publishing step copies the section to the live `version.json`, and v4's gate runs the accessibility run at AAA (STACK-03). Each new screen or control is declared in `tests/a11y/project.mjs` (its state, snapshot, interactions and kept functions; a journey that meets something it cannot check is extended in the same pull request) and each feature it adds or rules out is recorded in `project/a11y/coverage.json`, never the catalogue.
