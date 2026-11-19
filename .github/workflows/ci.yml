@@ -76,6 +76,43 @@ jobs:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
           PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: ubuntu24.04-x64
 
+      - name: TEMPORARY probe of the focus outline on Linux (STACK-03, removed before merge)
+        if: steps.sort.outputs.v4 == 'true'
+        run: |
+          npm run build > /dev/null 2>&1
+          cat > "$RUNNER_TEMP/probe.mjs" <<'PROBE'
+          import { chromium } from '/home/runner/work/route-plotter/route-plotter/node_modules/playwright-core/index.mjs';
+          import { spawn } from 'node:child_process';
+          import { createHash } from 'node:crypto';
+          const h = (b) => createHash('sha256').update(b).digest('hex').slice(0, 12);
+          const srv = spawn('npm', ['run', 'preview', '--', '--port', '4173', '--strictPort', '--configLoader', 'native'], { stdio: 'ignore', detached: true });
+          await new Promise((r) => setTimeout(r, 4000));
+          const b = await chromium.launch();
+          console.log('chromium', b.version(), 'override', process.env.PLAYWRIGHT_HOST_PLATFORM_OVERRIDE);
+          for (const how of ['tab', 'tab+bringToFront', 'focus()']) {
+            const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
+            await p.goto('http://127.0.0.1:4173/');
+            if (how === 'focus()') await p.locator('main a').focus(); else await p.keyboard.press('Tab');
+            if (how === 'tab+bringToFront') await p.bringToFront();
+            const st = await p.evaluate(() => { const a = document.activeElement, r = a.getBoundingClientRect(), s = getComputedStyle(a); return { el: a.tagName, focus: a.matches(':focus'), fv: a.matches(':focus-visible'), hasFocus: document.hasFocus(), vis: document.visibilityState, outline: `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor} off ${s.outlineOffset}`, box: [r.x, r.y, r.width, r.height].map(Math.round), fonts: document.fonts.status, dpr: devicePixelRatio }; });
+            const clip = { x: st.box[0] - 6, y: st.box[1] - 6, width: st.box[2] + 12, height: st.box[3] + 12 };
+            const f1 = await p.screenshot({ clip, animations: 'disabled', caret: 'hide' });
+            const full1 = await p.screenshot();
+            await p.evaluate(() => document.activeElement.blur());
+            const f2 = await p.screenshot({ clip, animations: 'disabled', caret: 'hide' });
+            const full2 = await p.screenshot();
+            const after = await p.evaluate(() => { const a = document.querySelector('main a'), r = a.getBoundingClientRect(); return [r.x, r.y].map(Math.round); });
+            console.log(how, JSON.stringify(st), 'after', JSON.stringify(after), 'clip', f1.equals(f2) ? 'SAME' : 'DIFFER', h(f1), h(f2), 'full', full1.equals(full2) ? 'SAME' : 'DIFFER');
+            await p.close();
+          }
+          await b.close();
+          process.kill(-srv.pid);
+          PROBE
+          node "$RUNNER_TEMP/probe.mjs"
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
+          PLAYWRIGHT_HOST_PLATFORM_OVERRIDE: ubuntu24.04-x64
+
       - name: Test the gate's own sorting
         if: steps.sort.outputs.gate == 'true'
         run: node scripts/gate.mjs --lane gate
