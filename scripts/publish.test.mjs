@@ -198,6 +198,11 @@ describe('the site check: every file the site refers to is there (DEF-75)', () =
     assert.deepEqual(scriptReferences('/* c */import "./a.js";').modules, ['./a.js']);
     assert.deepEqual(scriptReferences('import { a, // c\n b } from "./b.js";').modules, ['./b.js']);
     assert.deepEqual(scriptReferences('import("./c.json", { with: { type: "json" } })').modules, ['./c.json']);
+    // Codex's round 4: a trailing comma in new URL's arguments.
+    assert.deepEqual(scriptReferences('new URL("./missing-worker.js", import.meta.url,)').urls, ['./missing-worker.js']);
+    const comma = folder({ ...BUILT, 'assets/index-a1.js': 'const w=new URL("./missing-worker.js",import.meta.url,);\n' });
+    assert.throws(() => checkSite(comma), /refers to a missing file: \.\/missing-worker\.js/);
+    rmSync(comma, { recursive: true, force: true });
     const worker = folder({ ...BUILT, 'assets/index-a1.js': 'const w=new URL("worker.js",import.meta.url);\n', 'assets/worker.js': 'x' });
     assert.doesNotThrow(() => checkSite(worker), 'a URL is not a module name');
     rmSync(worker, { recursive: true, force: true });

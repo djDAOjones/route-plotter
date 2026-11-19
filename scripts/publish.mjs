@@ -216,7 +216,8 @@ export function scriptReferences(text) {
     ...read(`(?:^|[;}\\s)/])(?:import|export)${gap}(?:[\\w$*{},\\s]|/\\*[\\s\\S]*?\\*/|//[^\\n]*\\n)+?${gap}from${gap}${quoted}`),
     ...read(`(?<![.\\w$])import${gap}\\(${gap}${quoted}${gap}[,)]`)
   ];
-  const urls = read(`\\bnew${gap}URL${gap}\\(${gap}${quoted}${gap},${gap}import${gap}\\.${gap}meta${gap}\\.${gap}url${gap}\\)`);
+  // A call's arguments may end with a comma.
+  const urls = read(`\\bnew${gap}URL${gap}\\(${gap}${quoted}${gap},${gap}import${gap}\\.${gap}meta${gap}\\.${gap}url${gap},?${gap}\\)`);
   return { modules, urls };
 }
 
