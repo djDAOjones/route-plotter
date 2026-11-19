@@ -13,11 +13,11 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { ROOT, STEP, git, stepMade } from './gate.mjs';
+import { ROOT, STEP, git, pushedLine, stepMade } from './gate.mjs';
 import {
   ADDRESS, PUSH_TRIES, REPOSITORY, USAGE, VERIFY, UsageError, checkSite, cssReferences, decide, htmlReferences, main,
-  markupReferences, nextPreview, parseArgs, prSection, publish, sameBuild, scriptReferences, sourceMapReferences,
-  stepHistory, takeBack, versionRecord, watchPages, whatIsNew, whatToTry
+  markupReferences, nextPreview, parseArgs, prSection, publish, sameBuild, scriptReferences, servesOurs,
+  sourceMapReferences, stepHistory, takeBack, versionRecord, watchPages, whatIsNew, whatToTry
 } from './publish.mjs';
 
 const SHA_A = 'a'.repeat(40);
@@ -182,8 +182,23 @@ describe('the site check: every file the site refers to is there (DEF-75)', () =
       assert.throws(() => checkSite(dir), new RegExp(said), text);
       rmSync(dir, { recursive: true, force: true });
     }
+    // Codex's round 2: a comment inside an import, a slash before an attribute, and new URL's plain relative path.
+    for (const [path, text, missing] of [
+      ['index.html', '<script type="module">import/*comment*/"./commented.js";</script>', 'commented.js'],
+      ['index.html', '<img/src="slashed.png">', 'slashed.png'],
+      ['assets/index-a1.js', 'const w=new URL("worker.js",import.meta.url);\n', 'worker.js']
+    ]) {
+      const site = { ...BUILT };
+      site[path] = path === 'index.html' ? site[path].replace('</body>', `${text}</body>`) : text;
+      const dir = folder(site);
+      assert.throws(() => checkSite(dir), new RegExp(`refers to a missing file: [^;]*${missing.replace('.', '\\.')}`), text);
+      rmSync(dir, { recursive: true, force: true });
+    }
+    const worker = folder({ ...BUILT, 'assets/index-a1.js': 'const w=new URL("worker.js",import.meta.url);\n', 'assets/worker.js': 'x' });
+    assert.doesNotThrow(() => checkSite(worker), 'a URL is not a module name');
+    rmSync(worker, { recursive: true, force: true });
     // A method named import, and a path built at run time, are not loads the check can see.
-    assert.deepEqual(scriptReferences('loader.import("x");const p="./a"+n;import(p);'), []);
+    assert.deepEqual(scriptReferences('loader.import("x");const p="./a"+n;import(p);'), { modules: [], urls: [] });
     assert.deepEqual(markupReferences('<p title="<img src=x>">t</p>').markup, []);
   });
 
@@ -461,51 +476,70 @@ describe('a publish and a take-back write only the site, only from CI on main', 
   });
 });
 
-describe('deciding whether a run publishes: the gate green, and a change to the app', () => {
-  /** A fake GitHub API: the Verify run's steps, the merged pull request, main's newest passing run. */
-  function github({ v4Step = 'success', jobsOk = true, pulls = [], lastGreen = null } = {}) {
-    const asked = [];
-    const fetchImpl = async url => {
-      asked.push(url);
+describe('deciding whether a run publishes: the gate green, and a change to the app since the last publish', () => {
+  /** A fake GitHub API: the merged pull requests, main's newest passing runs. */
+  function github({ pulls = {}, green = [] } = {}) {
+    return async url => {
       const path = new URL(url).pathname;
       let body = null;
-      if (/\/actions\/runs\/\d+\/jobs$/.test(path)) body = jobsOk ? { jobs: [{ steps: [
-        { name: 'Sort the change by what it touches', conclusion: 'success' },
-        { name: VERIFY.v4Step, conclusion: v4Step }
-      ] }] } : null;
-      else if (/\/commits\/[0-9a-f]{40}\/pulls$/.test(path)) body = pulls;
-      else if (path.endsWith('/actions/workflows/ci.yml/runs')) body = { workflow_runs: lastGreen ? [{ head_sha: lastGreen }] : [] };
-      return { ok: body !== null, status: 200, json: async () => body };
+      const merged = path.match(/\/commits\/([0-9a-f]{40})\/pulls$/)?.[1];
+      if (merged) body = pulls[merged] ? [{ merge_commit_sha: merged, body: pulls[merged] }] : [];
+      else if (path.endsWith('/actions/workflows/ci.yml/runs')) body = { workflow_runs: green.map(head_sha => ({ head_sha })) };
+      return { ok: body !== null, status: body === null ? 404 : 200, json: async () => body };
     };
-    return { fetchImpl, asked };
   }
   const env = { GITHUB_REF: 'refs/heads/main', GITHUB_REPOSITORY: REPOSITORY, GITHUB_TOKEN: 't' };
+  const afterVerify = { ...env, GITHUB_EVENT_NAME: 'workflow_run' };
   const runEvent = (sha, change = {}) => ({ workflow_run: { id: 7, name: VERIFY.name, path: VERIFY.path, event: 'push',
     head_branch: 'main', head_repository: { full_name: REPOSITORY }, conclusion: 'success', head_sha: sha, ...change } });
+  const land = (repo, path, text, message) => {
+    folder({ [path]: text }, repo.dir);
+    return repo.commit(message);
+  };
 
-  test("an app merge whose Verify passed publishes main's tip, with the pull request's What to try", async () => {
+  test("the first passing run publishes main's tip, with the merged pull request's What to try", async () => {
     const repo = scratch();
     try {
-      const { fetchImpl } = github({ pulls: [{ merge_commit_sha: repo.v3, body: '## What to try\n- Open it.' }] });
-      const decided = await decide({ env: { ...env, GITHUB_EVENT_NAME: 'workflow_run' }, event: runEvent(repo.v3), cwd: repo.dir, fetchImpl });
+      const decided = await decide({ env: afterVerify, event: runEvent(repo.v3), cwd: repo.dir,
+        fetchImpl: github({ pulls: { [repo.v3]: '## What to try\n- Open it.' } }) });
       assert.equal(decided.publish, true, decided.reason);
       assert.equal(decided.source, repo.v3);
       assert.equal(decided.tryText, '- Open it.');
+      assert.match(decided.reason, /v4 has never been published/);
     } finally {
       repo.done();
     }
   });
 
-  test('a record-only or v3-only merge publishes nothing: Verify skipped v4\'s gate', async () => {
+  test('after a publish, a record-only or v3-only merge publishes nothing', async () => {
     const repo = scratch();
     try {
-      const { fetchImpl } = github({ v4Step: 'skipped' });
-      const decided = await decide({ env: { ...env, GITHUB_EVENT_NAME: 'workflow_run' }, event: runEvent(repo.v3), cwd: repo.dir, fetchImpl });
-      assert.equal(decided.publish, false);
-      assert.match(decided.reason, /did not touch v4/);
-      const unread = await decide({ env: { ...env, GITHUB_EVENT_NAME: 'workflow_run' }, event: runEvent(repo.v3), cwd: repo.dir,
-        fetchImpl: github({ jobsOk: false }).fetchImpl });
-      assert.equal(unread.publish, false);
+      publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci, now: repo.fixedNow });
+      for (const [path, message] of [['project/backlog.md', 'X: record'], ['v3/src/a.js', 'Y: v3']]) {
+        const merged = land(repo, path, `${message}\n`, message);
+        const decided = await decide({ env: afterVerify, event: runEvent(merged), cwd: repo.dir, fetchImpl: github() });
+        assert.equal(decided.publish, false, message);
+        assert.match(decided.reason, /nothing that changes v4 has landed since the last publish's source/);
+      }
+    } finally {
+      repo.done();
+    }
+  });
+
+  test("an app change whose own publish was queued out is published by the next merge's run, even a record-only one", async () => {
+    // Codex's sequence: publish A runs; app merge B's publish waits; record-only merge C's publish replaces B's in the
+    // queue. C's run must still publish B's change.
+    const repo = scratch();
+    try {
+      publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci, now: repo.fixedNow });
+      const b = land(repo, 'src/main.tsx', 'export const b = 1;\n', 'B: v4');
+      const c = land(repo, 'project/backlog.md', '# Backlog\n- [x] C\n', 'C: record');
+      const decided = await decide({ env: afterVerify, event: runEvent(c), cwd: repo.dir,
+        fetchImpl: github({ pulls: { [b]: '## What to try\n- See B.' } }) });
+      assert.equal(decided.publish, true, decided.reason);
+      assert.equal(decided.source, c);
+      assert.match(decided.reason, /v4 has changed since the last publish's source/);
+      assert.equal(decided.tryText, '- See B.');
     } finally {
       repo.done();
     }
@@ -514,13 +548,13 @@ describe('deciding whether a run publishes: the gate green, and a change to the 
   test('a failed run, a pull request, a fork, another branch, another workflow or another event publishes nothing', async () => {
     const repo = scratch();
     try {
-      const { fetchImpl } = github();
+      const fetchImpl = github();
       for (const [change, said] of [
         [{ conclusion: 'failure' }, /did not pass/], [{ event: 'pull_request' }, /only a push to main/],
         [{ head_repository: { full_name: 'someone/route-plotter' } }, /only a push to main/],
         [{ head_branch: 'feature' }, /only a push to main/], [{ name: 'Publish', path: '.github/workflows/publish.yml' }, /not Verify/]
       ]) {
-        const decided = await decide({ env: { ...env, GITHUB_EVENT_NAME: 'workflow_run' }, event: runEvent(repo.v3, change), cwd: repo.dir, fetchImpl });
+        const decided = await decide({ env: afterVerify, event: runEvent(repo.v3, change), cwd: repo.dir, fetchImpl });
         assert.equal(decided.publish, false, JSON.stringify(change));
         assert.match(decided.reason, said);
       }
@@ -538,25 +572,23 @@ describe('deciding whether a run publishes: the gate green, and a change to the 
     }
   });
 
-  test("by hand, main's newest passing run must hold main's v4; a later app change waits for its own run", async () => {
+  test("by hand, at any point, once main's newest passing run before its tip holds main's v4", async () => {
     const repo = scratch();
     try {
       const dispatch = { ...env, GITHUB_EVENT_NAME: 'workflow_dispatch', WHAT_TO_TRY: 'Look.' };
-      let decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ lastGreen: repo.v3 }).fetchImpl });
+      publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci, now: repo.fixedNow });
+      // Nothing changed since the last publish: by hand it still goes ahead (the publish itself then finds nothing new).
+      let decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ green: [repo.v3] }) });
       assert.equal(decided.publish, true, decided.reason);
       assert.equal(decided.tryText, 'Look.');
-      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ lastGreen: null }).fetchImpl });
+      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ green: [] }) });
       assert.equal(decided.publish, false);
-      // A record-only commit after the passing run: the same v4, so it publishes.
-      folder({ 'project/backlog.md': '# Backlog\n' }, repo.dir);
-      const record = repo.commit('X: record');
-      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ lastGreen: repo.v3 }).fetchImpl });
+      const record = land(repo, 'project/backlog.md', '# Backlog\n', 'X: record');
+      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ green: [repo.v3] }) });
       assert.equal(decided.publish, true, decided.reason);
       assert.equal(decided.source, record);
-      // An app commit after it: not the v4 that passed, so no.
-      folder({ 'src/main.tsx': 'export const later = 1;\n' }, repo.dir);
-      repo.commit('Y: v4');
-      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ lastGreen: repo.v3 }).fetchImpl });
+      land(repo, 'src/main.tsx', 'export const later = 1;\n', 'Y: v4');
+      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ green: [repo.v3] }) });
       assert.equal(decided.publish, false);
       assert.match(decided.reason, /moved on .*src\/main\.tsx/);
     } finally {
@@ -609,6 +641,18 @@ describe('seeing Pages build and serve a publish', () => {
       seen = await watchPages({ commit, env, cwd: repo.dir, fetchImpl: fake.fetchImpl, ...clock(), limitMs: 60_000 });
       assert.equal(seen.ok, false);
       assert.match(seen.said.join('\n'), /did not serve/);
+      // A record-only merge lands before Pages builds: the later commit serves the same site, and that is ours.
+      folder({ 'project/backlog.md': '# Backlog\n' }, repo.dir);
+      const later = repo.commit('X: record');
+      assert.equal(servesOurs(commit, later, repo.dir), 'same');
+      fake = pages({ startsByPush: true, served: { commit: later, html } });
+      seen = await watchPages({ commit, env, cwd: repo.dir, fetchImpl: fake.fetchImpl, ...clock() });
+      assert.equal(seen.ok, true, seen.said.join('\n'));
+      // A later commit with another site (a newer publish or a take-back) replaced ours: nothing more to watch.
+      folder({ 'docs/index.html': '<title>newer</title>' }, repo.dir);
+      const newer = repo.commit('PUB-01: newer');
+      assert.equal(servesOurs(commit, newer, repo.dir), 'later');
+      assert.equal(servesOurs(commit, 'f'.repeat(40), repo.dir), 'other');
     } finally {
       repo.done();
     }
@@ -653,13 +697,23 @@ describe('the step as wired in this repository', () => {
     assert.doesNotMatch(workflow, /run: [^\n]*\$\{\{/);
   });
 
-  test("Verify is the workflow and v4's gate the step that the decision reads", () => {
-    const ci = read(VERIFY.path);
-    assert.match(ci, /^name: Verify\n/);
-    const steps = ci.split(/\n\s+- name: /).slice(1);
-    const v4 = steps.filter(step => step.startsWith(`${VERIFY.v4Step}\n`));
-    assert.equal(v4.length, 1, `exactly one step named ${VERIFY.v4Step}`);
-    assert.match(v4[0], /run: node scripts\/gate\.mjs --lane v4(\n|$)/);
+  test('Verify is the workflow whose passing runs start the step', () => {
+    assert.match(read(VERIFY.path), /^name: Verify\n/);
+    assert.equal(VERIFY.path, '.github/workflows/ci.yml');
+  });
+
+  test("Pages is watched in jobs of their own, which write nothing, so the publish job's log is final at the push", () => {
+    for (const [name, after] of [['watch-publish', 'publish'], ['watch-take-back', 'take-back']]) {
+      const text = job(name);
+      assert.match(text, new RegExp(`needs: ${after}\\n`), name);
+      assert.match(text, /permissions:\n {6}contents: read\n {6}pages: write/, name);
+      assert.match(text, /--watch-pages/, name);
+      assert.doesNotMatch(text, /contents: write|--publish |--take-back /, name);
+    }
+    assert.doesNotMatch(job('publish'), /--watch-pages|pages: write/);
+    assert.doesNotMatch(job('take-back'), /--watch-pages|pages: write/);
+    assert.match(read('scripts/publish.mjs'), /console\.log\(pushedLine\(commit\)\)/);
+    assert.equal(pushedLine(SHA_A), `PUB-01 pushed ${SHA_A} to refs/heads/main`);
   });
 
   test('the step runs as the gate knows it: the same bot and trailer', () => {

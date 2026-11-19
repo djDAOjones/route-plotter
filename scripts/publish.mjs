@@ -13,8 +13,8 @@
  *       nothing. Anywhere, and the only mode that runs off main.
  *   node scripts/publish.mjs --decide
  *       CI, on main: may this run publish, and which commit? Verify must have
- *       passed and main's v4 must be what it checked; after a merge, only a
- *       change that ran v4's gate (an app change) publishes.
+ *       passed and main's v4 must be what it checked; after Verify, only when
+ *       something that changes v4 has landed since the last publish.
  *   node scripts/publish.mjs --publish --source <sha> --verified <sha> [--try-file <file>]
  *       CI, on main: put the checked build in docs/, write version.json, commit
  *       both as the Actions bot and push to main, never forced.
@@ -40,13 +40,13 @@ import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PAGES, ROOT, STEP, classify, git, isAncestor, lastGreenSha, pathsOfRange } from './gate.mjs';
+import { PAGES, ROOT, STEP, classify, git, isAncestor, lastGreenSha, pathsOfRange, pushedLine } from './gate.mjs';
 
 /** The repository the step publishes, and the address Pages serves it at. */
 export const REPOSITORY = 'djDAOjones/route-plotter';
 export const ADDRESS = 'https://djdaojones.github.io/route-plotter/';
-/** Verify (ci.yml), and the step of it that runs v4's gate: its success marks a change to the app. */
-export const VERIFY = { name: 'Verify', file: 'ci.yml', path: '.github/workflows/ci.yml', v4Step: "Run v4's gate" };
+/** Verify (ci.yml), whose passing push runs on main start the step. */
+export const VERIFY = { name: 'Verify', file: 'ci.yml', path: '.github/workflows/ci.yml' };
 /** v4's previews are numbered 4.0.0-preview.N, N counting the step's publishes. */
 export const VERSION_BASE = '4.0.0-preview';
 /** What the step adds beside the build in docs/: no Jekyll run on it, and what is live. */
@@ -161,11 +161,14 @@ export function markupReferences(text) {
     return `${open}${close}`;
   });
   rest = rest.replace(/(<script\b(?:"[^"]*"|'[^']*'|[^>"'])*>)([\s\S]*?)(<\/script\s*>)/gi, (_, open, body, close) => {
-    scripts.push(...scriptReferences(body));
+    const { modules, urls } = scriptReferences(body);
+    scripts.push(...modules);
+    markup.push(...urls);
     return `${open}${close}`;
   });
   const attribute = /([^\s"'>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
-  for (const [, inside] of rest.matchAll(/<[a-zA-Z][\w:-]*((?:\s+[^\s"'>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*)\s*\/?>/g)) {
+  // Attributes are separated by space or by a slash, as browsers read <img/src="x">.
+  for (const [, inside] of rest.matchAll(/<[a-zA-Z][\w:-]*((?:[\s/]+[^\s"'>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*)[\s/]*>/g)) {
     for (const match of inside.matchAll(attribute)) {
       const name = match[1].toLowerCase();
       const value = (match[2] ?? match[3] ?? match[4] ?? '').trim();
@@ -193,24 +196,25 @@ export function cssReferences(css) {
 }
 
 /**
- * The modules and files a script loads by a literal path: static `import` and
- * `export ... from`, `import()`, and `new URL(..., import.meta.url)`. Read
- * from the text, as a browser would fetch them; a path built at run time is
- * not seen.
+ * What a script loads by a literal path: modules, by static `import`,
+ * `export ... from` and `import()` (a module name, like `react`, has no file a
+ * browser could fetch), and URLs, by `new URL(..., import.meta.url)`, which
+ * resolve as any URL does. Comments may sit between the words. A path built at
+ * run time is not seen: no check that reads text can see it.
  * @param {string} text
+ * @returns {{ modules: string[], urls: string[] }}
  */
 export function scriptReferences(text) {
-  const found = [];
+  const gap = '(?:\\s|/\\*[\\s\\S]*?\\*/|//[^\\n]*\\n)*';
   const quoted = '(?:"([^"\\n]+)"|\'([^\'\\n]+)\'|`([^`$\\n]+)`)';
-  for (const pattern of [
-    new RegExp(`(?:^|[;}\\s])import\\s*${quoted}`, 'g'),
-    new RegExp(`(?:^|[;}\\s])(?:import|export)\\s*(?:[\\w$*{},\\s]+?)\\s*from\\s*${quoted}`, 'g'),
-    new RegExp(`(?<![.\\w$])import\\s*\\(\\s*${quoted}\\s*\\)`, 'g'),
-    new RegExp(`\\bnew\\s+URL\\s*\\(\\s*${quoted}\\s*,\\s*import\\.meta\\.url\\s*\\)`, 'g')
-  ]) {
-    for (const match of text.matchAll(pattern)) found.push(match[1] ?? match[2] ?? match[3]);
-  }
-  return found;
+  const read = pattern => [...text.matchAll(new RegExp(pattern, 'g'))].map(match => match[1] ?? match[2] ?? match[3]);
+  const modules = [
+    ...read(`(?:^|[;}\\s)])import${gap}${quoted}`),
+    ...read(`(?:^|[;}\\s)])(?:import|export)${gap}(?:[\\w$*{},\\s]|/\\*[\\s\\S]*?\\*/)+?${gap}from${gap}${quoted}`),
+    ...read(`(?<![.\\w$])import${gap}\\(${gap}${quoted}${gap}\\)`)
+  ];
+  const urls = read(`\\bnew${gap}URL${gap}\\(${gap}${quoted}${gap},${gap}import${gap}\\.${gap}meta${gap}\\.${gap}url${gap}\\)`);
+  return { modules, urls };
 }
 
 /**
@@ -259,7 +263,7 @@ export function checkSite(dir, { build = true } = {}) {
     let modules = [];
     if (kind === '.html' || kind === '.svg') ({ markup: found, scripts: modules } = markupReferences(text));
     else if (kind === '.css') found = cssReferences(text);
-    else modules = scriptReferences(text);
+    else ({ modules, urls: found } = scriptReferences(text));
     if (kind === '.css' || kind === '.js' || kind === '.mjs') found.push(...sourceMapReferences(text));
     for (const name of modules) {
       // A bare module name, such as react, has no file a browser could fetch.
@@ -472,6 +476,8 @@ function commitAndPush({ cwd, env, write, still, beforePush = () => {} }) {
     beforePush(attempt);
     const pushed = spawnSync('git', ['push', '-q', 'origin', 'HEAD:refs/heads/main'], { cwd, encoding: 'utf8' });
     if (pushed.status === 0) {
+      // The gate reads this line from the job's log, to know the commit as this run's (scripts/gate.mjs).
+      console.log(pushedLine(commit));
       return { changed: true, commit, said: `${done.said} Pushed ${short(commit)} to main${attempt > 1 ? `, at try ${attempt} of ${PUSH_TRIES}, main having moved on` : ''}.` };
     }
     // Not pushed: the checkout lets go of the commit, so it never holds a step commit main lacks.
@@ -627,12 +633,33 @@ async function api(env, fetchImpl, path, { method = 'GET' } = {}) {
   }
 }
 
+/** Paths that change what v4's build holds: v4's own and anything unplaced. */
+const APP = path => !['record', 'v3', 'pages'].includes(classify(path));
+
+/**
+ * "What to try", from the pull requests merged since the last publish, newest
+ * first: the first "What to try" section found, among at most five.
+ */
+async function tryFromPulls(env, fetchImpl, cwd, from, to) {
+  const commits = (git(['rev-list', '--first-parent', '--max-count=5', from ? `${from}..${to}` : to], cwd) ?? '').split('\n').filter(Boolean);
+  for (const sha of commits) {
+    const pulls = await api(env, fetchImpl, `/repos/${REPOSITORY}/commits/${sha}/pulls`);
+    const pull = Array.isArray(pulls) ? pulls.find(item => item.merge_commit_sha === sha) ?? pulls[0] : null;
+    const lines = prSection(pull?.body);
+    if (lines.length) return lines.join('\n');
+  }
+  return '';
+}
+
 /**
  * May this run publish, and what? The gate must be green: Verify passed on a
  * commit of main (the run that started this one, or main's newest passing run
  * when started by hand), and main's tip holds the same v4 (every path between
- * them is record, v3 or the site). After a merge, only a change whose run ran
- * v4's gate publishes, so a record-only or v3-only merge publishes nothing.
+ * them is record, v3 or the site). After Verify, the step publishes when
+ * something that changes v4's build has landed since the last publish's
+ * source, so a record-only or v3-only merge publishes nothing, and a change
+ * whose own publish was queued out or failed is published by the next run
+ * (Codex's review). By hand on main it publishes at any point.
  * @returns {Promise<{ publish: boolean, reason: string, source?: string, verified?: string, tryText?: string }>}
  */
 export async function decide({ env, event = {}, cwd = ROOT, fetchImpl = globalThis.fetch }) {
@@ -643,7 +670,7 @@ export async function decide({ env, event = {}, cwd = ROOT, fetchImpl = globalTh
   if (v40Declared(cwd)) return no("v4.0 is declared, which ends the owner's advance word: nothing publishes without his word");
 
   let verified;
-  let tryText = '';
+  const byHand = env.GITHUB_EVENT_NAME === 'workflow_dispatch';
   if (env.GITHUB_EVENT_NAME === 'workflow_run') {
     const ran = event.workflow_run ?? {};
     if (ran.name !== VERIFY.name || ran.path !== VERIFY.path) return no('the run that started this is not Verify');
@@ -652,37 +679,55 @@ export async function decide({ env, event = {}, cwd = ROOT, fetchImpl = globalTh
     }
     if (ran.conclusion !== 'success') return no(`Verify did not pass (${ran.conclusion})`);
     if (!SHA.test(ran.head_sha ?? '')) return no('the run names no commit');
-    const jobs = await api(env, fetchImpl, `/repos/${REPOSITORY}/actions/runs/${ran.id}/jobs?per_page=100`);
-    if (!jobs) return no("Verify's steps could not be read, so whether the change touched the app is unknown");
-    const steps = (jobs.jobs ?? []).flatMap(job => job.steps ?? []).filter(step => step.name === VERIFY.v4Step);
-    if (!steps.some(step => step.conclusion === 'success')) {
-      return no("the change did not touch v4 (Verify skipped v4's gate), so there is nothing new to publish");
-    }
     verified = ran.head_sha;
-    const pulls = await api(env, fetchImpl, `/repos/${REPOSITORY}/commits/${verified}/pulls`);
-    const pull = Array.isArray(pulls) ? pulls.find(item => item.merge_commit_sha === verified) ?? pulls[0] : null;
-    tryText = prSection(pull?.body).join('\n');
-  } else if (env.GITHUB_EVENT_NAME === 'workflow_dispatch') {
+  } else if (byHand) {
     verified = await lastGreenSha({ ...env, DEFAULT_BRANCH: 'main', GITHUB_WORKFLOW_REF: `${REPOSITORY}/${VERIFY.path}@refs/heads/main` },
       fetchImpl, sha => isAncestor(sha, tip, cwd));
     if (!verified) return no("main's newest passing Verify run could not be read");
-    tryText = env.WHAT_TO_TRY ?? '';
   } else {
     return no(`a ${env.GITHUB_EVENT_NAME ?? 'unknown'} event never publishes`);
   }
 
-  if (git(['merge-base', '--is-ancestor', verified, tip], cwd) === null) return no(`${short(verified)} is not on main`);
+  if (!isAncestor(verified, tip, cwd)) return no(`${short(verified)} is not on main`);
   const between = pathsOfRange([verified, tip], cwd);
   if (between === null) return no(`what changed between ${short(verified)} and main's tip could not be read`);
-  const moved = between.filter(path => !['record', 'v3', 'pages'].includes(classify(path)));
+  const moved = between.filter(APP);
   if (moved.length) {
     return no(`main has moved on from ${short(verified)} with a change of its own (${moved.slice(0, 3).join(', ')}); its own run publishes it`);
   }
+
+  // The last publish's source: what the live v4 was built from (a take-back leaves it, so v3 stays until v4 changes).
+  const last = stepHistory(cwd, tip).find(commit => commit.source && SHA.test(commit.source) && isAncestor(commit.source, tip, cwd))?.source;
+  if (!byHand && last && isAncestor(last, verified, cwd)) {
+    const since = pathsOfRange([last, verified], cwd);
+    if (since !== null && !since.some(APP)) {
+      return no(`nothing that changes v4 has landed since the last publish's source ${short(last)}: a record-only or v3-only change publishes nothing`);
+    }
+  }
+  const tryText = byHand && env.WHAT_TO_TRY?.trim() ? env.WHAT_TO_TRY : await tryFromPulls(env, fetchImpl, cwd, last, verified);
   return { publish: true, source: tip, verified, tryText,
-    reason: `Verify passed on ${short(verified)}, and main's tip ${short(tip)} holds the same v4` };
+    reason: `Verify passed on ${short(verified)}, main's tip ${short(tip)} holds the same v4, ` +
+      (byHand ? 'and the step was run by hand' : last ? `and v4 has changed since the last publish's source ${short(last)}` : 'and v4 has never been published') };
 }
 
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+
+/**
+ * Whether a commit Pages built serves the same site as ours: ours itself, or a
+ * later commit on main whose docs/ is ours byte for byte (a record-only merge
+ * may land before Pages builds). 'later' when a later commit on main serves a
+ * different site: a newer publish or take-back replaced ours.
+ * @returns {'same'|'later'|'other'}
+ */
+export function servesOurs(commit, built, cwd = ROOT) {
+  if (built === commit) return 'same';
+  if (!SHA.test(built ?? '')) return 'other';
+  if (git(['cat-file', '-e', `${built}^{commit}`], cwd) === null) {
+    spawnSync('git', ['fetch', '-q', 'origin', '+refs/heads/main:refs/remotes/origin/main'], { cwd });
+  }
+  if (!isAncestor(commit, built, cwd)) return 'other';
+  return git(['diff', '--quiet', commit, built, '--', ...PAGES.dirs], cwd) !== null ? 'same' : 'later';
+}
 
 /**
  * See Pages build the pushed commit and serve it: whether the push itself
@@ -701,11 +746,16 @@ export async function watchPages({ commit, env, cwd = ROOT, fetchImpl = globalTh
   let built = false;
   while (now() - started < limitMs) {
     const latest = await api(env, fetchImpl, `/repos/${REPOSITORY}/pages/builds/latest`);
-    if (latest?.commit === commit) {
+    const serves = latest ? servesOurs(commit, latest.commit, cwd) : 'other';
+    if (serves === 'later') {
+      said.push(`A later commit on main, ${short(latest.commit)}, replaced this site before Pages served it; nothing more to watch.`);
+      return { ok: true, started: how, said };
+    }
+    if (serves === 'same') {
       if (how === 'never') how = asked ? 'on request' : 'by the push';
       if (latest.status === 'built') { built = true; break; }
       if (latest.status === 'errored') {
-        said.push(`Pages could not build ${short(commit)}: ${latest.error?.message ?? 'no reason given'}`);
+        said.push(`Pages could not build ${short(latest.commit)}: ${latest.error?.message ?? 'no reason given'}`);
         return { ok: false, started: how, said };
       }
     } else if (!asked && now() - started >= askAfterMs) {
@@ -715,8 +765,8 @@ export async function watchPages({ commit, env, cwd = ROOT, fetchImpl = globalTh
     }
     await sleep(15_000);
   }
-  said.push(built ? `Pages built ${short(commit)}; the build was started ${how}.`
-    : `Pages did not report building ${short(commit)} in time (started: ${how}).`);
+  said.push(built ? `Pages built ${short(commit)}'s site; the build was started ${how}.`
+    : `Pages did not report building ${short(commit)}'s site in time (started: ${how}).`);
   if (!built) return { ok: false, started: how, said };
   while (now() - started < limitMs) {
     try {

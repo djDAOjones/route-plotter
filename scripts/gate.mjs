@@ -100,6 +100,13 @@ export const STEP = {
   email: '41898282+github-actions[bot]@users.noreply.github.com'
 };
 
+/**
+ * The line the step prints, on a line of its own in its job's log, once it has
+ * pushed a commit to main; the gate reads it to know the commit as that run's.
+ * @param {string} sha
+ */
+export const pushedLine = sha => `PUB-01 pushed ${sha} to refs/heads/main`;
+
 /** v4's gate has a 10-minute budget; exceeding it is a finding, not a failure. */
 export const V4_BUDGET_SECONDS = 600;
 
@@ -305,7 +312,7 @@ export function stepCandidates(from, to, cwd = ROOT) {
     if (!changed?.length || changed.some(path => classify(path) !== 'pages')) continue;
     // git diff --quiet exits 1 on a difference, which git() reads as null.
     if (git(['diff', '--quiet', sha, to, '--', ...PAGES.files, ...PAGES.dirs], cwd) === null) continue;
-    found.push({ sha, run: trailer.match(/\brun (\d+)\b/)?.[1] ?? null });
+    found.push({ sha, run: trailer.match(/\brun (\d+)\b/)?.[1] ?? null, attempt: trailer.match(/\battempt (\d+)\b/)?.[1] ?? '1' });
   }
   return found;
 }
@@ -313,33 +320,57 @@ export function stepCandidates(from, to, cwd = ROOT) {
 /** Whether a commit shaped as the step's left the live site as `to` holds it (git metadata alone). */
 export const stepMade = (from, to, cwd = ROOT) => stepCandidates(from, to, cwd).length > 0;
 
-/**
- * Check a step-shaped commit against GitHub's record of the run its trailer
- * names: a run of .github/workflows/publish.yml on main of this repository,
- * started after Verify or by hand, whose commit is the step commit's parent or
- * comes before it. True or false when the record says; null when it cannot be
- * read.
- * @param {{ sha: string, run: string|null }} candidate
- * @returns {Promise<boolean|null>}
- */
-export async function authenticateStep(candidate, env, fetchImpl = globalThis.fetch, cwd = ROOT) {
-  const { GITHUB_TOKEN: token, GITHUB_REPOSITORY: repo, GITHUB_API_URL: api = 'https://api.github.com' } = env;
-  if (!candidate.run) return false;
-  if (!token || !repo) return null;
-  let run;
+/** A GitHub API call with the run's token: JSON, or text when asked; null when it cannot be had. */
+async function github(env, fetchImpl, path, { text = false } = {}) {
+  const { GITHUB_TOKEN: token, GITHUB_API_URL: api = 'https://api.github.com' } = env;
   try {
-    const response = await fetchImpl(`${api}/repos/${repo}/actions/runs/${candidate.run}`, {
+    // A job's log answers with a redirect to a signed address, which fetch follows without the token.
+    const response = await fetchImpl(`${api}${path}`, {
       headers: { accept: 'application/vnd.github+json', authorization: `Bearer ${token}` }
     });
-    if (response.status === 404) return false;
+    if (response.status === 404) return { missing: true };
     if (!response.ok) return null;
-    run = await response.json();
+    return { body: text ? await response.text() : await response.json() };
   } catch {
     return null;
   }
-  return run?.path === '.github/workflows/publish.yml' && run?.head_branch === 'main' &&
+}
+
+/**
+ * Check a step-shaped commit against GitHub's record of the run its trailer
+ * names: a run of .github/workflows/publish.yml on main of this repository,
+ * started after Verify or by hand, whose publish or take-back job printed, on
+ * a line of its own in its log, that it pushed exactly this commit (see
+ * pushedLine). Only the step on main prints that line, so an old run's number
+ * cannot vouch for another commit. True or false when the record says; null
+ * when it cannot be read yet, as while the job still runs.
+ * @param {{ sha: string, run: string|null, attempt?: string }} candidate
+ * @returns {Promise<boolean|null>}
+ */
+export async function authenticateStep(candidate, env, fetchImpl = globalThis.fetch, cwd = ROOT) {
+  const repo = env.GITHUB_REPOSITORY;
+  if (!candidate.run) return false;
+  if (!env.GITHUB_TOKEN || !repo) return null;
+  const ran = await github(env, fetchImpl, `/repos/${repo}/actions/runs/${candidate.run}`);
+  if (!ran) return null;
+  if (ran.missing) return false;
+  const run = ran.body;
+  const fits = run?.path === '.github/workflows/publish.yml' && run?.head_branch === 'main' &&
     ['workflow_run', 'workflow_dispatch'].includes(run?.event) && run?.repository?.full_name === repo &&
     isSha(run?.head_sha) && isAncestor(run.head_sha, `${candidate.sha}^`, cwd);
+  if (!fits) return false;
+  const listed = await github(env, fetchImpl,
+    `/repos/${repo}/actions/runs/${candidate.run}/attempts/${candidate.attempt ?? '1'}/jobs?per_page=100`);
+  if (!listed || listed.missing) return listed ? false : null;
+  const marker = new RegExp(`^(?:\\S+\\s)?${pushedLine(candidate.sha).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\r?$`, 'm');
+  let unread = false;
+  for (const job of (listed.body?.jobs ?? []).filter(item => ['publish', 'take-back'].includes(item.name))) {
+    if (job.status !== 'completed') { unread = true; continue; }
+    const log = await github(env, fetchImpl, `/repos/${repo}/actions/jobs/${job.id}/logs`, { text: true });
+    if (!log || log.missing) { unread = true; continue; }
+    if (marker.test(log.body)) return true;
+  }
+  return unread ? null : false;
 }
 
 /**

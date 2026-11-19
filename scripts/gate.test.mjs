@@ -19,7 +19,8 @@ import {
 } from './gate.mjs';
 // PUB-01: the live site's class, the publishing step's commits and the refusal of a hand change.
 import {
-  PAGES, STEP, authenticateStep, isAncestor, main as gate, mainProvenance, pagesPaths, rangeEnds, stepCandidates, stepMade
+  PAGES, STEP, authenticateStep, isAncestor, main as gate, mainProvenance, pagesPaths, pushedLine, rangeEnds, stepCandidates,
+  stepMade
 } from './gate.mjs';
 
 const EVERYTHING = ['gate', 'v3', 'v4', 'record'];
@@ -686,21 +687,31 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
     }
   });
 
-  /** A fake GitHub API: main's passing runs, newest first, and the runs the step's commits name. */
-  function github({ green = [], runs = {}, fail = false } = {}) {
+  /** A fake GitHub API: main's passing runs, newest first, the runs the step's commits name, their jobs and logs. */
+  function github({ green = [], runs = {}, jobs = {}, logs = {}, fail = false } = {}) {
+    const json = body => ({ ok: true, status: 200, json: async () => body });
     return async url => {
       const { pathname } = new URL(url);
       if (fail) return { ok: false, status: 500, json: async () => null };
-      if (pathname.endsWith('/actions/workflows/ci.yml/runs')) {
-        return { ok: true, status: 200, json: async () => ({ workflow_runs: green.map(head_sha => ({ head_sha })) }) };
-      }
-      const id = pathname.match(/\/actions\/runs\/(\d+)$/)?.[1];
-      if (id && runs[id]) return { ok: true, status: 200, json: async () => runs[id] };
+      if (pathname.endsWith('/actions/workflows/ci.yml/runs')) return json({ workflow_runs: green.map(head_sha => ({ head_sha })) });
+      const run = pathname.match(/\/actions\/runs\/(\d+)$/)?.[1];
+      if (run && runs[run]) return json(runs[run]);
+      const listed = pathname.match(/\/actions\/runs\/(\d+)\/attempts\/\d+\/jobs$/)?.[1];
+      if (listed && jobs[listed]) return json({ jobs: jobs[listed] });
+      const log = pathname.match(/\/actions\/jobs\/(\d+)\/logs$/)?.[1];
+      if (log && logs[log] !== undefined) return { ok: true, status: 200, text: async () => logs[log] };
       return { ok: false, status: 404, json: async () => null };
     };
   }
   const publishRun = headSha => ({ path: '.github/workflows/publish.yml', head_branch: 'main', event: 'workflow_dispatch',
     repository: { full_name: 'djDAOjones/route-plotter' }, head_sha: headSha });
+  /** GitHub's record of a publish run that pushed `pushed`: the run, its jobs (a dry run beside), and their logs. */
+  const stepRun = (id, headSha, pushed, { status = 'completed', run = {} } = {}) => ({
+    runs: { [id]: { ...publishRun(headSha), ...run } },
+    jobs: { [id]: [{ id: 900 + id, name: 'dry-run', status: 'completed' }, { id, name: 'publish', status }] },
+    logs: { [900 + id]: `2026-11-19T03:00:00.0000000Z ${pushedLine('d'.repeat(40))}\n`,
+      [id]: `2026-11-19T03:00:00.0000000Z Committed v4.\n2026-11-19T03:00:01.0000000Z ${pushedLine(pushed)}\n` }
+  });
 
   /** The gate exactly as CI runs it, on a pull request or a push to main, in the scratch repository. */
   async function ciSort(repo, base, head, { eventName = 'pull_request', fetchImpl = github() } = {}) {
@@ -759,7 +770,7 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
     }
   });
 
-  test("on main, the step's commit counts as the step's only when GitHub's record of its run agrees", async () => {
+  test("on main, the step's commit counts as the step's only when its run's own log names it", async () => {
     const repo = site();
     try {
       const published = repo.publish('v4 preview 1', { trailer: `${STEP.trailer} publish.yml run 77, attempt 1` });
@@ -770,48 +781,61 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
       repo.run(['merge', '-q', '--no-ff', '--no-edit', 'work']);
       const merged = repo.run(['rev-parse', 'HEAD']);
       const push = fetchImpl => ciSort(repo, repo.start, merged, { eventName: 'push', fetchImpl });
+      const env = { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'djDAOjones/route-plotter' };
 
       // The record agrees: the merge after a publish runs the record checker alone.
-      let sorted = await push(github({ green: [repo.start], runs: { 77: publishRun(repo.start) } }));
+      let sorted = await push(github({ green: [repo.start], ...stepRun(77, repo.start, published) }));
       assert.equal(sorted.status, 0, sorted.said);
       assert.match(sorted.said, /pages\s+docs\/index\.html/);
       assert.match(sorted.said, /runs the record checker, because every path is record-only or the publishing step's own output/);
-      assert.equal(await mainProvenance(repo.start, merged, { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'djDAOjones/route-plotter' },
-        github({ runs: { 77: publishRun(repo.start) } }), repo.dir), 'step');
+      assert.equal(await mainProvenance(repo.start, merged, env, github(stepRun(77, repo.start, published)), repo.dir), 'step');
 
-      // No such run, another workflow's run, a run on another branch, or one after the commit: a hand change, which fails.
-      for (const runs of [{}, { 77: { ...publishRun(repo.start), path: '.github/workflows/ci.yml' } },
-        { 77: { ...publishRun(repo.start), head_branch: 'feature' } }, { 77: publishRun(published) }]) {
-        sorted = await push(github({ green: [repo.start], runs }));
-        assert.equal(sorted.status, 1, JSON.stringify(runs));
+      // No such run, another workflow's run, a run on another branch, one after the commit, or an old run whose log
+      // names another commit (a run's number replayed): a hand change, which fails.
+      for (const record of [{}, stepRun(77, repo.start, published, { run: { path: '.github/workflows/ci.yml' } }),
+        stepRun(77, repo.start, published, { run: { head_branch: 'feature' } }), stepRun(77, published, published),
+        stepRun(77, repo.start, 'c'.repeat(40))]) {
+        sorted = await push(github({ green: [repo.start], ...record }));
+        assert.equal(sorted.status, 1, JSON.stringify(record.runs));
         assert.match(sorted.said, /::error title=Hand change to the live site::.*Run the Publish workflow by hand on main/);
       }
-      // The record cannot be read: everything runs, with a warning, and nothing fails for it.
-      const unreadable = async url => (new URL(url).pathname.endsWith('/runs')
-        ? { ok: true, status: 200, json: async () => ({ workflow_runs: [{ head_sha: repo.start }] }) }
-        : { ok: false, status: 502, json: async () => null });
-      sorted = await push(unreadable);
-      assert.equal(sorted.status, 0, sorted.said);
-      assert.match(sorted.said, /::warning title=Live site::.*could not be read, so everything runs/);
-      assert.match(sorted.said, /other\s+docs\/index\.html/);
+      // The run's job still running, or the record unreadable: everything runs, with a warning, and nothing fails for it.
+      for (const fetchImpl of [github({ green: [repo.start], ...stepRun(77, repo.start, published, { status: 'in_progress' }) }),
+        async url => (new URL(url).pathname.endsWith('/ci.yml/runs')
+          ? { ok: true, status: 200, json: async () => ({ workflow_runs: [{ head_sha: repo.start }] }) }
+          : { ok: false, status: 502, json: async () => null })]) {
+        sorted = await push(fetchImpl);
+        assert.equal(sorted.status, 0, sorted.said);
+        assert.match(sorted.said, /::warning title=Live site::.*could not be read, so everything runs/);
+        assert.match(sorted.said, /other\s+docs\/index\.html/);
+      }
     } finally {
       repo.done();
     }
   });
 
-  test("a step commit's run must name it: the trailer's run, its workflow, branch, event and commit", async () => {
+  test("a step commit's run must name it: the trailer's run, its workflow, branch, event, commit and its job's log", async () => {
     const repo = site();
     try {
-      const published = repo.publish('v4', { trailer: `${STEP.trailer} publish.yml run 5, attempt 1` });
+      const published = repo.publish('v4', { trailer: `${STEP.trailer} publish.yml run 5, attempt 2` });
       const env = { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'djDAOjones/route-plotter' };
       const [candidate] = stepCandidates(repo.start, published, repo.dir);
-      assert.deepEqual(candidate, { sha: published, run: '5' });
-      const check = run => authenticateStep(candidate, env, github({ runs: { 5: run } }), repo.dir);
-      assert.equal(await check(publishRun(repo.start)), true);
-      assert.equal(await check({ ...publishRun(repo.start), event: 'workflow_run' }), true);
-      assert.equal(await check({ ...publishRun(repo.start), event: 'push' }), false);
-      assert.equal(await check({ ...publishRun(repo.start), repository: { full_name: 'someone/route-plotter' } }), false);
-      assert.equal(await check({ ...publishRun(repo.start), head_sha: published }), false);
+      assert.deepEqual(candidate, { sha: published, run: '5', attempt: '2' });
+      const check = (options = {}) => authenticateStep(candidate, env, github(stepRun(5, repo.start, published, options)), repo.dir);
+      assert.equal(await check(), true);
+      assert.equal(await check({ run: { event: 'workflow_run' } }), true);
+      assert.equal(await check({ run: { event: 'push' } }), false);
+      assert.equal(await check({ run: { repository: { full_name: 'someone/route-plotter' } } }), false);
+      assert.equal(await check({ run: { head_sha: published } }), false);
+      assert.equal(await check({ status: 'in_progress' }), null);
+      // The marker counts only on a line of its own, in the publish or take-back job: not quoted in other words, and
+      // not in the dry run's job.
+      const quoted = stepRun(5, repo.start, published);
+      quoted.logs[5] = `2026-11-19T03:00:00.0000000Z what to try: ${pushedLine(published)} (pasted)\n`;
+      assert.equal(await authenticateStep(candidate, env, github(quoted), repo.dir), false);
+      const inDryRun = stepRun(5, repo.start, 'e'.repeat(40));
+      inDryRun.logs[905] = `2026-11-19T03:00:00.0000000Z ${pushedLine(published)}\n`;
+      assert.equal(await authenticateStep(candidate, env, github(inDryRun), repo.dir), false);
       assert.equal(await authenticateStep({ sha: published, run: null }, env, github(), repo.dir), false);
       assert.equal(await authenticateStep(candidate, env, github({ fail: true }), repo.dir), null);
       assert.equal(await authenticateStep(candidate, {}, github(), repo.dir), null);
