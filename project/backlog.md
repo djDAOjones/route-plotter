@@ -34,9 +34,7 @@
 
 ### Phase 5 — v4: the architecture plan, before any code — the owner's word of 2026-11-18 — CLOSED 2026-11-18
 
-### Phase 6 — v4's foundations — the owner's overnight word of 2026-11-18 (PLAN-6)
-
-- [ ] STACK-04 — The architecture record, the enforced edges and the measures — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
+### Phase 6 — v4's foundations — the owner's overnight word of 2026-11-18 (PLAN-6) — CLOSED 2026-11-19
 
 ### Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
 
