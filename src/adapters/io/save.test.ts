@@ -128,7 +128,8 @@ describe('the save format', () => {
     expect(await zip.file('images/2.jpg')?.async('uint8array')).toEqual(jpeg(1, 2));
   });
 
-  it('saves no editor mode: Save is given the project and a decoder alone, and the file holds no mode (TST-04.1)', async () => {
+  it('TST-04.1, the adapter’s half: Save is given the project and a decoder alone, and the file holds no mode', async () => {
+    // The mode half (the saved duration the same from Edit and from Preview, through the shell's save) is CORE-05's.
     expect(saveProject.length).toBe(2);
     const keys = new Set<string>();
     JSON.parse((await readBack(await saved({ scene: sceneWithLabels('x'), images: [] }))).text, (key: string, value: unknown) => {

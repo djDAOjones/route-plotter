@@ -21,17 +21,13 @@ const NEAR_RUNS = 6;
 /** Any UTF-16 unit, a lone surrogate included, or an emoji: JSON.stringify escapes a lone one, so it saves whole. */
 const unit = fc.oneof(fc.integer({ min: 0, max: 0xffff }).map((code) => String.fromCharCode(code)), fc.constant('🙂'));
 
-/** A text up to its full length, mostly short, now and then exactly at `maxLength`; short only, when `full` is false. */
-function textOf(maxLength: number, full: boolean): fc.Arbitrary<string> {
-  if (!full) return fc.string({ unit, maxLength: 40 });
-  const whole = fc.string({ unit, minLength: 1, maxLength: 3 }).map((part) => part.repeat(maxLength).slice(0, maxLength));
-  return fc.oneof({ arbitrary: fc.string({ unit, maxLength: 40 }), weight: 30 }, { arbitrary: whole, weight: 1 });
-}
+/** A short text: every drawn scene then fits a file, so no run may be refused. A text at its full length is tested apart. */
+const textOf = (maxLength: number) => fc.string({ unit, maxLength: Math.min(40, maxLength) });
 
 const colourOf = fc.integer({ min: 0, max: 0xffffff }).map((rgb) => `#${rgb.toString(16).padStart(6, '0')}`);
 
 /** Any value the field accepts. JSON has no -0, so a drawn -0 is 0: the same place, the same setting. */
-function valueOf(field: Field, full: boolean): fc.Arbitrary<unknown> | null {
+function valueOf(field: Field): fc.Arbitrary<unknown> | null {
   switch (field.kind) {
     case 'number':
       return field.integer
@@ -44,17 +40,17 @@ function valueOf(field: Field, full: boolean): fc.Arbitrary<unknown> | null {
     case 'colour':
       return colourOf;
     case 'text':
-      return textOf(field.maxLength, full);
+      return textOf(field.maxLength);
     case 'group':
-      return valuesOf(field.of, full);
+      return valuesOf(field.of);
     default:
       return null;
   }
 }
 
-function valuesOf(fields: Fields, full = true): fc.Arbitrary<Record<string, unknown>> {
+function valuesOf(fields: Fields): fc.Arbitrary<Record<string, unknown>> {
   const drawn = Object.entries(fields).flatMap(([name, field]) => {
-    const value = valueOf(field, full);
+    const value = valueOf(field);
     return value === null ? [] : [[name, value] as const];
   });
   return fc.record(Object.fromEntries(drawn));
@@ -135,31 +131,33 @@ async function saved(project: Project): Promise<Uint8Array> {
 }
 
 describe('Save and Open’s properties', () => {
-  it('open after save gives the same project, or Save refuses it as too large and writes nothing', async () => {
-    let opened = 0;
+  it('open after save gives the same project: every drawn project saves, and opens to itself', async () => {
     await fc.assert(
       fc.asyncProperty(sceneOf, imagesOf, async (scene, images) => {
         const checked = checkScene(scene);
         if (!checked.ok) throw new Error('the schema refused a drawn scene');
         const project = { scene: checked.value, images };
-        const result = await saveProject(project, decodeHeader);
-        if (!result.ok) {
-          expect(result.refusal.reason).toBe('too-large');
-          return;
-        }
-        expect(await openProject(result.bytes, decodeHeader)).toEqual({ ok: true, project });
-        opened += 1;
+        expect(await openProject(await saved(project), decodeHeader)).toEqual({ ok: true, project });
       }),
       { numRuns: RUNS },
     );
-    expect(opened).toBeGreaterThan(RUNS / 2);
+  });
+
+  it('a label at its full length, of emoji and lone surrogates, saves and opens whole', async () => {
+    const scene = sceneAt(32, 0);
+    const label = '🙂\ud800a\udc00'.repeat(LIMITS.textLength / 5);
+    const point = scene.routes[0]?.points[0];
+    if (point === undefined) throw new Error('no point');
+    point.label = label;
+    expect(label).toHaveLength(LIMITS.textLength);
+    expect(await openProject(await saved({ scene, images: [] }), decodeHeader)).toEqual({ ok: true, project: { scene, images: [] } });
   });
 
   it('open then save is stable near the limits: the same project and the same bytes (CROWD-08.7)', async () => {
     const drawn = fc.record({
-      route: fc.array(valuesOf(ROUTE_FIELDS.settings.of, false), { minLength: 1, maxLength: 4 }),
-      point: fc.array(valuesOf(POINT_FIELDS, false), { minLength: 1, maxLength: 8 }),
-      line: fc.array(valuesOf(LINE_FIELDS, false), { minLength: 1, maxLength: 8 }),
+      route: fc.array(valuesOf(ROUTE_FIELDS.settings.of), { minLength: 1, maxLength: 4 }),
+      point: fc.array(valuesOf(POINT_FIELDS), { minLength: 1, maxLength: 8 }),
+      line: fc.array(valuesOf(LINE_FIELDS), { minLength: 1, maxLength: 8 }),
     });
     await fc.assert(
       fc.asyncProperty(drawn, fc.integer({ min: 4_000, max: 4_600 }), async (values, points) => {
