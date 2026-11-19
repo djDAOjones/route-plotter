@@ -8,8 +8,8 @@
 | `_Joe/design docs/` | 36 | the owner's design documents |
 | `_Joe/dev helper scripts/` | 2 | the owner's helper scripts (DEL-07 deletes two) |
 | `_Joe/dev notes/` | 6 | the dev guide, routed for code changes until DOC-08 retires it |
-| `./` | 21 | the workspace file, the contract (`AGENTS.md`, `CLAUDE.md`), the kept rulebooks `UI-STANDARDS.md` and `DEV-INFRASTRUCTURE.md`, `README.md`, `LICENSE`, v4's `THIRD_PARTY_NOTICES.md`, the live site's `version.json`, which only a release changes, and v4's package, page and settings (`package.json`, `index.html`, the four tsconfig files, `vite.config.mjs`, the three ESLint files, `knip.json`, `.dependency-cruiser.cjs`; STACK-02) |
-| `docs/` | 24 | generated build output and the GitHub Pages root — never hand-edited; only npm run push commits it |
+| `./` | 21 | the workspace file, the contract (`AGENTS.md`, `CLAUDE.md`), the kept rulebooks `UI-STANDARDS.md` and `DEV-INFRASTRUCTURE.md`, `README.md`, `LICENSE`, v4's `THIRD_PARTY_NOTICES.md`, the live site's `version.json`, which only the publishing step changes (PUB-01), and v4's package, page and settings (`package.json`, `index.html`, the four tsconfig files, `vite.config.mjs`, the three ESLint files, `knip.json`, `.dependency-cruiser.cjs`; STACK-02) |
+| `docs/` | 24 | the GitHub Pages root, generated — never hand-edited; only the publishing step commits it (PUB-01), and the gate refuses a hand change |
 | `docs/examples/` | 5 | built-in example projects, built |
 | `docs/images/` | 6 | the example images, copied |
 | `docs/styles/` | 6 | the shipped stylesheets, copied |
@@ -20,7 +20,7 @@
 | `pm_skills/templates/` | 4 | canon templates, frozen |
 | `reviews/` | 372 | review dossiers, the abstraction plan (each big-run item's detail) and the continuation prompts |
 | `reviews/design-review-2026-10-08-shots/` | 344 | the design review's screenshots, before and after (2026-10-08) |
-| `scripts/` | 2 | the gate sorted by what changed (`scripts/gate.mjs`, GATE-01) and its tests; CI runs it from the root |
+| `scripts/` | 4 | the gate sorted by what changed (`scripts/gate.mjs`, GATE-01), the publishing step (`scripts/publish.mjs`, PUB-01) and their tests; CI runs the gate from the root |
 | `specs/` | 15 | absorbed specifications |
 | `specs/dot-crowd-navigator/` | 15 | the crowd-flow fork's spec, absorbed into v3's flow layers |
 | `src/` | 7 | v4's source (STACK-02): `src/main.tsx` mounts the editor; the layers the PM-Skills editor pack lays out, each added by the item that first needs it |
@@ -46,3 +46,4 @@
 - [`v3/build.js`](../v3/build.js) — the esbuild bundler, dev server and version management; [`v3/push.js`](../v3/push.js) — the release helper; both run from `v3/`
 - [`v3/package.json`](../v3/package.json) — v3's scripts; from `v3/`, npm run check is its whole gate
 - [`scripts/gate.mjs`](../scripts/gate.mjs) — the gate sorted by what changed, which CI runs from the root
+- [`scripts/publish.mjs`](../scripts/publish.mjs) — the publishing step, which `.github/workflows/publish.yml` runs: v4 to Pages, a dry run, or a take-back
