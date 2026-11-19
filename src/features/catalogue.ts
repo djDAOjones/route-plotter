@@ -3,7 +3,8 @@
 // modules come first: on a route the line, then the lead (stage 5a), the markers (5b-1), the labels (5b-2) and the
 // pauses (5b-3, model only, drawing in no layer);
 // on the scene the background, the clock and the export settings, in §8's order, the background first so it is drawn
-// first in its layers. The editor's panels are another list, src/features/catalogue.editor.ts, built with the editor.
+// first in its layers. What only the editor uses is in src/features/catalogue.editor.ts: the overlays' makers now, the
+// panels when the editor is built; this file imports neither, so the player's closure holds no maker (D156).
 // A module's model types are in src/core/feature/contract.ts.
 import type { Drawings } from '../adapters/render/layers';
 import type { RouteFeatureModel, SceneFeatureModel } from '../core/feature/contract';
@@ -19,7 +20,6 @@ import { LEAD } from './lead/model/lead';
 import { LINE_DRAWINGS } from './line/draw/line';
 import { LINE } from './line/model/line';
 import { MARKER_DRAWINGS } from './markers/draw/markers';
-import { pointOverlay } from './markers/draw/overlays';
 import { MARKERS } from './markers/model/markers';
 import { PAUSES } from './pauses/model/pauses';
 
@@ -48,10 +48,3 @@ export const CATALOGUE: Catalogue = {
   ],
   scene: [{ ...BACKGROUND, layers: BACKGROUND_DRAWINGS }, CLOCK, EXPORT],
 };
-
-/**
- * The editor's overlays' makers (stage 6): what only the editor draws, made from plain ids into the request's list
- * of overlays. Not a member of Catalogue, so the composer never reaches them; an export or the player never passes
- * the list. The editor's catalogue (src/features/catalogue.editor.ts) takes them over when it is built.
- */
-export const OVERLAY_MAKERS = { points: pointOverlay } as const;

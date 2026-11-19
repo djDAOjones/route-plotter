@@ -7,7 +7,8 @@ import { unitAt } from '../adapters/render/overlays';
 import { Recorder } from '../adapters/render/recorder';
 import type { View } from '../core/feature/contract';
 import { newLine, newPoint, newRoute, newScene, type Route, type Scene } from '../core/model/scene';
-import { CATALOGUE, OVERLAY_MAKERS, type Catalogue, type SceneFeature } from '../features/catalogue';
+import { CATALOGUE, type Catalogue, type SceneFeature } from '../features/catalogue';
+import { OVERLAY_MAKERS } from '../features/catalogue.editor';
 import { compose, type FrameRequest } from './compose';
 
 type Choices = Parameters<typeof OVERLAY_MAKERS.points>[1];

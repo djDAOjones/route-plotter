@@ -40,11 +40,14 @@ const TESTS = '\\.test\\.tsx?$';
 const RENDER = '^src/adapters/render(/|\\.tsx?$)';
 // Rule 6: the player's closure. The core, the renderer's kit, the player itself, the player-safe catalogue and the
 // model/ and draw/ parts it lists; of the packages, only those PACKAGES lists that the player may ever hold.
+// A feature's draw/overlays.ts is not in it: that file holds the editor's overlays' makers, which only the editor's
+// catalogue lists, so neither the player nor exported code may reach one, directly or through another file (DEF-99.1;
+// D156, CORE-04 stage 6).
 const PLAYER = [
   '^src/(core|player)/',
   RENDER,
   '^src/features/catalogue\\.ts$',
-  '^src/features/[^/]+/(model|draw)/',
+  '^src/features/[^/]+/(model/|draw/(?!overlays\\.ts$))',
   ...packages(PACKAGES.filter((name) => !NEVER_IN_PLAYER.test(`node_modules/${name}/`))),
 ];
 
