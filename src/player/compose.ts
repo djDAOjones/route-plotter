@@ -5,6 +5,7 @@
 // frame. A module whose evaluation fails or throws draws nothing that frame; its report is passed on, never thrown.
 import { isolated, type DrawContext } from '../adapters/render/context';
 import { LAYERS, type Drawings, type Frame, type Layer } from '../adapters/render/layers';
+import type { Overlay, Screen } from '../adapters/render/overlays';
 import { renderScale } from '../adapters/render/scale';
 import { contentTime } from '../core/clock/clock';
 import type { Evaluation, TravellerRef, View } from '../core/feature/contract';
@@ -33,9 +34,6 @@ interface Viewing {
   readonly panX: number;
   readonly panY: number;
 }
-
-/** A drawing over the finished frame, in screen space. */
-type Overlay = (context: DrawContext, frame: Frame) => void;
 
 export interface FrameRequest {
   readonly scene: Scene;
@@ -127,7 +125,7 @@ function routesStage(run: Run) {
       const settings = feature.select(route.settings);
       return { settings, route: view, seed: seedFor(request.seed, route.id, feature.id), scale };
     });
-    return { route, timeline, modules };
+    return { route, timeline, view, modules };
   });
   const scenes = basesOf(null, catalogue.scene, fail, (feature) => {
     return { settings: feature.select(scene.settings), seed: seedFor(request.seed, '', feature.id), scale };
@@ -271,6 +269,21 @@ function drawStage(context: DrawContext, run: Run, evaluated: readonly Evaluated
   context.restore();
 }
 
+/**
+ * What each overlay is handed besides the frame: the frame's one transform (the scene's view, then the further zoom
+ * and pan), to place an image point on screen by, and each route as every module saw it, by its id.
+ */
+function screenOf({ frame, matrix }: ReturnType<typeof viewStage>, routes: ReturnType<typeof routesStage>['routes']): Screen {
+  const [zoom, , , , dx, dy] = matrix;
+  const place: Screen['place'] = (point) => {
+    const at = imageToCanvas(frame.bounds, point);
+    const x = zoom * at.x + dx;
+    const y = zoom * at.y + dy;
+    return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
+  };
+  return { zoom, place, routes: new Map(routes.map((each) => [each.route.id, each.view])) };
+}
+
 /** Draw the scene at its time onto `context`; returns what could not be drawn. */
 export function compose(context: DrawContext, request: FrameRequest, catalogue: Catalogue = CATALOGUE): FrameReport[] {
   const reports: FrameReport[] = [];
@@ -284,9 +297,12 @@ export function compose(context: DrawContext, request: FrameRequest, catalogue: 
   drawStage(context, run, [...scene.evaluated, ...routes.evaluated], placed);
 
   // Overlays, last and in screen space, only when the request holds some.
-  for (const overlay of request.overlays ?? []) {
+  const overlays = request.overlays ?? [];
+  if (overlays.length === 0) return reports;
+  const screen = screenOf(placed, routes.routes);
+  for (const overlay of overlays) {
     try {
-      isolated(context, (guarded) => overlay(guarded, placed.frame));
+      isolated(context, (guarded) => overlay(guarded, placed.frame, screen));
     } catch (error) {
       fail(null, 'overlay', reasonOf(error));
     }

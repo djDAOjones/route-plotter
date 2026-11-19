@@ -12,13 +12,32 @@
 // radius). Figures are screen pixels, v3's at a zoom of 1 (RenderingService.js:182–264, :424–450). v3 drew them under
 // its viewport's zoom times a clamp (:105–116, :1511), so on screen they grew with the zoom up to 3×, then were
 // held: unitAt is that factor, for an overlay's maker to size v3's widths by.
+import type { RouteInput } from '../../core/feature/contract';
+import type { ImagePoint } from '../../core/geometry/units';
 import type { DrawContext } from './context';
+import type { Frame } from './layers';
 
 /** A place on screen, in canvas pixels. */
-interface Place {
+export interface Place {
   readonly x: number;
   readonly y: number;
 }
+
+/** A route as every module saw it in this frame: its shape and its timeline. */
+type RouteView = RouteInput<unknown>['route'];
+
+/** What the composer hands each overlay besides the frame. */
+export interface Screen {
+  /** The zoom of the frame's one transform: the scene's view times the further zoom; 1 with neither. */
+  readonly zoom: number;
+  /** Where an image point (shares of the picture) lies on screen under that transform; null if it is not a number. */
+  readonly place: (point: ImagePoint) => Place | null;
+  /** Each route by its id: the very shape and timeline the modules were handed this frame. */
+  readonly routes: ReadonlyMap<string, RouteView>;
+}
+
+/** A drawing over the finished frame, in screen space, that only the editor asks for. */
+export type Overlay = (context: DrawContext, frame: Frame, screen: Screen) => void;
 
 /** v3's hover accent (`v3/src/config/constants.js:48`, HOVER_ACCENT_COLOR). */
 const ACCENT = '#0f62fe';
