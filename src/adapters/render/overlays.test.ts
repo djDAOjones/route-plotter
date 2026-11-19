@@ -2,7 +2,7 @@
 // `v3/src/services/RenderingService.js` at the lines named, read at a zoom of 1, where v3's clamp factor is 1.
 import { expect, test } from 'vitest';
 import type { DrawContext } from './context';
-import { hoverRing, plusHandle, selectionRect, selectionRing, unitAt } from './overlays';
+import { greyDot, hoverRing, plusHandle, selectionRect, selectionRing, unitAt } from './overlays';
 import { Recorder } from './recorder';
 
 const AT = '@ 1 0 0 1 0 0';
@@ -158,4 +158,27 @@ test('a shape whose figures are not finite, or whose size is not above 0, draws 
     expect(drawn(shape, context)).toEqual([]);
     expect(context.state()).toEqual(before);
   }
+});
+
+test('the grey dot is v3’s for a bend: black at 0.5, edged white at 0.5 (:2497–2509), and leaves the state behind it', () => {
+  // constants.js:45–47: radius 4, #000000 at 0.5; the edge scaleSizeClamped(1), 1 at a zoom of 1.
+  const dot: Shape = (context) => greyDot(context, { x: 30, y: 40 }, 4, 1);
+  expect(drawn(dot)).toEqual([
+    'save',
+    'beginPath',
+    `arc 30 40 4 0 6.283 clockwise ${AT}`,
+    `fill | ${AT} | globalAlpha=0.5`,
+    `stroke | ${AT} | strokeStyle=#ffffff globalAlpha=0.5`,
+    'beginPath',
+    'restore',
+  ]);
+  const context = dirtied();
+  const before = context.state();
+  expect(drawn(dot, context)).toEqual(drawn(dot));
+  expect(context.state()).toEqual(before);
+  for (const odd of [Number.NaN, 0, -1, Number.POSITIVE_INFINITY]) {
+    expect(drawn((each) => greyDot(each, { x: 30, y: 40 }, odd, 1))).toEqual([]);
+    expect(drawn((each) => greyDot(each, { x: 30, y: 40 }, 4, odd))).toEqual([]);
+  }
+  expect(drawn((each) => greyDot(each, { x: Number.NaN, y: 40 }, 4, 1))).toEqual([]);
 });

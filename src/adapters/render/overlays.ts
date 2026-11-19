@@ -112,6 +112,23 @@ export function hoverRing(context: DrawContext, at: Place, radius: number, unit 
   });
 }
 
+/**
+ * v3's grey dot for a point drawn only while editing (:2497–2509; `v3/src/config/constants.js:45–47`): black at alpha
+ * 0.5, edged white at the same alpha. v3 sized both by its clamped scale (:105–116); the caller hands the figures.
+ */
+export function greyDot(context: DrawContext, at: Place, radius: number, edge: number): void {
+  if (!finite(at.x, at.y, radius, edge) || radius <= 0 || edge <= 0) return;
+  own(context, () => {
+    context.globalAlpha = 0.5;
+    context.fillStyle = '#000000';
+    context.strokeStyle = '#ffffff';
+    context.lineWidth = edge;
+    context.arc(at.x, at.y, radius, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+  });
+}
+
 /** v3's "+" handle (:424–450): a disc of radius 9, or 11 when active, edged 1.5 wide, with a plus of round-capped arms. */
 export function plusHandle(context: DrawContext, at: Place, active: boolean, unit = 1, radius: number = (active ? 11 : 9) * unit): void {
   if (!finite(at.x, at.y, unit, radius) || unit <= 0 || radius <= 0) return;

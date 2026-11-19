@@ -19,6 +19,7 @@ import { LEAD } from './lead/model/lead';
 import { LINE_DRAWINGS } from './line/draw/line';
 import { LINE } from './line/model/line';
 import { MARKER_DRAWINGS } from './markers/draw/markers';
+import { pointOverlay } from './markers/draw/overlays';
 import { MARKERS } from './markers/model/markers';
 import { PAUSES } from './pauses/model/pauses';
 
@@ -47,3 +48,10 @@ export const CATALOGUE: Catalogue = {
   ],
   scene: [{ ...BACKGROUND, layers: BACKGROUND_DRAWINGS }, CLOCK, EXPORT],
 };
+
+/**
+ * The editor's overlays' makers (stage 6): what only the editor draws, made from plain ids into the request's list
+ * of overlays. Not a member of Catalogue, so the composer never reaches them; an export or the player never passes
+ * the list. The editor's catalogue (src/features/catalogue.editor.ts) takes them over when it is built.
+ */
+export const OVERLAY_MAKERS = { points: pointOverlay } as const;
