@@ -11,12 +11,12 @@ export const REFERENCE_SHORT_EDGE = 1080;
 
 /**
  * How many canvas pixels one reference pixel is in a frame of this size, at the scene's Graphics scale. A frame with
- * no area, or a size that is not a finite number, draws at the Graphics scale alone, as v3 fell back to 1: a width of
+ * no area, or either side not a finite number, draws at the Graphics scale alone, as v3 fell back to 1: a width of
  * 0 would be ignored by a canvas and leave the last width in force.
  */
 export function renderScale(frame: Size, graphicsScale: number): number {
   const graphics = Number.isFinite(graphicsScale) && graphicsScale > 0 ? graphicsScale : 1;
-  const shortEdge = Math.min(frame.width, frame.height);
-  if (!Number.isFinite(shortEdge) || shortEdge <= 0) return graphics;
-  return (shortEdge / REFERENCE_SHORT_EDGE) * graphics;
+  const sound = (side: number): boolean => Number.isFinite(side) && side > 0;
+  if (!sound(frame.width) || !sound(frame.height)) return graphics;
+  return (Math.min(frame.width, frame.height) / REFERENCE_SHORT_EDGE) * graphics;
 }

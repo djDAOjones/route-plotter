@@ -21,6 +21,9 @@ describe('reference scaling', () => {
     expect(renderScale({ width: Number.NaN, height: 1080 }, 2)).toBe(2);
     expect(renderScale({ width: Number.POSITIVE_INFINITY, height: Number.POSITIVE_INFINITY }, 0.5)).toBe(0.5);
     expect(renderScale({ width: -5, height: 10 }, 1)).toBe(1);
+    // Either side not finite is refused before the short edge is taken (Codex, stage 1).
+    expect(renderScale({ width: Number.POSITIVE_INFINITY, height: 540 }, 2)).toBe(2);
+    expect(renderScale({ width: 540, height: Number.POSITIVE_INFINITY }, 2)).toBe(2);
   });
 
   test('a Graphics scale that is not a positive number draws at 1, never at 0, which a canvas would ignore', () => {

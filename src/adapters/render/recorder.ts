@@ -88,12 +88,13 @@ interface Saved {
 }
 
 /** What the recorder holds now: how many saved states are open, the transform, the styles away from their defaults
- * (the line dash among them), and each clip in force. */
+ * (the line dash among them), each clip in force, and the current path, which save and restore do not touch. */
 export interface RecorderState {
   readonly depth: number;
   readonly transform: Matrix;
   readonly styles: Readonly<Record<string, string>>;
   readonly clip: readonly string[];
+  readonly path: readonly string[];
 }
 
 function round(value: number): string {
@@ -151,7 +152,7 @@ export class Recorder implements DrawContext {
       if (this.#styles[name] !== DEFAULTS[name]) styles[name] = describeStyle(this.#styles[name]);
     }
     if (this.#lineDash.length > 0) styles.lineDash = this.#lineDash.map(round).join(',');
-    return { depth: this.#stack.length, transform: this.#transform, styles, clip: this.#clip };
+    return { depth: this.#stack.length, transform: this.#transform, styles, clip: this.#clip, path: [...this.#path] };
   }
 
   #record(name: string, args: readonly (number | string)[] = []): void {

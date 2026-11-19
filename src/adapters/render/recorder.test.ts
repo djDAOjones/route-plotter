@@ -58,10 +58,43 @@ describe('the draw recorder', () => {
       transform: [1, 0, 0, 1, 3, 4],
       styles: { globalAlpha: '0.5', lineDash: '2,2' },
       clip: ['rect 0 0 5 5 @ 1 0 0 1 3 4'],
+      path: ['rect 0 0 5 5 @ 1 0 0 1 3 4'],
     });
     recorder.restore();
     recorder.restore();
-    expect(recorder.state()).toEqual({ depth: 0, transform: [1, 0, 0, 1, 0, 0], styles: {}, clip: [] });
+    // The path is not part of the saved state, as in a browser.
+    expect(recorder.state()).toEqual({
+      depth: 0,
+      transform: [1, 0, 0, 1, 0, 0],
+      styles: {},
+      clip: [],
+      path: ['rect 0 0 5 5 @ 1 0 0 1 3 4'],
+    });
+  });
+
+  test('a restore brings back exactly the clip saved with it, nested or not, and an extra restore keeps the clip in force (Codex, stage 1)', () => {
+    const recorder = new Recorder();
+    const outer = '[rect 0 0 100 100 @ 1 0 0 1 0 0]';
+    const middle = '[rect 10 10 50 50 @ 1 0 0 1 0 0]';
+    const clipTo = (x: number, size: number): void => {
+      recorder.beginPath();
+      recorder.rect(x, x, size, size);
+      recorder.clip();
+    };
+    clipTo(0, 100);
+    recorder.save();
+    clipTo(10, 50);
+    recorder.save();
+    clipTo(20, 5);
+    recorder.restore();
+    recorder.take();
+    recorder.fillRect(0, 0, 1, 1);
+    expect(recorder.take()).toEqual([`fillRect 0 0 1 1 | @ 1 0 0 1 0 0 | clip ${outer} ${middle}`]);
+    recorder.restore();
+    recorder.restore();
+    recorder.take();
+    recorder.fillRect(0, 0, 1, 1);
+    expect(recorder.take()).toEqual([`fillRect 0 0 1 1 | @ 1 0 0 1 0 0 | clip ${outer}`]);
   });
 
   test('a clip in force is written on every mark made under it, and a second clip meets the first (INTAKE.30)', () => {
