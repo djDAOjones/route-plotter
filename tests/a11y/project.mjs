@@ -60,7 +60,7 @@ async function tabOrder(page, tab) {
 export default {
   // How the gate reaches the app: a base URL, and the command that serves it on that URL (or null if already served).
   baseURL: ORIGIN,
-  server: { command: 'npm run preview -- --port 4173 --strictPort', url: ORIGIN },
+  server: { command: 'npm run preview -- --port 4173 --strictPort --configLoader native', url: ORIGIN },
   // Source the lint step reads with the project's ESLint configuration, which imports eslint.a11y.mjs.
   lint: ['src'],
   // The house target size for SUP03, in CSS px.

@@ -502,7 +502,8 @@ describe('the gate as wired in this repository', () => {
     assert.equal(JSON.parse(read('project/a11y/coverage.json')).level, 'AAA');
     const project = read('tests/a11y/project.mjs');
     assert.match(project, /name: 'shell',\n\s+path: '\/'/);
-    assert.match(project, /command: 'npm run preview -- --port 4173 --strictPort'/);
+    // Vite's native config loader: its default bundles the configuration into node_modules/.vite-temp first.
+    assert.match(project, /command: 'npm run preview -- --port 4173 --strictPort --configLoader native'/);
     // The routed document stays out of the live site's folder.
     assert.ok(tracked.includes('project/a11y/accessibility.md'));
     assert.ok(!tracked.some(path => /^docs\/(accessibility|extended)\.md$/.test(path)));
