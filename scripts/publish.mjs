@@ -9,17 +9,18 @@
  *
  *   node scripts/publish.mjs --dry-run [--dist <dir>]
  *       check v4's build (dist/, from npm run build) and say what a publish
- *       would change; write nothing. Anywhere, and the only mode off main.
+ *       would change; change nothing in docs/ or version.json, commit and push
+ *       nothing. Anywhere, and the only mode that runs off main.
  *   node scripts/publish.mjs --decide
  *       CI, on main: may this run publish, and which commit? Verify must have
  *       passed and main's v4 must be what it checked; after a merge, only a
  *       change that ran v4's gate (an app change) publishes.
  *   node scripts/publish.mjs --publish --source <sha> --verified <sha> [--try-file <file>]
- *       CI, on main: put the checked build in docs/, write version.json and
- *       commit both as the Actions bot; the workflow pushes the commit.
+ *       CI, on main: put the checked build in docs/, write version.json, commit
+ *       both as the Actions bot and push to main, never forced.
  *   node scripts/publish.mjs --take-back <commit or tag>
  *       CI, on main: restore docs/ and version.json from a commit or tag on
- *       main, such as v3.3.726, and commit them; the workflow pushes it.
+ *       main, such as v3.3.726, commit them as the bot and push to main.
  *   node scripts/publish.mjs --watch-pages --commit <sha>
  *       CI: see that Pages builds the pushed commit (asking for a build if
  *       the push started none) and serves its index.html.
@@ -39,7 +40,7 @@ import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PAGES, ROOT, STEP, classify, git, lastGreenSha, pathsOfRange } from './gate.mjs';
+import { PAGES, ROOT, STEP, classify, git, isAncestor, lastGreenSha, pathsOfRange } from './gate.mjs';
 
 /** The repository the step publishes, and the address Pages serves it at. */
 export const REPOSITORY = 'djDAOjones/route-plotter';
@@ -140,23 +141,47 @@ const extension = path => {
   return name.lastIndexOf('.') > 0 ? name.slice(name.lastIndexOf('.')).toLowerCase() : '';
 };
 
+const ATTRIBUTES = new Set(['src', 'href', 'xlink:href', 'poster', 'data-image', 'srcset', 'action', 'formaction', 'data', 'background', 'manifest']);
+
 /**
- * The references an HTML file makes in its tags' src, href, poster, data-image
- * and srcset attributes, quoted either way or not at all; comments are skipped.
- * @param {string} html
+ * The references a page or an SVG makes: its tags' src, href, xlink:href,
+ * poster, data-image, srcset, action, formaction, data, background and
+ * manifest attributes, quoted either way or not at all (a `>` inside quotes
+ * does not end a tag); the url()s of its style attributes and <style> blocks;
+ * and the imports of its inline scripts. Comments are skipped.
+ * @param {string} text
+ * @returns {{ markup: string[], scripts: string[] }}
  */
-export function htmlReferences(html) {
-  const found = [];
-  const text = html.replace(/<!--[\s\S]*?-->/g, '');
-  for (const [tag] of text.matchAll(/<[a-zA-Z][^>]*>/g)) {
-    for (const match of tag.matchAll(/\s(src|href|poster|data-image|srcset)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi)) {
+export function markupReferences(text) {
+  const markup = [];
+  const scripts = [];
+  let rest = text.replace(/<!--[\s\S]*?-->/g, '');
+  rest = rest.replace(/(<style\b(?:"[^"]*"|'[^']*'|[^>"'])*>)([\s\S]*?)(<\/style\s*>)/gi, (_, open, body, close) => {
+    markup.push(...cssReferences(body));
+    return `${open}${close}`;
+  });
+  rest = rest.replace(/(<script\b(?:"[^"]*"|'[^']*'|[^>"'])*>)([\s\S]*?)(<\/script\s*>)/gi, (_, open, body, close) => {
+    scripts.push(...scriptReferences(body));
+    return `${open}${close}`;
+  });
+  const attribute = /([^\s"'>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+  for (const [, inside] of rest.matchAll(/<[a-zA-Z][\w:-]*((?:\s+[^\s"'>/=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s"'=<>`]+))?)*)\s*\/?>/g)) {
+    for (const match of inside.matchAll(attribute)) {
+      const name = match[1].toLowerCase();
       const value = (match[2] ?? match[3] ?? match[4] ?? '').trim();
-      if (match[1].toLowerCase() === 'srcset') found.push(...value.split(',').map(part => part.trim().split(/\s+/)[0]));
-      else found.push(value);
+      if (name === 'style') markup.push(...cssReferences(value));
+      else if (name === 'srcset') markup.push(...value.split(',').map(part => part.trim().split(/\s+/)[0]));
+      else if (ATTRIBUTES.has(name)) markup.push(value);
     }
   }
-  return found.filter(Boolean);
+  return { markup: markup.filter(Boolean), scripts: scripts.filter(Boolean) };
 }
+
+/** The references an HTML file's tags make (markupReferences, scripts included). */
+export const htmlReferences = text => {
+  const { markup, scripts } = markupReferences(text);
+  return [...markup, ...scripts];
+};
 
 /** The references a stylesheet makes: url(...) either way quoted or not, and @import. */
 export function cssReferences(css) {
@@ -165,6 +190,27 @@ export function cssReferences(css) {
   for (const match of text.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)\s]*))\s*\)/gi)) found.push(match[1] ?? match[2] ?? match[3]);
   for (const match of text.matchAll(/@import\s+(?:"([^"]*)"|'([^']*)')/gi)) found.push(match[1] ?? match[2]);
   return found.filter(Boolean);
+}
+
+/**
+ * The modules and files a script loads by a literal path: static `import` and
+ * `export ... from`, `import()`, and `new URL(..., import.meta.url)`. Read
+ * from the text, as a browser would fetch them; a path built at run time is
+ * not seen.
+ * @param {string} text
+ */
+export function scriptReferences(text) {
+  const found = [];
+  const quoted = '(?:"([^"\\n]+)"|\'([^\'\\n]+)\'|`([^`$\\n]+)`)';
+  for (const pattern of [
+    new RegExp(`(?:^|[;}\\s])import\\s*${quoted}`, 'g'),
+    new RegExp(`(?:^|[;}\\s])(?:import|export)\\s*(?:[\\w$*{},\\s]+?)\\s*from\\s*${quoted}`, 'g'),
+    new RegExp(`(?<![.\\w$])import\\s*\\(\\s*${quoted}\\s*\\)`, 'g'),
+    new RegExp(`\\bnew\\s+URL\\s*\\(\\s*${quoted}\\s*,\\s*import\\.meta\\.url\\s*\\)`, 'g')
+  ]) {
+    for (const match of text.matchAll(pattern)) found.push(match[1] ?? match[2] ?? match[3]);
+  }
+  return found;
 }
 
 /**
@@ -207,10 +253,19 @@ export function checkSite(dir, { build = true } = {}) {
   const references = [];
   for (const file of files) {
     const kind = extension(file);
-    if (!['.html', '.css', '.js', '.mjs'].includes(kind)) continue;
+    if (!['.html', '.svg', '.css', '.js', '.mjs'].includes(kind)) continue;
     const text = readFileSync(join(dir, file), 'utf8');
-    const found = kind === '.html' ? htmlReferences(text) : kind === '.css' ? cssReferences(text) : [];
-    if (kind !== '.html') found.push(...sourceMapReferences(text));
+    let found = [];
+    let modules = [];
+    if (kind === '.html' || kind === '.svg') ({ markup: found, scripts: modules } = markupReferences(text));
+    else if (kind === '.css') found = cssReferences(text);
+    else modules = scriptReferences(text);
+    if (kind === '.css' || kind === '.js' || kind === '.mjs') found.push(...sourceMapReferences(text));
+    for (const name of modules) {
+      // A bare module name, such as react, has no file a browser could fetch.
+      if (/^(?:\.{1,2}\/|\/|[a-z][a-z0-9+.-]*:)/i.test(name)) found.push(name);
+      else problems.push(`${file} imports ${name} by name, which a browser cannot fetch`);
+    }
     for (const reference of found) {
       if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(reference)) {
         problems.push(`${file} loads from another site: ${reference}`);
@@ -372,10 +427,13 @@ function commitSite(cwd, message, env) {
   const staged = run('git', ['diff', '--cached', '--name-only', '-z'], cwd).split('\0').filter(Boolean);
   const stray = staged.filter(path => classify(path) !== 'pages');
   if (stray.length) throw new Error(`refused: something besides the site is staged: ${stray.join(', ')}`);
-  const file = join(mkdtempSync(join(tmpdir(), 'pub-01-message-')), 'message.txt');
-  writeFileSync(file, message);
-  run('git', ['-c', 'commit.gpgsign=false', 'commit', '-q', '--no-verify', '-F', file], cwd, BOT(env));
-  rmSync(file, { force: true });
+  const folder = mkdtempSync(join(tmpdir(), 'pub-01-message-'));
+  writeFileSync(join(folder, 'message.txt'), message);
+  try {
+    run('git', ['-c', 'commit.gpgsign=false', 'commit', '-q', '--no-verify', '-F', join(folder, 'message.txt')], cwd, BOT(env));
+  } finally {
+    rmSync(folder, { recursive: true, force: true });
+  }
   return run('git', ['rev-parse', 'HEAD'], cwd).trim();
 }
 
@@ -384,6 +442,45 @@ function restoreSite(cwd) {
   spawnSync('git', ['reset', '-q', '--', ...PAGES.files, ...PAGES.dirs], { cwd });
   spawnSync('git', ['checkout', '-q', 'HEAD', '--', ...PAGES.files, ...PAGES.dirs], { cwd });
   spawnSync('git', ['clean', '-q', '-f', '-d', '--', ...PAGES.dirs], { cwd });
+}
+
+/** How many times the step writes and pushes before it gives up on a moving main. */
+export const PUSH_TRIES = 3;
+
+/**
+ * Write the site, commit it as the bot and push it to main, never forced. When
+ * the push is refused because main has moved on, fetch main and, if `still`
+ * finds nothing against it, write again on its new tip, up to PUSH_TRIES
+ * times; so a record-only merge landing during a build does not leave an app
+ * change unpublished (Codex's review). Any other refusal stops at once.
+ * @param {{ cwd: string, env: object, write: () => { changed: boolean, said: string, message?: string },
+ *   still: (tip: string) => string|null, beforePush?: (attempt: number) => void }} options
+ */
+function commitAndPush({ cwd, env, write, still, beforePush = () => {} }) {
+  for (let attempt = 1; attempt <= PUSH_TRIES; attempt += 1) {
+    if (attempt > 1) {
+      run('git', ['fetch', '-q', 'origin', '+refs/heads/main:refs/remotes/origin/main'], cwd);
+      const tip = run('git', ['rev-parse', 'refs/remotes/origin/main'], cwd).trim();
+      const stop = still(tip);
+      if (stop) return { changed: false, said: stop };
+      run('git', ['reset', '-q', '--hard', tip], cwd);
+    }
+    const base = run('git', ['rev-parse', 'HEAD'], cwd).trim();
+    const done = write();
+    if (!done.changed) return done;
+    const commit = commitSite(cwd, done.message, env);
+    beforePush(attempt);
+    const pushed = spawnSync('git', ['push', '-q', 'origin', 'HEAD:refs/heads/main'], { cwd, encoding: 'utf8' });
+    if (pushed.status === 0) {
+      return { changed: true, commit, said: `${done.said} Pushed ${short(commit)} to main${attempt > 1 ? `, at try ${attempt} of ${PUSH_TRIES}, main having moved on` : ''}.` };
+    }
+    // Not pushed: the checkout lets go of the commit, so it never holds a step commit main lacks.
+    run('git', ['reset', '-q', '--hard', base], cwd);
+    if (!/\b(?:fetch first|non-fast-forward|rejected)\b/.test(`${pushed.stderr}${pushed.stdout}`)) {
+      throw new Error(`the push to main failed: ${pushed.stderr || pushed.stdout}`);
+    }
+  }
+  throw new Error(`main kept moving while the step wrote: nothing was pushed after ${PUSH_TRIES} tries`);
 }
 
 /** The notes for a publish of `source`: what is new since the last published source, and what to try. */
@@ -397,31 +494,39 @@ export function notesFor(cwd, source, tryText) {
   };
 }
 
+const V40_REFUSAL = "refused: v4.0 is declared, which ends the owner's advance word; the site changes only on his word";
+
 /**
  * The publish: the checked build into docs/, the record into version.json and
- * docs/version.json, one commit by the bot. Nothing is written when the build
- * equals what docs/ holds, or when any check fails.
+ * docs/version.json, one commit by the bot, pushed to main. Nothing is
+ * written when the build equals what docs/ holds, or when any check fails.
  * @returns {{ changed: boolean, commit?: string, preview?: number, said: string }}
  */
-export function publish({ cwd = ROOT, dist = 'dist', source, verified, tryText = '', env = process.env, now = () => new Date() }) {
+export function publish({ cwd = ROOT, dist = 'dist', source, verified, tryText = '', env = process.env,
+  now = () => new Date(), beforePush }) {
   const head = requireMain(env, cwd);
   if (head !== source) throw new Error(`refused: main's tip is ${short(head)}, not the source ${short(source)} it was decided for`);
-  if (v40Declared(cwd)) throw new Error('refused: v4.0 is declared, which ends the advance word; a publish needs the owner\'s word');
   const built = join(cwd, dist);
   const docs = join(cwd, 'docs');
-  checkSite(built);
-  if (sameBuild(built, docs)) return { changed: false, said: 'Nothing new: the build is what docs/ already holds.' };
-
-  const preview = nextPreview(stepHistory(cwd));
-  const notes = notesFor(cwd, source, tryText);
-  const record = versionRecord({ preview, source, published: now().toISOString().replace(/\.\d{3}Z$/, 'Z'), ...notes });
-  try {
-    rmSync(docs, { recursive: true, force: true });
-    cpSync(built, docs, { recursive: true });
-    writeFileSync(join(docs, '.nojekyll'), '');
-    writeFileSync(join(docs, 'version.json'), record);
-    writeFileSync(join(cwd, 'version.json'), record);
-    checkSite(docs);
+  let preview;
+  const write = () => {
+    if (v40Declared(cwd)) throw new Error(V40_REFUSAL);
+    checkSite(built);
+    if (sameBuild(built, docs)) return { changed: false, said: 'Nothing new: the build is what docs/ already holds.' };
+    preview = nextPreview(stepHistory(cwd));
+    const notes = notesFor(cwd, source, tryText);
+    const record = versionRecord({ preview, source, published: now().toISOString().replace(/\.\d{3}Z$/, 'Z'), ...notes });
+    try {
+      rmSync(docs, { recursive: true, force: true });
+      cpSync(built, docs, { recursive: true });
+      writeFileSync(join(docs, '.nojekyll'), '');
+      writeFileSync(join(docs, 'version.json'), record);
+      writeFileSync(join(cwd, 'version.json'), record);
+      checkSite(docs);
+    } catch (error) {
+      restoreSite(cwd);
+      throw error;
+    }
     const version = `${VERSION_BASE}.${preview}`;
     const message = [
       `PUB-01: publish v4 ${version}, built from ${short(source)}`,
@@ -440,8 +545,17 @@ export function publish({ cwd = ROOT, dist = 'dist', source, verified, tryText =
       `Preview: ${preview}`,
       ''
     ].join('\n');
-    const commit = commitSite(cwd, message, env);
-    return { changed: true, commit, preview, said: `Committed ${short(commit)}: v4 ${version}, from ${short(source)}.` };
+    return { changed: true, message, said: `Committed v4 ${version}, from ${short(source)}.` };
+  };
+  // On a retry, main's new tip must hold the same v4 as the source the build came from.
+  const still = tip => {
+    const between = pathsOfRange([source, tip], cwd);
+    const moved = between === null ? ['(unreadable)'] : between.filter(path => !['record', 'v3', 'pages'].includes(classify(path)));
+    return moved.length ? `Main moved on with a change of its own (${moved.slice(0, 3).join(', ')}); its own run publishes it.` : null;
+  };
+  try {
+    const done = commitAndPush({ cwd, env, write, still, beforePush });
+    return done.changed ? { ...done, preview } : done;
   } catch (error) {
     restoreSite(cwd);
     throw error;
@@ -450,11 +564,13 @@ export function publish({ cwd = ROOT, dist = 'dist', source, verified, tryText =
 
 /**
  * The take-back: docs/ and version.json as a commit or tag on main had them,
- * such as v3.3.726, committed by the bot. Refused for anything not on main.
+ * such as v3.3.726, committed by the bot and pushed to main. Refused for
+ * anything not on main, and once v4.0 is declared.
  * @returns {{ changed: boolean, commit?: string, said: string }}
  */
-export function takeBack({ cwd = ROOT, to, env = process.env }) {
+export function takeBack({ cwd = ROOT, to, env = process.env, beforePush }) {
   requireMain(env, cwd);
+  if (v40Declared(cwd)) throw new Error(V40_REFUSAL);
   const target = git(['rev-parse', '--verify', '--quiet', '--end-of-options', `${to}^{commit}`], cwd)?.trim();
   if (!target || !SHA.test(target)) throw new Error(`refused: ${to} names no commit`);
   if (git(['merge-base', '--is-ancestor', target, 'HEAD'], cwd) === null) {
@@ -463,14 +579,20 @@ export function takeBack({ cwd = ROOT, to, env = process.env }) {
   for (const path of ['docs/index.html', 'version.json']) {
     if (git(['cat-file', '-e', `${target}:${path}`], cwd) === null) throw new Error(`refused: ${to} has no ${path}`);
   }
-  if (git(['diff', '--quiet', target, 'HEAD', '--', ...PAGES.files, ...PAGES.dirs], cwd) !== null) {
-    return { changed: false, said: `Nothing to take back: the site is already as ${to} has it.` };
-  }
-  try {
-    run('git', ['rm', '-r', '-q', '--ignore-unmatch', '--', 'docs'], cwd);
-    rmSync(join(cwd, 'docs'), { recursive: true, force: true });
-    run('git', ['checkout', target, '--', ...PAGES.files, ...PAGES.dirs], cwd);
-    checkSite(join(cwd, 'docs'), { build: false });
+  const write = () => {
+    if (v40Declared(cwd)) throw new Error(V40_REFUSAL);
+    if (git(['diff', '--quiet', target, 'HEAD', '--', ...PAGES.files, ...PAGES.dirs], cwd) !== null) {
+      return { changed: false, said: `Nothing to take back: the site is already as ${to} has it.` };
+    }
+    try {
+      run('git', ['rm', '-r', '-q', '--ignore-unmatch', '--', 'docs'], cwd);
+      rmSync(join(cwd, 'docs'), { recursive: true, force: true });
+      run('git', ['checkout', target, '--', ...PAGES.files, ...PAGES.dirs], cwd);
+      checkSite(join(cwd, 'docs'), { build: false });
+    } catch (error) {
+      restoreSite(cwd);
+      throw error;
+    }
     const message = [
       `PUB-01: take the site back to ${to} (${short(target)})`,
       '',
@@ -480,8 +602,10 @@ export function takeBack({ cwd = ROOT, to, env = process.env }) {
       `Restored-from: ${target}`,
       ''
     ].join('\n');
-    const commit = commitSite(cwd, message, env);
-    return { changed: true, commit, said: `Committed ${short(commit)}: the site as ${to} (${short(target)}) had it.` };
+    return { changed: true, message, said: `Committed the site as ${to} (${short(target)}) had it.` };
+  };
+  try {
+    return commitAndPush({ cwd, env, write, still: () => null, beforePush });
   } catch (error) {
     restoreSite(cwd);
     throw error;
@@ -539,7 +663,8 @@ export async function decide({ env, event = {}, cwd = ROOT, fetchImpl = globalTh
     const pull = Array.isArray(pulls) ? pulls.find(item => item.merge_commit_sha === verified) ?? pulls[0] : null;
     tryText = prSection(pull?.body).join('\n');
   } else if (env.GITHUB_EVENT_NAME === 'workflow_dispatch') {
-    verified = await lastGreenSha({ ...env, DEFAULT_BRANCH: 'main', GITHUB_WORKFLOW_REF: `${REPOSITORY}/${VERIFY.path}@refs/heads/main` }, fetchImpl);
+    verified = await lastGreenSha({ ...env, DEFAULT_BRANCH: 'main', GITHUB_WORKFLOW_REF: `${REPOSITORY}/${VERIFY.path}@refs/heads/main` },
+      fetchImpl, sha => isAncestor(sha, tip, cwd));
     if (!verified) return no("main's newest passing Verify run could not be read");
     tryText = env.WHAT_TO_TRY ?? '';
   } else {
@@ -637,7 +762,7 @@ export async function main(argv, env = process.env, { cwd = ROOT } = {}) {
       const notes = notesFor(cwd, 'HEAD', '');
       const same = sameBuild(built, join(cwd, 'docs'));
       report(env, [
-        `Dry run: nothing is written, committed or pushed${env.GITHUB_REF && env.GITHUB_REF !== 'refs/heads/main' ? ` (on ${env.GITHUB_REF}, a dry run is all that runs)` : ''}.`,
+        `Dry run: docs/ and version.json are left as they are, and nothing is committed or pushed${env.GITHUB_REF && env.GITHUB_REF !== 'refs/heads/main' ? ` (on ${env.GITHUB_REF}, a dry run is all that runs)` : ''}.`,
         `The build checks out: ${files.length} files, ${references.length} referred to, every one present and inside the site.`,
         same ? 'A publish now would change nothing: docs/ already holds this build.'
           : `A publish now would put this build in docs/ as v4 ${VERSION_BASE}.${nextPreview(history)}.`,

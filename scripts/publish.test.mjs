@@ -15,9 +15,9 @@ import { dirname, join } from 'node:path';
 
 import { ROOT, STEP, git, stepMade } from './gate.mjs';
 import {
-  ADDRESS, REPOSITORY, USAGE, VERIFY, UsageError, checkSite, cssReferences, decide, htmlReferences, main, nextPreview,
-  parseArgs, prSection, publish, sameBuild, sourceMapReferences, stepHistory, takeBack, versionRecord, watchPages,
-  whatIsNew, whatToTry
+  ADDRESS, PUSH_TRIES, REPOSITORY, USAGE, VERIFY, UsageError, checkSite, cssReferences, decide, htmlReferences, main,
+  markupReferences, nextPreview, parseArgs, prSection, publish, sameBuild, scriptReferences, sourceMapReferences,
+  stepHistory, takeBack, versionRecord, watchPages, whatIsNew, whatToTry
 } from './publish.mjs';
 
 const SHA_A = 'a'.repeat(40);
@@ -152,6 +152,41 @@ describe('the site check: every file the site refers to is there (DEF-75)', () =
     rmSync(jekyll, { recursive: true, force: true });
   });
 
+  test("a page's inline styles and scripts, a quoted >, an SVG's links and a script's imports are all read", () => {
+    for (const [path, text, missing] of [
+      ['index.html', '<style>body{background:url(inline.png)}</style>', 'inline.png'],
+      ['index.html', '<div style="background:url(\'attr.png\')"></div>', 'attr.png'],
+      ['index.html', '<img alt="a > b" src="after-quote.png">', 'after-quote.png'],
+      ['index.html', '<script type="module">import "./inline-module.js";</script>', 'inline-module.js'],
+      ['index.html', '<object data="movie.svg"></object>', 'movie.svg'],
+      ['assets/index-a1.js', 'import{a as b}from"./chunk-static.js";\n', 'chunk-static.js'],
+      ['assets/index-a1.js', 'const m=()=>import("./chunk-lazy.js");\n', 'chunk-lazy.js'],
+      ['assets/index-a1.js', 'const u=new URL("./worker.js",import.meta.url);\n', 'worker.js'],
+      ['assets/index-a1.js', 'export*from"./re-export.js";\n', 're-export.js']
+    ]) {
+      const site = { ...BUILT };
+      site[path] = path === 'index.html' ? site[path].replace('</body>', `${text}</body>`) : text;
+      const dir = folder(site);
+      try {
+        assert.throws(() => checkSite(dir), new RegExp(`refers to a missing file: [^;]*${missing.replace('.', '\\.')}`), text);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    }
+    const svg = folder({ ...BUILT, 'icon.svg': '<svg><use xlink:href="sprite.svg#a"/></svg>',
+      'index.html': BUILT['index.html'].replace('</head>', '<link rel="icon" href="icon.svg"></head>') });
+    assert.throws(() => checkSite(svg), /icon\.svg refers to a missing file: sprite\.svg#a/);
+    rmSync(svg, { recursive: true, force: true });
+    for (const [text, said] of [['import"react";', 'imports react by name'], ['import("https://esm.example/x.js")', 'loads from another site']]) {
+      const dir = folder({ ...BUILT, 'assets/index-a1.js': text });
+      assert.throws(() => checkSite(dir), new RegExp(said), text);
+      rmSync(dir, { recursive: true, force: true });
+    }
+    // A method named import, and a path built at run time, are not loads the check can see.
+    assert.deepEqual(scriptReferences('loader.import("x");const p="./a"+n;import(p);'), []);
+    assert.deepEqual(markupReferences('<p title="<img src=x>">t</p>').markup, []);
+  });
+
   test('references are read in tags, either quote or none, and not in comments, code or text', () => {
     assert.deepEqual(htmlReferences(`<!-- <img src="old.png"> --><a href='#top'>x</a><p>src="text.png"</p><img data-image="i.png" alt="">`),
       ['#top', 'i.png']);
@@ -220,21 +255,36 @@ describe('what each preview comes with', () => {
   });
 });
 
-/** A scratch repository shaped like this one: v3's site live, v4 built into dist/, origin/main at main. */
+/** A scratch repository shaped like this one, with its own origin: v3's site live, v4 built into dist/. */
 function scratch() {
   const dir = mkdtempSync(join(tmpdir(), 'pub-01-repo-'));
+  const origin = `${dir}-origin.git`;
   const person = { ...process.env, GIT_AUTHOR_NAME: 'someone', GIT_AUTHOR_EMAIL: 'someone@example.invalid',
     GIT_COMMITTER_NAME: 'someone', GIT_COMMITTER_EMAIL: 'someone@example.invalid' };
-  const run = (...args) => {
-    const result = spawnSync('git', ['-c', 'commit.gpgsign=false', ...args], { cwd: dir, encoding: 'utf8', env: person });
+  const runIn = (cwd, ...args) => {
+    const result = spawnSync('git', ['-c', 'commit.gpgsign=false', ...args], { cwd, encoding: 'utf8', env: person });
     assert.equal(result.status, 0, result.stderr);
     return result.stdout.trim();
   };
+  const run = (...args) => runIn(dir, ...args);
+  /** Commit everything and push it to origin's main, as a merge to main would land. */
   const commit = message => {
     run('add', '-A');
     run('commit', '-q', '-m', message);
-    run('update-ref', 'refs/remotes/origin/main', 'HEAD');
+    run('push', '-q', 'origin', 'HEAD:refs/heads/main');
     return run('rev-parse', 'HEAD');
+  };
+  /** Someone else lands a commit on origin's main, as a merge during a build would. */
+  const landElsewhere = (path, text, message) => {
+    const other = mkdtempSync(join(tmpdir(), 'pub-01-other-'));
+    runIn(tmpdir(), 'clone', '-q', origin, other);
+    folder({ [path]: text }, other);
+    runIn(other, 'add', '-A');
+    runIn(other, 'commit', '-q', '-m', message);
+    runIn(other, 'push', '-q', 'origin', 'HEAD:refs/heads/main');
+    const sha = runIn(other, 'rev-parse', 'HEAD');
+    rmSync(other, { recursive: true, force: true });
+    return sha;
   };
   folder({
     '.gitignore': 'dist/\n',
@@ -245,24 +295,30 @@ function scratch() {
     'src/main.tsx': 'export {};\n',
     'project/trajectory.md': '# Trajectory\n\n## Phase 6 — v4\n\n- STACK-02 — skeleton (2026-11-19) — see decisions\n'
   }, dir);
+  runIn(tmpdir(), 'init', '-q', '--bare', '-b', 'main', origin);
   run('init', '-q', '-b', 'main');
+  run('remote', 'add', 'origin', origin);
   const v3 = commit('REL-726: v3.3.726');
   run('tag', 'v3.3.726');
   folder(BUILT, join(dir, 'dist'));
   const ci = { GITHUB_ACTIONS: 'true', GITHUB_REF: 'refs/heads/main', GITHUB_REPOSITORY: REPOSITORY, GITHUB_RUN_ID: '42',
     GITHUB_RUN_ATTEMPT: '1' };
   const fixedNow = () => new Date('2026-11-19T03:00:00Z');
-  return { dir, run, commit, v3, ci, fixedNow, done: () => rmSync(dir, { recursive: true, force: true }) };
+  const originMain = () => runIn(origin, 'rev-parse', 'refs/heads/main');
+  return { dir, run, commit, landElsewhere, originMain, v3, ci, fixedNow,
+    done: () => { rmSync(dir, { recursive: true, force: true }); rmSync(origin, { recursive: true, force: true }); } };
 }
 
 describe('a publish and a take-back write only the site, only from CI on main', () => {
-  test('a publish puts the build in docs/, the record in version.json, and one commit the gate knows as the step\'s', () => {
+  test('a publish puts the build in docs/, the record in version.json, and one commit the gate knows as the step\'s, pushed to main', () => {
     const repo = scratch();
     try {
       const done = publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, tryText: '- Open it.', env: repo.ci,
         now: repo.fixedNow });
       assert.equal(done.changed, true);
       assert.equal(done.preview, 1);
+      assert.equal(repo.originMain(), done.commit, 'pushed to main');
+      assert.match(done.said, /Pushed [0-9a-f]{7} to main\.$/);
       assert.equal(readFileSync(join(repo.dir, 'docs/index.html'), 'utf8'), BUILT['index.html']);
       assert.equal(existsSync(join(repo.dir, 'docs/examples/one.zip')), false, "v3's files go with the old site");
       assert.equal(existsSync(join(repo.dir, 'docs/.nojekyll')), true);
@@ -301,7 +357,48 @@ describe('a publish and a take-back write only the site, only from CI on main', 
       assert.throws(() => publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci }),
         /refers to a missing file: \.\/assets\/planted\.js/);
       assert.equal(repo.run('rev-parse', 'HEAD'), repo.v3);
+      assert.equal(repo.originMain(), repo.v3, 'nothing pushed');
       assert.equal(repo.run('status', '--porcelain'), '');
+      assert.match(readFileSync(join(repo.dir, 'docs/index.html'), 'utf8'), /<title>v3<\/title>/);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test('a record-only merge landing during a build is written over again, so the app change still publishes', () => {
+    const repo = scratch();
+    try {
+      let landed;
+      const done = publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci, now: repo.fixedNow,
+        beforePush: attempt => { if (attempt === 1) landed = repo.landElsewhere('project/backlog.md', '# Backlog\n', 'X: record'); } });
+      assert.equal(done.changed, true, done.said);
+      assert.match(done.said, /at try 2 of 3, main having moved on/);
+      assert.equal(repo.originMain(), done.commit);
+      assert.equal(repo.run('rev-parse', `${done.commit}^`), landed, "written on main's new tip");
+      assert.equal(stepMade(repo.v3, done.commit, repo.dir), true);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test("a change to the app landing during a build stops the publish, for that change's own run; a main that keeps moving stops it too", () => {
+    let repo = scratch();
+    try {
+      const done = publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci,
+        beforePush: attempt => { if (attempt === 1) repo.landElsewhere('src/main.tsx', 'export const later = 1;\n', 'Y: v4'); } });
+      assert.equal(done.changed, false);
+      assert.match(done.said, /moved on with a change of its own \(src\/main\.tsx\)/);
+      assert.notEqual(repo.run('show', '-s', '--format=%an', repo.originMain()), STEP.name, 'nothing of the step pushed');
+    } finally {
+      repo.done();
+    }
+    repo = scratch();
+    try {
+      let n = 0;
+      assert.throws(() => publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci,
+        beforePush: () => { n += 1; repo.landElsewhere(`project/note-${n}.md`, 'x\n', `X: record ${n}`); } }),
+      new RegExp(`main kept moving while the step wrote: nothing was pushed after ${PUSH_TRIES} tries`));
+      assert.equal(n, PUSH_TRIES);
       assert.match(readFileSync(join(repo.dir, 'docs/index.html'), 'utf8'), /<title>v3<\/title>/);
     } finally {
       repo.done();
@@ -324,6 +421,7 @@ describe('a publish and a take-back write only the site, only from CI on main', 
       folder({ 'project/trajectory.md': '# Trajectory\n\n## Phase 9\n\n- V40-01 — declared (2026-12-01) — see decisions\n' }, repo.dir);
       const declared = repo.commit('V40-01: declare');
       assert.throws(() => publish({ cwd: repo.dir, source: declared, verified: declared, env: repo.ci }), /v4\.0 is declared/);
+      assert.throws(() => takeBack({ cwd: repo.dir, to: 'v3.3.726', env: repo.ci }), /v4\.0 is declared/);
       assert.match(readFileSync(join(repo.dir, 'docs/index.html'), 'utf8'), /<title>v3<\/title>/);
     } finally {
       repo.done();
@@ -337,6 +435,7 @@ describe('a publish and a take-back write only the site, only from CI on main', 
       repo.run('update-ref', 'refs/remotes/origin/main', 'HEAD');
       const done = takeBack({ cwd: repo.dir, to: 'v3.3.726', env: repo.ci });
       assert.equal(done.changed, true);
+      assert.equal(repo.originMain(), done.commit, 'pushed to main');
       assert.equal(repo.run('diff', '--stat', repo.v3, 'HEAD', '--', 'docs', 'version.json'), '');
       assert.equal(readFileSync(join(repo.dir, 'docs/examples/one.zip'), 'utf8'), 'approved archive');
       assert.match(repo.run('log', '-1', '--format=%B'), new RegExp(`^PUB-01: take the site back to v3\\.3\\.726 \\([0-9a-f]{7}\\)\\n[\\s\\S]*^Verify: \\S.+$[\\s\\S]*^Restored-from: ${repo.v3}$`, 'm'));
@@ -538,9 +637,16 @@ describe('the step as wired in this repository', () => {
       assert.match(text, /if: (>-\n\s+)?github\.ref == 'refs\/heads\/main' && /, name);
       assert.match(text, /contents: write/, name);
       assert.match(text, /group: publish-main\n {6}cancel-in-progress: false/, name);
-      assert.match(text, /run: git push origin HEAD:refs\/heads\/main\n/, name);
     }
-    assert.doesNotMatch(workflow, /--force|\+HEAD|push -f|--tags|git tag/);
+    assert.match(job('publish'), /run: node scripts\/publish\.mjs --publish /);
+    assert.match(job('take-back'), /run: node scripts\/publish\.mjs --take-back /);
+    // The step itself pushes, to main's branch only, never forced; the workflow pushes nothing of its own.
+    assert.doesNotMatch(workflow, /git push|--force|\+HEAD|push -f|--tags|git tag/);
+    const script = read('scripts/publish.mjs');
+    assert.equal(script.match(/\['push',/g).length, 1, 'one git push in the step');
+    assert.match(script, /\['push', '-q', 'origin', 'HEAD:refs\/heads\/main'\]/);
+    // (git clean -f in restoreSite removes untracked site files from the checkout; it is no push.)
+    assert.doesNotMatch(script, /--force|\+HEAD|\['tag'|'push', '-f'|--force-with-lease/);
     assert.match(job('publish'), /github\.event\.workflow_run\.conclusion == 'success'/);
     assert.match(job('publish'), /github\.event\.workflow_run\.head_repository\.full_name == github\.repository/);
     // Inputs reach the scripts through the environment, never pasted into a command.
@@ -566,7 +672,7 @@ describe('the step as wired in this repository', () => {
     const before = git(['status', '--porcelain', '--', 'docs', 'version.json']);
     const result = spawnSync(process.execPath, ['scripts/publish.mjs', '--dry-run'], { cwd: ROOT, encoding: 'utf8' });
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /^Dry run: nothing is written, committed or pushed/);
+    assert.match(result.stdout, /^Dry run: docs\/ and version\.json are left as they are, and nothing is committed or pushed/);
     assert.equal(git(['status', '--porcelain', '--', 'docs', 'version.json']), before);
     assert.equal(typeof main, 'function');
   });
