@@ -57,6 +57,32 @@ function ownCourse(samples: readonly ImagePoint[], progress: number, at: ImagePo
   return [samples[Math.max(0, index - LOOK_BACK)] ?? first, at];
 }
 
+/** The stop a head last passed whose window still holds, how far back it is and the line that arrived at it. */
+interface Behind {
+  readonly distance: number;
+  readonly arrived: Walked | undefined;
+}
+
+/**
+ * v3 tries every stop's window in route order and the earliest that holds wins (getHeadDirection :783–808): so of
+ * the stops behind a head within the departure window, the one furthest back decides, though a nearer stop was
+ * passed since (two stops closer together than the window). Walks back from the line's first stop along the lines
+ * that arrived, summing their shares of the walk, while the window still holds. Null when no stop behind is in it.
+ */
+function behind(timeline: Timeline, line: Walked, since: number, shareOf: (line: Walked) => number): Behind | null {
+  if (since > DEPARTURE) return null;
+  const arrivingAt = (pointId: string) => timeline.lines.find((each) => each.to === pointId);
+  const walked = new Set([line.lineId]);
+  let found: Behind = { distance: since, arrived: arrivingAt(line.from) };
+  for (let back = found.arrived; back !== undefined && !walked.has(back.lineId); back = found.arrived) {
+    const distance = found.distance + shareOf(back);
+    if (distance > DEPARTURE) break;
+    walked.add(back.lineId);
+    found = { distance, arrived: arrivingAt(back.from) };
+  }
+  return found;
+}
+
 /**
  * Which way a head points (v3's getHeadDirection). At rest at a stop, paused, waiting at a join or at the end, along
  * the straight way from the stop it came from; at the start, toward the first stop out. Moving, as the line goes,
@@ -66,6 +92,7 @@ function ownCourse(samples: readonly ImagePoint[], progress: number, at: ImagePo
 function headingOf(timeline: Timeline, head: LeadHead, moment: Moment, total: number): Heading {
   const place = (pointId: string) => timeline.places.get(pointId) ?? head.at;
   const chord = (line: Walked): Course => [place(line.from), place(line.to)];
+  const shareOf = (each: Walked) => (total > 0 ? (timeline.shapes.get(each.lineId)?.lengthWidths ?? 0) / total : 0);
   const line = timeline.lines.find((each) => each.lineId === head.lineId);
   if (line === undefined) {
     const out = timeline.lines.find((each) => each.from === timeline.start);
@@ -73,18 +100,17 @@ function headingOf(timeline: Timeline, head: LeadHead, moment: Moment, total: nu
   }
   if (head.pointId !== null) return along(chord(line));
   const progress = moment.progress.get(line.lineId) ?? 0;
-  const shape = timeline.shapes.get(line.lineId);
-  const own = ownCourse(shape?.samples ?? [], progress, head.at);
-  const share = total > 0 ? (shape?.lengthWidths ?? 0) / total : 0;
-  const [since, until] = [progress * share, (1 - progress) * share];
-  const arrived = timeline.lines.find((each) => each.to === line.from);
-  if (since <= DEPARTURE) {
+  const own = ownCourse(timeline.shapes.get(line.lineId)?.samples ?? [], progress, head.at);
+  const share = shareOf(line);
+  const passed = behind(timeline, line, progress * share, shareOf);
+  if (passed !== null) {
+    const { distance, arrived } = passed;
     // v3 does not turn the head leaving the route's first stop: there is no way it arrived by (:791).
     if (arrived === undefined) return along(own);
-    if (since <= ARRIVING) return along(chord(arrived));
-    return { course: own, toward: chord(arrived), weight: 1 - since / DEPARTURE };
+    if (distance <= ARRIVING) return along(chord(arrived));
+    return { course: own, toward: chord(arrived), weight: 1 - distance / DEPARTURE };
   }
-  return until <= APPROACH ? along(chord(line)) : along(own);
+  return (1 - progress) * share <= APPROACH ? along(chord(line)) : along(own);
 }
 
 function evaluate({ settings, route, lead }: RouteInput<Settings>): Evaluation<LeadDrawing> {
