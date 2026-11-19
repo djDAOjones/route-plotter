@@ -111,10 +111,11 @@ export const PAGES = {
 /**
  * The publishing step's own files (PUB-01): its workflow, and
  * scripts/publish*.mjs, the step and its tests. A change to them runs the
- * gate's lane, which holds the step's tests, and the record checker, not
- * frozen v3's suite (GATE-02, wish PUB-01.3). v4's gate does not read them:
- * it lints, scans and tests src/ and tests/. A push of a branch also runs the
- * step's dry run on v4's real build (.github/workflows/publish.yml).
+ * gate's lane, which holds the step's tests, v4's gate and the record
+ * checker, not frozen v3's suite (GATE-02, wish PUB-01.3). v4's gate reads
+ * them: knip's GitHub Actions plugin takes the scripts the workflows run as
+ * its entries. A push of a branch also runs the step's dry run on v4's real
+ * build (.github/workflows/publish.yml).
  */
 export const PUBLISHING = {
   files: ['.github/workflows/publish.yml'],
@@ -223,8 +224,10 @@ export function plan(paths, { v4 = V4, pages = 'hand' } = {}) {
   if (found.has('other')) {
     return { lanes: everything, reason: 'a path is outside the record, v3 and v4 lists', classes };
   }
-  // GATE-02: the publishing step's own files ask for the gate's lane alone, which holds the step's tests.
-  const lanes = ['gate', ...['v3', 'v4'].filter(lane => found.has(lane)), 'record'];
+  // GATE-02: the publishing step's own files ask for the gate's lane, which holds the step's tests, and v4's, whose
+  // dead-code check reads the scripts the workflows run.
+  const wants = lane => found.has(lane) || (lane === 'v4' && found.has('step') && v4Exists);
+  const lanes = ['gate', ...['v3', 'v4'].filter(wants), 'record'];
   const touched = [...['v3', 'v4'].filter(l => found.has(l)), ...(found.has('step') ? ['the publishing step'] : [])];
   return { lanes, reason: `the change touches ${touched.join(' and ')}`, classes };
 }
@@ -389,13 +392,6 @@ async function github(env, fetchImpl, path, { text = false } = {}) {
 }
 
 /**
- * How long after a job finished its log may still be on its way. A finished
- * job whose log is missing after this is taken as having none (expired or
- * deleted), so it vouches for nothing (GATE-02).
- */
-export const LOG_GRACE_MINUTES = 30;
-
-/**
  * Check a step-shaped commit against GitHub's record of the run its trailer
  * names: a run of .github/workflows/publish.yml on main of this repository,
  * started after Verify or by hand, whose publish or take-back job printed, on
@@ -403,15 +399,14 @@ export const LOG_GRACE_MINUTES = 30;
  * pushedLine). Only the step on main prints that line, so an old run's number
  * cannot vouch for another commit. Only the jobs that ran are read: a job
  * whose conclusion is skipped has no log and pushed nothing (GATE-02). True
- * or false when the record says; null when it cannot be read yet: while a job
- * still runs, while a finished job's log may still be on its way, or when
- * GitHub does not answer.
+ * or false when the record says; null when it cannot be read: while a job
+ * still runs, when a log is missing (not yet written, expired or deleted), or
+ * when GitHub does not answer. On main the gate refuses a null as it refuses
+ * a false; the step does not publish over it (scripts/publish.mjs).
  * @param {{ sha: string, run: string|null, attempt?: string }} candidate
- * @param {{ now?: () => number }} [clock] for the tests
  * @returns {Promise<boolean|null>}
  */
-export async function authenticateStep(candidate, env, fetchImpl = globalThis.fetch, cwd = ROOT,
-  { now = Date.now } = {}) {
+export async function authenticateStep(candidate, env, fetchImpl = globalThis.fetch, cwd = ROOT) {
   const repo = env.GITHUB_REPOSITORY;
   if (!candidate.run) return false;
   if (!env.GITHUB_TOKEN || !repo) return null;
@@ -433,13 +428,7 @@ export async function authenticateStep(candidate, env, fetchImpl = globalThis.fe
     if (job.conclusion === 'skipped') continue;
     if (job.status !== 'completed') { unread = true; continue; }
     const log = await github(env, fetchImpl, `/repos/${repo}/actions/jobs/${job.id}/logs`, { text: true });
-    if (!log) { unread = true; continue; }
-    if (log.missing) {
-      // GATE-02: a finished job's log still missing after the grace is gone, not late. Without a time, wait.
-      const finished = Date.parse(job.completed_at ?? '');
-      if (!(now() - finished > LOG_GRACE_MINUTES * 60_000)) unread = true;
-      continue;
-    }
+    if (!log || log.missing) { unread = true; continue; }
     if (marker.test(log.body)) return true;
   }
   return unread ? null : false;
@@ -448,8 +437,8 @@ export async function authenticateStep(candidate, env, fetchImpl = globalThis.fe
 /**
  * Who left the live site as a push to main leaves it: 'step' when a commit
  * shaped as the step's did and GitHub's record of its run agrees; 'unverified'
- * when such a commit did but the record could not be read (the push then runs
- * everything); 'hand' otherwise.
+ * when such a commit did but the record could not be read; 'hand' otherwise.
+ * The gate refuses both of the last two on main (GATE-02).
  * @returns {Promise<'step'|'unverified'|'hand'>}
  */
 export async function mainProvenance(from, to, env, fetchImpl = globalThis.fetch, cwd = ROOT) {
@@ -546,6 +535,8 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
   // step's commits are checked against GitHub's record of their runs.
   let provenance = 'hand';
   let shapeOnly = false;
+  // GATE-02: the live site's paths whose provenance was checked when no change could be read.
+  let unreadSite = null;
   if (has('--all')) {
     paths = null;
     source = 'everything was asked for';
@@ -561,6 +552,15 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
     paths = range ? pathsOfRange(range, cwd) : null;
     if (onMain && range && pagesPaths(paths).length) {
       provenance = await mainProvenance(range[0], range[1], env, fetchImpl, cwd);
+    } else if (onMain && !range && isSha(env.GITHUB_SHA)) {
+      // GATE-02: with no last passing run to read from, everything runs, and the live site as this commit holds it
+      // must still be the step's: the newest commit that changed it is checked against its run's record.
+      const site = [...PAGES.files, ...PAGES.dirs];
+      const newest = git(['log', '-1', '--format=%H', env.GITHUB_SHA, '--', ...site], cwd)?.trim();
+      if (newest) {
+        provenance = await mainProvenance(`${newest}^`, env.GITHUB_SHA, env, fetchImpl, cwd);
+        unreadSite = pagesPaths(pathsOfRange([`${newest}^`, newest], cwd) ?? site);
+      }
     }
     source = `${env.GITHUB_EVENT_NAME} ${range ? range.join(' ') : 'with no readable range'}` +
       (onMain ? `, from the last passing run on ${main}${lastGreen ? '' : ', which could not be read'}` : '');
@@ -583,17 +583,23 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
     (shapeOnly && pagesPaths(paths).length ? `\ngate: the live site's paths read as ${provenance === 'step' ? "the step's" : 'by hand'}, by the commits' shape alone` : '');
   log(words);
 
-  const sitePaths = provenance === 'step' ? [] : pagesPaths(paths);
-  const refuse = sitePaths.length > 0 && provenance === 'hand' && !shapeOnly;
+  const sitePaths = provenance === 'step' ? [] : unreadSite ?? pagesPaths(paths);
+  // GATE-02: on main, a change to the live site that GitHub's record cannot vouch for is refused, as a hand change is,
+  // so that a commit shaped as the step's never passes Verify unproven and becomes the last passing run.
+  const refuse = sitePaths.length > 0 && !shapeOnly;
   if (sitePaths.length) {
     const said = provenance === 'unverified'
-      ? `the live site's change looks like the publishing step's (PUB-01), but GitHub's record of its run could not be read, so everything runs: ${sitePaths.join(', ')}`
+      ? "the live site's change looks like the publishing step's (PUB-01), but GitHub's record of its run cannot " +
+        'vouch for it (a job still running, a log missing, or GitHub not answering), so it is not trusted: ' +
+        `${sitePaths.join(', ')}. Re-run this run once the Publish run has finished; if it fails again, run the ` +
+        'Publish workflow by hand on main so that the step rewrites the site'
       : `docs/ and version.json are the live site, which only the publishing step writes (PUB-01), on main; this change edits them by hand: ${sitePaths.join(', ')}` +
         (has('--ci') && env.GITHUB_REF?.endsWith('/main') ? '. Run the Publish workflow by hand on main (publish, or take-back) so that the step rewrites the site'
           : !has('--ci') && !shapeOnly ? '. If they came from main, fetch origin first' : '');
     const level = refuse ? 'error' : 'warning';
-    log(env.GITHUB_ACTIONS ? `::${level} title=${refuse ? 'Hand change to the live site' : 'Live site'}::${said}`
-      : `gate: ${refuse ? 'refused' : 'warning'}: ${said}`);
+    const title = !refuse ? 'Live site'
+      : provenance === 'unverified' ? 'Live site not vouched for' : 'Hand change to the live site';
+    log(env.GITHUB_ACTIONS ? `::${level} title=${title}::${said}` : `gate: ${refuse ? 'refused' : 'warning'}: ${said}`);
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `\n**${refuse ? 'Refused' : 'Warning'}:** ${said}\n`);
   }
 

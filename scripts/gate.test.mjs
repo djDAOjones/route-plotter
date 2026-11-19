@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, extname, join, relative } from 'node:path';
+import { dirname, extname, join, posix, relative } from 'node:path';
 
 import {
   LANES, RECORD, ROOT, V3, V4, V4_BUDGET_SECONDS,
@@ -22,8 +22,8 @@ import {
   PAGES, STEP, authenticateStep, isAncestor, main as gate, mainProvenance, pagesPaths, pushedLine, rangeEnds, stepCandidates,
   stepMade
 } from './gate.mjs';
-// GATE-02: the accessibility pack's files, the publishing step's own class and a finished job's log gone for good.
-import { A11Y, LOG_GRACE_MINUTES, PUBLISHING } from './gate.mjs';
+// GATE-02: the accessibility pack's files and the publishing step's own class.
+import { A11Y, PUBLISHING } from './gate.mjs';
 
 const EVERYTHING = ['gate', 'v3', 'v4', 'record'];
 const NO_V4 = { files: [], dirs: [] };
@@ -187,14 +187,22 @@ describe('plan', () => {
     assert.deepEqual(plan(null, { v4 }).lanes, ['gate', 'v3', 'v4', 'record']);
   });
 
-  test("the publishing step's own files run the gate's lane, with the step's tests, never v3's suite (GATE-02)", () => {
+  test("the publishing step's own files run the gate's lane and v4's gate, never v3's suite (GATE-02)", () => {
+    // The gate's lane holds the step's tests; v4's dead-code check (knip) reads the scripts the workflows run, as its
+    // GitHub Actions plugin, which knip.json leaves on, takes them for entries.
     assert.ok(LANES.gate.commands.flat(2).includes('scripts/publish.test.mjs'), "the gate's lane has the step's tests");
-    assert.deepEqual(plan(['scripts/publish.mjs']).lanes, ['gate', 'record']);
-    assert.deepEqual(plan(['.github/workflows/publish.yml', 'scripts/publish.test.mjs']).lanes, ['gate', 'record']);
-    assert.deepEqual(plan(['scripts/publish.mjs', 'project/backlog.md']).lanes, ['gate', 'record']);
-    assert.deepEqual(plan(['scripts/publish.mjs', 'docs/index.html'], { pages: 'step' }).lanes, ['gate', 'record']);
+    const knip = JSON.parse(readFileSync(join(ROOT, 'knip.json'), 'utf8'));
+    assert.notEqual(knip['github-actions'], false, 'knip reads the workflows');
+    assert.match(readFileSync(join(ROOT, '.github/workflows/publish.yml'), 'utf8'), /run: node scripts\/publish\.mjs /);
+    assert.deepEqual(plan(['scripts/publish.mjs']).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['.github/workflows/publish.yml', 'scripts/publish.test.mjs']).lanes,
+      ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/publish.mjs', 'project/backlog.md']).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/publish.mjs', 'docs/index.html'], { pages: 'step' }).lanes,
+      ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['scripts/publish.mjs', 'src/main.tsx']).lanes, ['gate', 'v4', 'record']);
-    assert.deepEqual(plan(['scripts/publish.mjs', 'v3/build.js']).lanes, ['gate', 'v3', 'record']);
+    assert.deepEqual(plan(['scripts/publish.mjs', 'v3/build.js']).lanes, ['gate', 'v3', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/publish.mjs'], { v4: NO_V4 }).lanes, ['gate', 'record']);
     // Beside a path on no list, or a hand change to the live site, everything runs, as before.
     assert.deepEqual(plan(['scripts/publish.mjs', 'scripts/gate.mjs']).lanes, EVERYTHING);
     assert.deepEqual(plan(['scripts/publish.mjs', 'docs/index.html']).lanes, EVERYTHING);
@@ -487,9 +495,9 @@ describe('the gate as wired in this repository', () => {
   // GATE-02: a folder's mention is read with the path that follows it, and counts only when that path is the
   // record's, since the accessibility pack's files in the record's folders are v4's (A11Y). A web address names
   // no path in this repository, so it is read past.
-  const webAddress = /\b[a-z][a-z\d+.-]*:\/\/[^\s'"`<>()]*/gi;
+  const webAddress = /\bhttps?:\/\/[^\s'"`<>()]*/gi;
   const recordNames = text => [...text.replace(webAddress, ' ').matchAll(recordPath)]
-    .filter(([, name, rest]) => !name.endsWith('/') || classify(name + rest) === 'record')
+    .filter(([, name, rest]) => !name.endsWith('/') || classify(posix.normalize(name + rest)) === 'record')
     .map(([, name]) => name);
   // v3's code and v4's: scripts, TypeScript, React, markup, styles, settings, shell.
   const CODE = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.html', '.css', '.scss', '.json', '.sh']);
@@ -508,6 +516,11 @@ describe('the gate as wired in this repository', () => {
       ['tools/', 'project/', 'tools/', 'project/']);
     assert.deepEqual(found("url: 'https://www.w3.org/WAI/test-evaluate/tools/selecting/'"), []);
     assert.deepEqual(found("see https://example.com/project/x and read('project/app/set1.json')"), ['project/']);
+    // Only a web address is read past, and a path is read as it resolves: a file address or a climb out of the pack's
+    // folder into the record's still counts (Codex's review).
+    assert.deepEqual(found("readFileSync(new URL('file:///checkout/project/backlog.md'))"), ['project/']);
+    assert.deepEqual(found("readFileSync('project/a11y/../backlog.md'); 'tools/a11y-run.mjs/../check.mjs'"),
+      ['project/', 'tools/']);
   });
 
   test("no v3 or v4 code, test or build file names a record-only path, so the record cannot change their result", () => {
@@ -932,14 +945,15 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
         assert.equal(sorted.status, 1, JSON.stringify(record.runs));
         assert.match(sorted.said, /::error title=Hand change to the live site::.*Run the Publish workflow by hand on main/);
       }
-      // The run's job still running, or the record unreadable: everything runs, with a warning, and nothing fails for it.
+      // The run's job still running, or the record unreadable: everything would run, and since GATE-02 the push fails
+      // too, so that a commit the record cannot vouch for never becomes main's last passing run.
       for (const fetchImpl of [github({ green: [repo.start], ...stepRun(77, repo.start, published, { status: 'in_progress' }) }),
         async url => (new URL(url).pathname.endsWith('/ci.yml/runs')
           ? { ok: true, status: 200, json: async () => ({ workflow_runs: [{ head_sha: repo.start }] }) }
           : { ok: false, status: 502, json: async () => null })]) {
         sorted = await push(fetchImpl);
-        assert.equal(sorted.status, 0, sorted.said);
-        assert.match(sorted.said, /::warning title=Live site::.*could not be read, so everything runs/);
+        assert.equal(sorted.status, 1, sorted.said);
+        assert.match(sorted.said, /::error title=Live site not vouched for::.*cannot vouch for it.*Re-run this run/);
         assert.match(sorted.said, /other\s+docs\/index\.html/);
       }
     } finally {
@@ -1025,22 +1039,38 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
     }
   });
 
-  test("a finished job's log still missing after the grace is gone, so it vouches for nothing (GATE-02)", async () => {
-    const { repo, real, genuine, copy, env } = replayed();
+  test("on main, a change to the live site that GitHub's record cannot vouch for fails Verify (GATE-02)", async () => {
+    const { repo, forged, real, genuine, copy, env } = replayed();
     try {
-      // Within the grace the log may still be on its way, so it is read again later; after it, the log expired or was
-      // deleted, so a replay of an old run fails too, and the step's own commit is published again by hand.
-      const gone = { ...real, logs: {} };
-      const at = minutes => ({ now: () => Date.parse('2026-11-19T03:56:58Z') + minutes * 60_000 });
-      assert.equal(await authenticateStep(genuine, env, github(gone), repo.dir, at(1)), null);
-      assert.equal(await authenticateStep(genuine, env, github(gone), repo.dir, at(LOG_GRACE_MINUTES)), null);
-      assert.equal(await authenticateStep(genuine, env, github(gone), repo.dir, at(LOG_GRACE_MINUTES + 1)), false);
-      assert.equal(await authenticateStep(copy, env, github(gone), repo.dir, at(60 * 24 * 91)), false);
-      // A finished job with no time given: read again later.
-      const undated = { ...gone, jobs: { 6: real.jobs[6].map(({ completed_at: _, ...job }) => job) } };
-      assert.equal(await authenticateStep(genuine, env, github(undated), repo.dir, at(60)), null);
-      // With its log, the step's commit is the step's whatever the time.
-      assert.equal(await authenticateStep(genuine, env, github(real), repo.dir, at(60 * 24 * 91)), true);
+      // A replay whose run's record cannot settle it: the publish job still running, its log missing (not yet
+      // written, expired or deleted), or GitHub not answering. authenticateStep says null, as before, so the step
+      // never publishes over it (scripts/publish.mjs); the gate now refuses it rather than warning.
+      const started = job => (job.id === 6 ? { ...job, status: 'in_progress', conclusion: null } : job);
+      const records = { running: { ...real, jobs: { 6: real.jobs[6].map(started) } }, gone: { ...real, logs: {} } };
+      for (const [name, record] of Object.entries(records)) {
+        assert.equal(await authenticateStep(copy, env, github(record), repo.dir), null, name);
+        assert.equal(await mainProvenance(repo.start, forged, env, github(record), repo.dir), 'unverified', name);
+        const sorted = await ciSort(repo, repo.start, forged, { eventName: 'push',
+          fetchImpl: github({ green: [repo.start], ...record }) });
+        assert.equal(sorted.status, 1, `${name}: ${sorted.said}`);
+        assert.match(sorted.said, /::error title=Live site not vouched for::.*docs\/index\.html/, name);
+      }
+      // Main's last passing run unreadable: everything runs, and the newest change to the live site is still checked.
+      const fetchOf = record => async url => (new URL(url).pathname.endsWith('/ci.yml/runs')
+        ? { ok: false, status: 502, json: async () => null } : github(record)(url));
+      let sorted = await ciSort(repo, repo.start, forged, { eventName: 'push', fetchImpl: fetchOf(real) });
+      assert.equal(sorted.status, 1, sorted.said);
+      assert.match(sorted.said, /with no readable range, from the last passing run on main, which could not be read/);
+      assert.match(sorted.said, /::error title=Hand change to the live site::.*docs\/index\.html/);
+      repo.run(['reset', '-q', '--hard', genuine.sha]);
+      repo.write('src/main.tsx', 'export const after = 1;\n');
+      const app = repo.commit('B: v4 after the publish');
+      sorted = await ciSort(repo, repo.start, app, { eventName: 'push', fetchImpl: fetchOf(real) });
+      assert.equal(sorted.status, 0, sorted.said);
+      assert.doesNotMatch(sorted.said, /live site/i);
+      sorted = await ciSort(repo, repo.start, app, { eventName: 'push', fetchImpl: fetchOf(records.gone) });
+      assert.equal(sorted.status, 1, sorted.said);
+      assert.match(sorted.said, /::error title=Live site not vouched for::/);
     } finally {
       repo.done();
     }
