@@ -1,23 +1,17 @@
 // CORE-04 stage 4b: the line's comet trail, through the real catalogue (and the recorder for what is drawn), against
 // v3's numbers (v3/tests/visibilityPathMatrix.test.js :198–262): a trail of 0.2 over a walk that moves for 10 s, so
 // the trail's time is 2 s. Each expected end is a share of the way walked, read on the core's own samples.
-import { afterEach, expect, test, vi } from "vitest";
-import { Recorder } from "../adapters/render/recorder";
-import { pointAt } from "../core/geometry/path";
-import type { ImagePoint } from "../core/geometry/units";
-import {
-  newLine,
-  newPoint,
-  newRoute,
-  newScene,
-  type Route,
-} from "../core/model/scene";
-import { composeTimeline, leadAt } from "../core/timing/timeline";
-import { CATALOGUE } from "../features/catalogue";
-import { compose } from "./compose";
+import { afterEach, expect, test, vi } from 'vitest';
+import { Recorder } from '../adapters/render/recorder';
+import { pointAt } from '../core/geometry/path';
+import type { ImagePoint } from '../core/geometry/units';
+import { newLine, newPoint, newRoute, newScene, type Route } from '../core/model/scene';
+import { composeTimeline, leadAt } from '../core/timing/timeline';
+import { CATALOGUE } from '../features/catalogue';
+import { compose } from './compose';
 
 const line = CATALOGUE.route[0];
-if (line === undefined) throw new Error("no route module");
+if (line === undefined) throw new Error('no route module');
 
 const counter = () => {
   let n = 0;
@@ -28,22 +22,13 @@ const counter = () => {
  * a → b → c on a straight line, two lines of one length that the lead walks in 10 s by total time; b pauses
  * `pauseMs` halfway, c waits `finalMs` at the end. With `branch`, c forks to d and e, which the lead walks together.
  */
-function walkOf(
-  trailLength: number,
-  pauseMs: number,
-  finalMs: number,
-  branch = false,
-): Route {
+function walkOf(trailLength: number, pauseMs: number, finalMs: number, branch = false): Route {
   const nextId = counter();
   const at = (x: number, y: number, wait = 0) => ({
-    ...newPoint(nextId, { x, y, kind: "stop" }),
+    ...newPoint(nextId, { x, y, kind: 'stop' }),
     pauseMs: wait,
   });
-  const [a, b, c] = [
-    at(0.1, 0.5),
-    at(0.5, 0.5, pauseMs),
-    at(0.9, 0.5, finalMs),
-  ];
+  const [a, b, c] = [at(0.1, 0.5), at(0.5, 0.5, pauseMs), at(0.9, 0.5, finalMs)];
   const points = [a, b, c];
   const lines = [newLine(nextId, a.id, b.id), newLine(nextId, b.id, c.id)];
   if (branch) {
@@ -59,27 +44,39 @@ function walkOf(
       ...settings,
       lead: {
         ...settings.lead,
-        timing: "total time",
+        timing: 'total time',
         totalTimeMs: 10_000,
         startsAtMs: 0,
       },
-      line: { ...settings.line, appearance: "trail", trailLength },
+      line: { ...settings.line, appearance: 'trail', trailLength },
     },
   };
+}
+
+/**
+ * A straight route of `steps` stops evenly spaced, so its curve is straight and each line one length; `pauses` gives a
+ * stop's pause by its index. The lead walks it in 10 s by total time.
+ */
+function grid(trailLength: number, steps: number, pauses: Readonly<Record<number, number>> = {}): Route {
+  const route = walkOf(trailLength, 0, 0);
+  const nextId = counter();
+  const points = Array.from({ length: steps + 1 }, (_, i) => ({
+    ...newPoint(nextId, { x: 0.1 + (0.8 * i) / Math.max(1, steps), y: 0.5, kind: 'stop' }),
+    pauseMs: pauses[i] ?? 0,
+  }));
+  const lines = points.slice(1).map((point, i) => newLine(nextId, points[i]?.id ?? '', point.id));
+  return { ...route, points, lines, leadStart: points[0]?.id ?? null };
 }
 
 interface Drawing {
   readonly strokes: readonly { readonly points: readonly ImagePoint[] }[];
 }
 const isDrawing = (value: unknown): value is Drawing =>
-  typeof value === "object" &&
-  value !== null &&
-  "strokes" in value &&
-  Array.isArray(value.strokes);
+  typeof value === 'object' && value !== null && 'strokes' in value && Array.isArray(value.strokes);
 
 /** The line's strokes for a route at a moment of the content, which is also the module's `timeMs`. */
 function drawn(route: Route, ms: number) {
-  if (line === undefined) throw new Error("no route module");
+  if (line === undefined) throw new Error('no route module');
   const timeline = composeTimeline(route, 1);
   const shape = {
     points: route.points,
@@ -99,7 +96,7 @@ function drawn(route: Route, ms: number) {
     lead: leadAt(timeline, ms),
   });
   if (!result.ok) throw new Error(result.reason);
-  if (!isDrawing(result.value)) throw new Error("not a line drawing");
+  if (!isDrawing(result.value)) throw new Error('not a line drawing');
   return {
     strokes: result.value.strokes.map((stroke) => stroke.points),
     timeline,
@@ -110,26 +107,19 @@ function drawn(route: Route, ms: number) {
 /** The point a share of the way along a route with no branch, from the lines' lengths in walk order. */
 function walkedTo(route: Route, share: number): ImagePoint {
   const { lines, shapes } = composeTimeline(route, 1);
-  const lengths = lines.map(
-    (each) => shapes.get(each.lineId)?.lengthWidths ?? 0,
-  );
+  const lengths = lines.map((each) => shapes.get(each.lineId)?.lengthWidths ?? 0);
   let left = share * lengths.reduce((sum, length) => sum + length, 0);
   for (const [i, each] of lines.entries()) {
     const length = lengths[i] ?? 0;
     const samples = shapes.get(each.lineId)?.samples ?? [];
-    if (left <= length || i === lines.length - 1)
-      return pointAt(samples, left / length) ?? { x: Number.NaN, y: 0 };
+    if (left <= length || i === lines.length - 1) return pointAt(samples, left / length) ?? { x: Number.NaN, y: 0 };
     left -= length;
   }
-  throw new Error("no line");
+  throw new Error('no line');
 }
 
 /** The comet's one stroke at a moment, as [tail, head] shares of the way walked; null when nothing shows. */
-function expectComet(
-  route: Route,
-  ms: number,
-  ends: readonly [number, number] | null,
-) {
+function expectComet(route: Route, ms: number, ends: readonly [number, number] | null) {
   const { strokes } = drawn(route, ms);
   if (ends === null) {
     expect(strokes, `at ${ms} ms`).toEqual([]);
@@ -149,7 +139,7 @@ function expectComet(
 
 afterEach(() => vi.restoreAllMocks());
 
-test("the comet at the start, part way, over a pause and after it, against v3’s tail and head", () => {
+test('the comet at the start, part way, over a pause and after it, against v3’s tail and head', () => {
   const route = walkOf(0.2, 1_000, 0);
   // Not yet moved: no tail at all.
   expectComet(route, 0, null);
@@ -166,7 +156,36 @@ test("the comet at the start, part way, over a pause and after it, against v3’
   expectComet(route, 8_000, [0.5, 0.7]);
 });
 
-test("after the lead’s end the tail closes on it, and the scene waits for that and v3’s half-second handle", () => {
+test('successive pauses: each starts from the tail the last one held, against v3’s timeline golden', () => {
+  // v3's case: b waits 1 s at 0.3, c 2 s at 0.6, d 0.5 s at 0.606; the lead's end is at 13.5 s. Stops every 0.002 of
+  // the way keep the curve straight, and take 500 lines through the module's one sweep.
+  const route = grid(0.2, 500, { 150: 1_000, 300: 2_000, 303: 500 });
+  const golden = [
+    [3_500, 0.15, 0.3],
+    [4_000, 0.2, 0.3],
+    [4_500, 0.2, 0.35],
+    [5_000, 0.2, 0.4],
+    [6_000, 0.3, 0.5],
+    [9_060, 0.6, 0.606],
+    [9_560, 0.6015, 0.606],
+    [14_500, 0.9, 1],
+  ] as const;
+  for (const [ms, tail, head] of golden) expectComet(route, ms, [tail, head]);
+  expectComet(route, 15_500, null);
+  const end = drawn(route, 0).end;
+  expect(end !== null && 'endsAtMs' in end ? end.endsAtMs : null).toBeCloseTo(13_500 + 2_000 + 500, 6);
+});
+
+test('no trail, no walk and a time that is not a number draw nothing and add no time', () => {
+  for (const route of [walkOf(0, 1_000, 0), grid(0.2, 0)]) {
+    expect(drawn(route, 2_500).strokes).toEqual([]);
+    expect(drawn(route, 0).end).toBeNull();
+  }
+  // A moment that is not a number reads as 0, as the core's leadAt reads it.
+  expect(drawn(walkOf(0.2, 1_000, 0), Number.NaN).strokes).toEqual([]);
+});
+
+test('after the lead’s end the tail closes on it, and the scene waits for that and v3’s half-second handle', () => {
   const route = walkOf(0.2, 1_000, 0);
   // The lead ends at 11 s; a quarter of the trail's time later the tail is a quarter of the way in (v3: 0.85).
   expectComet(route, 11_000, [0.8, 1]);
@@ -174,16 +193,14 @@ test("after the lead’s end the tail closes on it, and the scene waits for that
   expectComet(route, 13_000, null);
   expect(drawn(route, 0).end).toEqual({ endsAtMs: 11_000 + 2_000 + 500 });
   // Any other appearance adds no time of its own.
-  const grows: Route["settings"]["line"] = {
+  const grows: Route['settings']['line'] = {
     ...route.settings.line,
-    appearance: "grows",
+    appearance: 'grows',
   };
-  expect(
-    drawn({ ...route, settings: { ...route.settings, line: grows } }, 0).end,
-  ).toBeNull();
+  expect(drawn({ ...route, settings: { ...route.settings, line: grows } }, 0).end).toBeNull();
 });
 
-test("TST-09.3: a stopped comet has no tail, so the trail is empty in a final wait (A25)", () => {
+test('TST-09.3: a stopped comet has no tail, so the trail is empty in a final wait (A25)', () => {
   // Open day's case: a 4.5 s final wait, longer than the trail's time.
   const route = walkOf(0.2, 1_000, 4_500);
   expectComet(route, 11_000, [0.8, 1]);
@@ -194,7 +211,7 @@ test("TST-09.3: a stopped comet has no tail, so the trail is empty in a final wa
   expect(drawn(route, 0).end).toEqual({ endsAtMs: 15_500 + 2_000 + 500 });
 });
 
-test("TST-03.1: the maximum trail (4.0) shows the last four fifths of the way walked, as v3 draws it", () => {
+test('TST-03.1: the maximum trail (4.0) shows the last four fifths of the way walked, as v3 draws it', () => {
   const route = walkOf(4, 1_000, 0);
   // v3: at the end the tail is at 0.2, part way at a fifth of the way walked; a trail of 1 draws the same.
   expectComet(route, 4_000, [0.08, 0.4]);
@@ -205,40 +222,29 @@ test("TST-03.1: the maximum trail (4.0) shows the last four fifths of the way wa
   expect(drawn(route, 0).end).toEqual({ endsAtMs: 11_000 + 40_000 + 500 });
 });
 
-test("on branches the comet trails every head back to one moment", () => {
+test('on branches the comet trails every head back to one moment', () => {
   const route = walkOf(0.2, 0, 0, true);
   const { timeline } = drawn(route, 0);
   const [, bc, cd, ce] = timeline.lines;
-  if (!bc || !cd || !ce) throw new Error("four walked lines");
+  if (!bc || !cd || !ce) throw new Error('four walked lines');
   expect(cd.departMs).toBe(ce.departMs);
-  const samples = (lineId: string) =>
-    timeline.shapes.get(lineId)?.samples ?? [];
-  const lengths = timeline.lines.map(
-    (each) => timeline.shapes.get(each.lineId)?.lengthWidths ?? 0,
-  );
+  const samples = (lineId: string) => timeline.shapes.get(lineId)?.samples ?? [];
+  const lengths = timeline.lines.map((each) => timeline.shapes.get(each.lineId)?.lengthWidths ?? 0);
   const total = lengths.reduce((sum, length) => sum + length, 0);
   // The share walked at a moment, and by halving, the moment a share was walked: an oracle apart from the module's.
   const walked = (ms: number) => {
     const { progress } = leadAt(timeline, ms);
     return (
-      timeline.lines.reduce(
-        (sum, each, i) =>
-          sum + (lengths[i] ?? 0) * (progress.get(each.lineId) ?? 0),
-        0,
-      ) / total
+      timeline.lines.reduce((sum, each, i) => sum + (lengths[i] ?? 0) * (progress.get(each.lineId) ?? 0), 0) / total
     );
   };
   const when = (share: number) => {
     let [low, high] = [0, timeline.endMs];
     for (let i = 0; i < 80; i++)
-      [low, high] =
-        walked((low + high) / 2) < share
-          ? [(low + high) / 2, high]
-          : [low, (low + high) / 2];
+      [low, high] = walked((low + high) / 2) < share ? [(low + high) / 2, high] : [low, (low + high) / 2];
     return high;
   };
-  const at = (lineId: string, ms: number) =>
-    pointAt(samples(lineId), leadAt(timeline, ms).progress.get(lineId) ?? 0);
+  const at = (lineId: string, ms: number) => pointAt(samples(lineId), leadAt(timeline, ms).progress.get(lineId) ?? 0);
   // A quarter of the way down c → d the tail is still on b → c, so each branch shows from c to its head; three
   // quarters down, the tail is on both branches, each where the lead was at the one moment it had walked it.
   for (const quarter of [0.25, 0.75]) {
@@ -263,20 +269,24 @@ test("on branches the comet trails every head back to one moment", () => {
   }
 });
 
-test("the same lead at two clock times draws the same, with no clock or random source read", () => {
+test('the same lead at two clock times draws the same, with no clock or random source read', () => {
   const route = walkOf(0.2, 1_000, 0);
-  vi.spyOn(Math, "random").mockImplementation(() => {
-    throw new Error("random read");
-  });
-  vi.spyOn(Date, "now").mockReturnValue(1);
-  vi.spyOn(performance, "now").mockReturnValue(1);
+  vi.spyOn(Date, 'now').mockReturnValue(1);
+  vi.spyOn(performance, 'now').mockReturnValue(1);
   const first = drawn(route, 5_500).strokes;
-  vi.spyOn(Date, "now").mockReturnValue(9e12);
-  vi.spyOn(performance, "now").mockReturnValue(9e6);
+  vi.spyOn(Date, 'now').mockReturnValue(9e12);
+  vi.spyOn(performance, 'now').mockReturnValue(9e6);
+  expect(drawn(route, 5_500).strokes).toEqual(first);
+  const refuse = (name: string) => () => {
+    throw new Error(`${name} read`);
+  };
+  vi.spyOn(Math, 'random').mockImplementation(refuse('Math.random'));
+  vi.spyOn(Date, 'now').mockImplementation(refuse('Date.now'));
+  vi.spyOn(performance, 'now').mockImplementation(refuse('performance.now'));
   expect(drawn(route, 5_500).strokes).toEqual(first);
 });
 
-test("the trail draws at full strength from tail to head through the recorder, as v3 draws it (D138)", () => {
+test('the trail draws at full strength from tail to head through the recorder, as v3 draws it (D138)', () => {
   const route = walkOf(0.2, 1_000, 0);
   const scene = newScene(counter());
   const clock = { ...scene.settings.clock, holdAtStartMs: 0 };
@@ -295,13 +305,9 @@ test("the trail draws at full strength from tail to head through the recorder, a
     surface: () => ({ context: new Recorder(), image: source }),
   });
   expect(reports).toEqual([]);
-  const strokes = recorder
-    .take()
-    .filter((entry) => entry.startsWith("stroke "));
+  const strokes = recorder.take().filter((entry) => entry.startsWith('stroke '));
   expect(strokes).toHaveLength(1);
   // The recorder names a style only where it differs from its default, so no `globalAlpha` here is full strength.
-  expect(strokes[0]).toMatch(
-    /^stroke \| .* strokeStyle=#d55e00 lineWidth=2\.778 /,
-  );
+  expect(strokes[0]).toMatch(/^stroke \| .* strokeStyle=#d55e00 lineWidth=2\.778 /);
   expect(strokes[0]).not.toMatch(/globalAlpha/);
 });

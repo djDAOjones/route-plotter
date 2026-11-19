@@ -78,13 +78,11 @@ interface Course {
   readonly rests: readonly { readonly startMs: number; readonly endMs: number; readonly share: number }[];
 }
 
-/** A walked line's progress at a moment, by the core's rule (`leadAt`): 1 once arrived, even when it takes no time. */
-function progressAt(line: Walked, ms: number): number {
-  if (ms >= line.arriveMs) return 1;
-  if (ms <= line.departMs) return 0;
-  return (ms - line.departMs) / (line.arriveMs - line.departMs);
-}
-
+/**
+ * One sweep through the walked lines' starts and ends in time order (O(n log n)): between two marks the moving lines'
+ * walked length grows at their summed rate, and the whole lead rests where no line moves. A line that takes no time
+ * is walked at once at its moment, as the core's `leadAt` counts it.
+ */
 function courseOf(timeline: Timeline): Course | null {
   const lines = timeline.lines.map(({ lineId, departMs, arriveMs }) => ({
     lineId,
@@ -94,19 +92,40 @@ function courseOf(timeline: Timeline): Course | null {
   }));
   const total = lines.reduce((sum, line) => sum + line.length, 0);
   if (!(total > 0)) return null;
-  const walked = (ms: number) => lines.reduce((sum, line) => sum + line.length * progressAt(line, ms), 0) / total;
-  const times = [...new Set([...lines.flatMap((line) => [line.departMs, line.arriveMs]), timeline.endMs])];
-  const marks = times.sort((a, b) => a - b).map((ms) => ({ ms, share: walked(ms) }));
-  let movingMs = 0;
+  type Event = { readonly ms: number; readonly line: Walked; readonly starts: boolean };
+  const events: Event[] = lines.flatMap((line): Event[] =>
+    line.length > 0
+      ? [
+          { ms: line.departMs, line, starts: true },
+          { ms: line.arriveMs, line, starts: false },
+        ]
+      : [],
+  );
+  events.sort((a, b) => a.ms - b.ms);
+  const marks: { ms: number; share: number }[] = [];
   const rests: { startMs: number; endMs: number; share: number }[] = [];
-  for (let i = 1; i < marks.length; i++) {
-    const [before, after] = [item(marks, i - 1), item(marks, i)];
-    if (after.share > before.share) movingMs += after.ms - before.ms;
-    else if (before.share > 0) {
+  let [done, rate, offset, moving, movingMs, k] = [0, 0, 0, 0, 0, 0];
+  const times = [...new Set([...events.map((event) => event.ms), timeline.endMs])].sort((a, b) => a - b);
+  for (const ms of times) {
+    const before = marks.at(-1);
+    if (before !== undefined && moving > 0) movingMs += ms - before.ms;
+    else if (before !== undefined && before.share > 0) {
       const last = rests.at(-1);
-      if (last?.endMs === before.ms) last.endMs = after.ms;
-      else rests.push({ startMs: before.ms, endMs: after.ms, share: before.share });
+      if (last?.endMs === before.ms) last.endMs = ms;
+      else rests.push({ startMs: before.ms, endMs: ms, share: before.share });
     }
+    for (; k < events.length && item(events, k).ms === ms; k++) {
+      const { line, starts } = item(events, k);
+      const span = line.arriveMs - line.departMs;
+      if (span > 0) {
+        const sign = starts ? 1 : -1;
+        rate += (sign * line.length) / span;
+        offset += (sign * line.length * line.departMs) / span;
+        moving += sign;
+      }
+      if (!starts) done += line.length;
+    }
+    marks.push({ ms, share: moving > 0 ? (done + rate * ms - offset) / total : done / total });
   }
   return { lines, total, marks, movingMs, rests };
 }
