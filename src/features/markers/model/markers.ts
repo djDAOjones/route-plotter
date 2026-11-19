@@ -7,6 +7,7 @@ import type { Evaluation, RouteFeatureModel, RouteInput } from '../../../core/fe
 import type { ImagePoint } from '../../../core/geometry/units';
 import type { Values } from '../../../core/schema/field';
 import { lookOf, type MarkerLook } from './look';
+import { timingOf } from './timing';
 
 type Settings = Values<typeof MARKER_SETTINGS>;
 
@@ -23,13 +24,20 @@ export interface MarkersDrawing {
   readonly markers: readonly Marker[];
 }
 
-function evaluate({ settings, route }: RouteInput<Settings>): Evaluation<MarkersDrawing> {
+function evaluate({ settings, route, timeMs }: RouteInput<Settings>): Evaluation<MarkersDrawing> {
   const look = lookOf(settings);
-  if (settings.appearance === 'never') return { ok: true, value: { look, markers: [] } };
-  // Until the timed appearances are built (5b-1's second piece), from, until and at arrival show as always.
-  const markers = route.shape.points
-    .filter((point) => point.kind === 'stop')
-    .map((point) => ({ pointId: point.id, at: { x: point.x, y: point.y }, scale: 1 }));
+  const { appearance } = settings;
+  if (appearance === 'never') return { ok: true, value: { look, markers: [] } };
+  const stops = route.shape.points.filter((point) => point.kind === 'stop');
+  const scaleOf = timingOf(route.timeline, new Set(stops.map((point) => point.id)));
+  // "until arrival" and "at arrival" show as always until their shrinking after the lead leaves is built (5b-1).
+  const markers = stops
+    .map((point) => ({
+      pointId: point.id,
+      at: { x: point.x, y: point.y },
+      scale: appearance === 'from arrival' ? scaleOf(point.id, appearance, timeMs) : 1,
+    }))
+    .filter((marker) => marker.scale > 0);
   return { ok: true, value: { look, markers } };
 }
 
