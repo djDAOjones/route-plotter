@@ -303,6 +303,25 @@ describe('the lead’s place: its heads, and its main head (§3, rule 5)', () =>
   });
 });
 
+describe('a stop’s authored point: the lead arrives, pauses and leaves there (Codex, stage 2)', () => {
+  it('stays on a stop’s authored point through its pause, and arrives and leaves there (Codex’s case, stage 2)', () => {
+    const base = routeOf(['a>b', 'b>c'], { pauses: { b: 1_000 } });
+    const where: Readonly<Record<string, { x: number; y: number }>> = {
+      a: { x: 0, y: 0 },
+      b: { x: 0.3333, y: 0.8 },
+      c: { x: 1, y: 0.1 },
+    };
+    const timeline = composeTimeline({ ...base, points: base.points.map((p) => ({ ...p, ...where[p.id] })) }, 0.75);
+    const [arrive = 0, depart = 0] = [arrival(timeline, 'b'), departure(timeline, 'b')];
+    expect(depart - arrive).toBeCloseTo(1_000, 6);
+    for (const ms of [arrive - 1e-6, arrive, (arrive + depart) / 2, depart, depart + 1e-6]) {
+      const at = leadAt(timeline, ms).main?.at;
+      expect(at?.x).toBeCloseTo(0.3333, 6);
+      expect(at?.y).toBeCloseTo(0.8, 6);
+    }
+  });
+});
+
 describe('a route of 2,000 points, timed end to end (INTAKE.12)', () => {
   it('samples within its budget, times every line and ends at its last point, in under a second', () => {
     const specs = Array.from({ length: 1_999 }, (_, i) => `p${i}>p${i + 1}`);

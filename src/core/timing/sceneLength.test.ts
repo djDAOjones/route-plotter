@@ -2,8 +2,10 @@
 // scene's length under §4, with v3's Hold at end numbers ported.
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { LIMITS } from '../config/limits';
 import { CLOCK_SETTINGS } from '../config/settings';
-import { calculatePath } from '../geometry/path';
+import { calculatePath, type Path } from '../geometry/path';
+import type { ImagePoint } from '../geometry/units';
 import { newLine, newPoint, newRoute, newScene, type IdSource, type Route, type Scene } from '../model/scene';
 import { cycleAllowanceMs, contentEndMs, sceneLength } from './sceneLength';
 import { routeShape } from './shape';
@@ -29,18 +31,25 @@ function routeOf(specs: readonly string[]): Route {
 }
 
 const shapeOf = (route: Route, aspect = 0.75, budget?: number) => routeShape(route, leadWalk(route), aspect, budget);
-const placesOf = (route: Route, ids: readonly string[]) =>
-  ids.map((id) => route.points.find((point) => point.id === id) ?? { x: Number.NaN, y: Number.NaN });
+const placesOf = (route: Route, ids: readonly string[]): ImagePoint[] =>
+  ids.map((id) => {
+    const { x, y } = route.points.find((point) => point.id === id) ?? { x: Number.NaN, y: Number.NaN };
+    return { x, y };
+  });
+
+/** Line `k` of a run as `routeShape` gives it: its two authored points, and between them its slice of the curve. */
+function lineOf(path: Path, k: number, ends: readonly ImagePoint[]) {
+  const [from = 0, to = 0] = [path.knots[k], path.knots[k + 1]];
+  return [ends[k], ...path.points.slice(from + 1, to), ends[k + 1]];
+}
 
 describe('a route’s shape, run by run (§6)', () => {
   it('a chain of stops is one curve through them all, as v3 draws its route', () => {
     const route = routeOf(['a>b', 'b>c', 'c>d']);
-    const path = calculatePath(placesOf(route, ['a', 'b', 'c', 'd']), 0.75);
+    const ends = placesOf(route, ['a', 'b', 'c', 'd']);
+    const path = calculatePath(ends, 0.75);
     const shapes = shapeOf(route);
-    const [k0, k1, k2, k3] = path.knots;
-    expect(shapes.get('a>b')?.samples).toEqual(path.points.slice(k0, (k1 ?? 0) + 1));
-    expect(shapes.get('b>c')?.samples).toEqual(path.points.slice(k1, (k2 ?? 0) + 1));
-    expect(shapes.get('c>d')?.samples).toEqual(path.points.slice(k2, (k3 ?? 0) + 1));
+    ['a>b', 'b>c', 'c>d'].forEach((lineId, k) => expect(shapes.get(lineId)?.samples).toEqual(lineOf(path, k, ends)));
     const widths = [...shapes.values()].reduce((sum, shape) => sum + shape.lengthWidths, 0);
     expect(widths).toBeCloseTo(path.length, 9);
   });
@@ -48,15 +57,17 @@ describe('a route’s shape, run by run (§6)', () => {
   it('the lead’s start, a fork and a join begin or end a run: a fork that rejoins (§3)', () => {
     const route = routeOf(['A>B', 'B>C', 'B>D', 'C>E', 'D>E', 'E>F']);
     const shapes = shapeOf(route);
-    expect(shapes.get('A>B')?.samples).toEqual(calculatePath(placesOf(route, ['A', 'B']), 0.75).points);
-    const upper = calculatePath(placesOf(route, ['B', 'C', 'E']), 0.75);
-    expect(shapes.get('B>C')?.samples.at(-1)).toEqual(upper.points[upper.knots[1] ?? 0]);
-    expect(shapes.get('E>F')?.samples).toEqual(calculatePath(placesOf(route, ['E', 'F']), 0.75).points);
+    const [ab, upper, ef] = [['A', 'B'], ['B', 'C', 'E'], ['E', 'F']].map((ids) => placesOf(route, ids));
+    expect(shapes.get('A>B')?.samples).toEqual(lineOf(calculatePath(ab ?? [], 0.75), 0, ab ?? []));
+    expect(shapes.get('B>C')?.samples).toEqual(lineOf(calculatePath(upper ?? [], 0.75), 0, upper ?? []));
+    expect(shapes.get('C>E')?.samples).toEqual(lineOf(calculatePath(upper ?? [], 0.75), 1, upper ?? []));
+    expect(shapes.get('E>F')?.samples).toEqual(lineOf(calculatePath(ef ?? [], 0.75), 0, ef ?? []));
   });
 
   it('a line the lead leaves out is a run of its own, in its saved direction: a loop (§3)', () => {
     const route = routeOf(['A>B', 'B>C', 'C>D', 'D>B']);
-    expect(shapeOf(route).get('D>B')?.samples).toEqual(calculatePath(placesOf(route, ['D', 'B']), 0.75).points);
+    const ends = placesOf(route, ['D', 'B']);
+    expect(shapeOf(route).get('D>B')?.samples).toEqual(lineOf(calculatePath(ends, 0.75), 0, ends));
   });
 
   it('INTAKE.12: never passes the route’s budget, however many runs it has', () => {
@@ -72,6 +83,28 @@ describe('a route’s shape, run by run (§6)', () => {
         expect(samples).toBeLessThanOrEqual(budget);
       }),
     );
+  });
+});
+
+describe('a line’s ends: its authored points, never the curve’s nearest sample (Codex, stage 2)', () => {
+  it('each line starts and ends at its authored points, where the curve’s nearest sample misses them', () => {
+    // Codex's case on stage 2: B's nearest sample on the curve was (0.33315164, 0.79995471), so the lead stepped
+    // onto B for its pause and back off it on leaving.
+    const where: Readonly<Record<string, ImagePoint>> = {
+      A: { x: 0, y: 0 },
+      B: { x: 0.3333, y: 0.8 },
+      C: { x: 1, y: 0.1 },
+    };
+    const base = routeOf(['A>B', 'B>C']);
+    const route = { ...base, points: base.points.map((point) => ({ ...point, ...where[point.id] })) };
+    const ends = placesOf(route, ['A', 'B', 'C']);
+    const path = calculatePath(ends, 0.75);
+    expect(path.points[path.knots[1] ?? 0]).not.toEqual(ends[1]);
+    const shapes = shapeOf(route);
+    expect(shapes.get('A>B')?.samples.at(0)).toEqual(where.A);
+    expect(shapes.get('A>B')?.samples.at(-1)).toEqual(where.B);
+    expect(shapes.get('B>C')?.samples.at(0)).toEqual(where.B);
+    expect(shapes.get('B>C')?.samples.at(-1)).toEqual(where.C);
   });
 });
 
@@ -165,5 +198,17 @@ describe('the bound on animation that cycles: the grace period and the author’
       { cycles: { releaseEndMs: 2_000, allowanceMs: Number.POSITIVE_INFINITY } },
     ];
     expect(contentEndMs(scene, 0.75, parts)).toBe(2_000);
+  });
+
+  it('no sum of times, and no dot however slow, makes the scene endless (Codex, stage 2)', () => {
+    const scene = sceneOf([{ totalTimeMs: 1_000 }]);
+    const huge = { cycles: { releaseEndMs: Number.MAX_VALUE, allowanceMs: Number.MAX_VALUE } };
+    expect(contentEndMs(scene, 0.75, [huge, { endsAtMs: Number.MAX_VALUE }])).toBe(LIMITS.timeMs);
+    expect(Number.isFinite(sceneLength(scene, 0.75, [huge]))).toBe(true);
+    const slowest = cycleAllowanceMs(crowd, 0.75, Number.MIN_VALUE, ['A']);
+    expect(slowest).toBe(LIMITS.timeMs);
+    const crawling = [{ cycles: { releaseEndMs: 1, allowanceMs: slowest } }];
+    expect(contentEndMs(scene, 0.75, crawling)).toBe(LIMITS.timeMs);
+    expect(Number.isFinite(sceneLength(scene, 0.75, crawling))).toBe(true);
   });
 });

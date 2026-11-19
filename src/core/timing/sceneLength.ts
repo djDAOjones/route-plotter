@@ -5,6 +5,7 @@
 // and by the author's control, the fixed length the clock already holds, which cuts it. No new saved field (D-number
 // in the pull request, provisional under the owner's grant G3).
 import { playLength } from '../clock/clock';
+import { LIMITS } from '../config/limits';
 import type { Route, Scene } from '../model/scene';
 import { routeShape } from './shape';
 import { composeTimeline } from './timeline';
@@ -17,12 +18,15 @@ export type Part =
   /** Animation that cycles, such as a crowd that repeats or respawns: it lasts its allowance past its release end. */
   | { readonly cycles: { readonly releaseEndMs: number; readonly allowanceMs: number } };
 
-/** A time a feature reports, read so that no part can make the scene endless or run before it starts. */
-const bounded = (ms: number) => (Number.isFinite(ms) ? Math.max(0, ms) : 0);
+/**
+ * A time a feature reports, read so that no part can make the scene endless or run before it starts: a time that is
+ * not a number counts as 0, and none runs past the longest time a scene may hold (LIMITS.timeMs), sums included.
+ */
+const bounded = (ms: number) => (Number.isFinite(ms) ? Math.min(Math.max(0, ms), LIMITS.timeMs) : 0);
 
 function endOf(part: Part): number {
   if ('endsAtMs' in part) return bounded(part.endsAtMs);
-  return bounded(part.cycles.releaseEndMs) + bounded(part.cycles.allowanceMs);
+  return bounded(bounded(part.cycles.releaseEndMs) + bounded(part.cycles.allowanceMs));
 }
 
 /** When the content has ended: the latest of each route's lead and each part. `aspect` is the image's height / width. */
@@ -40,7 +44,8 @@ export function sceneLength(scene: Pick<Scene, 'routes' | 'settings'>, aspect: n
  * The grace period for animation that cycles on a route (§4): the time a dot at `speed` image widths a second takes to
  * cover, once, every line it can reach from the points it sets off from, each line in the ways it runs. Finite on any
  * route, loops included; it shows the crowd moving over all its lines, without promising that every dot completes a
- * journey. A speed that is not a positive number moves nothing, so asks for no time.
+ * journey. A speed that is not a positive number moves nothing, so asks for no time; a speed so slow that the time
+ * would pass the longest a scene may hold (LIMITS.timeMs) asks for that.
  */
 export function cycleAllowanceMs(
   route: Pick<Route, 'points' | 'lines' | 'leadStart'>,
@@ -64,5 +69,5 @@ export function cycleAllowanceMs(
   }
   const shapes = routeShape(route, leadWalk(route), aspect);
   const widths = [...reached].reduce((sum, lineId) => sum + (shapes.get(lineId)?.lengthWidths ?? 0), 0);
-  return (widths / speed) * 1000;
+  return Math.min((widths / speed) * 1000, LIMITS.timeMs);
 }
