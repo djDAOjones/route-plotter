@@ -2,7 +2,7 @@
 
 ## Intent
 
-The HTML player rebuilds the timing on load whatever the project's mode (`src/player/PlayerApp.js`, its load), so a constant-time project whose duration the author set, and which the editor keeps until a rebuild (`_timingDerived` false, DEF-06), plays at a different length in the player: Codex's CROWD-05 review r1 measured the base 12,000 ms in the editor and 2,640 ms in the player. Pre-existing loader behaviour. A defect against play == export, under the owner's "fix defects along the way" (2026-09-28) and GATELESS-1.
+The HTML player rebuilds the timing on load whatever the project's mode (`v3/src/player/PlayerApp.js`, its load), so a constant-time project whose duration the author set, and which the editor keeps until a rebuild (`_timingDerived` false, DEF-06), plays at a different length in the player: Codex's CROWD-05 review r1 measured the base 12,000 ms in the editor and 2,640 ms in the player. Pre-existing loader behaviour. A defect against play == export, under the owner's "fix defects along the way" (2026-09-28) and GATELESS-1.
 
 ## Acceptance criteria
 

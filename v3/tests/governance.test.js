@@ -103,7 +103,7 @@ describe('repository governance contract', () => {
   });
 
   test('security reports use the private GitHub route', () => {
-    const security = read('.github/SECURITY.md');
+    const security = read('../.github/SECURITY.md');
 
     expect(security).toContain('https://github.com/djDAOjones/route-plotter/security/advisories/new');
     expect(security).toMatch(/Do not disclose .* public issue/is);
@@ -111,7 +111,7 @@ describe('repository governance contract', () => {
   });
 
   test('support uses public Issues on a best-effort basis without an SLA', () => {
-    const support = read('.github/SUPPORT.md');
+    const support = read('../.github/SUPPORT.md');
 
     expect(support).toContain('https://github.com/djDAOjones/route-plotter/issues');
     expect(support).toMatch(/best-effort basis/i);

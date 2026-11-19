@@ -33,6 +33,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+          # STACK-01: frozen v3's package and lockfile live in v3/.
+          cache-dependency-path: v3/package-lock.json
 
       # GATE-01: a record-only change runs the record checker alone; anything
       # the sort cannot place, or cannot read, runs every lane.
@@ -42,19 +44,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
-      - name: Install frozen dependencies
+      - name: Install frozen v3's dependencies
         if: steps.sort.outputs.install == 'true'
+        working-directory: v3
         run: npm ci
 
       - name: Test the gate's own sorting
         if: steps.sort.outputs.gate == 'true'
         run: node scripts/gate.mjs --lane gate
 
+      # The lane runs from v3/, where v3 builds into v3/docs/, which git ignores.
       - name: Run frozen v3's whole suite, shell contract and build check
         if: steps.sort.outputs.v3 == 'true'
         run: node scripts/gate.mjs --lane v3
 
-      # STACK-01 fills v4's gate; a run over 10 minutes is reported as a finding.
+      # STACK-02 fills v4's gate; a run over 10 minutes is reported as a finding.
       - name: Run v4's gate
         if: steps.sort.outputs.v4 == 'true'
         run: node scripts/gate.mjs --lane v4
@@ -63,4 +67,4 @@ jobs:
         run: node scripts/gate.mjs --lane record
 
       - name: Prove verification did not rewrite Pages output
-        run: git diff --exit-code -- docs version.json
+        run: git diff --exit-code -- docs version.json v3/version.json

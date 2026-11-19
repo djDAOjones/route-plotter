@@ -24,5 +24,5 @@ With a before/after browser check of the Tooltip system and the CSS. **P1**
 [gated: TST-04, TST-13 impl] — With a before/after browser check of the
 Tooltip system and the CSS. **P1**
 ```
-- 2026-10-05 — `src/components/Tooltip.js`, `src/config/tooltips.js` and `styles/tooltip.css` stay until UI-03 decides whether to reuse them: the session's call, from the Backlog status session's request, for the owner to confirm.
-- 2026-10-05 — UI-03 decided: hover lives in `ParamTooltip.js`, so `Tooltip.js`, `tooltips.js` and `tooltip.css` are not needed. Removing them also takes `main.js`'s `attachAllTooltips`, the `index.html` stylesheet link, `build.js`'s static file list and `tests/elementIds.test.js`'s `tooltip-container` row and test.
+- 2026-10-05 — `v3/src/components/Tooltip.js`, `v3/src/config/tooltips.js` and `v3/styles/tooltip.css` stay until UI-03 decides whether to reuse them: the session's call, from the Backlog status session's request, for the owner to confirm.
+- 2026-10-05 — UI-03 decided: hover lives in `ParamTooltip.js`, so `Tooltip.js`, `tooltips.js` and `tooltip.css` are not needed. Removing them also takes `main.js`'s `attachAllTooltips`, the `index.html` stylesheet link, `build.js`'s static file list and `v3/tests/elementIds.test.js`'s `tooltip-container` row and test.

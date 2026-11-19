@@ -2,7 +2,7 @@
 
 ## Intent
 
-Every crowd slider, the Edge Traffic slider and the Node path-weight inputs route through `crowd:param-changed` to `saveUndoStateDebounced` (`src/app/crowds.js` lines 190-196 and 324-330; `src/app/network.js` lines 189 and 524; `src/app/undoRedo.js` lines 87-93): a drag paused for more than 400 ms makes two undo entries, and a Direction change within 400 ms of a Traffic nudge cancels the pending timer and merges both into one entry (`undoRedo.js` line 70). CROWD-06's Hold at end slider already records on `change`. Promotes the crowd half of the wish-list line on slider undo timing. **P3**
+Every crowd slider, the Edge Traffic slider and the Node path-weight inputs route through `crowd:param-changed` to `saveUndoStateDebounced` (`v3/src/app/crowds.js` lines 190-196 and 324-330; `v3/src/app/network.js` lines 189 and 524; `v3/src/app/undoRedo.js` lines 87-93): a drag paused for more than 400 ms makes two undo entries, and a Direction change within 400 ms of a Traffic nudge cancels the pending timer and merges both into one entry (`undoRedo.js` line 70). CROWD-06's Hold at end slider already records on `change`. Promotes the crowd half of the wish-list line on slider undo timing. **P3**
 
 ## Acceptance criteria
 
@@ -12,9 +12,9 @@ Every crowd slider, the Edge Traffic slider and the Node path-weight inputs rout
 
 ## Context and sources
 
-- `src/app/crowds.js` (:190-196, :324-330) — `_wireCrowdSlider`
-- `src/app/network.js` (:183-190, :512-526) — Traffic and weights
-- `src/app/undoRedo.js` (:70, :87-93) — the debounce
+- `v3/src/app/crowds.js` (:190-196, :324-330) — `_wireCrowdSlider`
+- `v3/src/app/network.js` (:183-190, :512-526) — Traffic and weights
+- `v3/src/app/undoRedo.js` (:70, :87-93) — the debounce
 - [The crowd review](../../reviews/crowd-07-crowd-review-2026-10-08.md) — F34, F35
 - [Codex's verdict](../../reviews/design-review-second-opinion-2026-10-08.md) — CONFIRMED, F35 folded in
 - [UI-06](./UI-06.md) and [CROWD-07](./CROWD-07.md) — the reviews that found it
@@ -22,4 +22,4 @@ Every crowd slider, the Edge Traffic slider and the Node path-weight inputs rout
 ## Notes
 
 - 2026-10-08 — Filed from the design reviews' defect candidates on the owner's acceptance of the twelve proposed rows ("Accept all as proposed (Recommended)", 2026-10-08). Found by CROWD-07; the route-card sliders in the wish-list line stay on the wish-list. The priority is the reviewing session's proposal, accepted with the row.
-- 2026-10-12 — Seen in CROWD-07's crowd cards PR 5b (#128, `9466a3f`, v3.2.716): a Trace route into network within 400 ms of choosing Custom network shares that choice's undo entry, since the trace saves at once (`src/app/crowds.js` (:1184)) and `saveUndoState` cancels the choice's pending debounced save instead of making it (`src/app/undoRedo.js` (:70–75)). This row's defect, present before the PR and not fixed there: the lead's settlement, on Codex r1's reading of the PR's twelfth question. The PR's DEF-89 tests flush the pending entry before they trace, as a person's slower trace would (`tests/crowds.test.js`, "the Guide helper tells the truth after a trace (DEF-89)").
+- 2026-10-12 — Seen in CROWD-07's crowd cards PR 5b (#128, `9466a3f`, v3.2.716): a Trace route into network within 400 ms of choosing Custom network shares that choice's undo entry, since the trace saves at once (`v3/src/app/crowds.js` (:1184)) and `saveUndoState` cancels the choice's pending debounced save instead of making it (`v3/src/app/undoRedo.js` (:70–75)). This row's defect, present before the PR and not fixed there: the lead's settlement, on Codex r1's reading of the PR's twelfth question. The PR's DEF-89 tests flush the pending entry before they trace, as a person's slower trace would (`v3/tests/crowds.test.js`, "the Guide helper tells the truth after a trace (DEF-89)").

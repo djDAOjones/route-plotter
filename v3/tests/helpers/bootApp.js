@@ -8,10 +8,12 @@
  * under test is the real wiring.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, vi } from 'vitest';
+import { afterAll, afterEach, vi } from 'vitest';
 import { contextFor } from '../setup.js';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -217,16 +219,46 @@ function installLayout({ width, height, playbarHeight }) {
   if (playbar) fixSize(playbar, { offsetHeight: playbarHeight });
 }
 
+/** Where `docs/examples/` is served from once built, or null (see below). */
+let builtExamples = null;
+
+/**
+ * The example archives the site serves from `docs/examples/` are build
+ * output, and v3's build output is not in the repository (STACK-01), so the
+ * harness builds them once, with the build's own deterministic script, the
+ * first time a test asks for one.
+ */
+function examplesFolder() {
+  if (builtExamples) return builtExamples;
+  const folder = mkdtempSync(join(tmpdir(), 'route-plotter-examples-'));
+  const built = spawnSync(process.execPath, [join(repoRoot, 'scripts', 'build-examples.mjs'), folder],
+    { cwd: repoRoot, encoding: 'utf8' });
+  if (built.status !== 0) {
+    rmSync(folder, { recursive: true, force: true });
+    throw new Error(`The example archives could not be built: ${built.stderr || built.error}`);
+  }
+  builtExamples = folder;
+  return folder;
+}
+
+afterAll(() => {
+  if (builtExamples) rmSync(builtExamples, { recursive: true, force: true });
+  builtExamples = null;
+});
+
 /**
  * The app fetches its bundled example images by relative path, so the harness
- * serves the repository itself. Anything outside it fails loudly: a test that
- * needs the network needs its own fixture.
+ * serves the repository itself, and `docs/examples/` from the archives built
+ * above. Anything outside them fails loudly: a test that needs the network
+ * needs its own fixture.
  */
 function serveRepositoryFiles() {
   return vi.fn(async (input) => {
     const path = String(input).replace(/^\.?\//, '').split(/[?#]/)[0];
-    const file = join(repoRoot, path);
-    if (!file.startsWith(repoRoot) || !existsSync(file)) {
+    const example = path.startsWith('docs/examples/');
+    const base = example ? examplesFolder() : repoRoot;
+    const file = join(base, example ? path.slice('docs/examples/'.length) : path);
+    if (!file.startsWith(base) || !existsSync(file)) {
       return { ok: false, status: 404, statusText: 'Not Found' };
     }
     const bytes = readFileSync(file);

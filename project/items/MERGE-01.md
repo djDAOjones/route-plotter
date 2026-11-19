@@ -8,7 +8,7 @@ The owner wants the next major version, v4, to merge routes and crowds. In his w
 
 - A written plan in `reviews/` weighs options and recommends one for each of these, for the owner to decide:
   - the merged model: what kind of layer or layers v4 has, and what each v3 route and crowd becomes;
-  - what sets the scene's two durations once routes and crowds merge. Today the base timeline comes from the route (its legs, speeds, pauses, intro and longest branch), or from the author's Duration with no route clock, and crowd releases, anchors, label fades and camera transitions are fractions of it. The playback duration then adds what finishes after it (crowds that finish, beacons still changing) and Hold at end (`src/utils/sceneEnd.js`);
+  - what sets the scene's two durations once routes and crowds merge. Today the base timeline comes from the route (its legs, speeds, pauses, intro and longest branch), or from the author's Duration with no route clock, and crowd releases, anchors, label fades and camera transitions are fractions of it. The playback duration then adds what finishes after it (crowds that finish, beacons still changing) and Hold at end (`v3/src/utils/sceneEnd.js`);
   - how a crowd's path can carry the camera, as the owner asked;
   - how lines are drawn and styled across what are routes and crowds today;
   - how options and their controls are added, the owner's question having pictured a features pop-up; which exist at v4.0, which come later, and how each appears in the scene outline;
@@ -49,13 +49,13 @@ Open question: Owner: the plan's question round, `reviews/v4-architecture-plan-2
 - `reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md`: §11 and §16
 - `pm_skills/project/archive/decision-log-2026-08-17-to-2026-08-26.md`: the founding decision (:1558) and the "one inspector, explicit scopes" review (:1165)
 - [CROWD-08](./CROWD-08.md): the MVP that ships first
-- `src/services/CameraService.js`: the follow camera centres on the route head
-- `src/utils/sceneEnd.js`: the base timeline and the playback duration
-- `src/services/RenderingService.js` (:1342–1349): a crowd's network is drawn only while editing
+- `v3/src/services/CameraService.js`: the follow camera centres on the route head
+- `v3/src/utils/sceneEnd.js`: the base timeline and the playback duration
+- `v3/src/services/RenderingService.js` (:1342–1349): a crowd's network is drawn only while editing
 
 ## Notes
 
-- 2026-10-13 — The filing session's analysis, for the plan to weigh. For a merge: one mental model, one pen and one vocabulary; every feature works on every layer; several routes come free; the bridging features go. Against: something must still set the scene's length; a route's authored leg timing and a crowd's seeded release and pace are different motions; a route branch plays every branch at once while a crowd junction sends each dot one way; and every project, example and HTML export must carry over. The session proposed converging in steps: a camera target for any layer, scenes without a story route, one pen, then the pop-up. The owner chose a merge for v4. The lines share their geometry already: crowd paths use the route's `PathCalculator` (`src/services/SwarmEngine.js` (:905)).
+- 2026-10-13 — The filing session's analysis, for the plan to weigh. For a merge: one mental model, one pen and one vocabulary; every feature works on every layer; several routes come free; the bridging features go. Against: something must still set the scene's length; a route's authored leg timing and a crowd's seeded release and pace are different motions; a route branch plays every branch at once while a crowd junction sends each dot one way; and every project, example and HTML export must carry over. The session proposed converging in steps: a camera target for any layer, scenes without a story route, one pen, then the pop-up. The owner chose a merge for v4. The lines share their geometry already: crowd paths use the route's `PathCalculator` (`v3/src/services/SwarmEngine.js` (:905)).
 - 2026-10-13 — Candidate features, from the session's catalogue of movement types. They were built as live sketches, each a pure function of time, on a page private to the owner: <https://claude.ai/artifact/Dn8NTvrNok2HMufMtPfsE8>.
   - Where dots start and finish: drawn polygon areas; destinations, where a dot picks where it is going and takes only paths that lead there.
   - Along paths: pulse; back and forth; speed per path; timed gates and first-come queues, which can be worked out in advance from arrival order; start full; change on the way (colour or size); lanes.

@@ -18,8 +18,8 @@ After CROWD-05 the animation ends when the last animation that concludes has end
 - [CROWD-05's item](./CROWD-05.md) — the rule this extends
 - [TST-04's item](./TST-04.md) — pins every control in the Pacing section
 - [DEF-20's item](./DEF-20.md) — the Duration control out of step after Open and Clear All
-- `src/config/constants.js` — `END_BUFFER_SECONDS` (line 275), the unused intent this replaces
-- `src/app/crowds.js` — "Wait here for this crowd"
+- `v3/src/config/constants.js` — `END_BUFFER_SECONDS` (line 275), the unused intent this replaces
+- `v3/src/app/crowds.js` — "Wait here for this crowd"
 
 ## Notes
 

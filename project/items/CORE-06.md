@@ -9,7 +9,7 @@ An author draws routes on the canvas (the plan's §3). This item ports v3's poin
 - Canvas authoring runs through the ported pointer transaction (one primary pointer, a 3 px tap-or-drag threshold, capture, one commit or a restoring cancel).
 - The pen adds stops and bends, draws lines, forks, joins, two-way lines and loops, sets `leadStart` and marks starts and ends; a point can be inserted into a line, deleted, dragged with its group, duplicated, nudged by arrow keys and reached by a context menu.
 - The drawing half of "what the interface can author, a project can open" (the plan's §15, rule 6), driven through these commands at their limits with v3's boundary cases.
-- A point inserted on a fork's run joins that run (DEF-22, v3's pin at `tests/branchAuthoring.test.js` :469 inverted); a drag that moves nothing records no undo (DEF-87).
+- A point inserted on a fork's run joins that run (DEF-22, v3's pin at `v3/tests/branchAuthoring.test.js` :469 inverted); a drag that moves nothing records no undo (DEF-87).
 - It changes only these paths: src/editor/canvas/** and src/core/model/commands/**.
 - Its held lines in the plan's §16 are passed or weighed, each named in the pull request.
 - The item's gate is green in CI, Codex (gpt-6-astra) has reviewed it read-only, and `node tools/check.mjs` and `--commit HEAD` give 0 failures.

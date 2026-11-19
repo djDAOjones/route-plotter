@@ -2,7 +2,7 @@
 
 ## Intent
 
-A node traced from the route is anchored to its waypoint (`anchorWaypointId`): drawing, hit-testing and the walk read `position()`, which returns the resolved anchor while one is set (`src/models/GraphNode.js` lines 51-55), but a drag in Edit network writes the authored `x`,`y` (`src/services/NetworkEditService.js` lines 613-624) and `endDrag` commits an undo entry (`src/app/network.js` lines 112-118). The node stays put, Undo gains an entry, and the scene outline shows the new numbers. The node hint still says "Choose Edit network to move nodes" (the wish-list line this promotes). **P2**
+A node traced from the route is anchored to its waypoint (`anchorWaypointId`): drawing, hit-testing and the walk read `position()`, which returns the resolved anchor while one is set (`v3/src/models/GraphNode.js` lines 51-55), but a drag in Edit network writes the authored `x`,`y` (`v3/src/services/NetworkEditService.js` lines 613-624) and `endDrag` commits an undo entry (`v3/src/app/network.js` lines 112-118). The node stays put, Undo gains an entry, and the scene outline shows the new numbers. The node hint still says "Choose Edit network to move nodes" (the wish-list line this promotes). **P2**
 
 ## Acceptance criteria
 
@@ -14,10 +14,10 @@ A node traced from the route is anchored to its waypoint (`anchorWaypointId`): d
 
 ## Context and sources
 
-- `src/models/GraphNode.js` (:39-55, :86-89) — authored vs resolved
-- `src/services/NetworkEditService.js` (:563-568, :610-648) — the drag
-- `src/app/network.js` (:112-118) — the commit
-- `src/app/sceneOutline.js` (:674-693) — the outline fields
+- `v3/src/models/GraphNode.js` (:39-55, :86-89) — authored vs resolved
+- `v3/src/services/NetworkEditService.js` (:563-568, :610-648) — the drag
+- `v3/src/app/network.js` (:112-118) — the commit
+- `v3/src/app/sceneOutline.js` (:674-693) — the outline fields
 - [The crowd review](../../reviews/crowd-07-crowd-review-2026-10-08.md) — F4, F26, probe (a)
 - [Codex's verdict](../../reviews/design-review-second-opinion-2026-10-08.md) — CONFIRMED; distinct from DEF-79
 - [UI-06](./UI-06.md) and [CROWD-07](./CROWD-07.md) — the reviews that found it

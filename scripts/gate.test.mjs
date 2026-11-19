@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, extname, join } from 'node:path';
+import { dirname, extname, join, relative } from 'node:path';
 
 import {
   LANES, RECORD, ROOT, V3, V4, V4_BUDGET_SECONDS,
@@ -34,14 +34,27 @@ describe('classify', () => {
     ]) assert.equal(classify(path), 'record', path);
   });
 
-  test("frozen v3's code, tests and build", () => {
+  test("frozen v3's code, tests and build, under v3/ since STACK-01", () => {
     for (const path of [
-      'src/app/main.js', 'styles/main.css', 'tests/governance.test.js', 'tests/helpers/bootApp.js',
-      'images/Court.png', 'index.html', 'build.js', 'push.js', 'vitest.config.js', 'public-assets.json',
-      'LICENSE', 'THIRD_PARTY_NOTICES.md', '.github/SECURITY.md', '.github/SUPPORT.md',
-      'scripts/restart.sh', 'scripts/build.sh', 'scripts/perf-harness.js', 'scripts/build-examples.mjs',
-      'scripts/README.md'
+      'v3/src/app/main.js', 'v3/styles/main.css', 'v3/tests/governance.test.js', 'v3/tests/helpers/bootApp.js',
+      'v3/images/Court.png', 'v3/index.html', 'v3/build.js', 'v3/push.js', 'v3/vitest.config.js',
+      'v3/public-assets.json', 'v3/package.json', 'v3/package-lock.json', 'v3/version.json', 'v3/LICENSE',
+      'v3/THIRD_PARTY_NOTICES.md', 'v3/scripts/restart.sh', 'v3/scripts/build.sh', 'v3/scripts/perf-harness.js',
+      'v3/scripts/build-examples.mjs', 'v3/scripts/README.md', 'v3/docs/app.js', 'v3/new-file.txt',
+      // v3's governance test reads these two from the root.
+      '.github/SECURITY.md', '.github/SUPPORT.md'
     ]) assert.equal(classify(path), 'v3', path);
+  });
+
+  test('the paths v3 left at the root are not v3 any more, so a new file there runs everything', () => {
+    const left = [
+      'src/app/main.js', 'src/core/model.ts', 'styles/main.css', 'tests/governance.test.js', 'tests/a11y/x.spec.ts',
+      'images/Court.png', 'index.html', 'build.js', 'push.js', 'vitest.config.js', 'public-assets.json',
+      'LICENSE', 'THIRD_PARTY_NOTICES.md', 'scripts/restart.sh', 'scripts/build.sh', 'scripts/perf-harness.js',
+      'scripts/build-examples.mjs', 'scripts/README.md'
+    ];
+    for (const path of left) assert.equal(classify(path), 'other', path);
+    for (const path of left) assert.deepEqual(plan([path]).lanes, EVERYTHING, path);
   });
 
   test('everything else is other, near misses included', () => {
@@ -52,18 +65,20 @@ describe('classify', () => {
       'Route Plotter v3.code-workspace',
       // Near misses: only the exact spelling at the root counts.
       'project', 'Project/backlog.md', 'readme.md', 'README.md.orig', 'docs/AGENTS.md', 'tools',
-      'toolsx/check.mjs', 'reviews.md', 'LICENSE.txt', 'scripts/gate.sh'
+      'toolsx/check.mjs', 'reviews.md', 'LICENSE.txt', 'scripts/gate.sh',
+      'v3', 'V3/src/a.js', 'v3x/src/a.js', 'docs/v3/app.js', 'src/v3/a.js', '.github/workflows/v3.yml'
     ]) assert.equal(classify(path), 'other', path);
     // A record folder's name below the root is not the record.
-    assert.equal(classify('src/project/x.js'), 'v3');
+    assert.equal(classify('v3/src/project/x.js'), 'v3');
+    assert.equal(classify('v3/project/backlog.md'), 'v3');
   });
 
-  test("v4's paths are other until STACK-01 lists them", () => {
+  test("v4's paths are other until STACK-02 lists them", () => {
     assert.deepEqual(V4, { files: [], dirs: [] });
     assert.equal(classify('app/main.tsx'), 'other');
     assert.equal(classify('app/main.tsx', { v4: SOME_V4 }), 'v4');
     assert.equal(classify('tsconfig.json', { v4: SOME_V4 }), 'v4');
-    assert.equal(classify('src/app/main.js', { v4: SOME_V4 }), 'v3');
+    assert.equal(classify('v3/src/app/main.js', { v4: SOME_V4 }), 'v3');
   });
 });
 
@@ -74,15 +89,17 @@ describe('plan', () => {
   });
 
   test("a v3 change runs v3's whole suite, with the gate's tests and the record checker", () => {
-    assert.deepEqual(plan(['src/app/main.js']).lanes, ['gate', 'v3', 'record']);
-    assert.deepEqual(plan(['tests/governance.test.js', 'LICENSE']).lanes, ['gate', 'v3', 'record']);
+    assert.deepEqual(plan(['v3/src/app/main.js']).lanes, ['gate', 'v3', 'record']);
+    assert.deepEqual(plan(['v3/tests/governance.test.js', 'v3/LICENSE']).lanes, ['gate', 'v3', 'record']);
+    assert.deepEqual(plan(['.github/SECURITY.md']).lanes, ['gate', 'v3', 'record']);
   });
 
   test('mixed pushes run every lane any of their paths asks for', () => {
-    assert.deepEqual(plan(['project/backlog.md', 'src/app/main.js']).lanes, ['gate', 'v3', 'record']);
+    assert.deepEqual(plan(['project/backlog.md', 'v3/src/app/main.js']).lanes, ['gate', 'v3', 'record']);
     assert.deepEqual(plan(['project/backlog.md', 'package.json']).lanes, EVERYTHING);
-    assert.deepEqual(plan(['src/app/main.js', '.github/workflows/ci.yml']).lanes, EVERYTHING);
-    assert.deepEqual(plan(['project/backlog.md', 'src/app/main.js', 'specs/x.md']).lanes, EVERYTHING);
+    assert.deepEqual(plan(['v3/src/app/main.js', '.github/workflows/ci.yml']).lanes, EVERYTHING);
+    assert.deepEqual(plan(['v3/src/app/main.js', 'scripts/gate.mjs']).lanes, EVERYTHING);
+    assert.deepEqual(plan(['project/backlog.md', 'v3/src/app/main.js', 'specs/x.md']).lanes, EVERYTHING);
   });
 
   test('a change that is empty or cannot be read runs everything', () => {
@@ -95,7 +112,7 @@ describe('plan', () => {
     assert.ok(!plan(['package.json']).lanes.includes('v4'));
     assert.deepEqual(plan(['app/main.tsx'], { v4 }).lanes, ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['app/main.tsx', 'project/backlog.md'], { v4 }).lanes, ['gate', 'v4', 'record']);
-    assert.deepEqual(plan(['app/main.tsx', 'src/app/main.js'], { v4 }).lanes, ['gate', 'v3', 'v4', 'record']);
+    assert.deepEqual(plan(['app/main.tsx', 'v3/src/app/main.js'], { v4 }).lanes, ['gate', 'v3', 'v4', 'record']);
     assert.deepEqual(plan(['app/main.tsx', 'package.json'], { v4 }).lanes, ['gate', 'v3', 'v4', 'record']);
     assert.deepEqual(plan(null, { v4 }).lanes, ['gate', 'v3', 'v4', 'record']);
   });
@@ -176,7 +193,7 @@ describe('lastGreenSha', () => {
 });
 
 describe('reading a change from git', () => {
-  /** A scratch repository with a v3 file, a record file and origin/main. */
+  /** A scratch repository with two v3 files, a record file and origin/main. */
   function scratch() {
     const dir = mkdtempSync(join(tmpdir(), 'gate-01-'));
     const run = (...args) => {
@@ -190,8 +207,8 @@ describe('reading a change from git', () => {
       writeFileSync(join(dir, path), text);
     };
     run('init', '-q', '-b', 'main');
-    write('src/a.js', 'export const a = 1;\n');
-    write('src/b.js', 'export const b = 2;\n');
+    write('v3/src/a.js', 'export const a = 1;\n');
+    write('v3/src/b.js', 'export const b = 2;\n');
     write('project/backlog.md', '# Backlog\n');
     run('add', '-A');
     run('commit', '-q', '-m', 'start');
@@ -219,10 +236,10 @@ describe('reading a change from git', () => {
   test('a file moved from v3 into the record still counts as v3', () => {
     const repo = scratch();
     try {
-      repo.run('mv', 'src/a.js', 'project/a.js');
+      repo.run('mv', 'v3/src/a.js', 'project/a.js');
       repo.run('commit', '-q', '-m', 'move');
       const paths = pathsOfRange(['origin/main...HEAD'], repo.dir);
-      assert.deepEqual(paths.sort(), ['project/a.js', 'src/a.js']);
+      assert.deepEqual(paths.sort(), ['project/a.js', 'v3/src/a.js']);
       assert.deepEqual(plan(paths).lanes, ['gate', 'v3', 'record']);
     } finally {
       repo.done();
@@ -232,16 +249,16 @@ describe('reading a change from git', () => {
   test('a deletion, an untracked file and a staged change are all read', () => {
     const repo = scratch();
     try {
-      repo.run('rm', '-q', 'src/b.js');
+      repo.run('rm', '-q', 'v3/src/b.js');
       repo.run('commit', '-q', '-m', 'delete');
-      assert.deepEqual(localPaths(repo.dir), ['src/b.js']);
+      assert.deepEqual(localPaths(repo.dir), ['v3/src/b.js']);
       repo.run('reset', '-q', '--hard', 'origin/main');
       repo.write('notes.txt', 'loose\n');
       assert.deepEqual(plan(localPaths(repo.dir)).lanes, EVERYTHING);
       rmSync(join(repo.dir, 'notes.txt'));
-      repo.write('src/a.js', 'export const a = 3;\n');
-      repo.run('add', 'src/a.js');
-      assert.deepEqual(localPaths(repo.dir), ['src/a.js']);
+      repo.write('v3/src/a.js', 'export const a = 3;\n');
+      repo.run('add', 'v3/src/a.js');
+      assert.deepEqual(localPaths(repo.dir), ['v3/src/a.js']);
     } finally {
       repo.done();
     }
@@ -251,7 +268,7 @@ describe('reading a change from git', () => {
     const repo = scratch();
     try {
       const green = repo.run('rev-parse', 'HEAD');
-      repo.write('src/a.js', 'export const a = 4;\n');
+      repo.write('v3/src/a.js', 'export const a = 4;\n');
       repo.run('commit', '-q', '-am', 'v3');
       repo.run('switch', '-q', 'main');
       repo.write('project/backlog.md', '# Backlog\n- [x] Y\n');
@@ -259,7 +276,7 @@ describe('reading a change from git', () => {
       repo.run('merge', '-q', '--no-edit', 'work');
       const after = repo.run('rev-parse', 'HEAD');
       const range = ciRange({ eventName: 'push', event: {}, ref: 'refs/heads/main', sha: after, lastGreen: green });
-      assert.deepEqual(pathsOfRange(range, repo.dir).sort(), ['project/backlog.md', 'src/a.js']);
+      assert.deepEqual(pathsOfRange(range, repo.dir).sort(), ['project/backlog.md', 'v3/src/a.js']);
     } finally {
       repo.done();
     }
@@ -272,7 +289,7 @@ describe('reading a change from git', () => {
     try {
       repo.run('switch', '-q', 'main');
       const passed = repo.run('rev-parse', 'HEAD');
-      repo.write('src/b.js', 'export const b = 5;\n');
+      repo.write('v3/src/b.js', 'export const b = 5;\n');
       repo.run('commit', '-q', '-am', 'B: v3');
       const b = repo.run('rev-parse', 'HEAD');
       repo.write('project/backlog.md', '# Backlog\n- [ ] C\n');
@@ -288,17 +305,17 @@ describe('reading a change from git', () => {
   });
 
   test('every tracked link is found, chained ones included', () => {
-    // Codex's chain: src/alias -> ../images, then LICENSE -> src/alias/../project/license.txt,
-    // which a lexical reading places in src/ but the file system places in the record.
+    // Codex's chain: v3/src/alias -> ../images, then v3/LICENSE -> src/alias/../../project/license.txt,
+    // which a lexical reading places in v3/ but the file system places in the record.
     const repo = scratch();
     try {
       repo.write('project/license.txt', 'terms\n');
-      mkdirSync(join(repo.dir, 'images'));
-      symlinkSync('../images', join(repo.dir, 'src', 'alias'));
-      symlinkSync('src/alias/../project/license.txt', join(repo.dir, 'LICENSE'));
-      symlinkSync('a.js', join(repo.dir, 'src', 'c.js'));
+      mkdirSync(join(repo.dir, 'v3', 'images'));
+      symlinkSync('../images', join(repo.dir, 'v3', 'src', 'alias'));
+      symlinkSync('src/alias/../../project/license.txt', join(repo.dir, 'v3', 'LICENSE'));
+      symlinkSync('a.js', join(repo.dir, 'v3', 'src', 'c.js'));
       repo.run('add', '-A');
-      assert.deepEqual(trackedLinks(repo.dir), ['LICENSE', 'src/alias', 'src/c.js']);
+      assert.deepEqual(trackedLinks(repo.dir), ['v3/LICENSE', 'v3/src/alias', 'v3/src/c.js']);
     } finally {
       repo.done();
     }
@@ -337,6 +354,16 @@ describe('runLane', () => {
     assert.ok(said.some(line => /^FINDING: slow took 5 s, over its budget of 1 s/.test(line)), said.join('\n'));
   });
 
+  test("a lane runs from its own folder, and v3's from v3/", () => {
+    assert.equal(LANES.v3.cwd, 'v3');
+    for (const lane of ['gate', 'v4', 'record']) assert.equal(LANES[lane].cwd, undefined, lane);
+    const here = [process.execPath, ['-e', 'process.exit(process.cwd() === process.env.WANT ? 0 : 7)']];
+    const lanes = { root: { title: 'root', commands: [here] }, v3: { title: 'v3', cwd: 'v3', commands: [here] } };
+    assert.equal(runLane('root', { ...quiet, env: { ...process.env, WANT: ROOT }, lanes }), 0);
+    assert.equal(runLane('v3', { ...quiet, env: { ...process.env, WANT: join(ROOT, 'v3') }, lanes }), 0);
+    assert.equal(runLane('v3', { ...quiet, env: { ...process.env, WANT: ROOT }, lanes }), 7);
+  });
+
   test("v4's gate has the 10-minute budget the owner chose", () => {
     assert.equal(V4_BUDGET_SECONDS, 600);
     assert.equal(LANES.v4.budgetSeconds, 600);
@@ -363,10 +390,13 @@ describe('the gate as wired in this repository', () => {
     // A folder counts when a path follows it, so `/Failed to load project/` (a regular expression) does not.
     const pattern = new RegExp(`(?<![\\w.-])(${RECORD.files.map(escape).join('|')}|` +
       `(?:${RECORD.dirs.map(dir => escape(dir.slice(0, -1))).join('|')})/(?=[\\w.-]))`, 'g');
-    // Mentions in comments, read by hand on 2026-11-18: none reads a record file.
+    // Mentions in comments, read by hand on 2026-11-18: none reads a record file. v3's
+    // package.json names tools/ in its `check` script, which ends by running the record
+    // checker from the root, the record lane's own command; the v3 lane does not run it.
     const known = new Set([
-      'src/services/HTMLExportService.js UI-STANDARDS.md', 'src/app/privacy.js project/',
-      'scripts/restart.sh DEV-INFRASTRUCTURE.md', 'scripts/perf-harness.js DEV-INFRASTRUCTURE.md'
+      'v3/src/services/HTMLExportService.js UI-STANDARDS.md', 'v3/src/app/privacy.js project/',
+      'v3/scripts/restart.sh DEV-INFRASTRUCTURE.md', 'v3/scripts/perf-harness.js DEV-INFRASTRUCTURE.md',
+      'v3/package.json tools/'
     ]);
     const code = new Set(['.js', '.mjs', '.cjs', '.html', '.css', '.json', '.sh']);
     const found = [];
@@ -383,12 +413,15 @@ describe('the gate as wired in this repository', () => {
     assert.deepEqual(trackedLinks(), []);
   });
 
-  test("npm run check still runs v3's whole suite and the record checker, as the release helper expects", () => {
-    const { scripts } = JSON.parse(read('package.json'));
+  test("v3's npm run check still runs its whole suite and the record checker, as its release helper expects", () => {
+    const { scripts } = JSON.parse(read('v3/package.json'));
     const asText = ([command, args]) => [command === process.execPath ? 'node' : command, ...args].join(' ');
-    const v3AndRecord = [...LANES.v3.commands, ...LANES.record.commands].map(asText).join(' && ');
+    // From v3/, where npm runs it, back to the root, where the record checker runs.
+    const back = `cd ${relative(join(ROOT, LANES.v3.cwd), ROOT)}`;
+    const v3AndRecord = [...LANES.v3.commands.map(asText), back, ...LANES.record.commands.map(asText)].join(' && ');
+    assert.equal(back, 'cd ..');
     assert.equal(scripts.check, v3AndRecord);
-    assert.equal(scripts['check:changed'], 'node scripts/gate.mjs');
+    assert.equal(scripts['check:changed'], 'node ../scripts/gate.mjs');
   });
 
   test('CI sorts first, runs each lane in its own step, and runs the record checker on every push', () => {
@@ -403,7 +436,11 @@ describe('the gate as wired in this repository', () => {
     const sort = stepRunning('node scripts/gate.mjs --ci --plan');
     assert.equal(sort.length, 1);
     assert.match(sort[0], /GITHUB_TOKEN: \$\{\{ github\.token \}\}/);
-    assert.match(stepRunning('npm ci')[0], /if: steps\.sort\.outputs\.install == 'true'/);
+    const [install] = stepRunning('npm ci');
+    assert.match(install, /if: steps\.sort\.outputs\.install == 'true'/);
+    // v3's package and lockfile live in v3/ (STACK-01).
+    assert.match(install, /working-directory: v3\n/);
+    assert.match(workflow, /cache-dependency-path: v3\/package-lock\.json\n/);
     for (const lane of ['gate', 'v3', 'v4']) {
       const [step] = stepRunning(`node scripts/gate.mjs --lane ${lane}`);
       assert.ok(step, lane);
@@ -411,5 +448,9 @@ describe('the gate as wired in this repository', () => {
     }
     const [record] = stepRunning('node scripts/gate.mjs --lane record');
     assert.ok(record && !/\bif:/.test(record), 'the record checker runs unconditionally');
+    // The live site and both version files are proven untouched on every push.
+    const [pages] = stepRunning('git diff --exit-code');
+    assert.match(pages, /run: git diff --exit-code -- docs version\.json v3\/version\.json\n/);
+    assert.ok(!/\bif:/.test(pages), 'the Pages proof runs unconditionally');
   });
 });

@@ -2,7 +2,7 @@
 
 ## Intent
 
-With a custom-network crowd and fewer than two route waypoints, Play is enabled but `play()` returns at once (`src/app/playback.js` line 186) with no announcement, no disabled state and no reason; the crowd renders on scrub, so the app looks frozen only on Play. This is the first stall in the novice task "people walking from one place to another" from a blank project. UI-STANDARDS System status ("The UI must never appear frozen") and Error prevention ("disable impossible actions"). **P2**
+With a custom-network crowd and fewer than two route waypoints, Play is enabled but `play()` returns at once (`v3/src/app/playback.js` line 186) with no announcement, no disabled state and no reason; the crowd renders on scrub, so the app looks frozen only on Play. This is the first stall in the novice task "people walking from one place to another" from a blank project. UI-STANDARDS System status ("The UI must never appear frozen") and Error prevention ("disable impossible actions"). **P2**
 
 ## Acceptance criteria
 
@@ -13,7 +13,7 @@ With a custom-network crowd and fewer than two route waypoints, Play is enabled 
 
 ## Context and sources
 
-- `src/app/playback.js` (:186) — the silent return
+- `v3/src/app/playback.js` (:186) — the silent return
 - `index.html` (:1219) — the Play button
 - [The crowd review](../../reviews/crowd-07-crowd-review-2026-10-08.md) — F19, F30, §7 (a)
 - [Codex's verdict](../../reviews/design-review-second-opinion-2026-10-08.md) — CONFIRMED; distinct from DEF-62

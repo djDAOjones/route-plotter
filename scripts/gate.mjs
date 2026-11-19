@@ -12,7 +12,7 @@
  *
  *   node scripts/gate.mjs                  sort this checkout's change against
  *                                          origin/main and run what it needs
- *                                          (npm run check:changed)
+ *                                          (from v3/, npm run check:changed)
  *   node scripts/gate.mjs --all            run everything
  *   node scripts/gate.mjs --plan [--range A...B]
  *                                          say what a change would run, run
@@ -28,7 +28,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, readFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /** The repository root, so the gate reads and runs the same from any folder. */
@@ -45,31 +45,32 @@ export const RECORD = {
 };
 
 /**
- * Frozen v3 (3.3.726): its code, its tests and its build's inputs. LICENSE,
- * THIRD_PARTY_NOTICES.md and the two .github documents are here because the
- * build ships them or v3's tests read them. scripts/ is listed file by file so
- * that a new script, this gate's own among them, is other.
+ * Frozen v3 (3.3.726), which STACK-01 moved into v3/: its code, its tests, its
+ * package, its build's inputs and its own copies of version.json, LICENSE and
+ * THIRD_PARTY_NOTICES.md, which its build reads. The two .github documents stay
+ * at the root and are here because v3's governance test reads them. The paths
+ * v3 left at the root are not v3 any more: a file there is other until v4's
+ * list names it.
  */
 export const V3 = {
-  files: [
-    'index.html', 'build.js', 'push.js', 'vitest.config.js', 'public-assets.json',
-    'LICENSE', 'THIRD_PARTY_NOTICES.md', '.github/SECURITY.md', '.github/SUPPORT.md',
-    'scripts/README.md', 'scripts/build.sh', 'scripts/restart.sh', 'scripts/perf-harness.js',
-    'scripts/build-examples.mjs'
-  ],
-  dirs: ['src/', 'styles/', 'tests/', 'images/']
+  files: ['.github/SECURITY.md', '.github/SUPPORT.md'],
+  dirs: ['v3/']
 };
 
 /**
- * v4's paths: empty until STACK-01 puts v4 at the root. While it is empty the
- * v4 lane never runs, and STACK-01 fills both this list and `check:v4`.
+ * v4's paths: empty until STACK-02 puts v4's skeleton at the root. While it is
+ * empty the v4 lane never runs, and STACK-02 fills both this list and
+ * `check:v4`.
  */
 export const V4 = { files: [], dirs: [] };
 
 /** v4's gate has a 10-minute budget; exceeding it is a finding, not a failure. */
 export const V4_BUDGET_SECONDS = 600;
 
-/** The lanes, in the order they run. The record checker runs last, as before. */
+/**
+ * The lanes, in the order they run, each from its folder (cwd, below the
+ * root). The record checker runs last, as before.
+ */
 export const LANES = {
   gate: {
     title: "the gate's own tests",
@@ -77,6 +78,7 @@ export const LANES = {
   },
   v3: {
     title: "frozen v3's whole suite, shell contract and build check",
+    cwd: 'v3',
     commands: [['npm', ['test']], ['npm', ['run', 'test:shell']], ['npm', ['run', 'build:check']]]
   },
   v4: {
@@ -252,7 +254,7 @@ export function runLane(name, { env = process.env, log = console.log, lanes = LA
   log(`gate: running ${lane.title}`);
   const started = now();
   for (const [command, args] of lane.commands) {
-    const result = spawnSync(command, args, { cwd: ROOT, stdio: 'inherit', env });
+    const result = spawnSync(command, args, { cwd: join(ROOT, lane.cwd ?? ''), stdio: 'inherit', env });
     if (result.status !== 0) {
       log(`gate: ${lane.title} failed at ${[command === process.execPath ? 'node' : command, ...args].join(' ')}`);
       return result.status ?? 1;
