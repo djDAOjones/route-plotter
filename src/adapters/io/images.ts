@@ -37,7 +37,8 @@ export interface Size {
 /**
  * Decodes an image as the page will draw it and gives the size it decoded to, or null when it does not decode. The
  * shell (CORE-05) passes one built on the browser's own decoder, `createImageBitmap`; io's tests pass a fake. It is
- * given a copy of the bytes, so nothing it does can change what is saved or opened.
+ * given its own copy of the bytes, in a new buffer whatever kind of array it came in (a Node Buffer's `slice` shares
+ * its storage), so nothing it does can change what is saved or opened.
  */
 export type Decode = (bytes: Uint8Array, type: ImageType) => Promise<Size | null>;
 
@@ -176,7 +177,7 @@ function admitHeaders(images: Images): Exclude<Admission, { ok: true }> | { read
 /** Whether one image decodes to the size its header declares. A decoder that throws refuses the image. */
 async function decodesTo(decode: Decode, image: Images[number], declared: Size): Promise<boolean> {
   try {
-    const decoded = await decode(image.bytes.slice(), image.type);
+    const decoded = await decode(new Uint8Array(image.bytes), image.type);
     return decoded !== null && decoded.width === declared.width && decoded.height === declared.height;
   } catch {
     return false;

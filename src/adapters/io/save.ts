@@ -25,18 +25,21 @@ const megabytes = (bytes: number) => `${Math.ceil(bytes / (1024 * 1024))} MB`;
  * the page will (images.ts): the shell passes one built on the browser's decoder.
  */
 export async function saveProject(project: Project, decode: Decode): Promise<Saved> {
+  // Save's own copy of the images, taken before anything waits: the bytes checked, decoded and written are one set,
+  // whatever the caller's arrays do while the decoder runs. The scene is safe already: `check` copies it at once.
+  const images = project.images.map(({ id, type, bytes }) => ({ id, type, bytes: new Uint8Array(bytes) }));
   const file = {
     app: 'route-plotter',
     format: 'v4',
     version: FORMAT_VERSION,
     scene: project.scene,
-    images: project.images.map(({ id, type }) => ({ id, type })),
+    images: images.map(({ id, type }) => ({ id, type })),
   };
   const checked = check(PROJECT_FILE, file);
   if (!checked.ok) {
     return { ok: false, refusal: { reason: 'invalid', message: WORDS.savedInvalid(checked.problems), problems: checked.problems } };
   }
-  const admitted = await admitImages(project.images, decode);
+  const admitted = await admitImages(images, decode);
   if (!admitted.ok) {
     return {
       ok: false,
@@ -52,7 +55,7 @@ export async function saveProject(project: Project, decode: Decode): Promise<Sav
   }
   const zip = new JSZip();
   zip.file(PROJECT_FILE_NAME, json, { binary: true, createFolders: false, date: SAVED_AT });
-  project.images.forEach((image, index) => {
+  images.forEach((image, index) => {
     zip.file(imageEntryName(index, image.type), image.bytes, { binary: true, createFolders: false, date: SAVED_AT });
   });
   const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });

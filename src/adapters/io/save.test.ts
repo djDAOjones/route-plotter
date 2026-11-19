@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { newPoint, newScene } from '../../core/model/scene';
 import type { Scene } from '../../core/model/scene';
 import { decodeHeader, jpeg, png } from './fixtures';
+import type { ImageType } from './format';
+import type { Decode } from './images';
+import { IMAGE_LIMITS } from './limits';
 import { FORMAT_VERSION } from './format';
 import type { Project } from './format';
 import { saveProject } from './save';
@@ -100,6 +103,28 @@ describe('the save format', () => {
     );
     expect(result).toMatchObject({ ok: false, refusal: { reason: 'invalid', problems: [{ path: 'images[0]', expected: 'a PNG image that can be shown' }] } });
     expect('bytes' in result).toBe(false);
+  });
+
+  it('writes the images as they were when Save was called, whatever the caller changes while it decodes (Codex)', async () => {
+    const images: { id: string; type: ImageType; bytes: Uint8Array }[] = [
+      { id: 'map', type: 'image/png', bytes: png(2, 1) },
+      { id: 'photo', type: 'image/jpeg', bytes: jpeg(1, 2) },
+    ];
+    const big = new Uint8Array(IMAGE_LIMITS.bytes + 1);
+    big.set(jpeg(1, 2));
+    let largest = 0;
+    const meddles: Decode = (bytes, type) => {
+      largest = Math.max(largest, bytes.byteLength);
+      images[0]?.bytes.fill(0);
+      images[1] = { id: 'photo', type: 'image/jpeg', bytes: big };
+      return decodeHeader(bytes, type);
+    };
+    const result = await saveProject({ scene: sceneWithLabels('x'), images }, meddles);
+    expect(largest).toBeLessThanOrEqual(IMAGE_LIMITS.bytes);
+    if (!result.ok) throw new Error(result.refusal.message);
+    const zip = await JSZip.loadAsync(result.bytes);
+    expect(await zip.file('images/1.png')?.async('uint8array')).toEqual(png(2, 1));
+    expect(await zip.file('images/2.jpg')?.async('uint8array')).toEqual(jpeg(1, 2));
   });
 
   it('exports the Save notice the editor shows wherever it offers Save (PLAN-7)', () => {

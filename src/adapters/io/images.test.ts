@@ -174,4 +174,23 @@ describe('the decode guard: each image must decode, to the size its header decla
     expect(await admitImages([{ type: 'image/png', bytes }], spoils)).toEqual({ ok: true });
     expect(bytes).toEqual(png(4, 3));
   });
+
+  it('gives the decoder a copy in a new buffer even when the image’s own slice shares storage, as a Node Buffer’s does', async () => {
+    class Sharing extends Uint8Array {
+      override slice(start?: number, end?: number): Sharing {
+        return new Sharing(this.buffer, this.byteOffset + (start ?? 0), (end ?? this.length) - (start ?? 0));
+      }
+    }
+    const bytes = new Sharing(png(4, 3));
+    let given: Uint8Array | undefined;
+    const spoils: Decode = (copy, type) => {
+      given = copy;
+      const size = sizeOf(copy, type);
+      copy.fill(0);
+      return Promise.resolve(size);
+    };
+    expect(await admitImages([{ type: 'image/png', bytes }], spoils)).toEqual({ ok: true });
+    expect(given?.buffer).not.toBe(bytes.buffer);
+    expect(Uint8Array.from(bytes)).toEqual(png(4, 3));
+  });
 });
