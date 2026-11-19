@@ -8,8 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { LIMITS } from '../config/limits';
 import { check } from '../schema/check';
 import { defaultsOf, type Field, type Fields } from '../schema/field';
-import { checkScene } from './checkScene';
-import { LINE_FIELDS, MARK_FIELDS, POINT_FIELDS, ROUTE_FIELDS, SCENE_FIELDS, newScene } from './scene';
+import { LINE_FIELDS, POINT_FIELDS, ROUTE_FIELDS, SCENE, checkScene, newScene } from './scene';
 
 const RUNS = 100;
 
@@ -67,7 +66,7 @@ function routeOf(r: number) {
     const ids = Array.from({ length: size }, (_, p) => `r${r}p${p}`);
     const index = fc.integer({ min: 0, max: Math.max(0, size - 1) });
     const pair = fc.tuple(index, index).filter(([a, b]) => a !== b);
-    const kinds = MARK_FIELDS.end.choices;
+    const kinds = ROUTE_FIELDS.marks.of.end.choices;
     return fc.record({
       id: fc.constant(`r${r}`),
       points: fc.tuple(...ids.map((id) => valuesOf(POINT_FIELDS).map((values) => ({ id, ...values })))),
@@ -82,7 +81,7 @@ function routeOf(r: number) {
 const sceneOf = fc.integer({ min: 0, max: LIMITS.routes }).chain((count) =>
   fc.record({
     routes: fc.tuple(...Array.from({ length: count }, (_, r) => routeOf(r))),
-    settings: valuesOf(SCENE_FIELDS.settings.of),
+    settings: valuesOf(SCENE.of.settings.of),
   }),
 );
 
@@ -97,9 +96,8 @@ describe('the model’s properties', () => {
   });
 
   it('the defaults are valid: every group’s, and a new scene’s with any ids', () => {
-    for (const fields of [ROUTE_FIELDS.settings.of, SCENE_FIELDS.settings.of]) {
-      expect(check(fields, defaultsOf(fields)).ok).toBe(true);
-    }
+    expect(check(ROUTE_FIELDS.settings, defaultsOf(ROUTE_FIELDS.settings.of)).ok).toBe(true);
+    expect(check(SCENE.of.settings, defaultsOf(SCENE.of.settings.of)).ok).toBe(true);
     fc.assert(
       fc.property(fc.string({ minLength: 1, maxLength: LIMITS.idLength }), (id) => {
         expect(checkScene(newScene(() => id)).ok).toBe(true);

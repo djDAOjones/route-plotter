@@ -3,7 +3,9 @@
 // its TypeScript type (`Values`), its default (`defaultsOf`), its check at open (`check`, in check.ts) and the range a
 // control offers, so a value that opens is one its control can show (DEF-20.2, INTAKE.29). A control reads `min`,
 // `max` and `unit`, or `choices`, or `maxLength`, from the field itself. The project's shape is declared the same way:
-// an entity's id, a reference to an item of a list, a list of entities, and a group of fields saved together.
+// an entity's id, a reference to an item of a list, a field that may be empty, a list of entities, and a group of
+// fields saved together; a list or group also carries the rules no single field states, so the check at open is the
+// declaration's check and nothing else.
 
 /** What a number measures: shown beside a control, and named in a check's report. */
 type Unit =
@@ -55,24 +57,41 @@ interface IdField extends Declared<'id'> {
   readonly maxLength: number;
 }
 
-/**
- * The id of an item of `list`, a list declared on the entity holding this field or on the nearest one around it.
- * Where `nullWhenEmpty` is true it is null exactly while that list is empty, and a new one is null.
- */
-interface ReferenceField<N extends boolean = boolean> extends Declared<'reference'> {
+/** The id of an item of `list`, a list declared on the entity holding this field or on the nearest one around it. */
+interface ReferenceField extends Declared<'reference'> {
   readonly list: string;
-  readonly nullWhenEmpty: N;
 }
 
-/** Entities of one declaration, at most `max` of them; a new list is empty. */
+/** A field that may be empty: null, or a value `of` accepts; a new one is null. */
+interface OptionalField<O extends Field = Field> extends Declared<'optional'> {
+  readonly of: O;
+}
+
+/** Where a value breaks a rule: a path inside it (empty for the whole), what the rule expects and what it found. */
+export interface Breach {
+  readonly at: string;
+  readonly rule: 'reference' | 'duplicate' | 'total' | 'count';
+  readonly expected: string;
+  readonly received: string;
+}
+
+/** A rule over an entity or group that no single field states, such as "a line joins two different points". */
+export interface Rule<T> {
+  /** Every place `value`, whose fields are all sound, breaks the rule; none when it keeps it. */
+  breaches(value: T): readonly Breach[];
+}
+
+/** Entities of one declaration, at most `max` of them, each keeping `rules`; a new list is empty. */
 interface ListField<E extends Fields = Fields> extends Declared<'list'> {
   readonly of: E;
   readonly max: number;
+  readonly rules: readonly Rule<Values<E>>[];
 }
 
-/** Fields saved together as one object, such as a route's line settings; a new group holds their defaults. */
-interface GroupField<E extends Fields = Fields> extends Declared<'group'> {
+/** Fields saved together as one object, keeping `rules`, such as a route's line settings; a new one holds defaults. */
+export interface GroupField<E extends Fields = Fields> extends Declared<'group'> {
   readonly of: E;
+  readonly rules: readonly Rule<Values<E>>[];
 }
 
 export type Field =
@@ -83,6 +102,7 @@ export type Field =
   | TextField
   | IdField
   | ReferenceField
+  | OptionalField
   | ListField
   | GroupField;
 
@@ -97,22 +117,29 @@ type ValueOf<F extends Field> = F extends ChoiceField<infer C>
     ? number
     : F extends BooleanField
       ? boolean
-      : F extends ReferenceField<infer N>
-        ? N extends true
-          ? string | null
-          : string
+      : F extends OptionalField<infer O>
+        ? Field extends O
+          ? unknown
+          : ValueOf<O> | null
         : F extends ListField<infer E>
-          ? Values<E>[]
+          ? Fields extends E
+            ? unknown[]
+            : Values<E>[]
           : F extends GroupField<infer E>
-            ? Values<E>
+            ? Fields extends E
+              ? Readonly<Record<string, unknown>>
+              : Values<E>
             : string;
 
-/** The saved shape of an entity or group: one property per declared field, nothing else. */
+/**
+ * The saved shape of an entity or group: one property per declared field, nothing else. A list, group or optional
+ * field declared only as `Fields` or `Field`, as the walker sees every one, stands for any value, so the type ends.
+ */
 export type Values<G extends Fields> = { -readonly [K in keyof G]: ValueOf<G[K]> };
 
 /** The fields a new entity cannot take from its declaration: its id, and a reference that must name an item. */
 type Given<G extends Fields> = {
-  [K in keyof G]: G[K] extends IdField | ReferenceField<false> ? K : never;
+  [K in keyof G]: G[K] extends IdField | ReferenceField ? K : never;
 }[keyof G];
 
 /** A new entity's values, but for its id and the references the caller gives (`Given`). */
@@ -144,16 +171,22 @@ export function id(spec: Spec<IdField>): IdField {
   return { kind: 'id', ...spec };
 }
 
-export function reference<const N extends boolean>(spec: Spec<ReferenceField<N>>): ReferenceField<N> {
+export function reference(spec: Spec<ReferenceField>): ReferenceField {
   return { kind: 'reference', ...spec };
 }
 
-export function list<E extends Fields>(spec: Spec<ListField<E>>): ListField<E> {
-  return { kind: 'list', ...spec };
+export function optional<O extends Field>(spec: Spec<OptionalField<O>>): OptionalField<O> {
+  return { kind: 'optional', ...spec };
 }
 
-export function group<E extends Fields>(spec: Spec<GroupField<E>>): GroupField<E> {
-  return { kind: 'group', ...spec };
+type Ruled<F extends ListField | GroupField> = Omit<Spec<F>, 'rules'> & { readonly rules?: F['rules'] };
+
+export function list<E extends Fields>(spec: Ruled<ListField<E>>): ListField<E> {
+  return { kind: 'list', ...spec, rules: spec.rules ?? [] };
+}
+
+export function group<E extends Fields>(spec: Ruled<GroupField<E>>): GroupField<E> {
+  return { kind: 'group', ...spec, rules: spec.rules ?? [] };
 }
 
 /**
@@ -194,7 +227,9 @@ export function ruleBrokenBy(field: Field, value: unknown): FieldRule | null {
     case 'id':
       return typeof value === 'string' && value.length > 0 && value.length <= field.maxLength ? null : 'id';
     case 'reference':
-      return typeof value === 'string' || (field.nullWhenEmpty && value === null) ? null : 'reference';
+      return typeof value === 'string' ? null : 'reference';
+    case 'optional':
+      return value === null ? null : ruleBrokenBy(field.of, value);
     case 'list':
       if (!isList(value)) return 'type';
       return value.length <= field.max ? null : 'count';
@@ -204,8 +239,13 @@ export function ruleBrokenBy(field: Field, value: unknown): FieldRule | null {
 }
 
 /** True when `value` holds, as its own property, a value its field accepts for each declared field, at every depth. */
-export function holdsValues<G extends Fields>(fields: G, value: unknown): value is Values<G> {
+export function holdsAll(fields: Fields, value: unknown): boolean {
   return isRecord(value) && Object.entries(fields).every(([name, field]) => holdsOwn(field, value, name));
+}
+
+/** `holdsAll`, as the proof that `value` is the declaration's Values: how a checked copy is typed without a cast. */
+export function holdsValues<G extends Fields>(fields: G, value: unknown): value is Values<G> {
+  return holdsAll(fields, value);
 }
 
 function holdsOwn(field: Field, value: Readonly<Record<string, unknown>>, name: string): boolean {
@@ -214,21 +254,22 @@ function holdsOwn(field: Field, value: Readonly<Record<string, unknown>>, name: 
 
 function holds(field: Field, value: unknown): boolean {
   if (ruleBrokenBy(field, value) !== null) return false;
-  if (field.kind === 'group') return holdsValues(field.of, value);
+  if (field.kind === 'optional') return value === null || holds(field.of, value);
+  if (field.kind === 'group') return holdsAll(field.of, value);
   if (field.kind !== 'list' || !isList(value)) return true;
   for (let i = 0; i < value.length; i += 1) {
-    if (!Object.hasOwn(value, i) || !holdsValues(field.of, value[i])) return false;
+    if (!Object.hasOwn(value, i) || !holdsAll(field.of, value[i])) return false;
   }
   return true;
 }
 
 function isGiven(field: Field): boolean {
-  return field.kind === 'id' || (field.kind === 'reference' && !field.nullWhenEmpty);
+  return field.kind === 'id' || field.kind === 'reference';
 }
 
-function defaultOf(field: Exclude<Field, IdField>): unknown {
+function defaultOf(field: Exclude<Field, IdField | ReferenceField>): unknown {
   switch (field.kind) {
-    case 'reference':
+    case 'optional':
       return null;
     case 'list':
       return [];
@@ -245,13 +286,13 @@ function holdsDefaults<G extends Fields>(fields: G, value: Readonly<Record<strin
 
 /**
  * A new entity's or group's values from its declaration: each field at its default, a list empty, a group at its
- * fields' defaults, a reference that may be null null. Ids and references that must name an item are the caller's
- * to give. A default its own field refuses is a fault in the declaration, and throws.
+ * fields' defaults, a field that may be empty null. Ids and references are the caller's to give. A default its own
+ * field refuses is a fault in the declaration, and throws.
  */
 export function defaultsOf<G extends Fields>(fields: G): Defaults<G> {
   const values: Record<string, unknown> = {};
   for (const [name, field] of Object.entries(fields)) {
-    if (field.kind !== 'id' && !isGiven(field)) values[name] = defaultOf(field);
+    if (field.kind !== 'id' && field.kind !== 'reference') values[name] = defaultOf(field);
   }
   if (holdsDefaults(fields, values)) return values;
   const refused = Object.entries(fields).filter(([name, field]) => !isGiven(field) && !holdsOwn(field, values, name));

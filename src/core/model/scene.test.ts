@@ -5,8 +5,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { LIMITS } from '../config/limits';
 import { isList, isRecord, type Fields, type NumberField } from '../schema/field';
-import { checkScene } from './checkScene';
-import { SCENE_FIELDS, newLine, newPoint, newRoute, newScene, type Scene } from './scene';
+import { SCENE, checkScene, newLine, newPoint, newRoute, newScene, type Scene } from './scene';
 
 /** Ids from a counter: what a test injects in place of the editor's ids. */
 function counter(prefix = 'id'): () => string {
@@ -67,7 +66,7 @@ function groupsIn(fields: Fields, where: string): [string, Fields][] {
   return [[where, fields], ...inner];
 }
 
-const numberFields = groupsIn(SCENE_FIELDS, '').flatMap(([where, fields]) =>
+const numberFields = groupsIn(SCENE.of, '').flatMap(([where, fields]) =>
   Object.entries(fields)
     .filter((entry): entry is [string, NumberField] => entry[1].kind === 'number')
     .map(([name, field]) => ({ where, name, field })),
@@ -169,7 +168,7 @@ describe('INTAKE.29 and DEF-20.2: a value that opens is always one its control c
   });
 });
 
-describe('the scene’s shape: ids, references, lists', () => {
+describe('the scene’s shape: ids, references and the rules across them', () => {
   it('a line joins two points of its own route, never a point to itself', () => {
     const scene = chainScene();
     const route = itemAt(scene.routes, 0);
@@ -227,6 +226,9 @@ describe('the scene’s shape: ids, references, lists', () => {
     expect(rulesBroken(scene)).toEqual(['routes[0].marks[3] duplicate']);
   });
 
+});
+
+describe('what an open reads: declared, own fields only', () => {
   it('an unknown field anywhere is reported, never kept or dropped silently (INTAKE.13)', () => {
     const scene = { ...chainScene(), extra: true, routes: [{ ...chainScene().routes[0], colourful: 1 }] };
     expect(rulesBroken(scene)).toEqual(['routes[0].colourful unknown', 'extra unknown']);

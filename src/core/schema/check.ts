@@ -1,11 +1,24 @@
-// CORE-01: the check at open, from the declarations in field.ts, all the way down: fields, ids, references, lists and
-// groups. A failure never throws: it is a list of problems, each naming the field's full path, the rule it broke, what
-// the field accepts and what it was given. Only a value's own fields are read, only plain objects and lists are
-// accepted, and only declared fields are copied into the checked value, so an inherited field or a forbidden key
-// (`__proto__`) never reaches the project; an unknown key is reported, never silently kept or dropped (INTAKE.13).
-import { holdsValues, isList, isRecord, ruleBrokenBy, type Field, type Fields, type Values } from './field';
+// CORE-01: the check at open, from one declaration all the way down: fields, ids, references, optional fields, lists,
+// groups and the rules they carry. A failure never throws: it is a list of problems, each naming the field's full
+// path, the rule it broke, what the field accepts and what it was given. Each own property is read once, by its
+// descriptor, so no getter runs; only plain objects and lists are accepted; every own key that is not declared,
+// hidden or symbol keys included, is reported, never silently kept or dropped (INTAKE.13); and only declared fields
+// are copied into the checked value, so an inherited field or a forbidden key (`__proto__`) never reaches the
+// project. References are resolved against the checked copy, never against a second read of the input.
+import {
+  holdsAll,
+  holdsValues,
+  isList,
+  isRecord,
+  ruleBrokenBy,
+  type Field,
+  type Fields,
+  type GroupField,
+  type Rule,
+  type Values,
+} from './field';
 
-type Rule =
+type Broken =
   | 'missing'
   | 'unknown'
   | 'type'
@@ -20,11 +33,11 @@ type Rule =
   | 'count'
   | 'total';
 
-export interface Problem {
+interface Problem {
   /** Where the value sits in what was checked, such as `routes[0].settings.line.thickness`; empty for the whole. */
   readonly path: string;
   /** The rule it broke. */
-  readonly rule: Rule;
+  readonly rule: Broken;
   /** What the field accepts, in words, such as `a number from 1 to 40 pixels`. */
   readonly expected: string;
   /** What it was given, shortened. */
@@ -62,7 +75,9 @@ function accepts(field: Field): string {
     case 'id':
       return `text of 1 to ${field.maxLength} characters`;
     case 'reference':
-      return `the id of an item in ${field.list}${field.nullWhenEmpty ? `, or null while ${field.list} is empty` : ''}`;
+      return `the id of an item in ${field.list}`;
+    case 'optional':
+      return `${accepts(field.of)}, or null`;
     case 'list':
       return `a list of at most ${field.max}`;
     case 'group':
@@ -70,107 +85,163 @@ function accepts(field: Field): string {
   }
 }
 
-/** What one check has seen: its problems, every id so far, and the ids in each list around the value it is at. */
+/**
+ * An entity's or group's fields and the rules it keeps. A rule is declared for its entity's Values; the walker holds
+ * it as a rule over any record (a method's parameter is bivariant) and calls it only once `holdsAll` has proved the
+ * copy is that entity's Values.
+ */
+interface Declaration {
+  readonly of: Fields;
+  readonly rules: readonly Rule<Readonly<Record<string, unknown>>>[];
+}
+
+/** The ids of each list an entity declares, once checked, or null for a list refused whole. */
+type Frame = Map<string, ReadonlySet<string> | null>;
+
+interface Reference {
+  readonly frames: readonly Frame[];
+  readonly list: string;
+  readonly id: string;
+  readonly path: string;
+  readonly expected: string;
+}
+
+/** What one check has seen: its problems, every id so far, the references to resolve, and where it is reading. */
 interface Walk {
   readonly problems: Problem[];
   readonly ids: Set<string>;
-  readonly lists: ReadonlyMap<string, ReadonlySet<string>>[];
+  readonly references: Reference[];
+  at: string;
 }
 
-function report(walk: Walk, path: string, rule: Rule, expected: string, value: unknown): void {
-  walk.problems.push({ path, rule, expected, received: describe(value) });
+/** Marks a value refused, so it is never copied. */
+const REFUSED = Symbol('refused');
+
+function report(walk: Walk, path: string, rule: Broken, expected: string, received: string): void {
+  walk.problems.push({ path, rule, expected, received });
 }
 
 const join = (path: string, name: string) => (path === '' ? name : `${path}.${name}`);
 
-/** The own ids of a list's items, read before the items are checked, so a reference may name a later item. */
-function idsIn(fields: Fields, items: unknown): Set<string> {
-  const ids = new Set<string>();
+type Own = { readonly found: 'value'; readonly value: unknown } | { readonly found: 'none' | 'accessor' };
+
+/** An own data property, read by its descriptor so that no getter runs. */
+function own(value: object, key: string | number | symbol): Own {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  if (descriptor === undefined) return { found: 'none' };
+  return 'value' in descriptor ? { found: 'value', value: descriptor.value } : { found: 'accessor' };
+}
+
+/** Every own key, hidden and symbol keys included, each with its value described. */
+function ownKeys(value: object): [string, string][] {
+  const keys = [...Object.getOwnPropertyNames(value), ...Object.getOwnPropertySymbols(value)];
+  return keys.map((key) => {
+    const read = own(value, key);
+    return [typeof key === 'string' ? key : String(key), read.found === 'value' ? describe(read.value) : 'a getter'];
+  });
+}
+
+function idsOf(fields: Fields, items: unknown): ReadonlySet<string> | null {
+  if (!Array.isArray(items)) return null;
   const key = Object.keys(fields).find((name) => fields[name]?.kind === 'id');
-  if (key === undefined || !isList(items)) return ids;
+  const ids = new Set<string>();
   for (const item of items) {
-    const named = isRecord(item) && Object.hasOwn(item, key) ? item[key] : undefined;
-    if (typeof named === 'string') ids.add(named);
+    const id = key !== undefined && isRecord(item) ? item[key] : undefined;
+    if (typeof id === 'string') ids.add(id);
   }
   return ids;
 }
 
-/** The ids in each list `fields` declares, by the list's name: what a reference on or inside `value` may name. */
-function listsIn(fields: Fields, value: Readonly<Record<string, unknown>>): Map<string, Set<string>> {
-  const lists = new Map<string, Set<string>>();
-  for (const [name, field] of Object.entries(fields)) {
-    if (field.kind === 'list') lists.set(name, idsIn(field.of, Object.hasOwn(value, name) ? value[name] : undefined));
-  }
-  return lists;
-}
-
-/** The ids of `list` on the nearest entity around the value being checked that declares a list of that name. */
-function nearest(walk: Walk, list: string): ReadonlySet<string> | undefined {
-  for (let i = walk.lists.length - 1; i >= 0; i -= 1) {
-    const ids = walk.lists[i]?.get(list);
-    if (ids !== undefined) return ids;
-  }
-  return undefined;
-}
-
-function checkRecord(fields: Fields, value: unknown, path: string, walk: Walk): Record<string, unknown> {
+function checkRecord(declared: Declaration, value: unknown, path: string, walk: Walk, frames: readonly Frame[]) {
+  walk.at = path;
   const copy: Record<string, unknown> = {};
   if (!isRecord(value)) {
-    report(walk, path, 'type', 'an object', value);
+    report(walk, path, 'type', 'an object', describe(value));
     return copy;
   }
-  walk.lists.push(listsIn(fields, value));
-  for (const [name, field] of Object.entries(fields)) {
-    if (Object.hasOwn(value, name)) copy[name] = checkValue(field, value[name], join(path, name), walk);
-    else walk.problems.push({ path: join(path, name), rule: 'missing', expected: accepts(field), received: 'nothing' });
+  const frame: Frame = new Map();
+  for (const [name, field] of Object.entries(declared.of)) {
+    const at = join(path, name);
+    walk.at = at;
+    const read = own(value, name);
+    const checked = read.found === 'value' ? checkValue(field, read.value, at, walk, [...frames, frame]) : REFUSED;
+    if (read.found === 'none') report(walk, at, 'missing', accepts(field), 'nothing');
+    if (read.found === 'accessor') report(walk, at, 'type', accepts(field), 'a getter');
+    if (checked !== REFUSED) copy[name] = checked;
+    if (field.kind === 'list') frame.set(name, idsOf(field.of, copy[name]));
   }
-  for (const key of Object.keys(value)) {
-    if (!Object.hasOwn(fields, key)) report(walk, join(path, key), 'unknown', 'no such field', value[key]);
+  for (const [key, received] of ownKeys(value)) {
+    if (!Object.hasOwn(declared.of, key)) report(walk, join(path, key), 'unknown', 'no such field', received);
   }
-  walk.lists.pop();
+  if (!holdsAll(declared.of, copy)) return copy;
+  for (const breach of declared.rules.flatMap((rule) => rule.breaches(copy))) {
+    report(walk, join(path, breach.at), breach.rule, breach.expected, breach.received);
+  }
   return copy;
 }
 
-function checkList(fields: Fields, value: readonly unknown[], path: string, walk: Walk): unknown[] {
+function checkList(declared: Declaration & { readonly max: number }, value: readonly unknown[], path: string,
+  walk: Walk, frames: readonly Frame[]): unknown[] | typeof REFUSED {
+  walk.at = path;
+  const { length } = value;
+  if (length > declared.max) {
+    report(walk, path, 'count', `a list of at most ${declared.max}`, `a list of ${length}`);
+    return REFUSED;
+  }
   const copy: unknown[] = [];
-  for (let i = 0; i < value.length; i += 1) {
-    if (Object.hasOwn(value, i)) copy.push(checkRecord(fields, value[i], `${path}[${i}]`, walk));
-    else walk.problems.push({ path: `${path}[${i}]`, rule: 'missing', expected: 'an object', received: 'a hole' });
+  for (let i = 0; i < length; i += 1) {
+    const read = own(value, i);
+    if (read.found === 'value') copy.push(checkRecord(declared, read.value, `${path}[${i}]`, walk, frames));
+    else report(walk, `${path}[${i}]`, 'missing', 'an object', read.found === 'none' ? 'a hole' : 'a getter');
+  }
+  for (const [key, received] of ownKeys(value)) {
+    const item = /^(0|[1-9]\d*)$/.test(key) && Number(key) < length;
+    if (!item && key !== 'length') report(walk, join(path, key), 'unknown', 'no such field', received);
   }
   return copy;
 }
 
-function checkReference(list: string, value: unknown, path: string, walk: Walk, expected: string): void {
-  const ids = nearest(walk, list);
-  const empty = ids === undefined || ids.size === 0;
-  if (value === null ? !empty : typeof value !== 'string' || ids?.has(value) !== true) {
-    report(walk, path, 'reference', expected, value);
-  }
-}
-
-function checkValue(field: Field, value: unknown, path: string, walk: Walk): unknown {
+function checkValue(field: Field, value: unknown, path: string, walk: Walk, frames: readonly Frame[]): unknown {
   const rule = ruleBrokenBy(field, value);
   if (rule !== null) {
-    report(walk, path, rule, accepts(field), value);
-    return value;
+    report(walk, path, rule, accepts(field), describe(value));
+    return REFUSED;
   }
-  if (field.kind === 'group') return checkRecord(field.of, value, path, walk);
-  if (field.kind === 'list') return isList(value) ? checkList(field.of, value, path, walk) : value;
-  if (field.kind === 'reference') checkReference(field.list, value, path, walk, accepts(field));
+  if (field.kind === 'optional') return value === null ? null : checkValue(field.of, value, path, walk, frames);
+  if (field.kind === 'group') return checkRecord(field, value, path, walk, frames);
+  if (field.kind === 'list') return isList(value) ? checkList(field, value, path, walk, frames) : REFUSED;
+  if (field.kind === 'reference' && typeof value === 'string') {
+    walk.references.push({ frames, list: field.list, id: value, path, expected: accepts(field) });
+  }
   if (field.kind === 'id' && typeof value === 'string') {
-    if (walk.ids.has(value)) report(walk, path, 'duplicate', 'an id used nowhere else', value);
+    if (walk.ids.has(value)) report(walk, path, 'duplicate', 'an id used nowhere else', describe(value));
     walk.ids.add(value);
   }
   return value;
 }
 
+/** Each reference, against the checked ids of its list on the nearest entity declaring one. */
+function resolve(walk: Walk): void {
+  for (const { frames, list, id, path, expected } of walk.references) {
+    let ids: ReadonlySet<string> | null | undefined;
+    for (let i = frames.length - 1; ids === undefined && i >= 0; i -= 1) ids = frames[i]?.get(list);
+    if (ids !== null && ids?.has(id) !== true) report(walk, path, 'reference', expected, describe(id));
+  }
+}
+
 /**
- * A value checked against its declarations: every problem is listed, not only the first. Ids are unique across
- * everything checked in one call, and a reference names an item of its list on the nearest entity declaring one.
+ * A value checked against its declaration: every problem is listed, not only the first. Ids are unique across
+ * everything checked in one call; a reference names a checked item of its list on the nearest entity declaring one;
+ * each rule is kept once the fields it reads are sound. Anything that cannot be read as plain data is refused.
  */
-export function check<G extends Fields>(fields: G, value: unknown, path = ''): Checked<Values<G>> {
-  const walk: Walk = { problems: [], ids: new Set(), lists: [] };
-  const copy = checkRecord(fields, value, path, walk);
-  if (walk.problems.length === 0 && holdsValues(fields, copy)) return { ok: true, value: copy };
+export function check<E extends Fields>(declared: GroupField<E>, value: unknown, path = ''): Checked<Values<E>> {
+  const walk: Walk = { problems: [], ids: new Set(), references: [], at: path };
+  try {
+    const copy = checkRecord(declared, value, path, walk, []);
+    resolve(walk);
+    if (walk.problems.length === 0 && holdsValues(declared.of, copy)) return { ok: true, value: copy };
+  } catch {
+    report(walk, walk.at, 'type', 'plain data', 'something that could not be read');
+  }
   return { ok: false, problems: walk.problems };
 }

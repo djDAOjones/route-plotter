@@ -74,10 +74,11 @@ export const LEAD_SETTINGS = {
 };
 
 export const MARKER_SETTINGS = {
-  // v3's five waypoint visibility modes (v3/src/config/constants.js:342–347), in v4's words.
+  // v3's five waypoint visibility modes (v3/src/config/constants.js:342–347), in v4's words; default v3's model
+  // default, hide before (v3/src/main.js:172).
   appearance: choice({
     choices: ['always', 'from arrival', 'until arrival', 'at arrival', 'never'],
-    default: 'always',
+    default: 'from arrival',
     description: 'When a stop’s marker shows: always, from the lead’s arrival, until it, only at it, or never.',
   }),
   // v3/index.html:194; default v3/src/config/constants.js:44.
