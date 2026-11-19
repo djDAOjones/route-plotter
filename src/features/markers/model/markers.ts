@@ -30,12 +30,11 @@ function evaluate({ settings, route, timeMs }: RouteInput<Settings>): Evaluation
   if (appearance === 'never') return { ok: true, value: { look, markers: [] } };
   const stops = route.shape.points.filter((point) => point.kind === 'stop');
   const scaleOf = timingOf(route.timeline, new Set(stops.map((point) => point.id)));
-  // "until arrival" and "at arrival" show as always until their shrinking after the lead leaves is built (5b-1).
   const markers = stops
     .map((point) => ({
       pointId: point.id,
       at: { x: point.x, y: point.y },
-      scale: appearance === 'from arrival' ? scaleOf(point.id, appearance, timeMs) : 1,
+      scale: appearance === 'always' ? 1 : scaleOf(point.id, appearance, timeMs),
     }))
     .filter((marker) => marker.scale > 0);
   return { ok: true, value: { look, markers } };

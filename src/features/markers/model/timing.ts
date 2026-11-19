@@ -7,6 +7,9 @@ import type { Timeline } from '../../../core/timing/timeline';
 /** v3's WAYPOINT_ANIM: a grow of 0.25 s, held between 1% and 8% of the walk's moving time; no overshoot. */
 const GROW = { targetMs: 250, least: 0.01, most: 0.08 };
 
+/** v3's "at the stop" share of the walk's moving time, just after the lead leaves (phase 3, :533). */
+const AT_STOP = 0.001;
+
 /** v3's ease-out with an overshoot of 1.0, a cubic (easeOutBack, MotionVisibilityService.js:570–578). */
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
@@ -20,6 +23,47 @@ type LineTime = Times['lines'][number];
 interface Behind {
   readonly gapMs: number;
   readonly previous: string | null;
+}
+
+/** What the walks back and forward read: the timeline, the route's stops, and the line the lead arrives at each by. */
+interface Graph {
+  readonly times: Times;
+  readonly stops: ReadonlySet<string>;
+  readonly into: ReadonlyMap<string, LineTime>;
+}
+
+/** Back from a stop through bends to the stop before it, or to the start when no stop stands between (v3's -1). */
+function behind(graph: Graph, pointId: string, arriveMs: number): Behind {
+  const { times, stops, into } = graph;
+  if (pointId === times.start) return { gapMs: 0, previous: null };
+  const seen = new Set<string>();
+  let line = into.get(pointId);
+  let leftMs = arriveMs;
+  while (line !== undefined && !seen.has(line.from)) {
+    seen.add(line.from);
+    leftMs = line.departMs;
+    if (stops.has(line.from)) return { gapMs: arriveMs - leftMs, previous: line.from };
+    if (line.from === times.start) break;
+    line = into.get(line.from);
+  }
+  return { gapMs: arriveMs - leftMs, previous: null };
+}
+
+/** Forward from a stop through bends: the least moving time to the next stop, or to a branch's end (v3's 1). */
+function ahead(graph: Graph, pointId: string): { readonly aheadMs: number; readonly toStop: boolean } {
+  const { times, stops } = graph;
+  let best = { aheadMs: Infinity, toStop: false };
+  const walk = (from: string, sofarMs: number, seen: ReadonlySet<string>) => {
+    const out = times.lines.filter((line) => line.from === from);
+    if (out.length === 0 && sofarMs < best.aheadMs && from !== pointId) best = { aheadMs: sofarMs, toStop: false };
+    for (const line of out) {
+      const ms = sofarMs + line.arriveMs - line.departMs;
+      if (stops.has(line.to)) best = ms < best.aheadMs ? { aheadMs: ms, toStop: true } : best;
+      else if (!seen.has(line.to)) walk(line.to, ms, new Set([...seen, line.to]));
+    }
+  };
+  walk(pointId, 0, new Set([pointId]));
+  return Number.isFinite(best.aheadMs) ? best : { aheadMs: 0, toStop: false };
 }
 
 /**
@@ -36,26 +80,11 @@ export function timingOf(times: Times, stops: ReadonlySet<string>) {
   for (const line of times.lines) {
     if (!into.has(line.to) && line.arriveMs === times.points.get(line.to)?.arriveMs) into.set(line.to, line);
   }
-
-  /** Back from a stop through bends to the stop before it, or to the start when no stop stands between (v3's -1). */
-  function behind(pointId: string, arriveMs: number): Behind {
-    if (pointId === times.start) return { gapMs: 0, previous: null };
-    const seen = new Set<string>();
-    let line = into.get(pointId);
-    let leftMs = arriveMs;
-    while (line !== undefined && !seen.has(line.from)) {
-      seen.add(line.from);
-      leftMs = line.departMs;
-      if (stops.has(line.from)) return { gapMs: arriveMs - leftMs, previous: line.from };
-      if (line.from === times.start) break;
-      line = into.get(line.from);
-    }
-    return { gapMs: arriveMs - leftMs, previous: null };
-  }
+  const graph: Graph = { times, stops, into };
 
   /** Before the lead's arrival, hiding before: v3's grow, with its early start in the stop before's pause. */
   function growing(pointId: string, arriveMs: number, t: number): number {
-    const { gapMs, previous } = behind(pointId, arriveMs);
+    const { gapMs, previous } = behind(graph, pointId, arriveMs);
     const inMs = Math.max(leastMs, Math.min(idealMs, previous === null ? gapMs : gapMs / 2));
     // v3 never starts a grow before the stop before: the window is clamped to the gap (:434–439).
     const windowMs = Math.min(inMs, gapMs);
@@ -77,12 +106,23 @@ export function timingOf(times: Times, stops: ReadonlySet<string>) {
     return easeOut(Math.min(1, headStart + ((windowMs - remainingMs) / windowMs) * (1 - headStart)));
   }
 
+  /** After the lead leaves, hiding after: v3's shrink (:537–546), over half the way to the next stop at most. */
+  function shrinking(pointId: string, leftMs: number): number {
+    const { aheadMs, toStop } = ahead(graph, pointId);
+    // v3's window ends with the walk (:436): past a branch's end the marker keeps the size it had there.
+    const sinceMs = toStop ? leftMs : Math.min(leftMs, aheadMs);
+    if (sinceMs === 0 || sinceMs < AT_STOP * movingMs) return 1;
+    const outMs = Math.max(leastMs, Math.min(idealMs, toStop ? aheadMs / 2 : aheadMs));
+    return sinceMs < outMs ? 1 - (sinceMs / outMs) ** 3 : 0;
+  }
+
   return (pointId: string, appearance: Timed, t: number): number => {
     const time = times.points.get(pointId);
     // A stop the walk never reaches is as one not yet reached (D136).
     if (time === undefined) return appearance === 'until arrival' ? 1 : 0;
     if (t < time.arriveMs) return appearance === 'until arrival' ? 1 : growing(pointId, time.arriveMs, t);
-    // From the lead's arrival on, whole. Until arrival and at arrival shrink away after it leaves in the next step.
-    return 1;
+    // Whole from the lead's arrival and over its pause; then, hiding after, v3's ease-in shrink (easeInBack, :584).
+    if (t < time.departMs || appearance === 'from arrival') return 1;
+    return shrinking(pointId, t - time.departMs);
   };
 }

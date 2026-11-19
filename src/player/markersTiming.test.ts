@@ -137,6 +137,32 @@ test('at a join a stop goes by the core’s arrival, the latest line in, not the
   expect(at(5_000)).toBe(1);
 });
 
+test('“until arrival” is whole until the lead leaves, then shrinks away as v3; “at arrival” does both', () => {
+  // The first test's walk: B reached at 4 s, left at 5 s, C 6 s on. v3's shrink is 250 ms here, after 10 ms at the stop.
+  const lines: Walked[] = [
+    ['A', 'B', 0, 4_000],
+    ['B', 'C', 5_000, 11_000],
+  ];
+  const reached: Reached = { A: [0, 0], B: [4_000, 5_000], C: [11_000, 11_000] };
+  const until = (t: number) => scales('ABC', lines, reached, t, 'until arrival');
+  const only = (t: number) => scales('ABC', lines, reached, t, 'at arrival');
+  expect(until(0)).toEqual({ A: 1, B: 1, C: 1 });
+  expect(until(125).A).toBeCloseTo(0.875, 6); // v3: 0.875, the start shrinking as the lead sets off
+  expect([until(3_875).B, until(4_500).B, until(5_005).B]).toEqual([1, 1, 1]); // v3: approaching, at the stop
+  expect(until(5_125).B).toBeCloseTo(0.875, 6); // v3: 0.875
+  expect(until(5_250).B).toBe(0); // v3: scale 0
+  expect(until(20_000)).toEqual({ A: 0, B: 0, C: 1 }); // v3: the last stop stays whole at the walk's end
+  expect(only(0)).toEqual({ A: 1, B: 0, C: 0 });
+  expect(only(3_875).B).toBeCloseTo(0.875, 6); // v3: 0.875 growing
+  expect([only(4_000).B, only(4_500).B]).toEqual([1, 1]);
+  expect(only(5_125).B).toBeCloseTo(0.875, 6); // v3: 0.875 shrinking
+  expect(only(20_000)).toEqual({ A: 0, B: 0, C: 1 });
+  // A stop never reached: hidden under "at arrival", whole under "until arrival" (D136).
+  const short: Walked[] = [['A', 'B', 0, 4_000]];
+  expect(scales('ABC', short, { A: [0, 0], B: [4_000, 4_000] }, 9_000, 'until arrival').C).toBe(1);
+  expect(scales('ABC', short, { A: [0, 0], B: [4_000, 4_000] }, 9_000, 'at arrival').C).toBe(0);
+});
+
 /** A, a bend, C, walked in 10 s by total time; each frame through the composer at 1080p, its markers' arcs. */
 function framed(sceneMs: number) {
   let n = 0;
