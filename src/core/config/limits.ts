@@ -14,13 +14,13 @@ export const LIMITS = Object.freeze({
   points: 10_000,
   /** Lines in a scene, all routes together: v3's network edges (v3/src/models/Scene.js:8). */
   lines: 20_000,
-  /** A stop's pause (v3/src/app/persistence.js:74). */
+  /** A stop's pause (v3/src/app/persistence.js:76). */
   pauseMs: 10 * 60 * 1000,
-  /** All of a route's pauses together (v3/src/app/persistence.js:75). */
+  /** All of a route's pauses together (v3/src/app/persistence.js:77). */
   routePausesMs: 24 * 60 * 60 * 1000,
-  /** Any time in the scene: a start, a total time, a fixed length (v3/src/app/persistence.js:72). */
+  /** Any time in the scene: a start, a total time, a fixed length (v3/src/app/persistence.js:74). */
   timeMs: 24 * 60 * 60 * 1000,
-  /** A label's text (v3/src/app/persistence.js:69). */
+  /** A label's text (v3/src/app/persistence.js:70). */
   textLength: 100_000,
   /**
    * Where a point may stand, in image fractions: v3's authoring and load range, off the image included

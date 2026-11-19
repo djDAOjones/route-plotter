@@ -44,7 +44,7 @@ export const LEAD_SETTINGS = {
     unit: 'image widths per second',
     description: 'How fast the lead moves.',
   }),
-  // v3's duration, default 10 s (v3/src/config/constants.js:10), at most a day (v3/src/app/persistence.js:72).
+  // v3's duration, default 10 s (v3/src/config/constants.js:10), at most a day (v3/src/app/persistence.js:74).
   totalTimeMs: number({
     default: 10_000,
     min: 1,
@@ -137,7 +137,7 @@ export const LABEL_SETTINGS = {
 
 /** The pauses module's one setting, carried by each stop; a new stop takes its default. */
 export const PAUSE_SETTINGS = {
-  // Default v3/src/config/constants.js:16; at most v3/src/app/persistence.js:74.
+  // Default v3/src/config/constants.js:16; at most v3/src/app/persistence.js:76.
   pauseMs: number({
     default: 1_500,
     min: 0,
