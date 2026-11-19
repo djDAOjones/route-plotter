@@ -24,6 +24,12 @@
  *                                          with GITHUB_TOKEN)
  *   node scripts/gate.mjs --lane <name>    run one lane (CI runs each in a step)
  *
+ * The live site, the root docs/ and version.json, is written only by the
+ * publishing step (PUB-01), on main. A pull request, a branch or a checkout
+ * that changes either is refused; on main, a change the step made (its
+ * commits checked against GitHub's record of their runs) runs nothing of its
+ * own, so a publish never makes the next change wait, and a hand change fails.
+ *
  * No dependency: Node and git only, so the record-only path needs no npm ci.
  */
 
@@ -73,6 +79,34 @@ export const V4 = {
   dirs: ['src/', 'tests/']
 };
 
+/**
+ * The live site (PUB-01): the root docs/, which GitHub Pages serves, and the
+ * root version.json beside it, which says what is live. Only the publishing
+ * step writes them (.github/workflows/publish.yml, scripts/publish.mjs).
+ */
+export const PAGES = {
+  files: ['version.json'],
+  dirs: ['docs/']
+};
+
+/**
+ * How the publishing step's own commits are known: one parent, made and
+ * committed by the Actions bot, a line beginning with the trailer, and no path
+ * changed outside PAGES. The step writes exactly these (scripts/publish.mjs).
+ */
+export const STEP = {
+  trailer: 'Published-by: PUB-01',
+  name: 'github-actions[bot]',
+  email: '41898282+github-actions[bot]@users.noreply.github.com'
+};
+
+/**
+ * The line the step prints, on a line of its own in its job's log, once it has
+ * pushed a commit to main; the gate reads it to know the commit as that run's.
+ * @param {string} sha
+ */
+export const pushedLine = sha => `PUB-01 pushed ${sha} to refs/heads/main`;
+
 /** v4's gate has a 10-minute budget; exceeding it is a finding, not a failure. */
 export const V4_BUDGET_SECONDS = 600;
 
@@ -82,8 +116,8 @@ export const V4_BUDGET_SECONDS = 600;
  */
 export const LANES = {
   gate: {
-    title: "the gate's own tests",
-    commands: [[process.execPath, ['--test', 'scripts/gate.test.mjs']]]
+    title: "the gate's and the publishing step's own tests",
+    commands: [[process.execPath, ['--test', 'scripts/gate.test.mjs', 'scripts/publish.test.mjs']]]
   },
   v3: {
     title: "frozen v3's whole suite, shell contract and build check",
@@ -108,11 +142,12 @@ const inList = (path, list) => list.files.includes(path) || list.dirs.some(dir =
  * The class of one repository path, compared exactly as git spells it.
  * @param {string} path
  * @param {{ v4?: { files: string[], dirs: string[] } }} [lists]
- * @returns {'record'|'v3'|'v4'|'other'}
+ * @returns {'record'|'v3'|'pages'|'v4'|'other'}
  */
 export function classify(path, { v4 = V4 } = {}) {
   if (inList(path, RECORD)) return 'record';
   if (inList(path, V3)) return 'v3';
+  if (inList(path, PAGES)) return 'pages';
   if (inList(path, v4)) return 'v4';
   return 'other';
 }
@@ -121,19 +156,30 @@ export function classify(path, { v4 = V4 } = {}) {
  * Which lanes a change runs.
  * @param {string[]|null} paths every path the change adds, changes or deletes;
  *   null when the change could not be read
- * @param {{ v4?: { files: string[], dirs: string[] } }} [lists]
+ * @param {{ v4?: { files: string[], dirs: string[] }, pages?: 'step'|'hand' }} [lists] pages: who left
+ *   docs/ and version.json as the change leaves them. The step's output runs nothing of its own; a hand
+ *   change is other, so it runs everything (and outside main the gate refuses it before this).
  * @returns {{ lanes: string[], reason: string, classes: Map<string, string> }}
  */
-export function plan(paths, { v4 = V4 } = {}) {
+export function plan(paths, { v4 = V4, pages = 'hand' } = {}) {
   const v4Exists = v4.files.length > 0 || v4.dirs.length > 0;
   const everything = ORDER.filter(lane => lane !== 'v4' || v4Exists);
-  const classes = new Map((paths ?? []).map(path => [path, classify(path, { v4 })]));
+  const kindOf = path => {
+    const kind = classify(path, { v4 });
+    return kind === 'pages' && pages !== 'step' ? 'other' : kind;
+  };
+  const classes = new Map((paths ?? []).map(path => [path, kindOf(path)]));
   if (paths === null) return { lanes: everything, reason: 'the change could not be read', classes };
   if (paths.length === 0) return { lanes: everything, reason: 'the change names no path', classes };
 
   const found = new Set(classes.values());
   if (found.size === 1 && found.has('record')) {
     return { lanes: ['record'], reason: 'every path is record-only', classes };
+  }
+  // PUB-01: the publishing step's own output asks for no lane; the record checker still runs on every push.
+  found.delete('pages');
+  if (found.size === 0 || (found.size === 1 && found.has('record'))) {
+    return { lanes: ['record'], reason: "every path is record-only or the publishing step's own output", classes };
   }
   if (found.has('other')) {
     return { lanes: everything, reason: 'a path is outside the record, v3 and v4 lists', classes };
@@ -194,28 +240,169 @@ export function ciRange({ eventName, event, ref, sha, lastGreen = null }) {
 
 /**
  * The commit of the newest push to the default branch whose run of this
- * workflow passed, from GitHub's API; null when it cannot be had, which makes
- * the push run everything.
+ * workflow passed and which `accept` takes, from GitHub's API; null when it
+ * cannot be had, which makes the push run everything. CI accepts only an
+ * ancestor of the commit it sorts, so a run that finished late, for a newer
+ * commit, never reads a range backwards (PUB-01, from Codex's review).
  * @param {object} env the CI environment
  * @param {typeof fetch} [fetchImpl]
+ * @param {(sha: string) => boolean} [accept]
  * @returns {Promise<string|null>}
  */
-export async function lastGreenSha(env, fetchImpl = globalThis.fetch) {
+export async function lastGreenSha(env, fetchImpl = globalThis.fetch, accept = () => true) {
   const { GITHUB_TOKEN: token, GITHUB_REPOSITORY: repo, GITHUB_API_URL: api = 'https://api.github.com' } = env;
   const workflow = env.GITHUB_WORKFLOW_REF?.match(/\.github\/workflows\/([^@/]+)@/)?.[1] ?? 'ci.yml';
   if (!token || !repo || !env.DEFAULT_BRANCH) return null;
-  const query = new URLSearchParams({ branch: env.DEFAULT_BRANCH, event: 'push', status: 'success', per_page: '1' });
+  const query = new URLSearchParams({ branch: env.DEFAULT_BRANCH, event: 'push', status: 'success', per_page: '20' });
   try {
     const response = await fetchImpl(`${api}/repos/${repo}/actions/workflows/${workflow}/runs?${query}`, {
       headers: { accept: 'application/vnd.github+json', authorization: `Bearer ${token}` }
     });
     if (!response.ok) return null;
-    const sha = (await response.json())?.workflow_runs?.[0]?.head_sha;
-    return isSha(sha) ? sha : null;
+    const runs = (await response.json())?.workflow_runs ?? [];
+    return runs.map(run => run?.head_sha).find(sha => isSha(sha) && accept(sha)) ?? null;
   } catch {
     return null;
   }
 }
+
+/** Whether `ancestor` is `descendant` or comes before it. */
+export const isAncestor = (ancestor, descendant, cwd = ROOT) =>
+  git(['merge-base', '--is-ancestor', ancestor, descendant], cwd) !== null;
+
+/**
+ * The two ends of a range as git diff reads it: A...B from where B left A, A..B
+ * and [A, B] from A. Null when they cannot be had.
+ * @param {string[]} range
+ * @returns {[string, string]|null}
+ */
+export function rangeEnds(range, cwd = ROOT) {
+  if (range.length === 2) return [range[0], range[1]];
+  const [spec] = range;
+  const three = spec?.match(/^(.+)\.\.\.(.+)$/);
+  if (three) {
+    const base = git(['merge-base', three[1], three[2]], cwd)?.trim();
+    return base ? [base, three[2]] : null;
+  }
+  const two = spec?.match(/^(.+)\.\.(.+)$/);
+  return two ? [two[1], two[2]] : null;
+}
+
+/**
+ * The commits reachable from `to` (and not from `from`, when given) that are
+ * shaped as the publishing step's own (see STEP), newest first: one parent,
+ * the bot as author and committer, the trailer, and only the live site's
+ * paths. Shape is git metadata, which anyone can write, so on main the gate
+ * and the step also check each one against GitHub's record of the run that
+ * made it (authenticateStep); a pull request never relies on it.
+ * @returns {{ sha: string, run: string|null, attempt: string, body: string }[]} empty when unreadable
+ */
+export function stepCommits(from, to, cwd = ROOT) {
+  const log = git(['log', '--format=%H%x1f%P%x1f%an%x1f%ae%x1f%cn%x1f%ce%x1f%B%x1e', from ? `${from}..${to}` : to], cwd);
+  if (log === null) return [];
+  const found = [];
+  for (const entry of log.split('\x1e')) {
+    const [sha, parents, authorName, authorEmail, committerName, committerEmail, body = ''] =
+      entry.replace(/^\s+/, '').split('\x1f');
+    if (!isSha(sha) || parents.trim().split(/\s+/).length !== 1) continue;
+    if (authorName !== STEP.name || committerName !== STEP.name) continue;
+    if (authorEmail !== STEP.email || committerEmail !== STEP.email) continue;
+    const trailer = body.split('\n').find(line => line.startsWith(`${STEP.trailer} `));
+    if (!trailer) continue;
+    const changed = pathsOfRange([`${sha}^`, sha], cwd);
+    if (!changed?.length || changed.some(path => classify(path) !== 'pages')) continue;
+    found.push({ sha, run: trailer.match(/\brun (\d+)\b/)?.[1] ?? null, attempt: trailer.match(/\battempt (\d+)\b/)?.[1] ?? '1', body });
+  }
+  return found;
+}
+
+/**
+ * The step-shaped commits after `from` that left the live site as `to` holds
+ * it: neither docs/ nor version.json has changed since.
+ * @returns {{ sha: string, run: string|null, attempt: string }[]} newest first
+ */
+export function stepCandidates(from, to, cwd = ROOT) {
+  return stepCommits(from, to, cwd)
+    // git diff --quiet exits 1 on a difference, which git() reads as null.
+    .filter(({ sha }) => git(['diff', '--quiet', sha, to, '--', ...PAGES.files, ...PAGES.dirs], cwd) !== null)
+    .map(({ sha, run, attempt }) => ({ sha, run, attempt }));
+}
+
+/** Whether a commit shaped as the step's left the live site as `to` holds it (git metadata alone). */
+export const stepMade = (from, to, cwd = ROOT) => stepCandidates(from, to, cwd).length > 0;
+
+/** A GitHub API call with the run's token: JSON, or text when asked; null when it cannot be had. */
+async function github(env, fetchImpl, path, { text = false } = {}) {
+  const { GITHUB_TOKEN: token, GITHUB_API_URL: api = 'https://api.github.com' } = env;
+  try {
+    // A job's log answers with a redirect to a signed address, which fetch follows without the token.
+    const response = await fetchImpl(`${api}${path}`, {
+      headers: { accept: 'application/vnd.github+json', authorization: `Bearer ${token}` }
+    });
+    if (response.status === 404) return { missing: true };
+    if (!response.ok) return null;
+    return { body: text ? await response.text() : await response.json() };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check a step-shaped commit against GitHub's record of the run its trailer
+ * names: a run of .github/workflows/publish.yml on main of this repository,
+ * started after Verify or by hand, whose publish or take-back job printed, on
+ * a line of its own in its log, that it pushed exactly this commit (see
+ * pushedLine). Only the step on main prints that line, so an old run's number
+ * cannot vouch for another commit. True or false when the record says; null
+ * when it cannot be read yet, as while the job still runs.
+ * @param {{ sha: string, run: string|null, attempt?: string }} candidate
+ * @returns {Promise<boolean|null>}
+ */
+export async function authenticateStep(candidate, env, fetchImpl = globalThis.fetch, cwd = ROOT) {
+  const repo = env.GITHUB_REPOSITORY;
+  if (!candidate.run) return false;
+  if (!env.GITHUB_TOKEN || !repo) return null;
+  const ran = await github(env, fetchImpl, `/repos/${repo}/actions/runs/${candidate.run}`);
+  if (!ran) return null;
+  if (ran.missing) return false;
+  const run = ran.body;
+  const fits = run?.path === '.github/workflows/publish.yml' && run?.head_branch === 'main' &&
+    ['workflow_run', 'workflow_dispatch'].includes(run?.event) && run?.repository?.full_name === repo &&
+    isSha(run?.head_sha) && isAncestor(run.head_sha, `${candidate.sha}^`, cwd);
+  if (!fits) return false;
+  const listed = await github(env, fetchImpl,
+    `/repos/${repo}/actions/runs/${candidate.run}/attempts/${candidate.attempt ?? '1'}/jobs?per_page=100`);
+  if (!listed || listed.missing) return listed ? false : null;
+  const marker = new RegExp(`^(?:\\S+\\s)?${pushedLine(candidate.sha).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\r?$`, 'm');
+  let unread = false;
+  for (const job of (listed.body?.jobs ?? []).filter(item => ['publish', 'take-back'].includes(item.name))) {
+    if (job.status !== 'completed') { unread = true; continue; }
+    const log = await github(env, fetchImpl, `/repos/${repo}/actions/jobs/${job.id}/logs`, { text: true });
+    if (!log || log.missing) { unread = true; continue; }
+    if (marker.test(log.body)) return true;
+  }
+  return unread ? null : false;
+}
+
+/**
+ * Who left the live site as a push to main leaves it: 'step' when a commit
+ * shaped as the step's did and GitHub's record of its run agrees; 'unverified'
+ * when such a commit did but the record could not be read (the push then runs
+ * everything); 'hand' otherwise.
+ * @returns {Promise<'step'|'unverified'|'hand'>}
+ */
+export async function mainProvenance(from, to, env, fetchImpl = globalThis.fetch, cwd = ROOT) {
+  let unread = false;
+  for (const candidate of stepCandidates(from, to, cwd)) {
+    const said = await authenticateStep(candidate, env, fetchImpl, cwd);
+    if (said === true) return 'step';
+    if (said === null) unread = true;
+  }
+  return unread ? 'unverified' : 'hand';
+}
+
+/** The paths of a change that are the live site's. */
+export const pagesPaths = paths => (paths ?? []).filter(path => classify(path) === 'pages');
 
 /**
  * Every tracked symbolic link. A link can make a v3 path and a record path
@@ -279,7 +466,12 @@ export function runLane(name, { env = process.env, log = console.log, lanes = LA
   return 0;
 }
 
-async function main(argv, env) {
+/**
+ * The gate's command line (see the top of this file). Exported so its tests
+ * can run it in a scratch repository: cwd is the repository, log the output.
+ * @returns {Promise<number>} the exit status
+ */
+export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl = globalThis.fetch } = {}) {
   const has = flag => argv.includes(flag);
   const valueOf = flag => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined);
 
@@ -287,6 +479,12 @@ async function main(argv, env) {
 
   let paths;
   let source;
+  // PUB-01: who left the live site as the change leaves it. Outside main a
+  // change to it is always a hand change, since the step writes only on main
+  // and a branch that merged main reads from after its commits; on main the
+  // step's commits are checked against GitHub's record of their runs.
+  let provenance = 'hand';
+  let shapeOnly = false;
   if (has('--all')) {
     paths = null;
     source = 'everything was asked for';
@@ -295,23 +493,48 @@ async function main(argv, env) {
     try { event = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, 'utf8')); } catch { /* read as no range */ }
     const main = event?.repository?.default_branch || 'main';
     const onMain = env.GITHUB_EVENT_NAME === 'push' && env.GITHUB_REF === `refs/heads/${main}`;
-    const lastGreen = onMain ? await lastGreenSha({ ...env, DEFAULT_BRANCH: main }) : null;
+    const lastGreen = onMain && isSha(env.GITHUB_SHA)
+      ? await lastGreenSha({ ...env, DEFAULT_BRANCH: main }, fetchImpl, sha => isAncestor(sha, env.GITHUB_SHA, cwd))
+      : null;
     const range = ciRange({ eventName: env.GITHUB_EVENT_NAME, event, ref: env.GITHUB_REF, sha: env.GITHUB_SHA, lastGreen });
-    paths = range ? pathsOfRange(range) : null;
+    paths = range ? pathsOfRange(range, cwd) : null;
+    if (onMain && range && pagesPaths(paths).length) {
+      provenance = await mainProvenance(range[0], range[1], env, fetchImpl, cwd);
+    }
     source = `${env.GITHUB_EVENT_NAME} ${range ? range.join(' ') : 'with no readable range'}` +
       (onMain ? `, from the last passing run on ${main}${lastGreen ? '' : ', which could not be read'}` : '');
   } else if (has('--range')) {
+    // Says what a range would run, by the commits' shape alone: no record of their runs is read here.
     const range = valueOf('--range');
-    paths = range ? pathsOfRange([range]) : null;
+    paths = range ? pathsOfRange([range], cwd) : null;
+    const ends = range && pagesPaths(paths).length ? rangeEnds([range], cwd) : null;
+    provenance = ends && stepMade(ends[0], ends[1], cwd) ? 'step' : 'hand';
+    shapeOnly = true;
     source = `range ${range}`;
   } else {
-    paths = localPaths();
+    paths = localPaths(cwd);
     source = 'this checkout against origin/main, working tree and untracked files included';
   }
 
-  const decided = has('--all') ? { ...plan(null), reason: 'everything was asked for' } : plan(paths);
-  const words = describe(decided, source);
-  console.log(words);
+  const pages = provenance === 'step' ? 'step' : 'hand';
+  const decided = has('--all') ? { ...plan(null), reason: 'everything was asked for' } : plan(paths, { pages });
+  const words = describe(decided, source) +
+    (shapeOnly && pagesPaths(paths).length ? `\ngate: the live site's paths read as ${provenance === 'step' ? "the step's" : 'by hand'}, by the commits' shape alone` : '');
+  log(words);
+
+  const sitePaths = provenance === 'step' ? [] : pagesPaths(paths);
+  const refuse = sitePaths.length > 0 && provenance === 'hand' && !shapeOnly;
+  if (sitePaths.length) {
+    const said = provenance === 'unverified'
+      ? `the live site's change looks like the publishing step's (PUB-01), but GitHub's record of its run could not be read, so everything runs: ${sitePaths.join(', ')}`
+      : `docs/ and version.json are the live site, which only the publishing step writes (PUB-01), on main; this change edits them by hand: ${sitePaths.join(', ')}` +
+        (has('--ci') && env.GITHUB_REF?.endsWith('/main') ? '. Run the Publish workflow by hand on main (publish, or take-back) so that the step rewrites the site'
+          : !has('--ci') && !shapeOnly ? '. If they came from main, fetch origin first' : '');
+    const level = refuse ? 'error' : 'warning';
+    log(env.GITHUB_ACTIONS ? `::${level} title=${refuse ? 'Hand change to the live site' : 'Live site'}::${said}`
+      : `gate: ${refuse ? 'refused' : 'warning'}: ${said}`);
+    if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `\n**${refuse ? 'Refused' : 'Warning'}:** ${said}\n`);
+  }
 
   if (has('--ci')) {
     // Each lane's step, and each package's install, reads its own lane's output (STACK-02).
@@ -319,6 +542,7 @@ async function main(argv, env) {
     if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, `${outputs.join('\n')}\n`);
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `## Gate by what changed\n\n\`\`\`\n${words}\n\`\`\`\n`);
   }
+  if (refuse) return 1;
   if (has('--plan')) return 0;
 
   for (const lane of decided.lanes) {
