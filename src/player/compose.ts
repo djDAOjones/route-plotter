@@ -91,12 +91,13 @@ export function compose(context: DrawContext, request: FrameRequest, catalogue: 
   const fail = (routeId: string | null, featureId: string, reason: string) => reports.push({ routeId, featureId, reason });
   const aspect = aspectOf(request.image);
   const scale = renderScale(size, scene.settings.graphics.scale);
-  const frame: Frame = { bounds: imageBounds(size, request.image ?? SQUARE, 1), scale };
+  const bounds = imageBounds(size, request.image ?? SQUARE, 1);
 
   // 1. Routes: each route's view, then its modules in catalogue order, first for their ends (the content's length).
   const routes = scene.routes.map((route) => {
     const timeline = composeTimeline(route, aspect);
-    const view = { shape: { points: route.points, lines: route.lines, leadStart: route.leadStart }, timeline };
+    const shape = { points: route.points, lines: route.lines, leadStart: route.leadStart, marks: route.marks };
+    const view = { shape, timeline };
     const modules = catalogue.route.flatMap((feature) => {
       const basis = attempt(() => {
         const settings = feature.select(route.settings);
@@ -176,11 +177,13 @@ export function compose(context: DrawContext, request: FrameRequest, catalogue: 
 
   // 3. The view: the scene's (the whole picture, without one), then the further zoom and pan, as one transform.
   const centre = { x: size.width / 2, y: size.height / 2 };
-  const camera = view !== null && sound(view.zoom, 0) ? { zoom: view.zoom, at: imageToCanvas(frame.bounds, view.centre) } : null;
+  const camera = view !== null && sound(view.zoom, 0) ? { zoom: view.zoom, at: imageToCanvas(bounds, view.centre) } : null;
   const further = request.viewing !== undefined && sound(request.viewing.zoom, 0) ? request.viewing : NO_VIEWING;
   const zoom = further.zoom * (camera?.zoom ?? 1);
   const at = camera?.at ?? centre;
   const matrix = [zoom, 0, 0, zoom, centre.x + further.panX - zoom * at.x, centre.y + further.panY - zoom * at.y] as const;
+
+  const frame: Frame = { bounds, scale, view: camera === null ? null : view };
 
   // 4. Drawing: layer by layer; within a layer the scene's modules, then routes in list order, each module isolated.
   const failed = new Set<Evaluated>();
@@ -204,6 +207,8 @@ export function compose(context: DrawContext, request: FrameRequest, catalogue: 
   for (const layer of LAYERS) {
     if (layer === 'backgroundMask') {
       if (!evaluated.some((each) => each.layers?.backgroundMask !== undefined)) continue;
+      // A module that draws in the mask is a reveal: drawing nothing there means it has uncovered nothing yet, so the
+      // background is hidden; it is drawn whole only when no such module evaluated, or every one failed this frame.
       mask = request.surface(size);
       mask.context.setTransform(...matrix);
       drawLayer(mask.context, layer);

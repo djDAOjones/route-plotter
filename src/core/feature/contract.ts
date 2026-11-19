@@ -26,9 +26,9 @@ interface FeatureBase<S extends Fields> {
   readonly settings: S;
 }
 
-/** A route as a module reads it (P1, P2): its points, lines and start, and the lead's timeline; none of its settings. */
+/** A route as a module reads it (P1, P2): its points, lines, start and authored marks, and the lead's timeline; none of its settings. */
 interface RouteView {
-  readonly shape: Pick<Route, 'points' | 'lines' | 'leadStart'>;
+  readonly shape: Pick<Route, 'points' | 'lines' | 'leadStart' | 'marks'>;
   readonly timeline: Timeline;
 }
 

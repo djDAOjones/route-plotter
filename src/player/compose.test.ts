@@ -1,7 +1,7 @@
 // CORE-04: the composer, tested with fake modules through the draw recorder. Each test's name is a line the item holds.
 import { describe, expect, test } from 'vitest';
 import type { DrawContext } from '../adapters/render/context';
-import type { Drawings } from '../adapters/render/layers';
+import type { Drawings, Frame } from '../adapters/render/layers';
 import { Recorder } from '../adapters/render/recorder';
 import type { Evaluation, RouteInput, SceneInput, View } from '../core/feature/contract';
 import { newLine, newPoint, newRoute, newScene, type Route, type Scene } from '../core/model/scene';
@@ -25,7 +25,7 @@ function sceneOf(routes: number): Scene {
   return { ...scene, routes: Array.from({ length: routes }, (_, i) => twoStopRoute(nextId, 0.2 + i * 0.3)) };
 }
 
-type Draw = (context: DrawContext, value: unknown) => void;
+type Draw = (context: DrawContext, value: unknown, frame: Frame) => void;
 
 /** A fake route module: by default it evaluates to its time and seed, which `tag` writes in each layer it is given. */
 function routeModule(
@@ -93,14 +93,15 @@ describe('compose', () => {
     // What it gives each module names none either, whether the frame has a further zoom and overlays or not.
     const given: string[][] = [];
     const catalogue = {
-      route: [routeModule('r', {}, (input) => (given.push(Object.keys(input).sort()), { ok: true, value: null }))],
+      route: [routeModule('r', {}, (input) => (given.push(Object.keys(input).sort(), Object.keys(input.route.shape).sort()), { ok: true, value: null }))],
       scene: [sceneModule('s', { evaluate: (input) => (given.push(Object.keys(input).sort()), { ok: true, value: null }) })],
     };
     draw(catalogue, request(sceneOf(1), { viewing: { zoom: 2, panX: 5, panY: 5 }, overlays: [() => undefined] }));
     draw(catalogue, request(sceneOf(1)));
     const route = ['lead', 'route', 'scale', 'seed', 'settings', 'timeMs'];
+    const shape = ['leadStart', 'lines', 'marks', 'points'];
     const scene = ['scale', 'seed', 'settings', 'timeMs', 'travellerAt'];
-    expect(given).toEqual([route, scene, route, scene]);
+    expect(given).toEqual([route, shape, scene, route, shape, scene]);
   });
 
   test('the same time, state and seed give the same frame, line for line', () => {
@@ -175,7 +176,7 @@ describe('compose', () => {
   test('the scene’s view and the further zoom and pan are one transform; the overlays come last, in screen space', () => {
     const camera: View = { centre: { x: 0.5, y: 0.5 }, zoom: 2 };
     const catalogue = {
-      route: [routeModule('line', { lines: (context) => context.fillText('line', 0, 0) })],
+      route: [routeModule('line', { lines: (context, _value, frame) => context.fillText(`line ${JSON.stringify(frame.view)}`, 0, 0) })],
       scene: [sceneModule('camera', { view: () => camera })],
     };
     const viewing = { zoom: 1.5, panX: 10, panY: -20 };
@@ -184,6 +185,7 @@ describe('compose', () => {
     const drawn = lines.filter((line) => line.startsWith('fillText'));
     // The picture's centre is the frame's (960, 540): zoom 3 about it, then the pan.
     expect(drawn[0]).toContain('| @ 3 0 0 3 -1910 -1100');
+    expect(drawn[0]).toContain(JSON.stringify(JSON.stringify(camera)).slice(1, -1));
     expect(drawn[1]).toBe('fillText "ring" 0 0 | @ 1 0 0 1 0 0');
     expect(lines.slice(lines.indexOf(drawn[1] ?? '') + 1).every((line) => /^(beginPath|restore)\b/.test(line))).toBe(true);
   });

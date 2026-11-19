@@ -3,6 +3,7 @@
 // surface of its own: what reveals uncover there, the background is then drawn through. The editor's overlays are not
 // a layer: they are a separate list the editor alone draws, after these and in screen space, so no export or player
 // frame can hold one (DEF-99.1).
+import type { View } from '../../core/feature/contract';
 import type { ImageBounds } from '../../core/geometry/transform';
 import type { DrawContext } from './context';
 
@@ -20,10 +21,14 @@ export const LAYERS = [
 
 export type Layer = (typeof LAYERS)[number];
 
-/** What every drawing is told of the frame: where the picture lies in it (image to canvas) and the render scale. */
+/**
+ * What every drawing is told of the frame: where the picture lies in it (image to canvas), the render scale, and the
+ * scene's view (the camera's centre and zoom, or null for the whole picture), which Reveal background follows (P4).
+ */
 export interface Frame {
   readonly bounds: ImageBounds;
   readonly scale: number;
+  readonly view: View | null;
 }
 
 /** One module's drawing in one layer, from its evaluation. Declared as a method, so a list may hold any module's. */
