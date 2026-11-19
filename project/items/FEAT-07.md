@@ -14,11 +14,11 @@ The owner said of crowd areas "as per your reccomendation, but the full feature 
 
 ## Now
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
 Next step: Start once FEAT-05 has merged.
 
-Open question: Owner: what "the full feature in v4" means (round 2, Q7); provisionally areas placed freely (A23).
+Open question: None; his answer to round 2, Q7, "q7) as recommended", is read by PLAN-6 of 2026-11-19 as: the full area feature is areas placed freely, rectangle or ellipse (A23).
 
 ## Context and sources
 
@@ -29,3 +29,4 @@ Open question: Owner: what "the full feature in v4" means (round 2, Q7); provisi
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: of crowd areas, "as per your reccomendation, but the full feature in v4" (2026-10-14). Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A23 (the plan's §18; the night's decisions list).
+- 2026-11-19 — The owner answered the plan's round 2, Q7 (what "the full feature in v4" means, A23; `reviews/v4-plan-question-round-answers-2026-11-19.md`), verbatim: "q7) as recommended". Read by PLAN-6 of 2026-11-19, a reading his to correct, as ruling A23 as recommended: areas placed freely, rectangle or ellipse, with no drawn shapes at v4.0, so this item's criterion marked "Provisionally (A23)" now reads as ruled.

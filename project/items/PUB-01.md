@@ -1,13 +1,14 @@
-# PUB-01 — Each app merge the owner orders publishes v4
+# PUB-01 — Each app item publishes v4 to Pages, on the owner's advance word
 
 ## Intent
 
-Today a merge releases nothing and only `npm run push` publishes. The owner chose "Every merge publishes" (Q15): until v4.0, each merge he orders that changes the app also publishes the preview to GitHub Pages, starting with the first build in which the core works end to end; a record-only merge publishes nothing (Q24). This item builds that publishing step and its guards before the first v4 build replaces v3 at the main address.
+Today a merge releases nothing, and since v3 moved into `v3/` its `npm run push` cannot publish either (wish STACK-01.1). The owner chose "Every merge publishes" (Q15), and on 2026-11-18 went further: "re publishing to github pages, just go ahead and publish to it at any point (and after any work item is developed, so long as doesn't cause untoward delay or overhead)". Shown that the first publish replaces working v3 at the github.io address with v4 as it then stands, he answered "yes, publish, and I'm going to bed now, so hopefully no more pauses until 08:00". This item builds the publishing step, through which alone v4 reaches Pages, with its guards, straight after STACK-02, the first point at which v4 has a build to publish; a record-only merge publishes nothing (Q24).
 
 ## Acceptance criteria
 
 - On a merge the owner ordered that changes the app, with the gate green, the v4 build is published to Pages from `docs/` on `main`; a record-only merge publishes nothing, by GATE-01's sorting.
-- Nothing is published before the first v4 build in which an author can draw a route, play it, save and reopen it and export it, passing v4's gate (CORE-08's build is the first candidate). That first publish is on the owner's call and, under the architecture plan's provisional decision A16, waits for his word that the Xerte copy works and Gary has its address, unless his answer to the plan's round 1, Q4, says otherwise.
+- v4 may be published at any point and after any work item, without asking the owner again, by his word of 2026-11-18 quoted in the Intent: the first publish waits neither for the core to work end to end, nor for his call, nor for the Xerte copy or Gary's having its address (the architecture plan's A16, overturned by PLAN-6 of 2026-11-19).
+- A publish does not make later work wait, in his words "so long as doesn't cause untoward delay or overhead": the next item's merge and CI are not held up by it, and the two facts in the Notes of 2026-11-19 are settled here.
 - An unknown or mistyped flag never publishes (DEF-71), and every file the published page refers to is checked before a publish (DEF-75), v3's publication checks being ported for both.
 - A dry run on a branch publishes nothing, and a record-only merge publishes nothing.
 - It changes only these paths: .github/workflows/publish.yml and scripts/publish*.mjs; never `docs/` or `version.json` by hand. What the root `version.json` becomes is put to the owner.
@@ -16,25 +17,32 @@ Today a merge releases nothing and only `npm run push` publishes. The owner chos
 - Each published preview comes with a short list of what is new and what to try.
 - How a bad publish is taken back is written down and tried once.
 - The grant ends when v4.0 is declared; a v3 release stays the owner's call alone.
+- Nothing is published by a v3 release, `npm run push`, a tag or a hand change, and no publish skips the gate, Codex's review of the item or any guard above: the owner's word of 2026-11-18 grants none of these.
 - The profile's Hosting and deploy line and the rules' `main` line are checked against what was built, and redrafted for the owner's signature if they differ.
 
 ## Now
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
-Next step: None until Phase 7 opens by its PLAN entry; it is built last in Phase 7, after CORE-08.
+Next step: Start once STACK-02 has merged, the first point at which v4 has a build to publish; it may run beside STACK-03, as it touches neither `ci.yml` nor `package.json`.
 
-Open question: Owner: whether the Xerte copy's readiness is a condition for the first publish (the architecture plan's round 1, Q4); provisionally yes (A16).
+Open question: Owner: whether Gary has the Xerte copy's address (he said "Xerte copy works" and did not say), which no longer holds up a publish; and what the root `version.json` becomes, which this item takes on its recommended option, provisional under his grant G3, if he has not answered when it is built.
 
 ## Context and sources
 
-- [The decisions](../decisions.md): PLAN-5, the grant and its six conditions
+- [The decisions](../decisions.md): PLAN-5, the grant and its six conditions; PLAN-6 of 2026-11-19, the owner's answers and his word on publishing; STACK-01, the two facts in the Notes
+- `reviews/v4-plan-question-round-answers-2026-11-19.md`: his answers and both publishing messages, with what he was shown
+- `reviews/v4-architecture-plan-2026-11-18.md`: §19 (Phase 6) and §22
 - `reviews/v4-vision-question-rounds-2026-11-18.md`: Q3, Q7, Q13, Q15 and Q24
 - `reviews/v4-programme-2026-11-18.md`: P6 and finding F8
 - `DEV-INFRASTRUCTURE.md`: release and deployment
+- `scripts/gate.mjs` and `v3/tests/helpers/buildScriptHarness.js`: the two facts in the Notes
 
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-5. The owner's instructions in force, verbatim: "half build v4 is ok, use pages as is" (Q3); "once it's releasable" (Q7); "The core works end to end (Recommended)" (Q13); "Every merge publishes" (Q15); and the tick "Record-only merges publish nothing" (Q24). Promoted here from the wish list by the stock take's ruling: INTAKE.10, "CI could fail a pull request that changes `docs/` or `version.json`, which only `npm run push` may commit; today the release steps rely on checking the diff by eye."; and REL-720.1, "Reconcile the generic item-commit checker with the prescribed generated `chore: deploy vX.Y.Z` commit, which has no Verify body; both commit-shape diagnostics reproduced on v3.3.720 while the normal ledger check passed".
 - 2026-11-18 — Placed by PLAN-6 last in Phase 7, after CORE-08, whose build is the first a publish may carry (the architecture plan's §19). The plan's provisional decision A16, under the owner's overnight grant G3, makes the Xerte copy working, with Gary holding its address, a condition for the first publish; it is round 1's fourth question. Of his task message's wording, verbatim: "when Pages switches from v3 to v4 (ideally once the v3 copy works on Xerte and Gary has its address)". What the root `version.json` becomes is put to him in this item.
 - 2026-11-18 — Criteria brought up to the architecture plan's §19 by PLAN-6. The second criterion as PLAN-5 filed it, word for word: "Nothing is published before the first v4 build in which an author can draw a route, play it, save and reopen it and export it, passing v4's gate. That first publish is on the owner's call. Before it, the session tells him where the Xerte copy stands and asks whether its readiness is a condition."
+- 2026-11-19 — Re-filed by PLAN-6 of 2026-11-19 on the owner's answers of 2026-11-18 (`reviews/v4-plan-question-round-answers-2026-11-19.md`). His answer to the plan's round 1, Q4, verbatim: "Xerte copy works, progress with pages". His word on publishing and his confirmation, verbatim, are quoted in the Intent. Read by that entry, a reading his to correct: his call, given in advance, for v4 to be published without asking him again, through this item's step only, with every guard kept. The item moves from last in Phase 7 to Phase 6, straight after STACK-02; its third criterion is new, from his words. Kept word for word as they stood before: the title, "Each app merge the owner orders publishes v4"; the Intent, "Today a merge releases nothing and only `npm run push` publishes. The owner chose "Every merge publishes" (Q15): until v4.0, each merge he orders that changes the app also publishes the preview to GitHub Pages, starting with the first build in which the core works end to end; a record-only merge publishes nothing (Q24). This item builds that publishing step and its guards before the first v4 build replaces v3 at the main address."; and the second criterion, "Nothing is published before the first v4 build in which an author can draw a route, play it, save and reopen it and export it, passing v4's gate (CORE-08's build is the first candidate). That first publish is on the owner's call and, under the architecture plan's provisional decision A16, waits for his word that the Xerte copy works and Gary has its address, unless his answer to the plan's round 1, Q4, says otherwise."
+- 2026-11-19 — Two facts this item must settle, found by STACK-01's close. First, the gate (`scripts/gate.mjs`) sorts the root `docs/` as other, so a publish commit on `main` would run v3's whole suite, about 35 minutes, the delay his word rules out; settling it may need a path outside this item's list (the gate and its test), which is then a decision of its own. Second, v3's release tests read the root `docs/` as the last release (`v3/tests/helpers/buildScriptHarness.js` copies the root `docs/`; STACK-01's decision), so they must keep passing when `docs/` holds v4.
+- 2026-11-19 — The first publish, soon after STACK-02, replaces working v3 at the github.io address with a near-empty v4 page; v3 stays on Xerte and at tag v3.3.726.

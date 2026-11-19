@@ -16,7 +16,7 @@ The owner chose "An Add feature list (Recommended)" (Q17) and, for removing, "hi
 
 ## Now
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
 Next step: Start once Phase 8 opens by its PLAN entry.
 
@@ -30,3 +30,4 @@ Open question: None.
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: "An Add feature list (Recommended)" (Q17); "hide it during the session for undo, but dont save it" (Q18); "Removing asks first" (P6). Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A4, A8 (the plan's §18; the night's decisions list).
+- 2026-11-19 — The owner answered the plan's round 2, Q5 (where features live, A3 and A4; `reviews/v4-plan-question-round-answers-2026-11-19.md`), verbatim: "q5) as recommended". Read by PLAN-6 of 2026-11-19, a reading his to correct, as ruling A4 as recommended. A8 stays provisional under G3.
