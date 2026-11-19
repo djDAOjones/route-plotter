@@ -9,10 +9,9 @@
 | `_Joe/dev helper scripts/` | 2 | the owner's helper scripts (DEL-07 deletes two) |
 | `_Joe/dev notes/` | 6 | the dev guide, routed for code changes until DOC-08 retires it |
 | `./` | 21 | the workspace file, the contract (`AGENTS.md`, `CLAUDE.md`), the kept rulebooks `UI-STANDARDS.md` and `DEV-INFRASTRUCTURE.md`, `README.md`, `LICENSE`, v4's `THIRD_PARTY_NOTICES.md`, the live site's `version.json`, which only the publishing step changes (PUB-01), and v4's package, page and settings (`package.json`, `index.html`, the four tsconfig files, `vite.config.mjs`, the three ESLint files, `knip.json`, `.dependency-cruiser.cjs`; STACK-02) |
-| `docs/` | 24 | the GitHub Pages root, generated — never hand-edited; only the publishing step commits it (PUB-01), and the gate refuses a hand change |
-| `docs/examples/` | 5 | built-in example projects, built |
-| `docs/images/` | 6 | the example images, copied |
-| `docs/styles/` | 6 | the shipped stylesheets, copied |
+| `docs/` | 16 | the GitHub Pages root, generated — never hand-edited; only the publishing step commits it (PUB-01), and the gate refuses a hand change |
+| `docs/assets/` | 13 | v4's published editor build: its script, styles and bundled fonts, written by the publishing step (PUB-01) |
+| `docs/player/` | 1 | v4's published exported player, one script, written by the publishing step (PUB-01) |
 | `pm_skills/` | 35 | the frozen canon 4.7.0 record and framework copy, pinned by `project/migration/inventory.json`; never edited (`project/history.md`) |
 | `pm_skills/integrations/` | 6 | canon workflows, frozen |
 | `pm_skills/prompts/` | 14 | canon prompts, frozen |
