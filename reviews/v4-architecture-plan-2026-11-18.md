@@ -1,5 +1,17 @@
 # The v4 architecture plan — MERGE-01 with REFACTOR-01's port plan — 18 November 2026
 
+**Brought up to date on 19 November 2026 by PLAN-6 (the entry of that
+date).** The owner answered the question round of section 22 on the evening
+of 18 November and gave his word on publishing v4 to GitHub Pages; his words
+stand in section 22 and, with what he was shown, in
+`reviews/v4-plan-question-round-answers-2026-11-19.md`. As that entry reads
+his answers (a reading, his to correct), A1, A2b, A3, A4, A11, A15, A23 and
+A24 are ruled as recommended, A2b with a requirement he added, and A16 is
+overturned; PUB-01 moves to Phase 6, straight after STACK-02. Sections 18 to
+22 say so. The rest of the plan is as merged in #172: where an earlier
+section calls one of these provisional, or places PUB-01 last in Phase 7,
+sections 18 to 22 and that entry win.
+
 This is the one written plan PLAN-5 asks for: MERGE-01's architecture of v4
 and REFACTOR-01's plan for porting v3's engine into it. It was written on the
 night of 18 to 19 November 2026 by an Opus sub-chat, under the owner's
@@ -1171,33 +1183,38 @@ Each is provisional under G3 until he rules. "Redo" names the items that
 would be redone if he picks otherwise; the build order (§19) puts the least
 settled last.
 
+He answered the question round on 18 November (§22). As PLAN-6 (2026-11-19)
+reads his answers, a reading his to correct: A1, A2b, A3, A4, A11, A15, A23
+and A24 are ruled as recommended, and A16 is overturned by his word on
+publishing; each is marked below. The rest stay provisional under G3.
+
 | # | Decision | Section | Redo if overturned |
 | --- | --- | --- | --- |
-| A1 | A route's lines may fork, join, run both ways, start in several places and loop; the lead's walk is the deterministic tree of §3 (round 1, Q2) | §3 | Small if he picks "forks only": the model is built general and gains a validation rule that refuses several starts, two-way lines and loops (CORE-01, CORE-06, FEAT-04) |
+| A1 | A route's lines may fork, join, run both ways, start in several places and loop; the lead's walk is the deterministic tree of §3 (round 1, Q2). **Ruled 18 Nov: as recommended (§22).** | §3 | Small if he picks "forks only": the model is built general and gains a validation rule that refuses several starts, two-way lines and loops (CORE-01, CORE-06, FEAT-04) |
 | A2a | Every time is saved as an exact time, never a share of a duration | §4 | CORE-01, CORE-02 |
-| A2b | The scene's length comes from its content unless the author fixes it; a fixed length trims, never stretches (round 1, Q1) | §4 | A small change to the clock (CORE-02) |
-| A3 | The camera is a scene feature following a lead's main head or a crowd's centre, smoothed over a window of scene time (round 2, Q5) | §5 | FEAT-06 |
-| A4 | The feature homes of §7 (round 2, Q5) | §7 | The feature whose home moves (FEAT-01, FEAT-02, FEAT-03 or FEAT-06) |
+| A2b | The scene's length comes from its content unless the author fixes it; a fixed length trims, never stretches (round 1, Q1). **Ruled 18 Nov: as recommended, with his added requirement for animation that cycles (§22; CORE-02).** | §4 | A small change to the clock (CORE-02) |
+| A3 | The camera is a scene feature following a lead's main head or a crowd's centre, smoothed over a window of scene time (round 2, Q5). **Ruled 18 Nov: as recommended (§22).** | §5 | FEAT-06 |
+| A4 | The feature homes of §7 (round 2, Q5). **Ruled 18 Nov: as recommended (§22).** | §7 | The feature whose home moves (FEAT-01, FEAT-02, FEAT-03 or FEAT-06) |
 | A5 | A feature is one folder with `model/`, `draw/` and `editor/`; two contracts (route, scene) on one base; two ordered catalogues | §8 | Every feature item; it is grounded in his Q1 and Q12 |
 | A6 | The seven contact points | §8 | CORE-02 to CORE-06 |
 | A7 | The pack's layers kept, its player and exported rules replaced, seven rules for `src/features/` | §8 | STACK-04 |
 | A8 | A new route shows the core only, about fourteen controls | §9 | CORE-12 |
 | A9 | The measures M1 to M11, printed by `npm run measures` and in CI's summary | §10 | STACK-04 |
 | A10 | The five presets' contents, and Blank | §12 | PRESET-01 |
-| A11 | Before v4.0 only what v4's model and the presets need; the after-v4.0 order of §12 (round 2, Q6) | §12 | None; items are added |
+| A11 | Before v4.0 only what v4's model and the presets need; the after-v4.0 order of §12 (round 2, Q6). **Ruled 18 Nov: as recommended (§22).** | §12 | None; items are added |
 | A12 | Schema-first save with our own helper, no new package | §13 | CORE-01, CORE-03 |
 | A13 | Format versions: free until the first publish; then older versions open by tested steps, newer ones are refused whole | §13 | CORE-03 |
 | A14 | v3 moves into `v3/` with its own package; its build and release scripts unchanged; root `docs/` and `version.json` untouched, v3 given copies | §14 | STACK-01 and the paths of everything after it; grounded in Q5's option text |
-| A15 | v4 keeps its own browser storage, autosaving to IndexedDB under names that do not begin `routePlotter_` (round 1, Q3) | §11 | CORE-09 |
-| A16 | The Xerte copy working, with Gary holding its address, is a condition for the first publish (round 1, Q4) | §11 | PUB-01's first-publish step only |
+| A15 | v4 keeps its own browser storage, autosaving to IndexedDB under names that do not begin `routePlotter_` (round 1, Q3). **Ruled 18 Nov: as recommended (§22).** | §11 | CORE-09 |
+| A16 | The Xerte copy working, with Gary holding its address, is a condition for the first publish (round 1, Q4). **Overturned 18 Nov by his word on publishing (§22): no condition; v4 may be published at any point, PUB-01 straight after STACK-02.** | §11 | PUB-01's first-publish step only |
 | A17 | The port's verdicts, piece by piece | §15 | The item that ports the piece |
 | A18 | The rules for porting tests | §15 | Every porting item |
 | A19 | No string-event bus; a typed store with commands | §15 | CORE-05 |
 | A20 | The exported player is a second Vite entry | §14 | CORE-10 |
 | A21 | The MediaRecorder video fallback is not ported (Chromium-only) | §15 | Additive, if he wants it |
 | A22 | Speeds in image widths a second; nothing timed in canvas pixels | §4 | CORE-02 |
-| A23 | Crowd areas placed freely, rectangle or ellipse (round 2, Q7) | §22 | FEAT-07 |
-| A24 | A repeating dot's laps on a network are identical (round 2, Q8) | §22 | FEAT-04's sway rule |
+| A23 | Crowd areas placed freely, rectangle or ellipse (round 2, Q7). **Ruled 18 Nov: as recommended (§22).** | §22 | FEAT-07 |
+| A24 | A repeating dot's laps on a network are identical (round 2, Q8). **Ruled 18 Nov: as recommended for v4.0; his later wish is PLAN-6.1 (§22).** | §22 | FEAT-04's sway rule |
 | A25 | TST-09.3 (a comet trail is empty during a final wait) is meant, as a stopped comet has no tail; TST-09.4 (a crowd walking before the lead moves) is meant when its release says so, crowd and lead timing being independent | §16 | CORE-04, FEAT-04 |
 | A26 | jszip and mediabunny are installed by STACK-02 with the stack | §15 | STACK-02 |
 | A27 | The five lost defects are held as checks, all still open | §16 | — |
@@ -1276,6 +1293,27 @@ the owner's signature, not written. Writes: `package.json`,
 `project/app/set1.json`, `THIRD_PARTY_NOTICES.md`, `.github/workflows/ci.yml`.
 Parallel: none. Redo: A26, A35.
 
+**PUB-01 — Each app item publishes v4 to Pages, on the owner's advance word.**
+Moved here from the end of Phase 7 by PLAN-6 (2026-11-19), on his word to "publish to it at any point (and after any work item is developed, so long as doesn't cause untoward delay or overhead)"
+(§22): STACK-02's build is the first that v4 has to publish. Delivers, as
+its item file says: the publishing step, through which alone v4 reaches
+Pages; the first publish waits for nothing more (A16 overturned), and
+replaces v3 at the github.io address with v4 as it then stands, as he
+confirmed (§22); a publish never makes later work wait; v3's publication
+checks ported (DEF-71, DEF-75); what the root `version.json` becomes put to
+him. Every guard is kept: an unknown flag never publishes; every file the
+page refers to is checked; a dry run and a record-only merge publish nothing;
+a bad publish's take-back is written down and tried once; CI fails a hand
+change to `docs/` or `version.json`. Depends on: STACK-02, GATE-01. Checks:
+a dry run on a branch publishes nothing; a record-only merge publishes
+nothing; the two facts in its item file's Notes settled (the gate sorts the
+root `docs/` as other, so a publish commit would run v3's whole suite; v3's
+release tests read the root `docs/` as the last release). Writes:
+`.github/workflows/publish.yml`, `scripts/publish*.mjs`; never `docs/` or
+`version.json` by hand. Parallel: with STACK-03 (it touches neither
+`ci.yml` nor `package.json`). Redo: none (A16, its old Redo, is
+overturned).
+
 **STACK-03 — Accessibility testing, standard depth, at AAA.** Delivers: the
 accessibility pack's Playwright and axe run (its four specs: states,
 keyboard, adaptation, journeys) green against the shell in CI. Depends on:
@@ -1298,7 +1336,7 @@ Writes: `project/architecture.md`, `v3/ARCHITECTURE.md`,
 `package.json` (scripts), `.github/workflows/ci.yml`. Parallel: none. Redo:
 A7, A9, A34.
 
-### Phase 7 — the core, end to end, and the publishing set-up
+### Phase 7 — the core, end to end
 
 **CORE-01 — The project model and the schema helper.** Delivers:
 `src/core/schema` (§13); the scene, routes, points, lines, starts and ends,
@@ -1406,17 +1444,6 @@ Depends on: CORE-03, CORE-05. Checks: no v3 key is read, written or deleted
 not write over each other. Writes: `src/adapters/storage/**`,
 `src/editor/recovery/**`. Parallel: with CORE-10. Redo: A15 (round 1, Q3).
 
-**PUB-01 — Each app merge the owner orders publishes v4.** As its item file
-says, with CORE-08's build as the first candidate, and the first publish
-waiting for the owner's call and, under A16, his word that the Xerte copy
-works and Gary has its address; v3's publication checks ported (DEF-71,
-DEF-75); what the root `version.json` becomes put to him. Depends on:
-CORE-08, GATE-01. Checks: a dry run on a branch publishes nothing; a
-record-only merge publishes nothing. Writes: `.github/workflows/publish.yml`,
-`scripts/publish*.mjs`; never `docs/` or `version.json` by hand. Parallel:
-with CORE-10 and CORE-09 (it does not touch `ci.yml`). Redo: A16 (round 1,
-Q4).
-
 ### Phase 8 — features as modules
 
 **FEAT-01 — The Add feature list, with Arrival effects and Line glow.**
@@ -1515,7 +1542,7 @@ Depends on: A11Y-03, REV-03, REV-05. Waits on the owner's declaration.
 | --- | --- | --- |
 | 6.1 | STACK-01 | — |
 | 6.2 | STACK-02 | — |
-| 6.3 | STACK-03 | — |
+| 6.3 | PUB-01, STACK-03 | yes |
 | 6.4 | STACK-04 | — |
 | 7.1 | CORE-01 | — |
 | 7.2 | CORE-02, CORE-03 | yes |
@@ -1523,7 +1550,7 @@ Depends on: A11Y-03, REV-03, REV-05. Waits on the owner's declaration.
 | 7.4 | CORE-05 | — |
 | 7.5 | CORE-06, CORE-12 | yes |
 | 7.6 | CORE-07, CORE-08 | yes |
-| 7.7 | CORE-10, CORE-09, PUB-01 | yes |
+| 7.7 | CORE-10, CORE-09 | yes |
 | 8.1 | FEAT-01 | — |
 | 8.2 | FEAT-02, FEAT-03, FEAT-04, CORE-11 | yes; catalogue lines added one merge at a time |
 | 8.3 | FEAT-05, FEAT-06 | yes |
@@ -1538,7 +1565,8 @@ That is 28 build items, with the owner's two existing assurance items
 
 **Waiting on the owner:** his signature on the brief's redrafted sections
 (§21), the profile's App opinion and Accessibility testing lines (STACK-02)
-and v4's rules lines (STACK-04); the first publish (PUB-01); A11Y-03's
+and v4's rules lines (STACK-04); whether Gary has the Xerte copy's address and
+what the root `version.json` becomes (PUB-01, which neither holds up); A11Y-03's
 VoiceOver permissions; REV-03's and REV-05's evidence; V40-01's declaration.
 Everything else can be built overnight on the recommended options.
 
@@ -1546,8 +1574,8 @@ Everything else can be built overnight on the recommended options.
 
 | Phase | Direction | Items |
 | --- | --- | --- |
-| 6 — v4's foundations | v4 at the root on the editor stack, its own gate and edges enforced, before any feature | STACK-01, STACK-02, STACK-03, STACK-04 |
-| 7 — the core, end to end, and publishing | Draw, play, save and reopen, export; the first build the owner may publish; autosave last, its storage being the least settled | CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-12, CORE-07, CORE-08, CORE-10, CORE-09, PUB-01 |
+| 6 — v4's foundations | v4 at the root on the editor stack, its own gate and edges enforced, before any feature; from STACK-02 on, each build published on the owner's advance word (PLAN-6, 2026-11-19) | STACK-01, STACK-02, PUB-01, STACK-03, STACK-04 |
+| 7 — the core, end to end | Draw, play, save and reopen, export; autosave last, its storage having been the least settled | CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-12, CORE-07, CORE-08, CORE-10, CORE-09 |
 | 8 — features as modules | The Add feature list and v4.0's features, each a module; the camera and free crowd areas last, being the least settled | FEAT-01, FEAT-02, FEAT-03, FEAT-04, CORE-11, FEAT-05, FEAT-06, FEAT-07 |
 | 9 — presets and v4.0 | The five presets, a scene for each, the extended accessibility depth, v4.0 declared | PRESET-01, EX-01, A11Y-03, REV-03, REV-05, V40-01 |
 | After v4.0 | What his answers place later, in §12's order | wishes PLAN-5.1 and EX-03.1; AI-01 (medium term); the candidates of §12 |
@@ -1576,21 +1604,35 @@ Unsigned drafts. `project/brief.md` keeps the signed text until he signs.
 > Web app. Single-page, client-side only. No server. Repo:
 > `djDAOjones/route-plotter`. v4 is built at the repository's root; frozen v3
 > lives in `v3/` and stays recoverable at tag v3.3.726. GitHub Pages serves
-> `docs/` on `main` at `djdaojones.github.io/route-plotter/`: v3 until the
-> first v4 build whose core works end to end replaces it on the owner's call,
-> then each app merge he orders, until v4.0 (PLAN-5). v3 is also to be
-> served from Xerte, from the 3.3.726 zip. The frozen v2 line remains at
-> `djdaojones.github.io/router-plotter-02/`.
+> `docs/` on `main` at `djdaojones.github.io/route-plotter/`: v4 from its
+> first publish, made through PUB-01's step at any point on the owner's
+> advance word, and then after each app item, until v4.0 (PLAN-6,
+> 2026-11-19). v3 is also to be served from Xerte, from the 3.3.726 zip. The
+> frozen v2 line remains at `djdaojones.github.io/router-plotter-02/`.
+
+Redrafted on 19 November 2026 by PLAN-6 after his word on publishing (§22).
+The draft as merged in #172 read, of Pages: "v3 until the first v4 build
+whose core works end to end replaces it on the owner's call, then each app
+merge he orders, until v4.0 (PLAN-5)".
 
 **Direction's last sentence** — old: "The current work is the v4 programme
 (PLAN-5): the architecture plan first, before any code." New: "The current
 work is the v4 programme: v4's foundations (PLAN-6), then the core, its
 features and presets, to v4.0."
 
+**Direction's `main` sentence** — added on 19 November 2026 by PLAN-6, as
+his word on publishing makes the signed sentence untrue. Old: "`main` is the
+live site: branch, pull request, the owner orders each merge; once v4's core
+works end to end, each app merge publishes until v4.0." New: "`main` is the
+live site: branch, pull request, the owner orders each merge; v4 publishes at
+any point and after each app item, until v4.0."
+
 **Open questions** — the second entry, once his round is answered, becomes:
 "None of the architecture plan's is open: its answers are in
-`reviews/v4-architecture-plan-2026-11-18.md`." Until then it stands as
-signed.
+`reviews/v4-plan-question-round-answers-2026-11-19.md`." His round is
+answered (§22), so this now applies, awaiting his signature; until he signs
+it stands as signed. (Changed on 19 November 2026 from pointing at this
+plan, to point at the file that holds his answers.)
 
 ## 22. The owner's question round
 
@@ -1604,6 +1646,14 @@ is next available, building goes on meanwhile on the recommended options, and
 each is recorded as provisional (section 18) with what would be redone if he
 picks otherwise. This is a departure from the criterion, by his word, which
 the PLAN-6 entry is to record.
+
+**Answered.** He answered round 1 at about 22:35 UTC and round 2 at about
+23:28 UTC on 18 November 2026, typing his own text each time, none of it an
+option label; round 1 was shown to him in a shortened form, round 2 as
+written below. His answers stand under each question, each with a reading
+that is a proposal for him to confirm or correct. With what he was shown,
+they are in `reviews/v4-plan-question-round-answers-2026-11-19.md`, and the
+PLAN-6 entry of 2026-11-19 rules on them.
 
 Written as he asks for them: up to four questions a round, each with a
 recommendation first and its trade-off, in plain English. Round 1 holds the
@@ -1630,6 +1680,12 @@ the end, never stretches. Given that, how should the scene's length be set?
 - If overturned: a small change to the clock (CORE-02); stored times are
   unaffected.
 
+**His answer** (typed about 22:35 UTC, 18 Nov 2026, shown the shortened form):
+"scene ends when all animation has concluded (although some animation could be cyclical so will need a grace period or control for how long to last)"
+Reading (a proposal, his to correct): the recommended option stands; animation that cycles needs a grace
+period or a control for how long it lasts, which CORE-02 now carries as a
+criterion and settles.
+
 **Q2 — Route shape (A1).** Can one route start in several places, run both
 ways along a street and go round a loop?
 - "Yes, a route can be a network (Recommended)" — A new route is a simple
@@ -1646,6 +1702,10 @@ ways along a street and go round a loop?
   refuses several starts, two-way lines and loops is added (CORE-01, CORE-06,
   FEAT-04).
 
+**His answer** (typed about 22:35 UTC, 18 Nov 2026, shown the shortened form):
+"recommendation good"
+Reading (a proposal, his to correct): the recommended option stands.
+
 **Q3 — v4's browser storage (A15).** You left this reading unticked: should
 v4 keep browser storage of its own?
 - "Its own storage (Recommended)" — v4 autosaves under names of its own and
@@ -1659,6 +1719,12 @@ v4 keep browser storage of its own?
   work.
 - If overturned: only autosave and recovery change (CORE-09, placed late in
   Phase 7).
+
+**His answer** (typed about 22:35 UTC, 18 Nov 2026, shown the shortened form):
+"open to reccomendation but no backwards compatibility needed"
+Reading (a proposal, his to correct): the recommended option stands; v4 need not read, import or migrate
+v3's browser autosaves. A13 (older v4 files keep opening) is not changed by
+it.
 
 **Q4 — Xerte and the switch (A16).** You left this reading unticked. Your task
 message of 18 November asked when Pages switches from v3 to v4, "ideally once
@@ -1674,6 +1740,12 @@ condition?
   github.io before Xerte works.
 - If overturned: nothing built is redone; only PUB-01's first-publish step
   changes, last in Phase 7.
+
+**His answer** (typed about 22:35 UTC, 18 Nov 2026, shown the shortened form):
+"Xerte copy works, progress with pages"
+Reading (a proposal, his to correct): the condition's first half is met; he did not say whether Gary has the
+Xerte copy's address. His word on publishing, below, then overturns A16
+whole: the first publish waits for neither.
 
 ### Round 2
 
@@ -1694,6 +1766,10 @@ for each. Do these homes stand?
   home redoes that feature's schema and controls (FEAT-01, FEAT-02 or
   FEAT-03).
 
+**His answer** (typed about 23:28 UTC, 18 Nov 2026, shown this wording):
+"q5) as recommended"
+Reading (a proposal, his to correct): the recommended option stands.
+
 **Q6 — New features before v4.0 (A11).** Which new features join before
 v4.0? (The one-by-one list is in §12.)
 - "Only what v4 itself needs (Recommended)" — v4.0 is your five preset scenes,
@@ -1709,6 +1785,10 @@ v4.0? (The one-by-one list is in §12.)
 - "Some now" — Name them under Other. Trade-off: v4.0 arrives later.
 - If overturned: nothing is redone; items are added.
 
+**His answer** (typed about 23:28 UTC, 18 Nov 2026, shown this wording):
+"q6) as recommended"
+Reading (a proposal, his to correct): the recommended option stands.
+
 **Q7 — "The full area feature" (A23, CROWD-08.3).** You said of crowd areas
 "the full feature in v4". What does full mean?
 - "Placed freely (Recommended)" — A crowd's start or finish area can be
@@ -1723,6 +1803,11 @@ v4.0? (The one-by-one list is in §12.)
   least to build; "full" waits.
 - If overturned: only crowd areas are redone (FEAT-07, last in Phase 8).
 
+**His answer** (typed about 23:28 UTC, 18 Nov 2026, shown this wording, its
+last line naming FEAT-05, as written before that item was split):
+"q7) as recommended"
+Reading (a proposal, his to correct): the recommended option stands.
+
 **Q8 — A repeating crowd (A24, DEF-95).** When a crowd repeats its journey on
 a network, should each dot's lap look exactly the same every time, as it
 already does on a simple route?
@@ -1735,6 +1820,35 @@ already does on a simple route?
   but each lap differs (v3 does this on purpose today, for that smoothness).
   Trade-off: laps never line up.
 - If overturned: the crowd's sway rule and its tests change (FEAT-04).
+
+**His answer** (typed about 23:28 UTC, 18 Nov 2026, shown this wording):
+"q8) as recommended for now, but future feature may include expressions that make it varied"
+Reading (a proposal, his to correct): "Every lap the same" stands for v4.0; his addition is a wish for a
+later feature (PLAN-6.1), and what "expressions" means is his to say when
+that feature is planned.
+
+### His word on publishing
+
+Not a question of this round. Shown, with round 2, orchestrator 3's question
+whether "build the publishing set-up, don't publish yet" was the right reading
+of his "progress with pages", he answered at about 23:28 UTC, in the same
+message:
+"re publishing to github pages, just go ahead and publish to it at any point (and after any work item is developed, so long as doesn't cause untoward delay or overhead)"
+
+Shown then that the first publish swaps working v3 at the github.io address
+for v4 as it then stands, a near-empty page soon after STACK-02, with v3 kept
+on Xerte and at tag v3.3.726, he replied at about 23:35 UTC:
+"yes, publish, and I'm going to bed now, so hopefully no more pauses until 08:00"
+
+Reading (a proposal, his to correct): his call, given in advance, for v4 to be published to Pages without
+asking him again, at any point and after each work item, while publishing
+causes no untoward delay or overhead; the first publish may replace v3 at the
+github.io address. It goes only through PUB-01's step, which therefore moves
+to straight after STACK-02 (§19), with every guard kept. It is not a v3
+release, `npm run push`, a tag, a hand change to `docs/` or `version.json`,
+or leave to skip the gate, Codex's review or PUB-01's guards. The signed
+lines it makes untrue are redrafted for his signature (the brief's in §21,
+the profile's Hosting line in the PLAN-6 entry), unchanged until he signs.
 
 ### Also for his signature, not a question
 

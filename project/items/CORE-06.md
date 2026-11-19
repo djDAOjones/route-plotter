@@ -16,11 +16,11 @@ An author draws routes on the canvas (the plan's §3). This item ports v3's poin
 
 ## Now
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
 Next step: Start once CORE-05 has merged; it may run beside CORE-12.
 
-Open question: None; the round-1 answer on route shape (Q2) only adds a validation rule if he picks "forks only".
+Open question: None; his answer on route shape (round 1, Q2), "recommendation good", keeps a route able to be a network (A1), as PLAN-6 of 2026-11-19 reads it.
 
 ## Context and sources
 
@@ -31,3 +31,4 @@ Open question: None; the round-1 answer on route shape (Q2) only adds a validati
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: "Core with storytelling basics" (Q9); "One route, travellers as features (Recommended)" (Q11). Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A1 (the plan's §18; the night's decisions list).
+- 2026-11-19 — The owner answered the plan's round 1, Q2 (route shape, A1; `reviews/v4-plan-question-round-answers-2026-11-19.md`), verbatim: "recommendation good". Read by PLAN-6 of 2026-11-19, a reading his to correct, as ruling A1 as recommended: drawing gains two-way lines, loops and several starts, with no rule refusing them.

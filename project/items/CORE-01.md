@@ -16,11 +16,11 @@ v4's project is one scene holding routes whose points and lines may fork, join, 
 
 ## Now
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
 Next step: Start once Phase 7 opens by its PLAN entry.
 
-Open question: None; the round-1 answer on route shape (Q2) only adds a validation rule if he picks "forks only".
+Open question: None; his answer on route shape (round 1, Q2), "recommendation good", keeps a route able to be a network (A1), as PLAN-6 of 2026-11-19 reads it.
 
 ## Context and sources
 
@@ -31,3 +31,4 @@ Open question: None; the round-1 answer on route shape (Q2) only adds a validati
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: "One route, travellers as features (Recommended)" (Q11); "Core with storytelling basics" (Q9); "v3 files stay with v3" (Q14). Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A1, A2a, A12 (the plan's §18; the night's decisions list).
+- 2026-11-19 — The owner answered the plan's round 1, Q2 (route shape, A1; `reviews/v4-plan-question-round-answers-2026-11-19.md`), verbatim: "recommendation good". Read by PLAN-6 of 2026-11-19, a reading his to correct, as ruling A1 as recommended, so no rule refusing several starts, two-way lines and loops is added. A2a and A12 stay provisional under G3.

@@ -17,11 +17,11 @@ The owner said "crowd paths should be able to act as the camera" (2026-10-13). T
 
 ## Now
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
 Next step: Start once FEAT-04 has merged; it may run beside FEAT-05.
 
-Open question: Owner: whether the feature homes stand (round 2, Q5); provisionally yes (A3, A4).
+Open question: None; his answer to round 2, Q5, "q5) as recommended", keeps the feature homes (A3, A4), as PLAN-6 of 2026-11-19 reads it.
 
 ## Context and sources
 
@@ -31,3 +31,4 @@ Open question: Owner: whether the feature homes stand (round 2, Q5); provisional
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: "crowd paths should be able to act as the camera" (PLAN-4); "do what makes intuitive sense from a user point of view for a given case" (Q10). Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A3, A4 (the plan's §18; the night's decisions list).
+- 2026-11-19 — The owner answered the plan's round 2, Q5 (where features live, A3 and A4; `reviews/v4-plan-question-round-answers-2026-11-19.md`), verbatim: "q5) as recommended". Read by PLAN-6 of 2026-11-19, a reading his to correct, as ruling A3 and A4 as recommended: the camera is the scene's, following a route's lead or its crowd.
