@@ -11,6 +11,7 @@
 ## Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
 
 - GATE-02 — the gate sorts the accessibility pack's files as v4, runs the publishing step's own files through the gate's tests and v4's gate, not v3's suite, places the measures script with v4, and fails on `main` a site change its run's record cannot vouch for; PUB-01's live trial is in its Notes, by pull request (2026-11-19) — see decisions
+- CORE-01 — v4's project model stands in `src/core`: the schema helper declares every saved field, the scene's shape and the rules across it once, giving types, defaults, control ranges and a total open check that names each field; v3's limits carried; the core held pure by a compiled guard, by pull request (2026-11-19) — see decisions
 
 ## Phase 6 — v4's foundations — the owner's overnight word of 2026-11-18 (PLAN-6)
 
