@@ -239,6 +239,17 @@ describe('check reads each own data property once, in plain objects and lists on
     expect(result).toEqual(['items.Symbol(Symbol.iterator) unknown', 'first reference']);
   });
 
+  it('an unknown field whose value cannot be read is still reported by its own path', () => {
+    const revoked = Proxy.revocable({}, {});
+    revoked.revoke();
+    expect(check(BOX, { ...box(), extra: revoked.proxy })).toEqual({
+      ok: false,
+      problems: [
+        { path: 'extra', rule: 'unknown', expected: 'no such field', received: 'something that could not be read' },
+      ],
+    });
+  });
+
   it('what cannot be read as plain data is refused with a report, never thrown', () => {
     const trap = new Proxy({}, { getPrototypeOf: () => { throw new Error('trap'); } });
     const unreadable = { ok: false, problems: [{ path: 'style', rule: 'type', expected: 'plain data' }] };

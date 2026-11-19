@@ -18,6 +18,8 @@ import {
   type Values,
 } from './field';
 
+const UNREADABLE = 'something that could not be read';
+
 type Broken =
   | 'missing'
   | 'unknown'
@@ -48,14 +50,18 @@ export type Checked<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly problems: readonly Problem[] };
 
-/** A short, safe description of any value, for a report. */
+/** A short, safe description of any value, for a report; never a throw, whatever the value. */
 export function describe(value: unknown): string {
   if (typeof value === 'string') return JSON.stringify(value.length > 40 ? `${value.slice(0, 40)}…` : value);
   if (typeof value === 'number' || typeof value === 'boolean' || value === null || value === undefined) {
     return String(value);
   }
-  if (Array.isArray(value)) return `a list of ${value.length}`;
-  if (typeof value === 'object') return isRecord(value) ? 'an object' : 'an object of another kind';
+  try {
+    if (Array.isArray(value)) return `a list of ${value.length}`;
+    if (typeof value === 'object') return isRecord(value) ? 'an object' : 'an object of another kind';
+  } catch {
+    return UNREADABLE;
+  }
   return `a ${typeof value}`;
 }
 
@@ -132,13 +138,15 @@ function own(value: object, key: string | number | symbol): Own {
   return 'value' in descriptor ? { found: 'value', value: descriptor.value } : { found: 'accessor' };
 }
 
-/** Every own key, hidden and symbol keys included, each with its value described. */
-function ownKeys(value: object): [string, string][] {
-  const keys = [...Object.getOwnPropertyNames(value), ...Object.getOwnPropertySymbols(value)];
-  return keys.map((key) => {
+/** Reports each own key of `value`, hidden and symbol keys included, that `known` does not accept, by its own path. */
+function reportUnknownKeys(walk: Walk, value: object, path: string, known: (key: string) => boolean): void {
+  for (const key of [...Object.getOwnPropertyNames(value), ...Object.getOwnPropertySymbols(value)]) {
+    const name = typeof key === 'string' ? key : String(key);
+    if (typeof key === 'string' && known(key)) continue;
+    walk.at = join(path, name);
     const read = own(value, key);
-    return [typeof key === 'string' ? key : String(key), read.found === 'value' ? describe(read.value) : 'a getter'];
-  });
+    report(walk, walk.at, 'unknown', 'no such field', read.found === 'value' ? describe(read.value) : 'a getter');
+  }
 }
 
 function idsOf(fields: Fields, items: unknown): ReadonlySet<string> | null {
@@ -170,9 +178,7 @@ function checkRecord(declared: Declaration, value: unknown, path: string, walk: 
     if (checked !== REFUSED) copy[name] = checked;
     if (field.kind === 'list') frame.set(name, idsOf(field.of, copy[name]));
   }
-  for (const [key, received] of ownKeys(value)) {
-    if (!Object.hasOwn(declared.of, key)) report(walk, join(path, key), 'unknown', 'no such field', received);
-  }
+  reportUnknownKeys(walk, value, path, (key) => Object.hasOwn(declared.of, key));
   if (!holdsAll(declared.of, copy)) return copy;
   for (const breach of declared.rules.flatMap((rule) => rule.breaches(copy))) {
     report(walk, join(path, breach.at), breach.rule, breach.expected, breach.received);
@@ -194,10 +200,8 @@ function checkList(declared: Declaration & { readonly max: number }, value: read
     if (read.found === 'value') copy.push(checkRecord(declared, read.value, `${path}[${i}]`, walk, frames));
     else report(walk, `${path}[${i}]`, 'missing', 'an object', read.found === 'none' ? 'a hole' : 'a getter');
   }
-  for (const [key, received] of ownKeys(value)) {
-    const item = /^(0|[1-9]\d*)$/.test(key) && Number(key) < length;
-    if (!item && key !== 'length') report(walk, join(path, key), 'unknown', 'no such field', received);
-  }
+  const item = (key: string) => /^(0|[1-9]\d*)$/.test(key) && Number(key) < length;
+  reportUnknownKeys(walk, value, path, (key) => key === 'length' || item(key));
   return copy;
 }
 
@@ -241,7 +245,7 @@ export function check<E extends Fields>(declared: GroupField<E>, value: unknown,
     resolve(walk);
     if (walk.problems.length === 0 && holdsValues(declared.of, copy)) return { ok: true, value: copy };
   } catch {
-    report(walk, walk.at, 'type', 'plain data', 'something that could not be read');
+    report(walk, walk.at, 'type', 'plain data', UNREADABLE);
   }
   return { ok: false, problems: walk.problems };
 }

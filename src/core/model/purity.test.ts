@@ -2,11 +2,12 @@
 // (.dependency-cruiser.cjs says so), and a global needs no import, so this test compiles every source file under
 // src/core but its tests, in any script language, with TypeScript's own checker on every run, against the core's lib
 // (ES2022, no browser or host types), and fails on any global that is not on an allowlist of pure ES globals: what is
-// not listed (Date, Intl, Atomics, SharedArrayBuffer, WeakRef, Proxy, Reflect, Function, eval, globalThis, Promise) or
-// not declared at all (window, alert, BroadcastChannel) fails by default. `Math` may be used only as `Math.<name>`
-// with a pure name, so an alias or a destructuring fails; `constructor` and `__proto__` may not be named, the usual
-// way round to `Function`. Comments, strings and property names do not count; planted files below prove that it bites.
-// It is a static guard: text a program builds at run time (`'constr' + 'uctor'`) is beyond it, and review covers that.
+// not listed (Date, Intl, Atomics, SharedArrayBuffer, WeakRef, Proxy, Reflect, Function, eval, globalThis, Promise),
+// not declared at all (window, alert, BroadcastChannel), or declared only ambiently (`declare const`) fails by
+// default. `Math` may be used only as `Math.<name>` with a pure name, so an alias or a destructuring fails;
+// `constructor` and `__proto__` may not be named, the usual way round to `Function`. Comments, strings and property
+// names do not count; planted files below prove that it bites. It is a static guard: text a program builds at run
+// time (`'constr' + 'uctor'`) is beyond it, and review covers that.
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
@@ -77,11 +78,21 @@ function mathUse(node: ts.Identifier): string {
   return literal && ts.isStringLiteralLike(literal) ? `Math.${literal.text}` : 'Math';
 }
 
+/** A declaration that emits nothing, and so names a global: the lib's, a `.d.ts` file's, or one under `declare`. */
+function isAmbient(node: ts.Node): boolean {
+  if (node.getSourceFile().isDeclarationFile) return true;
+  for (let at: ts.Node | undefined = node; at !== undefined; at = at.parent) {
+    const modifiers = ts.canHaveModifiers(at) ? ts.getModifiers(at) : undefined;
+    if (modifiers?.some((one) => one.kind === ts.SyntaxKind.DeclareKeyword)) return true;
+  }
+  return false;
+}
+
 /** What a global use is, or null where it is pure. */
 function impureGlobal(node: ts.Identifier, program: ts.Program): string | null {
   const symbol = program.getTypeChecker().getSymbolAtLocation(node);
   const declarations = symbol?.declarations ?? [];
-  const global = declarations.every((one) => program.isSourceFileDefaultLibrary(one.getSourceFile()));
+  const global = declarations.every(isAmbient);
   if (!global || (symbol === undefined && node.text === 'undefined')) return null;
   if (symbol === undefined) return `${node.text} (no such global in the core)`;
   if (!PURE_GLOBALS.has(node.text)) return node.text;
@@ -136,6 +147,14 @@ const PLANTED = [
   ['export const wait = () => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);',
     ['1: Atomics', '1: SharedArrayBuffer']],
   ['export const keep = (o: object) => new WeakRef(o);', ['1: WeakRef']],
+  [
+    "declare const BroadcastChannel: new (to: string) => unknown;\nexport const tell = () => new BroadcastChannel('');",
+    ['1: BroadcastChannel', '2: BroadcastChannel'],
+  ],
+  [
+    'declare global { var clock: () => number }\nexport const now = () => clock();',
+    ['1: global', '1: clock', '2: clock'],
+  ],
 ] as const;
 
 const INNOCENT = [
