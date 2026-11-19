@@ -40,7 +40,9 @@ import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { PAGES, ROOT, STEP, classify, git, isAncestor, lastGreenSha, pathsOfRange, pushedLine } from './gate.mjs';
+import {
+  PAGES, ROOT, STEP, authenticateStep, classify, git, isAncestor, lastGreenSha, pathsOfRange, pushedLine, stepCommits
+} from './gate.mjs';
 
 /** The repository the step publishes, and the address Pages serves it at. */
 export const REPOSITORY = 'djDAOjones/route-plotter';
@@ -208,10 +210,11 @@ export function scriptReferences(text) {
   const gap = '(?:\\s|/\\*[\\s\\S]*?\\*/|//[^\\n]*\\n)*';
   const quoted = '(?:"([^"\\n]+)"|\'([^\'\\n]+)\'|`([^`$\\n]+)`)';
   const read = pattern => [...text.matchAll(new RegExp(pattern, 'g'))].map(match => match[1] ?? match[2] ?? match[3]);
+  // A statement may follow a comment, so '/' may come before it; a specifier list may hold either kind of comment.
   const modules = [
-    ...read(`(?:^|[;}\\s)])import${gap}${quoted}`),
-    ...read(`(?:^|[;}\\s)])(?:import|export)${gap}(?:[\\w$*{},\\s]|/\\*[\\s\\S]*?\\*/)+?${gap}from${gap}${quoted}`),
-    ...read(`(?<![.\\w$])import${gap}\\(${gap}${quoted}${gap}\\)`)
+    ...read(`(?:^|[;}\\s)/])import${gap}${quoted}`),
+    ...read(`(?:^|[;}\\s)/])(?:import|export)${gap}(?:[\\w$*{},\\s]|/\\*[\\s\\S]*?\\*/|//[^\\n]*\\n)+?${gap}from${gap}${quoted}`),
+    ...read(`(?<![.\\w$])import${gap}\\(${gap}${quoted}${gap}[,)]`)
   ];
   const urls = read(`\\bnew${gap}URL${gap}\\(${gap}${quoted}${gap},${gap}import${gap}\\.${gap}meta${gap}\\.${gap}url${gap}\\)`);
   return { modules, urls };
@@ -696,18 +699,33 @@ export async function decide({ env, event = {}, cwd = ROOT, fetchImpl = globalTh
     return no(`main has moved on from ${short(verified)} with a change of its own (${moved.slice(0, 3).join(', ')}); its own run publishes it`);
   }
 
-  // The last publish's source: what the live v4 was built from (a take-back leaves it, so v3 stays until v4 changes).
-  const last = stepHistory(cwd, tip).find(commit => commit.source && SHA.test(commit.source) && isAncestor(commit.source, tip, cwd))?.source;
-  if (!byHand && last && isAncestor(last, verified, cwd)) {
+  // The last checkpoint: the newest commit shaped as the step's that GitHub's record of its run vouches for (the
+  // gate's authenticateStep), so a forged one is passed over. A publish's checkpoint is its Source, what the live v4
+  // was built from; a take-back's is itself, so the site it restored stays until v4 changes again (Codex's review).
+  let last = null;
+  for (const commit of stepCommits(null, tip, cwd)) {
+    const vouched = await authenticateStep(commit, env, fetchImpl, cwd);
+    if (vouched === null && !byHand) {
+      return no(`GitHub's record of the step's commit ${short(commit.sha)} could not be read yet; the next run reconciles`);
+    }
+    if (vouched !== true) continue;
+    const source = commit.body.split('\n').find(line => line.startsWith('Source: '))?.slice(8).trim();
+    last = source && SHA.test(source) && isAncestor(source, tip, cwd) ? source : commit.sha;
+    break;
+  }
+  if (!byHand && last) {
+    if (!isAncestor(last, verified, cwd)) {
+      return no(`the last publish or take-back, at ${short(last)}, came after ${short(verified)}: nothing more to publish for it`);
+    }
     const since = pathsOfRange([last, verified], cwd);
     if (since !== null && !since.some(APP)) {
-      return no(`nothing that changes v4 has landed since the last publish's source ${short(last)}: a record-only or v3-only change publishes nothing`);
+      return no(`nothing that changes v4 has landed since ${short(last)}, the last publish's source or take-back: a record-only or v3-only change publishes nothing`);
     }
   }
   const tryText = byHand && env.WHAT_TO_TRY?.trim() ? env.WHAT_TO_TRY : await tryFromPulls(env, fetchImpl, cwd, last, verified);
   return { publish: true, source: tip, verified, tryText,
     reason: `Verify passed on ${short(verified)}, main's tip ${short(tip)} holds the same v4, ` +
-      (byHand ? 'and the step was run by hand' : last ? `and v4 has changed since the last publish's source ${short(last)}` : 'and v4 has never been published') };
+      (byHand ? 'and the step was run by hand' : last ? `and v4 has changed since ${short(last)}, the last publish's source or take-back` : 'and v4 has never been published') };
 }
 
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');

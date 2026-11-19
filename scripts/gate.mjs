@@ -289,15 +289,16 @@ export function rangeEnds(range, cwd = ROOT) {
 }
 
 /**
- * The commits after `from` that are shaped as the publishing step's own (see
- * STEP) and left the live site as `to` holds it: neither docs/ nor
- * version.json has changed since. Shape is git metadata, which anyone can
- * write, so on main CI also checks each one against GitHub's record of the
- * run that made it (authenticateStep); a pull request never relies on it.
- * @returns {{ sha: string, run: string|null }[]} newest first; empty when unreadable
+ * The commits reachable from `to` (and not from `from`, when given) that are
+ * shaped as the publishing step's own (see STEP), newest first: one parent,
+ * the bot as author and committer, the trailer, and only the live site's
+ * paths. Shape is git metadata, which anyone can write, so on main the gate
+ * and the step also check each one against GitHub's record of the run that
+ * made it (authenticateStep); a pull request never relies on it.
+ * @returns {{ sha: string, run: string|null, attempt: string, body: string }[]} empty when unreadable
  */
-export function stepCandidates(from, to, cwd = ROOT) {
-  const log = git(['log', '--format=%H%x1f%P%x1f%an%x1f%ae%x1f%cn%x1f%ce%x1f%B%x1e', `${from}..${to}`], cwd);
+export function stepCommits(from, to, cwd = ROOT) {
+  const log = git(['log', '--format=%H%x1f%P%x1f%an%x1f%ae%x1f%cn%x1f%ce%x1f%B%x1e', from ? `${from}..${to}` : to], cwd);
   if (log === null) return [];
   const found = [];
   for (const entry of log.split('\x1e')) {
@@ -310,11 +311,21 @@ export function stepCandidates(from, to, cwd = ROOT) {
     if (!trailer) continue;
     const changed = pathsOfRange([`${sha}^`, sha], cwd);
     if (!changed?.length || changed.some(path => classify(path) !== 'pages')) continue;
-    // git diff --quiet exits 1 on a difference, which git() reads as null.
-    if (git(['diff', '--quiet', sha, to, '--', ...PAGES.files, ...PAGES.dirs], cwd) === null) continue;
-    found.push({ sha, run: trailer.match(/\brun (\d+)\b/)?.[1] ?? null, attempt: trailer.match(/\battempt (\d+)\b/)?.[1] ?? '1' });
+    found.push({ sha, run: trailer.match(/\brun (\d+)\b/)?.[1] ?? null, attempt: trailer.match(/\battempt (\d+)\b/)?.[1] ?? '1', body });
   }
   return found;
+}
+
+/**
+ * The step-shaped commits after `from` that left the live site as `to` holds
+ * it: neither docs/ nor version.json has changed since.
+ * @returns {{ sha: string, run: string|null, attempt: string }[]} newest first
+ */
+export function stepCandidates(from, to, cwd = ROOT) {
+  return stepCommits(from, to, cwd)
+    // git diff --quiet exits 1 on a difference, which git() reads as null.
+    .filter(({ sha }) => git(['diff', '--quiet', sha, to, '--', ...PAGES.files, ...PAGES.dirs], cwd) !== null)
+    .map(({ sha, run, attempt }) => ({ sha, run, attempt }));
 }
 
 /** Whether a commit shaped as the step's left the live site as `to` holds it (git metadata alone). */

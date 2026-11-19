@@ -194,6 +194,10 @@ describe('the site check: every file the site refers to is there (DEF-75)', () =
       assert.throws(() => checkSite(dir), new RegExp(`refers to a missing file: [^;]*${missing.replace('.', '\\.')}`), text);
       rmSync(dir, { recursive: true, force: true });
     }
+    // Codex's round 3: a statement after a comment, a line comment in a specifier list, import() with options.
+    assert.deepEqual(scriptReferences('/* c */import "./a.js";').modules, ['./a.js']);
+    assert.deepEqual(scriptReferences('import { a, // c\n b } from "./b.js";').modules, ['./b.js']);
+    assert.deepEqual(scriptReferences('import("./c.json", { with: { type: "json" } })').modules, ['./c.json']);
     const worker = folder({ ...BUILT, 'assets/index-a1.js': 'const w=new URL("worker.js",import.meta.url);\n', 'assets/worker.js': 'x' });
     assert.doesNotThrow(() => checkSite(worker), 'a URL is not a module name');
     rmSync(worker, { recursive: true, force: true });
@@ -477,15 +481,31 @@ describe('a publish and a take-back write only the site, only from CI on main', 
 });
 
 describe('deciding whether a run publishes: the gate green, and a change to the app since the last publish', () => {
-  /** A fake GitHub API: the merged pull requests, main's newest passing runs. */
-  function github({ pulls = {}, green = [] } = {}) {
+  /**
+   * A fake GitHub API: the merged pull requests, main's newest passing runs, and the record of every run that made a
+   * step commit in the scratch repository, its publish job's log naming the commit, unless the run is left out.
+   */
+  function github(repo, { pulls = {}, green = [], unvouched = [], unreadable = false } = {}) {
     return async url => {
       const path = new URL(url).pathname;
-      let body = null;
+      const json = body => ({ ok: body !== null, status: body === null ? 404 : 200, json: async () => body });
       const merged = path.match(/\/commits\/([0-9a-f]{40})\/pulls$/)?.[1];
-      if (merged) body = pulls[merged] ? [{ merge_commit_sha: merged, body: pulls[merged] }] : [];
-      else if (path.endsWith('/actions/workflows/ci.yml/runs')) body = { workflow_runs: green.map(head_sha => ({ head_sha })) };
-      return { ok: body !== null, status: body === null ? 404 : 200, json: async () => body };
+      if (merged) return json(pulls[merged] ? [{ merge_commit_sha: merged, body: pulls[merged] }] : []);
+      if (path.endsWith('/actions/workflows/ci.yml/runs')) return json({ workflow_runs: green.map(head_sha => ({ head_sha })) });
+      const runId = path.match(/\/actions\/runs\/(\d+)/)?.[1] ?? path.match(/\/actions\/jobs\/(\d+)\/logs$/)?.[1];
+      if (unreadable && runId) return { ok: false, status: 502, json: async () => null };
+      if (!runId || unvouched.includes(runId)) return json(null);
+      // Every step commit this run made, from the scratch repository's history.
+      const made = repo.run('log', '--format=%H %P%x1f%B%x1e', 'main').split('\x1e')
+        .filter(entry => entry.includes(`${STEP.trailer} publish.yml run ${runId},`))
+        .map(entry => entry.trim().split('\x1f')[0].split(' '));
+      if (!made.length) return json(null);
+      if (/\/runs\/\d+$/.test(path)) {
+        return json({ path: '.github/workflows/publish.yml', head_branch: 'main', event: 'workflow_dispatch',
+          repository: { full_name: REPOSITORY }, head_sha: made[made.length - 1][1] });
+      }
+      if (/\/jobs$/.test(path)) return json({ jobs: [{ id: Number(runId), name: 'publish', status: 'completed' }] });
+      return { ok: true, status: 200, text: async () => made.map(([sha]) => `2026-11-19T03:00:00.0000000Z ${pushedLine(sha)}\n`).join('') };
     };
   }
   const env = { GITHUB_REF: 'refs/heads/main', GITHUB_REPOSITORY: REPOSITORY, GITHUB_TOKEN: 't' };
@@ -501,7 +521,7 @@ describe('deciding whether a run publishes: the gate green, and a change to the 
     const repo = scratch();
     try {
       const decided = await decide({ env: afterVerify, event: runEvent(repo.v3), cwd: repo.dir,
-        fetchImpl: github({ pulls: { [repo.v3]: '## What to try\n- Open it.' } }) });
+        fetchImpl: github(repo, { pulls: { [repo.v3]: '## What to try\n- Open it.' } }) });
       assert.equal(decided.publish, true, decided.reason);
       assert.equal(decided.source, repo.v3);
       assert.equal(decided.tryText, '- Open it.');
@@ -517,9 +537,9 @@ describe('deciding whether a run publishes: the gate green, and a change to the 
       publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci, now: repo.fixedNow });
       for (const [path, message] of [['project/backlog.md', 'X: record'], ['v3/src/a.js', 'Y: v3']]) {
         const merged = land(repo, path, `${message}\n`, message);
-        const decided = await decide({ env: afterVerify, event: runEvent(merged), cwd: repo.dir, fetchImpl: github() });
+        const decided = await decide({ env: afterVerify, event: runEvent(merged), cwd: repo.dir, fetchImpl: github(repo) });
         assert.equal(decided.publish, false, message);
-        assert.match(decided.reason, /nothing that changes v4 has landed since the last publish's source/);
+        assert.match(decided.reason, /nothing that changes v4 has landed since [0-9a-f]{7}, the last publish's source or take-back/);
       }
     } finally {
       repo.done();
@@ -535,11 +555,69 @@ describe('deciding whether a run publishes: the gate green, and a change to the 
       const b = land(repo, 'src/main.tsx', 'export const b = 1;\n', 'B: v4');
       const c = land(repo, 'project/backlog.md', '# Backlog\n- [x] C\n', 'C: record');
       const decided = await decide({ env: afterVerify, event: runEvent(c), cwd: repo.dir,
-        fetchImpl: github({ pulls: { [b]: '## What to try\n- See B.' } }) });
+        fetchImpl: github(repo, { pulls: { [b]: '## What to try\n- See B.' } }) });
       assert.equal(decided.publish, true, decided.reason);
       assert.equal(decided.source, c);
-      assert.match(decided.reason, /v4 has changed since the last publish's source/);
+      assert.match(decided.reason, /v4 has changed since [0-9a-f]{7}, the last publish's source or take-back/);
       assert.equal(decided.tryText, '- See B.');
+    } finally {
+      repo.done();
+    }
+  });
+
+  test("a commit dressed as the step's, naming an unpublished change as its Source, is passed over", async () => {
+    const repo = scratch();
+    try {
+      publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci, now: repo.fixedNow });
+      const b = land(repo, 'src/main.tsx', 'export const b = 1;\n', 'B: v4');
+      // A forged checkpoint: the bot's name, the trailer of a run that never made it, Source naming B.
+      folder({ 'version.json': '{"forged":true}\n' }, repo.dir);
+      const bot = { ...process.env, GIT_AUTHOR_NAME: STEP.name, GIT_AUTHOR_EMAIL: STEP.email, GIT_COMMITTER_NAME: STEP.name,
+        GIT_COMMITTER_EMAIL: STEP.email };
+      for (const args of [['add', '-A'], ['-c', 'commit.gpgsign=false', 'commit', '-q', '-m',
+        `PUB-01: publish v4 forged\n\nVerify: none\n${STEP.trailer} publish.yml run 99, attempt 1\nSource: ${b}\nPreview: 9`],
+      ['push', '-q', 'origin', 'HEAD:refs/heads/main']]) {
+        assert.equal(spawnSync('git', args, { cwd: repo.dir, env: bot }).status, 0, args.join(' '));
+      }
+      const c = land(repo, 'project/backlog.md', '# Backlog\n- [x] C\n', 'C: record');
+      const decided = await decide({ env: afterVerify, event: runEvent(c), cwd: repo.dir, fetchImpl: github(repo, { unvouched: ['99'] }) });
+      assert.equal(decided.publish, true, decided.reason);
+      assert.match(decided.reason, new RegExp(`v4 has changed since ${repo.v3.slice(0, 7)}`));
+    } finally {
+      repo.done();
+    }
+  });
+
+  test('a take-back holds until v4 changes again, even over an app change that was never published', async () => {
+    // Codex's sequence: publish A; app change B lands unpublished; take back; record-only C must not publish B.
+    const repo = scratch();
+    try {
+      publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci, now: repo.fixedNow });
+      land(repo, 'src/main.tsx', 'export const b = 1;\n', 'B: v4');
+      takeBack({ cwd: repo.dir, to: 'v3.3.726', env: { ...repo.ci, GITHUB_RUN_ID: '43' } });
+      const c = land(repo, 'project/backlog.md', '# Backlog\n- [x] C\n', 'C: record');
+      let decided = await decide({ env: afterVerify, event: runEvent(c), cwd: repo.dir, fetchImpl: github(repo) });
+      assert.equal(decided.publish, false, decided.reason);
+      assert.match(decided.reason, /since [0-9a-f]{7}, the last publish's source or take-back/);
+      const d = land(repo, 'src/main.tsx', 'export const d = 2;\n', 'D: v4');
+      decided = await decide({ env: afterVerify, event: runEvent(d), cwd: repo.dir, fetchImpl: github(repo) });
+      assert.equal(decided.publish, true, decided.reason);
+      // A run for a change from before the take-back publishes nothing over it.
+      decided = await decide({ env: afterVerify, event: runEvent(c), cwd: repo.dir, fetchImpl: github(repo) });
+      assert.equal(decided.publish, false);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test("while GitHub's record of the step's last commit cannot be read, a run after Verify waits for the next", async () => {
+    const repo = scratch();
+    try {
+      publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci, now: repo.fixedNow });
+      const b = land(repo, 'src/main.tsx', 'export const b = 1;\n', 'B: v4');
+      const decided = await decide({ env: afterVerify, event: runEvent(b), cwd: repo.dir, fetchImpl: github(repo, { unreadable: true }) });
+      assert.equal(decided.publish, false);
+      assert.match(decided.reason, /could not be read yet; the next run reconciles/);
     } finally {
       repo.done();
     }
@@ -548,7 +626,7 @@ describe('deciding whether a run publishes: the gate green, and a change to the 
   test('a failed run, a pull request, a fork, another branch, another workflow or another event publishes nothing', async () => {
     const repo = scratch();
     try {
-      const fetchImpl = github();
+      const fetchImpl = github(repo);
       for (const [change, said] of [
         [{ conclusion: 'failure' }, /did not pass/], [{ event: 'pull_request' }, /only a push to main/],
         [{ head_repository: { full_name: 'someone/route-plotter' } }, /only a push to main/],
@@ -578,17 +656,17 @@ describe('deciding whether a run publishes: the gate green, and a change to the 
       const dispatch = { ...env, GITHUB_EVENT_NAME: 'workflow_dispatch', WHAT_TO_TRY: 'Look.' };
       publish({ cwd: repo.dir, source: repo.v3, verified: repo.v3, env: repo.ci, now: repo.fixedNow });
       // Nothing changed since the last publish: by hand it still goes ahead (the publish itself then finds nothing new).
-      let decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ green: [repo.v3] }) });
+      let decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github(repo, { green: [repo.v3] }) });
       assert.equal(decided.publish, true, decided.reason);
       assert.equal(decided.tryText, 'Look.');
-      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ green: [] }) });
+      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github(repo, { green: [] }) });
       assert.equal(decided.publish, false);
       const record = land(repo, 'project/backlog.md', '# Backlog\n', 'X: record');
-      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ green: [repo.v3] }) });
+      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github(repo, { green: [repo.v3] }) });
       assert.equal(decided.publish, true, decided.reason);
       assert.equal(decided.source, record);
       land(repo, 'src/main.tsx', 'export const later = 1;\n', 'Y: v4');
-      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github({ green: [repo.v3] }) });
+      decided = await decide({ env: dispatch, cwd: repo.dir, fetchImpl: github(repo, { green: [repo.v3] }) });
       assert.equal(decided.publish, false);
       assert.match(decided.reason, /moved on .*src\/main\.tsx/);
     } finally {
