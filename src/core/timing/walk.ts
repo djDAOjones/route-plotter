@@ -18,6 +18,7 @@ export interface Walk {
   readonly joins: ReadonlySet<string>;
 }
 
+/** One way out of a point: along `lineId` to `to`, `forward` when that is the line's saved direction. */
 interface Step {
   readonly lineId: string;
   readonly to: string;
@@ -27,7 +28,7 @@ interface Step {
 type Line = Route['lines'][number];
 
 /** Each point's ways out, in the lines' saved order: a one-way line from its `from`, a two-way line from either end. */
-function waysOut(lines: readonly Line[]): Map<string, Step[]> {
+export function waysOut(lines: readonly Line[]): Map<string, Step[]> {
   const ways = new Map<string, Step[]>();
   const add = (at: string, step: Step) => {
     const list = ways.get(at);
