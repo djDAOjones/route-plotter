@@ -3,12 +3,13 @@
  * The gate, sorted by what changed (GATE-01, the owner's Q23 pick "Gate by
  * what changed (Recommended)").
  *
- * Every changed path is put in one class: record, v3, v4 or other. A change
- * whose paths are all record runs the record checker alone. Otherwise the
- * gate's own tests run, then each lane the classes ask for, then the record
- * checker; a single path of class other, or a change that cannot be read,
- * runs everything. So a wrong or missing list entry fails towards running
- * more, never less.
+ * Every changed path is put in one class: record, v3, v4, pages (the live
+ * site), step (the publishing step's own files) or other. A change whose
+ * paths are all record runs the record checker alone. Otherwise the gate's
+ * own tests run, then each lane the classes ask for, then the record checker;
+ * a single path of class other, or a change that cannot be read, runs
+ * everything. So a wrong or missing list entry fails towards running more,
+ * never less.
  *
  *   node scripts/gate.mjs                  sort this checkout's change against
  *                                          origin/main and run what it needs
@@ -43,12 +44,28 @@ export const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
 /**
  * Record-only paths: the list the owner was shown (D4, provisional under his
- * overnight grant). Nothing in v3's code, tests or build reads these, and the
- * build never ships them; scripts/gate.test.mjs keeps that true.
+ * overnight grant). Nothing in v3's or v4's code, tests or build reads these,
+ * and the build never ships them; scripts/gate.test.mjs keeps that true. The
+ * accessibility pack's files inside two of these folders are v4's (A11Y).
  */
 export const RECORD = {
   files: ['AGENTS.md', 'CLAUDE.md', 'UI-STANDARDS.md', 'DEV-INFRASTRUCTURE.md', 'README.md'],
   dirs: ['project/', 'verbs/', 'tools/', 'reviews/', 'pm_skills/']
+};
+
+/**
+ * The accessibility pack's own files (STACK-03), which sit in the record's
+ * folders where the pack's own refresh looks for them: its run, report and
+ * coverage check, tools/a11y-*.mjs, and its catalogue and coverage file,
+ * project/a11y/. v4's gate runs and reads them (package.json's `a11y` script,
+ * tests/a11y/), so they sort as v4, ahead of the record list, whatever v4's
+ * list holds (GATE-02, wish STACK-03.1). A file here is matched by a pattern,
+ * so a pack file added later is v4 too.
+ */
+export const A11Y = {
+  files: [],
+  dirs: ['project/a11y/'],
+  patterns: [/^tools\/a11y-[^/]+\.mjs$/]
 };
 
 /**
@@ -68,13 +85,15 @@ export const V3 = {
  * v4's paths (STACK-02): the root package, its lockfile and the editor stack's
  * settings, the page, and v4's code and tests. The root `npm run check:v4`
  * runs v4's whole gate; v4's settings exclude v3/. LICENSE and the root
- * THIRD_PARTY_NOTICES.md stay other, as STACK-01 left them.
+ * THIRD_PARTY_NOTICES.md stay other, as STACK-01 left them. The measures
+ * script (STACK-04) is v4's: CI's v4 step runs it after the lane, and
+ * tests/architecture/ tests it (GATE-02).
  */
 export const V4 = {
   files: [
     'package.json', 'package-lock.json', 'index.html', 'tsconfig.json', 'tsconfig.base.json', 'tsconfig.app.json',
     'tsconfig.core.json', 'vite.config.mjs', 'eslint.config.mjs', 'eslint.base.mjs', 'eslint.a11y.mjs', 'knip.json',
-    '.dependency-cruiser.cjs'
+    '.dependency-cruiser.cjs', 'scripts/measures.mjs'
   ],
   dirs: ['src/', 'tests/']
 };
@@ -87,6 +106,20 @@ export const V4 = {
 export const PAGES = {
   files: ['version.json'],
   dirs: ['docs/']
+};
+
+/**
+ * The publishing step's own files (PUB-01): its workflow, and
+ * scripts/publish*.mjs, the step and its tests. A change to them runs the
+ * gate's lane, which holds the step's tests, and the record checker, not
+ * frozen v3's suite (GATE-02, wish PUB-01.3). v4's gate does not read them:
+ * it lints, scans and tests src/ and tests/. A push of a branch also runs the
+ * step's dry run on v4's real build (.github/workflows/publish.yml).
+ */
+export const PUBLISHING = {
+  files: ['.github/workflows/publish.yml'],
+  dirs: [],
+  patterns: [/^scripts\/publish[^/]*\.mjs$/]
 };
 
 /**
@@ -136,18 +169,24 @@ export const LANES = {
 };
 const ORDER = ['gate', 'v3', 'v4', 'record'];
 
-const inList = (path, list) => list.files.includes(path) || list.dirs.some(dir => path.startsWith(dir));
+/** Whether a path is on a list: one of its files, under one of its folders, or matched by one of its patterns. */
+const inList = (path, list) => list.files.includes(path) || list.dirs.some(dir => path.startsWith(dir)) ||
+  (list.patterns ?? []).some(pattern => pattern.test(path));
 
 /**
- * The class of one repository path, compared exactly as git spells it.
+ * The class of one repository path, compared exactly as git spells it. The
+ * accessibility pack's files are v4's before the record list is read, since
+ * they sit in its folders (GATE-02).
  * @param {string} path
  * @param {{ v4?: { files: string[], dirs: string[] } }} [lists]
- * @returns {'record'|'v3'|'pages'|'v4'|'other'}
+ * @returns {'record'|'v3'|'pages'|'step'|'v4'|'other'}
  */
 export function classify(path, { v4 = V4 } = {}) {
+  if (inList(path, A11Y)) return 'v4';
   if (inList(path, RECORD)) return 'record';
   if (inList(path, V3)) return 'v3';
   if (inList(path, PAGES)) return 'pages';
+  if (inList(path, PUBLISHING)) return 'step';
   if (inList(path, v4)) return 'v4';
   return 'other';
 }
@@ -184,8 +223,10 @@ export function plan(paths, { v4 = V4, pages = 'hand' } = {}) {
   if (found.has('other')) {
     return { lanes: everything, reason: 'a path is outside the record, v3 and v4 lists', classes };
   }
+  // GATE-02: the publishing step's own files ask for the gate's lane alone, which holds the step's tests.
   const lanes = ['gate', ...['v3', 'v4'].filter(lane => found.has(lane)), 'record'];
-  return { lanes, reason: `the change touches ${['v3', 'v4'].filter(l => found.has(l)).join(' and ')}`, classes };
+  const touched = [...['v3', 'v4'].filter(l => found.has(l)), ...(found.has('step') ? ['the publishing step'] : [])];
+  return { lanes, reason: `the change touches ${touched.join(' and ')}`, classes };
 }
 
 /**
@@ -348,17 +389,29 @@ async function github(env, fetchImpl, path, { text = false } = {}) {
 }
 
 /**
+ * How long after a job finished its log may still be on its way. A finished
+ * job whose log is missing after this is taken as having none (expired or
+ * deleted), so it vouches for nothing (GATE-02).
+ */
+export const LOG_GRACE_MINUTES = 30;
+
+/**
  * Check a step-shaped commit against GitHub's record of the run its trailer
  * names: a run of .github/workflows/publish.yml on main of this repository,
  * started after Verify or by hand, whose publish or take-back job printed, on
  * a line of its own in its log, that it pushed exactly this commit (see
  * pushedLine). Only the step on main prints that line, so an old run's number
- * cannot vouch for another commit. True or false when the record says; null
- * when it cannot be read yet, as while the job still runs.
+ * cannot vouch for another commit. Only the jobs that ran are read: a job
+ * whose conclusion is skipped has no log and pushed nothing (GATE-02). True
+ * or false when the record says; null when it cannot be read yet: while a job
+ * still runs, while a finished job's log may still be on its way, or when
+ * GitHub does not answer.
  * @param {{ sha: string, run: string|null, attempt?: string }} candidate
+ * @param {{ now?: () => number }} [clock] for the tests
  * @returns {Promise<boolean|null>}
  */
-export async function authenticateStep(candidate, env, fetchImpl = globalThis.fetch, cwd = ROOT) {
+export async function authenticateStep(candidate, env, fetchImpl = globalThis.fetch, cwd = ROOT,
+  { now = Date.now } = {}) {
   const repo = env.GITHUB_REPOSITORY;
   if (!candidate.run) return false;
   if (!env.GITHUB_TOKEN || !repo) return null;
@@ -376,9 +429,17 @@ export async function authenticateStep(candidate, env, fetchImpl = globalThis.fe
   const marker = new RegExp(`^(?:\\S+\\s)?${pushedLine(candidate.sha).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\r?$`, 'm');
   let unread = false;
   for (const job of (listed.body?.jobs ?? []).filter(item => ['publish', 'take-back'].includes(item.name))) {
+    // GATE-02: a skipped job never ran, so it has no log to wait for; a run whose other job pushed is read whole.
+    if (job.conclusion === 'skipped') continue;
     if (job.status !== 'completed') { unread = true; continue; }
     const log = await github(env, fetchImpl, `/repos/${repo}/actions/jobs/${job.id}/logs`, { text: true });
-    if (!log || log.missing) { unread = true; continue; }
+    if (!log) { unread = true; continue; }
+    if (log.missing) {
+      // GATE-02: a finished job's log still missing after the grace is gone, not late. Without a time, wait.
+      const finished = Date.parse(job.completed_at ?? '');
+      if (!(now() - finished > LOG_GRACE_MINUTES * 60_000)) unread = true;
+      continue;
+    }
     if (marker.test(log.body)) return true;
   }
   return unread ? null : false;
