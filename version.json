@@ -1,14 +1,14 @@
 {
   "app": "Route Plotter",
-  "version": "4.0.0-preview.2",
-  "preview": 2,
-  "source": "e907926c9034fa97e53536c7ab3261a90d564df3",
-  "published": "2026-11-19T04:01:56Z",
+  "version": "4.0.0-preview.3",
+  "preview": 3,
+  "source": "ed09a7609a99d8bf0b8fa4e68ed64b0dbb93c941",
+  "published": "2026-11-19T05:23:43Z",
   "address": "https://djdaojones.github.io/route-plotter/",
   "whatIsNew": [
-    "No item has shipped since the last publish."
+    "STACK-03 — v4's gate tests the shell at AAA in headless Chromium with the accessibility pack's standard run, its output outside the checkout; planted 5:1 text and a 30 px target fail it, and one link gives the shell a control to focus, by pull request (2026-11-19)"
   ],
   "whatToTry": [
-    "Open https://djdaojones.github.io/route-plotter/ — v4's page is back after the take-back was tried once. Open https://djdaojones.github.io/route-plotter/version.json — it now says 4.0.0-preview.2."
+    "Open https://djdaojones.github.io/route-plotter/ and check that the page loads and says what this preview holds."
   ]
 }
