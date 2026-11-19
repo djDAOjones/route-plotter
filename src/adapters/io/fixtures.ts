@@ -3,6 +3,9 @@
 import { sizeOf } from './images';
 import type { Decode } from './images';
 
+/** The glossary's retired words (the plan's §10), as STACK-04's M6 holds the interface to them (scripts/measures.mjs:151). */
+export const RETIRED_WORDS = /\b(nodes?|edges?|paths?|guides?|emitters?|flow layers?|waypoints?)\b/i;
+
 /** The decoder io's tests pass to Save and Open: a sound image decodes to the size its header declares. */
 export const decodeHeader: Decode = (bytes, type) => Promise.resolve(sizeOf(bytes, type));
 

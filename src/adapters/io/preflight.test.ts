@@ -2,6 +2,7 @@
 // archive tests), with the names v4 refuses besides `..` and `\`.
 import JSZip from 'jszip/dist/jszip.min.js';
 import { describe, expect, it, vi } from 'vitest';
+import { RETIRED_WORDS } from './fixtures';
 import { ARCHIVE_LIMITS } from './limits';
 import { newBudget, preflight, readEntry } from './preflight';
 
@@ -112,6 +113,7 @@ function toLargeFileFormat(bytes: Uint8Array): Uint8Array {
 const refusedFor = (bytes: Uint8Array) => {
   const result = preflight(bytes);
   if (result.ok) throw new Error('the file was not refused');
+  expect(result.refusal.message).not.toMatch(RETIRED_WORDS);
   return result.refusal;
 };
 

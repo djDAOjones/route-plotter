@@ -3,7 +3,7 @@
 import JSZip from 'jszip/dist/jszip.min.js';
 import { describe, expect, it } from 'vitest';
 import { newPoint, newScene } from '../../core/model/scene';
-import { decodeHeader, jpeg, png, webpLossy } from './fixtures';
+import { RETIRED_WORDS, decodeHeader, jpeg, png, webpLossy } from './fixtures';
 import { FORMAT_VERSION } from './format';
 import type { Project } from './format';
 import type { Decode } from './images';
@@ -57,7 +57,12 @@ async function savedFile(): Promise<Record<string, unknown>> {
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
-const reasonOf = (opened: Opened) => (opened.ok ? 'opened' : opened.refusal.reason);
+/** The reason a file was refused, or 'opened'; every refusal's words are held to the glossary on the way. */
+const reasonOf = (opened: Opened) => {
+  if (opened.ok) return 'opened';
+  expect(opened.refusal.message).not.toMatch(RETIRED_WORDS);
+  return opened.refusal.reason;
+};
 
 describe('Open', () => {
   it('opens what Save wrote: the same scene and the same image bytes', async () => {
@@ -151,6 +156,71 @@ describe('Open', () => {
     expect(again.project.scene).not.toBe(first.project.scene);
     expect(again.project.images[0]?.bytes).not.toBe(first.project.images[0]?.bytes);
     expect(again.project.images[0]?.bytes.buffer).not.toBe(bytes.buffer);
+  });
+});
+
+describe('the refusals by name, with the words each shows (brief 17, proof 4)', () => {
+  const images = { 'images/1.png': png(4, 3), 'images/2.jpg': jpeg(3, 4), 'images/3.webp': webpLossy(2, 2) };
+
+  /** The refusal for these bytes: no project with it, the bytes unchanged (DEF-51), the words free of retired ones. */
+  async function refusal(bytes: Uint8Array) {
+    const copy = bytes.slice();
+    const opened = await openProject(bytes, decodeHeader);
+    if (opened.ok) throw new Error('the file opened');
+    expect('project' in opened).toBe(false);
+    expect(bytes).toEqual(copy);
+    expect(opened.refusal.message).not.toMatch(RETIRED_WORDS);
+    return opened.refusal;
+  }
+
+  it('a v3 file is refused, naming v3 and where to open it (Q14)', async () => {
+    const v3 = await zipOf({
+      'project.json': text({ coordVersion: 2, waypoints: [{ imgX: 0.25, imgY: 0.5 }], styles: {}, animationState: { duration: 5000 } }),
+      'background.png': png(4, 3),
+    });
+    expect(await refusal(v3)).toEqual({
+      reason: 'v3',
+      message: 'This project was saved by Route Plotter v3, which Route Plotter v4 does not open. Open it in Route Plotter v3. Nothing was opened.',
+    });
+  });
+
+  it('an older and a newer v4 save format are refused alike, saying another preview made the file (PLAN-7)', async () => {
+    const file = await savedFile();
+    for (const version of [FORMAT_VERSION - 1, FORMAT_VERSION + 1]) {
+      expect(await refusal(await zipOf({ 'project.json': text({ ...file, version }), ...images })), `version ${version}`).toEqual({
+        reason: 'other-preview',
+        version: String(version),
+        message: `This file was saved by another preview of Route Plotter v4 (save format ${version}); this preview opens save format ${FORMAT_VERSION} only. Nothing was opened.`,
+      });
+    }
+  });
+
+  it('an unknown feature is refused, listing it by its id', async () => {
+    const file = await savedFile();
+    if (!isRecord(file.scene)) throw new Error('no scene');
+    const scene = { ...file.scene, features: { crowd: { count: 30 } } };
+    expect(await refusal(await zipOf({ 'project.json': text({ ...file, scene }), ...images }))).toEqual({
+      reason: 'unknown',
+      features: ['crowd'],
+      fields: [],
+      files: [],
+      message: 'This file holds what this preview of Route Plotter does not know (features: crowd). Nothing was opened.',
+    });
+  });
+
+  it('an unknown field is refused, listing it by its place, never kept or dropped silently (INTAKE.13)', async () => {
+    const file = structuredClone(await savedFile());
+    const routes = isRecord(file.scene) ? file.scene.routes : undefined;
+    const route: unknown = Array.isArray(routes) ? routes[0] : undefined;
+    if (!isRecord(route)) throw new Error('no route');
+    route.glow = true;
+    expect(await refusal(await zipOf({ 'project.json': text(file), ...images }))).toEqual({
+      reason: 'unknown',
+      features: [],
+      fields: ['scene.routes[0].glow'],
+      files: [],
+      message: 'This file holds what this preview of Route Plotter does not know (settings: scene.routes[0].glow). Nothing was opened.',
+    });
   });
 });
 

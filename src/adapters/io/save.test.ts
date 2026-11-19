@@ -8,6 +8,7 @@ import type { Decode } from './images';
 import { IMAGE_LIMITS } from './limits';
 import { FORMAT_VERSION } from './format';
 import type { Project } from './format';
+import { openProject } from './open';
 import { saveProject } from './save';
 import { SAVE_NOTICE } from './words';
 
@@ -127,6 +128,16 @@ describe('the save format', () => {
     expect(await zip.file('images/2.jpg')?.async('uint8array')).toEqual(jpeg(1, 2));
   });
 
+  it('saves no editor mode: Save is given the project and a decoder alone, and the file holds no mode (TST-04.1)', async () => {
+    expect(saveProject.length).toBe(2);
+    const keys = new Set<string>();
+    JSON.parse((await readBack(await saved({ scene: sceneWithLabels('x'), images: [] }))).text, (key: string, value: unknown) => {
+      keys.add(key);
+      return value;
+    });
+    expect([...keys].filter((key) => /mode/i.test(key))).toEqual([]);
+  });
+
   it('exports the Save notice the editor shows wherever it offers Save (PLAN-7)', () => {
     expect(SAVE_NOTICE).toBe(
       'This is a preview of Route Plotter v4. A file saved in this preview may not open in a later preview.',
@@ -148,19 +159,30 @@ const DEF_101 = [
   [65535, false],
 ] as const;
 
-describe('DEF-101: an emoji across each 16,384-unit boundary survives Save', () => {
-  it.each(DEF_101)('a label with 🙂 at offset %i (v3 safe: %s) saves and reads back whole', async (offset) => {
+/** The first point's label, as Open gives it back from these bytes. */
+async function reopenedLabel(bytes: Uint8Array): Promise<string | undefined> {
+  const opened = await openProject(bytes, decodeHeader);
+  if (!opened.ok) throw new Error(opened.refusal.message);
+  return opened.project.scene.routes[0]?.points[0]?.label;
+}
+
+describe('DEF-101: an emoji across each 16,384-unit boundary survives Save and Open', () => {
+  it.each(DEF_101)('a label with 🙂 at offset %i (v3 safe: %s) saves, reads back and opens whole', async (offset) => {
     const label = `${'a'.repeat(offset)}🙂`;
-    const { text } = await readBack(await saved({ scene: sceneWithLabels(label), images: [] }));
+    const bytes = await saved({ scene: sceneWithLabels(label), images: [] });
+    const { text } = await readBack(bytes);
     expect(JSON.parse(text)).toMatchObject({ scene: { routes: [{ points: [{ label }] }] } });
+    expect(await reopenedLabel(bytes)).toBe(label);
   });
 
   it.each([1, 2, 3, 4])('🙂 straddling unit %i × 16,384 of project.json’s own text saves whole', async (k) => {
     const probe = (await readBack(await saved({ scene: sceneWithLabels(''), images: [] }))).text;
     const before = probe.indexOf('"label":""') + '"label":"'.length;
     const label = `${'a'.repeat(k * 16_384 - 1 - before)}🙂`;
-    const { text } = await readBack(await saved({ scene: sceneWithLabels(label), images: [] }));
+    const bytes = await saved({ scene: sceneWithLabels(label), images: [] });
+    const { text } = await readBack(bytes);
     expect(text.charCodeAt(k * 16_384 - 1)).toBe(0xd83d);
     expect(JSON.parse(text)).toMatchObject({ scene: { routes: [{ points: [{ label }] }] } });
+    expect(await reopenedLabel(bytes)).toBe(label);
   });
 });
