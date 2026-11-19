@@ -22,8 +22,8 @@
 | `scripts/` | 5 | the gate sorted by what changed (`scripts/gate.mjs`, GATE-01), the publishing step (`scripts/publish.mjs`, PUB-01) and their tests, and v4's measures (`scripts/measures.mjs`, STACK-04); CI runs the gate from the root |
 | `specs/` | 15 | absorbed specifications |
 | `specs/dot-crowd-navigator/` | 15 | the crowd-flow fork's spec, absorbed into v3's flow layers |
-| `src/` | 17 | v4's source (STACK-02): `src/main.tsx` mounts the editor; the layers the PM-Skills editor pack lays out, each added by the item that first needs it |
-| `src/core/` | 13 | v4's core: pure TypeScript, no DOM, React or clock; Vitest's (an inert scaffold until CORE-01) |
+| `src/` | 16 | v4's source (STACK-02): `src/main.tsx` mounts the editor; the layers the PM-Skills editor pack lays out, each added by the item that first needs it |
+| `src/core/` | 12 | v4's core: pure TypeScript, no DOM, React or clock: the project model, its schema helper and v3's limits (CORE-01), each module's tests beside it |
 | `src/editor/` | 1 | v4's editor, React and Carbon React (one blank page until CORE-05) |
 | `src/exported/` | 1 | the exported player's entry, built in Vite's player mode into one script with no package inside (A20) |
 | `src/ui/` | 1 | v4's theme: Carbon's Sass, IBM Plex bundled, the tokens strengthened toward 7:1 |

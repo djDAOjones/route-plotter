@@ -26,6 +26,24 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-11-19 — CORE-01 — The project model and schema helper: each field and rule declared once, the core pure
+**Decision:** `src/core/schema` declares each saved field once, the scene's shape and cross-field rules included, giving its type, defaults, control range and open check, which names each field it refuses; the scene and core settings use it, v3's limits carried; a compiled guard keeps the core pure. Provisional under grant G3. Because the owner chose "Core with storytelling basics" (Q9).
+**Rationale:** The owner's words in force, verbatim (the item's Notes): "One route, travellers as features (Recommended)" (Q11); "Core with storytelling basics" (Q9); "v3 files stay with v3" (Q14); on round 1, Q2, "recommendation good"; overnight, "Proceed on recommendations (Recommended)" (G3) and "accrue decisions that come up but dont stop dev unless impossible". Every choice below is the architecture plan's recommendation (A1, A2a, A12) or a smaller one of this item's, provisional and put to him in the night's list.
+
+The model (the plan's §3, A1): one scene holding up to 32 routes in drawing order; a route holds points (stops and bends, at image fractions from −10 to 11), lines (one way or both, a speed factor), start and end marks and an optional `leadStart`, with its line, lead, marker and label settings; the scene holds its background, graphics, clock and export settings. Every time is exact milliseconds (A2a). Ids come from an injected `IdSource`, never a clock or a random number. `newScene`, `newRoute`, `newPoint` and `newLine` give new values from the declarations.
+
+The schema helper (§13, A12) and the plan's §16. Each kind passes §16.1: the value kinds serve some forty settings; id serves points, lines and routes; reference serves a line's two ends, a mark's point and `leadStart`, each resolved against the checked ids of its list on the nearest entity declaring one; a list serves routes, points, lines and marks, its count checked before any item is read; a group serves the eight settings groups; optional serves `leadStart` alone, a kind (null, or what its field accepts) rather than a flag, with "a route with points names one" as a rule on the route. Rules (a line joins two different points; one mark of each kind on a point; a route's pauses; points and lines across routes) are declared on the list or group that holds what they constrain, so the open check, `checkScene`, is the declaration's own check and nothing else: a scene the schema allows always opens. Weighed and dropped: a separate range descriptor for controls (the field is the range); a step (no control needs one yet); a barrel index (§16.2, a layer that only forwards); the first build's hand-written open check (Codex round 1, a second declaration); the rules as plain functions after the check (Codex round 2: the schema then allowed scenes the open refused).
+
+The check reads each own property once, by its descriptor, so no getter runs; accepts only plain objects and lists; reports every own key it does not declare, hidden and symbol keys included, and every hole; copies declared fields only; and refuses whatever cannot be read as plain data with a report, never a throw. Its typed result is proved by a recursive predicate, never a cast.
+
+v3's limits are carried, each citing its line in `v3/` (the pull request's table): ids of 1 to 256 characters, 32 routes, 10,000 points and 20,000 lines across a scene (v3's network limits, since a v4 route is both hero route and network), a stop's pause of 10 minutes and a route's of 24 hours, times up to 24 hours, labels of 100,000 characters, every setting's range and v3's model defaults. Choices of this item, each in the night's list: the lead's speed in image widths a second (DEF-79), colours as `#rrggbb` only, the frame rate and graphics scale narrowed to their controls (DEF-20.2, INTAKE.29), Hold at start borrowing Hold at end's range, v3's model defaults over its sliders' (the trail's 0.20, the markers from arrival), every point carrying a label and a pause, at most two marks a point, and the purity guard as a test.
+
+Proofs: 92 tests in six files; the fast-check properties (every scene the schema allows opens unchanged, up to 32 routes and labels at full length; the defaults are valid; any number past its range is refused where it sits); each limit at its boundary; INTAKE.29 and DEF-20.2 by name for every number field; seventeen planted faults in the check and the rules each fail the suite; the purity guard compiles `src/core` with TypeScript's checker against the core's lib, allows only listed pure ES globals, and fails on a planted `Date.now()` and nineteen other plants, two of them ambient declarations. It reads source text, which TST-11's lint forbids in behaviour tests; it is a static guard, kept here because `eslint.config.mjs` was outside the item's paths (wish CORE-01.1). Codex (gpt-6-astra) rejected rounds 1, 2 and 3 with five, seven and two findings, all answered.
+
+Digest rules applied (house conventions): 2-space indentation, single quotes and semicolons; camelCase functions and UPPER_SNAKE_CASE constants; "Add a focused test for new model methods, utilities"; lines within 120 characters in this item's files; an out-of-scope idea is one wish line. Measures: M2, M3, M4, M6 and M7 at 0; M8 at 0 functions over 60 lines and 0 files over 400; nothing visible changes, so `tests/a11y` and `project/a11y` are untouched.
+**Supersedes:** none
+**Deferred:** none
+
 ## 2026-11-19 — GATE-02 — The gate places the accessibility pack, the step's files and the measures; a replayed run fails
 **Decision:** `scripts/gate.mjs` sorts tools/a11y-*.mjs and `project/a11y/` as v4 ahead of the record, gives the publishing step's files a class running the gate's and v4's lanes, not v3's, and puts scripts/measures.mjs with v4; it passes over skipped jobs and, on `main`, refuses a site change its run's record cannot vouch for, so a replayed run fails Verify. Provisional under grant G3. Because he chose "Gate by what changed (Recommended)" (Q23).
 **Rationale:** The owner's words in force, verbatim: "Gate by what changed (Recommended)" (Q23); on publishing, "re publishing to github pages, just go ahead and publish to it at any point (and after any work item is developed, so long as doesn't cause untoward delay or overhead)" (2026-11-18); overnight, "Merge when checks pass (Recommended)" (G2), "Proceed on recommendations (Recommended)" (G3) and, typed by him, "accrue decisions that come up but dont stop dev unless impossible". Each choice below is provisional and put to him in the night's decisions list.
@@ -951,24 +969,3 @@ Standards: house event ownership and regression/mutation checks; nielsen 1 and 9
 **Supersedes:** 2026-10-05 — GATELESS-1 — The run goes gateless: each merge lands and ships as it goes, with Codex reviewing
 
 **Deferred:** none
-
-## 2026-10-14 — REFACTOR-01 — After CROWD-08, a refactor in light of PM-Skills 3.1 comes before v4's merge
-
-**Decision:** On the owner's word, REFACTOR-01, a major refactor in light of PM-Skills 3.1's code-management frameworks, follows CROWD-08 and comes before MERGE-01, so that v4's merge of routes and crowds lands on more modular code. It replaces PLAN-4's "MERGE-01 first in Next"; the rest of PLAN-4 stands.
-
-**Rationale:** The owner, 2026-10-14, after CROWD-08's part A was built, verbatim: "my intention is that we will get the MVP out, then do a major refactor in light of pm-skills 3.1 where various code management frameworks (e.g. for encapsulation, dead code, etc) are coming into play that should make dev work more manageable going forwards, then we will do the major work of consolidating paths and crowds and introducing new features where everything is more modular. so things like duration setting values can hopefully be fixed then."
-
-The lead then asked: "shall I record it in part A's record as your stated sequence, with the refactor as an item in Next ahead of MERGE-01? Or leave the record alone until CROWD-08 ships?" He answered "leave until crowd 8 ships". Later the same day he asked: "is the following in the backlog? if not, add it in:", followed by the sequence above, from "my intention" to "more modular." That request supersedes his earlier answer.
-
-It was not in the backlog: Next held MERGE-01 alone, first, under PLAN-4's heading. REFACTOR-01 is filed ahead of it, under one heading for both.
-
-The filing session's readings, for the owner to confirm:
-- the refactor changes no behaviour;
-- its scope, the frameworks it applies, and their fit with the adopted abstraction plan of 2026-09-22 (whose W4 dead-code items are in Next) are for a plan he decides;
-- "encapsulation, dead code, etc" are his examples, not a list.
-
-CROWD-08, its parts and its deadline of 2026-10-20 are unchanged. The item file holds the proposed criteria (`project/items/REFACTOR-01.md`).
-
-**Supersedes:** 2026-10-13 — PLAN-4 — A football crowd and mob MVP comes first; v4 merges routes and crowds
-
-**Deferred:** REFACTOR-01
