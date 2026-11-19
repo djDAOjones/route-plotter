@@ -1,0 +1,5246 @@
+{
+  "inputs": {
+    "src/config/constants.js": {
+      "bytes": 19822,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/services/CoordinateTransform.js": {
+      "bytes": 11226,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/services/DotRenderer.js": {
+      "bytes": 1990,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/renderReference.js": {
+      "bytes": 1623,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/finishArea.js": {
+      "bytes": 9092,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/CoordinateTransform.js",
+          "kind": "import-statement",
+          "original": "../services/CoordinateTransform.js"
+        },
+        {
+          "path": "src/services/DotRenderer.js",
+          "kind": "import-statement",
+          "original": "../services/DotRenderer.js"
+        },
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "./renderReference.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/BeaconRenderer.js": {
+      "bytes": 44813,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/core/PlayerCore.js": {
+      "bytes": 27998,
+      "imports": [
+        {
+          "path": "src/services/BeaconRenderer.js",
+          "kind": "import-statement",
+          "original": "../services/BeaconRenderer.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/CatmullRom.js": {
+      "bytes": 2459,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/Easing.js": {
+      "bytes": 1205,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/services/PathCalculator.js": {
+      "bytes": 21786,
+      "imports": [
+        {
+          "path": "src/utils/CatmullRom.js",
+          "kind": "import-statement",
+          "original": "../utils/CatmullRom.js"
+        },
+        {
+          "path": "src/utils/Easing.js",
+          "kind": "import-statement",
+          "original": "../utils/Easing.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/MotionVisibilityService.js": {
+      "bytes": 66120,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/branchTiming.js": {
+      "bytes": 7087,
+      "imports": [
+        {
+          "path": "src/core/PlayerCore.js",
+          "kind": "import-statement",
+          "original": "../core/PlayerCore.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/routeBranches.js": {
+      "bytes": 15124,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/finishReleaseClock.js": {
+      "bytes": 6134,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/core/PlayerCore.js",
+          "kind": "import-statement",
+          "original": "../core/PlayerCore.js"
+        },
+        {
+          "path": "src/services/CoordinateTransform.js",
+          "kind": "import-statement",
+          "original": "../services/CoordinateTransform.js"
+        },
+        {
+          "path": "src/services/PathCalculator.js",
+          "kind": "import-statement",
+          "original": "../services/PathCalculator.js"
+        },
+        {
+          "path": "src/services/MotionVisibilityService.js",
+          "kind": "import-statement",
+          "original": "../services/MotionVisibilityService.js"
+        },
+        {
+          "path": "src/utils/branchTiming.js",
+          "kind": "import-statement",
+          "original": "./branchTiming.js"
+        },
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "./routeBranches.js"
+        },
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "./renderReference.js"
+        },
+        {
+          "path": "src/utils/finishArea.js",
+          "kind": "import-statement",
+          "original": "./finishArea.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/imageCoordinates.js": {
+      "bytes": 910,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/crowdArea.js": {
+      "bytes": 3834,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "./imageCoordinates.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/crowdAreaDescription.js": {
+      "bytes": 1785,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/groupSettings.js": {
+      "bytes": 2735,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/waitingSettings.js": {
+      "bytes": 2432,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/app/finishContexts.js": {
+      "bytes": 3589,
+      "imports": [
+        {
+          "path": "src/utils/finishArea.js",
+          "kind": "import-statement",
+          "original": "../utils/finishArea.js"
+        },
+        {
+          "path": "src/utils/finishReleaseClock.js",
+          "kind": "import-statement",
+          "original": "../utils/finishReleaseClock.js"
+        },
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "../utils/renderReference.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        },
+        {
+          "path": "src/utils/crowdAreaDescription.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdAreaDescription.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/entryWeight.js": {
+      "bytes": 942,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/models/GraphNode.js": {
+      "bytes": 5629,
+      "imports": [
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "../utils/entryWeight.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/models/GraphEdge.js": {
+      "bytes": 4586,
+      "imports": [
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/models/GraphModel.js": {
+      "bytes": 5157,
+      "imports": [
+        {
+          "path": "src/models/GraphNode.js",
+          "kind": "import-statement",
+          "original": "./GraphNode.js"
+        },
+        {
+          "path": "src/models/GraphEdge.js",
+          "kind": "import-statement",
+          "original": "./GraphEdge.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/safeColor.js": {
+      "bytes": 1271,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/busynessEnvelope.js": {
+      "bytes": 6548,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/routeAnchors.js": {
+      "bytes": 6508,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/models/Emitter.js": {
+      "bytes": 13710,
+      "imports": [
+        {
+          "path": "src/utils/safeColor.js",
+          "kind": "import-statement",
+          "original": "../utils/safeColor.js"
+        },
+        {
+          "path": "src/utils/busynessEnvelope.js",
+          "kind": "import-statement",
+          "original": "../utils/busynessEnvelope.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "../utils/routeAnchors.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/entityId.js": {
+      "bytes": 2262,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/models/FlowLayer.js": {
+      "bytes": 10202,
+      "imports": [
+        {
+          "path": "src/models/GraphModel.js",
+          "kind": "import-statement",
+          "original": "./GraphModel.js"
+        },
+        {
+          "path": "src/models/Emitter.js",
+          "kind": "import-statement",
+          "original": "./Emitter.js"
+        },
+        {
+          "path": "src/utils/entityId.js",
+          "kind": "import-statement",
+          "original": "../utils/entityId.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "../utils/entryWeight.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/models/Scene.js": {
+      "bytes": 6181,
+      "imports": [
+        {
+          "path": "src/models/FlowLayer.js",
+          "kind": "import-statement",
+          "original": "./FlowLayer.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/uiReadouts.js": {
+      "bytes": 9350,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/DotRenderer.js",
+          "kind": "import-statement",
+          "original": "../services/DotRenderer.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/StorageService.js": {
+      "bytes": 28345,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/models/AnimationState.js": {
+      "bytes": 6604,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/AnimationEngine.js": {
+      "bytes": 40159,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/models/AnimationState.js",
+          "kind": "import-statement",
+          "original": "../models/AnimationState.js"
+        },
+        {
+          "path": "src/core/PlayerCore.js",
+          "kind": "import-statement",
+          "original": "../core/PlayerCore.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/segmentHitTest.js": {
+      "bytes": 5121,
+      "imports": [
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "./routeBranches.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/AreaHighlightRenderer.js": {
+      "bytes": 13126,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/Easing.js",
+          "kind": "import-statement",
+          "original": "../utils/Easing.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/TextLabelService.js": {
+      "bytes": 15096,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/Easing.js",
+          "kind": "import-statement",
+          "original": "../utils/Easing.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/RenderingService.js": {
+      "bytes": 115564,
+      "imports": [
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/Easing.js",
+          "kind": "import-statement",
+          "original": "../utils/Easing.js"
+        },
+        {
+          "path": "src/utils/segmentHitTest.js",
+          "kind": "import-statement",
+          "original": "../utils/segmentHitTest.js"
+        },
+        {
+          "path": "src/services/BeaconRenderer.js",
+          "kind": "import-statement",
+          "original": "./BeaconRenderer.js"
+        },
+        {
+          "path": "src/services/AreaHighlightRenderer.js",
+          "kind": "import-statement",
+          "original": "./AreaHighlightRenderer.js"
+        },
+        {
+          "path": "src/utils/branchTiming.js",
+          "kind": "import-statement",
+          "original": "../utils/branchTiming.js"
+        },
+        {
+          "path": "src/services/DotRenderer.js",
+          "kind": "import-statement",
+          "original": "./DotRenderer.js"
+        },
+        {
+          "path": "src/services/MotionVisibilityService.js",
+          "kind": "import-statement",
+          "original": "./MotionVisibilityService.js"
+        },
+        {
+          "path": "src/services/TextLabelService.js",
+          "kind": "import-statement",
+          "original": "./TextLabelService.js"
+        },
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "../utils/renderReference.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/crowdArrival.js": {
+      "bytes": 6768,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/graphRouting.js": {
+      "bytes": 4230,
+      "imports": [
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "./entryWeight.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/groupRouting.js": {
+      "bytes": 3802,
+      "imports": [
+        {
+          "path": "src/utils/graphRouting.js",
+          "kind": "import-statement",
+          "original": "./graphRouting.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/groupJourney.js": {
+      "bytes": 6907,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/SwarmEngine.js": {
+      "bytes": 75085,
+      "imports": [
+        {
+          "path": "src/services/PathCalculator.js",
+          "kind": "import-statement",
+          "original": "./PathCalculator.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "../utils/routeAnchors.js"
+        },
+        {
+          "path": "src/utils/crowdArrival.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArrival.js"
+        },
+        {
+          "path": "src/utils/graphRouting.js",
+          "kind": "import-statement",
+          "original": "../utils/graphRouting.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "../utils/entryWeight.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        },
+        {
+          "path": "src/utils/groupRouting.js",
+          "kind": "import-statement",
+          "original": "../utils/groupRouting.js"
+        },
+        {
+          "path": "src/utils/groupJourney.js",
+          "kind": "import-statement",
+          "original": "../utils/groupJourney.js"
+        },
+        {
+          "path": "src/utils/busynessEnvelope.js",
+          "kind": "import-statement",
+          "original": "../utils/busynessEnvelope.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        },
+        {
+          "path": "src/utils/finishArea.js",
+          "kind": "import-statement",
+          "original": "../utils/finishArea.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/core/EventBus.js": {
+      "bytes": 6515,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/config/keybindings.js": {
+      "bytes": 14889,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/config/helpContent.js": {
+      "bytes": 8759,
+      "imports": [
+        {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "./keybindings.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/sliderScales.js": {
+      "bytes": 6171,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/focusTrap.js": {
+      "bytes": 15862,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/misc.js": {
+      "bytes": 34457,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/logging.js": {
+      "bytes": 2902,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/metadata.js": {
+      "bytes": 8437,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/shared/bitstream.js": {
+      "bytes": 1987,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/shared/aac-misc.js": {
+      "bytes": 7173,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "./bitstream.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/codec.js": {
+      "bytes": 52411,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
+          "kind": "import-statement",
+          "original": "../shared/aac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/shared/mp3-misc.js": {
+      "bytes": 6072,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/shared/ac3-misc.js": {
+      "bytes": 504,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/codec-data.js": {
+      "bytes": 123094,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "./codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/ac3-misc.js",
+          "kind": "import-statement",
+          "original": "../shared/ac3-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "../shared/bitstream.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/demuxer.js": {
+      "bytes": 406,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/packet.js": {
+      "bytes": 9583,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-misc.js": {
+      "bytes": 1699,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-reader.js": {
+      "bytes": 2511,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/aes.js": {
+      "bytes": 10952,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "./reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-demuxer.js": {
+      "bytes": 161174,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/aac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
+          "kind": "import-statement",
+          "original": "../demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "../packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-misc.js",
+          "kind": "import-statement",
+          "original": "./isobmff-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-reader.js",
+          "kind": "import-statement",
+          "original": "./isobmff-reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/ac3-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/ac3-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "../../shared/bitstream.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/aes.js",
+          "kind": "import-statement",
+          "original": "../aes.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "../logging.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/matroska/ebml.js": {
+      "bytes": 25606,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/matroska/matroska-misc.js": {
+      "bytes": 731,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/matroska/matroska-demuxer.js": {
+      "bytes": 103128,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
+          "kind": "import-statement",
+          "original": "../demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "../logging.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "../packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/matroska/ebml.js",
+          "kind": "import-statement",
+          "original": "./ebml.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/matroska/matroska-misc.js",
+          "kind": "import-statement",
+          "original": "./matroska-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/mp3/mp3-reader.js": {
+      "bytes": 2132,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/mp3-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/mp3-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/mp3/mp3-demuxer.js": {
+      "bytes": 13568,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
+          "kind": "import-statement",
+          "original": "../demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "../packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/mp3-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/mp3-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/id3.js",
+          "kind": "import-statement",
+          "original": "../id3.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/mp3/mp3-reader.js",
+          "kind": "import-statement",
+          "original": "./mp3-reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/ogg/ogg-misc.js": {
+      "bytes": 3227,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/ogg/ogg-reader.js": {
+      "bytes": 2263,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/ogg/ogg-misc.js",
+          "kind": "import-statement",
+          "original": "./ogg-misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/ogg/ogg-demuxer.js": {
+      "bytes": 36412,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
+          "kind": "import-statement",
+          "original": "../demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "../packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/ogg/ogg-misc.js",
+          "kind": "import-statement",
+          "original": "./ogg-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/ogg/ogg-reader.js",
+          "kind": "import-statement",
+          "original": "./ogg-reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/wave/wave-demuxer.js": {
+      "bytes": 19304,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
+          "kind": "import-statement",
+          "original": "../demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "../packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/id3.js",
+          "kind": "import-statement",
+          "original": "../id3.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/adts/adts-reader.js": {
+      "bytes": 2249,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "../../shared/bitstream.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/adts/adts-demuxer.js": {
+      "bytes": 10263,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/aac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
+          "kind": "import-statement",
+          "original": "../demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/id3.js",
+          "kind": "import-statement",
+          "original": "../id3.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "../packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/adts/adts-reader.js",
+          "kind": "import-statement",
+          "original": "./adts-reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/flac/flac-misc.js": {
+      "bytes": 4360,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "../../shared/bitstream.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/flac/flac-demuxer.js": {
+      "bytes": 24913,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
+          "kind": "import-statement",
+          "original": "../demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "../packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/flac/flac-misc.js",
+          "kind": "import-statement",
+          "original": "./flac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "../../shared/bitstream.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/id3.js",
+          "kind": "import-statement",
+          "original": "../id3.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/mpeg-ts/mpeg-ts-misc.js": {
+      "bytes": 678,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/mpeg-ts/mpeg-ts-demuxer.js": {
+      "bytes": 102224,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/adts/adts-demuxer.js",
+          "kind": "import-statement",
+          "original": "../adts/adts-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/adts/adts-reader.js",
+          "kind": "import-statement",
+          "original": "../adts/adts-reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/aac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
+          "kind": "import-statement",
+          "original": "../demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "../logging.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/mp3-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/mp3-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "../packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/mpeg-ts/mpeg-ts-misc.js",
+          "kind": "import-statement",
+          "original": "./mpeg-ts-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/ac3-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/ac3-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "../../shared/bitstream.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/hls/hls-misc.js": {
+      "bytes": 2538,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/segmented-input.js": {
+      "bytes": 17355,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "(disabled):node_modules/mediabunny/dist/modules/src/node.js": {
+      "bytes": 0,
+      "imports": []
+    },
+    "node_modules/mediabunny/dist/modules/src/source.js": {
+      "bytes": 85780,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "(disabled):node_modules/mediabunny/dist/modules/src/node.js",
+          "kind": "import-statement",
+          "original": "./node.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input.js",
+          "kind": "import-statement",
+          "original": "./input.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/hls/hls-segmented-input.js": {
+      "bytes": 32456,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/aes.js",
+          "kind": "import-statement",
+          "original": "../aes.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input.js",
+          "kind": "import-statement",
+          "original": "../input.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/segmented-input.js",
+          "kind": "import-statement",
+          "original": "../segmented-input.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/source.js",
+          "kind": "import-statement",
+          "original": "../source.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/hls/hls-misc.js",
+          "kind": "import-statement",
+          "original": "./hls-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input-format.js",
+          "kind": "import-statement",
+          "original": "../input-format.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-misc.js",
+          "kind": "import-statement",
+          "original": "../isobmff/isobmff-misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/hls/hls-demuxer.js": {
+      "bytes": 35276,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/demuxer.js",
+          "kind": "import-statement",
+          "original": "../demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/hls/hls-misc.js",
+          "kind": "import-statement",
+          "original": "./hls-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/hls/hls-segmented-input.js",
+          "kind": "import-statement",
+          "original": "./hls-segmented-input.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/source.js",
+          "kind": "import-statement",
+          "original": "../source.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/input-format.js": {
+      "bytes": 22236,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-demuxer.js",
+          "kind": "import-statement",
+          "original": "./isobmff/isobmff-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/matroska/ebml.js",
+          "kind": "import-statement",
+          "original": "./matroska/ebml.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/matroska/matroska-demuxer.js",
+          "kind": "import-statement",
+          "original": "./matroska/matroska-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/mp3/mp3-demuxer.js",
+          "kind": "import-statement",
+          "original": "./mp3/mp3-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/mp3-misc.js",
+          "kind": "import-statement",
+          "original": "../shared/mp3-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/id3.js",
+          "kind": "import-statement",
+          "original": "./id3.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/mp3/mp3-reader.js",
+          "kind": "import-statement",
+          "original": "./mp3/mp3-reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/ogg/ogg-demuxer.js",
+          "kind": "import-statement",
+          "original": "./ogg/ogg-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/wave/wave-demuxer.js",
+          "kind": "import-statement",
+          "original": "./wave/wave-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/adts/adts-reader.js",
+          "kind": "import-statement",
+          "original": "./adts/adts-reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/adts/adts-demuxer.js",
+          "kind": "import-statement",
+          "original": "./adts/adts-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "./reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/flac/flac-demuxer.js",
+          "kind": "import-statement",
+          "original": "./flac/flac-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/mpeg-ts/mpeg-ts-demuxer.js",
+          "kind": "import-statement",
+          "original": "./mpeg-ts/mpeg-ts-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/mpeg-ts/mpeg-ts-misc.js",
+          "kind": "import-statement",
+          "original": "./mpeg-ts/mpeg-ts-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/hls/hls-demuxer.js",
+          "kind": "import-statement",
+          "original": "./hls/hls-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/hls/hls-misc.js",
+          "kind": "import-statement",
+          "original": "./hls/hls-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/source.js",
+          "kind": "import-statement",
+          "original": "./source.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/decode.js": {
+      "bytes": 8240,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "./codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/custom-coder.js",
+          "kind": "import-statement",
+          "original": "./custom-coder.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/sample.js": {
+      "bytes": 110911,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/encode.js": {
+      "bytes": 36382,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "./codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/custom-coder.js",
+          "kind": "import-statement",
+          "original": "./custom-coder.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/sample.js",
+          "kind": "import-statement",
+          "original": "./sample.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/custom-coder.js": {
+      "bytes": 4643,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/decode.js",
+          "kind": "import-statement",
+          "original": "./decode.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/encode.js",
+          "kind": "import-statement",
+          "original": "./encode.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/pcm.js": {
+      "bytes": 2350,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/media-sink.js": {
+      "bytes": 92943,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "./codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "./codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/custom-coder.js",
+          "kind": "import-statement",
+          "original": "./custom-coder.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input.js",
+          "kind": "import-statement",
+          "original": "./input.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input-track.js",
+          "kind": "import-statement",
+          "original": "./input-track.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "./packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/pcm.js",
+          "kind": "import-statement",
+          "original": "./pcm.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/sample.js",
+          "kind": "import-statement",
+          "original": "./sample.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/input-track.js": {
+      "bytes": 47097,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "./codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/custom-coder.js",
+          "kind": "import-statement",
+          "original": "./custom-coder.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/media-sink.js",
+          "kind": "import-statement",
+          "original": "./media-sink.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "./packet.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/input.js": {
+      "bytes": 17202,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input-format.js",
+          "kind": "import-statement",
+          "original": "./input-format.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input-track.js",
+          "kind": "import-statement",
+          "original": "./input-track.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "./reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/source.js",
+          "kind": "import-statement",
+          "original": "./source.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/reader.js": {
+      "bytes": 10001,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input.js",
+          "kind": "import-statement",
+          "original": "./input.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/source.js",
+          "kind": "import-statement",
+          "original": "./source.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/id3.js": {
+      "bytes": 37101,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/mp3-misc.js",
+          "kind": "import-statement",
+          "original": "../shared/mp3-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "./reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/muxer.js": {
+      "bytes": 2001,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/adts/adts-muxer.js": {
+      "bytes": 3963,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/aac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/id3.js",
+          "kind": "import-statement",
+          "original": "../id3.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/muxer.js",
+          "kind": "import-statement",
+          "original": "../muxer.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/flac/flac-muxer.js": {
+      "bytes": 13076,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/muxer.js",
+          "kind": "import-statement",
+          "original": "../muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/flac/flac-misc.js",
+          "kind": "import-statement",
+          "original": "./flac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "../../shared/bitstream.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/subtitles.js": {
+      "bytes": 3693,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-boxes.js": {
+      "bytes": 66558,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/subtitles.js",
+          "kind": "import-statement",
+          "original": "../subtitles.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-muxer.js",
+          "kind": "import-statement",
+          "original": "./isobmff-muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "../../shared/bitstream.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/writer.js": {
+      "bytes": 3400,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/target.js": {
+      "bytes": 23581,
+      "imports": [
+        {
+          "path": "(disabled):node_modules/mediabunny/dist/modules/src/node.js",
+          "kind": "import-statement",
+          "original": "./node.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-muxer.js": {
+      "bytes": 59054,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-boxes.js",
+          "kind": "import-statement",
+          "original": "./isobmff-boxes.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/muxer.js",
+          "kind": "import-statement",
+          "original": "../muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/writer.js",
+          "kind": "import-statement",
+          "original": "../writer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/target.js",
+          "kind": "import-statement",
+          "original": "../target.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/output-format.js",
+          "kind": "import-statement",
+          "original": "../output-format.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/subtitles.js",
+          "kind": "import-statement",
+          "original": "../subtitles.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/aac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/adts/adts-reader.js",
+          "kind": "import-statement",
+          "original": "../adts/adts-reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-misc.js",
+          "kind": "import-statement",
+          "original": "./isobmff-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-reader.js",
+          "kind": "import-statement",
+          "original": "./isobmff-reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/matroska/matroska-muxer.js": {
+      "bytes": 50717,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "../../shared/bitstream.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/matroska/ebml.js",
+          "kind": "import-statement",
+          "original": "./ebml.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/matroska/matroska-misc.js",
+          "kind": "import-statement",
+          "original": "./matroska-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/output-format.js",
+          "kind": "import-statement",
+          "original": "../output-format.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/subtitles.js",
+          "kind": "import-statement",
+          "original": "../subtitles.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/aac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/adts/adts-reader.js",
+          "kind": "import-statement",
+          "original": "../adts/adts-reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/reader.js",
+          "kind": "import-statement",
+          "original": "../reader.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/muxer.js",
+          "kind": "import-statement",
+          "original": "../muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/mp3/mp3-writer.js": {
+      "bytes": 3261,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/mp3-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/mp3-misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/mp3/mp3-muxer.js": {
+      "bytes": 9310,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/muxer.js",
+          "kind": "import-statement",
+          "original": "../muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/mp3-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/mp3-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/mp3/mp3-writer.js",
+          "kind": "import-statement",
+          "original": "./mp3-writer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/id3.js",
+          "kind": "import-statement",
+          "original": "../id3.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/ogg/ogg-muxer.js": {
+      "bytes": 16898,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/muxer.js",
+          "kind": "import-statement",
+          "original": "../muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/ogg/ogg-misc.js",
+          "kind": "import-statement",
+          "original": "./ogg-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/ogg/ogg-reader.js",
+          "kind": "import-statement",
+          "original": "./ogg-reader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/mpeg-ts/mpeg-ts-muxer.js": {
+      "bytes": 27342,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
+          "kind": "import-statement",
+          "original": "../../shared/aac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "../codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/bitstream.js",
+          "kind": "import-statement",
+          "original": "../../shared/bitstream.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/muxer.js",
+          "kind": "import-statement",
+          "original": "../muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/mpeg-ts/mpeg-ts-misc.js",
+          "kind": "import-statement",
+          "original": "./mpeg-ts-misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/wave/riff-writer.js": {
+      "bytes": 1010,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/wave/wave-muxer.js": {
+      "bytes": 13026,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/muxer.js",
+          "kind": "import-statement",
+          "original": "../muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/wave/wave-demuxer.js",
+          "kind": "import-statement",
+          "original": "./wave-demuxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/wave/riff-writer.js",
+          "kind": "import-statement",
+          "original": "./riff-writer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "../metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/id3.js",
+          "kind": "import-statement",
+          "original": "../id3.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "../logging.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/resample.js": {
+      "bytes": 13047,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/sample.js",
+          "kind": "import-statement",
+          "original": "./sample.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/media-source.js": {
+      "bytes": 115296,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/shared/aac-misc.js",
+          "kind": "import-statement",
+          "original": "../shared/aac-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "./codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/subtitles.js",
+          "kind": "import-statement",
+          "original": "./subtitles.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/pcm.js",
+          "kind": "import-statement",
+          "original": "./pcm.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/custom-coder.js",
+          "kind": "import-statement",
+          "original": "./custom-coder.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "./packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/sample.js",
+          "kind": "import-statement",
+          "original": "./sample.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/encode.js",
+          "kind": "import-statement",
+          "original": "./encode.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/resample.js",
+          "kind": "import-statement",
+          "original": "./resample.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec-data.js",
+          "kind": "import-statement",
+          "original": "./codec-data.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/hls/hls-muxer.js": {
+      "bytes": 62398,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "../codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "../logging.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/media-source.js",
+          "kind": "import-statement",
+          "original": "../media-source.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "../misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/muxer.js",
+          "kind": "import-statement",
+          "original": "../muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/output.js",
+          "kind": "import-statement",
+          "original": "../output.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/writer.js",
+          "kind": "import-statement",
+          "original": "../writer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/target.js",
+          "kind": "import-statement",
+          "original": "../target.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/hls/hls-misc.js",
+          "kind": "import-statement",
+          "original": "./hls-misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/output-format.js": {
+      "bytes": 26925,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/adts/adts-muxer.js",
+          "kind": "import-statement",
+          "original": "./adts/adts-muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "./codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/flac/flac-muxer.js",
+          "kind": "import-statement",
+          "original": "./flac/flac-muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-muxer.js",
+          "kind": "import-statement",
+          "original": "./isobmff/isobmff-muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/matroska/matroska-muxer.js",
+          "kind": "import-statement",
+          "original": "./matroska/matroska-muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/mp3/mp3-muxer.js",
+          "kind": "import-statement",
+          "original": "./mp3/mp3-muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/ogg/ogg-muxer.js",
+          "kind": "import-statement",
+          "original": "./ogg/ogg-muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/mpeg-ts/mpeg-ts-muxer.js",
+          "kind": "import-statement",
+          "original": "./mpeg-ts/mpeg-ts-muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/wave/wave-muxer.js",
+          "kind": "import-statement",
+          "original": "./wave/wave-muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/hls/hls-muxer.js",
+          "kind": "import-statement",
+          "original": "./hls/hls-muxer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/hls/hls-misc.js",
+          "kind": "import-statement",
+          "original": "./hls/hls-misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/output.js": {
+      "bytes": 28389,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "./metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/output-format.js",
+          "kind": "import-statement",
+          "original": "./output-format.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/media-source.js",
+          "kind": "import-statement",
+          "original": "./media-source.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/target.js",
+          "kind": "import-statement",
+          "original": "./target.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/writer.js",
+          "kind": "import-statement",
+          "original": "./writer.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "./packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "./codec.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/conversion.js": {
+      "bytes": 70653,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "./codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/encode.js",
+          "kind": "import-statement",
+          "original": "./encode.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input.js",
+          "kind": "import-statement",
+          "original": "./input.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/media-sink.js",
+          "kind": "import-statement",
+          "original": "./media-sink.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/media-source.js",
+          "kind": "import-statement",
+          "original": "./media-source.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/output.js",
+          "kind": "import-statement",
+          "original": "./output.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/output-format.js",
+          "kind": "import-statement",
+          "original": "./output-format.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/sample.js",
+          "kind": "import-statement",
+          "original": "./sample.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "./metadata.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/target.js",
+          "kind": "import-statement",
+          "original": "./target.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/mediabunny/dist/modules/src/index.js": {
+      "bytes": 4300,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/output.js",
+          "kind": "import-statement",
+          "original": "./output.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/output-format.js",
+          "kind": "import-statement",
+          "original": "./output-format.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/media-source.js",
+          "kind": "import-statement",
+          "original": "./media-source.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/codec.js",
+          "kind": "import-statement",
+          "original": "./codec.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/decode.js",
+          "kind": "import-statement",
+          "original": "./decode.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/encode.js",
+          "kind": "import-statement",
+          "original": "./encode.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/target.js",
+          "kind": "import-statement",
+          "original": "./target.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/misc.js",
+          "kind": "import-statement",
+          "original": "./misc.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/logging.js",
+          "kind": "import-statement",
+          "original": "./logging.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/output.js",
+          "kind": "import-statement",
+          "original": "./output.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/source.js",
+          "kind": "import-statement",
+          "original": "./source.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input-format.js",
+          "kind": "import-statement",
+          "original": "./input-format.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input.js",
+          "kind": "import-statement",
+          "original": "./input.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/input-track.js",
+          "kind": "import-statement",
+          "original": "./input-track.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/packet.js",
+          "kind": "import-statement",
+          "original": "./packet.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/sample.js",
+          "kind": "import-statement",
+          "original": "./sample.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/media-sink.js",
+          "kind": "import-statement",
+          "original": "./media-sink.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/conversion.js",
+          "kind": "import-statement",
+          "original": "./conversion.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/custom-coder.js",
+          "kind": "import-statement",
+          "original": "./custom-coder.js"
+        },
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/metadata.js",
+          "kind": "import-statement",
+          "original": "./metadata.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/VideoExporter.js": {
+      "bytes": 37961,
+      "imports": [
+        {
+          "path": "node_modules/mediabunny/dist/modules/src/index.js",
+          "kind": "import-statement",
+          "original": "mediabunny"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/pathWidthScale.js": {
+      "bytes": 1241,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/waypointNaming.js": {
+      "bytes": 5942,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/sceneSemantics.js": {
+      "bytes": 13362,
+      "imports": [
+        {
+          "path": "src/utils/waypointNaming.js",
+          "kind": "import-statement",
+          "original": "./waypointNaming.js"
+        },
+        {
+          "path": "src/utils/graphRouting.js",
+          "kind": "import-statement",
+          "original": "./graphRouting.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "./entryWeight.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "./groupSettings.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "./waitingSettings.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "./uiReadouts.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/controllers/UIController.js": {
+      "bytes": 117994,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/config/helpContent.js",
+          "kind": "import-statement",
+          "original": "../config/helpContent.js"
+        },
+        {
+          "path": "src/utils/sliderScales.js",
+          "kind": "import-statement",
+          "original": "../utils/sliderScales.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        },
+        {
+          "path": "src/services/VideoExporter.js",
+          "kind": "import-statement",
+          "original": "../services/VideoExporter.js"
+        },
+        {
+          "path": "src/utils/pathWidthScale.js",
+          "kind": "import-statement",
+          "original": "../utils/pathWidthScale.js"
+        },
+        {
+          "path": "src/utils/waypointNaming.js",
+          "kind": "import-statement",
+          "original": "../utils/waypointNaming.js"
+        },
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "../utils/routeBranches.js"
+        },
+        {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/handlers/InteractionHandler.js": {
+      "bytes": 42160,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "../config/keybindings.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/UndoService.js": {
+      "bytes": 7051,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/controllers/SectionController.js": {
+      "bytes": 18014,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/components/ModeBanner.js": {
+      "bytes": 19379,
+      "imports": [
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/AreaDrawingService.js": {
+      "bytes": 14086,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        },
+        {
+          "path": "src/components/ModeBanner.js",
+          "kind": "import-statement",
+          "original": "../components/ModeBanner.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/snapToAngle.js": {
+      "bytes": 1046,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/networkBudget.js": {
+      "bytes": 2020,
+      "imports": [
+        {
+          "path": "src/models/FlowLayer.js",
+          "kind": "import-statement",
+          "original": "../models/FlowLayer.js"
+        },
+        {
+          "path": "src/models/Scene.js",
+          "kind": "import-statement",
+          "original": "../models/Scene.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/NetworkEditService.js": {
+      "bytes": 49007,
+      "imports": [
+        {
+          "path": "src/utils/finishArea.js",
+          "kind": "import-statement",
+          "original": "../utils/finishArea.js"
+        },
+        {
+          "path": "src/utils/snapToAngle.js",
+          "kind": "import-statement",
+          "original": "../utils/snapToAngle.js"
+        },
+        {
+          "path": "src/utils/graphRouting.js",
+          "kind": "import-statement",
+          "original": "../utils/graphRouting.js"
+        },
+        {
+          "path": "src/utils/networkBudget.js",
+          "kind": "import-statement",
+          "original": "../utils/networkBudget.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        },
+        {
+          "path": "src/components/ModeBanner.js",
+          "kind": "import-statement",
+          "original": "../components/ModeBanner.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/AreaEditService.js": {
+      "bytes": 11979,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/components/SwatchPicker.js": {
+      "bytes": 12583,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/config/tooltips.js": {
+      "bytes": 2788,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/components/Tooltip.js": {
+      "bytes": 7210,
+      "imports": [
+        {
+          "path": "src/config/tooltips.js",
+          "kind": "import-statement",
+          "original": "../config/tooltips.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/components/ParamTooltip.js": {
+      "bytes": 33282,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/components/Dropdown.js": {
+      "bytes": 6277,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/services/CameraService.js": {
+      "bytes": 23405,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/models/ImageAsset.js": {
+      "bytes": 11000,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/jszip/dist/jszip.min.js": {
+      "bytes": 97630,
+      "imports": [
+        {
+          "path": "<runtime>",
+          "kind": "import-statement",
+          "external": true
+        }
+      ],
+      "format": "cjs"
+    },
+    "src/utils/assetReferences.js": {
+      "bytes": 6641,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/archiveText.js": {
+      "bytes": 1067,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/archiveBound.js": {
+      "bytes": 2576,
+      "imports": [
+        {
+          "path": "src/utils/archiveText.js",
+          "kind": "import-statement",
+          "original": "./archiveText.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/ImageAssetService.js": {
+      "bytes": 33408,
+      "imports": [
+        {
+          "path": "src/models/ImageAsset.js",
+          "kind": "import-statement",
+          "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "node_modules/jszip/dist/jszip.min.js",
+          "kind": "import-statement",
+          "original": "jszip"
+        },
+        {
+          "path": "src/utils/assetReferences.js",
+          "kind": "import-statement",
+          "original": "../utils/assetReferences.js"
+        },
+        {
+          "path": "src/utils/archiveBound.js",
+          "kind": "import-statement",
+          "original": "../utils/archiveBound.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/HTMLExportService.js": {
+      "bytes": 14502,
+      "imports": [
+        {
+          "path": "src/models/ImageAsset.js",
+          "kind": "import-statement",
+          "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "src/utils/assetReferences.js",
+          "kind": "import-statement",
+          "original": "../utils/assetReferences.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/operationGeneration.js": {
+      "bytes": 1374,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/utils/mixedControlState.js": {
+      "bytes": 3517,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/assets/drone-head.png": {
+      "bytes": 183623,
+      "imports": []
+    },
+    "src/utils/pathHeadPresets.js": {
+      "bytes": 2175,
+      "imports": [
+        {
+          "path": "src/assets/drone-head.png",
+          "kind": "import-statement",
+          "original": "../assets/drone-head.png"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/models/Waypoint.js": {
+      "bytes": 20403,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/routeTrace.js": {
+      "bytes": 7936,
+      "imports": [
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "./routeBranches.js"
+        },
+        {
+          "path": "src/utils/entityId.js",
+          "kind": "import-statement",
+          "original": "./entityId.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/examples/index.js": {
+      "bytes": 27822,
+      "imports": [
+        {
+          "path": "src/models/Waypoint.js",
+          "kind": "import-statement",
+          "original": "../models/Waypoint.js"
+        },
+        {
+          "path": "src/models/Scene.js",
+          "kind": "import-statement",
+          "original": "../models/Scene.js"
+        },
+        {
+          "path": "src/utils/routeTrace.js",
+          "kind": "import-statement",
+          "original": "../utils/routeTrace.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/wiringDom.js": {
+      "bytes": 45645,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/TextLabelService.js",
+          "kind": "import-statement",
+          "original": "../services/TextLabelService.js"
+        },
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        },
+        {
+          "path": "src/models/ImageAsset.js",
+          "kind": "import-statement",
+          "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "src/app/operationGeneration.js",
+          "kind": "import-statement",
+          "original": "./operationGeneration.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/mixedControlState.js",
+          "kind": "import-statement",
+          "original": "../utils/mixedControlState.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "../utils/pathHeadPresets.js"
+        },
+        {
+          "path": "src/examples/index.js",
+          "kind": "import-statement",
+          "original": "../examples/index.js"
+        },
+        {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "../config/keybindings.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/wiringBus.js": {
+      "bytes": 19664,
+      "imports": [
+        {
+          "path": "src/models/Waypoint.js",
+          "kind": "import-statement",
+          "original": "../models/Waypoint.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "../components/SwatchPicker.js"
+        },
+        {
+          "path": "src/utils/snapToAngle.js",
+          "kind": "import-statement",
+          "original": "../utils/snapToAngle.js"
+        },
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "../utils/routeBranches.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/components/ContextMenu.js": {
+      "bytes": 6357,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/services/RecoveryImageStore.js": {
+      "bytes": 31636,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/models/ImageAsset.js",
+          "kind": "import-statement",
+          "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "src/services/ImageAssetService.js",
+          "kind": "import-statement",
+          "original": "./ImageAssetService.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/recoveryImages.js": {
+      "bytes": 51807,
+      "imports": [
+        {
+          "path": "src/models/ImageAsset.js",
+          "kind": "import-statement",
+          "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "src/utils/assetReferences.js",
+          "kind": "import-statement",
+          "original": "../utils/assetReferences.js"
+        },
+        {
+          "path": "src/services/RecoveryImageStore.js",
+          "kind": "import-statement",
+          "original": "../services/RecoveryImageStore.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/components/ModeBanner.js",
+          "kind": "import-statement",
+          "original": "../components/ModeBanner.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/backgroundLoading.js": {
+      "bytes": 9372,
+      "imports": [
+        {
+          "path": "src/app/operationGeneration.js",
+          "kind": "import-statement",
+          "original": "./operationGeneration.js"
+        },
+        {
+          "path": "src/models/ImageAsset.js",
+          "kind": "import-statement",
+          "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "src/app/recoveryImages.js",
+          "kind": "import-statement",
+          "original": "./recoveryImages.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/services/DiagnosticsService.js": {
+      "bytes": 5184,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/app/privacy.js": {
+      "bytes": 14433,
+      "imports": [
+        {
+          "path": "src/services/DiagnosticsService.js",
+          "kind": "import-statement",
+          "original": "../services/DiagnosticsService.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/unrestoredAutosave.js": {
+      "bytes": 23984,
+      "imports": [
+        {
+          "path": "src/app/privacy.js",
+          "kind": "import-statement",
+          "original": "./privacy.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/sceneEnd.js": {
+      "bytes": 10863,
+      "imports": [
+        {
+          "path": "src/services/BeaconRenderer.js",
+          "kind": "import-statement",
+          "original": "../services/BeaconRenderer.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/pathTiming.js": {
+      "bytes": 37711,
+      "imports": [
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        },
+        {
+          "path": "src/utils/Easing.js",
+          "kind": "import-statement",
+          "original": "../utils/Easing.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/MotionVisibilityService.js",
+          "kind": "import-statement",
+          "original": "../services/MotionVisibilityService.js"
+        },
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        },
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "../utils/routeBranches.js"
+        },
+        {
+          "path": "src/utils/branchTiming.js",
+          "kind": "import-statement",
+          "original": "../utils/branchTiming.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "../utils/routeAnchors.js"
+        },
+        {
+          "path": "src/utils/sceneEnd.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneEnd.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/regionLines.js": {
+      "bytes": 825,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/app/persistence.js": {
+      "bytes": 75582,
+      "imports": [
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/sliderScales.js",
+          "kind": "import-statement",
+          "original": "../utils/sliderScales.js"
+        },
+        {
+          "path": "src/models/Waypoint.js",
+          "kind": "import-statement",
+          "original": "../models/Waypoint.js"
+        },
+        {
+          "path": "src/models/Scene.js",
+          "kind": "import-statement",
+          "original": "../models/Scene.js"
+        },
+        {
+          "path": "src/models/ImageAsset.js",
+          "kind": "import-statement",
+          "original": "../models/ImageAsset.js"
+        },
+        {
+          "path": "src/services/ImageAssetService.js",
+          "kind": "import-statement",
+          "original": "../services/ImageAssetService.js"
+        },
+        {
+          "path": "src/services/StorageService.js",
+          "kind": "import-statement",
+          "original": "../services/StorageService.js"
+        },
+        {
+          "path": "src/app/operationGeneration.js",
+          "kind": "import-statement",
+          "original": "./operationGeneration.js"
+        },
+        {
+          "path": "src/app/backgroundLoading.js",
+          "kind": "import-statement",
+          "original": "./backgroundLoading.js"
+        },
+        {
+          "path": "src/utils/safeColor.js",
+          "kind": "import-statement",
+          "original": "../utils/safeColor.js"
+        },
+        {
+          "path": "src/utils/entityId.js",
+          "kind": "import-statement",
+          "original": "../utils/entityId.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "../utils/renderReference.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "../utils/pathHeadPresets.js"
+        },
+        {
+          "path": "src/examples/index.js",
+          "kind": "import-statement",
+          "original": "../examples/index.js"
+        },
+        {
+          "path": "src/app/unrestoredAutosave.js",
+          "kind": "import-statement",
+          "original": "./unrestoredAutosave.js"
+        },
+        {
+          "path": "src/app/pathTiming.js",
+          "kind": "import-statement",
+          "original": "./pathTiming.js"
+        },
+        {
+          "path": "src/app/regionLines.js",
+          "kind": "import-statement",
+          "original": "./regionLines.js"
+        },
+        {
+          "path": "src/app/recoveryImages.js",
+          "kind": "import-statement",
+          "original": "./recoveryImages.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/exporting.js": {
+      "bytes": 26239,
+      "imports": [
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/VideoExporter.js",
+          "kind": "import-statement",
+          "original": "../services/VideoExporter.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./persistence.js"
+        },
+        {
+          "path": "src/app/pathTiming.js",
+          "kind": "import-statement",
+          "original": "./pathTiming.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/wiringControllers.js": {
+      "bytes": 63558,
+      "imports": [
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/models/Waypoint.js",
+          "kind": "import-statement",
+          "original": "../models/Waypoint.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "../components/SwatchPicker.js"
+        },
+        {
+          "path": "src/components/ContextMenu.js",
+          "kind": "import-statement",
+          "original": "../components/ContextMenu.js"
+        },
+        {
+          "path": "src/utils/snapToAngle.js",
+          "kind": "import-statement",
+          "original": "../utils/snapToAngle.js"
+        },
+        {
+          "path": "src/utils/routeBranches.js",
+          "kind": "import-statement",
+          "original": "../utils/routeBranches.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "../utils/routeAnchors.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        },
+        {
+          "path": "src/app/backgroundLoading.js",
+          "kind": "import-statement",
+          "original": "./backgroundLoading.js"
+        },
+        {
+          "path": "src/app/exporting.js",
+          "kind": "import-statement",
+          "original": "./exporting.js"
+        },
+        {
+          "path": "src/components/ModeBanner.js",
+          "kind": "import-statement",
+          "original": "../components/ModeBanner.js"
+        },
+        {
+          "path": "src/app/regionLines.js",
+          "kind": "import-statement",
+          "original": "./regionLines.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/undoRedo.js": {
+      "bytes": 21437,
+      "imports": [
+        {
+          "path": "src/models/Waypoint.js",
+          "kind": "import-statement",
+          "original": "../models/Waypoint.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "../components/SwatchPicker.js"
+        },
+        {
+          "path": "src/services/ImageAssetService.js",
+          "kind": "import-statement",
+          "original": "../services/ImageAssetService.js"
+        },
+        {
+          "path": "src/utils/assetReferences.js",
+          "kind": "import-statement",
+          "original": "../utils/assetReferences.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/sceneEnd.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneEnd.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "../utils/pathHeadPresets.js"
+        },
+        {
+          "path": "src/app/regionLines.js",
+          "kind": "import-statement",
+          "original": "./regionLines.js"
+        },
+        {
+          "path": "src/app/recoveryImages.js",
+          "kind": "import-statement",
+          "original": "./recoveryImages.js"
+        },
+        {
+          "path": "src/app/backgroundLoading.js",
+          "kind": "import-statement",
+          "original": "./backgroundLoading.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/playback.js": {
+      "bytes": 20272,
+      "imports": [
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        },
+        {
+          "path": "src/components/ModeBanner.js",
+          "kind": "import-statement",
+          "original": "../components/ModeBanner.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/camera.js": {
+      "bytes": 13262,
+      "imports": [
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        },
+        {
+          "path": "src/utils/mixedControlState.js",
+          "kind": "import-statement",
+          "original": "../utils/mixedControlState.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/viewport.js": {
+      "bytes": 23173,
+      "imports": [
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        },
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "../utils/renderReference.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/waypointCardActions.js": {
+      "bytes": 8817,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "../services/CameraService.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/editorPanel.js": {
+      "bytes": 37028,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/services/BeaconRenderer.js",
+          "kind": "import-statement",
+          "original": "../services/BeaconRenderer.js"
+        },
+        {
+          "path": "src/utils/sliderScales.js",
+          "kind": "import-statement",
+          "original": "../utils/sliderScales.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "../components/SwatchPicker.js"
+        },
+        {
+          "path": "src/utils/pathWidthScale.js",
+          "kind": "import-statement",
+          "original": "../utils/pathWidthScale.js"
+        },
+        {
+          "path": "src/utils/mixedControlState.js",
+          "kind": "import-statement",
+          "original": "../utils/mixedControlState.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/waypointCardActions.js",
+          "kind": "import-statement",
+          "original": "../utils/waypointCardActions.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "../utils/pathHeadPresets.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/pointer.js": {
+      "bytes": 12647,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/segmentHitTest.js",
+          "kind": "import-statement",
+          "original": "../utils/segmentHitTest.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/crowdCopy.js": {
+      "bytes": 1412,
+      "imports": [
+        {
+          "path": "src/models/Emitter.js",
+          "kind": "import-statement",
+          "original": "../models/Emitter.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/crowds.js": {
+      "bytes": 92415,
+      "imports": [
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        },
+        {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "../config/keybindings.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "../components/SwatchPicker.js"
+        },
+        {
+          "path": "src/utils/busynessEnvelope.js",
+          "kind": "import-statement",
+          "original": "../utils/busynessEnvelope.js"
+        },
+        {
+          "path": "src/utils/routeTrace.js",
+          "kind": "import-statement",
+          "original": "../utils/routeTrace.js"
+        },
+        {
+          "path": "src/models/FlowLayer.js",
+          "kind": "import-statement",
+          "original": "../models/FlowLayer.js"
+        },
+        {
+          "path": "src/models/GraphModel.js",
+          "kind": "import-statement",
+          "original": "../models/GraphModel.js"
+        },
+        {
+          "path": "src/models/Emitter.js",
+          "kind": "import-statement",
+          "original": "../models/Emitter.js"
+        },
+        {
+          "path": "src/models/Scene.js",
+          "kind": "import-statement",
+          "original": "../models/Scene.js"
+        },
+        {
+          "path": "src/services/DotRenderer.js",
+          "kind": "import-statement",
+          "original": "../services/DotRenderer.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./persistence.js"
+        },
+        {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/crowdCopy.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdCopy.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        },
+        {
+          "path": "src/utils/archiveText.js",
+          "kind": "import-statement",
+          "original": "../utils/archiveText.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "../utils/routeAnchors.js"
+        },
+        {
+          "path": "src/app/operationGeneration.js",
+          "kind": "import-statement",
+          "original": "./operationGeneration.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/app/regionLines.js",
+          "kind": "import-statement",
+          "original": "./regionLines.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/crowdWaiting.js": {
+      "bytes": 9285,
+      "imports": [
+        {
+          "path": "src/models/Emitter.js",
+          "kind": "import-statement",
+          "original": "../models/Emitter.js"
+        },
+        {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./persistence.js"
+        },
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/network.js": {
+      "bytes": 50743,
+      "imports": [
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./persistence.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "../config/keybindings.js"
+        },
+        {
+          "path": "src/utils/graphRouting.js",
+          "kind": "import-statement",
+          "original": "../utils/graphRouting.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "../utils/entryWeight.js"
+        },
+        {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/segmentHitTest.js",
+          "kind": "import-statement",
+          "original": "../utils/segmentHitTest.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/app/regionLines.js",
+          "kind": "import-statement",
+          "original": "./regionLines.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/controllers/SceneOutlineController.js": {
+      "bytes": 80965,
+      "imports": [
+        {
+          "path": "src/utils/crowdAreaDescription.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdAreaDescription.js"
+        },
+        {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/utils/groupSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/groupSettings.js"
+        },
+        {
+          "path": "src/utils/waitingSettings.js",
+          "kind": "import-statement",
+          "original": "../utils/waitingSettings.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/utils/crowdArea.js",
+          "kind": "import-statement",
+          "original": "../utils/crowdArea.js"
+        },
+        {
+          "path": "src/utils/entryWeight.js",
+          "kind": "import-statement",
+          "original": "../utils/entryWeight.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/sceneOutline.js": {
+      "bytes": 52372,
+      "imports": [
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./finishContexts.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "../utils/uiReadouts.js"
+        },
+        {
+          "path": "src/controllers/SceneOutlineController.js",
+          "kind": "import-statement",
+          "original": "../controllers/SceneOutlineController.js"
+        },
+        {
+          "path": "src/utils/sceneSemantics.js",
+          "kind": "import-statement",
+          "original": "../utils/sceneSemantics.js"
+        },
+        {
+          "path": "src/models/Scene.js",
+          "kind": "import-statement",
+          "original": "../models/Scene.js"
+        },
+        {
+          "path": "src/utils/networkBudget.js",
+          "kind": "import-statement",
+          "original": "../utils/networkBudget.js"
+        },
+        {
+          "path": "src/models/Emitter.js",
+          "kind": "import-statement",
+          "original": "../models/Emitter.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./persistence.js"
+        },
+        {
+          "path": "src/utils/safeColor.js",
+          "kind": "import-statement",
+          "original": "../utils/safeColor.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/utils/imageCoordinates.js",
+          "kind": "import-statement",
+          "original": "../utils/imageCoordinates.js"
+        },
+        {
+          "path": "src/app/regionLines.js",
+          "kind": "import-statement",
+          "original": "./regionLines.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/helpDialog.js": {
+      "bytes": 4811,
+      "imports": [
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "../utils/focusTrap.js"
+        },
+        {
+          "path": "src/config/helpContent.js",
+          "kind": "import-statement",
+          "original": "../config/helpContent.js"
+        },
+        {
+          "path": "src/app/privacy.js",
+          "kind": "import-statement",
+          "original": "./privacy.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/startup.js": {
+      "bytes": 1122,
+      "imports": [
+        {
+          "path": "src/app/unrestoredAutosave.js",
+          "kind": "import-statement",
+          "original": "./unrestoredAutosave.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app/projectReset.js": {
+      "bytes": 6801,
+      "imports": [
+        {
+          "path": "src/app/operationGeneration.js",
+          "kind": "import-statement",
+          "original": "./operationGeneration.js"
+        },
+        {
+          "path": "src/app/backgroundLoading.js",
+          "kind": "import-statement",
+          "original": "./backgroundLoading.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./persistence.js"
+        },
+        {
+          "path": "src/utils/renderReference.js",
+          "kind": "import-statement",
+          "original": "../utils/renderReference.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "../utils/pathHeadPresets.js"
+        },
+        {
+          "path": "src/app/unrestoredAutosave.js",
+          "kind": "import-statement",
+          "original": "./unrestoredAutosave.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        },
+        {
+          "path": "src/app/regionLines.js",
+          "kind": "import-statement",
+          "original": "./regionLines.js"
+        },
+        {
+          "path": "src/app/recoveryImages.js",
+          "kind": "import-statement",
+          "original": "./recoveryImages.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/utils/announcementQueue.js": {
+      "bytes": 7735,
+      "imports": [
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "../config/constants.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/main.js": {
+      "bytes": 71756,
+      "imports": [
+        {
+          "path": "src/app/finishContexts.js",
+          "kind": "import-statement",
+          "original": "./app/finishContexts.js"
+        },
+        {
+          "path": "src/config/constants.js",
+          "kind": "import-statement",
+          "original": "./config/constants.js"
+        },
+        {
+          "path": "src/models/Scene.js",
+          "kind": "import-statement",
+          "original": "./models/Scene.js"
+        },
+        {
+          "path": "src/services/MotionVisibilityService.js",
+          "kind": "import-statement",
+          "original": "./services/MotionVisibilityService.js"
+        },
+        {
+          "path": "src/utils/uiReadouts.js",
+          "kind": "import-statement",
+          "original": "./utils/uiReadouts.js"
+        },
+        {
+          "path": "src/services/StorageService.js",
+          "kind": "import-statement",
+          "original": "./services/StorageService.js"
+        },
+        {
+          "path": "src/services/CoordinateTransform.js",
+          "kind": "import-statement",
+          "original": "./services/CoordinateTransform.js"
+        },
+        {
+          "path": "src/services/PathCalculator.js",
+          "kind": "import-statement",
+          "original": "./services/PathCalculator.js"
+        },
+        {
+          "path": "src/services/AnimationEngine.js",
+          "kind": "import-statement",
+          "original": "./services/AnimationEngine.js"
+        },
+        {
+          "path": "src/services/RenderingService.js",
+          "kind": "import-statement",
+          "original": "./services/RenderingService.js"
+        },
+        {
+          "path": "src/services/SwarmEngine.js",
+          "kind": "import-statement",
+          "original": "./services/SwarmEngine.js"
+        },
+        {
+          "path": "src/core/EventBus.js",
+          "kind": "import-statement",
+          "original": "./core/EventBus.js"
+        },
+        {
+          "path": "src/controllers/UIController.js",
+          "kind": "import-statement",
+          "original": "./controllers/UIController.js"
+        },
+        {
+          "path": "src/handlers/InteractionHandler.js",
+          "kind": "import-statement",
+          "original": "./handlers/InteractionHandler.js"
+        },
+        {
+          "path": "src/config/helpContent.js",
+          "kind": "import-statement",
+          "original": "./config/helpContent.js"
+        },
+        {
+          "path": "src/services/UndoService.js",
+          "kind": "import-statement",
+          "original": "./services/UndoService.js"
+        },
+        {
+          "path": "src/controllers/SectionController.js",
+          "kind": "import-statement",
+          "original": "./controllers/SectionController.js"
+        },
+        {
+          "path": "src/services/AreaDrawingService.js",
+          "kind": "import-statement",
+          "original": "./services/AreaDrawingService.js"
+        },
+        {
+          "path": "src/services/NetworkEditService.js",
+          "kind": "import-statement",
+          "original": "./services/NetworkEditService.js"
+        },
+        {
+          "path": "src/services/AreaEditService.js",
+          "kind": "import-statement",
+          "original": "./services/AreaEditService.js"
+        },
+        {
+          "path": "src/config/helpContent.js",
+          "kind": "import-statement",
+          "original": "./config/helpContent.js"
+        },
+        {
+          "path": "src/components/SwatchPicker.js",
+          "kind": "import-statement",
+          "original": "./components/SwatchPicker.js"
+        },
+        {
+          "path": "src/components/ModeBanner.js",
+          "kind": "import-statement",
+          "original": "./components/ModeBanner.js"
+        },
+        {
+          "path": "src/components/Tooltip.js",
+          "kind": "import-statement",
+          "original": "./components/Tooltip.js"
+        },
+        {
+          "path": "src/components/ParamTooltip.js",
+          "kind": "import-statement",
+          "original": "./components/ParamTooltip.js"
+        },
+        {
+          "path": "src/components/Dropdown.js",
+          "kind": "import-statement",
+          "original": "./components/Dropdown.js"
+        },
+        {
+          "path": "src/services/CameraService.js",
+          "kind": "import-statement",
+          "original": "./services/CameraService.js"
+        },
+        {
+          "path": "src/services/ImageAssetService.js",
+          "kind": "import-statement",
+          "original": "./services/ImageAssetService.js"
+        },
+        {
+          "path": "src/models/ImageAsset.js",
+          "kind": "import-statement",
+          "original": "./models/ImageAsset.js"
+        },
+        {
+          "path": "src/services/HTMLExportService.js",
+          "kind": "import-statement",
+          "original": "./services/HTMLExportService.js"
+        },
+        {
+          "path": "src/app/wiringDom.js",
+          "kind": "import-statement",
+          "original": "./app/wiringDom.js"
+        },
+        {
+          "path": "src/app/wiringBus.js",
+          "kind": "import-statement",
+          "original": "./app/wiringBus.js"
+        },
+        {
+          "path": "src/app/wiringControllers.js",
+          "kind": "import-statement",
+          "original": "./app/wiringControllers.js"
+        },
+        {
+          "path": "src/app/undoRedo.js",
+          "kind": "import-statement",
+          "original": "./app/undoRedo.js"
+        },
+        {
+          "path": "src/app/playback.js",
+          "kind": "import-statement",
+          "original": "./app/playback.js"
+        },
+        {
+          "path": "src/app/camera.js",
+          "kind": "import-statement",
+          "original": "./app/camera.js"
+        },
+        {
+          "path": "src/app/viewport.js",
+          "kind": "import-statement",
+          "original": "./app/viewport.js"
+        },
+        {
+          "path": "src/app/pathTiming.js",
+          "kind": "import-statement",
+          "original": "./app/pathTiming.js"
+        },
+        {
+          "path": "src/app/persistence.js",
+          "kind": "import-statement",
+          "original": "./app/persistence.js"
+        },
+        {
+          "path": "src/app/exporting.js",
+          "kind": "import-statement",
+          "original": "./app/exporting.js"
+        },
+        {
+          "path": "src/app/editorPanel.js",
+          "kind": "import-statement",
+          "original": "./app/editorPanel.js"
+        },
+        {
+          "path": "src/app/pointer.js",
+          "kind": "import-statement",
+          "original": "./app/pointer.js"
+        },
+        {
+          "path": "src/app/crowds.js",
+          "kind": "import-statement",
+          "original": "./app/crowds.js"
+        },
+        {
+          "path": "src/app/crowdWaiting.js",
+          "kind": "import-statement",
+          "original": "./app/crowdWaiting.js"
+        },
+        {
+          "path": "src/app/network.js",
+          "kind": "import-statement",
+          "original": "./app/network.js"
+        },
+        {
+          "path": "src/app/sceneOutline.js",
+          "kind": "import-statement",
+          "original": "./app/sceneOutline.js"
+        },
+        {
+          "path": "src/app/privacy.js",
+          "kind": "import-statement",
+          "original": "./app/privacy.js"
+        },
+        {
+          "path": "src/app/helpDialog.js",
+          "kind": "import-statement",
+          "original": "./app/helpDialog.js"
+        },
+        {
+          "path": "src/app/startup.js",
+          "kind": "import-statement",
+          "original": "./app/startup.js"
+        },
+        {
+          "path": "src/app/unrestoredAutosave.js",
+          "kind": "import-statement",
+          "original": "./app/unrestoredAutosave.js"
+        },
+        {
+          "path": "src/app/backgroundLoading.js",
+          "kind": "import-statement",
+          "original": "./app/backgroundLoading.js"
+        },
+        {
+          "path": "src/config/keybindings.js",
+          "kind": "import-statement",
+          "original": "./config/keybindings.js"
+        },
+        {
+          "path": "src/app/projectReset.js",
+          "kind": "import-statement",
+          "original": "./app/projectReset.js"
+        },
+        {
+          "path": "src/utils/pathHeadPresets.js",
+          "kind": "import-statement",
+          "original": "./utils/pathHeadPresets.js"
+        },
+        {
+          "path": "src/utils/routeAnchors.js",
+          "kind": "import-statement",
+          "original": "./utils/routeAnchors.js"
+        },
+        {
+          "path": "src/utils/announcementQueue.js",
+          "kind": "import-statement",
+          "original": "./utils/announcementQueue.js"
+        },
+        {
+          "path": "src/utils/focusTrap.js",
+          "kind": "import-statement",
+          "original": "./utils/focusTrap.js"
+        },
+        {
+          "path": "src/services/RecoveryImageStore.js",
+          "kind": "import-statement",
+          "original": "./services/RecoveryImageStore.js"
+        },
+        {
+          "path": "src/app/recoveryImages.js",
+          "kind": "import-statement",
+          "original": "./app/recoveryImages.js"
+        }
+      ],
+      "format": "esm"
+    }
+  },
+  "outputs": {
+    ".docs-build-ANTSP4/app.js.map": {
+      "imports": [],
+      "exports": [],
+      "inputs": {},
+      "bytes": 4290143
+    },
+    ".docs-build-ANTSP4/app.js": {
+      "imports": [],
+      "exports": [],
+      "entryPoint": "src/main.js",
+      "inputs": {
+        "node_modules/jszip/dist/jszip.min.js": {
+          "bytesInOutput": 97352
+        },
+        "src/config/constants.js": {
+          "bytesInOutput": 4609
+        },
+        "src/services/CoordinateTransform.js": {
+          "bytesInOutput": 3754
+        },
+        "src/services/DotRenderer.js": {
+          "bytesInOutput": 429
+        },
+        "src/utils/renderReference.js": {
+          "bytesInOutput": 342
+        },
+        "src/utils/finishArea.js": {
+          "bytesInOutput": 3477
+        },
+        "src/services/BeaconRenderer.js": {
+          "bytesInOutput": 10487
+        },
+        "src/core/PlayerCore.js": {
+          "bytesInOutput": 7447
+        },
+        "src/utils/CatmullRom.js": {
+          "bytesInOutput": 461
+        },
+        "src/utils/Easing.js": {
+          "bytesInOutput": 150
+        },
+        "src/services/PathCalculator.js": {
+          "bytesInOutput": 4910
+        },
+        "src/services/MotionVisibilityService.js": {
+          "bytesInOutput": 11724
+        },
+        "src/utils/branchTiming.js": {
+          "bytesInOutput": 1671
+        },
+        "src/utils/routeBranches.js": {
+          "bytesInOutput": 4418
+        },
+        "src/utils/finishReleaseClock.js": {
+          "bytesInOutput": 2772
+        },
+        "src/utils/imageCoordinates.js": {
+          "bytesInOutput": 141
+        },
+        "src/utils/crowdArea.js": {
+          "bytesInOutput": 1386
+        },
+        "src/utils/crowdAreaDescription.js": {
+          "bytesInOutput": 1230
+        },
+        "src/utils/groupSettings.js": {
+          "bytesInOutput": 1679
+        },
+        "src/utils/waitingSettings.js": {
+          "bytesInOutput": 1728
+        },
+        "src/app/finishContexts.js": {
+          "bytesInOutput": 1586
+        },
+        "src/utils/entryWeight.js": {
+          "bytesInOutput": 528
+        },
+        "src/models/GraphNode.js": {
+          "bytesInOutput": 1437
+        },
+        "src/models/GraphEdge.js": {
+          "bytesInOutput": 1302
+        },
+        "src/models/GraphModel.js": {
+          "bytesInOutput": 1399
+        },
+        "src/utils/safeColor.js": {
+          "bytesInOutput": 384
+        },
+        "src/utils/busynessEnvelope.js": {
+          "bytesInOutput": 2763
+        },
+        "src/utils/routeAnchors.js": {
+          "bytesInOutput": 1621
+        },
+        "src/models/Emitter.js": {
+          "bytesInOutput": 5218
+        },
+        "src/utils/entityId.js": {
+          "bytesInOutput": 694
+        },
+        "src/models/FlowLayer.js": {
+          "bytesInOutput": 4297
+        },
+        "src/models/Scene.js": {
+          "bytesInOutput": 2238
+        },
+        "src/utils/uiReadouts.js": {
+          "bytesInOutput": 1905
+        },
+        "src/services/StorageService.js": {
+          "bytesInOutput": 10096
+        },
+        "src/models/AnimationState.js": {
+          "bytesInOutput": 2256
+        },
+        "src/services/AnimationEngine.js": {
+          "bytesInOutput": 13132
+        },
+        "src/utils/segmentHitTest.js": {
+          "bytesInOutput": 836
+        },
+        "src/services/AreaHighlightRenderer.js": {
+          "bytesInOutput": 3859
+        },
+        "src/services/TextLabelService.js": {
+          "bytesInOutput": 3863
+        },
+        "src/services/RenderingService.js": {
+          "bytesInOutput": 29416
+        },
+        "src/utils/crowdArrival.js": {
+          "bytesInOutput": 280
+        },
+        "src/utils/graphRouting.js": {
+          "bytesInOutput": 1123
+        },
+        "src/utils/groupRouting.js": {
+          "bytesInOutput": 1681
+        },
+        "src/utils/groupJourney.js": {
+          "bytesInOutput": 2911
+        },
+        "src/services/SwarmEngine.js": {
+          "bytesInOutput": 24943
+        },
+        "src/core/EventBus.js": {
+          "bytesInOutput": 1297
+        },
+        "src/config/keybindings.js": {
+          "bytesInOutput": 6254
+        },
+        "src/config/helpContent.js": {
+          "bytesInOutput": 3919
+        },
+        "src/utils/sliderScales.js": {
+          "bytesInOutput": 856
+        },
+        "src/utils/focusTrap.js": {
+          "bytesInOutput": 3978
+        },
+        "node_modules/mediabunny/dist/modules/src/misc.js": {
+          "bytesInOutput": 3508
+        },
+        "node_modules/mediabunny/dist/modules/src/logging.js": {
+          "bytesInOutput": 779
+        },
+        "node_modules/mediabunny/dist/modules/src/metadata.js": {
+          "bytesInOutput": 4437
+        },
+        "node_modules/mediabunny/dist/modules/shared/bitstream.js": {
+          "bytesInOutput": 741
+        },
+        "node_modules/mediabunny/dist/modules/shared/aac-misc.js": {
+          "bytesInOutput": 807
+        },
+        "node_modules/mediabunny/dist/modules/src/codec.js": {
+          "bytesInOutput": 13482
+        },
+        "node_modules/mediabunny/dist/modules/shared/ac3-misc.js": {
+          "bytesInOutput": 46
+        },
+        "node_modules/mediabunny/dist/modules/src/codec-data.js": {
+          "bytesInOutput": 18394
+        },
+        "node_modules/mediabunny/dist/modules/src/packet.js": {
+          "bytesInOutput": 4220
+        },
+        "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-misc.js": {
+          "bytesInOutput": 213
+        },
+        "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-reader.js": {
+          "bytesInOutput": 15
+        },
+        "node_modules/mediabunny/dist/modules/src/matroska/ebml.js": {
+          "bytesInOutput": 8720
+        },
+        "node_modules/mediabunny/dist/modules/src/matroska/matroska-misc.js": {
+          "bytesInOutput": 226
+        },
+        "node_modules/mediabunny/dist/modules/src/adts/adts-reader.js": {
+          "bytesInOutput": 705
+        },
+        "node_modules/mediabunny/dist/modules/src/reader.js": {
+          "bytesInOutput": 905
+        },
+        "node_modules/mediabunny/dist/modules/src/muxer.js": {
+          "bytesInOutput": 832
+        },
+        "node_modules/mediabunny/dist/modules/src/subtitles.js": {
+          "bytesInOutput": 486
+        },
+        "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-boxes.js": {
+          "bytesInOutput": 20069
+        },
+        "node_modules/mediabunny/dist/modules/src/writer.js": {
+          "bytesInOutput": 1578
+        },
+        "node_modules/mediabunny/dist/modules/src/target.js": {
+          "bytesInOutput": 2366
+        },
+        "node_modules/mediabunny/dist/modules/src/isobmff/isobmff-muxer.js": {
+          "bytesInOutput": 22659
+        },
+        "node_modules/mediabunny/dist/modules/src/matroska/matroska-muxer.js": {
+          "bytesInOutput": 18325
+        },
+        "node_modules/mediabunny/dist/modules/src/media-source.js": {
+          "bytesInOutput": 2372
+        },
+        "node_modules/mediabunny/dist/modules/src/output-format.js": {
+          "bytesInOutput": 4762
+        },
+        "node_modules/mediabunny/dist/modules/src/output.js": {
+          "bytesInOutput": 11461
+        },
+        "node_modules/mediabunny/dist/modules/src/index.js": {
+          "bytesInOutput": 307
+        },
+        "src/services/VideoExporter.js": {
+          "bytesInOutput": 16152
+        },
+        "src/utils/pathWidthScale.js": {
+          "bytesInOutput": 186
+        },
+        "src/utils/waypointNaming.js": {
+          "bytesInOutput": 1370
+        },
+        "src/utils/sceneSemantics.js": {
+          "bytesInOutput": 5535
+        },
+        "src/controllers/UIController.js": {
+          "bytesInOutput": 45187
+        },
+        "src/handlers/InteractionHandler.js": {
+          "bytesInOutput": 17831
+        },
+        "src/services/UndoService.js": {
+          "bytesInOutput": 2379
+        },
+        "src/controllers/SectionController.js": {
+          "bytesInOutput": 7081
+        },
+        "src/components/ModeBanner.js": {
+          "bytesInOutput": 5034
+        },
+        "src/services/AreaDrawingService.js": {
+          "bytesInOutput": 4790
+        },
+        "src/utils/snapToAngle.js": {
+          "bytesInOutput": 191
+        },
+        "src/utils/networkBudget.js": {
+          "bytesInOutput": 644
+        },
+        "src/services/NetworkEditService.js": {
+          "bytesInOutput": 19825
+        },
+        "src/services/AreaEditService.js": {
+          "bytesInOutput": 4525
+        },
+        "src/components/SwatchPicker.js": {
+          "bytesInOutput": 5567
+        },
+        "src/config/tooltips.js": {
+          "bytesInOutput": 2158
+        },
+        "src/components/Tooltip.js": {
+          "bytesInOutput": 2154
+        },
+        "src/components/ParamTooltip.js": {
+          "bytesInOutput": 6999
+        },
+        "src/components/Dropdown.js": {
+          "bytesInOutput": 2348
+        },
+        "src/services/CameraService.js": {
+          "bytesInOutput": 5670
+        },
+        "src/models/ImageAsset.js": {
+          "bytesInOutput": 5069
+        },
+        "src/services/ImageAssetService.js": {
+          "bytesInOutput": 14182
+        },
+        "src/utils/assetReferences.js": {
+          "bytesInOutput": 2653
+        },
+        "src/utils/archiveText.js": {
+          "bytesInOutput": 356
+        },
+        "src/utils/archiveBound.js": {
+          "bytesInOutput": 1192
+        },
+        "src/services/HTMLExportService.js": {
+          "bytesInOutput": 8269
+        },
+        "src/app/operationGeneration.js": {
+          "bytesInOutput": 702
+        },
+        "src/utils/mixedControlState.js": {
+          "bytesInOutput": 1326
+        },
+        "src/assets/drone-head.png": {
+          "bytesInOutput": 244864
+        },
+        "src/utils/pathHeadPresets.js": {
+          "bytesInOutput": 595
+        },
+        "src/models/Waypoint.js": {
+          "bytesInOutput": 7456
+        },
+        "src/utils/routeTrace.js": {
+          "bytesInOutput": 2105
+        },
+        "src/examples/index.js": {
+          "bytesInOutput": 15146
+        },
+        "src/app/wiringDom.js": {
+          "bytesInOutput": 18746
+        },
+        "src/app/wiringBus.js": {
+          "bytesInOutput": 6271
+        },
+        "src/components/ContextMenu.js": {
+          "bytesInOutput": 3342
+        },
+        "src/services/RecoveryImageStore.js": {
+          "bytesInOutput": 9877
+        },
+        "src/app/recoveryImages.js": {
+          "bytesInOutput": 18197
+        },
+        "src/app/backgroundLoading.js": {
+          "bytesInOutput": 3223
+        },
+        "src/services/DiagnosticsService.js": {
+          "bytesInOutput": 2176
+        },
+        "src/app/privacy.js": {
+          "bytesInOutput": 9656
+        },
+        "src/app/unrestoredAutosave.js": {
+          "bytesInOutput": 7389
+        },
+        "src/utils/sceneEnd.js": {
+          "bytesInOutput": 2230
+        },
+        "src/app/pathTiming.js": {
+          "bytesInOutput": 10352
+        },
+        "src/app/regionLines.js": {
+          "bytesInOutput": 93
+        },
+        "src/app/persistence.js": {
+          "bytesInOutput": 33187
+        },
+        "src/app/exporting.js": {
+          "bytesInOutput": 7755
+        },
+        "src/app/wiringControllers.js": {
+          "bytesInOutput": 24619
+        },
+        "src/app/undoRedo.js": {
+          "bytesInOutput": 9056
+        },
+        "src/app/playback.js": {
+          "bytesInOutput": 6651
+        },
+        "src/app/camera.js": {
+          "bytesInOutput": 4403
+        },
+        "src/app/viewport.js": {
+          "bytesInOutput": 6562
+        },
+        "src/utils/waypointCardActions.js": {
+          "bytesInOutput": 4621
+        },
+        "src/app/editorPanel.js": {
+          "bytesInOutput": 19794
+        },
+        "src/app/pointer.js": {
+          "bytesInOutput": 1871
+        },
+        "src/utils/crowdCopy.js": {
+          "bytesInOutput": 647
+        },
+        "src/app/crowds.js": {
+          "bytesInOutput": 43627
+        },
+        "src/app/crowdWaiting.js": {
+          "bytesInOutput": 5680
+        },
+        "src/app/network.js": {
+          "bytesInOutput": 22120
+        },
+        "src/controllers/SceneOutlineController.js": {
+          "bytesInOutput": 46621
+        },
+        "src/app/sceneOutline.js": {
+          "bytesInOutput": 30707
+        },
+        "src/app/helpDialog.js": {
+          "bytesInOutput": 1387
+        },
+        "src/app/startup.js": {
+          "bytesInOutput": 173
+        },
+        "src/app/projectReset.js": {
+          "bytesInOutput": 2368
+        },
+        "src/utils/announcementQueue.js": {
+          "bytesInOutput": 1089
+        },
+        "src/main.js": {
+          "bytesInOutput": 28964
+        }
+      },
+      "bytes": 1294489
+    }
+  }
+}

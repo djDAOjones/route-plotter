@@ -1,0 +1,4517 @@
+/* Route Plotter v3 — Main Styles (UoN Carbon Design System)
+   Requires: tokens.css to be loaded first
+   AAA-first: Black text on white, strong borders, visible focus
+*/
+
+/* Reset */
+*,*::before,*::after{box-sizing:border-box;}
+*{margin:0;padding:0;}
+
+html,body{
+  height:100%;
+}
+
+body{
+  font-family:var(--font-sans);
+  font-size:var(--type-body);
+  line-height:var(--lh-body);
+  color:var(--text-01);
+  background:var(--ui-background);
+  overflow:hidden;
+  /* UoN-blue accent for every native control (slider, checkbox, radio) so none
+     fall back to the UA-default/black. Text colour is unaffected. */
+  accent-color:var(--control-accent);
+}
+
+/* Screen reader only utility */
+.sr-only{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+
+/* Skip link */
+.skip-link{
+  position:absolute;
+  left:var(--space-4);
+  top:var(--space-2);
+  transform:translateY(-200%);
+  background:var(--interactive-01);
+  color:var(--text-04);
+  /* Full 44px target: it was 37px tall, and a skip link is the first thing a
+     keyboard or switch user reaches (REV-05). */
+  display:flex;
+  align-items:center;
+  min-height:var(--control-lg);
+  padding:var(--space-2) var(--space-3);
+  border-radius:var(--radius-2);
+  text-decoration:none;
+  z-index:10001;
+  transition:transform var(--motion-fast) var(--ease-out);
+}
+
+.skip-link:focus,
+.skip-link:focus-visible{
+  transform:translateY(0);
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.skip-link-outline{
+  left:var(--space-4);
+}
+
+/* Links: always underlined */
+a{
+  color:var(--link-01);
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+a:visited{color:var(--link-visited);}
+
+/* Universal focus style: robust two-layer ring */
+:where(a,button,[role="button"],input,select,textarea,[tabindex]:not([tabindex="-1"])):focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+/* Ensure minimum touch target size */
+button,
+input[type="color"],
+select{
+  min-height:var(--control-lg);
+}
+
+/* App Container - CSS Grid for proper viewport fill
+   Row 1: Header (fixed height)
+   Row 2: The banner slot (UI-06 J-12): 0 px empty, one line while a mode shows
+   Row 3: Main content (fills remaining space)
+   Row 4: Timeline/controls (auto height)
+   Sidebar widths use clamp() for responsive sizing (relative units)
+*/
+#app {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto; /* header row auto-sizes to content+padding */
+  grid-template-columns: var(--sidebar-left) 1fr var(--sidebar-right);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Header - spans all columns, per spec §3.1 */
+.header{
+  grid-row: 1;
+  grid-column: 1 / -1;
+  background:var(--ui-01);
+  padding:1rem 0.75rem 1rem 1rem; /* generous vertical breathing room */
+  display:flex;
+  align-items:center;
+  gap:var(--topbar-gap);
+  /* Removed border-bottom per user request */
+}
+
+/* UI-06 J-12: the one banner slot, a row of its own below the header, so a
+   mode's banner or the first-start tip never covers the header's controls
+   (wish-list 22's ModeBanner). Empty, it takes no room; showing, one line of
+   3 rem, two at a width that wraps it, and the canvas area below gives up
+   that height. Its height eases over 150 ms, not under reduced motion. The
+   surface is each banner's own (.mode-banner-item); the slot paints none. */
+#mode-banner{
+  grid-row:2;
+  grid-column:1 / -1;
+  min-height:0;
+  max-height:0;
+  padding:0;
+  border:0;
+  overflow:hidden;
+  transition:min-height 150ms var(--ease-out), max-height 150ms var(--ease-out);
+}
+
+#mode-banner.is-showing{
+  min-height:3rem;
+  max-height:6rem;
+}
+
+@media (prefers-reduced-motion:reduce){
+  #mode-banner{
+    transition:none;
+  }
+}
+
+/* A banner: its words, then its actions (44 px buttons). White on UoN blue
+   is 11.7:1; the network's keeps the crowd scope's green (≥ 10:1).
+   The banner takes its owner's scope colour, as the scope chip does: the
+   route's modes and the tip UoN blue, network editing the crowd's green
+   (the owner, 2026-10-12). */
+.mode-banner-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-4);
+  box-sizing:border-box;
+  min-height:3rem;
+  padding:0 var(--space-4);
+  background:var(--interactive-01);
+  color:var(--text-04);
+  font-size:var(--type-body);
+  line-height:var(--lh-body);
+}
+
+#network-edit-banner{
+  background:var(--scope-crowd-fg);
+}
+
+.mode-banner-item .banner-text{
+  flex:1 1 auto;
+  min-width:0;
+}
+
+.mode-banner-item .banner-count{
+  margin-left:var(--space-1);
+}
+
+/* A key named in a banner: drawn in the banner's own colours, outlined. */
+.mode-banner-item kbd{
+  color:inherit;
+  background:transparent;
+  border-color:currentColor;
+  box-shadow:none;
+}
+
+.mode-banner-action{
+  flex:none;
+  min-height:var(--touch-target-min);
+  min-width:var(--touch-target-min);
+  padding:0 var(--space-3);
+  background:transparent;
+  color:inherit;
+  border:1px solid currentColor;
+  border-radius:var(--radius-1);
+  font:inherit;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.mode-banner-action:hover{
+  box-shadow:inset 0 0 0 1px currentColor;
+}
+
+/* Focused, under the pointer too: a 4 px ring inside the button, in its
+   words' colour (white on the banner, 11.7:1 and ≥ 10:1). Inside, because
+   the slot clips what is drawn outside its 3 rem, so the page's two-layer
+   ring would be cut. 4 px, so the pixels it changes from hover's 1 px, as
+   from no ring, are at least a 2 px perimeter's area at any size the button
+   takes (WCAG 2.4.12, 2.4.13; Codex r1 on 7a74755, 6; Codex r2 on 753f93f,
+   5). */
+.mode-banner-action:focus-visible,
+.mode-banner-action:hover:focus-visible{
+  outline:none;
+  box-shadow:inset 0 0 0 4px currentColor;
+}
+
+.header-title{
+  font-size:var(--type-h1);
+  line-height:var(--lh-h1);
+  font-weight:var(--w-h1);
+  margin:0;
+  color:var(--text-01);
+}
+
+/* UI-06 B-17: the save state as text beside the title, at the caption size
+   in --text-02 (10.4:1 on --ui-01); the "●" is its decorative mark, at the
+   title's size so the header keeps its height. */
+.title-indicator{
+  font-size:var(--type-h1);
+  line-height:var(--lh-h1);
+  color:var(--text-02);
+  margin-left:calc(-1 * var(--space-2));
+}
+
+.header-status{
+  margin:0;
+  font-size:var(--type-caption);
+  line-height:var(--lh-caption);
+  color:var(--text-02);
+  white-space:nowrap;
+}
+
+.header-controls{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  margin-left:auto;
+}
+
+/* Header control groups - HDR-01: spacing as separators, not rules */
+.header-group{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+}
+.header-group + .header-group{
+  margin-left:1.5rem; /* 24px gap between groups - HDR-01 */
+}
+
+
+/* Danger button styling - neutral by default, red on hover (per spec) */
+.btn-danger{
+  border-color:var(--border-strong);
+  color:var(--text-01);
+}
+.btn-danger:hover{
+  background:var(--support-error-bg);
+  border-color:var(--support-error);
+  color:var(--text-error); /* 7.8:1 on the tint; --support-error was 4.6:1 (B-09) */
+}
+.btn-danger:active{
+  background:var(--uon-jubilee-red-05);
+  transform:translateY(1px);
+}
+
+/* HDR-05: Segmented Control (Edit/Preview) */
+.segmented-control{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  background:var(--ui-02);
+  border:1px solid var(--border-interactive); /* interactive control — 3:1 boundary (WCAG 1.4.11) */
+  border-radius:var(--radius-2);
+  padding:0.125rem;
+  height:var(--control-h); /* 36px per spec */
+}
+
+.segment{
+  position:relative;
+  padding:0 0.75rem;
+  height:calc(var(--control-h) - 0.375rem); /* ~60% of outer, accounting for padding */
+  min-width:3.5rem;
+  font-size:var(--control-font);
+  font-weight:400;
+  color:var(--text-02);
+  background:transparent;
+  border:none;
+  border-radius:calc(var(--radius-2) - 0.0625rem);
+  cursor:pointer;
+  transition:color var(--motion-fast) var(--ease-out),
+             background var(--motion-fast) var(--ease-out),
+             font-weight var(--motion-fast) var(--ease-out);
+  user-select:none;
+}
+
+.segment:hover:not(.active){
+  color:var(--text-01);
+  background:var(--hover-ui);
+}
+
+.segment.active{
+  color:var(--text-04); /* white inverse on navy fill — 11.7:1 (was undefined --text-on-color → near-black, ~1.3:1) */
+  font-weight:600;
+  background:var(--control-accent);
+  box-shadow:var(--elev-1);
+}
+
+.segment:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+  z-index:1;
+}
+
+/* Legacy mode-switch support (for camera zoom toggle) */
+.mode-switch{
+  display:flex;
+  align-items:center;
+  gap:0.125rem;
+  background:var(--ui-02);
+  border:1px solid var(--border-interactive); /* interactive control — 3:1 boundary (WCAG 1.4.11) */
+  border-radius:999px;
+  padding:0.25rem 0.375rem;
+  min-height:var(--control-lg);
+}
+
+.mode-label{
+  font-size:var(--control-font);
+  font-weight:500;
+  /* --text-03 is exactly 7:1 on white, but this label sits on the toggle's
+     own --ui-02 surface, where it fell to 6.37:1 — under AAA for text this
+     size (REV-05). --text-02 clears 10:1 on both. */
+  color:var(--text-02);
+  padding:0.25rem 0.5rem;
+  border-radius:999px;
+  transition:color var(--motion-fast) var(--ease-out),
+             background var(--motion-fast) var(--ease-out);
+  user-select:none;
+}
+
+.mode-label.active{
+  /* No weight bump: 600 would widen the label and reflow the header on every Edit/Preview toggle (decision-log 2026-06-17) */
+  color:var(--text-01);
+  background:var(--ui-00);
+  box-shadow:var(--elev-1);
+}
+
+/* Mode toggle (switch style) - for camera zoom etc */
+.mode-toggle{
+  position:relative;
+  width:2.75rem;
+  height:2.75rem;
+  min-width:2.75rem;
+  min-height:2.75rem;
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  padding:0;
+  box-sizing:border-box;
+}
+
+.mode-toggle::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:50%;
+  width:2.75rem;
+  height:1.5rem;
+  transform:translateY(-50%);
+  background:var(--ui-03);
+  border:1px solid var(--border-interactive); /* B1: visible 3:1 boundary for the OFF state (WCAG 1.4.11) */
+  border-radius:999rem;
+  transition:background var(--motion-fast) var(--ease-out);
+}
+
+.mode-toggle:hover::before{
+  background:var(--hover-ui);
+}
+
+.mode-toggle:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.mode-toggle[aria-checked="true"]::before{
+  background:var(--control-accent);
+  border-color:transparent; /* navy fill is 11.7:1 on white — boundary not needed when ON */
+}
+
+.mode-toggle[aria-checked="true"]:hover::before{
+  background:var(--control-accent-hover);
+}
+
+.mode-toggle-thumb{
+  position:absolute;
+  top:50%;
+  left:0.125rem;
+  width:1.125rem;
+  height:1.125rem;
+  transform:translateY(-50%);
+  background:var(--ui-00);
+  border-radius:50%;
+  box-shadow:var(--elev-1);
+  transition:transform var(--motion-fast) var(--ease-out);
+  pointer-events:none;
+}
+
+.mode-toggle[aria-checked="true"] .mode-toggle-thumb{
+  transform:translate(1.25rem,-50%);
+}
+
+/* Toast notification — auto-dismisses. Bottom-centre of the canvas area,
+   never over the header (UI-06 J-12): it stands on the transport, the
+   container's containing block, so it covers none of the transport's
+   controls at any height the transport takes; under .modal's 999, so a
+   dialog's backdrop covers it. */
+.toast-container{
+  /* How far above the viewport's bottom the toasts stand where the
+     transport scrolls with the page, measured by the app (≤ 64 rem, below) */
+  --toast-lift:0px;
+  /* The stack's cap there, where neither the room above the transport's
+     controls nor the room below them takes it (the app's; none otherwise) */
+  --toast-room:none;
+  position:absolute;
+  left:var(--space-3);
+  right:var(--space-3);
+  bottom:calc(100% + var(--space-2));
+  z-index:20;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:var(--space-2);
+  pointer-events:none;
+}
+
+.toast{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  padding:var(--space-2) var(--space-4);
+  background:var(--ui-05, #161616);
+  color:var(--text-04, #fff);
+  border-radius:var(--radius-2);
+  font-size:var(--type-caption);
+  box-shadow:var(--elev-3, 0 4px 16px rgba(0,0,0,0.25));
+  pointer-events:auto;
+  opacity:0;
+  transform:translateY(0.5rem);
+  transition:opacity var(--motion-med) var(--ease-out),
+             transform var(--motion-med) var(--ease-out);
+}
+
+.toast.is-visible{
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* LABEL-01: a toast may carry one offer. It is a real control on a dark
+   surface, so it takes the full 44px target and states its own affordance —
+   white on --ui-05 is ~21:1, well clear of AAA. */
+.toast-action{
+  flex-shrink:0;
+  min-height:var(--control-lg);
+  padding:0 var(--space-3);
+  background:transparent;
+  color:inherit;
+  border:1px solid currentColor;
+  border-radius:var(--radius-1);
+  font-size:var(--type-caption);
+  font-weight:600;
+  cursor:pointer;
+}
+
+.toast-action:hover{
+  background:rgba(255,255,255,0.12);
+}
+
+/* UI-06 B-20: a 44 × 44 ghost icon button (WCAG 2.5.5), as .modal-close-x is;
+   the glyph sits in its middle and the toast's own padding is pulled in so
+   the toast grows no taller than its text and offer need. */
+.toast-dismiss{
+  flex-shrink:0;
+  width:var(--touch-target-min);
+  height:var(--touch-target-min);
+  margin:calc(-1 * var(--space-2)) calc(-1 * var(--space-3)) calc(-1 * var(--space-2)) 0;
+  padding:0;
+  background:transparent;
+  border:none;
+  border-radius:var(--radius-1);
+  cursor:pointer;
+  font-size:1.25rem;
+  line-height:1;
+  color:inherit;
+  opacity:0.7;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.toast-dismiss:hover{
+  opacity:1;
+}
+
+/* DEF-28: a session that could not be restored is offered here until the
+   author discards it (a Carbon inline notification, warning kind). */
+.unrestored-notice{
+  margin:var(--space-2) var(--space-3) 0;
+  padding:var(--space-2) var(--space-3);
+  background:var(--support-warning-bg);
+  border-left:3px solid var(--support-warning-strong);
+  color:var(--text-01);
+  font-size:var(--type-caption);
+}
+
+.unrestored-notice[hidden]{
+  display:none;
+}
+
+.unrestored-notice p{
+  margin:0 0 var(--space-2);
+}
+
+.unrestored-notice-title{
+  font-weight:600;
+}
+
+.unrestored-notice-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:var(--space-2);
+}
+
+/* NEW-03: Keyboard shortcut chip styling */
+kbd{
+  display:inline-block;
+  padding:0.125rem 0.375rem;
+  font-family:var(--font-mono);
+  font-size:0.75rem;
+  font-weight:500;
+  color:var(--text-02);
+  background:var(--ui-02);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  box-shadow:0 1px 0 var(--border-subtle);
+  white-space:nowrap;
+}
+
+/* Export Warning Tooltip */
+.export-warning{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--support-warning);
+  color:var(--text-01);
+  padding:var(--space-2) var(--space-3);
+  border-radius:var(--radius-2);
+  font-size:var(--type-caption);
+  font-weight:500;
+  white-space:nowrap;
+  box-shadow:var(--elev-2);
+  z-index:1000;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity var(--motion-fast) var(--ease-out),
+             visibility var(--motion-fast) var(--ease-out);
+  pointer-events:none;
+}
+
+.export-warning.visible{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+}
+
+.export-warning-arrow{
+  position:absolute;
+  top:-6px;
+  left:50%;
+  transform:translateX(-50%);
+  width:0;
+  height:0;
+  border-left:6px solid transparent;
+  border-right:6px solid transparent;
+  border-bottom:6px solid var(--support-warning);
+}
+
+/* Highlight the mode switch when warning is shown */
+.mode-switch.highlight-warning{
+  box-shadow:0 0 0 3px var(--support-warning-bg);
+}
+
+/* Beacon sub-controls */
+.beacon-sub-controls{
+  margin:var(--space-2) 0 var(--space-3) 0;
+  padding:var(--space-3);
+  background:var(--ui-01);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+  border-left:3px solid var(--interactive-01);
+}
+
+.beacon-sub-controls label{
+  margin-bottom:var(--space-2);
+}
+
+.beacon-sub-controls label:last-child{
+  margin-bottom:0;
+}
+
+.beacon-sub-controls .checkbox-label{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  cursor:pointer;
+  margin-top:var(--space-2);
+}
+
+/* Native group forms share the existing checkbox and productive field patterns. */
+.crowd-group-form{
+  display:grid;
+  gap:var(--space-2);
+  min-width:0;
+}
+.crowd-group-form[hidden]{ display:none; }
+.crowd-group-toggle{
+  min-height:var(--touch-target-min);
+}
+.crowd-group-form input[type="number"]{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+
+.beacon-sub-controls .checkbox-label input[type="checkbox"],
+.crowd-group-toggle input[type="checkbox"]{
+  width:16px;
+  height:16px;
+  cursor:pointer;
+  accent-color:var(--control-accent);
+}
+
+/* Labelled sub-group inside a card (e.g. Camera zoom in On arrival) */
+.sub-controls-group{
+  margin-top:var(--space-3);
+  padding-top:var(--space-3);
+  border-top:1px solid var(--border-subtle);
+}
+
+.sub-controls-label{
+  display:block;
+  font-size:var(--type-caption);
+  color:var(--text-02);
+  font-weight:500;
+  margin-bottom:var(--space-1);
+}
+
+/* Main Content - spans all columns in row 3, below the banner slot, contains sidebars + canvas */
+.main{
+  grid-row: 3;
+  grid-column: 1 / -1;
+  display:grid;
+  grid-template-columns: var(--sidebar-left) 1fr var(--sidebar-right);
+  position:relative;
+  background:var(--ui-background);
+  overflow:hidden;
+  min-height:0;
+}
+
+/* Left Sidebar (Settings) - scrolls internally, no horizontal scroll per spec §4.1 */
+.sidebar{
+  grid-column: 1;
+  background:var(--ui-01);
+  overflow-y:auto;
+  overflow-x:hidden;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  /* Prevent content from causing horizontal overflow */
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+/* Ensure all sidebar children respect container width */
+.sidebar *{
+  max-width:100%;
+  box-sizing:border-box;
+}
+
+/* Sidebar Header - per spec §4.3 use spacing not lines */
+.sidebar-header{
+  padding:0.75rem 1rem; /* 12px 16px */
+  background:var(--ui-01);
+  flex-shrink:0;
+}
+
+.sidebar-header h2{
+  font-size:var(--type-h2);
+  line-height:var(--lh-h2);
+  font-weight:var(--w-h2);
+  color:var(--text-01);
+  margin:0;
+}
+
+/* Compact sidebar header (subtitle only, no h2) */
+.sidebar-header-compact{
+  padding:var(--space-2) var(--space-3);
+  min-height:0;
+}
+
+/* Scope chip: names what the inspector edits — "Editing · Waypoint 2" /
+   "Editing · Route" — with prev/next stepping (Phase 4 one-inspector).
+   Colour distinguishes scopes but the text always carries the meaning. */
+.scope-chip{
+  display:flex;
+  align-items:center;
+  gap:var(--space-1);
+  min-height:2.75rem; /* 44px WCAG AAA target row */
+  border-radius:var(--radius-2);
+  padding:0 var(--space-1);
+  background:var(--scope-route-bg);
+  color:var(--scope-route-fg);
+}
+
+.scope-chip[data-scope="waypoint"],
+.scope-chip[data-scope="multi"],
+.scope-chip[data-scope="all"]{
+  background:var(--scope-waypoint-bg);
+  color:var(--scope-waypoint-fg);
+}
+
+.scope-chip[data-scope="crowd"]{
+  background:var(--scope-crowd-bg);
+  color:var(--scope-crowd-fg);
+}
+
+.scope-chip-text{
+  flex:1;
+  text-align:center;
+  font-size:var(--type-caption);
+  line-height:var(--lh-caption);
+  font-weight:600;
+  overflow-wrap:anywhere;
+}
+
+.scope-route-btn{
+  flex:none;
+  min-width:3.5rem;
+  min-height:2.75rem;
+  padding:0 var(--space-2);
+  border:1px solid currentColor;
+  border-radius:var(--radius-2);
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.scope-route-btn:hover:not([aria-current="true"]){
+  background:rgba(0,0,0,0.06);
+}
+
+/* UI-06 J-08, W-01: in Route scope the button is the current scope — filled
+   in the chip's own pair (the same contrast, inverted), never disabled. From
+   every other scope it is the way back to Route. */
+.scope-route-btn[aria-current="true"]{
+  background:var(--scope-route-fg);
+  border-color:var(--scope-route-fg);
+  color:var(--scope-route-bg);
+  cursor:default;
+}
+
+.scope-nav-btn{
+  flex:none;
+  min-width:2.75rem;
+  min-height:2.75rem;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:transparent;
+  border:none;
+  border-radius:var(--radius-2);
+  color:inherit;
+  cursor:pointer;
+  padding:0;
+}
+
+.scope-nav-btn:hover:not(:disabled){
+  background:rgba(0,0,0,0.06);
+}
+
+.scope-nav-btn:disabled{
+  opacity:0.35;
+  cursor:not-allowed;
+}
+
+/* Inner sidebar header (for Global Settings) - spacing instead of border per spec §4.3 */
+.sidebar-header-inner{
+  margin-top:0.5rem;
+  padding-top:0.75rem;
+}
+
+/* Sidebar Tabs */
+.sidebar-tabs{
+  display:flex;
+  background:var(--ui-02);
+  border-bottom:1px solid var(--border-subtle);
+  flex-shrink:0;
+  height:var(--control-md);
+}
+
+.tab-btn{
+  flex:1;
+  padding:0;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  cursor:pointer;
+  font-size:var(--type-body);
+  line-height:calc(var(--control-md) - 2px);
+  font-weight:500;
+  color:var(--text-02);
+  transition:all var(--motion-fast) var(--ease-out);
+}
+
+.tab-btn:hover{
+  background:var(--hover-ui);
+  color:var(--text-01);
+}
+
+.tab-btn.active{
+  background:var(--ui-01);
+  color:var(--text-01);
+  border-bottom-color:var(--interactive-01);
+}
+
+/* Tab Content */
+.tab-content{
+  display:none;
+  padding:var(--space-4);
+  overflow-y:auto;
+  overflow-x:hidden;
+  flex:1;
+}
+
+.tab-content.active{
+  display:flex;
+  flex-direction:column;
+}
+
+/* Right Sidebar (Waypoints) - scrolls internally, no horizontal scroll per spec §4.1 */
+.sidebar-right{
+  grid-column: 3;
+  background:var(--ui-01);
+  overflow-y:auto;
+  overflow-x:hidden;
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  /* Prevent content from causing horizontal overflow */
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+/* Duration block at top of right sidebar per spec §10.1 */
+/* (.duration-block removed — Duration/Scale/Path emphasis now live in the
+   left inspector's Route scope: Pacing + Path emphasis cards, Phase 4) */
+
+/* ── Parameter Tooltip (Carbon Toggletip pattern) ──────────────────────
+   Each hint has a "?" button of its own (UI-04, ParamTooltip.js); the
+   label's text is plain label text again, so a click on it reaches its
+   control (DEF-14). The shared .param-tooltip element is positioned by JS
+   to avoid sidebar overflow clipping.
+   Colors hardcoded (#161616 bg, #fff text) for guaranteed WCAG AAA 7:1+
+   contrast regardless of which CSS variable theme is active. */
+
+/* A wired hint's label text holds a 44px slot after itself for its trigger
+   (WCAG 2.5.5), and is at least as tall, so the trigger overlaps no
+   neighbouring row or control. The trigger is a sibling of the label, not a
+   child (a button inside a label is invalid and joins the control's name),
+   so CSS anchor positioning draws it in that slot: the anchor's name is set
+   inline by ParamTooltip.js, one per hint. Only a label's or a legend's hint
+   gets a trigger: a button's own hint (UI-06) draws none, and takes no slot.
+   `:where()` keeps the selector's specificity as it was. */
+[data-tip-desc]:where(label, label *, legend *){
+  display:flex;
+  align-items:center;
+  min-height:var(--touch-target-min);
+  margin-inline-end:var(--touch-target-min);
+}
+/* The trigger's containing block: the label's own container, inside the
+   sidebar's scroller and its sections' clip, so it scrolls and folds away
+   with its row. */
+:has(> .param-hint-trigger){
+  position:relative;
+}
+/* Carbon's ghost icon-only button: the whole 44px square is the target, the
+   "?" glyph sits in its middle. Focus takes the universal ring. */
+.param-hint-trigger{
+  position:absolute;
+  left:anchor(right);
+  top:calc(anchor(center) - var(--touch-target-min) / 2);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  width:var(--touch-target-min);
+  min-width:var(--touch-target-min);
+  height:var(--touch-target-min);
+  min-height:var(--touch-target-min);
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:var(--radius-1);
+  background:transparent;
+  color:var(--text-01);
+  cursor:pointer;
+}
+.param-hint-trigger[hidden]{
+  display:none;
+}
+.param-hint-trigger:hover{
+  background:var(--hover-ui);
+}
+.param-hint-trigger:active{
+  background:var(--active-ui);
+}
+.param-hint-glyph{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  width:1.25rem;
+  height:1.25rem;
+  border:1px solid var(--border-strongest);
+  border-radius:50%;
+  font-family:var(--font-sans);
+  font-size:var(--type-caption);
+  font-weight:600;
+  line-height:1;
+}
+/* Its hint is showing: the glyph fills, so the state is not colour alone. */
+.param-hint-trigger[aria-expanded="true"] .param-hint-glyph{
+  border-color:var(--text-02);
+  background:var(--text-02);
+  color:var(--text-04);
+}
+/* Forced colours drop the fill; the system's highlight pair carries it. */
+@media (forced-colors: active){
+  .param-hint-trigger[aria-expanded="true"] .param-hint-glyph{
+    border-color:Highlight;
+    background:Highlight;
+    color:HighlightText;
+  }
+}
+.param-tooltip{
+  display:none;
+  position:absolute;
+  z-index:10000;
+  max-width:260px;
+  padding:0.5rem 0.75rem;
+  background:#161616;
+  color:#ffffff;
+  border-radius:0.25rem;
+  font-size:var(--type-body); /* 14 px, Carbon's tooltip body (UI-06 W-05) */
+  line-height:1.45;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+  pointer-events:none; /* click-through so outside-click dismiss works */
+}
+/* A hint opened by hover takes the pointer, so the pointer can move onto it
+   and read it without it closing (WCAG 1.4.13 Hoverable). */
+.param-tooltip.is-hover-open{
+  pointer-events:auto;
+}
+
+/* Ensure all right sidebar children respect container width */
+.sidebar-right *{
+  max-width:100%;
+  box-sizing:border-box;
+}
+
+/* Tab content panels in left sidebar */
+.sidebar > .tab-content{
+  padding:var(--space-4);
+  flex:1;
+  overflow-x:hidden;
+  word-wrap:break-word;
+}
+
+/* Waypoint editor placeholder */
+.waypoint-editor-placeholder{
+  padding:var(--space-4);
+  color:var(--text-01);
+  line-height:var(--lh-body);
+}
+
+.waypoint-editor-placeholder h4{
+  font-size:var(--type-body);
+  font-weight:600;
+  color:var(--text-01);
+  margin:var(--space-4) 0 var(--space-2) 0;
+}
+
+.waypoint-editor-placeholder h4:first-child{
+  margin-top:0;
+}
+
+.waypoint-editor-placeholder ul{
+  margin:0;
+  padding-left:var(--space-5);
+}
+
+.waypoint-editor-placeholder li{
+  margin-bottom:var(--space-1);
+  font-size:var(--type-body);
+  color:var(--text-02);
+}
+
+/* ============================================================================
+   COLLAPSIBLE SECTIONS
+   ============================================================================ */
+
+.settings-section{
+  margin-bottom:var(--space-3); /* Spacing provides separation, not borders */
+  border-radius:var(--radius);
+  overflow:hidden;
+  border:none;                  /* Remove passive container border */
+  background:var(--ui-02);      /* Subtle background instead of border */
+}
+
+/* Card flash: directs the eye after a canvas gesture lands here
+   (e.g. clicking a route leg flashes the Leg card that owns it) */
+.settings-section.section-flash{
+  animation:section-flash 1.2s ease-out;
+}
+
+@keyframes section-flash{
+  0%,100%{ box-shadow:none; }
+  15%,60%{ box-shadow:0 0 0 2px var(--interactive-01); }
+  40%{ box-shadow:0 0 0 1px transparent; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .settings-section.section-flash{
+    /* One steady highlight, no pulsing; the animation still ends so
+       animationend fires and the class is cleaned up */
+    animation:section-flash-static 1.2s step-end;
+  }
+  @keyframes section-flash-static{
+    0%{ box-shadow:0 0 0 2px var(--interactive-01); }
+    100%{ box-shadow:none; }
+  }
+}
+
+/* Section header "cap" band - per spec v3.1.241 §5.1. The header is a native
+   button inside the card's heading (UI-06 B-21, the Carbon accordion):
+   Enter and Space are the browser's, and the heading keeps its rank. */
+.section-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  min-height:var(--touch-target-min);
+  margin:0;
+  padding:0.5rem 0.75rem; /* 8px 12px per spec */
+  border:none;
+  border-radius:0;
+  background:var(--cap-system); /* default cap color */
+  color:inherit;
+  font:inherit;
+  letter-spacing:inherit;
+  text-align:left;
+  cursor:pointer;
+  user-select:none;
+  -webkit-appearance:none;
+  appearance:none;
+  transition:background var(--motion-fast) var(--ease-out);
+}
+
+.section-header:hover{
+  filter:brightness(0.97);
+}
+
+/* Focus state for section headers - AAA compliant ring per spec §C. The ring
+   is drawn inside the header's own box (UI-06 B-02): the card clips its
+   children to its rounded corners, which took an outer ring with it, and a
+   collapsed card is nothing but its header. */
+.section-header:focus-visible{
+  outline:none;
+  box-shadow:
+    inset 0 0 0 2px var(--focus-inner),
+    inset 0 0 0 5px var(--focus-outer);
+  z-index:1; /* Ensure focus ring is above adjacent elements */
+}
+
+.settings-section.expanded .section-header{
+  box-shadow:inset 4px 0 0 0 var(--interactive-01);
+}
+
+/* Expanded + focused: combine both indicators. The ring's layers come
+   first, so they are painted on top; the accent, listed last, reaches 9px
+   in and shows its 4px past the ring's 5px (UI-06 low item c: listed first,
+   it covered 4px of the ring's left side). */
+.settings-section.expanded .section-header:focus-visible{
+  box-shadow:
+    inset 0 0 0 2px var(--focus-inner),
+    inset 0 0 0 5px var(--focus-outer),
+    inset 9px 0 0 0 var(--interactive-01);
+}
+
+/* Section title - text always #0F0F0F per spec §0. The heading wraps the
+   header button, which inherits its type. */
+.section-title{
+  font-size:var(--type-label);
+  line-height:var(--lh-label);
+  font-weight:var(--w-label);
+  letter-spacing:var(--ls-label);
+  color:var(--text-01);
+  margin:0;
+}
+
+.section-chevron{
+  color:var(--icon-02);
+  transition:transform var(--motion-med) var(--ease-out);
+}
+
+.settings-section.expanded .section-chevron{
+  transform:rotate(90deg);
+}
+
+/* Section content - flat tint per spec v3.1.256 §G (no inner white card)
+   PAN-04: Removed inner border - outer .settings-section border is sufficient */
+.section-content{
+  display:none;
+  padding:var(--section-pad);    /* 0.75rem per spec §B */
+  background:var(--tint-system); /* default tint */
+  border:none;                   /* PAN-04: no nested frames */
+  border-radius:0;               /* PAN-04: clipped by parent overflow:hidden */
+  margin:0;
+}
+
+.settings-section.expanded .section-content{
+  display:block;
+}
+
+/* Carbon-style progressive disclosure inside complex inspector cards. Native
+   details/summary keeps keyboard and assistive-technology state semantics; the
+   project styling supplies a full-size productive target and visible focus. */
+.section-more{
+  margin-top:var(--space-2);
+  border-top:1px solid var(--border-interactive);
+}
+
+.section-more > summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  min-height:var(--touch-target-min);
+  padding:0 var(--space-1);
+  color:var(--text-01);
+  font-size:var(--type-body);
+  font-weight:600;
+  cursor:pointer;
+  list-style:none;
+}
+
+.section-more > summary::-webkit-details-marker{
+  display:none;
+}
+
+.section-more > summary::after{
+  content:"";
+  width:0.5rem;
+  height:0.5rem;
+  margin-right:var(--space-1);
+  border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;
+  transform:rotate(45deg);
+  transition:transform var(--motion-med) var(--ease-out);
+}
+
+.section-more[open] > summary::after{
+  transform:rotate(225deg);
+}
+
+.section-more > summary:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 2px var(--focus-inner), 0 0 0 5px var(--focus-outer);
+}
+
+.section-more-content{
+  padding-top:var(--space-2);
+}
+
+.waypoint-card-actions{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:var(--space-2);
+  margin-top:var(--space-2);
+  padding-top:var(--space-2);
+  border-top:1px solid var(--border-interactive);
+}
+
+.waypoint-card-actions .btn{
+  min-width:0;
+  min-height:var(--touch-target-min);
+  padding-inline:var(--space-2);
+}
+
+.crowd-pattern-controls{
+  display:grid;
+  gap:var(--space-2);
+  margin-top:var(--space-2);
+  padding-top:var(--space-2);
+  border-top:1px solid var(--border-interactive);
+}
+
+.crowd-seed-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-2);
+  min-height:var(--touch-target-min);
+}
+
+/* CROWD-07 F18: the Pattern seed's label is a <label>, holding only its hint
+   span, so the span is both the label's first child and its last: it reads
+   as the card's other labels do (span:first-child), not as a value
+   (span:last-child), and the row keeps its own spacing. */
+.section-content #crowd-seed-label{
+  margin-bottom:0;
+}
+.section-content #crowd-seed-label span:last-child{
+  min-width:0;
+  text-align:left;
+  font-family:inherit;
+  font-size:var(--type-caption);
+  font-weight:500;
+}
+
+/* CROWD-07 F16: the seed is a field, wide enough for its largest, 4294967295 */
+#crowd-seed-value{
+  width:9rem;
+  box-sizing:border-box;
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+}
+
+#crowd-reroll-btn{
+  width:100%;
+  min-height:var(--touch-target-min);
+}
+
+.crowd-busyness-editor{
+  display:grid;
+  gap:var(--space-2);
+  margin-top:var(--space-3);
+  padding-top:var(--space-3);
+  border-top:1px solid var(--border-interactive);
+}
+
+.crowd-busyness-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--space-2);
+  font-size:var(--type-body);
+  font-weight:600;
+}
+
+#crowd-busyness-summary{
+  color:var(--text-02);
+  font-size:var(--type-caption);
+  font-weight:400;
+}
+
+.crowd-busyness-graph{
+  display:block;
+  width:100%;
+  min-height:8.75rem;
+  border:1px solid var(--border-interactive);
+  border-radius:var(--radius-1);
+  background:var(--ui-01);
+  touch-action:none;
+}
+
+.crowd-busyness-axis{
+  fill:none;
+  stroke:var(--border-strong);
+  stroke-width:1.5;
+}
+
+.crowd-busyness-line{
+  fill:none;
+  stroke:var(--interactive-01);
+  stroke-width:4;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.crowd-busyness-handle{
+  fill:var(--ui-01);
+  stroke:var(--interactive-01);
+  stroke-width:4;
+  cursor:grab;
+  pointer-events:none;
+}
+
+.crowd-busyness-handle-target{
+  fill:transparent;
+  stroke:transparent;
+  cursor:grab;
+}
+
+.crowd-busyness-handle-target:active{
+  cursor:grabbing;
+}
+
+.crowd-busyness-handles{
+  display:grid;
+  gap:var(--space-2);
+}
+
+.crowd-busyness-handle-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--space-2);
+  padding:var(--space-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  background:var(--ui-01);
+}
+
+.crowd-busyness-handle-title{
+  grid-column:1 / -1;
+  color:var(--text-01);
+  font-size:var(--type-caption);
+  font-weight:600;
+}
+
+.section-content .crowd-busyness-handle-row label{
+  display:grid;
+  grid-template-columns:1fr auto;
+  margin:0;
+  gap:var(--space-1);
+  color:var(--text-02);
+  font-size:var(--type-caption);
+}
+
+.crowd-busyness-handle-row input,
+.crowd-busyness-handle-row select{
+  grid-column:1 / -1;
+  width:100%;
+  min-width:0;
+  min-height:var(--touch-target-min);
+}
+
+.crowd-busyness-handle-row input[readonly]{
+  color:var(--text-02);
+  background:var(--ui-02);
+}
+
+.crowd-busyness-remove{
+  grid-column:1 / -1;
+  min-height:var(--touch-target-min);
+}
+
+.crowd-busyness-actions{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:var(--space-2);
+}
+
+.crowd-busyness-actions .btn{
+  min-width:0;
+  min-height:var(--touch-target-min);
+  padding-inline:var(--space-2);
+}
+
+/* Section tints and cap bands per spec v3.1.241 §5.1 */
+/* Header uses cap color (darker), content uses tint (lighter) */
+/* Waypoint-scope cards */
+.settings-section[data-section="marker"] .section-header{ background: var(--cap-marker); }
+.settings-section[data-section="marker"] .section-content{ background: var(--tint-marker); }
+.settings-section[data-section="on-arrival"] .section-header{ background: var(--cap-camera); }
+.settings-section[data-section="on-arrival"] .section-content{ background: var(--tint-camera); }
+.settings-section[data-section="label"] .section-header{ background: var(--cap-text); }
+.settings-section[data-section="label"] .section-content{ background: var(--tint-text); }
+.settings-section[data-section="leg"] .section-header{ background: var(--cap-path); }
+.settings-section[data-section="leg"] .section-content{ background: var(--tint-path); }
+/* Route-scope cards: all grey per spec v3.1.241 §5.2 */
+.settings-section[data-section="head"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="head"] .section-content{ background: var(--tint-system); }
+.settings-section[data-section="pacing"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="pacing"] .section-content{ background: var(--tint-system); }
+.settings-section[data-section="reveal"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="reveal"] .section-content{ background: var(--tint-system); }
+.settings-section[data-section="path-emphasis"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="path-emphasis"] .section-content{ background: var(--tint-system); }
+.settings-section[data-section="background"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="background"] .section-content{ background: var(--tint-system); }
+.settings-section[data-section="video"] .section-header{ background: var(--cap-system); }
+.settings-section[data-section="video"] .section-content{ background: var(--tint-system); }
+
+/* === Last-interacted section (blue tint emphasis) ===
+   Provides "where am I?" orientation without color-coding meaning.
+   Coexists with expanded accent bar. */
+.settings-section[data-last="true"]{
+  box-shadow: 0 0 0 2px var(--section-last-ring);
+}
+.settings-section[data-last="true"] .section-header{
+  background: var(--cap-last);
+}
+.settings-section[data-last="true"].expanded .section-header{
+  background: var(--cap-last-open);
+}
+.settings-section[data-last="true"] .section-title{
+  font-weight: 600;
+}
+
+/* Ensure focus rings remain visible above last-interacted styling */
+.section-header:focus-visible{
+  position: relative;
+  z-index: 2;
+}
+
+/* Empty section state - compact padding, no dead space */
+.section-content-empty{
+  padding:var(--space-3);
+}
+
+.empty-state{
+  margin:0;
+  color:var(--text-02);
+  font-style:italic;
+  font-size:var(--type-caption);
+}
+
+/* Section content controls - per spec v3.1.256 §B */
+.section-content label{
+  display:flex;
+  align-items:center;
+  margin-bottom:var(--row-gap);  /* 0.5rem per spec §B */
+  font-size:var(--type-body);
+  gap:var(--label-gap);          /* 0.25rem per spec §B */
+  min-width:0;
+}
+
+/* `display:flex` above outranks the browser's own `[hidden]` rule, so a row
+   the app hides by its label's `hidden` (the reveal trail, REVEAL-01) still
+   showed, and its hint trigger, which follows `hidden`, did not (UI-04). */
+.section-content label[hidden]{
+  display:none;
+}
+
+.section-content label span:first-child{
+  flex:0 0 6rem; /* Consistent label width per spec §I */
+  color:var(--text-02);
+  font-weight:500;
+  font-size:var(--type-caption); /* Smaller label text */
+}
+
+.section-content input[type="color"]{
+  width:60px;
+  height:35px;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  cursor:pointer;
+  padding:2px;
+}
+
+/* AAA target size (WCAG 2.5.5) for every range (UI-06 B-01, CROWD-06's
+   recipe for Hold at end made the rule): the input itself is a 44px band
+   that takes the pointer anywhere along it, while the rail and thumb look
+   as they did — the rail is drawn on the runnable track, not on the input
+   (Chromium is the app's browser). */
+.section-content input[type="range"]{
+  flex:1;
+  /* Below a range's own 129px default, so a hint's 44px trigger slot is
+     taken from the track, not from the readout beside it or past the
+     sidebar's edge (UI-04). The explicit width is what the range contributes
+     to its label's content width — `min-width` alone leaves that at the
+     129px, which at a 288px sidebar pushed the label past its row and
+     clipped the rail's end (UI-06, round 1b); `flex:1` still grows it. */
+  width:3rem;
+  min-width:3rem;
+  margin:0 var(--space-2);
+  accent-color:var(--control-accent);
+  -webkit-appearance:none;
+  appearance:none;
+  height:var(--touch-target-min);
+  background:transparent;
+  border:none;
+  border-radius:0;
+  outline:none;
+}
+
+.section-content input[type="range"]::-webkit-slider-runnable-track{
+  height:4px;
+  background:var(--ui-03);
+  border:1px solid var(--border-interactive); /* B1: 3:1 rail boundary (WCAG 1.4.11) */
+  border-radius:2px;
+}
+
+.section-content input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:14px;
+  height:14px;
+  margin-top:-5px; /* (4px rail − 14px thumb) ÷ 2: the thumb centred on the rail */
+  border-radius:50%;
+  background:var(--control-accent);
+  cursor:pointer;
+  border:none;
+  box-shadow:0 1px 3px rgba(0,0,0,0.2);
+}
+
+.section-content input[type="range"]::-moz-range-thumb{
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:var(--control-accent);
+  cursor:pointer;
+  border:none;
+  box-shadow:0 1px 3px rgba(0,0,0,0.2);
+}
+
+.section-content input[type="range"]::-moz-range-track{
+  height:4px;
+  background:var(--ui-03);
+  border:1px solid var(--border-interactive); /* B1: 3:1 rail boundary (WCAG 1.4.11) */
+  border-radius:2px;
+}
+
+.section-content input[type="range"]:focus-visible{
+  box-shadow:0 0 0 2px var(--focus-inner), 0 0 0 5px var(--focus-outer);
+}
+
+/* The thumb remains an available replacement value; the adjacent readout and
+   aria-valuetext carry the authoritative mixed-state claim. */
+.section-content input[type="range"][data-mixed="true"]{
+  opacity:.72;
+}
+
+/* UI-06 B-06: a range's readout sits beside its label, in one row, never
+   inside the label — inside, it joined the control's accessible name and
+   was read twice. The app shows or hides a whole row by the row.
+   The label is never narrower than its content (its text column, help slot
+   and the slider's 3rem minimum), so its children cannot run under the
+   readout; a readout that does not fit beside the slider — a narrow sidebar,
+   a long unit — wraps under it, at the right. */
+.section-content .range-row{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:var(--label-gap);
+  margin-bottom:var(--row-gap);
+  min-width:0;
+}
+
+.section-content .range-row[hidden]{
+  display:none;
+}
+
+.section-content .range-row > label{
+  flex:1 1 auto;
+  min-width:min-content;
+  margin-bottom:0;
+}
+
+.section-content .range-row > .range-readout{
+  flex:0 0 auto;
+  margin-inline-start:auto;
+  min-width:2.5rem; /* Consistent value width per spec §I */
+  text-align:right;
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  font-weight:var(--w-mono);
+  color:var(--text-02);
+}
+
+/* DEF-86: a number field beside each crowd slider and the Path card's Share
+   (Carbon's slider with an input). Where the field is the readout it takes
+   the readout's place, and class, and its unit follows it; Release bias and
+   Share keep a readout of another quantity after it. Like a long readout, it
+   wraps under its slider at the right in a 288px sidebar. */
+.section-content .range-row > .range-field{
+  flex:0 0 auto;
+  margin-inline-start:auto;
+}
+.section-content .range-row > .range-field + .range-readout{
+  margin-inline-start:0;
+}
+.section-content .range-field{
+  display:inline-flex;
+  align-items:center;
+  gap:var(--space-1);
+  min-width:0;
+}
+.section-content .range-field input[type="number"]{
+  width:6rem;
+  box-sizing:border-box;
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+}
+.section-content .range-field-unit{
+  color:var(--text-02);
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  font-weight:var(--w-mono);
+  white-space:nowrap;
+}
+/* Share's weight field has a label of its own, a quantity beside the share
+   it gives: as wide as its word, not the card's 6rem label column. */
+.section-content .range-field > .range-field-label{
+  margin-bottom:0;
+}
+.section-content .range-field > .range-field-label span:first-child{
+  flex:none;
+}
+/* Why a slider is off, and what is wrong with a value typed: each a line
+   of the row's own, under the slider and the field. */
+.section-content .range-row > .range-reason,
+.section-content .range-row > .range-field-error{
+  flex:1 0 100%;
+  margin:0;
+}
+.section-content .range-field-error{
+  color:var(--text-error);
+}
+.section-content input[type="number"][aria-invalid="true"],
+#network-node-area-shape[aria-invalid="true"]{
+  border-color:var(--support-01);
+  box-shadow:0 0 0 1px var(--support-01);
+}
+/* X-06: the Path card's Share takes the card's whole width on a line of its
+   own under its label, where it shared one with a long readout and was
+   48px wide for weights from 0.1 to 5. */
+.section-content .range-row-wide > label{
+  flex-wrap:wrap;
+}
+.section-content .range-row-wide > label > input[type="range"]{
+  flex:1 0 100%;
+  margin-inline:0;
+}
+
+/* CROWD-07 [Q6]: the Guide and At journey end selects take the full row on
+   a second line under their label, so "Custom network" and "Respawn at the
+   start" show whole in a 288px sidebar, where beside the label they were cut
+   to "Custom ne…". */
+.section-content label.label-stacked{
+  flex-wrap:wrap;
+}
+.section-content label.label-stacked > select{
+  flex:1 0 100%;
+  width:100%;
+}
+
+.section-content label span:last-child{
+  min-width:2.5rem; /* Consistent value width per spec §I */
+  text-align:right;
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  font-weight:var(--w-mono);
+  color:var(--text-02);
+}
+
+.section-content select{
+  flex:1;
+  /* Shrinks rather than overflow the sidebar beside a hint's trigger slot. */
+  min-width:0;
+  min-height:var(--control-minh); /* 44px target */
+  padding:var(--space-1) var(--space-2);
+  padding-right:2rem;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  background:var(--ui-02);
+  font-size:var(--control-font); /* 0.875rem per spec §B */
+  color:var(--text-01);
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23525252' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 0.5rem center;
+  background-size:0.75rem;
+  cursor:pointer;
+}
+
+.section-content input[type="text"]{
+  flex:1;
+  width:100%; /* full width per spec v3.1.241 §9 */
+  min-height:var(--control-minh); /* 44px target */
+  padding:var(--space-1) var(--space-2);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  font-size:var(--type-body);
+  color:var(--text-01);
+  background:var(--ui-00); /* white input on tinted background */
+}
+
+.section-content input[type="number"]{
+  min-height:var(--control-minh); /* 44px target */
+  padding:var(--space-1) var(--space-2);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  font-size:var(--control-font); /* 0.875rem per spec §B */
+  color:var(--text-01);
+}
+
+/* Keep the area fields inside the inspector beside its fixed label/help column. */
+#network-node-area-card input[type="number"]{
+  flex:1 1 0;
+  width:5rem;
+  min-width:var(--touch-target-min);
+  box-sizing:border-box;
+  background:var(--ui-00);
+}
+
+/* Control row stacked - per spec v3.1.256 §B */
+.control-row{
+  margin-bottom:var(--row-gap); /* 0.5rem per spec §B */
+}
+
+/* CTL-01: Control row grid pattern - label + control alignment */
+.control-row-grid{
+  display:grid;
+  grid-template-columns:var(--sidebar-label-width) 1fr;
+  align-items:center;
+  gap:var(--space-2);
+  margin-bottom:var(--row-gap);
+  min-height:var(--touch-target-min); /* WCAG AAA: 44px min height */
+}
+
+/* CTL-03/04: Input with suffix (px, fps, etc) */
+.input-with-suffix{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.input-with-suffix input{
+  flex:1;
+  padding-right:2.5rem; /* Space for suffix */
+}
+.input-with-suffix .input-suffix{
+  position:absolute;
+  right:0.75rem;
+  color:var(--text-03);
+  font-size:var(--type-caption);
+  pointer-events:none;
+}
+
+.control-row .btn{
+  width:100%;
+}
+
+.control-warning{
+  color:var(--text-01);
+  font-size:var(--type-caption);
+  padding:var(--space-1) var(--space-2);
+  margin-bottom:var(--space-2);
+  background:var(--support-error-bg);
+  border-left:3px solid var(--support-error);
+  border-radius:var(--radius-1);
+}
+
+.control-row-stacked{
+  display:flex;
+  gap:var(--space-4);
+  margin-bottom:var(--space-3);
+}
+
+.control-row-stacked .control-cell{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-1);
+}
+
+.control-row-stacked .control-label{
+  font-size:var(--type-caption);
+  color:var(--text-02);
+}
+
+.control-row-stacked input[type="color"]{
+  width:100%;
+  height:32px;
+  padding:2px;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  cursor:pointer;
+}
+
+.control-row-stacked select{
+  width:100%;
+  padding:var(--space-1) var(--space-2);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  font-size:var(--type-body);
+  background:var(--ui-02);
+  color:var(--text-01);
+}
+
+/* Settings sections container. Its inline padding is room for the
+   last-used card's 2px ring, which the scroller's own clip took off at
+   both edges (UI-06 B-02). */
+.settings-sections{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-inline:0.375rem;
+}
+
+/* Scope groups: waypoint-scope vs route-scope card sets. SectionController
+   toggles the hidden attribute with selection — the panel edits what's
+   selected, so only one group is ever visible (no ghosted sections). */
+.scope-group[hidden]{
+  display:none;
+}
+
+/* Compact control groups */
+.control-group-compact{
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-2);
+}
+
+.control-row-inline{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+}
+
+/* The row's own children only: a hint's "?" in the row holds a span too
+   (UI-04), which these would stretch to the label column and grey. */
+.control-row-inline > span:first-child{
+  min-width:var(--sidebar-label-width);
+  font-size:var(--type-body);
+  color:var(--text-02);
+}
+
+.control-row-inline > span:last-child{
+  font-size:var(--type-caption);
+  color:var(--text-02); /* --text-03 is 6.4:1 on the card tint; this is 10.3:1 (B-08) */
+}
+
+.control-row-inline input[type="range"]{
+  flex:1;
+  min-width:60px;
+  accent-color:var(--control-accent);
+}
+
+.control-label-short{
+  min-width:70px;
+  flex-shrink:0;
+}
+
+/* Read-only slider value (for prev zoom display) */
+/* CTL-06: Fixed min-width for slider value labels to prevent layout jitter */
+.slider-value{
+  min-width:3.25rem;
+  text-align:right;
+}
+
+.slider-value-readonly{
+  flex:1;
+  text-align:left;
+  color:var(--text-02); /* 10.3:1 on the card tint (B-08) */
+  font-style:italic;
+}
+
+.control-label-small{
+  font-size:var(--type-caption);
+  color:var(--text-02);
+  margin-bottom:var(--space-1);
+  display:block;
+}
+
+.btn-group-compact{
+  display:flex;
+  gap:var(--space-2);
+}
+
+/* Export presets row - aligned with labels per spec §L */
+.export-presets{
+  display:flex;
+  align-items:center;
+  margin-bottom:var(--row-gap);
+  gap:var(--label-gap);
+}
+
+.export-presets > span:first-child{
+  flex:0 0 6rem;
+  color:var(--text-02);
+  font-weight:500;
+  font-size:var(--type-caption);
+}
+
+.btn-group-inline{
+  display:flex;
+  gap:var(--space-1);
+  flex-wrap:wrap;
+}
+
+.btn-small{
+  padding:0.125rem var(--space-2); /* Reduced ~40% vertical padding */
+  font-size:var(--type-caption);
+  min-height:1.25rem; /* Reduced ~40% from 2rem */
+}
+
+/* Beacon sub-controls (duplicate removed - see earlier definition) */
+
+/* Placeholder controls (coming soon) */
+.control-placeholder{
+  display:flex;
+  align-items:center;
+  margin-bottom:var(--space-4);
+  font-size:var(--type-body);
+  gap:var(--space-2);
+}
+
+.control-placeholder span:first-child{
+  min-width:100px;
+  color:var(--disabled-03);
+}
+
+.control-placeholder .coming-soon{
+  font-size:var(--type-caption);
+  color:var(--disabled-03);
+  font-style:italic;
+  background:var(--ui-01);
+  padding:var(--space-0) var(--space-2);
+  border-radius:var(--radius-1);
+}
+
+.control-group{
+  margin-bottom:var(--space-6);
+  max-width:100%;
+  box-sizing:border-box;
+}
+
+.control-group h3{
+  font-size:var(--type-label);
+  font-weight:var(--w-label);
+  color:var(--text-01);
+  margin-bottom:var(--space-4);
+  letter-spacing:var(--ls-label);
+}
+
+.control-group label{
+  display:flex;
+  align-items:center;
+  margin-bottom:var(--space-4);
+  font-size:var(--type-body);
+  gap:var(--space-2);
+  min-width:0;
+}
+
+.control-group label span:first-child{
+  flex:0 0 6rem; /* Match section-content labels per spec §O */
+  color:var(--text-02);
+  font-weight:500;
+  font-size:var(--type-caption);
+}
+
+.control-group input[type="color"]{
+  width:60px;
+  height:35px;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  cursor:pointer;
+  padding:2px;
+}
+
+.control-group input[type="range"]{
+  flex:1;
+  margin:0 var(--space-2);
+  accent-color:var(--control-accent);
+}
+
+.control-group label span:last-child{
+  min-width:30px;
+  font-family:var(--font-mono);
+  font-weight:var(--w-mono);
+  color:var(--text-02);
+}
+
+.control-group select{
+  flex:1;
+  padding:var(--space-1) var(--space-2);
+  padding-right:2rem;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  background:var(--ui-02);
+  font-size:var(--type-body);
+  color:var(--text-01);
+  max-width:100%;
+  box-sizing:border-box;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23525252' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 0.5rem center;
+  background-size:0.75rem;
+  cursor:pointer;
+}
+
+/* Checkbox styles */
+.checkbox-container{
+  margin:var(--space-3) 0;
+}
+
+.checkbox-label{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  gap:var(--space-2)!important;
+  cursor:pointer;
+  margin-bottom:var(--space-2)!important;
+}
+
+.checkbox-label input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  margin:0;
+  accent-color:var(--control-accent);
+}
+
+/* Export "Include in export" checkbox group (image / camera / text) */
+.export-include-group{
+  border:none;
+  margin:var(--space-3) 0 0;
+  padding:0;
+  min-inline-size:0; /* let the fieldset shrink in the narrow sidebar */
+}
+
+.export-include-group legend{
+  padding:0;
+  margin-bottom:var(--space-1);
+  color:var(--text-02);
+  font-weight:500;
+  font-size:var(--type-caption);
+}
+
+/* AAA target size (WCAG 2.5.5): each row is a >=44px click/tap target */
+.export-include-group .checkbox-label{
+  min-height:2.75rem;
+  margin-bottom:0!important;
+}
+
+/* Path emphasis group (path casing + path glow) — mirrors the export-include fieldset */
+.path-emphasis{
+  border:none;
+  margin:var(--space-2) 0 0;
+  padding:0;
+  min-inline-size:0; /* let the fieldset shrink in the narrow sidebar */
+}
+
+.path-emphasis legend{
+  padding:0;
+  margin-bottom:var(--space-1);
+  color:var(--text-02);
+  font-weight:500;
+  font-size:var(--type-caption);
+}
+
+/* AAA target size (WCAG 2.5.5): each control row is a >=44px target;
+   Background → Show image too (UI-08) */
+.path-emphasis .checkbox-label,
+.path-emphasis .sidebar-control-row,
+#section-background-content .checkbox-label{
+  min-height:2.75rem;
+  margin-bottom:0!important;
+}
+
+/* Waypoints Tab */
+#waypoints-tab .control-group{
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  margin-bottom:0;
+}
+
+/* Waypoint List
+   Scroll container with padding to prevent focus ring clipping.
+   Uses scroll-margin on children to keep focused items visible.
+*/
+.waypoint-list{
+  margin-top:var(--space-4);
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-2);
+  background:var(--ui-02);
+  padding:6px;
+  list-style:none;
+}
+
+/* Empty state for waypoint list */
+.waypoint-list-empty{
+  padding:var(--space-6) var(--space-4);
+  text-align:center;
+  color:var(--text-01);
+}
+
+.waypoint-list-empty p{
+  margin:0;
+  font-size:var(--type-body);
+}
+
+.waypoint-list-empty .hint{
+  margin-top:var(--space-2);
+  font-size:var(--type-caption);
+  color:var(--text-02); /* 10.3:1 on the list's --ui-02 (B-08) */
+}
+
+/* Waypoint Item Base - calm rows without card borders
+   Selection uses left accent bar; focus ring applied to .waypoint-row button.
+*/
+/* ============================================================
+   Layers strip (Phase 4): Route + crowd layers above the waypoint
+   list. Rows share the waypoint-list idiom — accent bar selection,
+   44px targets — with visibility/delete affordances per crowd.
+   ============================================================ */
+.layers-strip{
+  list-style:none;
+  margin:0 0 var(--space-2);
+  padding:0;
+}
+
+.layer-item{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:var(--space-1);
+  border-bottom:1px solid var(--border-quiet);
+  min-height:var(--row-height);
+  transition:background var(--motion-fast) var(--ease-out);
+}
+
+.layer-item.selected{
+  background:var(--selected-ui);
+}
+.layer-item.selected::before{
+  content:"";
+  position:absolute;
+  left:0; top:0; bottom:0;
+  width:var(--border-width-focus);
+  background:var(--interactive-01);
+}
+.layer-item.selected .layer-title{
+  font-weight:600;
+}
+.layer-item:focus-within{
+  z-index:2;
+}
+/* A hidden crowd is still a live row (selectable, renamable), so its title
+   keeps 7:1 text — --text-02 is 11:1 on --ui-01, 8.6:1 selected — and a
+   "hidden" tag beside it says the state in words; only the swatch's fill
+   fades (UI-06 B-11), under a wash of the strip's surface: its border keeps
+   3:1, where fading the whole swatch took it too (UI-06 B-36). */
+.layer-item.layer-hidden .layer-title{
+  color:var(--text-02);
+}
+.layer-item.layer-hidden .layer-swatch{
+  background-image:linear-gradient(
+    color-mix(in srgb, var(--ui-01) 55%, transparent),
+    color-mix(in srgb, var(--ui-01) 55%, transparent)
+  );
+}
+.layer-hidden-tag{
+  flex-shrink:0;
+  padding:0 var(--space-1);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  font-size:var(--type-caption);
+  font-weight:400;
+  line-height:1.5;
+  color:var(--text-02);
+  background:var(--ui-02);
+}
+@media (forced-colors: active){
+  .layer-hidden-tag{ border-color:CanvasText; color:CanvasText; background:Canvas; }
+}
+
+.layer-row{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  padding:0.375rem var(--space-3);
+  min-height:var(--control-lg);
+  background:transparent;
+  border:none;
+  border-radius:var(--radius-2);
+  cursor:pointer;
+  font:inherit;
+  color:var(--text-01);
+  text-align:left;
+  min-width:0;
+}
+.layer-row:hover{
+  background:var(--hover-ui);
+}
+.layer-row:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.layer-swatch{
+  flex:none;
+  width:0.75rem;
+  height:0.75rem;
+  border-radius:50%;
+  /* B-13's token: 3:1 or more on a white or yellow fill and on the strip
+     (UI-06 B-36; --border-quiet was 1.31:1) */
+  border:1px solid var(--border-interactive);
+}
+
+.layer-title{
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.layer-visibility,
+.layer-delete,
+.layer-duplicate{
+  flex:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:var(--touch-target-min);
+  min-height:var(--touch-target-min);
+  background:transparent;
+  border:none;
+  border-radius:var(--radius-2);
+  color:var(--text-02);
+  cursor:pointer;
+  font-size:1rem;
+  line-height:1;
+}
+.layer-visibility:hover,
+.layer-delete:hover,
+.layer-duplicate:hover{
+  background:var(--hover-ui);
+  color:var(--text-01);
+}
+.layer-visibility:focus-visible,
+.layer-delete:focus-visible,
+.layer-duplicate:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+.layer-delete{
+  font-size:1.1rem;
+}
+
+.layer-rename-input{
+  flex:1;
+  min-width:0;
+  font:inherit;
+  padding:0.125rem 0.25rem;
+  border:1px solid var(--border-control);
+  border-radius:var(--radius-2);
+}
+
+.add-crowd-btn{
+  width:100%;
+  margin-bottom:var(--space-2);
+}
+
+/* Hint copy inside a card (e.g. the Guide card's follow-route note), at the
+   1.5 leading WCAG 1.4.8 (AAA) asks of a block of text: a Custom network's
+   Guide hint runs to nine lines (CROWD-07 layout) */
+.section-hint{
+  font-size:var(--type-caption);
+  line-height:var(--line-base);
+  color:var(--text-02);
+  margin:var(--space-1) 0 0;
+}
+
+/* Complete semantic scene outline (REV-02).
+   The canvas remains the visual renderer; this native details/list/form view
+   keeps every persisted route, crowd, graph and polygon entity operable with
+   ordinary browser keyboard behaviour. Indentation is deliberately shallow
+   so deep graph/polygon structures still reflow in the narrow sidebar. */
+.scene-outline-shell{
+  min-width:0;
+  margin:0;
+  padding:0.75rem;
+  border-top:1px solid var(--border-subtle);
+}
+
+.scene-outline-shell > details,
+.scene-outline,
+.scene-outline-details,
+.scene-outline-content,
+.scene-outline-subgroup,
+.scene-outline-form{
+  min-width:0;
+  max-width:100%;
+}
+
+.scene-outline-title,
+.scene-outline-summary{
+  min-height:var(--touch-target-min);
+  padding:var(--space-2);
+  color:var(--text-01);
+  font-weight:600;
+  line-height:var(--lh-body);
+  cursor:pointer;
+  overflow-wrap:anywhere;
+}
+
+.scene-outline-title{
+  font-size:var(--type-h2);
+}
+
+.scene-outline-summary{
+  border-radius:var(--radius-2);
+  font-size:var(--type-body);
+}
+
+.scene-outline-title:hover,
+.scene-outline-summary:hover{
+  background:var(--hover-ui);
+}
+
+.scene-outline-title:focus-visible,
+.scene-outline-summary:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.scene-outline{
+  margin-top:var(--space-3);
+  font-size:var(--type-caption);
+}
+
+.scene-outline > .scene-outline-details{
+  margin-bottom:var(--space-3);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-2);
+  background:var(--ui-02);
+}
+
+.scene-outline-content{
+  display:grid;
+  gap:var(--space-2);
+  padding:var(--space-2);
+}
+
+.scene-outline-list{
+  display:grid;
+  gap:var(--space-2);
+  min-width:0;
+  margin:0;
+  padding:0 0 0 var(--space-2);
+  border-left:2px solid var(--border-subtle);
+  list-style:none;
+}
+
+.scene-outline-item{
+  min-width:0;
+}
+
+.scene-outline-item > .scene-outline-details,
+.scene-outline-subgroup.scene-outline-details,
+.scene-outline-content > .scene-outline-network{
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+  background:var(--ui-01);
+}
+
+.scene-outline-hint,
+.scene-outline-empty{
+  margin:0;
+  color:var(--text-02);
+  line-height:var(--line-base); /* a block of text: WCAG 1.4.8's 1.5 (CROWD-07 layout) */
+  overflow-wrap:anywhere;
+}
+
+.scene-outline-empty{
+  padding:var(--space-2);
+  font-style:italic;
+}
+
+.scene-outline-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:var(--space-2);
+}
+
+.scene-outline-action,
+.scene-outline-submit{
+  min-height:var(--touch-target-min);
+  white-space:normal;
+}
+
+.scene-outline-action{
+  flex:1 1 8rem;
+}
+
+.scene-outline-action.is-selected{
+  border-color:var(--interactive-01);
+  background:var(--selected-ui);
+  box-shadow:inset var(--border-width-focus) 0 0 var(--interactive-01);
+  font-weight:600;
+}
+
+/* The Delete action is also .btn.btn-secondary, whose border rules come later
+   in this sheet; two classes outrank them whatever the order (DEF-94). */
+.btn.scene-outline-danger{
+  border-color:var(--support-01);
+}
+
+.scene-outline-form{
+  display:grid;
+  gap:var(--space-2);
+  padding:var(--space-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+  background:var(--ui-02);
+}
+
+/* CROWD-07 F15: why Release bias's amount is off, a line across the form's
+   grid under the field it describes */
+.scene-outline-reason{
+  grid-column:1 / -1;
+}
+
+.scene-outline-field-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(8.5rem,100%),1fr));
+  gap:var(--space-2);
+  min-width:0;
+}
+
+.control-group .scene-outline-field{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:var(--space-1);
+  min-width:0;
+  margin:0;
+}
+
+.control-group .scene-outline-field > span:first-child{
+  flex:none;
+  /* As wide as its words, so its hint's trigger sits right after them. */
+  align-self:flex-start;
+  color:var(--text-02);
+  font-size:var(--type-caption);
+  font-weight:600;
+}
+
+.scene-outline-field input,
+.scene-outline-field select{
+  width:100%;
+  min-width:0;
+  min-height:var(--touch-target-min);
+  padding:var(--space-2);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-2);
+  background:var(--ui-01);
+  color:var(--text-01);
+  font:inherit;
+  font-size:max(1rem,var(--type-body));
+}
+
+.control-group .scene-outline-field input[type="color"]{
+  width:100%;
+  height:var(--touch-target-min);
+  padding:var(--space-1);
+}
+
+.scene-outline-submit{
+  justify-self:stretch;
+  width:100%;
+}
+
+.scene-outline-error{
+  margin:0;
+  padding:var(--space-2);
+  border-left:var(--border-width-focus) solid var(--support-01);
+  background:var(--ui-01);
+  color:var(--text-01);
+  font-weight:600;
+  line-height:var(--lh-caption);
+}
+
+.scene-outline-field [aria-invalid="true"]{
+  border-color:var(--support-01);
+  box-shadow:0 0 0 1px var(--support-01);
+}
+
+.scene-outline-readonly{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:var(--space-1) var(--space-2);
+  min-width:0;
+  margin:0;
+  padding:var(--space-2);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+}
+
+.scene-outline-readonly dt{
+  color:var(--text-02);
+  font-weight:600;
+}
+
+.scene-outline-readonly dd{
+  min-width:0;
+  margin:0;
+  overflow-wrap:anywhere;
+}
+
+/* Junction path-choice fieldset: native number inputs keep exact weights
+   keyboard-editable; read-only percentages explain the resulting split. */
+.network-path-weights{
+  border:0;
+  min-inline-size:0;
+  margin:var(--space-4) 0;
+  padding:0;
+}
+
+.network-path-weights[hidden]{
+  display:none;
+}
+
+.network-path-weights legend{
+  padding:0;
+  color:var(--text-01);
+  font-size:var(--type-label);
+  font-weight:var(--w-label);
+}
+
+.network-path-weights > .section-hint{
+  margin-bottom:var(--space-2);
+}
+
+.network-path-weight-rows{
+  display:grid;
+  gap:var(--space-2);
+}
+
+.section-content .network-path-weight-row{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) 5rem;
+  align-items:center;
+  gap:var(--space-1) var(--space-2);
+  min-height:var(--touch-target-min);
+  margin:0;
+}
+
+/* The row's label wraps the name alone, beside the field rather than around
+   it, so the readout and the error are its siblings and outside the label
+   (UI-06 B-30); it lays out as its name did as a bare grid cell. */
+.section-content .network-path-weight-row > label{
+  display:contents;
+  margin:0;
+}
+
+.section-content .network-path-weight-row .network-path-weight-name{
+  min-width:0;
+  flex:none;
+  color:var(--text-01);
+  font-size:var(--type-caption);
+  font-weight:500;
+  font-family:inherit;
+  text-align:left;
+}
+
+.section-content .network-path-weight-row input[type="number"]{
+  width:5rem;
+  min-height:var(--touch-target-min);
+  box-sizing:border-box;
+  background:var(--ui-00);
+}
+
+.section-content .network-path-weight-row .network-path-weight-value{
+  grid-column:1 / -1;
+  min-width:0;
+  text-align:left;
+  color:var(--text-02);
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  font-weight:var(--w-mono);
+}
+
+/* What an invalid weight is told, under its row, in the error colour the
+   outline's errors use; hidden until there is something to say (UI-06 B-30). */
+.section-content .network-path-weight-row .network-path-weight-error{
+  grid-column:1 / -1;
+  min-width:0;
+  color:var(--text-error);
+  font-size:var(--type-caption);
+  line-height:var(--line-base); /* a helper line, as .section-hint (CROWD-07 layout) */
+}
+.section-content .network-path-weight-row .network-path-weight-error[hidden]{
+  display:none;
+}
+
+.waypoint-item{
+  position:relative;
+  display:flex;
+  align-items:center;
+  gap:var(--space-1);
+  background:transparent;
+  border:none;
+  border-bottom:1px solid var(--border-quiet);
+  border-radius:0;
+  min-height:var(--row-height);
+  scroll-margin:0.75rem;
+  transition:background var(--motion-fast) var(--ease-out);
+}
+
+/* Selection styling: left accent bar (UoN blue per Carbon) + subtle fill */
+.waypoint-item.selected,
+.waypoint-item.is-selected{
+  background:var(--selected-ui);
+}
+.waypoint-item.selected::before,
+.waypoint-item.is-selected::before{
+  content:"";
+  position:absolute;
+  left:0; top:0; bottom:0;
+  width:var(--border-width-focus);
+  background:var(--interactive-01);
+}
+.waypoint-item.selected .waypoint-title,
+.waypoint-item.is-selected .waypoint-title{
+  font-weight:600;
+}
+
+/* Focus-within: elevate z-index so focus ring isn't clipped */
+.waypoint-item:focus-within{
+  z-index:2;
+}
+
+/* Selection + focus: accent bar via ::before, focus ring on .waypoint-row */
+
+.waypoint-item.dragging{
+  opacity:0.5;
+}
+
+/* Waypoint Row Button - receives focus and selection click
+   RGT-02: Tighter density while maintaining 44px tap target */
+.waypoint-row{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  padding:0.375rem var(--space-3); /* RGT-02: reduced from space-2 (0.5rem) */
+  min-height:var(--control-lg); /* 44px tap target preserved */
+  background:transparent;
+  border:none;
+  border-radius:var(--radius-2);
+  cursor:pointer;
+  font:inherit;
+  color:var(--text-01);
+  text-align:left;
+}
+
+.waypoint-row:hover{
+  background:var(--hover-ui);
+}
+
+/* Focus ring on the row button (not the li) */
+.waypoint-row:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+/* Colour dot — visual marker colour indicator per waypoint (N6-1) */
+.waypoint-color-dot{
+  width:0.75rem;
+  height:0.75rem;
+  border-radius:50%;
+  flex-shrink:0;
+  /* 4.5:1 on a white dot, 4.1:1 on the list: a white marker's dot no longer
+     vanishes (B-13); --border-subtle was 1.4:1 */
+  border:1px solid var(--border-interactive);
+}
+
+/* None-colour dot: red diagonal line over white circle */
+.waypoint-color-dot.is-none{
+  background:
+    linear-gradient(
+      to top right,
+      transparent calc(50% - 0.5px),
+      #DA1E28 calc(50% - 0.5px),
+      #DA1E28 calc(50% + 0.5px),
+      transparent calc(50% + 0.5px)
+    ) !important;
+}
+
+.waypoint-handle{
+  color:var(--icon-02);
+  flex-shrink:0;
+  opacity:0; /* calmness: revealed on row hover/focus (see reveal rule below) */
+  transition:opacity var(--motion-fast) var(--ease-out);
+}
+
+.waypoint-title{
+  flex:1;
+  font-size:var(--type-body);
+  color:var(--text-01);
+}
+/* Inline rename input — matches waypoint-title dimensions for seamless editing */
+.waypoint-rename-input{
+  flex:1;
+  font-size:var(--type-body);
+  color:var(--text-01);
+  background:var(--ui-01);
+  border:1px solid var(--interactive-01);
+  border-radius:var(--radius-2);
+  padding:0 var(--space-2);
+  outline:none;
+  min-width:0;
+}
+
+/* ── Minor waypoint rows (UI-02) ───────────────────────────────────────────
+   A minor shapes the leg of the major above it. The row is indented one step
+   with a leader line so the hierarchy reads at a glance; the visible "minor"
+   tag and the row's .sr-only context carry the same fact for anyone who does
+   not perceive the indent (WCAG 2.2 1.3.1). Row height and focus ring are
+   unchanged — a minor is still a 44px tap target. */
+.waypoint-item-minor > .waypoint-row{
+  /* One indent step, and a tighter gap: the sidebar is narrow, and a minor
+     row carries an extra child (the tag) where a major carries none. */
+  padding-left:calc(var(--space-3) + var(--space-4));
+  gap:var(--space-1);
+}
+
+/* Leader line from the owning major down the indent gutter */
+.waypoint-item-minor::after{
+  content:"";
+  position:absolute;
+  left:calc(var(--space-3) + var(--space-2));
+  top:0; bottom:0;
+  width:1px;
+  background:var(--border-quiet);
+  pointer-events:none;
+}
+
+/* Canvas draws minors as small grey shaping dots regardless of dotColor, so
+   the row shows that glyph rather than a swatch the render ignores. */
+.waypoint-minor-dot{
+  width:0.4375rem;
+  height:0.4375rem;
+  border-radius:50%;
+  flex-shrink:0;
+  background:var(--icon-02);
+  opacity:0.5;
+  /* Occupy the same box as .waypoint-color-dot so titles stay on one rhythm */
+  margin:0 calc((0.75rem - 0.4375rem) / 2);
+}
+
+/* Minors do not drag, so the handle slot is dead space in a narrow panel */
+.waypoint-handle.is-fixed{
+  display:none;
+}
+
+.waypoint-minor-tag{
+  flex-shrink:0;
+  margin-left:var(--space-1);
+  padding:0 var(--space-1);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  font-size:var(--type-caption);
+  line-height:1.5;
+  color:var(--text-02);
+  background:var(--ui-02);
+}
+
+@media (forced-colors: active){
+  .waypoint-item-minor::after{ background:CanvasText; }
+  .waypoint-minor-dot{ background:CanvasText; opacity:1; }
+  .waypoint-minor-tag{ border-color:CanvasText; color:CanvasText; background:Canvas; }
+}
+/* ── Branch rows (ROUTE-01c) ───────────────────────────────────────────────
+   A branch reuses the minor row's indent and leader so hierarchy reads the
+   same way, but carries the route's own colour rather than the grey shaping
+   glyph: a branch waypoint IS a route waypoint, it just runs in parallel. */
+.waypoint-item-branch > .waypoint-row .waypoint-minor-dot{
+  background:var(--interactive-01);
+  opacity:1;
+}
+.waypoint-item-branch::after{
+  background:var(--interactive-01);
+  opacity:0.4;
+}
+.waypoint-item-branch .waypoint-minor-tag{
+  color:var(--interactive-01);
+  border-color:var(--interactive-01);
+}
+
+/* The row a branch leaves. Badged onto the waypoint's own colour dot rather
+   than placed in the text flow: a major row is already dot + handle + title +
+   ▲▼ + × in a ~140px column, and one more inline child wrapped the title. The
+   mark belongs to the marker anyway. Aria-hidden — the row's .sr-only says it. */
+.waypoint-fork-mark{
+  position:absolute;
+  left:calc(var(--space-3) + 0.4rem);
+  top:0.5rem;
+  line-height:1;
+  color:var(--interactive-01);
+  font-size:var(--type-caption);
+  pointer-events:none;
+}
+
+@media (forced-colors: active){
+  .waypoint-item-branch > .waypoint-row .waypoint-minor-dot,
+  .waypoint-item-branch::after{ background:Highlight; opacity:1; }
+  .waypoint-item-branch .waypoint-minor-tag{ color:CanvasText; border-color:CanvasText; }
+  .waypoint-fork-mark{ color:CanvasText; }
+}
+/* Delete button: separate focusable control with own focus ring */
+.waypoint-delete{
+  width:var(--control-lg);
+  height:var(--control-lg);
+  border-radius:var(--radius-2);
+  border:1px solid transparent;
+  background:transparent;
+  cursor:pointer;
+  color:var(--icon-02);
+  flex-shrink:0;
+  font-size:1.25rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0; /* calmness: revealed on row hover/focus; reachable via :focus-within */
+  pointer-events:none;
+  transition:opacity var(--motion-fast) var(--ease-out);
+}
+
+.waypoint-delete:hover{
+  background:var(--hover-ui);
+  color:var(--support-error);
+}
+
+.waypoint-delete:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+/* Move up/down buttons - keyboard alternative to drag (AAA) */
+.waypoint-move-btns{
+  display:flex;
+  flex-direction:row;
+  gap:0;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--motion-fast) var(--ease-out);
+}
+
+/* Reveal row controls (handle, reorder, delete) on hover/focus. Keyboard users
+   get them via :focus-within, so the controls stay operable and discoverable. */
+.waypoint-item:hover .waypoint-handle,
+.waypoint-item:focus-within .waypoint-handle,
+.waypoint-item:hover .waypoint-move-btns,
+.waypoint-item:focus-within .waypoint-move-btns,
+.waypoint-item:hover .waypoint-delete,
+.waypoint-item:focus-within .waypoint-delete{
+  opacity:1;
+  pointer-events:auto;
+}
+
+.waypoint-move-btn{
+  width:var(--touch-target-min);
+  height:var(--touch-target-min);
+  padding:0;
+  border:none;
+  background:transparent;
+  color:var(--icon-02);
+  cursor:pointer;
+  font-size:0.5rem;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:var(--radius-1);
+}
+
+.waypoint-move-btn:hover:not(:disabled){
+  background:var(--hover-ui);
+  color:var(--text-01);
+}
+
+.waypoint-move-btn:disabled{
+  opacity:0.3;
+  cursor:not-allowed;
+}
+
+.waypoint-move-btn:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 4px var(--focus-outer);
+}
+
+/* Add Waypoint button - keyboard-accessible way to add waypoints (AAA) */
+.waypoint-item-add{
+  border-top:1px dashed var(--border-passive);
+  margin-top:var(--space-1);
+}
+
+.waypoint-add-btn{
+  justify-content:center;
+  gap:var(--space-1);
+  color:var(--text-02);
+  font-weight:500;
+}
+
+.waypoint-add-btn:hover{
+  background:var(--hover-ui);
+  color:var(--text-01);
+}
+
+.waypoint-add-icon{
+  font-size:1rem;
+  font-weight:600;
+  line-height:1;
+}
+
+/* Editable waypoint name input */
+.waypoint-item-label.editing{
+  background:var(--ui-02);
+  border:1px solid var(--interactive-01);
+  border-radius:var(--radius-1);
+  padding:var(--space-0) var(--space-1);
+  outline:none;
+}
+
+.waypoint-item-label[contenteditable="true"]:focus{
+  background:var(--ui-02);
+  border:1px solid var(--interactive-01);
+  border-radius:var(--radius-1);
+  padding:var(--space-0) var(--space-1);
+  outline:none;
+}
+
+/* Modal styles */
+.modal,.splash-screen{
+  position:fixed;
+  inset:0;
+  background:var(--overlay-01);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:var(--space-4);
+  z-index:999;
+}
+
+.modal-content,.splash-content{
+  position:relative; /* MOD-01: For close button positioning */
+  background:var(--ui-02);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-3);
+  box-shadow:var(--elev-3);
+  padding:var(--space-6);
+  max-width:720px;
+  width:100%;
+}
+
+/* Help and the welcome (UI-06 J-01 round 4): Carbon's modal anatomy. The
+   dialog is a column bounded to the viewport, at the height Help had; its
+   header (the title, and the × in its corner) and its footer action stay in
+   view, and only its body scrolls. Neither box scrolls itself. */
+.help-modal-content,
+.splash-content{
+  display:flex;
+  flex-direction:column;
+  max-height:calc(100vh - (2 * var(--space-4)));
+}
+
+/* The body takes the room left and scrolls inside it. Its padding, given
+   back by its margin, keeps the focus ring of a control at its edge from
+   being clipped by the scroll; while it scrolls it takes focus itself
+   (utils/focusTrap.js), and the universal ring marks it. */
+.modal-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  margin:0 calc(-1 * var(--space-2));
+  padding:var(--space-2);
+}
+
+/* MOD-01: Close × button in top-right corner of modals */
+.modal-close-x{
+  position:absolute;
+  top:var(--space-3);
+  right:var(--space-3);
+  width:var(--touch-target-min);
+  height:var(--touch-target-min);
+  padding:0;
+  background:transparent;
+  border:none;
+  border-radius:var(--radius-1);
+  cursor:pointer;
+  font-size:1.5rem;
+  line-height:1;
+  color:var(--text-02);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background var(--motion-fast) var(--ease-out),
+             color var(--motion-fast) var(--ease-out);
+}
+
+.modal-close-x:hover{
+  background:var(--hover-ui);
+  color:var(--text-01);
+}
+
+.modal-close-x:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.modal-content h3{
+  margin:0 0 var(--space-4) 0;
+  color:var(--text-01);
+}
+
+.modal-content p{
+  margin:0 0 var(--space-5) 0;
+  color:var(--text-02);
+  line-height:var(--lh-body);
+}
+
+.modal-buttons{
+  display:flex;
+  gap:var(--space-3);
+  justify-content:flex-end;
+}
+
+.diagnostics-modal-content{
+  max-width:48rem;
+  max-height:calc(100vh - (2 * var(--space-4)));
+  overflow-y:auto;
+}
+
+/* Help (UI-06 J-01): wide enough for two columns of shortcuts; long, so
+   its body scrolls (above) */
+.help-modal-content{
+  max-width:48rem;
+}
+
+.help-modal-content h2{
+  margin:0 0 var(--space-5) 0;
+  padding-right:var(--touch-target-min);
+  color:var(--text-01);
+  font-size:var(--type-h1);
+}
+
+.help-modal-content .help-section{
+  margin:0 0 var(--space-6) 0;
+}
+
+.help-modal-content .help-section h3{
+  margin:0 0 var(--space-3) 0;
+  color:var(--text-01);
+  font-size:var(--type-h2);
+}
+
+.help-modal-content .help-section p{
+  margin:0 0 var(--space-3) 0;
+  font-size:var(--type-body-compact);
+}
+
+/* A link on a line of its own is a 44 px target, its text no larger (WCAG
+   2.5.5; round 4); a link inside a sentence keeps the inline exception */
+.standalone-link{
+  display:inline-flex;
+  align-items:center;
+  min-height:var(--touch-target-min);
+}
+
+.modal-content .diagnostics-public-warning{
+  margin-top:calc(-1 * var(--space-2));
+  padding:var(--space-3);
+  border-left:3px solid var(--support-warning);
+  background:var(--support-warning-bg);
+  color:var(--text-01);
+}
+
+.diagnostics-preview-label{
+  display:block;
+  margin:0 0 var(--space-2);
+  color:var(--text-01);
+  font-size:var(--type-label);
+  font-weight:var(--w-label);
+}
+
+.diagnostics-preview{
+  display:block;
+  width:100%;
+  min-height:16rem;
+  max-height:45vh;
+  margin:0;
+  padding:var(--space-3);
+  resize:vertical;
+  box-sizing:border-box;
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-1);
+  background:var(--ui-00);
+  color:var(--text-01);
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  line-height:var(--lh-body);
+}
+
+.diagnostics-preview:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.modal-content .diagnostics-status{
+  min-height:1.5rem;
+  margin:var(--space-2) 0 var(--space-3);
+  color:var(--text-02);
+}
+
+.modal-content .diagnostics-issues-note{
+  margin:calc(-1 * var(--space-2)) 0 var(--space-3);
+}
+
+.modal-content .diagnostics-issues-note[hidden]{
+  display:none;
+}
+
+.diagnostics-inline-action{
+  display:inline-flex;
+  align-items:center;
+  min-height:var(--control-min-h);
+  padding:0 var(--space-2);
+  border:0;
+  background:transparent;
+  color:var(--link-01);
+  font:inherit;
+  font-weight:var(--w-label);
+  text-decoration:underline;
+  cursor:pointer;
+}
+
+.diagnostics-inline-action[hidden]{
+  display:none;
+}
+
+.diagnostics-inline-action:hover{
+  background:var(--hover-ui);
+}
+
+.diagnostics-inline-action:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+.diagnostics-issues-note code{
+  overflow-wrap:anywhere;
+}
+
+.diagnostics-actions{
+  flex-wrap:wrap;
+}
+
+/* ========== Keyboard Shortcuts Modal ========== */
+.shortcuts-modal{
+  max-width:48rem;
+  width:90vw;
+}
+
+.shortcuts-modal .modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding-bottom:var(--space-4);
+  border-bottom:1px solid var(--border-subtle);
+  margin-bottom:var(--space-4);
+}
+
+.shortcuts-modal .modal-header h2{
+  margin:0;
+  font-size:var(--type-heading-02);
+  color:var(--text-01);
+}
+
+.shortcuts-modal .modal-close{
+  width:2rem;
+  height:2rem;
+  padding:0;
+  background:transparent;
+  border:none;
+  border-radius:var(--radius-1);
+  cursor:pointer;
+  font-size:1.5rem;
+  line-height:1;
+  color:var(--text-02);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background var(--motion-fast) var(--ease-out);
+}
+
+.shortcuts-modal .modal-close:hover{
+  background:var(--hover-ui);
+  color:var(--text-01);
+}
+
+.shortcuts-modal .modal-close:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 2px var(--focus-inner),0 0 0 5px var(--focus-outer);
+}
+
+.shortcuts-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(14rem, 1fr));
+  gap:var(--space-5);
+}
+
+.shortcut-section h3{
+  margin:0 0 var(--space-3) 0;
+  font-size:var(--type-body);
+  font-weight:600;
+  color:var(--text-01);
+  border-bottom:1px solid var(--border-subtle);
+  padding-bottom:var(--space-2);
+}
+
+.shortcut-list{
+  margin:0;
+  padding:0;
+}
+
+.shortcut-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  padding:var(--space-1) 0;
+  gap:var(--space-3);
+}
+
+.shortcut-item dt{
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  background:var(--ui-01);
+  padding:var(--space-0) var(--space-2);
+  border-radius:var(--radius-1);
+  border:1px solid var(--border-subtle);
+  white-space:nowrap;
+  color:var(--text-01);
+}
+
+.shortcut-item dd{
+  margin:0;
+  font-size:var(--type-caption);
+  color:var(--text-02);
+  text-align:right;
+}
+
+.shortcuts-modal .modal-footer{
+  margin-top:var(--space-4);
+  padding-top:var(--space-4);
+  border-top:1px solid var(--border-subtle);
+}
+
+.shortcut-tip{
+  margin:0;
+  font-size:var(--type-caption);
+  color:var(--text-helper);
+  font-style:italic;
+}
+
+/* ========== Waypoint Instructions (Getting Started) ========== */
+.waypoint-instructions{
+  padding:var(--space-4);
+  font-size:var(--type-caption);
+  color:var(--text-02);
+  line-height:var(--lh-body);
+}
+
+.waypoint-instructions h2{
+  margin:0 0 var(--space-2) 0;
+  font-size:var(--type-body);
+  color:var(--text-01);
+}
+
+.waypoint-instructions h2:not(:first-child){
+  margin-top:var(--space-4);
+}
+
+.waypoint-instructions ul{
+  margin:0;
+  padding-left:var(--space-5);
+}
+
+.waypoint-instructions li{
+  margin-bottom:var(--space-1);
+}
+
+.waypoint-instructions kbd{
+  display:inline-block;
+  padding:var(--space-0) var(--space-1);
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  background:var(--ui-01);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  box-shadow:0 1px 0 var(--ui-03);
+}
+
+.shortcuts-hint{
+  margin-top:var(--space-4);
+  padding-top:var(--space-3);
+  border-top:1px solid var(--border-subtle);
+  font-size:var(--type-caption);
+  color:var(--text-helper);
+  text-align:center;
+}
+
+.shortcuts-hint-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:var(--space-2);
+  margin-top:var(--space-4);
+  padding:var(--space-2) var(--space-4);
+  font-size:var(--type-caption);
+  color:var(--text-02);
+  background:var(--ui-01);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+  cursor:pointer;
+  transition:background var(--motion-fast) var(--ease-out),
+             border-color var(--motion-fast) var(--ease-out);
+}
+
+.shortcuts-hint-btn:hover{
+  background:var(--hover-ui);
+  border-color:var(--border-interactive);
+}
+
+.shortcuts-hint-btn:focus-visible{
+  outline:none;
+  box-shadow:0 0 0 2px var(--focus-inner),0 0 0 5px var(--focus-outer);
+}
+
+.shortcuts-hint-btn kbd{
+  padding:var(--space-0) var(--space-1);
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  background:var(--ui-02);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+}
+
+/* Essential actions grid (inline + splash) */
+.essential-actions{
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-2);
+  margin:var(--space-3) 0;
+}
+
+.essential-action{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  font-size:var(--type-body-compact);
+}
+
+.essential-action kbd{
+  min-width:5rem;
+  padding:var(--space-1) var(--space-2);
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  text-align:center;
+  background:var(--ui-01);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  box-shadow:0 1px 0 var(--ui-03);
+}
+
+.essential-action .action-icon{
+  font-size:1rem;
+  width:1.5rem;
+  text-align:center;
+}
+
+.essential-action .action-result{
+  color:var(--text-02);
+}
+
+/* Splash screen essential actions (larger) */
+.essential-actions--splash{
+  gap:var(--space-3);
+}
+
+.essential-actions--splash .essential-action{
+  font-size:var(--type-body);
+}
+
+.essential-actions--splash kbd{
+  min-width:6rem;
+  padding:var(--space-2) var(--space-3);
+  font-size:var(--type-body-compact);
+}
+
+.splash-instructions{
+  text-align:left;
+}
+
+.splash-instructions h3{
+  margin-bottom:var(--space-3);
+  font-size:var(--type-heading-03);
+  font-weight:600;
+}
+
+/* Splash help layout: the welcome's body scrolls, not this wrapper (UI-06
+   J-01 round 4: a 60vh cap here cut its last line at 1440×900) */
+.splash-help{
+  text-align:left;
+}
+
+.splash-intro{
+  margin-bottom:var(--space-4);
+  font-size:var(--type-body);
+  color:var(--text-02);
+}
+
+.splash-sections{
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-4);
+}
+
+.help-section h3{
+  margin:0 0 var(--space-2) 0;
+  font-size:var(--type-body);
+  font-weight:600;
+  color:var(--text-01);
+}
+
+.help-section ul{
+  margin:0;
+  padding-left:var(--space-5);
+}
+
+.help-section li{
+  margin-bottom:var(--space-1);
+  font-size:var(--type-body-compact);
+  color:var(--text-02);
+}
+
+.help-section kbd{
+  padding:var(--space-0) var(--space-1);
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  background:var(--ui-01);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+}
+
+/* Help's shortcuts grid (UI-06 J-01): the accordion's panel, always open,
+   its categories side by side where the dialog is wide enough, and one
+   column where it is not, down to 320 CSS px (WCAG 1.4.10, round 4) */
+.controls-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap:var(--space-4) var(--space-6);
+  padding:var(--space-3) var(--space-4);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-2);
+  background:var(--ui-01);
+}
+
+.controls-category{
+  margin:0;
+}
+
+/* Each category a list of terms (round 4: WCAG 1.3.1): a row groups the key,
+   its dt, with the action, its dd */
+.controls-category dl{
+  margin:0;
+}
+
+.controls-category h4{
+  margin:0 0 var(--space-2) 0;
+  font-size:var(--type-caption);
+  font-weight:600;
+  color:var(--text-helper);
+  letter-spacing:0.5px;
+}
+
+.control-item{
+  display:flex;
+  align-items:center;
+  gap:var(--space-3);
+  padding:var(--space-1) 0;
+}
+
+.control-item kbd{
+  min-width:6rem;
+  padding:var(--space-1) var(--space-2);
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  text-align:center;
+  background:var(--ui-02);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+}
+
+/* The key's term holds its chip as the row held it before: a flex item, so
+   the chip's 6rem minimum lines the actions up */
+.control-item dt{
+  display:flex;
+  flex:0 0 auto;
+}
+
+.control-item dd{
+  margin:0;
+  font-size:var(--type-body-compact);
+  color:var(--text-02);
+}
+
+/* Inline shortcuts (sidebar) */
+.inline-shortcuts{
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-1);
+  margin:var(--space-2) 0 var(--space-3);
+}
+
+.inline-shortcut{
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  font-size:var(--type-caption);
+}
+
+.inline-shortcut kbd{
+  min-width:4.5rem;
+  padding:var(--space-0) var(--space-1);
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  text-align:center;
+  background:var(--ui-01);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+}
+
+.inline-shortcut span{
+  color:var(--text-02);
+}
+
+/* Canvas wrapper - scrollable container for canvas + sticky playbar */
+.canvas-area{
+  grid-column: 2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;      /* Center canvas horizontally */
+  justify-content:center;  /* Center canvas vertically when shorter than viewport */
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  background:#FAFAFA;
+  border-left:1px solid var(--border-subtle);
+  border-right:1px solid var(--border-subtle);
+}
+
+/* The canvas's own box, as large as the canvas: the Preview badge stands in
+   its top-right corner, on the canvas however it is letterboxed in the
+   canvas area (UI-06 J-12, the lead's Q5). */
+.canvas-frame{
+  position:relative;
+  flex:0 0 auto;
+}
+
+/* Canvas - fills width, height determined by aspect-ratio (set via JS) */
+#canvas{
+  flex:0 0 auto;
+  width:100%;
+  /* Canvas gestures are authored by the captured Pointer Events state
+     machine. Page scrolling remains available outside the canvas surface. */
+  touch-action:none;
+  background:#fff;
+  cursor:crosshair;
+  display:block;
+  border:1px solid var(--border-subtle);
+  box-shadow:var(--shadow-01);
+}
+
+#canvas.dragging{
+  cursor:grabbing;
+}
+
+/* Playbar - matches canvas width, sticky at bottom, attached to canvas */
+.controls{
+  flex-shrink:0;
+  align-self:flex-start; /* Match canvas left-alignment */
+  min-height:var(--touch-target-min); /* WCAG AAA: 44px minimum */
+  background:var(--ui-01);
+  padding:var(--space-2) var(--space-4);
+  display:flex;
+  align-items:center;
+  gap:var(--space-4);
+  position:sticky;
+  bottom:0;
+  z-index:10;
+  box-sizing:border-box;
+  margin-top:0;
+  border-top:1px solid var(--border-subtle);
+  /* Play's reason takes a row of its own under the transport (CROWD-08 part A) */
+  flex-wrap:wrap;
+}
+
+/* Why Play is off (CROWD-08 part A): ordinary helper text, never the
+   disabled grey, on the playbar's row below its controls. */
+.playbar-reason{
+  flex:1 0 100%;
+  margin:0;
+  font-size:var(--type-caption);
+  line-height:var(--lh-caption);
+  color:var(--text-02);
+}
+
+.transport-controls{
+  display:flex;
+  gap:var(--space-2);
+}
+
+.timeline{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:var(--space-4);
+}
+
+/* UI-06 B-26: the slider's visible name, as the exported player shows it. */
+.timeline-label{
+  flex:none;
+  font-size:var(--type-caption);
+  line-height:var(--lh-caption);
+  font-weight:500;
+  color:var(--text-02);
+}
+
+/* The 44px band of every card range (UI-06 B-01), with the playbar's own
+   6px rail and 16px thumb drawn on the track. */
+.timeline-slider{
+  flex:1;
+  height:var(--touch-target-min);
+  background:transparent;
+  border:none;
+  border-radius:0;
+  outline:none;
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+.timeline-slider::-webkit-slider-runnable-track{
+  height:6px;
+  border-radius:3px;
+  background:var(--ui-03);
+  border:1px solid var(--border-interactive); /* B1: 3:1 rail boundary (WCAG 1.4.11) */
+}
+
+.timeline-slider::-moz-range-track{
+  height:6px;
+  border-radius:3px;
+  background:var(--ui-03);
+  border:1px solid var(--border-interactive); /* B1: 3:1 rail boundary (WCAG 1.4.11) */
+}
+
+.timeline-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:16px;
+  height:16px;
+  margin-top:-5px; /* (6px rail − 16px thumb) ÷ 2: the thumb centred on the rail */
+  border-radius:50%;
+  background:var(--control-accent);
+  cursor:pointer;
+  transition:transform var(--motion-fast) var(--ease-out);
+}
+
+.timeline-slider::-webkit-slider-thumb:hover{
+  transform:scale(1.2);
+}
+
+.timeline-slider::-moz-range-thumb{
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:var(--control-accent);
+  cursor:pointer;
+  border:none;
+  transition:transform var(--motion-fast) var(--ease-out);
+}
+
+.timeline-slider::-moz-range-thumb:hover{
+  transform:scale(1.2);
+}
+
+.time{
+  font-family:var(--font-mono);
+  font-size:var(--type-mono);
+  line-height:var(--lh-mono);
+  font-weight:var(--w-mono);
+  color:var(--text-02);
+  font-variant-numeric:tabular-nums;
+  min-width:3rem;
+}
+
+/* Buttons - increased horizontal padding per spec §2.1A (+20-30%) */
+/* display:inline-flex would defeat the hidden attribute (same rule the
+   scope groups need) — Edit network / Swap direction toggle with state */
+.btn[hidden]{
+  display:none;
+}
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:var(--space-2);
+  font-size:var(--control-font);
+  line-height:var(--control-line);
+  font-weight:600;
+  min-height:var(--control-min-h);
+  padding:var(--control-pad-y) var(--control-pad-x);
+  border-radius:var(--radius-2);
+  border:1px solid var(--border-strong);
+  background:transparent;
+  color:var(--text-01);
+  cursor:pointer;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.btn:disabled{
+  cursor:not-allowed;
+  background:var(--disabled-01);
+  color:var(--disabled-03);
+  border-color:var(--disabled-02);
+}
+
+.btn-primary{
+  background:var(--uon-blue); /* per spec v3.1.241 §4.4 */
+  border-color:var(--uon-blue);
+  color:var(--text-04);
+}
+
+a.btn-primary:visited{
+  color:var(--text-04);
+}
+
+.btn-primary:hover{
+  background:var(--hover-primary);
+}
+
+.btn-primary:active{
+  background:var(--active-primary);
+  transform:translateY(1px);
+}
+
+.btn-secondary{
+  background:transparent;
+  border-color:var(--border-strong);
+  color:var(--text-01);
+}
+
+.btn-secondary:hover{
+  background:var(--hover-ui);
+}
+
+.btn-secondary:active{
+  background:var(--active-ui);
+  transform:translateY(1px);
+}
+
+/* HDR-03: Icon buttons should be square with proper hit target */
+.btn-icon{
+  width:var(--control-lg);
+  height:var(--control-lg);
+  padding:0;
+  border-color:transparent;
+  flex-shrink:0;
+}
+
+/* Ghost button - transparent background, subtle border on hover */
+.btn-ghost{
+  background:transparent;
+  border-color:transparent;
+}
+.btn-ghost:hover{
+  background:var(--hover-ui);
+  border-color:var(--border-subtle);
+}
+
+.btn-icon:hover{
+  background:var(--hover-ui);
+}
+
+.btn-icon:active{
+  background:var(--active-ui);
+  transform:translateY(1px);
+}
+
+/* Play and Pause are primary icon buttons. The icon states above follow
+   .btn-primary in this sheet and would repaint them --hover-ui / --active-ui,
+   leaving the white glyph at 1.2:1 and 1.5:1; the primary fills stay
+   (15.4:1 and 17.2:1) (UI-06 review). */
+.btn-primary.btn-icon:hover{
+  background:var(--hover-primary);
+}
+.btn-primary.btn-icon:active{
+  background:var(--active-primary);
+}
+
+.btn-icon:disabled{
+  opacity:0.4;
+  cursor:not-allowed;
+}
+
+/* Undo/Redo buttons in header - same height as other controls per spec v3.1.241 §4.2 */
+#undo-btn,#redo-btn{
+  font-size:1.1rem;
+  min-width:var(--control-minh);
+  min-height:var(--control-minh);
+  padding:var(--space-1);
+  background:var(--ui-02);
+  border:1px solid var(--border-subtle);
+}
+
+#undo-btn:not(:disabled):hover,
+#redo-btn:not(:disabled):hover{
+  background:var(--hover-ui);
+}
+
+/* Dropdown Component */
+.dropdown{
+  position:relative;
+  display:inline-block;
+}
+
+.dropdown-toggle{
+  cursor:pointer;
+}
+
+.dropdown-menu{
+  position:absolute;
+  top:100%;
+  left:0;
+  z-index:1000;
+  display:none;
+  min-width:160px;
+  padding:var(--space-1) 0;
+  margin:var(--space-0) 0 0;
+  background:var(--ui-02);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-2);
+  box-shadow:var(--elev-2);
+}
+
+.dropdown.open .dropdown-menu{
+  display:block;
+}
+
+.dropdown-item{
+  display:block;
+  width:100%;
+  padding:var(--space-2) var(--space-4);
+  text-align:left;
+  background:none;
+  border:none;
+  color:var(--text-01);
+  font-size:var(--type-body);
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.dropdown-item:hover{
+  background:var(--hover-ui);
+}
+
+.dropdown-item:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 2px var(--focus-inner),
+    0 0 0 5px var(--focus-outer);
+}
+
+/* Splash Screen (combined with modal styles above) */
+.splash-content h2{
+  color:var(--text-01);
+  margin-bottom:var(--space-5);
+  font-size:var(--type-h1);
+}
+
+.splash-content h3{
+  color:var(--text-01);
+  font-size:var(--type-h2);
+  margin-top:var(--space-5);
+  margin-bottom:var(--space-3);
+}
+
+.instructions{
+  margin-bottom:var(--space-6);
+}
+
+.instructions ul{
+  margin-left:var(--space-5);
+  line-height:1.8;
+  color:var(--text-02);
+}
+
+.instructions ul li{
+  margin-bottom:var(--space-2);
+}
+
+.instructions kbd{
+  display:inline-block;
+  padding:var(--space-0) var(--space-1);
+  font-family:var(--font-mono);
+  font-size:var(--type-caption);
+  background:var(--ui-01);
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-1);
+  box-shadow:0 1px 0 var(--ui-03);
+}
+
+#splash-close{
+  width:100%;
+  padding:var(--space-3);
+  font-size:var(--type-body);
+  margin-top:var(--space-5);
+}
+
+/* LEGAL-01: the licence line sits under the CTA as secondary text. It must
+   never compete with Get Started, but it is still body copy, so it keeps the
+   AAA text token rather than a lighter one. */
+.splash-legal{
+  margin:var(--space-4) 0 0;
+  font-size:var(--type-caption);
+  line-height:1.5;
+  color:var(--text-02);
+}
+
+/* Beacon Animation */
+@keyframes beacon-pulse{
+  0%,100%{transform:scale(1);opacity:1;}
+  50%{transform:scale(1.3);opacity:0.8;}
+}
+
+@keyframes beacon-ripple{
+  0%{transform:scale(0.8);opacity:1;}
+  100%{transform:scale(2.5);opacity:0;}
+}
+
+/* Path Style */
+.path{
+  stroke:var(--map-series-1);
+  stroke-width:var(--map-path-stroke-width);
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+/* Animations */
+@keyframes pulse{
+  0%{transform:scale(1);}
+  50%{transform:scale(1.1);}
+  100%{transform:scale(1);}
+}
+
+.pulse{
+  animation:pulse 0.5s ease-in-out;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:0.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:0.01ms!important;
+    scroll-behavior:auto!important;
+  }
+}
+
+/* Increased contrast (UI-06 B-27): the primary button stays on UoN blue —
+   white on it is 11.7:1, where white on jubilee red was 6.4:1 — and strokes
+   strengthen instead: tokens.css darkens --border-interactive to 7.8:1 and
+   every button border doubles. The header has no bottom border to recolour.
+   The timeline rail keeps --ui-03: darkened to --ui-04 it sat at 2.8:1 under
+   its #003A65 thumb; the 7.8:1 rail border carries the mode's strength. */
+@media (prefers-contrast:more){
+  .btn{border-width:2px;}
+  .btn-secondary{background:var(--ui-02);color:var(--text-01);}
+}
+
+/* Impact overlay (zoom prompt etc) */
+.impact-toast,.zoom-prompt{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%) scale(0.9);
+  background:var(--interactive-01);
+  color:var(--text-04);
+  border-radius:var(--radius-2);
+  box-shadow:var(--elev-2);
+  padding:var(--space-4) var(--space-5);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--motion-med) var(--ease-out),
+             transform var(--motion-med) var(--ease-out);
+  z-index:10000;
+}
+
+.impact-toast.visible,.zoom-prompt.visible{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1);
+  pointer-events:auto;
+}
+
+/* =========================
+   Responsive: Medium screens
+   Keep all three real DOM columns present, but narrow both inspectors.
+   ========================= */
+@media (max-width: 80rem) {
+  .header,
+  .header-controls{
+    flex-wrap:wrap;
+  }
+
+  .main{
+    grid-template-columns:minmax(15rem,18rem) minmax(20rem,1fr) minmax(15rem,18rem);
+  }
+
+  .sidebar,
+  .sidebar-right{
+    min-width:0;
+  }
+}
+
+/* =========================
+   Responsive: Reflow breakpoint for WCAG zoom compliance
+   At ~1024px (64rem), including zoom-reduced viewports, use document
+   scrolling and stack the actual settings, canvas, and layer panels.
+   ========================= */
+@media (max-width: 64rem) {
+  html,
+  body{
+    height:auto;
+    min-height:100%;
+  }
+
+  body{
+    overflow:auto;
+  }
+
+  #app{
+    display:flex;
+    flex-direction:column;
+    height:auto;
+    min-height:100vh;
+    overflow:visible;
+  }
+
+  .header-title{
+    flex-basis:100%;
+  }
+
+  .header-controls{
+    width:100%;
+    margin-left:0;
+  }
+
+  .main{
+    display:flex;
+    flex-direction:column;
+    width:100%;
+    overflow:visible;
+  }
+
+  .sidebar,
+  .canvas-area,
+  .sidebar-right{
+    position:static;
+    width:100%;
+    max-width:none;
+    transform:none;
+    grid-column:auto;
+    grid-row:auto;
+  }
+
+  .sidebar,
+  .sidebar-right,
+  .settings-sections,
+  .waypoint-list{
+    overflow:visible;
+    max-height:none;
+  }
+
+  .canvas-area{
+    min-height:22rem;
+    justify-content:flex-start;
+    border-left:none;
+    border-right:none;
+    border-top:1px solid var(--border-subtle);
+    border-bottom:1px solid var(--border-subtle);
+  }
+
+  .sidebar-right{
+    border-top:1px solid var(--border-passive);
+  }
+
+  .controls{
+    /* In flow here, not sticky (UI-06 J-12) */
+    position:relative;
+    width:100%;
+    align-self:stretch;
+    flex-wrap:wrap;
+  }
+
+  /* The transport scrolls with the page here, so the toasts are fixed to
+     the viewport, in view however far it scrolls, and over none of the
+     transport's controls: wholly above them or wholly below them, or, where
+     neither room takes the stack, capped to the larger and scrolling inside
+     itself (`--toast-lift`, `--toast-room`, measured by the app on scroll
+     and resize: UI-06 J-12, the lead's Q5; Codex r2 on 753f93f, 2). */
+  .toast-container{
+    position:fixed;
+    bottom:calc(var(--toast-lift) + var(--space-2));
+    max-height:var(--toast-room);
+  }
+
+  .toast-container.is-capped{
+    overflow-y:auto;
+  }
+
+  .timeline{
+    flex:1 1 20rem;
+    min-width:0;
+  }
+}
+
+@media (max-width: 30rem) {
+  .header{
+    padding:var(--space-3);
+  }
+
+  .header-controls{
+    gap:var(--space-1);
+  }
+
+  .mode-switch{
+    width:100%;
+    justify-content:center;
+  }
+
+  .header-controls > .dropdown{
+    flex:1 1 8rem;
+  }
+
+  .header-controls > .dropdown .dropdown-toggle,
+  .header-controls > #report-bug-btn,
+  .header-controls > #help-btn{
+    width:100%;
+  }
+
+  .header-controls > #report-bug-btn,
+  .header-controls > #help-btn{
+    flex:1 1 8rem;
+  }
+
+  .diagnostics-actions .btn{
+    flex:1 1 10rem;
+  }
+
+  .canvas-area{
+    min-height:16rem;
+  }
+
+  .transport-controls{
+    width:100%;
+    justify-content:center;
+  }
+
+  .timeline{
+    flex-basis:100%;
+    gap:var(--space-2);
+  }
+
+  .time{
+    min-width:2.5rem;
+  }
+
+  .modal,
+  .splash-screen{
+    padding:var(--space-2);
+  }
+
+  .modal-content,
+  .splash-content{
+    max-height:calc(100vh - (2 * var(--space-2)));
+    overflow-y:auto;
+    padding:var(--space-4);
+  }
+
+  /* Help and the welcome scroll their body, not their box (UI-06 J-01 round 4) */
+  .help-modal-content,
+  .splash-content{
+    overflow-y:visible;
+  }
+
+  .section-content label.crowd-variation-control{
+    flex-wrap:wrap;
+  }
+
+  .crowd-variation-control input[type="range"]{
+    order:3;
+    flex:1 0 100%;
+    margin:var(--space-2) 0 var(--space-1);
+  }
+
+  .section-content .crowd-variation-control span:first-child{
+    flex:1 1 auto;
+  }
+
+  .section-content .range-row:has(> .crowd-variation-control){
+    align-items:flex-start;
+  }
+
+  .section-content .range-row:has(> .crowd-variation-control) > .range-readout{
+    display:inline-flex;
+    align-items:center;
+    min-height:var(--touch-target-min);
+    min-width:0;
+    white-space:nowrap;
+  }
+
+  .crowd-busyness-handle-row,
+  .crowd-busyness-actions{
+    grid-template-columns:1fr;
+  }
+
+  .crowd-busyness-handle-title,
+  .crowd-busyness-remove{
+    grid-column:1;
+  }
+}
+
+/* ==========================================================================
+   Preview Mode Indicator
+   Visual feedback when in Preview mode (Issue #10)
+   ========================================================================== */
+
+body[data-mode="preview"] .sidebar.left,
+body[data-mode="preview"] .sidebar-left {
+  display: none;
+}
+
+body[data-mode="preview"] .canvas-area {
+  grid-column: 1 / -1;
+}
+
+/* Preview mode badge (UI-06 J-12): a real element, top-right of the canvas
+   itself (its frame), where no toast stands (they are bottom-centre); white
+   on UoN blue, 11.7:1. It was a pseudo-element fixed over the header. Shown
+   in Preview alone, by its own `hidden`, which the mode switch keeps true
+   (Codex r1 on 7a74755, 2). */
+.preview-badge[hidden] {
+  display: none;
+}
+
+.preview-badge {
+  display: block;
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  background: var(--interactive-01);
+  color: var(--text-04);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  border-radius: var(--radius-2);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   UTILITY LAYOUT CLASSES
+   Extracted from inline styles for maintainability (Carbon pattern)
+   ============================================================================ */
+
+/* Inline row for upload / action controls */
+.upload-row{
+  display:flex;
+  gap:var(--space-2);
+  align-items:center;
+  margin-top:var(--space-3);
+}
+
+/* Custom marker / head preview container */
+.preview-box{
+  padding:var(--space-2);
+  border:1px solid var(--ui-03, #CFD4D8);
+  text-align:center;
+}
+
+/* Right sidebar control row: label + range + value on one line */
+.sidebar-control-row{
+  display:flex;
+  align-items:center;
+  gap:0.5rem;
+  margin:0;
+}
+
+.sidebar-control-row span[data-tip],
+.sidebar-control-row > span:first-child{
+  flex:0 0 auto;
+  font-weight:500;
+  color:var(--text-02);
+}
+
+.sidebar-control-row input[type="range"]{
+  flex:1;
+  accent-color:var(--control-accent);
+}
+
+/* ── Forced colours (A11Y-02) ──────────────────────────────────────────────
+   Windows High Contrast and its kin force `box-shadow` to none, and every
+   focus ring in this project is a box-shadow drawn over `outline:none`.
+   Left alone, a high-contrast user gets no visible focus anywhere at all.
+   `outline` IS repainted with system colours, so it is the one thing they
+   can actually see: restored here for every focusable element in a single
+   place. `!important` because the per-component rules that zero the outline
+   are more specific than any selector this block could reasonably carry, and
+   in this mode one consistent system ring is the goal anyway.
+
+   Below it, the UI that carries meaning in hue alone is repainted to system
+   colours. The map canvas is deliberately NOT touched: it is content, like an
+   image, and forced colours leaves it as authored — so the Okabe-Ito data
+   palette and the affordances drawn over it (the hovered leg, its "+" handle,
+   beacons) stay legible against each other exactly as before. That exemption
+   is recorded in UI-STANDARDS → Accessibility rather than worked around
+   here, because repainting content to system colours would destroy the
+   colour-blind-safe palette it exists to protect. */
+@media (forced-colors: active){
+  :focus-visible{
+    outline:var(--focus-width) solid Highlight !important;
+    outline-offset:var(--focus-offset) !important;
+  }
+
+  /* A card header's ring is drawn inside its box (B-02), and so is its
+     outline here: the card clips what its header draws outside itself. */
+  .section-header:focus-visible{
+    outline-offset:-5px !important;
+  }
+
+  /* A banner's action likewise: the slot clips what is drawn outside its
+     3 rem (UI-06 J-12; Codex r1 on 7a74755, 6). */
+  .mode-banner-action:focus-visible{
+    outline-offset:-5px !important;
+  }
+
+  /* The current scope's fill flattens to Canvas; the system highlight pair
+     carries it, as it does a hint trigger's open state. */
+  .scope-route-btn[aria-current="true"]{
+    border-color:Highlight;
+    background:Highlight;
+    color:HighlightText;
+  }
+
+  /* Selection accent bars: their fill would otherwise flatten to Canvas and
+     the selected row would lose its only non-text marker. */
+  .waypoint-item.selected::before,
+  .waypoint-item.is-selected::before,
+  .layer-item.selected::before{ background:Highlight; }
+
+  /* This one draws its bar as an inset box-shadow, so only the border can
+     survive — make that border carry the selection. */
+  .scene-outline-action.is-selected{ border-color:Highlight; }
+}
+
+/* Disabled fields look disabled (UI-06 B-31; the lead's pane finding, round
+   2). A crowd with no emitter disables its Dots, Release and Motion cards,
+   and their ranges and select looked exactly as when enabled: the accent
+   thumb, the field's own text and border. Carbon's disabled state, as the
+   .btn rule has it: the --disabled tokens and a not-allowed cursor. Disabled
+   controls are exempt from contrast (WCAG 1.4.11); the thumb takes the
+   darkest of the three so the value it marks can still be read. The swatches
+   sit in a fieldset that is disabled with them (.swatch-fieldset:disabled,
+   swatch-picker.css): a chip is the colour it offers, so it keeps its hue.
+   Placed last: the field rules above tie with these on specificity. Each
+   pseudo-element has its own rule, as a browser drops a rule it cannot
+   parse whole. */
+input[type="range"]:disabled{
+  cursor:not-allowed;
+  accent-color:var(--disabled-03);
+}
+
+.section-content input[type="range"]:disabled::-webkit-slider-runnable-track{
+  background:var(--disabled-01);
+  border-color:var(--disabled-02);
+}
+
+.section-content input[type="range"]:disabled::-moz-range-track{
+  background:var(--disabled-01);
+  border-color:var(--disabled-02);
+}
+
+.section-content input[type="range"]:disabled::-webkit-slider-thumb{
+  background:var(--disabled-03);
+  box-shadow:none;
+  cursor:not-allowed;
+}
+
+.section-content input[type="range"]:disabled::-moz-range-thumb{
+  background:var(--disabled-03);
+  box-shadow:none;
+  cursor:not-allowed;
+}
+
+select:disabled,
+input[type="number"]:disabled{
+  background-color:var(--disabled-01);
+  color:var(--disabled-03);
+  border-color:var(--disabled-02);
+  cursor:not-allowed;
+}
+
+.crowd-group-toggle input[type="checkbox"]:disabled{
+  cursor:not-allowed;
+  accent-color:var(--disabled-03);
+}
+.crowd-group-toggle:has(input:disabled){ cursor:not-allowed; }
+
+.layer-item{ flex-wrap:wrap; }
+.layer-copy-reason{
+  order:1;
+  flex-basis:100%;
+  margin:0;
+  padding:var(--space-2);
+  color:var(--text-01);
+  font-size:var(--text-sm);
+}
+
+/* A full name row keeps the new 44 px action from squeezing names in the desktop sidebar. */
+.layer-item:has(> .layer-duplicate) > .layer-row{ flex-basis:100%; }
+.layer-item:has(> .layer-duplicate) > .layer-visibility{ margin-left:auto; }
+
+/* Final whistle uses the same native productive form pattern as Groups. */
+.crowd-wait-form{
+  display:grid;
+  gap:var(--space-2);
+  margin-top:var(--space-3);
+}
+.crowd-wait-form[hidden]{ display:none; }
+.crowd-wait-toggle{
+  min-height:var(--touch-target-min);
+  cursor:pointer;
+}
+.crowd-wait-toggle input[type="checkbox"]{
+  width:16px;
+  height:16px;
+  cursor:pointer;
+  accent-color:var(--control-accent);
+}
+.crowd-wait-toggle input[type="checkbox"]:disabled{
+  accent-color:var(--disabled-03);
+  cursor:not-allowed;
+}
+.crowd-wait-toggle:has(input:disabled){ cursor:not-allowed; }
