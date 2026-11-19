@@ -26,6 +26,22 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-11-19 — PLAN-7 — Phase 7, the core end to end, opens with what Phase 6 taught written into each item
+**Decision:** Phase 7 opens beside Phase 6's last item with §19's eleven core items and GATE-02, the gate's loose ends; CORE-01 starts when the orchestrator starts it, after STACK-04. Every core item's pull request carries `## What to try`, covers what it adds in the accessibility run and leaves the published page working. Until v4.0 the save format may change between previews. Provisional under grant G3. Because the owner asked to "plan for as many phases of work as possible".
+**Rationale:** The owner's word in force is his overnight message of 2026-11-18, word for word in GATELESS-2, which asks to "accrue decisions that come up but dont stop dev unless impossible" and ends "please plan for as many phases of work as possible"; with his answer "Proceed on recommendations (Recommended)" (G3), it is the instruction to plan and execute that `verbs/plan.md` step 5 names. Every choice below is the session's recommended option, provisional under G3 and listed for him in the night's decisions list.
+
+The phase. Phase 7 opens under Current with the items of the architecture plan's §19, in its order, and GATE-02 second: CORE-01, GATE-02, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-12, CORE-07, CORE-08, CORE-10, CORE-09. CORE-11 stays in Phase 8, where §19 places it. Phase 6 is not closed here: STACK-04's close closes it, so two phases stand open under Current for a while, as Phases 2 and 3 once did. CORE-01 starts only when the orchestrator starts it, and §19's "Depends on: STACK-04" stands. §19's side-by-side pairs stand (CORE-02 with CORE-03, CORE-06 with CORE-12, CORE-07 with CORE-08, CORE-10 with CORE-09). Since STACK-03, `tests/a11y/project.mjs` and `project/a11y/coverage.json` are shared by every item that adds a screen or control, so the three pairs that both add controls run on the catalogues' terms: each adds only its own entries, and the second to merge brings `main` in, runs v4's whole gate with the accessibility run on the joined head, and merges once CI is green and Codex has approved that head. The run holds port 4173, so two items cannot run it on one machine at once; the second waits (wish PLAN-7.1).
+
+What Phase 6 taught, now one criterion line in each core item file, CORE-11's included, where `node tools/brief.mjs` shows it whole (it prints an item's Now, then its criteria, before anything else that fits): since PUB-01 every app merge publishes, so the merge leaves the published page working; the step copies the pull request's `## What to try` section into the live `version.json`, which is how the owner learns what each preview can do; and since STACK-03 v4's gate runs the accessibility run at AAA, so each new screen or control is declared in `tests/a11y/project.mjs` in the same pull request and each feature added or ruled out is recorded in `project/a11y/coverage.json` (wish STACK-03.4). Phase 8's items take the same line when Phase 8 opens (wish PLAN-7.2). CORE-05's file now lists what depends on the shell's one link (STACK-03's decision, wish STACK-03.5) and its record P09.
+
+The save format. The plan's A13 let the format change freely only until the first publish, assuming that came with CORE-08. The owner's word on publishing brought it before anything could be saved, so read literally every change after CORE-03's first published build would need a tested step, an overhead on every core and feature item. Until v4.0 is declared the format may change between previews: a file from another version, older or newer, is refused whole, and the editor says plainly wherever it offers Save that a preview's file may not open in a later preview; from v4.0, A13 holds as written. CORE-03's criterion and the plan's §13 say so. The other options: A13 literally; or free until CORE-08's build, A13's original moment.
+
+GATE-02 gathers the gate's small gaps and runs beside CORE-01 to CORE-03, which touch none of its files. Its traces: STACK-03.1 — promoted to GATE-02 — the accessibility pack's files sort as record though v4's lane reads them; PUB-01.3 — promoted to GATE-02 — the publishing step's own files run v3's whole suite; PUB-01.6 — promoted to GATE-02 — PUB-01's trial is still to be written into its Notes. It also places STACK-04's `scripts/measures.mjs`, left on none of the gate's lists by STACK-04's brief, and makes the publishing commit's check skip jobs that did not run (PUB-01's hand-over). Wishes PUB-01.4 and PUB-01.5 stay the owner's calls.
+
+The checker's warnings on item files: AI-01's `docs/examples/`, which left the root at v4's first publish, now names `v3/src/examples/`; CORE-05's `src/player` is a folder the plan places and CORE-04 makes, so its warning stays until then; STACK-01's is that item's file and stays. What the owner ruled in the question round stands as recorded, CORE-02's "grace period or control" criterion included. Adding this entry made 46 live decisions, so on his ticks "Archive the oldest decisions" and "Archive one more decision" (2026-11-18) the oldest moves to the archive word for word, leaving 45. Standards: record-only; no digest rule applies.
+**Supersedes:** 2026-11-18 — PLAN-6 — v4's foundations open on the architecture plan's recommended options, provisional under the owner's overnight grant
+**Items:** CORE-01, GATE-02, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-12, CORE-07, CORE-08, CORE-10, CORE-09
+
 ## 2026-11-19 — STACK-03 — v4's gate tests the shell at AAA in a real browser, and planted faults fail it
 **Decision:** `npm run check:v4` runs the PM-Skills 5.0.1 accessibility pack's standard depth, Playwright and axe in headless Chromium, against v4's shell at level AAA, writing nothing in the checkout; the pack's 5:1 text and 30 px target pages must fail it; one link gives the shell a control to focus. Provisional under the owner's grants G3 and G4. Because he chose "Standard now, extended before v4.0 (Recommended)" (Q22).
 **Rationale:** The owner's words in force, verbatim: "Standard now, extended before v4.0 (Recommended)" (Q22), whose option text reads "From the start: automated checks in a real browser (Playwright and axe) and accessibility lint rules, as part of the gate"; overnight, "Yes, read and install (Recommended)" (G4), "Proceed on recommendations (Recommended)" (G3) and, typed by him, "accrue decisions that come up but dont stop dev unless impossible". Every choice below is provisional and put to him in the night's list; the pinned versions are shown to him in the night's lane (`PINNED-VERSIONS-10-stack-03.md`).
@@ -941,42 +957,6 @@ CROWD-08, its parts and its deadline of 2026-10-20 are unchanged. The item file 
 - **What happened:** REL-718 was written before #135 (PLAN-4) landed. It was rebased onto `5ad50cb` to resolve conflicts, but its next-item sentence and its recall answer 4 were not re-read against PLAN-4's placement ("comes first in Current after DEF-98").
 - **The backlog order:** the closed DEF-98 heading, then "MVP — football crowds and mobs — the owner's word of 2026-10-13" with CROWD-08, then Phase 2, where DEF-15 now waits behind CROWD-08.
 - **Recall:** the recheck stored as 8/8 had answer 4 wrong, so it should have scored 1 (7/8). After this correction a local recheck answers 4 with CROWD-08 in the MVP heading (PLAN-4's placement), 8/8, stored as its own trajectory line.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-13 — REL-718 — v3.2.718 ships DEF-98's recovery images; DEF-98 closes, and its heading with it
-
-**Decision:** v3.2.718 is live from deploy `9864efc` (tag `v3.2.718`), released on the owner's word for DEF-98's merge (`e8c361c`, PR #133). DEF-98 closes with its heading, and Phase 2 resumes at DEF-15. The player changed only by minifier renames, so its disk save is waived.
-
-**Rationale:**
-- **Release** (`release.sh`): rollback tag `rollback-v3.2.717-e8c361c`; gate green (137 files, 3,484 tests, 2 todo); dry run, then push; deploy `9864efc`; report-build-status, deploy, test-and-build and build all succeeded; Pages built `9864efc`; all 22 live files SHA-256-identical.
-- **Live smoke** (the lead's observation in the pane, 2026-10-13 ~18:37 BST, storage and the image store cleared):
-  - the Open day route loads 6 waypoints, plays to 3,002 ms of 26,763 ms, then to its end in 1,426 frames with none queued;
-  - MP4 9,910,489 bytes, ftypisom, 1920×1080, 28.8 s;
-  - HTML 2,037,331 bytes, with the project, its CSP and the live `player.js` embedded;
-  - no non-200 resource.
-- **DEF-98 on the live site** (the lead's observation): before storage was cleared, the pane held a recovery record in v3.2.717's format, left by earlier smokes. v3.2.718 restored its 6 waypoints and offered "Background not restored: recovery before this release kept no images. Choose the image this route was made on." with Choose image and Dismiss.
-- **The player:** `docs/player.js` differs from v3.2.717's only by the minifier's renames. It has the same length, 435,031 bytes, though the raw bytes differ, and it is the same text once every one- and two-character identifier is masked (`perl -pe 's/\b[A-Za-z_\$][A-Za-z0-9_\$]?\b/X/g'`, both SHA-1 `d5b5ac7a5009…`). Masked equality shows the renames are all that changed; it is not, on its own, a proof of identical behaviour. By the owner's export rule (GATELESS-1), a release that changes `player.js` has its exports saved to disk. Asked, the owner waived it for this release only: "Waive this one (Recommended)".
-- **What DEF-98 delivers:**
-  - Recovery keeps the background, bundled or uploaded, custom markers and the custom path head, each with its file name, size and custom style.
-  - Images live in IndexedDB, keyed by SHA-256, and the record carries a version-2 manifest.
-  - Each tab holds a shared Web Lock per image it shows, saves or reads, and a deletion needs that image's lock exclusively. Without Web Locks nothing is deleted.
-  - A toast names any image not kept, and why. A background that cannot come back is offered by name in the banner slot, never replaced.
-  - Clear All removes the images only once nothing needs them, and says so only then.
-  - `coordVersion`, the project file format and the player's behaviour are unchanged. No package was added.
-- **The owner's words on the PR**, 2026-10-13 (labels verbatim):
-  - "Merge and release (Recommended)", whose option text was: "I squash-merge #133 and release v3.2.718 with the usual release script from your OneDrive copy, after checking no other chat is busy. Then I run the live smoke test and file the release record that closes DEF-98."
-  - On its six open questions, "Keep all six (Recommended)": (1) the keeping order, background, then the path head, then the markers; (2) no background name in Save Project yet; (3) Choose image keeps the prompt until a background is set; (4) Dismiss is final; (5) the warning toasts stay until dismissed; (6) a browser that cannot store images warns as built.
-  - The filing's other readings stand as proposals, tracked by a wish line. "Markers in waypoint order" is the implementation's detail; his option said "then markers".
-- **Before releasing** (the lead's observation): two other chats were busy, but neither was in `route-plotter/`. One worked in the PM-Skills Lab folder; the other had just gone idle.
-- **The pull request's own record:** five lead rounds (`ab4592a` → `b797a79`). Codex reviewed the brief twice and the code four times (r1: 1 blocking and 7 real; r2: 1 blocking and 3 real; r3: 1 real; r4: approve). The lead checked it in Chromium: real IndexedDB and Web Locks, two tabs, Clear All across tabs.
-- **Recall, local** (verbs/recall.md). The lead first scored it 8/8; Codex r1 on the record found answer 3 partial, so the original result is 7/8 (2,2,1,2). After the repair below, a local recheck is 8/8, stored as its own trajectory line:
-  1. The last four shipped: DEF-98, DEF-89, DEF-86, DEF-96 (`project/trajectory.md`).
-  2. One decision of this heading: DEF-98's, that recovery keeps every image, because a restored session came back with dots on a blank canvas.
-  3. What is deferred: the original answer, "every Deferred line below is none", missed the backlog's deferred items (score 1). The repaired answer: EX-01, DEF-78, DEF-79 and DEF-80 (from CROWD-05), DEF-84, 85, 87, 88, 90, 92, 93, 95 and 97 (from CROWD-07), each a `— (from: …)` line in `project/backlog.md`, and the open ideas in `project/wish-list.md`. DEF-98's remaining readings are a new wish line there.
-  4. The next item: DEF-15, in Phase 2 (the DEF-98 decision's placement, "before DEF-15").
 
 **Supersedes:** none
 
