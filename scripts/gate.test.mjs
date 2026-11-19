@@ -17,6 +17,8 @@ import {
   ciRange, classify, describe as describePlan, git, lastGreenSha, localPaths, pathsOfRange, plan, runLane,
   trackedLinks
 } from './gate.mjs';
+// PUB-01: the live site's class, the publishing step's commits and the refusal of a hand change.
+import { PAGES, STEP, localPages, main as gate, pagesPaths, rangeEnds, stepMade } from './gate.mjs';
 
 const EVERYTHING = ['gate', 'v3', 'v4', 'record'];
 const NO_V4 = { files: [], dirs: [] };
@@ -64,13 +66,15 @@ describe('classify', () => {
     for (const path of [
       '.github/workflows/ci.yml', 'scripts/gate.mjs', 'scripts/gate.test.mjs', 'scripts/new-script.sh',
       '.npmrc', 'vitest.config.mjs', 'playwright.config.ts', 'dist/index.html', '.nvmrc', '.gitignore', '.editorconfig', '.claude/settings.json',
-      'docs/index.html', 'version.json', 'specs/dot-crowd-navigator/README.md', '_Joe/dev notes/task list.md',
+      'specs/dot-crowd-navigator/README.md', '_Joe/dev notes/task list.md',
       'Route Plotter v3.code-workspace',
       // Near misses: only the exact spelling at the root counts.
-      'project', 'Project/backlog.md', 'readme.md', 'README.md.orig', 'docs/AGENTS.md', 'tools',
+      'project', 'Project/backlog.md', 'readme.md', 'README.md.orig', 'tools',
       'toolsx/check.mjs', 'reviews.md', 'LICENSE.txt', 'scripts/gate.sh',
-      'v3', 'V3/src/a.js', 'v3x/src/a.js', 'docs/v3/app.js', '.github/workflows/v3.yml',
-      'src', 'Src/main.tsx', 'srcx/a.ts', 'testsx/a.mjs', 'docs/src/a.js', 'tsconfig.json.orig'
+      'v3', 'V3/src/a.js', 'v3x/src/a.js', '.github/workflows/v3.yml',
+      'src', 'Src/main.tsx', 'srcx/a.ts', 'testsx/a.mjs', 'tsconfig.json.orig',
+      // PUB-01: the live site's near misses (docs/ and version.json themselves are its class, below).
+      'docs', 'Docs/index.html', 'docsx/index.html', 'version.json.orig', 'Version.json', 'specs/version.json'
     ]) assert.equal(classify(path), 'other', path);
     // A record folder's name below the root is not the record.
     assert.equal(classify('v3/src/project/x.js'), 'v3');
@@ -528,5 +532,238 @@ describe('the gate as wired in this repository', () => {
     const [pages] = stepRunning('git diff --exit-code');
     assert.match(pages, /run: git diff --exit-code -- docs version\.json v3\/version\.json\n/);
     assert.ok(!/\bif:/.test(pages), 'the Pages proof runs unconditionally');
+  });
+});
+
+describe('the live site, which only the publishing step writes (PUB-01)', () => {
+  /** A scratch repository on main with a live site, a v4 file and a record file, origin/main at its start. */
+  function site() {
+    const dir = mkdtempSync(join(tmpdir(), 'pub-01-gate-'));
+    const env = (name, email) => ({ ...process.env, GIT_AUTHOR_NAME: name, GIT_AUTHOR_EMAIL: email,
+      GIT_COMMITTER_NAME: name, GIT_COMMITTER_EMAIL: email });
+    const person = env('someone', 'someone@example.invalid');
+    const bot = env(STEP.name, STEP.email);
+    const run = (args, as = person) => {
+      const result = spawnSync('git', ['-c', 'commit.gpgsign=false', ...args], { cwd: dir, encoding: 'utf8', env: as });
+      assert.equal(result.status, 0, result.stderr);
+      return result.stdout.trim();
+    };
+    const write = (path, text) => {
+      mkdirSync(dirname(join(dir, path)), { recursive: true });
+      writeFileSync(join(dir, path), text);
+    };
+    const commit = (message, as) => {
+      run(['add', '-A'], as);
+      run(['commit', '-q', '-m', message], as);
+      return run(['rev-parse', 'HEAD']);
+    };
+    /** What the step commits: the whole site and version.json, with its trailer. */
+    const publish = (text, { as = bot, trailer = `${STEP.trailer} publish.yml run 1` } = {}) => {
+      rmSync(join(dir, 'docs'), { recursive: true, force: true });
+      write('docs/index.html', text);
+      write('version.json', `{"site":"${text}"}\n`);
+      return commit(`PUB-01: publish ${text}\n\nVerify: test\n${trailer}`, as);
+    };
+    run(['init', '-q', '-b', 'main']);
+    write('docs/index.html', 'v3');
+    write('version.json', '{"build":726}\n');
+    write('src/main.tsx', 'export {};\n');
+    write('project/backlog.md', '# Backlog\n');
+    const start = commit('start');
+    run(['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+    return { dir, run, write, commit, publish, start, person, bot, done: () => rmSync(dir, { recursive: true, force: true }) };
+  }
+
+  test('docs/ and the root version.json are the live site; v3/ keeps its own copies', () => {
+    assert.deepEqual(PAGES, { files: ['version.json'], dirs: ['docs/'] });
+    for (const path of ['docs/index.html', 'docs/assets/index-abc.js', 'docs/AGENTS.md', 'docs/v3/app.js',
+      'docs/src/a.js', 'docs/.nojekyll', 'version.json']) assert.equal(classify(path), 'pages', path);
+    for (const path of ['v3/docs/app.js', 'v3/version.json']) assert.equal(classify(path), 'v3', path);
+    assert.deepEqual(pagesPaths(['docs/a', 'src/b.ts', 'version.json', 'v3/version.json']), ['docs/a', 'version.json']);
+    assert.deepEqual(pagesPaths(null), []);
+  });
+
+  test("a hand change to the live site runs everything; the step's own output runs nothing of its own", () => {
+    assert.deepEqual(plan(['docs/index.html']).lanes, EVERYTHING);
+    assert.deepEqual(plan(['version.json'], { pages: 'hand' }).lanes, EVERYTHING);
+    assert.equal(plan(['docs/index.html']).classes.get('docs/index.html'), 'other');
+    assert.deepEqual(plan(['docs/index.html', 'version.json'], { pages: 'step' }).lanes, ['record']);
+    assert.deepEqual(plan(['docs/index.html', 'project/backlog.md'], { pages: 'step' }).lanes, ['record']);
+    assert.deepEqual(plan(['docs/index.html', 'src/main.tsx'], { pages: 'step' }).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['docs/index.html', 'v3/build.js'], { pages: 'step' }).lanes, ['gate', 'v3', 'record']);
+    assert.deepEqual(plan(['docs/index.html', '.nvmrc'], { pages: 'step' }).lanes, EVERYTHING);
+    const words = describePlan(plan(['version.json'], { pages: 'step' }), 'a test');
+    assert.match(words, /pages\s+version\.json/);
+    assert.match(words, /the publishing step's own output/);
+  });
+
+  test("the merge after a publish reads the step's commit as the step's, so a record-only merge stays record-only", () => {
+    const repo = site();
+    try {
+      repo.publish('v4 preview 1');
+      repo.run(['switch', '-q', '-c', 'work', repo.start]);
+      repo.write('project/backlog.md', '# Backlog\n- [x] A\n');
+      repo.commit('A: record');
+      repo.run(['switch', '-q', 'main']);
+      repo.run(['merge', '-q', '--no-ff', '--no-edit', 'work']);
+      const merged = repo.run(['rev-parse', 'HEAD']);
+      const paths = pathsOfRange([repo.start, merged], repo.dir);
+      assert.deepEqual(paths.sort(), ['docs/index.html', 'project/backlog.md', 'version.json']);
+      assert.equal(stepMade(repo.start, merged, repo.dir), true);
+      assert.deepEqual(plan(paths, { pages: 'step' }).lanes, ['record']);
+      // Before PUB-01 the same range ran everything, v3's suite included.
+      assert.deepEqual(plan(paths).lanes, EVERYTHING);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test('a take-back, a publish after it and a branch that merged main are all the step\'s', () => {
+    const repo = site();
+    try {
+      repo.publish('v4 preview 1');
+      repo.publish('v3', { trailer: `${STEP.trailer} publish.yml run 2 (take-back)` });
+      const republished = repo.publish('v4 preview 2');
+      assert.equal(stepMade(repo.start, republished, repo.dir), true);
+      // A branch cut before the publishes that merged main in: its own range holds no site path.
+      repo.run(['switch', '-q', '-c', 'work', repo.start]);
+      repo.write('src/main.tsx', 'export const a = 1;\n');
+      repo.commit('B: v4');
+      repo.run(['merge', '-q', '--no-edit', 'main']);
+      const head = repo.run(['rev-parse', 'HEAD']);
+      assert.deepEqual(pathsOfRange([`main...${head}`], repo.dir), ['src/main.tsx']);
+      assert.equal(stepMade(repo.start, head, repo.dir), true);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test("a hand change is never the step's: after it, without the bot, without the trailer, or beside other paths", () => {
+    const repo = site();
+    try {
+      // After a publish, a hand edit to the site.
+      repo.publish('v4 preview 1');
+      repo.write('docs/index.html', 'edited');
+      const edited = repo.commit('X: edit the site');
+      assert.equal(stepMade(repo.start, edited, repo.dir), false);
+      // The step's trailer from someone else.
+      repo.run(['reset', '-q', '--hard', repo.start]);
+      const forged = repo.publish('forged', { as: repo.person });
+      assert.equal(stepMade(repo.start, forged, repo.dir), false);
+      // The bot, without the trailer.
+      repo.run(['reset', '-q', '--hard', repo.start]);
+      const plain = repo.publish('plain', { trailer: 'Verify: nothing' });
+      assert.equal(stepMade(repo.start, plain, repo.dir), false);
+      // The bot and the trailer, beside an app path.
+      repo.run(['reset', '-q', '--hard', repo.start]);
+      repo.write('src/main.tsx', 'export const b = 2;\n');
+      const beside = repo.publish('beside');
+      assert.equal(stepMade(repo.start, beside, repo.dir), false);
+      // Nothing to read is never the step's.
+      assert.equal(stepMade('0'.repeat(40), beside, repo.dir), false);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test('a range is read from both its ends, three dots from where the branch left', () => {
+    const repo = site();
+    try {
+      repo.run(['switch', '-q', '-c', 'work']);
+      repo.write('src/main.tsx', 'export const c = 3;\n');
+      const head = repo.commit('C: v4');
+      repo.run(['switch', '-q', 'main']);
+      repo.write('project/backlog.md', '# Backlog\n- [ ] D\n');
+      repo.commit('D: record');
+      assert.deepEqual(rangeEnds([`main...${head}`], repo.dir), [repo.start, head]);
+      assert.deepEqual(rangeEnds([`main..${head}`], repo.dir), ['main', head]);
+      assert.deepEqual(rangeEnds(['a', 'b'], repo.dir), ['a', 'b']);
+      assert.equal(rangeEnds(['HEAD'], repo.dir), null);
+    } finally {
+      repo.done();
+    }
+  });
+
+  /** The gate exactly as CI runs it, on a pull request event in the scratch repository. */
+  async function ciSort(repo, base, head, eventName = 'pull_request') {
+    const said = [];
+    const eventPath = join(repo.dir, '..', `${relative(tmpdir(), repo.dir).replace(/\W/g, '')}-event.json`);
+    writeFileSync(eventPath, JSON.stringify({ repository: { default_branch: 'main' },
+      pull_request: { base: { sha: base }, head: { sha: head } } }));
+    try {
+      const status = await gate(['--ci', '--plan'], { GITHUB_EVENT_NAME: eventName, GITHUB_EVENT_PATH: eventPath,
+        GITHUB_REF: 'refs/pull/9/merge', GITHUB_SHA: head, GITHUB_ACTIONS: 'true' },
+      { cwd: repo.dir, log: line => said.push(line) });
+      return { status, said: said.join('\n') };
+    } finally {
+      rmSync(eventPath, { force: true });
+    }
+  }
+
+  test('CI fails a pull request that changes docs/ or version.json by hand', async () => {
+    const repo = site();
+    try {
+      repo.run(['switch', '-q', '-c', 'hand']);
+      repo.write('docs/index.html', 'by hand');
+      const docs = repo.commit('X: edit docs');
+      let sorted = await ciSort(repo, repo.start, docs);
+      assert.equal(sorted.status, 1, sorted.said);
+      assert.match(sorted.said, /::error title=Hand change to the live site::.*docs\/index\.html/);
+
+      repo.run(['reset', '-q', '--hard', repo.start]);
+      repo.write('version.json', '{"build":727}\n');
+      const version = repo.commit('X: bump the version');
+      sorted = await ciSort(repo, repo.start, version);
+      assert.equal(sorted.status, 1, sorted.said);
+      assert.match(sorted.said, /by hand: version\.json/);
+
+      // A file added under docs/ is a hand change too; one under src/ is not.
+      repo.run(['reset', '-q', '--hard', repo.start]);
+      repo.write('docs/extra.txt', 'new');
+      const added = repo.commit('X: add a file');
+      assert.equal((await ciSort(repo, repo.start, added)).status, 1);
+      repo.run(['reset', '-q', '--hard', repo.start]);
+      repo.write('src/main.tsx', 'export const d = 4;\n');
+      const app = repo.commit('Y: v4');
+      sorted = await ciSort(repo, repo.start, app);
+      assert.equal(sorted.status, 0, sorted.said);
+      assert.doesNotMatch(sorted.said, /Hand change/);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test('the gate in a checkout refuses a hand change, staged, committed or untracked, and lets the step\'s through', async () => {
+    const repo = site();
+    const local = async () => {
+      const said = [];
+      const status = await gate(['--plan'], {}, { cwd: repo.dir, log: line => said.push(line) });
+      return { status, said: said.join('\n') };
+    };
+    try {
+      repo.run(['switch', '-q', '-c', 'work']);
+      assert.equal((await local()).status, 0);
+      repo.write('docs/new.txt', 'untracked');
+      let result = await local();
+      assert.equal(result.status, 1, result.said);
+      assert.match(result.said, /gate: refused: .*docs\/new\.txt/);
+      rmSync(join(repo.dir, 'docs', 'new.txt'));
+      repo.write('version.json', '{}\n');
+      repo.run(['add', 'version.json']);
+      assert.equal((await local()).status, 1);
+      repo.run(['reset', '-q', '--hard', 'HEAD']);
+      assert.equal(localPages(repo.dir), 'hand');
+      // The step's commit, reached through main: allowed, and asks for no lane.
+      repo.run(['switch', '-q', 'main']);
+      repo.publish('v4 preview 1');
+      repo.run(['switch', '-q', 'work']);
+      repo.run(['merge', '-q', '--no-edit', 'main']);
+      assert.equal(localPages(repo.dir), 'step');
+      result = await local();
+      assert.equal(result.status, 0, result.said);
+      assert.match(result.said, /runs the record checker, because every path is record-only or the publishing step's own/);
+    } finally {
+      repo.done();
+    }
   });
 });

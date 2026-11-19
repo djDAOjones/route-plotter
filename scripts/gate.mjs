@@ -24,6 +24,11 @@
  *                                          with GITHUB_TOKEN)
  *   node scripts/gate.mjs --lane <name>    run one lane (CI runs each in a step)
  *
+ * The live site, the root docs/ and version.json, is written only by the
+ * publishing step (PUB-01). A pull request, a branch or a checkout that
+ * changes either by hand is refused; on main, a change the step made runs
+ * nothing of its own, so a publish never makes the next change wait.
+ *
  * No dependency: Node and git only, so the record-only path needs no npm ci.
  */
 
@@ -73,6 +78,27 @@ export const V4 = {
   dirs: ['src/', 'tests/']
 };
 
+/**
+ * The live site (PUB-01): the root docs/, which GitHub Pages serves, and the
+ * root version.json beside it, which says what is live. Only the publishing
+ * step writes them (.github/workflows/publish.yml, scripts/publish.mjs).
+ */
+export const PAGES = {
+  files: ['version.json'],
+  dirs: ['docs/']
+};
+
+/**
+ * How the publishing step's own commits are known: one parent, made and
+ * committed by the Actions bot, a line beginning with the trailer, and no path
+ * changed outside PAGES. The step writes exactly these (scripts/publish.mjs).
+ */
+export const STEP = {
+  trailer: 'Published-by: PUB-01',
+  name: 'github-actions[bot]',
+  email: '41898282+github-actions[bot]@users.noreply.github.com'
+};
+
 /** v4's gate has a 10-minute budget; exceeding it is a finding, not a failure. */
 export const V4_BUDGET_SECONDS = 600;
 
@@ -82,8 +108,8 @@ export const V4_BUDGET_SECONDS = 600;
  */
 export const LANES = {
   gate: {
-    title: "the gate's own tests",
-    commands: [[process.execPath, ['--test', 'scripts/gate.test.mjs']]]
+    title: "the gate's and the publishing step's own tests",
+    commands: [[process.execPath, ['--test', 'scripts/gate.test.mjs', 'scripts/publish.test.mjs']]]
   },
   v3: {
     title: "frozen v3's whole suite, shell contract and build check",
@@ -108,11 +134,12 @@ const inList = (path, list) => list.files.includes(path) || list.dirs.some(dir =
  * The class of one repository path, compared exactly as git spells it.
  * @param {string} path
  * @param {{ v4?: { files: string[], dirs: string[] } }} [lists]
- * @returns {'record'|'v3'|'v4'|'other'}
+ * @returns {'record'|'v3'|'pages'|'v4'|'other'}
  */
 export function classify(path, { v4 = V4 } = {}) {
   if (inList(path, RECORD)) return 'record';
   if (inList(path, V3)) return 'v3';
+  if (inList(path, PAGES)) return 'pages';
   if (inList(path, v4)) return 'v4';
   return 'other';
 }
@@ -121,19 +148,30 @@ export function classify(path, { v4 = V4 } = {}) {
  * Which lanes a change runs.
  * @param {string[]|null} paths every path the change adds, changes or deletes;
  *   null when the change could not be read
- * @param {{ v4?: { files: string[], dirs: string[] } }} [lists]
+ * @param {{ v4?: { files: string[], dirs: string[] }, pages?: 'step'|'hand' }} [lists] pages: who left
+ *   docs/ and version.json as the change leaves them. The step's output runs nothing of its own; a hand
+ *   change is other, so it runs everything (and outside main the gate refuses it before this).
  * @returns {{ lanes: string[], reason: string, classes: Map<string, string> }}
  */
-export function plan(paths, { v4 = V4 } = {}) {
+export function plan(paths, { v4 = V4, pages = 'hand' } = {}) {
   const v4Exists = v4.files.length > 0 || v4.dirs.length > 0;
   const everything = ORDER.filter(lane => lane !== 'v4' || v4Exists);
-  const classes = new Map((paths ?? []).map(path => [path, classify(path, { v4 })]));
+  const kindOf = path => {
+    const kind = classify(path, { v4 });
+    return kind === 'pages' && pages !== 'step' ? 'other' : kind;
+  };
+  const classes = new Map((paths ?? []).map(path => [path, kindOf(path)]));
   if (paths === null) return { lanes: everything, reason: 'the change could not be read', classes };
   if (paths.length === 0) return { lanes: everything, reason: 'the change names no path', classes };
 
   const found = new Set(classes.values());
   if (found.size === 1 && found.has('record')) {
     return { lanes: ['record'], reason: 'every path is record-only', classes };
+  }
+  // PUB-01: the publishing step's own output asks for no lane; the record checker still runs on every push.
+  found.delete('pages');
+  if (found.size === 0 || (found.size === 1 && found.has('record'))) {
+    return { lanes: ['record'], reason: "every path is record-only or the publishing step's own output", classes };
   }
   if (found.has('other')) {
     return { lanes: everything, reason: 'a path is outside the record, v3 and v4 lists', classes };
@@ -218,6 +256,55 @@ export async function lastGreenSha(env, fetchImpl = globalThis.fetch) {
 }
 
 /**
+ * The two ends of a range as git diff reads it: A...B from where B left A, A..B
+ * and [A, B] from A. Null when they cannot be had.
+ * @param {string[]} range
+ * @returns {[string, string]|null}
+ */
+export function rangeEnds(range, cwd = ROOT) {
+  if (range.length === 2) return [range[0], range[1]];
+  const [spec] = range;
+  const three = spec?.match(/^(.+)\.\.\.(.+)$/);
+  if (three) {
+    const base = git(['merge-base', three[1], three[2]], cwd)?.trim();
+    return base ? [base, three[2]] : null;
+  }
+  const two = spec?.match(/^(.+)\.\.(.+)$/);
+  return two ? [two[1], two[2]] : null;
+}
+
+/**
+ * Whether the publishing step left the live site as `to` holds it: some
+ * commit after `from` is one of the step's own (see STEP) and neither docs/
+ * nor version.json has changed since. Then whatever came before, the site at
+ * `to` is the step's output. Anything unreadable is false, so a doubtful case
+ * counts as a hand change.
+ * @param {string} from
+ * @param {string} to
+ * @returns {boolean}
+ */
+export function stepMade(from, to, cwd = ROOT) {
+  const log = git(['log', '--format=%H%x1f%P%x1f%an%x1f%ae%x1f%cn%x1f%ce%x1f%B%x1e', `${from}..${to}`], cwd);
+  if (log === null) return false;
+  for (const entry of log.split('\x1e')) {
+    const [sha, parents, authorName, authorEmail, committerName, committerEmail, body = ''] =
+      entry.replace(/^\s+/, '').split('\x1f');
+    if (!isSha(sha) || parents.trim().split(/\s+/).length !== 1) continue;
+    if (authorName !== STEP.name || committerName !== STEP.name) continue;
+    if (authorEmail !== STEP.email || committerEmail !== STEP.email) continue;
+    if (!body.split('\n').some(line => line.startsWith(STEP.trailer))) continue;
+    const changed = pathsOfRange([`${sha}^`, sha], cwd);
+    if (!changed?.length || changed.some(path => classify(path) !== 'pages')) continue;
+    // git diff --quiet exits 1 on a difference, which git() reads as null.
+    if (git(['diff', '--quiet', sha, to, '--', ...PAGES.files, ...PAGES.dirs], cwd) !== null) return true;
+  }
+  return false;
+}
+
+/** The paths of a change that are the live site's. */
+export const pagesPaths = paths => (paths ?? []).filter(path => classify(path) === 'pages');
+
+/**
  * Every tracked symbolic link. A link can make a v3 path and a record path
  * the same file, so that a record-only change alters what v3 reads or ships;
  * links can chain, so rather than trust a resolution of them the gate's tests
@@ -242,6 +329,17 @@ export function localPaths(cwd) {
   const untracked = git(['ls-files', '--others', '--exclude-standard', '-z'], cwd);
   if (tracked === null || untracked === null) return null;
   return [...new Set([...tracked, ...splitZ(untracked)])].sort();
+}
+
+/**
+ * Who left this checkout's live site as it is: the step, when its commits
+ * since origin/main did and nothing in the working tree touches it; else hand.
+ * @returns {'step'|'hand'}
+ */
+export function localPages(cwd) {
+  const base = git(['merge-base', 'origin/main', 'HEAD'], cwd)?.trim();
+  const loose = git(['status', '--porcelain', '--untracked-files=all', '--', ...PAGES.files, ...PAGES.dirs], cwd);
+  return base && loose === '' && stepMade(base, 'HEAD', cwd) ? 'step' : 'hand';
 }
 
 /** A plan in words, one line per path, for the log and the step summary. */
@@ -279,7 +377,12 @@ export function runLane(name, { env = process.env, log = console.log, lanes = LA
   return 0;
 }
 
-async function main(argv, env) {
+/**
+ * The gate's command line (see the top of this file). Exported so its tests
+ * can run it in a scratch repository: cwd is the repository, log the output.
+ * @returns {Promise<number>} the exit status
+ */
+export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl = globalThis.fetch } = {}) {
   const has = flag => argv.includes(flag);
   const valueOf = flag => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined);
 
@@ -287,6 +390,9 @@ async function main(argv, env) {
 
   let paths;
   let source;
+  // Who left the live site as the change leaves it (PUB-01), and whether a hand change is refused here.
+  let pages = 'hand';
+  let refuseHand = true;
   if (has('--all')) {
     paths = null;
     source = 'everything was asked for';
@@ -295,23 +401,40 @@ async function main(argv, env) {
     try { event = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, 'utf8')); } catch { /* read as no range */ }
     const main = event?.repository?.default_branch || 'main';
     const onMain = env.GITHUB_EVENT_NAME === 'push' && env.GITHUB_REF === `refs/heads/${main}`;
-    const lastGreen = onMain ? await lastGreenSha({ ...env, DEFAULT_BRANCH: main }) : null;
+    const lastGreen = onMain ? await lastGreenSha({ ...env, DEFAULT_BRANCH: main }, fetchImpl) : null;
     const range = ciRange({ eventName: env.GITHUB_EVENT_NAME, event, ref: env.GITHUB_REF, sha: env.GITHUB_SHA, lastGreen });
-    paths = range ? pathsOfRange(range) : null;
+    paths = range ? pathsOfRange(range, cwd) : null;
+    const ends = range && pagesPaths(paths).length ? rangeEnds(range, cwd) : null;
+    pages = ends && stepMade(ends[0], ends[1], cwd) ? 'step' : 'hand';
+    // On main the change has landed: a hand change there runs everything, and is reported.
+    refuseHand = !onMain;
     source = `${env.GITHUB_EVENT_NAME} ${range ? range.join(' ') : 'with no readable range'}` +
       (onMain ? `, from the last passing run on ${main}${lastGreen ? '' : ', which could not be read'}` : '');
   } else if (has('--range')) {
     const range = valueOf('--range');
-    paths = range ? pathsOfRange([range]) : null;
+    paths = range ? pathsOfRange([range], cwd) : null;
+    const ends = range && pagesPaths(paths).length ? rangeEnds([range], cwd) : null;
+    pages = ends && stepMade(ends[0], ends[1], cwd) ? 'step' : 'hand';
+    refuseHand = false;
     source = `range ${range}`;
   } else {
-    paths = localPaths();
+    paths = localPaths(cwd);
+    pages = pagesPaths(paths).length ? localPages(cwd) : 'hand';
     source = 'this checkout against origin/main, working tree and untracked files included';
   }
 
-  const decided = has('--all') ? { ...plan(null), reason: 'everything was asked for' } : plan(paths);
+  const decided = has('--all') ? { ...plan(null), reason: 'everything was asked for' } : plan(paths, { pages });
   const words = describe(decided, source);
-  console.log(words);
+  log(words);
+
+  const hand = pages === 'hand' ? pagesPaths(paths) : [];
+  if (hand.length) {
+    const said = `docs/ and version.json are the live site, which only the publishing step writes (PUB-01); ` +
+      `this change edits them by hand: ${hand.join(', ')}`;
+    log(env.GITHUB_ACTIONS ? `::${refuseHand ? 'error' : 'warning'} title=Hand change to the live site::${said}`
+      : `gate: ${refuseHand ? 'refused' : 'warning'}: ${said}`);
+    if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `\n**${refuseHand ? 'Refused' : 'Warning'}:** ${said}\n`);
+  }
 
   if (has('--ci')) {
     // Each lane's step, and each package's install, reads its own lane's output (STACK-02).
@@ -319,6 +442,7 @@ async function main(argv, env) {
     if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, `${outputs.join('\n')}\n`);
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `## Gate by what changed\n\n\`\`\`\n${words}\n\`\`\`\n`);
   }
+  if (hand.length && refuseHand) return 1;
   if (has('--plan')) return 0;
 
   for (const lane of decided.lanes) {
