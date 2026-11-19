@@ -1,0 +1,67 @@
+// V31-APP-PACK starter, React kinds: Carbon's styles compiled by Sass (signed 2026-11-11, P-sass) with the fonts bundled from
+// the local IBM Plex package, none fetched. Carbon's layout tokens are imported: in Route Plotter's preparation a
+// Select measured 19 px high without the layout module and 48 px with it (a consuming project's report, not re-run by
+// the lab). The text, link and primary-button tokens below are strengthened toward 7:1 on the white theme (Carbon's
+// own #0f62fe under white text measured 5:1 in the lab's throwaway app, 2026-11-11); a starting point, measured by
+// the app's own accessibility run, never certified here.
+@use '@carbon/react/scss/config' with ($css--font-face: false);
+@use 'sass:map';
+@use '@carbon/react/scss/themes';
+@use '@carbon/react/scss/theme' with ($theme: map.merge(themes.$white, (
+  text-secondary: #393939,
+  text-helper: #393939,
+  text-placeholder: #393939,
+  link-primary: #0043ce,
+  link-primary-hover: #002d9c,
+)));
+@use '@carbon/react/scss/reset';
+@use '@carbon/react/scss/fonts/sans' as plex;
+@use '@carbon/react/scss/layout';
+@use '@carbon/react/scss/spacing';
+@use '@carbon/react';
+
+@include plex.regular($styles: (normal));
+@include plex.semibold($styles: (normal));
+
+:root {
+  @include theme.theme();
+
+  // The button's colours are Carbon component tokens, not theme tokens: a theme-map entry does not reach them.
+  --cds-button-primary: #0043ce;
+  --cds-button-primary-hover: #002d9c;
+  --cds-button-primary-active: #001d6c;
+}
+
+body {
+  background: theme.$background;
+  color: theme.$text-primary;
+}
+
+main {
+  max-width: 48rem;
+  margin: spacing.$spacing-07 auto;
+  padding: spacing.$spacing-05;
+}
+
+// Focus at 2.4.12 and 2.4.13: a 3 px outline outside the control. Carbon's own inset ring changed less than a 2 px
+// perimeter by 3:1 in the lab's throwaway app (2026-11-11); its selectors outrank a plain one, hence !important.
+:is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid theme.$focus !important;
+  outline-offset: 2px !important;
+}
+
+@media (forced-colors: active) {
+  :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline-color: Highlight !important;
+  }
+}
+
+// Reduced motion: Carbon's transitions stop when the user asks (the accessibility pack's SUP02).
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

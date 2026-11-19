@@ -1,0 +1,29 @@
+// V31-APP-PACK starter, React kinds (the editor and the forms tool): the common configuration plus React's hook rules
+// over TSX. Replaces eslint.config.mjs, which carries the common part alone for the "unsure" kind.
+// STACK-02 (Route Plotter v4) adds two blocks, provisional under the owner's overnight grant G3: frozen v3 in v3/ is
+// never linted as v4, and v4's tests keep the architecture plan's §15 conventions — a test exercises behaviour and never
+// reads source text (TST-11), and none relies on a real animation frame, the engine being tested through its pure
+// clock (INTAKE.18).
+import { defineConfig } from 'eslint/config';
+import reactHooks from 'eslint-plugin-react-hooks'; // signed 2026-11-11 (P-react-hooks): React kinds only
+import base from './eslint.base.mjs';
+
+const TST_11 = 'TST-11: a test exercises behaviour through imports and never reads source text';
+const INTAKE_18 = 'INTAKE.18: no test relies on a real animation frame; drive the pure clock instead';
+
+export default defineConfig(
+  { ignores: ['v3/**'] },
+  ...base,
+  { files: ['src/**/*.tsx'], extends: [reactHooks.configs.flat['recommended-latest']] },
+  {
+    files: ['src/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        paths: ['fs', 'node:fs', 'fs/promises', 'node:fs/promises'].map((name) => ({ name, message: TST_11 })),
+        patterns: [{ group: ['*?raw', '*?raw&*'], message: TST_11 }],
+      }],
+      'no-restricted-globals': ['error', ...['requestAnimationFrame', 'cancelAnimationFrame'].map((name) => ({ name, message: INTAKE_18 }))],
+      'no-restricted-properties': ['error', ...['requestAnimationFrame', 'cancelAnimationFrame'].flatMap((property) => ['window', 'globalThis', 'self'].map((object) => ({ object, property, message: INTAKE_18 })))],
+    },
+  },
+);

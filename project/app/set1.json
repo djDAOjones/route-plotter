@@ -1,0 +1,39 @@
+{
+  "signed": "2026-11-18",
+  "keep": null,
+  "endOfLife": {},
+  "provisional": "STACK-02, 2026-11-19, under the owner's overnight grants G3 and G4 of 2026-11-18. Not yet signed by him as Set 1: 'signed' is the date of G4, his answer 'Yes, read and install (Recommended)', whose option read 'the pack's packages are installed at the versions it names. The pinned list is shown to you in the morning, not before installing.' The checker reads this file only once the profile has an App opinion line, which awaits his signature; at that signature he signs Set 1 or changes it, and the date becomes his.",
+  "pinned": {
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "@carbon/react": "1.118.0",
+    "typescript": "6.0.3",
+    "vite": "8.2.2",
+    "vitest": "5.1.0",
+    "eslint": "9.39.5",
+    "knip": "6.41.0",
+    "dependency-cruiser": "18.6.0",
+    "@eslint/js": "9.39.5",
+    "typescript-eslint": "8.71.2",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "fast-check": "4.10.2",
+    "sass": "1.105.1",
+    "@ibm/plex": "6.4.1",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
+    "@types/prop-types": "15.7.15",
+    "eslint-plugin-jsx-a11y": "6.10.2"
+  },
+  "conflicts": [
+    "ESLint 9, or no jsx-a11y: npm marks eslint 9.39.5 as no longer supported (read 2026-11-19); eslint-plugin-jsx-a11y 6.10.2 runs on ESLint 9 only. Its end-of-life date was not read, so endOfLife records none.",
+    "TypeScript 6.0 until typescript-eslint supports 7: typescript-eslint 8.71.2's peer range ends below 6.1.0.",
+    "vite 8.2.2: npm audit lists six advisories for its development server (high), fixed in 8.3.8; the built files are not affected.",
+    "@carbon/react 1.118.0 installed @carbon/styles 1.120.0 (1.119.0 in the lab's throwaway app)."
+  ],
+  "pilot": {
+    "row": "2026-11-19",
+    "app": "Route Plotter v4, editor kind: the first app to take the pack, at STACK-02",
+    "read": "at the later of day 30 (2026-12-19) and commit 30 after this install, by the signed outcomes in the lab's record",
+    "provisional": "Dated as the pack's intake verb says for the first app ('the first app's dated row before its first session'), under the plan's A35, awaiting the owner's ruling; the pre-registration itself lives in the lab's record, which this repository does not write."
+  }
+}
