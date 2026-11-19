@@ -1,143 +1,95 @@
-# Architecture — Route Plotter
+# Architecture — Route Plotter v4
 
-## Tech stack
+Updated: 2026-11-19
 
-| Technology | Reason |
-| --- | --- |
-| Vanilla JavaScript (ES modules) | No framework overhead, full Canvas API control |
-| Canvas 2D | Direct pixel manipulation for path rendering and animation |
-| esbuild | Fast bundling, simple config, ESM output |
-| Vitest + jsdom | Unit testing with DOM simulation |
-| axe-core | Automated accessibility audit in the test suite |
-| mediabunny | MP4/WebM mux layer |
-| jszip | Project ZIP import/export |
-| CSS custom properties | Design tokens for theming (UoN + Okabe-Ito) |
+<!-- pm-next architecture record, specification 3.26 — keep this line -->
 
-## Project structure
+<!-- Route Plotter v4's architecture record (PM-Skills 5.0.1, specification 3.26), written by STACK-04 from the v4
+     architecture plan (reviews/v4-architecture-plan-2026-11-18.md, §8 and §14), provisional under the owner's
+     overnight grant G3. Frozen v3's own architecture file is v3/ARCHITECTURE.md, moved there by the same item.
+     The rules file routes code changes here. A change that adds, removes or renames a container or an external
+     system, moves the boundary, or changes how two of them talk, or how the code is layered, updates this file and
+     its Updated line in the same change. Directories belong in structure.md. -->
 
-`project/structure.md` is the maintained index of directory roles; the canon file map is frozen under `pm_skills/project/`.
-`src/main.js` is the entry point and orchestrator core; its method groups are
-prototype mixins in `src/app/`.
+v4 is a static web app, built from this repository's root; nothing runs on a server of its own. Every frame is a pure
+function of (timelineMs, projectState, seed), evaluated by one composer that the editor's preview, the video export and
+the exported player share.
 
-(The former `workers/` layer was deleted 2026-06-18 — it never initialised
-under the old esbuild targets; see the v2 decision-log entry. es2022 targets
-re-legalise workers if ever needed again.)
+## System context
 
-## v3 direction (founded 2026-08-17)
+Who uses Route Plotter v4, and the one outside system it needs.
 
-Layered scene over one master timeline: the Waypoint chain remains the
-"hero route" layer; **flow layers** (GraphModel guide networks + emitters)
-add crowd/particle animation. Everything renders as a pure function of
-(timelineMs, projectState, seed) — the deterministic-timeline mandate,
-implemented since Phase 1 (2026-08-17) by **`src/core/PlayerCore.js`**: it
-builds the timeline (segments, exact pause budgets, beacon schedules) and
-evaluates any instant with no wall-clock reads or mutation. AnimationEngine
-is demand-driven transport + events: play and visible camera settling keep its
-preview frame alive, while stable paused views leave no frame queued; export
-keeps its explicit synchronous frame loop. Beacons are closed-form in timeline
-time; play, scrub, and export share the one evaluation path (golden harness:
-`tests/goldenFrames.test.js`). Since Phase 5 (2026-08-19) the HTML
-export runs the same stack: `src/player/PlayerApp.js` (bundled to
-`docs/player.js`, inlined into exports) hydrates the coordVersion-9
-snapshot, recomputes timing in the snapshot's `timingReference` space
-to preserve the authored timeline, and renders at export resolution with the
-app's own services. A separate stable `renderReference` supplies the visual
-short-edge scale for map-bound reference-pixel values. CROWD-08's active finish, group and waiting journeys share it;
-others stay unchanged. Other snapshots migrate
-from `timingReference` or the authored canvas (cross-check:
-`tests/playerApp.test.js` and `tests/renderReference.test.js`).
-The scene data model landed in Phase 2 (2026-08-18): `Scene` →
-`FlowLayer` (guide graph or hero route + `Emitter`s with per-emitter
-seeds, normalised release windows and two-to-eight-handle busyness envelopes),
-persisted additively as the
-coordVersion 9 `scene` block. Phases and rationale: backlog +
-decision-log 2026-08-17/18.
+```mermaid
+flowchart LR
+  accTitle: Route Plotter v4, system context
+  accDescr: An author makes an animated route in Route Plotter v4, which GitHub Pages serves; a viewer watches what the author exported.
+  author(["Person: Author<br>a university educator"])
+  viewer(["Person: Viewer<br>a student"])
+  system["System: Route Plotter v4<br>an animated route editor for maps and images"]
+  pages["External system: GitHub Pages<br>serves the editor's files"]
+  author -->|"Opens in Chromium, draws routes, saves and exports with"| system
+  pages -->|"Serves the editor to the author's browser"| system
+  viewer -->|"Watches the exported video or page of"| system
+```
 
-REV-02 adds an equivalent non-canvas authoring path without changing that
-ownership: `src/utils/sceneSemantics.js` projects the canonical model into a
-plain semantic snapshot, `src/controllers/SceneOutlineController.js` renders
-lazy native DOM and emits stable-ID commands, and `src/app/sceneOutline.js`
-resolves those commands back into the existing mutation/undo/autosave paths.
-The exported player uses `src/player/playerAccessibility.js` for an aggregate
-scene description and discrete transport announcements.
+### Text alternative
 
-## Key modules
+- An author, a university educator, opens Route Plotter v4 in Chromium, draws routes on a map or image, saves the
+  project as a file and exports a video or a web page.
+- GitHub Pages, an external system, serves the editor's built files from this repository's `docs/`, written only by
+  the publishing step.
+- A viewer, a student, watches what the author exported: a video file, or a web page that plays the scene.
 
-| Module | Path | Responsibility |
-| --- | --- | --- |
-| RoutePlotter | `src/main.js` + `src/app/*` | Sole orchestrator: owns all services, handles app-level intents and durable commits, manages state. Method groups live as prototype mixins in `src/app/*` (Object.assign; names unique across mixins) |
-| Waypoint | `src/models/Waypoint.js` | Data model for waypoints (position, style, camera, area, etc.) |
-| AnimationEngine | `src/services/AnimationEngine.js` | Demand-driven preview scheduler, transport, timing, segment speed and pause markers |
-| PathCalculator | `src/services/PathCalculator.js` | Catmull-Rom spline, reparameterisation, curvature |
-| RenderingService | `src/services/RenderingService.js` | Canvas drawing plus project-reference scaling for path, markers, labels, effects and area borders |
-| UIController | `src/controllers/UIController.js` | Sidebar controls, waypoint list, slider sync |
-| SceneOutlineController | `src/controllers/SceneOutlineController.js` | Lazy native semantic outline, authoring forms, focus and draft state |
-| InteractionHandler | `src/handlers/InteractionHandler.js` | Captured mouse/touch/pen transactions, keyboard and drag-and-drop input |
-| CoordinateTransform | `src/services/CoordinateTransform.js` | Image ↔ canvas coordinate conversion |
-| VideoExporter | `src/services/VideoExporter.js` | MP4/WebM export via WebCodecs |
+## Containers
 
-## Communication patterns
+Two containers run: the editor and the exported player. Inside them the code is layered, and `npm run boundaries`
+enforces the layers (`.dependency-cruiser.cjs`); each rule has a planted violation in `tests/architecture/fixtures/`
+that `npm run test:architecture` shows failing on every v4 change.
 
-The rule (the owner's answer to the abstraction plan's §20 Q15, 2026-09-22;
-stated as a hard rule in `AGENTS.md`):
+- `src/core`: the project model and its schema helper, geometry, the lead's timing and the clock. It reaches only
+  itself.
+- `src/adapters`: the renderer's kit (`src/adapters/render`), the ZIP and asset boundary, storage, the video encoder
+  and the HTML export builder. They reach the core and each other.
+- `src/features/<id>/`: one folder per feature. Its `model/` is pure and reaches the core and itself; its `draw/`
+  reaches the core, the renderer's kit and its own model; its `editor/` reaches the shared control kit
+  (`src/editor/kit`), `src/ui`, its own model, React and Carbon React. No feature reaches another or a catalogue; outside a
+  feature's own folder, only `src/features/catalogue.ts` (definitions and drawing, safe for the player) and
+  `catalogue.editor.ts` (panels) import one. The core and the adapters never reach a feature.
+- `src/player`: the playback runtime and the composer (`compose.ts`). It reaches the core, the renderer's kit, itself,
+  `catalogue.ts` and the features' `model/` and `draw/` parts; never another adapter, an editor part, jszip,
+  mediabunny, React, React DOM or Carbon, directly or through another file. A closure test checks the built bundle too.
+- `src/exported`: the exported player's entry. It reaches what the player may, and itself.
+- `src/editor`: the React and Carbon app, its store and commands, and the control kit; `src/ui`: the theme and shared
+  controls.
+- No package enters the core, the adapters, the player or exported code until a decision lists it; no import forms a
+  cycle; every import resolves. A new shared abstraction answers the abstraction plan's §16 in its pull request.
 
-- **Components → app: through the EventBus.** UIController,
-  SectionController, SceneOutlineController, InteractionHandler and the modal
-  tools (NetworkEditService, AreaDrawingService, AreaEditService) receive the
-  bus but no app instance. The bus carries their intents, notifications to
-  them, and synchronous callback queries such as `coordinate:canvas-to-image`.
-  UI widgets (`src/components/`) are outside this rule: they use DOM events
-  and callbacks their owner supplies.
-- **App → components: named public methods.** RoutePlotter and its mixins
-  call components directly, for example to refresh the waypoint list or start
-  a tool, but never through an underscore-private member.
-- **Modal tools: provisional edits, committed by event.** While active, the
-  tools change the model provisionally; `network:changed` (with `commit`) and
-  `area:changed` are where the app records undo history and autosaves.
-- **Durable model changes belong to the app.**
+`npm run measures` prints the measures M1 to M11 the plan's §10 sets, and CI shows them in every v4 run's summary.
 
-Current exceptions, and what removes them:
+```mermaid
+flowchart LR
+  accTitle: Route Plotter v4, containers
+  accDescr: The author uses the editor, which GitHub Pages serves; the editor inlines the exported player into each HTML export, which the viewer opens.
+  author(["Person: Author"])
+  viewer(["Person: Viewer"])
+  subgraph boundary["System boundary: Route Plotter v4"]
+    editor["Container: Editor<br>strict TypeScript, React and Carbon React, in the author's Chromium"]
+    player["Container: Exported player<br>one script, no React or Carbon, in the viewer's browser"]
+  end
+  pages["External system: GitHub Pages"]
+  author -->|"Draws, saves, opens and exports in"| editor
+  pages -->|"Serves the built editor to"| editor
+  editor -->|"Inlines into each HTML export"| player
+  viewer -->|"Opens the exported page, which runs"| player
+```
 
-- UIController writes the model itself: pause, segment speed and
-  area-highlight settings from the inspector, and names (with `_autoNamed`)
-  from the waypoint list. CON-01 moves those writes app-side.
-- NetworkEditService edits at once, outside an active edit session, while the
-  scene outline or the network inspector has bound it for inspection: node and
-  edge deletion, node type, edge direction and reversal. Each commits through
-  `network:changed`. CON-01 routes them through app-side wiring.
-- AreaEditService calls an app-supplied coordinate callback (`imageToScreen`),
-  which InteractionHandler carries in the `area:edit-start` payload. CON-01
-  replaces it with a bus query or a value in the payload.
-- Private cross-module calls: UIController →
-  `VideoExporter._testWebCodecsConfig` (DEP-04), HTMLExportService →
-  `ImageAsset._hasExpectedSignature` (DEP-05), and `editorPanel` →
-  `uiController._updateAreaSubControls` (no plan item yet; GOV-03's
-  private-call check will detect it).
-- Kept on purpose, to be revisited in SPL-05: `renderState` carries the
-  editor tools into RenderingService, which calls their public rendering
-  methods, and NetworkEditService uses the renderer's sizing methods.
+### Text alternative
 
-Canvas authoring uses one primary-pointer transaction owned by
-`InteractionHandler`: hit-test and immutable geometry snapshot on down, a
-shared 3 CSS px tap/drag threshold, captured movement, then exactly one commit
-or restoring cancellation. Window terminal-event fallbacks are deliberately
-idempotent with captured canvas events. Area, network and waypoint drags share
-this boundary; a selected waypoint group moves by one shared bounds-safe delta.
+Inside Route Plotter v4's boundary are two containers:
 
-## Dependency policy
-
-- **Two bundled runtime dependencies: mediabunny and jszip** (jszip
-  bundled 2026-08-17, replacing a runtime CDN load). No new runtime
-  packages without explicit approval.
-- Dev dependencies are those in `package.json` (`DEV-INFRASTRUCTURE.md` →
-  Package management).
-
-## Dev workflow
-
-- Install: `npm ci` (Node 24 is pinned in `.nvmrc`)
-- Dev: `npm run dev` → <http://localhost:3000>
-- Build: `npm run build` → output in `docs/`
-- Check: `npm run check` (Vitest + restart-script safety contract +
-  non-mutating production build)
-- Deploy: `DEV-INFRASTRUCTURE.md` → Deployment (pull requests; the owner
-  calls each release)
+- the editor, a web page built with strict TypeScript, React and Carbon React, which runs in the author's Chromium.
+  The author draws routes in it, saves and opens projects as files, keeps an autosave in the browser's own storage, and
+  exports a video file or a web page. GitHub Pages, an external system, serves its built files.
+- the exported player, one self-contained script with no React or Carbon inside, which the editor inlines into each
+  web page it exports. It runs in the viewer's browser when the viewer opens that page, and draws the scene with the
+  same composer as the editor.

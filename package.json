@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "check": "node scripts/gate.mjs",
-    "check:v4": "npm run typecheck && npm run lint && npm run boundaries && npm run deadcode && npm test && npm run build && npm run test:bundle && npm run a11y && npm run a11y:known-bad",
+    "check:v4": "npm run typecheck && npm run lint && npm run boundaries && npm run deadcode && npm test && npm run build && npm run test:bundle && npm run test:architecture && npm run a11y && npm run a11y:known-bad",
     "typecheck": "tsc --noEmit -p tsconfig.core.json && tsc --noEmit -p tsconfig.app.json",
     "lint": "eslint src",
     "boundaries": "depcruise --config .dependency-cruiser.cjs src",
@@ -13,8 +13,10 @@
     "test": "vitest run --maxWorkers=3",
     "build": "vite build && vite build --mode player",
     "test:bundle": "node --test \"tests/bundle/*.test.mjs\"",
+    "test:architecture": "node --test \"tests/architecture/*.test.mjs\"",
     "a11y": "node tools/a11y-run.mjs",
     "a11y:known-bad": "node tests/a11y/non-vacuity.mjs",
+    "measures": "node scripts/measures.mjs",
     "dev": "vite",
     "preview": "vite preview"
   },

@@ -16,19 +16,20 @@ The owner asked for "layers and module edges enforced in the gate, not just writ
 
 ## Now
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
-Next step: Start once STACK-03 has merged (the two share `package.json` and `ci.yml`, so they run one after the other).
+Next step: Merge this item's pull request under grant G2 once CI is green on its head and Codex approves it; CORE-01, Phase 7's first item, may then start.
 
-Open question: None.
+Open question: Owner: will you sign v4's drafted Always lines, which need a raise of the rules file's 600-word budget first (the wish list's first STACK-04 line)?
 
 ## Context and sources
 
 - [The decisions](../decisions.md): PLAN-6
 - `reviews/v4-architecture-plan-2026-11-18.md`: §8, §10, §17, §19
-- `project/architecture.md`: v3's architecture file
+- `v3/ARCHITECTURE.md`: v3's architecture file, moved there by this item; `project/architecture.md`: v4's architecture record
 - `reviews/codebase-abstraction-and-auditability-plan-2026-09-22.md`: §11, §16, §18
 
 ## Notes
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: the Q1 sentences quoted in the Intent. Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A7, A9, A34 (the plan's §18; the night's decisions list).
+- 2026-11-19 — Built by sub-chat 11 under the owner's overnight grants; no further instruction of his for it is recorded beyond the Q1 sentences in the Intent and G3, "Proceed on recommendations (Recommended)". v3's file moved first, alone; v4's record, the rules with 29 planted violations and a legal tree, the player's closure test and `npm run measures` followed; the rules file's Always lines are drafted, not written (STACK-04's decision entry).
