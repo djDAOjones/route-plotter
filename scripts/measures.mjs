@@ -153,18 +153,30 @@ const RETIRED = /\b(nodes?|edges?|paths?|guides?|emitters?|flow layers?|waypoint
 const NOT_WORDS = new Set(['className', 'id', 'href', 'src', 'type', 'role', 'key', 'kind', 'size', 'as', 'rel', 'target', 'name',
   'htmlFor', 'lang', 'value', 'align', 'direction', 'orientation', 'tabIndex', 'autoComplete', 'inputMode', 'method', 'action']);
 
-/** M6: every string the interface shows (JSX text, readable attributes, literal children) and the retired words in it. */
+/**
+ * M6: every string the interface shows and the retired words in it: JSX text; readable attributes, written as a string
+ * or as an expression; and the strings in a child expression, a conditional's branches included. A string inside a
+ * nested element is read with that element, so a class name in it stays out.
+ */
 export async function interfaceWords(root = ROOT) {
   const { default: ts } = await import('typescript');
   const strings = [];
   for (const file of sourceFiles(root, /\.tsx$/)) {
     const source = ts.createSourceFile(file, readFileSync(join(root, file), 'utf8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const add = (text) => { if (text.trim()) strings.push({ file, text: text.trim() }); };
+    const literals = (node) => {
+      if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || ts.isJsxFragment(node)) return;
+      if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) add(node.text);
+      else if (ts.isTemplateExpression(node)) [node.head, ...node.templateSpans.map((span) => span.literal)].forEach((part) => add(part.text));
+      ts.forEachChild(node, literals);
+    };
+    const readable = (attribute) => !NOT_WORDS.has(attribute.name.getText(source)) && !attribute.name.getText(source).startsWith('data-');
     const visit = (node) => {
-      if (ts.isJsxText(node) && node.text.trim()) strings.push({ file, text: node.text.trim() });
-      else if (ts.isJsxAttribute(node) && node.initializer && ts.isStringLiteral(node.initializer)
-        && !NOT_WORDS.has(node.name.getText(source)) && !node.name.getText(source).startsWith('data-')) strings.push({ file, text: node.initializer.text });
-      else if (ts.isJsxExpression(node) && node.expression && ts.isStringLiteralLike(node.expression)
-        && !ts.isJsxAttribute(node.parent)) strings.push({ file, text: node.expression.text });
+      if (ts.isJsxText(node)) add(node.text);
+      else if (ts.isJsxAttribute(node) && node.initializer && readable(node)) {
+        if (ts.isStringLiteral(node.initializer)) add(node.initializer.text);
+        else if (ts.isJsxExpression(node.initializer) && node.initializer.expression) literals(node.initializer.expression);
+      } else if (ts.isJsxExpression(node) && node.expression && !ts.isJsxAttribute(node.parent)) literals(node.expression);
       ts.forEachChild(node, visit);
     };
     visit(source);
@@ -197,31 +209,49 @@ export async function longCode(root = ROOT) {
 const list = (items) => (items.length ? `: ${items.join('; ')}` : '');
 
 /**
- * Every measure, M1 to M11: v3's baseline, v4's figure now, and v4's aim.
+ * Every measure, M1 to M11: v3's baseline, v4's figure now, and v4's aim. A measure that cannot be taken says so in
+ * its own cell, marked failed, and the rest of the table stands.
  * @param {{ root?: string, gateSeconds?: number }} [where]
  */
 export async function measures({ root = ROOT, gateSeconds } = {}) {
-  const graph = await cruiseWithTheGatesRules(root);
-  const reach = featureReach(graph, root);
-  const { cycles, crossings } = cyclesAndCrossings(graph);
-  const words = await interfaceWords(root);
-  const long = await longCode(root);
-  // knip and the player's build read the whole project, so they run only on it.
-  const dead = root === ROOT ? deadCode(root) : null;
-  const player = root === ROOT ? await buildPlayer() : null;
-  const findings = player ? closureFindings(player.moduleIds, ROOT) : [];
-  const beyond = reach.flatMap(({ id, beyond: files }) => files.map((file) => `${id}: ${file}`));
+  const failed = new Set();
+  let graph;
+  const cruised = async () => (graph ??= await cruiseWithTheGatesRules(root));
+  const take = async (id, work) => {
+    try { return await work(); } catch (error) {
+      failed.add(id);
+      return `not measured: ${String(error?.message ?? error).split('\n')[0]}`;
+    }
+  };
   const v4 = {
-    M1: reach.length ? `${beyond.length} files beyond the catalogues, over ${reach.length} features${list(beyond)}` : '0 features yet, so 0 files beyond the catalogues',
-    M2: `${featureToFeature(graph).length}${list(featureToFeature(graph))}`,
-    M3: `${cycles.length} cycles; ${crossings.length} edges the layer rules forbid${list([...cycles, ...crossings])}`,
-    M4: `${sharedThis(root).length}${list(sharedThis(root))}`,
+    M1: await take('M1', async () => {
+      const reach = featureReach(await cruised(), root);
+      const beyond = reach.flatMap(({ id, beyond: files }) => files.map((file) => `${id}: ${file}`));
+      return reach.length ? `${beyond.length} files beyond the catalogues, over ${reach.length} features${list(beyond)}` : '0 features yet, so 0 files beyond the catalogues';
+    }),
+    M2: await take('M2', async () => { const edges = featureToFeature(await cruised()); return `${edges.length}${list(edges)}`; }),
+    M3: await take('M3', async () => {
+      const { cycles, crossings } = cyclesAndCrossings(await cruised());
+      return `${cycles.length} cycles; ${crossings.length} edges the layer rules forbid${list([...cycles, ...crossings])}`;
+    }),
+    M4: await take('M4', () => { const found = sharedThis(root); return `${found.length}${list(found)}`; }),
     M5: 'not yet: v4 has no route until CORE-06 and CORE-12, which add the count to the Playwright suite',
-    M6: `${words.retired.length} retired words in ${words.strings} interface strings${list(words.retired)}`,
-    M7: dead ? `${dead.length}${list(dead)}` : 'not run here',
-    M8: `${long.functions.length} functions over 60 lines; ${long.files.length} files over 400 lines${list([...long.functions, ...long.files])}`,
+    M6: await take('M6', async () => {
+      const words = await interfaceWords(root);
+      return `${words.retired.length} retired words in ${words.strings} interface strings${list(words.retired)}`;
+    }),
+    // knip and the player's build read the whole project, so they run only on it.
+    M7: root === ROOT ? await take('M7', () => { const dead = deadCode(root); return `${dead.length}${list(dead)}`; }) : 'not run here',
+    M8: await take('M8', async () => {
+      const long = await longCode(root);
+      return `${long.functions.length} functions over 60 lines; ${long.files.length} files over 400 lines${list([...long.functions, ...long.files])}`;
+    }),
     M9: gateSeconds === undefined ? "timed in CI, around v4's lane" : `${gateSeconds} s (v4's lane in this CI run)`,
-    M10: player ? `${(Buffer.byteLength(player.code) / 1024).toFixed(2)} KB; ${findings.length ? `outside its closure${list(findings)}` : 'no React, React DOM, Carbon, jszip, mediabunny or editor part inside'}` : 'not built here',
+    M10: root === ROOT ? await take('M10', async () => {
+      const player = await buildPlayer();
+      const findings = closureFindings(player.moduleIds, ROOT);
+      return `${(Buffer.byteLength(player.code) / 1024).toFixed(2)} KB; ${findings.length ? `outside its closure${list(findings)}` : 'no React, React DOM, Carbon, jszip, mediabunny or editor part inside'}`;
+    }) : 'not built here',
     M11: 'not yet: the EX-01 scripted runs, with PRESET-01',
   };
   return [
@@ -236,7 +266,7 @@ export async function measures({ root = ROOT, gateSeconds } = {}) {
     ['M9', 'Gate time for a v4 change', 'under 10 minutes'],
     ['M10', 'The exported player: size, and no React or Carbon inside', 'no React or Carbon; size reported'],
     ['M11', "Steps to make each preset's scene from blank", 'reported per preset'],
-  ].map(([id, name, aim]) => ({ id, name, v3: V3[id], v4: v4[id], aim }));
+  ].map(([id, name, aim]) => ({ id, name, v3: V3[id], v4: v4[id], aim, failed: failed.has(id) }));
 }
 
 const cell = (text) => String(text).replaceAll('|', '\\|');
@@ -254,7 +284,13 @@ export function parseArgs(args) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   let options;
   try { options = parseArgs(process.argv.slice(2)); } catch (error) { console.error(`measures: ${error.message}`); process.exit(2); }
-  const text = table(await measures(options));
+  const rows = await measures(options);
+  const text = table(rows);
   console.log(text);
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n## v4's measures (STACK-04)\n\n${text}\n`);
+  const failed = rows.filter((row) => row.failed).map((row) => row.id);
+  if (failed.length) {
+    console.error(`measures: ${failed.join(', ')} could not be measured; the table says why`);
+    process.exitCode = 1;
+  }
 }

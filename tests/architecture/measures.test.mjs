@@ -41,11 +41,17 @@ describe('the measures, each proved on a planted fixture', () => {
     assert.deepEqual(sharedThis(boundaries('legal')), []);
   });
 
-  test("M6: retired words in what a person reads count; a class name does not", async () => {
+  test("M6: retired words in what a person reads count, in text, attributes, expressions and both branches; class names do not", async () => {
     const { strings, retired } = await interfaceWords(MEASURES);
-    assert.equal(strings, 4);
-    assert.deepEqual(retired, ['src/editor/Panel.tsx: "waypoint" in "Add a waypoint here."',
-      'src/editor/Panel.tsx: "node" in "Delete the node"']);
+    assert.equal(strings, 11);
+    assert.deepEqual(retired, [
+      'src/editor/Panel.tsx: "waypoint" in "Add a waypoint here."',
+      'src/editor/Panel.tsx: "node" in "Delete the node"',
+      'src/editor/Panel.tsx: "edges" in "Show the edges"',
+      'src/editor/Panel.tsx: "guide" in "guide"',
+      'src/editor/Panel.tsx: "node" in "node"',
+      'src/editor/Panel.tsx: "waypoint" in "Delete waypoint"',
+    ]);
   });
 
   test('M8: a function over 60 lines and a file over 400 count, each named', async () => {
@@ -58,6 +64,17 @@ describe('the measures, each proved on a planted fixture', () => {
     assert.deepEqual(Object.fromEntries(rows.map((row) => [row.id, row.v3])), V3);
     assert.ok(Object.isFrozen(V3));
     assert.match(table(rows), /^\| # \| Measure \| v3 \(baseline\) \| v4 now \| v4 aim \|\n/);
+  });
+
+  test('a measure that cannot be taken says so in its own cell, and the rest of the table stands', async () => {
+    // fixtures/ itself has no src/ for the dependency graph, so M1 to M3 cannot be taken there.
+    const rows = await measures({ root: FIXTURES });
+    assert.equal(rows.length, 11);
+    for (const row of rows) {
+      assert.equal(row.failed, ['M1', 'M2', 'M3'].includes(row.id), row.id);
+      if (row.failed) assert.match(row.v4, /^not measured: /, row.id);
+    }
+    assert.equal(rows.find((row) => row.id === 'M4').v4, '0');
   });
 
   test('the script takes one option, --gate-seconds N, and refuses anything else before it measures', () => {

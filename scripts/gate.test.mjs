@@ -581,11 +581,14 @@ describe('the gate as wired in this repository', () => {
     assert.ok(steps.indexOf(browser[0]) < steps.indexOf(v4Lane), 'the browser is installed before the lane');
     const status = "git status --porcelain --ignored=matching --untracked-files=all | sed '/^!! dist\\/$/d'";
     assert.ok(v4Lane.includes(`${status} > "$RUNNER_TEMP/checkout-before-v4"\n`), 'the checkout is noted before the lane');
-    // STACK-04: the measures follow the lane in its step, timed, so the proof below covers them too.
-    assert.ok(v4Lane.includes('node scripts/gate.mjs --lane v4\n          npm run measures -- --gate-seconds '), 'the measures follow the lane');
+    // STACK-04: the measures follow the lane in its step, timed, whether it passed or not, and the step fails if either
+    // did; the proof below covers them, after a failing lane too.
+    assert.ok(v4Lane.includes('gate=0; node scripts/gate.mjs --lane v4 || gate=$?\n'
+      + '          measures=0; npm run measures -- --gate-seconds "$(( $(date +%s) - started ))" || measures=$?\n'
+      + '          exit $(( gate || measures ))\n'), 'the measures follow the lane');
     const [unchanged] = stepRunning(`${status} | diff "$RUNNER_TEMP/checkout-before-v4" -`);
     assert.ok(unchanged && steps.indexOf(unchanged) === steps.indexOf(v4Lane) + 1, 'the proof follows the lane');
-    assert.match(unchanged, /if: steps\.sort\.outputs\.v4 == 'true'/);
+    assert.match(unchanged, /if: \$\{\{ !cancelled\(\) && steps\.sort\.outputs\.v4 == 'true' \}\}/);
     const [record] = stepRunning('node scripts/gate.mjs --lane record');
     assert.ok(record && !/\bif:/.test(record), 'the record checker runs unconditionally');
     // The live site and both version files are proven untouched on every push.
