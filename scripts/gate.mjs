@@ -435,21 +435,51 @@ export async function authenticateStep(candidate, env, fetchImpl = globalThis.fe
 }
 
 /**
- * Who left the live site as a push to main leaves it: 'step' when a commit
- * shaped as the step's did and GitHub's record of its run agrees; 'unverified'
- * when such a commit did but the record could not be read; 'hand' otherwise.
- * The gate refuses both of the last two on main (GATE-02).
- * @returns {Promise<'step'|'unverified'|'hand'>}
+ * The commit on main's first-parent line, after `from` when given and up to
+ * `to`, that last changed the live site, with the site's paths it changed;
+ * null when none did. That line is the states main has been in, one per push,
+ * so this commit is the one that left the site as `to` holds it, whatever an
+ * older commit held (GATE-02, from Codex's review). A commit whose change
+ * cannot be read counts as changing the whole site.
+ * @returns {{ sha: string, paths: string[] }|null}
  */
-export async function mainProvenance(from, to, env, fetchImpl = globalThis.fetch, cwd = ROOT) {
-  let unread = false;
-  for (const candidate of stepCandidates(from, to, cwd)) {
-    const said = await authenticateStep(candidate, env, fetchImpl, cwd);
-    if (said === true) return 'step';
-    if (said === null) unread = true;
+export function lastSiteChange(from, to, cwd = ROOT) {
+  const site = [...PAGES.files, ...PAGES.dirs];
+  const line = git(['rev-list', '--first-parent', from ? `${from}..${to}` : to], cwd);
+  if (line === null) return { sha: null, paths: site };
+  for (const sha of line.split('\n').filter(Boolean)) {
+    const changed = pathsOfRange([`${sha}^`, sha], cwd);
+    const paths = changed === null ? site : pagesPaths(changed);
+    if (paths.length) return { sha, paths };
   }
-  return unread ? 'unverified' : 'hand';
+  return null;
 }
+
+/**
+ * Who left the live site as a push to main leaves it, judged by the commit on
+ * main's line that last changed it (lastSiteChange): 'step' when that commit
+ * is shaped as the step's and GitHub's record of its run vouches for it;
+ * 'unverified' when it is so shaped but the record cannot be read; 'hand'
+ * otherwise; 'none' when nothing after `from` changed the site. The gate
+ * refuses 'hand' and 'unverified' on main (GATE-02). A step commit after a
+ * hand change still makes the site the step's again.
+ * @returns {Promise<{ provenance: 'step'|'unverified'|'hand'|'none', paths: string[] }>}
+ */
+export async function siteProvenance(from, to, env, fetchImpl = globalThis.fetch, cwd = ROOT) {
+  const change = lastSiteChange(from, to, cwd);
+  if (!change) return { provenance: 'none', paths: [] };
+  const [candidate] = change.sha ? stepCommits(`${change.sha}^`, change.sha, cwd) : [];
+  if (!candidate || candidate.sha !== change.sha) return { provenance: 'hand', paths: change.paths };
+  const said = await authenticateStep(candidate, env, fetchImpl, cwd);
+  return { provenance: said === true ? 'step' : said === null ? 'unverified' : 'hand', paths: change.paths };
+}
+
+/**
+ * siteProvenance's verdict alone.
+ * @returns {Promise<'step'|'unverified'|'hand'|'none'>}
+ */
+export const mainProvenance = async (from, to, env, fetchImpl = globalThis.fetch, cwd = ROOT) =>
+  (await siteProvenance(from, to, env, fetchImpl, cwd)).provenance;
 
 /** The paths of a change that are the live site's. */
 export const pagesPaths = paths => (paths ?? []).filter(path => classify(path) === 'pages');
@@ -535,8 +565,8 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
   // step's commits are checked against GitHub's record of their runs.
   let provenance = 'hand';
   let shapeOnly = false;
-  // GATE-02: the live site's paths whose provenance was checked when no change could be read.
-  let unreadSite = null;
+  // GATE-02: on main, the live site's paths that the commit which last changed it changed.
+  let siteChanged = [];
   if (has('--all')) {
     paths = null;
     source = 'everything was asked for';
@@ -550,17 +580,12 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
       : null;
     const range = ciRange({ eventName: env.GITHUB_EVENT_NAME, event, ref: env.GITHUB_REF, sha: env.GITHUB_SHA, lastGreen });
     paths = range ? pathsOfRange(range, cwd) : null;
-    if (onMain && range && pagesPaths(paths).length) {
-      provenance = await mainProvenance(range[0], range[1], env, fetchImpl, cwd);
-    } else if (onMain && !range && isSha(env.GITHUB_SHA)) {
-      // GATE-02: with no last passing run to read from, everything runs, and the live site as this commit holds it
-      // must still be the step's: the newest commit that changed it is checked against its run's record.
-      const site = [...PAGES.files, ...PAGES.dirs];
-      const newest = git(['log', '-1', '--format=%H', env.GITHUB_SHA, '--', ...site], cwd)?.trim();
-      if (newest) {
-        provenance = await mainProvenance(`${newest}^`, env.GITHUB_SHA, env, fetchImpl, cwd);
-        unreadSite = pagesPaths(pathsOfRange([`${newest}^`, newest], cwd) ?? site);
-      }
+    if (onMain && isSha(env.GITHUB_SHA)) {
+      // GATE-02: on main, the commit that last changed the live site, within the range read or, when no last passing
+      // run can be read, on all of main's line, is checked against its run's record, whether or not the site differs
+      // at the range's two ends (a forged commit can put back an older site).
+      ({ provenance, paths: siteChanged } = await siteProvenance(range ? range[0] : null, env.GITHUB_SHA, env,
+        fetchImpl, cwd));
     }
     source = `${env.GITHUB_EVENT_NAME} ${range ? range.join(' ') : 'with no readable range'}` +
       (onMain ? `, from the last passing run on ${main}${lastGreen ? '' : ', which could not be read'}` : '');
@@ -583,7 +608,7 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
     (shapeOnly && pagesPaths(paths).length ? `\ngate: the live site's paths read as ${provenance === 'step' ? "the step's" : 'by hand'}, by the commits' shape alone` : '');
   log(words);
 
-  const sitePaths = provenance === 'step' ? [] : unreadSite ?? pagesPaths(paths);
+  const sitePaths = ['step', 'none'].includes(provenance) ? [] : [...new Set([...pagesPaths(paths), ...siteChanged])];
   // GATE-02: on main, a change to the live site that GitHub's record cannot vouch for is refused, as a hand change is,
   // so that a commit shaped as the step's never passes Verify unproven and becomes the last passing run.
   const refuse = sitePaths.length > 0 && !shapeOnly;

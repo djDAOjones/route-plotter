@@ -23,7 +23,7 @@ import {
   stepMade
 } from './gate.mjs';
 // GATE-02: the accessibility pack's files and the publishing step's own class.
-import { A11Y, PUBLISHING } from './gate.mjs';
+import { A11Y, PUBLISHING, lastSiteChange } from './gate.mjs';
 
 const EVERYTHING = ['gate', 'v3', 'v4', 'record'];
 const NO_V4 = { files: [], dirs: [] };
@@ -1071,6 +1071,70 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
       sorted = await ciSort(repo, repo.start, app, { eventName: 'push', fetchImpl: fetchOf(records.gone) });
       assert.equal(sorted.status, 1, sorted.said);
       assert.match(sorted.said, /::error title=Live site not vouched for::/);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test("on main, the site's last change is the one checked, so no older publish covers it (GATE-02)", async () => {
+    // Codex's second review: an older publish holding the same site, or a site put back as it was at the range's
+    // start, must not let a commit shaped as the step's pass unchecked.
+    const runs = (...records) => Object.fromEntries(['runs', 'jobs', 'logs']
+      .map(key => [key, Object.assign({}, ...records.map(record => record[key]))]));
+    const trailer = run => `${STEP.trailer} publish.yml run ${run}, attempt 1`;
+    const sortPush = (repo, head, record) => ciSort(repo, repo.start, head, { eventName: 'push',
+      fetchImpl: github({ green: [repo.start], ...record }) });
+    let repo = site();
+    try {
+      // Publishes B (run 6) and C (run 7), then D, by hand, puts B's site back and names B's run, then a record change.
+      const b = repo.publish('snapshot 1', { trailer: trailer(6) });
+      const c = repo.publish('snapshot 2', { trailer: trailer(7) });
+      const d = repo.publish('snapshot 1', { trailer: trailer(6) });
+      repo.write('project/backlog.md', '# Backlog\n- [x] E\n');
+      const e = repo.commit('E: record');
+      const record = runs(stepRun(6, repo.start, b), stepRun(7, repo.start, c));
+      const env = { GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'djDAOjones/route-plotter' };
+      assert.equal(lastSiteChange(repo.start, e, repo.dir).sha, d);
+      assert.equal(await mainProvenance(repo.start, e, env, github(record), repo.dir), 'hand');
+      const sorted = await sortPush(repo, e, record);
+      assert.equal(sorted.status, 1, sorted.said);
+      assert.match(sorted.said, new RegExp(`::error title=Hand change to the live site::.*docs/index\\.html`));
+    } finally {
+      repo.done();
+    }
+    repo = site();
+    try {
+      // B publishes (run 6); D, by hand and naming B's run, puts the site back as the range's start held it, so the two
+      // ends show no change to it; with a record change after it, and without.
+      const b = repo.publish('snapshot 1', { trailer: trailer(6) });
+      repo.write('docs/index.html', 'v3');
+      repo.write('version.json', '{"build":726}\n');
+      const d = repo.commit(`PUB-01: publish back\n\nVerify: forged\n${trailer(6)}`, repo.bot);
+      assert.deepEqual(pathsOfRange([repo.start, d], repo.dir), []);
+      const record = stepRun(6, repo.start, b);
+      let sorted = await sortPush(repo, d, record);
+      assert.equal(sorted.status, 1, sorted.said);
+      assert.match(sorted.said, /::error title=Hand change to the live site::.*docs\/index\.html/);
+      repo.write('project/backlog.md', '# Backlog\n- [x] E\n');
+      const e = repo.commit('E: record');
+      sorted = await sortPush(repo, e, record);
+      assert.equal(sorted.status, 1, sorted.said);
+      assert.match(sorted.said, /record\s+project\/backlog\.md/);
+      assert.match(sorted.said, /::error title=Hand change to the live site::/);
+    } finally {
+      repo.done();
+    }
+    repo = site();
+    try {
+      // A hand change, then a publish (run 8) that rewrites the site: the site is the step's again, as before.
+      repo.write('docs/index.html', 'by hand');
+      repo.commit('X: edit the site');
+      const s = repo.publish('rewritten', { trailer: trailer(8) });
+      repo.write('project/backlog.md', '# Backlog\n- [x] E\n');
+      const e = repo.commit('E: record');
+      const sorted = await sortPush(repo, e, stepRun(8, repo.start, s));
+      assert.equal(sorted.status, 0, sorted.said);
+      assert.match(sorted.said, /runs the record checker, because every path is record-only or the publishing step's/);
     } finally {
       repo.done();
     }
