@@ -1,0 +1,154 @@
+{
+  "note": "V31-A11Y section B's known-bad fixtures: each page, run alone through the gate (npm run a11y -- --known-bad <page>) at level AAA, must exit 1 with its named row failed by its named method. A page whose fault an interaction starts names its control in start. Each test claims the rows its check records (claims), or every row axe credits; the named rows are among them.",
+  "pages": [
+    {
+      "page": "unnamed-button",
+      "method": "axe",
+      "fails": [
+        "4.1.2"
+      ],
+      "reason": "axe button-name"
+    },
+    {
+      "page": "unlabelled-input",
+      "method": "axe",
+      "fails": [
+        "4.1.2"
+      ],
+      "reason": "axe label",
+      "also": [
+        {
+          "method": "snapshot",
+          "fails": [
+            "1.3.1"
+          ]
+        },
+        {
+          "method": "j-forms",
+          "fails": [
+            "3.3.2"
+          ]
+        }
+      ]
+    },
+    {
+      "page": "contrast-5",
+      "method": "contrast",
+      "fails": [
+        "1.4.6"
+      ],
+      "passes": [
+        "1.4.3"
+      ],
+      "reason": "text at about 5.0:1",
+      "claims": [
+        "1.4.3",
+        "1.4.6",
+        "1.4.11"
+      ]
+    },
+    {
+      "page": "target-30",
+      "method": "target-size",
+      "fails": [
+        "2.5.5"
+      ],
+      "passes": [
+        "2.5.8"
+      ],
+      "reason": "a 30 px target",
+      "claims": [
+        "2.5.5",
+        "2.5.8",
+        "SUP03"
+      ]
+    },
+    {
+      "page": "dialog-trap",
+      "method": "keyboard",
+      "fails": [
+        "2.1.2"
+      ],
+      "reason": "a dialog with no exit",
+      "claims": [
+        "2.1.2",
+        "2.4.3"
+      ]
+    },
+    {
+      "page": "dialog-drop",
+      "method": "keyboard",
+      "fails": [
+        "2.4.3"
+      ],
+      "reason": "focus dropped on Escape",
+      "claims": [
+        "2.1.2",
+        "2.4.3"
+      ]
+    },
+    {
+      "page": "timed-keys",
+      "method": "keyboard",
+      "fails": [
+        "2.1.3"
+      ],
+      "passes": [
+        "2.1.1"
+      ],
+      "reason": "a double press within 400 ms",
+      "claims": [
+        "2.1.1",
+        "2.1.3"
+      ]
+    },
+    {
+      "page": "reflow-320",
+      "method": "reflow",
+      "fails": [
+        "1.4.10"
+      ],
+      "reason": "a 640 px panel",
+      "claims": [
+        "1.4.10"
+      ]
+    },
+    {
+      "page": "spacing-clip",
+      "method": "text-spacing",
+      "fails": [
+        "1.4.12"
+      ],
+      "reason": "a fixed-height box hiding overflow",
+      "claims": [
+        "1.4.12"
+      ]
+    },
+    {
+      "page": "sticky-focus",
+      "method": "focus",
+      "fails": [
+        "2.4.11",
+        "2.4.12"
+      ],
+      "reason": "a link under a fixed header",
+      "claims": [
+        "2.4.11",
+        "2.4.12"
+      ]
+    },
+    {
+      "page": "motion",
+      "method": "reduced-motion",
+      "fails": [
+        "2.3.3"
+      ],
+      "reason": "an animation a control starts, ignoring the preference",
+      "claims": [
+        "2.3.3",
+        "SUP02"
+      ],
+      "start": "#start"
+    }
+  ]
+}

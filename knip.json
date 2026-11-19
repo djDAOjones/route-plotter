@@ -3,7 +3,8 @@
     "src/exported/*.ts",
     "eslint.base.mjs",
     "eslint.a11y.mjs",
-    "tests/bundle/*.test.mjs"
+    "tests/bundle/*.test.mjs",
+    "tests/a11y/**/*.{ts,mjs}"
   ],
   "project": [
     "src/**/*.{ts,tsx}",
@@ -26,6 +27,7 @@
   "ignoreDependencies": [
     "@ibm/plex",
     "@types/prop-types",
+    "axe-core",
     "jszip",
     "mediabunny"
   ]

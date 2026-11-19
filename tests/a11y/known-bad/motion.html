@@ -1,0 +1,4 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Known-bad: motion that ignores reduced motion</title><style>body{font:16px/1.5 sans-serif;color:#111;background:#fff;margin:1rem}button{min-height:48px;min-width:48px;font-size:16px}@keyframes spin{to{transform:rotate(360deg)}}.spinner{width:48px;height:48px;border:4px solid #111;border-top-color:transparent;border-radius:50%}.spinner.on{animation:spin 1s linear infinite}</style></head><body><main>
+<h1>Spinner</h1><p>Pressing Start turns the decorative spinner, under reduced motion too (2.3.3).</p><button type="button" id="start">Start</button><div class="spinner" id="spinner" aria-hidden="true"></div>
+<script>document.getElementById("start").addEventListener("click",()=>document.getElementById("spinner").classList.add("on"));</script>
+</main></body></html>
