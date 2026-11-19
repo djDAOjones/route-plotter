@@ -1,4 +1,14 @@
 {
-  "build": 726,
-  "lastUpdated": "2026-10-19T17:51:40.177Z"
+  "app": "Route Plotter",
+  "version": "4.0.0-preview.2",
+  "preview": 2,
+  "source": "e907926c9034fa97e53536c7ab3261a90d564df3",
+  "published": "2026-11-19T04:01:56Z",
+  "address": "https://djdaojones.github.io/route-plotter/",
+  "whatIsNew": [
+    "No item has shipped since the last publish."
+  ],
+  "whatToTry": [
+    "Open https://djdaojones.github.io/route-plotter/ — v4's page is back after the take-back was tried once. Open https://djdaojones.github.io/route-plotter/version.json — it now says 4.0.0-preview.2."
+  ]
 }
