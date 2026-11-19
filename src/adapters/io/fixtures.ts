@@ -1,5 +1,11 @@
 // CORE-03: image headers built by hand, for io's tests only: admission reads a header and no more, so a test image
 // needs no encoder. Each builds the smallest bytes its type's header reader accepts, at the size asked for.
+import { sizeOf } from './images';
+import type { Decode } from './images';
+
+/** The decoder io's tests pass to Save and Open: a sound image decodes to the size its header declares. */
+export const decodeHeader: Decode = (bytes, type) => Promise.resolve(sizeOf(bytes, type));
+
 const ascii = (text: string) => [...text].map((character) => character.charCodeAt(0));
 const be32 = (value: number) => [(value >>> 24) & 255, (value >>> 16) & 255, (value >>> 8) & 255, value & 255];
 const be16 = (value: number) => [(value >>> 8) & 255, value & 255];

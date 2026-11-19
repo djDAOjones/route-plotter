@@ -2,7 +2,8 @@
 // the words to show: the ZIP's own guard (preflight.ts); jszip's reading, which must name the same files the guard
 // counted; project.json, read within its limit, as strict UTF-8 plain data (json.ts); the kind of file and the
 // declaration's judgement (classify.ts); the ZIP's files against the declared images, so a file the project does not
-// name is listed, never silently dropped (INTAKE.13); each image read within its limit and admitted (images.ts).
+// name is listed, never silently dropped (INTAKE.13); each image read within its limit, admitted and decoded by the
+// caller's decoder (images.ts).
 // Every object it returns is built here, after every stage passed: nothing it is given changes, and it keeps nothing
 // between calls, so a refused file leaves no trace (DEF-51, inverted from v3/tests/projectRollback.test.js:14–15,
 // where a failed load left the candidate's caches behind).
@@ -11,6 +12,7 @@ import { judge, classify } from './classify';
 import { imageEntryName, PROJECT_FILE_NAME } from './format';
 import type { ImageType, Project } from './format';
 import { admitImages } from './images';
+import type { Decode } from './images';
 import { parseProjectJson } from './json';
 import { ARCHIVE_LIMITS, IMAGE_LIMITS } from './limits';
 import { newBudget, preflight, readEntry } from './preflight';
@@ -24,7 +26,7 @@ const unsafe = (why: string) => refused({ reason: 'unsafe', message: WORDS.opene
 const tooLarge = (what: string) => refused({ reason: 'too-large', message: WORDS.openedTooLarge(what) });
 const MB = (bytes: number) => `${bytes / (1024 * 1024)} MB`;
 
-async function stages(bytes: Uint8Array): Promise<Opened> {
+async function stages(bytes: Uint8Array, decode: Decode): Promise<Opened> {
   const checked = preflight(bytes);
   if (!checked.ok) return refused(checked.refusal);
   const names = new Set(checked.entries.map(({ name }) => name));
@@ -66,7 +68,7 @@ async function stages(bytes: Uint8Array): Promise<Opened> {
     if (imageBytes === null) return tooLarge(`image ${index + 1} is over ${MB(IMAGE_LIMITS.bytes)}, or its files come to more than ${MB(ARCHIVE_LIMITS.inflatedBytes)} once unpacked`);
     images.push({ id, type, bytes: imageBytes });
   }
-  const admitted = admitImages(images);
+  const admitted = await admitImages(images, decode);
   if (!admitted.ok) {
     return 'tooLarge' in admitted
       ? tooLarge(admitted.tooLarge)
@@ -77,11 +79,12 @@ async function stages(bytes: Uint8Array): Promise<Opened> {
 
 /**
  * A project file's bytes opened: the project, or why the file was refused, with the words to show. Never throws:
- * whatever jszip or the bytes do, the answer is a project whole or a refusal, never part of one.
+ * whatever jszip, the bytes or the decoder do, the answer is a project whole or a refusal, never part of one. `decode`
+ * decodes each image as the page will (images.ts): the shell passes one built on the browser's decoder.
  */
-export async function openProject(bytes: Uint8Array): Promise<Opened> {
+export async function openProject(bytes: Uint8Array, decode: Decode): Promise<Opened> {
   try {
-    return await stages(bytes);
+    return await stages(bytes, decode);
   } catch {
     return unsafe('it is damaged: part of it could not be unpacked');
   }

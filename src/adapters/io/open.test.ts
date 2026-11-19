@@ -3,9 +3,10 @@
 import JSZip from 'jszip/dist/jszip.min.js';
 import { describe, expect, it } from 'vitest';
 import { newPoint, newScene } from '../../core/model/scene';
-import { jpeg, png, webpLossy } from './fixtures';
+import { decodeHeader, jpeg, png, webpLossy } from './fixtures';
 import { FORMAT_VERSION } from './format';
 import type { Project } from './format';
+import type { Decode } from './images';
 import { ARCHIVE_LIMITS, IMAGE_LIMITS } from './limits';
 import { openProject } from './open';
 import type { Opened } from './open';
@@ -30,7 +31,7 @@ function project(): Project {
 }
 
 async function saved(value: Project): Promise<Uint8Array> {
-  const result = await saveProject(value);
+  const result = await saveProject(value, decodeHeader);
   if (!result.ok) throw new Error(result.refusal.message);
   return result.bytes;
 }
@@ -61,7 +62,7 @@ const reasonOf = (opened: Opened) => (opened.ok ? 'opened' : opened.refusal.reas
 describe('Open', () => {
   it('opens what Save wrote: the same scene and the same image bytes', async () => {
     const original = project();
-    const opened = await openProject(await saved(original));
+    const opened = await openProject(await saved(original), decodeHeader);
     expect(opened).toEqual({ ok: true, project: original });
   });
 
@@ -85,13 +86,14 @@ describe('Open', () => {
       ['an image over 8,192 pixels wide', await zipOf({ 'project.json': text(file), ...images, 'images/1.png': png(9000, 1) }), 'invalid'],
       ['a damaged deflate stream', await damagedDeflate(), 'unsafe'],
     ];
-    for (const [name, bytes, reason] of cases) expect(reasonOf(await openProject(bytes)), name).toBe(reason);
+    for (const [name, bytes, reason] of cases) expect(reasonOf(await openProject(bytes, decodeHeader)), name).toBe(reason);
   });
 
   it('lists the files the project does not name, every one, never dropping them', async () => {
     const file = await savedFile();
     const opened = await openProject(
       await zipOf({ 'project.json': text({ ...file, images: [] }), 'images/1.png': png(1, 1), 'notes.txt': png(1, 1) }),
+      decodeHeader,
     );
     expect(opened).toMatchObject({ ok: false, refusal: { reason: 'unknown', files: ['images/1.png', 'notes.txt'] } });
   });
@@ -102,13 +104,29 @@ describe('Open', () => {
     big.set(png(1, 1));
     const opened = await openProject(
       await zipOf({ 'project.json': text({ ...file, images: [{ id: 'big', type: 'image/png' }] }), 'images/1.png': big }),
+      decodeHeader,
     );
     expect(opened).toMatchObject({ ok: false, refusal: { reason: 'too-large' } });
   });
 
+  it('refuses an image the decoder cannot show, and returns no project (the decode guard)', async () => {
+    const bytes = await saved(project());
+    const refuseJpeg: Decode = (image, type) => (type === 'image/jpeg' ? Promise.resolve(null) : decodeHeader(image, type));
+    const opened = await openProject(bytes, refuseJpeg);
+    expect(opened).toMatchObject({
+      ok: false,
+      refusal: { reason: 'invalid', problems: [{ path: 'images[1]', rule: 'type', expected: 'a JPEG image that can be shown', received: 'a damaged image' }] },
+    });
+    expect('project' in opened).toBe(false);
+    const larger = await openProject(bytes, (image, type) => decodeHeader(image, type).then((size) => size && { ...size, width: size.width + 1 }));
+    expect(larger).toMatchObject({ ok: false, refusal: { reason: 'invalid' } });
+    const throws = await openProject(bytes, () => Promise.reject(new Error('the decoder failed')));
+    expect(throws).toMatchObject({ ok: false, refusal: { reason: 'invalid' } });
+  });
+
   it('leaves nothing behind when it refuses: what it opened before and the bytes it was given are unchanged (DEF-51)', async () => {
     const bytes = await saved(project());
-    const first = await openProject(bytes);
+    const first = await openProject(bytes, decodeHeader);
     if (!first.ok) throw new Error(first.refusal.message);
     const snapshot = structuredClone(first.project);
     const file = await savedFile();
@@ -121,13 +139,13 @@ describe('Open', () => {
     ];
     for (const candidate of refused) {
       const copy = candidate.slice();
-      const opened = await openProject(candidate);
+      const opened = await openProject(candidate, decodeHeader);
       expect(opened.ok).toBe(false);
       expect('project' in opened).toBe(false);
       expect(candidate).toEqual(copy);
     }
     expect(first.project).toEqual(snapshot);
-    const again = await openProject(bytes);
+    const again = await openProject(bytes, decodeHeader);
     expect(again).toEqual(first);
     if (!again.ok) throw new Error(again.refusal.message);
     expect(again.project.scene).not.toBe(first.project.scene);

@@ -2,7 +2,7 @@ import JSZip from 'jszip/dist/jszip.min.js';
 import { describe, expect, it } from 'vitest';
 import { newPoint, newScene } from '../../core/model/scene';
 import type { Scene } from '../../core/model/scene';
-import { jpeg, png } from './fixtures';
+import { decodeHeader, jpeg, png } from './fixtures';
 import { FORMAT_VERSION } from './format';
 import type { Project } from './format';
 import { saveProject } from './save';
@@ -28,7 +28,7 @@ function sceneWithLabels(...labels: string[]): Scene {
 }
 
 async function saved(project: Project): Promise<Uint8Array> {
-  const result = await saveProject(project);
+  const result = await saveProject(project, decodeHeader);
   if (!result.ok) throw new Error(result.refusal.message);
   return result.bytes;
 }
@@ -79,7 +79,7 @@ describe('the save format', () => {
   it('refuses a project the schema does not allow, naming where, and writes nothing', async () => {
     const scene = sceneWithLabels('x');
     const extra = { ...scene, notes: 'kept?' };
-    const result = await saveProject({ scene: extra, images: [] });
+    const result = await saveProject({ scene: extra, images: [] }, decodeHeader);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.refusal.reason).toBe('invalid');
@@ -89,8 +89,17 @@ describe('the save format', () => {
 
   it('refuses a project whose project.json would pass v3’s 2 MB limit', async () => {
     const scene = sceneWithLabels(...Array.from({ length: 11 }, () => '🙂'.repeat(50_000)));
-    const result = await saveProject({ scene, images: [] });
+    const result = await saveProject({ scene, images: [] }, decodeHeader);
     expect(result.ok ? 'saved' : result.refusal.reason).toBe('too-large');
+  });
+
+  it('refuses an image the decoder cannot show, and writes nothing (the decode guard)', async () => {
+    const images = [{ id: 'map', type: 'image/png' as const, bytes: PNG }, { id: 'photo', type: 'image/jpeg' as const, bytes: JPEG }];
+    const result = await saveProject({ scene: sceneWithLabels('x'), images }, (bytes, type) =>
+      type === 'image/png' ? Promise.resolve(null) : decodeHeader(bytes, type),
+    );
+    expect(result).toMatchObject({ ok: false, refusal: { reason: 'invalid', problems: [{ path: 'images[0]', expected: 'a PNG image that can be shown' }] } });
+    expect('bytes' in result).toBe(false);
   });
 
   it('exports the Save notice the editor shows wherever it offers Save (PLAN-7)', () => {
