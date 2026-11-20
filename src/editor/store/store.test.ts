@@ -83,6 +83,7 @@ describe('one gesture is one undo step, never merged by a timer (DEF-92, CROWD-0
   it('a gesture that ends where it began makes no step and keeps Redo', () => {
     const { project, route } = twoStops();
     const store = storeOf(project);
+    const first = store.getState().project;
     store.dispatch(setRouteSetting(route, 'line', 'thickness', 10));
     store.undo();
     const begun = store.begin('Line width');
@@ -90,7 +91,7 @@ describe('one gesture is one undo step, never merged by a timer (DEF-92, CROWD-0
     begun.gesture.apply(setRouteSetting(route, 'line', 'thickness', 20));
     begun.gesture.apply(setRouteSetting(route, 'line', 'thickness', 3));
     expect(begun.gesture.commit()).toEqual({ ok: true, changed: false });
-    expect(store.getState().project).toBe(project);
+    expect(store.getState().project).toBe(first);
     expect(store.getState()).toMatchObject({ undo: null, redo: 'Change the line settings' });
   });
 
@@ -247,10 +248,11 @@ describe('history, as v3 kept it', () => {
   it('Undo and Redo give back the very projects they recorded', () => {
     const { project, route } = twoStops();
     const store = storeOf(project);
+    const first = store.getState().project;
     store.dispatch(setRouteSetting(route, 'line', 'thickness', 10));
     const after = store.getState().project;
     store.undo();
-    expect(store.getState().project).toBe(project);
+    expect(store.getState().project).toBe(first);
     store.redo();
     expect(store.getState().project).toBe(after);
   });
@@ -277,6 +279,28 @@ describe('history, as v3 kept it', () => {
     expect(store.open(broken)).toMatchObject({ ok: false, refusal: { why: 'invalid' } });
     expect(store.getState()).toBe(before);
     expect(() => createStore({ project: broken, nextId: counter('x') })).toThrow(RangeError);
+  });
+
+  it('a failed Open, with Redo history and a gesture open, keeps the gesture, the history and the selection', () => {
+    const { project, route, a } = twoStops();
+    const store = storeOf(project);
+    store.select({ route, points: [a] });
+    store.dispatch(setRouteSetting(route, 'line', 'thickness', 10));
+    store.dispatch(setRouteSetting(route, 'line', 'thickness', 12));
+    store.undo();
+    const begun = store.begin('Move point');
+    if (!begun.ok) throw new Error('the gesture did not open');
+    expect(begun.gesture.apply(movePoint(route, a, { x: 0.3, y: 0.3 }))).toEqual({ ok: true, changed: true });
+    const before = store.getState();
+    const broken = { ...project, scene: { ...project.scene, routes: [...project.scene.routes, ...project.scene.routes] } };
+    expect(store.open(broken)).toMatchObject({ ok: false, refusal: { why: 'invalid' } });
+    expect(() => store.open({ ...project, images: Object.assign([], { extra: 1 }) })).toThrow(TypeError);
+    expect(store.getState()).toBe(before);
+    expect(before).toMatchObject({ undo: 'Change the line settings', redo: 'Change the line settings', gesture: 'Move point' });
+    expect(before.selection).toEqual({ route, points: [a] });
+    expect(begun.gesture.cancel()).toEqual({ ok: true, changed: true });
+    expect(store.redo()).toEqual({ ok: true, changed: true });
+    expect(thickness(store)).toBe(12);
   });
 });
 

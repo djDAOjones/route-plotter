@@ -26,6 +26,7 @@ describe('every change is a command, checked by the declarations', () => {
   it('each scene setting with a route makes its own undo entry (CROWD-06.3)', () => {
     const { project } = oneStop();
     const store = storeOf(project);
+    const first = store.getState().project;
     const clock = () => store.getState().project.scene.settings.clock;
     const fixedLengthMs = project.scene.settings.clock.fixedLengthMs;
     expect(store.dispatch(setSceneSetting('clock', 'length', 'fixed'))).toEqual({ ok: true, changed: true });
@@ -36,7 +37,7 @@ describe('every change is a command, checked by the declarations', () => {
     expect(clock()).toMatchObject({ length: 'fixed', fixedLengthMs });
     expect(store.getState().undo).toBe('Change the clock settings');
     expect(store.undo()).toEqual({ ok: true, changed: true });
-    expect(store.getState().project).toBe(project);
+    expect(store.getState().project).toBe(first);
     expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
   });
 
@@ -74,8 +75,9 @@ describe('every change is a command, checked by the declarations', () => {
     store.dispatch(addRoute());
     expect(store.getState().project.scene.routes.map((route) => route.id)).toEqual(['seed-2', 'fresh-1']);
     const stuck = storeOf(project, () => 'seed-2');
+    const first = stuck.getState().project;
     expect(stuck.dispatch(addRoute())).toMatchObject({ ok: false, refusal: { why: 'invalid' } });
-    expect(stuck.getState().project).toBe(project);
+    expect(stuck.getState().project).toBe(first);
   });
 
   it(`refuses a route past the limit of ${String(LIMITS.routes)}`, () => {
@@ -89,11 +91,12 @@ describe('every change is a command, checked by the declarations', () => {
   it('a command changes only what it names', () => {
     const { project, route } = oneStop();
     const store = storeOf(project);
+    const first = store.getState().project;
     store.dispatch(setRouteSetting(route, 'lead', 'speed', 2));
     const after = store.getState().project;
-    expect(after.images).toBe(project.images);
-    expect(after.scene.settings).toBe(project.scene.settings);
-    const [was, now] = [project.scene.routes[0], after.scene.routes[0]];
+    expect(after.images).toBe(first.images);
+    expect(after.scene.settings).toBe(first.scene.settings);
+    const [was, now] = [first.scene.routes[0], after.scene.routes[0]];
     expect(now?.points).toBe(was?.points);
     expect(now?.settings.line).toBe(was?.settings.line);
     expect(now?.settings.lead).toEqual({ ...was?.settings.lead, speed: 2 });

@@ -4,9 +4,12 @@
 // slider from its first move to its release, a typed value at its commit — and never by a timer: the store reads no
 // clock to decide what a step is (DEF-92, CROWD-06.2), where v3 merged saves by a debounce (undoRedo.js:99). A step
 // records the selection it found and the one it left, so Undo gives back the first and Redo the second (DEF-74). An
-// error in one subscriber never stops the others (the plan's §15, line 986, kept from v3's EventBus). Nothing the store
-// holds or hands out can be written to (own.ts): a project is frozen as it comes in and as a command gives it, a
-// selection is always the store's own frozen copy, and so is what `getState()` gives and what a command receives.
+// error in one subscriber never stops the others (the plan's §15, line 986, kept from v3's EventBus). What the store
+// holds and hands out is its own frozen copy (own.ts): of a project as it comes in and as a command gives it, of a
+// selection, and so what `getState()` gives and what a command receives. The claim's point 4: commands, the id source,
+// the reporter and subscribers are the editor's own code. Everything the store reads from a command (its label, its
+// `apply` and what that gives) is read before `current` changes, so one that throws leaves the state and the history as
+// they were, and what `getState()` shows is always what the next command receives.
 import type { Project } from '../../adapters/io/format';
 import { checkScene, type IdSource } from '../../core/model/scene';
 import type { Command, Current, Refusal } from './command';
@@ -214,9 +217,10 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
     },
     dispatch: (command) => {
       if (opened !== null) return refused({ why: 'gesture-open' });
+      const { label } = command;
       const before = current;
       const outcome = run(command);
-      return outcome.ok && outcome.changed ? close({ label: command.label, before }) : outcome;
+      return outcome.ok && outcome.changed ? close({ label, before }) : outcome;
     },
     begin,
     select: (selection) => {
