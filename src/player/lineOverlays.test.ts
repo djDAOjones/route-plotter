@@ -3,7 +3,7 @@
 // (D157), checked here as src/features/line/draw/overlays.ts states it. Where it runs is checked against the line
 // itself, drawn whole by the line's own layer in the same frame, so the guide is on screen where the line would be.
 import { expect, test } from 'vitest';
-import { unitAt } from '../adapters/render/overlays';
+import { unitAt, type Overlay, type Screen } from '../adapters/render/overlays';
 import { Recorder } from '../adapters/render/recorder';
 import type { View } from '../core/feature/contract';
 import { newLine, newPoint, newRoute, newScene, type Route, type Scene } from '../core/model/scene';
@@ -257,4 +257,63 @@ test('the "+" sits at the hovered stretch’s middle, after the glow: radius 9, 
       expect(added.slice(first).find((line) => line.startsWith('fill')), name).toContain(plus === 'active' ? '#0f62fe' : 'rgba(255, 255, 255, 0.95)');
     }
   }
+});
+
+/** The frame and screen the composer hands each overlay for `scene` at 1080p and a zoom of 1. */
+function handed(scene: Scene): Parameters<Overlay> extends [unknown, ...infer Rest] ? Rest : never {
+  const seen: Parameters<Overlay>[] = [];
+  draw(request(scene, { overlays: [(...args) => void seen.push(args)] }));
+  const [, frame, screen] = seen[0] ?? [];
+  if (frame === undefined || screen === undefined) throw new Error('no overlay was handed a frame');
+  return [frame, screen];
+}
+
+test('drawn straight onto a dirtied canvas, the lines’ overlay sets every style it uses and leaves the state and no path behind', () => {
+  const scene = sceneOf(['hidden', 'whole'], { branch: true });
+  const [frame, screen] = handed(scene);
+  const overlay = OVERLAY_MAKERS.lines(scene.routes.map((route) => route.id), { hovered: hover(scene, 'active', 3, 1) });
+  const onto = (context: Recorder, on: Screen = screen) => (overlay(context, frame, on), context.take());
+  // As careless drawing would leave it: faint, multiplied, dashed, offset, square-capped, bevelled, wide, coloured, a path open.
+  const context = new Recorder();
+  Object.assign(context, { globalAlpha: 0.3, globalCompositeOperation: 'multiply', lineDashOffset: 3, lineCap: 'square', lineJoin: 'bevel', lineWidth: 7, strokeStyle: 'red', fillStyle: 'green' });
+  context.setLineDash([5, 7]);
+  context.moveTo(1, 2);
+  context.lineTo(3, 4);
+  context.take();
+  const before = context.state();
+  expect(before.path.length).toBeGreaterThan(0);
+  const clean = onto(new Recorder());
+  expect(strokes(clean)).toHaveLength(5); // the guide, the glow's two, the "+"'s edge and arms
+  expect(onto(context)).toEqual(clean);
+  expect(context.state()).toEqual({ ...before, path: [] });
+  // A hovered line of no sample or one: neither glow nor "+" (no guide is asked for).
+  const alone = OVERLAY_MAKERS.lines([], { hovered: hover(scene, 'active', 3, 1) });
+  const id = scene.routes[1]?.id ?? '';
+  const view = screen.routes.get(id);
+  for (const count of [0, 1]) {
+    const shapes = new Map([...(view?.timeline.shapes ?? [])].map(([key, shape]) => [key, { ...shape, samples: shape.samples.slice(0, count) }]));
+    const thin = view === undefined ? [] : [[id, { ...view, timeline: { ...view.timeline, shapes } }] as const];
+    const recorder = new Recorder();
+    alone(recorder, frame, { ...screen, routes: new Map([...screen.routes, ...thin]) });
+    expect(recorder.take().filter((line) => /^(stroke|fill|arc) /.test(line)), String(count)).toEqual([]);
+  }
+});
+
+test('a branch hovered glows along the branch alone; the line’s width is its layer’s, frame.scale included (2 at 2160p)', () => {
+  const viewing = VIEWINGS['a zoom of 1'];
+  const scene = sceneOf(['whole'], { branch: true });
+  const { plain, added } = both(scene, viewing, scene.routes, { hovered: hover(scene, 'none', 3) });
+  const glow = places(added);
+  const drawn = places(plain.lines);
+  expect(glow.filter(({ x, y }) => !drawn.some((at) => Math.hypot(at.x - x, at.y - y) <= 0.1))).toEqual([]);
+  // From the third point (0.6, 0.55) to the fifth (0.7, 0.8), on the picture drawn 1,440 wide from x = 240.
+  const ends = [glow[0], glow[glow.length - 1]].map((at) => [Math.round(at?.x ?? 0), Math.round(at?.y ?? 0)]);
+  expect(ends).toEqual([[1104, 594], [1248, 864]]);
+  // At 2160p the line's own stroke is thickness 3 × frame.scale 2; the glow is that + 9 and + 4.
+  const size = { width: 3840, height: 2160 };
+  const big = draw(request(scene, { size }), viewing.catalogue);
+  const edited = draw(request(scene, { size, overlays: [OVERLAY_MAKERS.lines([], { hovered: hover(scene) })] }), viewing.catalogue);
+  const line = widthOf(strokes(big.lines)[0]);
+  expect(line).toBe(6);
+  expect(strokes(edited.lines.slice(big.lines.length)).map(widthOf)).toEqual([line + 9, line + 4]);
 });
