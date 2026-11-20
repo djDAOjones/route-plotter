@@ -10,7 +10,7 @@ const press = (key: string, held: Partial<Omit<KeyPress, 'key'>> = {}): KeyPress
 
 const PLATFORMS = [true, false] as const;
 
-/** Every way Ctrl, Cmd, Alt and Shift may be held, the fifteen with at least one of Ctrl, Cmd or Alt among them. */
+/** Every way Ctrl, Cmd, Alt and Shift may be held, the fourteen with at least one of Ctrl, Cmd or Alt among them. */
 const CHORDS = Array.from({ length: 16 }, (_, bits) => ({
   ctrlKey: (bits & 1) !== 0,
   metaKey: (bits & 2) !== 0,
