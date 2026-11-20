@@ -1,0 +1,613 @@
+# the start: 0 ms of 10666
+resetTransform
+clearRect 0 0 1920 1080 | @ 1 0 0 1 0 0
+save
+setTransform 1 0 0 1 0 0
+save
+beginPath
+save
+resetTransform
+fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
+restore
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+beginPath
+restore
+save
+beginPath
+beginPath
+restore
+save
+beginPath
+beginPath
+restore
+save
+beginPath
+beginPath
+arc 528 756 8 0 6.283 clockwise @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
+beginPath
+restore
+save
+beginPath
+beginPath
+restore
+save
+beginPath
+save
+save
+beginPath
+moveTo 506 739.6 @ 1 0 0 1 0 0
+lineTo 550 739.6 @ 1 0 0 1 0 0
+quadraticCurveTo 554 739.6 554 743.6 @ 1 0 0 1 0 0
+lineTo 554 768.4 @ 1 0 0 1 0 0
+quadraticCurveTo 554 772.4 550 772.4 @ 1 0 0 1 0 0
+lineTo 506 772.4 @ 1 0 0 1 0 0
+quadraticCurveTo 502 772.4 502 768.4 @ 1 0 0 1 0 0
+lineTo 502 743.6 @ 1 0 0 1 0 0
+quadraticCurveTo 502 739.6 506 739.6 @ 1 0 0 1 0 0
+closePath @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#ffffff globalAlpha=0.85
+restore
+fillText "Start" 528 756 | @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+restore
+beginPath
+restore
+restore
+# a quarter: 2666 ms of 10666
+resetTransform
+clearRect 0 0 1920 1080 | @ 1 0 0 1 0 0
+save
+setTransform 1 0 0 1 0 0
+save
+beginPath
+save
+resetTransform
+fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
+restore
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+beginPath
+restore
+save
+beginPath
+beginPath
+restore
+save
+beginPath
+beginPath
+moveTo 769.598 337.333 @ 1 0 0 1 0 0
+lineTo 771.159 338.416 @ 1 0 0 1 0 0
+lineTo 773.509 340.071 @ 1 0 0 1 0 0
+lineTo 775.851 341.74 @ 1 0 0 1 0 0
+lineTo 778.185 343.422 @ 1 0 0 1 0 0
+lineTo 780.512 345.117 @ 1 0 0 1 0 0
+lineTo 782.832 346.82 @ 1 0 0 1 0 0
+lineTo 785.147 348.533 @ 1 0 0 1 0 0
+lineTo 787.458 350.252 @ 1 0 0 1 0 0
+lineTo 789.763 351.979 @ 1 0 0 1 0 0
+lineTo 792.063 353.714 @ 1 0 0 1 0 0
+lineTo 794.359 355.455 @ 1 0 0 1 0 0
+lineTo 796.652 357.2 @ 1 0 0 1 0 0
+lineTo 798.941 358.951 @ 1 0 0 1 0 0
+lineTo 801.227 360.707 @ 1 0 0 1 0 0
+lineTo 803.509 362.466 @ 1 0 0 1 0 0
+lineTo 805.789 364.23 @ 1 0 0 1 0 0
+lineTo 808.065 365.998 @ 1 0 0 1 0 0
+lineTo 810.34 367.769 @ 1 0 0 1 0 0
+lineTo 812.612 369.544 @ 1 0 0 1 0 0
+lineTo 814.881 371.322 @ 1 0 0 1 0 0
+lineTo 817.148 373.102 @ 1 0 0 1 0 0
+lineTo 819.413 374.886 @ 1 0 0 1 0 0
+lineTo 821.676 376.672 @ 1 0 0 1 0 0
+lineTo 823.938 378.46 @ 1 0 0 1 0 0
+lineTo 826.197 380.251 @ 1 0 0 1 0 0
+lineTo 828.455 382.044 @ 1 0 0 1 0 0
+lineTo 830.712 383.838 @ 1 0 0 1 0 0
+lineTo 832.967 385.635 @ 1 0 0 1 0 0
+lineTo 835.221 387.433 @ 1 0 0 1 0 0
+lineTo 837.473 389.234 @ 1 0 0 1 0 0
+lineTo 839.724 391.036 @ 1 0 0 1 0 0
+lineTo 841.974 392.839 @ 1 0 0 1 0 0
+lineTo 844.222 394.644 @ 1 0 0 1 0 0
+lineTo 846.47 396.449 @ 1 0 0 1 0 0
+lineTo 848.717 398.257 @ 1 0 0 1 0 0
+lineTo 850.963 400.066 @ 1 0 0 1 0 0
+lineTo 853.207 401.876 @ 1 0 0 1 0 0
+lineTo 855.451 403.686 @ 1 0 0 1 0 0
+lineTo 857.695 405.498 @ 1 0 0 1 0 0
+lineTo 859.937 407.311 @ 1 0 0 1 0 0
+lineTo 862.179 409.124 @ 1 0 0 1 0 0
+lineTo 864.42 410.939 @ 1 0 0 1 0 0
+lineTo 866.661 412.754 @ 1 0 0 1 0 0
+lineTo 868.9 414.57 @ 1 0 0 1 0 0
+lineTo 871.14 416.387 @ 1 0 0 1 0 0
+lineTo 873.379 418.204 @ 1 0 0 1 0 0
+lineTo 875.617 420.022 @ 1 0 0 1 0 0
+lineTo 877.856 421.84 @ 1 0 0 1 0 0
+lineTo 880.093 423.659 @ 1 0 0 1 0 0
+lineTo 882.331 425.478 @ 1 0 0 1 0 0
+lineTo 884.568 427.297 @ 1 0 0 1 0 0
+lineTo 886.805 429.117 @ 1 0 0 1 0 0
+lineTo 889.041 430.937 @ 1 0 0 1 0 0
+lineTo 891.278 432.757 @ 1 0 0 1 0 0
+lineTo 893.514 434.578 @ 1 0 0 1 0 0
+lineTo 895.75 436.399 @ 1 0 0 1 0 0
+lineTo 897.986 438.219 @ 1 0 0 1 0 0
+lineTo 900.223 440.04 @ 1 0 0 1 0 0
+lineTo 902.459 441.861 @ 1 0 0 1 0 0
+lineTo 904.695 443.682 @ 1 0 0 1 0 0
+lineTo 906.931 445.502 @ 1 0 0 1 0 0
+lineTo 909.167 447.323 @ 1 0 0 1 0 0
+lineTo 911.404 449.143 @ 1 0 0 1 0 0
+lineTo 913.64 450.963 @ 1 0 0 1 0 0
+lineTo 915.877 452.783 @ 1 0 0 1 0 0
+lineTo 918.114 454.602 @ 1 0 0 1 0 0
+lineTo 920.352 456.421 @ 1 0 0 1 0 0
+lineTo 922.59 458.24 @ 1 0 0 1 0 0
+lineTo 924.828 460.058 @ 1 0 0 1 0 0
+lineTo 927.067 461.876 @ 1 0 0 1 0 0
+lineTo 929.306 463.693 @ 1 0 0 1 0 0
+lineTo 931.545 465.509 @ 1 0 0 1 0 0
+lineTo 933.785 467.325 @ 1 0 0 1 0 0
+lineTo 936.026 469.139 @ 1 0 0 1 0 0
+lineTo 938.268 470.953 @ 1 0 0 1 0 0
+lineTo 940.51 472.766 @ 1 0 0 1 0 0
+lineTo 942.753 474.578 @ 1 0 0 1 0 0
+lineTo 944.997 476.389 @ 1 0 0 1 0 0
+lineTo 947.242 478.199 @ 1 0 0 1 0 0
+lineTo 949.487 480.008 @ 1 0 0 1 0 0
+lineTo 951.734 481.815 @ 1 0 0 1 0 0
+lineTo 953.982 483.62 @ 1 0 0 1 0 0
+lineTo 956.231 485.425 @ 1 0 0 1 0 0
+lineTo 958.482 487.227 @ 1 0 0 1 0 0
+lineTo 960.734 489.027 @ 1 0 0 1 0 0
+lineTo 962.987 490.826 @ 1 0 0 1 0 0
+lineTo 965.242 492.623 @ 1 0 0 1 0 0
+lineTo 967.498 494.417 @ 1 0 0 1 0 0
+lineTo 969.166 495.741 @ 1 0 0 1 0 0
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#d55e00 lineWidth=3 lineCap=round lineJoin=round
+beginPath
+restore
+save
+beginPath
+beginPath
+arc 528 756 8 0 6.283 clockwise @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
+beginPath
+restore
+save
+beginPath
+save
+translate 969.166 495.741
+rotate 0.672
+beginPath
+moveTo 8 0 @ 0.782 0.623 -0.623 0.782 969.166 495.741
+lineTo -4 4 @ 0.782 0.623 -0.623 0.782 969.166 495.741
+lineTo -2 0 @ 0.782 0.623 -0.623 0.782 969.166 495.741
+lineTo -4 -4 @ 0.782 0.623 -0.623 0.782 969.166 495.741
+closePath @ 0.782 0.623 -0.623 0.782 969.166 495.741
+fill | @ 0.782 0.623 -0.623 0.782 969.166 495.741 | fillStyle=#111111
+restore
+beginPath
+restore
+save
+beginPath
+save
+save
+beginPath
+moveTo 506 739.6 @ 1 0 0 1 0 0
+lineTo 550 739.6 @ 1 0 0 1 0 0
+quadraticCurveTo 554 739.6 554 743.6 @ 1 0 0 1 0 0
+lineTo 554 768.4 @ 1 0 0 1 0 0
+quadraticCurveTo 554 772.4 550 772.4 @ 1 0 0 1 0 0
+lineTo 506 772.4 @ 1 0 0 1 0 0
+quadraticCurveTo 502 772.4 502 768.4 @ 1 0 0 1 0 0
+lineTo 502 743.6 @ 1 0 0 1 0 0
+quadraticCurveTo 502 739.6 506 739.6 @ 1 0 0 1 0 0
+closePath @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#ffffff globalAlpha=0.85
+restore
+fillText "Start" 528 756 | @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+restore
+beginPath
+restore
+restore
+# the middle: 5333 ms of 10666
+resetTransform
+clearRect 0 0 1920 1080 | @ 1 0 0 1 0 0
+save
+setTransform 1 0 0 1 0 0
+save
+beginPath
+save
+resetTransform
+fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
+restore
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+beginPath
+restore
+save
+beginPath
+beginPath
+restore
+save
+beginPath
+beginPath
+moveTo 1033.485 539.911 @ 1 0 0 1 0 0
+lineTo 1035.36 539.607 @ 1 0 0 1 0 0
+lineTo 1037.984 538.958 @ 1 0 0 1 0 0
+lineTo 1040.674 538.17 @ 1 0 0 1 0 0
+lineTo 1043.377 537.295 @ 1 0 0 1 0 0
+lineTo 1046.08 536.37 @ 1 0 0 1 0 0
+lineTo 1048.778 535.408 @ 1 0 0 1 0 0
+lineTo 1051.472 534.417 @ 1 0 0 1 0 0
+lineTo 1054.16 533.403 @ 1 0 0 1 0 0
+lineTo 1056.844 532.37 @ 1 0 0 1 0 0
+lineTo 1059.523 531.321 @ 1 0 0 1 0 0
+lineTo 1062.198 530.259 @ 1 0 0 1 0 0
+lineTo 1064.87 529.185 @ 1 0 0 1 0 0
+lineTo 1067.539 528.102 @ 1 0 0 1 0 0
+lineTo 1070.204 527.01 @ 1 0 0 1 0 0
+lineTo 1072.867 525.91 @ 1 0 0 1 0 0
+lineTo 1075.527 524.802 @ 1 0 0 1 0 0
+lineTo 1078.184 523.688 @ 1 0 0 1 0 0
+lineTo 1080.84 522.568 @ 1 0 0 1 0 0
+lineTo 1083.493 521.443 @ 1 0 0 1 0 0
+lineTo 1086.144 520.312 @ 1 0 0 1 0 0
+lineTo 1088.793 519.177 @ 1 0 0 1 0 0
+lineTo 1091.441 518.038 @ 1 0 0 1 0 0
+lineTo 1094.087 516.894 @ 1 0 0 1 0 0
+lineTo 1096.732 515.746 @ 1 0 0 1 0 0
+lineTo 1099.375 514.596 @ 1 0 0 1 0 0
+lineTo 1102.016 513.441 @ 1 0 0 1 0 0
+lineTo 1104.657 512.284 @ 1 0 0 1 0 0
+lineTo 1107.296 511.124 @ 1 0 0 1 0 0
+lineTo 1109.934 509.96 @ 1 0 0 1 0 0
+lineTo 1112.571 508.795 @ 1 0 0 1 0 0
+lineTo 1115.206 507.626 @ 1 0 0 1 0 0
+lineTo 1117.841 506.456 @ 1 0 0 1 0 0
+lineTo 1120.475 505.282 @ 1 0 0 1 0 0
+lineTo 1123.108 504.107 @ 1 0 0 1 0 0
+lineTo 1125.74 502.93 @ 1 0 0 1 0 0
+lineTo 1128.37 501.75 @ 1 0 0 1 0 0
+lineTo 1131.001 500.569 @ 1 0 0 1 0 0
+lineTo 1133.63 499.385 @ 1 0 0 1 0 0
+lineTo 1136.259 498.201 @ 1 0 0 1 0 0
+lineTo 1138.886 497.014 @ 1 0 0 1 0 0
+lineTo 1141.514 495.825 @ 1 0 0 1 0 0
+lineTo 1144.14 494.636 @ 1 0 0 1 0 0
+lineTo 1146.766 493.444 @ 1 0 0 1 0 0
+lineTo 1149.391 492.251 @ 1 0 0 1 0 0
+lineTo 1152.015 491.056 @ 1 0 0 1 0 0
+lineTo 1154.639 489.861 @ 1 0 0 1 0 0
+lineTo 1157.262 488.663 @ 1 0 0 1 0 0
+lineTo 1159.885 487.465 @ 1 0 0 1 0 0
+lineTo 1162.506 486.265 @ 1 0 0 1 0 0
+lineTo 1165.128 485.064 @ 1 0 0 1 0 0
+lineTo 1167.749 483.862 @ 1 0 0 1 0 0
+lineTo 1170.369 482.659 @ 1 0 0 1 0 0
+lineTo 1172.989 481.454 @ 1 0 0 1 0 0
+lineTo 1175.609 480.249 @ 1 0 0 1 0 0
+lineTo 1178.227 479.042 @ 1 0 0 1 0 0
+lineTo 1180.846 477.834 @ 1 0 0 1 0 0
+lineTo 1183.464 476.626 @ 1 0 0 1 0 0
+lineTo 1186.081 475.416 @ 1 0 0 1 0 0
+lineTo 1188.698 474.205 @ 1 0 0 1 0 0
+lineTo 1191.315 472.994 @ 1 0 0 1 0 0
+lineTo 1193.931 471.781 @ 1 0 0 1 0 0
+lineTo 1196.547 470.568 @ 1 0 0 1 0 0
+lineTo 1199.163 469.354 @ 1 0 0 1 0 0
+lineTo 1201.778 468.139 @ 1 0 0 1 0 0
+lineTo 1204.392 466.923 @ 1 0 0 1 0 0
+lineTo 1207.007 465.706 @ 1 0 0 1 0 0
+lineTo 1209.621 464.488 @ 1 0 0 1 0 0
+lineTo 1212.234 463.27 @ 1 0 0 1 0 0
+lineTo 1214.847 462.051 @ 1 0 0 1 0 0
+lineTo 1217.46 460.831 @ 1 0 0 1 0 0
+lineTo 1220.073 459.611 @ 1 0 0 1 0 0
+lineTo 1222.685 458.389 @ 1 0 0 1 0 0
+lineTo 1225.297 457.167 @ 1 0 0 1 0 0
+lineTo 1227.908 455.945 @ 1 0 0 1 0 0
+lineTo 1230.52 454.722 @ 1 0 0 1 0 0
+lineTo 1233.13 453.497 @ 1 0 0 1 0 0
+lineTo 1235.741 452.273 @ 1 0 0 1 0 0
+lineTo 1238.351 451.047 @ 1 0 0 1 0 0
+lineTo 1240.961 449.822 @ 1 0 0 1 0 0
+lineTo 1243.571 448.595 @ 1 0 0 1 0 0
+lineTo 1246.181 447.368 @ 1 0 0 1 0 0
+lineTo 1248.79 446.14 @ 1 0 0 1 0 0
+lineTo 1251.399 444.912 @ 1 0 0 1 0 0
+lineTo 1254.007 443.683 @ 1 0 0 1 0 0
+lineTo 1256.616 442.454 @ 1 0 0 1 0 0
+lineTo 1259.224 441.223 @ 1 0 0 1 0 0
+lineTo 1261.832 439.993 @ 1 0 0 1 0 0
+lineTo 1264.439 438.762 @ 1 0 0 1 0 0
+lineTo 1265.908 438.068 @ 1 0 0 1 0 0
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#d55e00 lineWidth=3 lineCap=round lineJoin=round
+beginPath
+restore
+save
+beginPath
+beginPath
+arc 528 756 8 0 6.283 clockwise @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
+beginPath
+arc 1032 540 8 0 6.283 clockwise @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
+beginPath
+restore
+save
+beginPath
+save
+translate 1265.908 438.068
+rotate -0.441
+beginPath
+moveTo 8 0 @ 0.904 -0.427 0.427 0.904 1265.908 438.068
+lineTo -4 4 @ 0.904 -0.427 0.427 0.904 1265.908 438.068
+lineTo -2 0 @ 0.904 -0.427 0.427 0.904 1265.908 438.068
+lineTo -4 -4 @ 0.904 -0.427 0.427 0.904 1265.908 438.068
+closePath @ 0.904 -0.427 0.427 0.904 1265.908 438.068
+fill | @ 0.904 -0.427 0.427 0.904 1265.908 438.068 | fillStyle=#111111
+restore
+beginPath
+restore
+save
+beginPath
+save
+save
+beginPath
+moveTo 506 739.6 @ 1 0 0 1 0 0
+lineTo 550 739.6 @ 1 0 0 1 0 0
+quadraticCurveTo 554 739.6 554 743.6 @ 1 0 0 1 0 0
+lineTo 554 768.4 @ 1 0 0 1 0 0
+quadraticCurveTo 554 772.4 550 772.4 @ 1 0 0 1 0 0
+lineTo 506 772.4 @ 1 0 0 1 0 0
+quadraticCurveTo 502 772.4 502 768.4 @ 1 0 0 1 0 0
+lineTo 502 743.6 @ 1 0 0 1 0 0
+quadraticCurveTo 502 739.6 506 739.6 @ 1 0 0 1 0 0
+closePath @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#ffffff globalAlpha=0.85
+restore
+fillText "Start" 528 756 | @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+restore
+save
+save
+beginPath
+moveTo 1006 523.6 @ 1 0 0 1 0 0
+lineTo 1058 523.6 @ 1 0 0 1 0 0
+quadraticCurveTo 1062 523.6 1062 527.6 @ 1 0 0 1 0 0
+lineTo 1062 552.4 @ 1 0 0 1 0 0
+quadraticCurveTo 1062 556.4 1058 556.4 @ 1 0 0 1 0 0
+lineTo 1006 556.4 @ 1 0 0 1 0 0
+quadraticCurveTo 1002 556.4 1002 552.4 @ 1 0 0 1 0 0
+lineTo 1002 527.6 @ 1 0 0 1 0 0
+quadraticCurveTo 1002 523.6 1006 523.6 @ 1 0 0 1 0 0
+closePath @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#ffffff globalAlpha=0.85
+restore
+fillText "Middle" 1032 540 | @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+restore
+beginPath
+restore
+restore
+# three quarters: 7999 ms of 10666
+resetTransform
+clearRect 0 0 1920 1080 | @ 1 0 0 1 0 0
+save
+setTransform 1 0 0 1 0 0
+save
+beginPath
+save
+resetTransform
+fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
+restore
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+beginPath
+restore
+save
+beginPath
+beginPath
+restore
+save
+beginPath
+beginPath
+restore
+save
+beginPath
+beginPath
+arc 528 756 8 0 6.283 clockwise @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
+beginPath
+arc 1032 540 8 0 6.283 clockwise @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
+beginPath
+arc 1392 378 8 0 6.283 clockwise @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
+beginPath
+restore
+save
+beginPath
+save
+translate 1392 378
+rotate -0.423
+beginPath
+moveTo 8 0 @ 0.912 -0.41 0.41 0.912 1392 378
+lineTo -4 4 @ 0.912 -0.41 0.41 0.912 1392 378
+lineTo -2 0 @ 0.912 -0.41 0.41 0.912 1392 378
+lineTo -4 -4 @ 0.912 -0.41 0.41 0.912 1392 378
+closePath @ 0.912 -0.41 0.41 0.912 1392 378
+fill | @ 0.912 -0.41 0.41 0.912 1392 378 | fillStyle=#111111
+restore
+beginPath
+restore
+save
+beginPath
+save
+save
+beginPath
+moveTo 506 739.6 @ 1 0 0 1 0 0
+lineTo 550 739.6 @ 1 0 0 1 0 0
+quadraticCurveTo 554 739.6 554 743.6 @ 1 0 0 1 0 0
+lineTo 554 768.4 @ 1 0 0 1 0 0
+quadraticCurveTo 554 772.4 550 772.4 @ 1 0 0 1 0 0
+lineTo 506 772.4 @ 1 0 0 1 0 0
+quadraticCurveTo 502 772.4 502 768.4 @ 1 0 0 1 0 0
+lineTo 502 743.6 @ 1 0 0 1 0 0
+quadraticCurveTo 502 739.6 506 739.6 @ 1 0 0 1 0 0
+closePath @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#ffffff globalAlpha=0.85
+restore
+fillText "Start" 528 756 | @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+restore
+save
+save
+beginPath
+moveTo 1006 523.6 @ 1 0 0 1 0 0
+lineTo 1058 523.6 @ 1 0 0 1 0 0
+quadraticCurveTo 1062 523.6 1062 527.6 @ 1 0 0 1 0 0
+lineTo 1062 552.4 @ 1 0 0 1 0 0
+quadraticCurveTo 1062 556.4 1058 556.4 @ 1 0 0 1 0 0
+lineTo 1006 556.4 @ 1 0 0 1 0 0
+quadraticCurveTo 1002 556.4 1002 552.4 @ 1 0 0 1 0 0
+lineTo 1002 527.6 @ 1 0 0 1 0 0
+quadraticCurveTo 1002 523.6 1006 523.6 @ 1 0 0 1 0 0
+closePath @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#ffffff globalAlpha=0.85
+restore
+fillText "Middle" 1032 540 | @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+restore
+save
+save
+beginPath
+moveTo 1378 361.6 @ 1 0 0 1 0 0
+lineTo 1406 361.6 @ 1 0 0 1 0 0
+quadraticCurveTo 1410 361.6 1410 365.6 @ 1 0 0 1 0 0
+lineTo 1410 390.4 @ 1 0 0 1 0 0
+quadraticCurveTo 1410 394.4 1406 394.4 @ 1 0 0 1 0 0
+lineTo 1378 394.4 @ 1 0 0 1 0 0
+quadraticCurveTo 1374 394.4 1374 390.4 @ 1 0 0 1 0 0
+lineTo 1374 365.6 @ 1 0 0 1 0 0
+quadraticCurveTo 1374 361.6 1378 361.6 @ 1 0 0 1 0 0
+closePath @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#ffffff globalAlpha=0.85
+restore
+fillText "End" 1392 378 | @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+restore
+beginPath
+restore
+restore
+# the end: 10666 ms of 10666
+resetTransform
+clearRect 0 0 1920 1080 | @ 1 0 0 1 0 0
+save
+setTransform 1 0 0 1 0 0
+save
+beginPath
+save
+resetTransform
+fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
+restore
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+beginPath
+restore
+save
+beginPath
+beginPath
+restore
+save
+beginPath
+beginPath
+restore
+save
+beginPath
+beginPath
+arc 528 756 8 0 6.283 clockwise @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
+beginPath
+arc 1032 540 8 0 6.283 clockwise @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
+beginPath
+arc 1392 378 8 0 6.283 clockwise @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
+stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
+beginPath
+restore
+save
+beginPath
+save
+translate 1392 378
+rotate -0.423
+beginPath
+moveTo 8 0 @ 0.912 -0.41 0.41 0.912 1392 378
+lineTo -4 4 @ 0.912 -0.41 0.41 0.912 1392 378
+lineTo -2 0 @ 0.912 -0.41 0.41 0.912 1392 378
+lineTo -4 -4 @ 0.912 -0.41 0.41 0.912 1392 378
+closePath @ 0.912 -0.41 0.41 0.912 1392 378
+fill | @ 0.912 -0.41 0.41 0.912 1392 378 | fillStyle=#111111
+restore
+beginPath
+restore
+save
+beginPath
+save
+save
+beginPath
+moveTo 506 739.6 @ 1 0 0 1 0 0
+lineTo 550 739.6 @ 1 0 0 1 0 0
+quadraticCurveTo 554 739.6 554 743.6 @ 1 0 0 1 0 0
+lineTo 554 768.4 @ 1 0 0 1 0 0
+quadraticCurveTo 554 772.4 550 772.4 @ 1 0 0 1 0 0
+lineTo 506 772.4 @ 1 0 0 1 0 0
+quadraticCurveTo 502 772.4 502 768.4 @ 1 0 0 1 0 0
+lineTo 502 743.6 @ 1 0 0 1 0 0
+quadraticCurveTo 502 739.6 506 739.6 @ 1 0 0 1 0 0
+closePath @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#ffffff globalAlpha=0.85
+restore
+fillText "Start" 528 756 | @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+restore
+save
+save
+beginPath
+moveTo 1006 523.6 @ 1 0 0 1 0 0
+lineTo 1058 523.6 @ 1 0 0 1 0 0
+quadraticCurveTo 1062 523.6 1062 527.6 @ 1 0 0 1 0 0
+lineTo 1062 552.4 @ 1 0 0 1 0 0
+quadraticCurveTo 1062 556.4 1058 556.4 @ 1 0 0 1 0 0
+lineTo 1006 556.4 @ 1 0 0 1 0 0
+quadraticCurveTo 1002 556.4 1002 552.4 @ 1 0 0 1 0 0
+lineTo 1002 527.6 @ 1 0 0 1 0 0
+quadraticCurveTo 1002 523.6 1006 523.6 @ 1 0 0 1 0 0
+closePath @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#ffffff globalAlpha=0.85
+restore
+fillText "Middle" 1032 540 | @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+restore
+save
+save
+beginPath
+moveTo 1378 361.6 @ 1 0 0 1 0 0
+lineTo 1406 361.6 @ 1 0 0 1 0 0
+quadraticCurveTo 1410 361.6 1410 365.6 @ 1 0 0 1 0 0
+lineTo 1410 390.4 @ 1 0 0 1 0 0
+quadraticCurveTo 1410 394.4 1406 394.4 @ 1 0 0 1 0 0
+lineTo 1378 394.4 @ 1 0 0 1 0 0
+quadraticCurveTo 1374 394.4 1374 390.4 @ 1 0 0 1 0 0
+lineTo 1374 365.6 @ 1 0 0 1 0 0
+quadraticCurveTo 1374 361.6 1378 361.6 @ 1 0 0 1 0 0
+closePath @ 1 0 0 1 0 0
+fill | @ 1 0 0 1 0 0 | fillStyle=#ffffff globalAlpha=0.85
+restore
+fillText "End" 1392 378 | @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+restore
+beginPath
+restore
+restore

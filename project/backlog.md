@@ -38,9 +38,9 @@
 
 ### Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
 
-- [ ] CORE-04 — The renderer and the core's drawing — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-05 — The editor shell — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-06 — Drawing routes on the canvas — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
+- [ ] CORE-13 — The settings the drawing already takes — since 2026-11-20 — (from: CORE-04, 2026-11-20)
 - [ ] CORE-12 — The core panels and the points list — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-07 — The scene outline — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-08 — Video export: the core works end to end — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
