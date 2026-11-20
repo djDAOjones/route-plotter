@@ -7,9 +7,12 @@
 // error in one subscriber never stops the others (the plan's §15, line 986, kept from v3's EventBus). What the store
 // holds and hands out is its own frozen copy (own.ts): of a project as it comes in and as a command gives it, of a
 // selection, and so what `getState()` gives and what a command receives. The claim's point 4: commands, the id source,
-// the reporter and subscribers are the editor's own code. Everything the store reads from a command (its label, its
-// `apply` and what that gives) is read before `current` changes, so one that throws leaves the state and the history as
-// they were, and what `getState()` shows is always what the next command receives.
+// the reporter and subscribers are the editor's own code. A command and the id source are called, and everything the
+// store reads from a command (its label, its `apply` and what that gives) is read, before `current` changes: one that
+// throws leaves the state and the history as they were before the call. Subscribers and the reporter are called after
+// a change is kept, to be told of it: one that throws never undoes the change, never stops the others being told, and
+// is reported. Either way, what `getState()` shows is always what the next command receives. The store does not claim
+// to withstand code written to break it.
 import type { Project } from '../../adapters/io/format';
 import { checkScene, type IdSource } from '../../core/model/scene';
 import type { Command, Current, Refusal } from './command';

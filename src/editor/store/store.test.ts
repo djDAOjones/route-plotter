@@ -305,7 +305,7 @@ describe('history, as v3 kept it', () => {
 });
 
 describe('subscribers', () => {
-  it('one failing subscriber never stops the others; its error is reported', () => {
+  it('one failing subscriber never stops the others; its error is reported, and the change is kept', () => {
     const { project, route } = twoStops();
     const report = vi.fn();
     const store = createStore({ project, nextId: counter('new'), report });
@@ -316,9 +316,20 @@ describe('subscribers', () => {
       throw failure;
     });
     store.subscribe(() => heard.push('third'));
-    store.dispatch(setRouteSetting(route, 'line', 'thickness', 10));
+    expect(store.dispatch(setRouteSetting(route, 'line', 'thickness', 10))).toEqual({ ok: true, changed: true });
     expect(heard).toEqual(['first', 'third']);
     expect(report).toHaveBeenCalledWith(failure);
+    expect(thickness(store)).toBe(10);
+    expect(store.getState().undo).toBe('Change the line settings');
+    let received: Project | undefined;
+    store.dispatch({
+      label: 'Look',
+      apply: (current) => {
+        received = current.project;
+        return current;
+      },
+    });
+    expect(received).toBe(store.getState().project);
   });
 
   it('a failing reporter never stops them either: the dispatch holds, and its failure is thrown again later, on its own', () => {

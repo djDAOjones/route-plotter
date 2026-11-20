@@ -10,8 +10,12 @@
 //    its own copy of its bytes as it comes in; an image a store has taken already (read from a store's state and handed
 //    back, to Open or to another store) is kept as it is and shares its bytes. Those bytes can still be written through
 //    `getState()`; no command reads or writes them; a holder that cannot be written is CORE-12's.
-// 4. (store.ts) Commands, the id source, the reporter and subscribers are the editor's own code: one that throws leaves
-//    the state and the history as they were. The store does not claim to withstand code written to break it.
+// 4. (store.ts) Commands, the id source, the reporter and subscribers are the editor's own code. A command and the id
+//    source are called, and all the store reads from a command is read, before anything changes: one that throws leaves
+//    the state and the history as they were before the call. Subscribers and the reporter are called after a change is
+//    kept, to be told of it: one that throws never undoes the change, never stops the others being told, and is
+//    reported. Either way, what `getState()` shows is always what the next command receives. The store does not claim
+//    to withstand code written to break it.
 //
 // How: each object the store has not taken yet is read through its own property descriptors, so no getter runs and a
 // proxy gives only what it says it owns; a fresh record or array is built from those values and frozen. Objects already
