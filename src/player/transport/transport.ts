@@ -8,8 +8,18 @@
 // DEF-42.1 has two halves. The transport's: nothing is built until the length is read, and a frame builds it once
 // however many changes came before. The reader's, carried to stage 6 (the preview and Open), which proves it with the
 // real play bar on the real store: an interface reads `length()` only when it draws, and draws at most once a frame
-// (the transport builds once per changed scene, however often it is read). What the transport does after it writes
-// the playback goes by what the holder then holds, however the write ended (Codex's findings B and C on a3ced7d).
+// (the transport builds once per changed scene, however often it is read).
+//
+// The transport's claim (Codex's findings B and C on a3ced7d, T1 on 6ba74e8; every command and frame ends in `follow()`):
+// 1. When any of its commands (play, pause, seek, setSpeed) returns or throws, and when any frame it runs ends, a frame
+//    is booked if and only if what the holder holds is playing: whatever a subscriber did while it was told, and
+//    whether or not the telling threw.
+// 2. A "paused" written to the holder by someone else (the store's Open) is met by the frame already booked, which says
+//    nothing and books no more (TST-04.2); until that frame, one frame may be booked.
+// 3. Playing begins only through the transport's own commands. A "playing" written to the holder by anyone else,
+//    outside a telling the transport is in the middle of, is not followed until the next command or frame. (The
+//    editor's transport, stage 3, is the only thing that plays.)
+// 4. It does not claim to withstand code written to break it.
 import { playLength } from '../../core/clock/clock';
 import type { Scene } from '../../core/model/scene';
 import { CATALOGUE, type Catalogue } from '../../features/catalogue';
@@ -122,12 +132,29 @@ export function createTransport<H>({ frames, holder, inputs, report, catalogue =
   }
 
   /**
-   * After Play's write: a frame booked while what is held plays, none while it is paused, however the write ended. A
-   * subscriber told may have paused (finding B), and a write whose telling threw has still been kept (finding C).
+   * The claim's point 1, in one place: a frame booked while what is held plays, none while it is paused, and the last
+   * frame's time forgotten, so a later resume moves as a first frame would, never by a stale gap. Every command and
+   * every frame ends here however it ended: a subscriber told may have paused or played (findings B and T1), and a
+   * write whose telling threw has still been kept (finding C).
    */
   function follow(): void {
-    if (holder.playback().playing) book();
-    else unbook();
+    if (holder.playback().playing) {
+      book();
+    } else {
+      lastMs = null;
+      unbook();
+    }
+  }
+
+  /** A command: `body`, then `follow()` however it ended. */
+  function settled<A extends unknown[]>(body: (...args: A) => void): (...args: A) => void {
+    return (...args) => {
+      try {
+        body(...args);
+      } finally {
+        follow();
+      }
+    };
   }
 
   /** One frame: moves the position by the time since the last, times the speed; stops on an end, as Pause does. */
@@ -156,39 +183,34 @@ export function createTransport<H>({ frames, holder, inputs, report, catalogue =
     } catch (error) {
       report(error);
     } finally {
-      if (holder.playback().playing) book();
+      follow();
     }
   }
 
   return {
-    play: () => {
+    play: settled(() => {
       const now = holder.playback();
       if (now.playing) return;
       const lengthMs = lengthNow();
       lastMs = null;
-      try {
-        if (now.speed > 0 && now.atMs >= lengthMs) write(true, 0, 1);
-        else write(true, Math.min(Math.max(now.atMs, 0), lengthMs), now.speed);
-      } finally {
-        follow();
-      }
-    },
-    pause: () => {
-      unbook();
+      if (now.speed > 0 && now.atMs >= lengthMs) write(true, 0, 1);
+      else write(true, Math.min(Math.max(now.atMs, 0), lengthMs), now.speed);
+    }),
+    pause: settled(() => {
       lastMs = null;
       write(false, holder.playback().atMs, 1);
-    },
-    seek: (ms) => {
+    }),
+    seek: settled((ms: number) => {
       const lengthMs = lengthNow();
       const now = holder.playback();
       write(now.playing, Number.isNaN(ms) ? 0 : Math.min(Math.max(ms, 0), lengthMs), now.speed);
-    },
-    setSpeed: (speed) => {
+    }),
+    setSpeed: settled((speed: number) => {
       if (Number.isNaN(speed)) return;
       const size = Math.min(Math.max(Math.abs(speed), SLOWEST), FASTEST);
       const now = holder.playback();
       write(now.playing, now.atMs, speed < 0 ? -size : size);
-    },
+    }),
     length: lengthNow,
   };
 }

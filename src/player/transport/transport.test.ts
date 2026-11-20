@@ -14,6 +14,7 @@ import {
   MAX_GAP_MS,
   type FrameSource,
   type Playback,
+  type Transport,
 } from './transport';
 
 const counter = () => {
@@ -141,6 +142,37 @@ function throwingRig() {
     },
   };
 }
+
+/**
+ * A rig whose holder throws again what a subscriber threw, once all are told; `once(act)` runs `act` in the next
+ * telling only, so a subscriber can write to the holder (a nested telling it then sits out) and throw.
+ */
+function onceRig() {
+  const frames = handMade();
+  const reports: unknown[] = [];
+  const holder = heldPlayback((error) => {
+    throw error;
+  });
+  let armed: (() => void) | null = null;
+  holder.subscribe(() => {
+    const act = armed;
+    armed = null;
+    act?.();
+  });
+  const { catalogue } = counting();
+  const inputs: ContentRequest = { scene: sceneOf(), seed: 7, size: { width: 1920, height: 1080 }, image: null };
+  const transport = createTransport({
+    frames: frames.source, holder, inputs: () => inputs, report: (error) => reports.push(error), catalogue,
+  });
+  return {
+    frames, holder, reports, transport,
+    once: (act: () => void) => {
+      armed = act;
+    },
+  };
+}
+
+const failure = () => new Error('a subscriber that fails');
 
 describe('the transport', () => {
   test('starts at the start, paused, at normal speed, with nothing booked and nothing built', () => {
@@ -429,6 +461,73 @@ describe('the transport', () => {
     expect(holder.playback()).toEqual(AT_START);
     booked();
     expect(reports).toHaveLength(2);
+  });
+
+  // Codex's T1 on 6ba74e8: a subscriber that changes what is held during a telling and throws. Every command and every
+  // frame ends in `follow()` (the claim's point 1), so the booking goes by what is finally held.
+  test('a subscriber that plays during Pause’s telling and throws leaves a frame booked, which moves it on (T1)', () => {
+    const { frames, holder, transport, once } = onceRig();
+    transport.play();
+    frames.run(0);
+    once(() => {
+      holder.setPlayback(Object.freeze({ playing: true, atMs: 300, speed: 1 }));
+      throw failure();
+    });
+    expect(() => transport.pause()).toThrow('a subscriber that fails');
+    expect(holder.playback()).toEqual({ playing: true, atMs: 300, speed: 1 });
+    expect(frames.booked()).toBe(1);
+    frames.run(5000);
+    expect(holder.playback().atMs).toBeCloseTo(300 + FIRST_FRAME_MS);
+    expect(frames.booked()).toBe(1);
+  });
+
+  test('a subscriber that pauses during seek’s or setSpeed’s telling and throws leaves no frame booked (T1)', () => {
+    for (const act of [(t: Transport) => t.seek(500), (t: Transport) => t.setSpeed(2)]) {
+      const { frames, holder, transport, once } = onceRig();
+      transport.play();
+      frames.run(0);
+      once(() => {
+        holder.setPlayback(Object.freeze({ playing: false, atMs: 200, speed: 1 }));
+        throw failure();
+      });
+      expect(() => act(transport)).toThrow('a subscriber that fails');
+      expect(holder.playback()).toEqual({ playing: false, atMs: 200, speed: 1 });
+      expect(frames.booked()).toBe(0);
+    }
+  });
+
+  test('a subscriber that plays, then puts the start back, during a frame’s stop at the end and throws leaves no frame booked (T1)', () => {
+    const { frames, holder, transport, once, reports } = onceRig();
+    transport.seek(transport.length() - 10);
+    transport.play();
+    once(() => {
+      transport.play();
+      expect(frames.booked()).toBe(1);
+      holder.setPlayback(AT_START);
+      throw failure();
+    });
+    frames.run(0);
+    expect(holder.playback()).toEqual(AT_START);
+    expect(frames.booked()).toBe(0);
+    expect(reports).toHaveLength(1);
+  });
+
+  test('a frame that follow() cancels forgets the last frame’s time: a resume after it moves as a first frame would', () => {
+    const { frames, holder, transport } = rig();
+    transport.play();
+    frames.run(0);
+    // Someone else pauses (the store's Open): the frame booked stays until it runs or a command comes (point 2).
+    holder.setPlayback(Object.freeze({ playing: false, atMs: 500, speed: 1 }));
+    expect(frames.booked()).toBe(1);
+    transport.seek(1000);
+    expect(frames.booked()).toBe(0);
+    // Someone else plays: not followed until the next command, here one that writes nothing (point 3).
+    holder.setPlayback(Object.freeze({ playing: true, atMs: 1000, speed: 1 }));
+    expect(frames.booked()).toBe(0);
+    transport.setSpeed(1);
+    expect(frames.booked()).toBe(1);
+    frames.run(5000);
+    expect(holder.playback().atMs).toBeCloseTo(1000 + FIRST_FRAME_MS);
   });
 
   test('a frame and the transport read the content’s end from the one sum (D174)', () => {

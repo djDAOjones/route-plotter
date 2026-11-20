@@ -173,6 +173,28 @@ describe('the transport’s slice in the store', () => {
     expect(told).toBe(0);
   });
 
+  it('a speed, a position or a playing that is not of its own type is refused, though it would read as one (Codex’s S1)', () => {
+    const { store } = storeOf();
+    store.setPlayback(PLAYING);
+    const before = store.getState();
+    let told = 0;
+    store.subscribe(() => {
+      told += 1;
+    });
+    // Each would pass a check that coerces: `Math.abs('2')` is 2, `Math.abs(true)` 1, `Math.abs([2])` 2, and so on.
+    const coercing: unknown[] = [
+      { ...PLAYING, speed: '2' }, { ...PLAYING, speed: true }, { ...PLAYING, speed: [2] },
+      { ...PLAYING, atMs: '5' }, { ...PLAYING, atMs: [5] }, { ...PLAYING, atMs: true },
+      { ...PLAYING, playing: 1 }, { ...PLAYING, playing: 'true' },
+    ];
+    for (const next of coercing) {
+      expect(store.setPlayback(asPlayback(next))).toEqual({ ok: false, refusal: { why: 'not-a-playback' } });
+      expect(store.getState()).toBe(before);
+      expect(store.playback()).toBe(before.playback);
+    }
+    expect(told).toBe(0);
+  });
+
   it('reads each field of what it is given once, before anything changes, and keeps its own frozen copy', () => {
     const { store } = storeOf();
     const reads: string[] = [];

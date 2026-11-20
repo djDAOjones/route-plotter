@@ -123,8 +123,10 @@ function rethrowLater(error: unknown): void {
  */
 function playbackOf(next: Playback): Playback | null {
   const { playing, atMs, speed } = next;
-  const size = Math.abs(speed);
-  const whole = typeof playing === 'boolean' && Number.isFinite(atMs) && atMs >= 0 && size >= SLOWEST && size <= FASTEST;
+  // `Number.isFinite` never coerces, so a string, a boolean or an array is refused before `Math.abs` could read it as a
+  // number (Codex's S1 on 6ba74e8); `typeof` does the same for `playing`.
+  const whole = typeof playing === 'boolean' && Number.isFinite(atMs) && atMs >= 0 && Number.isFinite(speed)
+    && Math.abs(speed) >= SLOWEST && Math.abs(speed) <= FASTEST;
   return whole ? Object.freeze({ playing, atMs, speed }) : null;
 }
 
