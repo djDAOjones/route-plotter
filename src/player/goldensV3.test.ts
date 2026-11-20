@@ -34,6 +34,14 @@ const PATH_CALL = new RegExp(`^(moveTo|lineTo) ${NUMBER} ${NUMBER} @`);
 const ARC = new RegExp(`^arc ${NUMBER} ${NUMBER} `);
 const TEXT = new RegExp(`^fillText (?:"((?:[^"\\\\]|\\\\.)*)"|(\\S+)) ${NUMBER} ${NUMBER} `);
 const MOMENT = /^# ([^:]+): .*\d+ ms of \d+$/;
+const MATRIX = new RegExp(`@ ${NUMBER} ${NUMBER} ${NUMBER} ${NUMBER} ${NUMBER} ${NUMBER}`);
+
+/** A recorded place through the transform recorded with it (`@ a b c d e f`), so a moved transform moves the place. */
+function placed(call: string, x: number, y: number): Point {
+  const [a = 1, b = 0, c = 0, d = 1, e = 0, f = 0] = MATRIX.exec(call)?.slice(1).map(Number) ?? [];
+  const round = (value: number) => Math.round(value * 1000) / 1000;
+  return { x: round(a * x + c * y + e), y: round(b * x + d * y + f) };
+}
 
 /** The calls one recorded line makes, without v3's surface name ("main", "vector"). */
 const callOf = (line: string) => line.replace(/^(?:main|vector) /, '');
@@ -43,7 +51,7 @@ function readCall(call: string, moment: Moment, path: Point[][]): void {
   if (call === 'beginPath') path.length = 0;
   const step = PATH_CALL.exec(call);
   if (step) {
-    const point = { x: Number(step[2]), y: Number(step[3]) };
+    const point = placed(call, Number(step[2]), Number(step[3]));
     if (step[1] === 'moveTo' || path.length === 0) path.push([point]);
     else path[path.length - 1]?.push(point);
   }
@@ -51,9 +59,15 @@ function readCall(call: string, moment: Moment, path: Point[][]): void {
     moment.lines.push(...path.map((piece) => [...piece]));
   }
   const arc = ARC.exec(call);
-  if (arc) moment.markers.push(`${arc[1]} ${arc[2]}`);
+  if (arc) {
+    const at = placed(call, Number(arc[1]), Number(arc[2]));
+    moment.markers.push(`${at.x} ${at.y}`);
+  }
   const text = TEXT.exec(call);
-  if (text) moment.labels.push(`${text[1] ?? text[2]} ${text[3]} ${text[4]}`);
+  if (text) {
+    const at = placed(call, Number(text[3]), Number(text[4]));
+    moment.labels.push(`${text[1] ?? text[2]} ${at.x} ${at.y}`);
+  }
 }
 
 /** Each moment of a recording by its name: the pieces of line stroked in the route's colour, the markers, the labels. */
@@ -136,7 +150,7 @@ for (const { name, v3, v4 } of SCENES) {
   });
 }
 
-test('grows’ checks hold something, and the course check fails when either side’s line moves by more than a pixel', () => {
+test('grows’ checks hold something, and fail when either side’s line moves by more than a pixel, by its points or its transform', () => {
   const grows = SCENES.find((scene) => scene.name === 'grows');
   const moments = shared(grows?.v3 ?? '', grows?.v4 ?? '');
   const moved = (points: readonly Point[]) => points.map(({ x, y }) => ({ x: x + 0.8, y: y + 0.8 }));
@@ -147,6 +161,11 @@ test('grows’ checks hold something, and the course check fails when either sid
   expect([end(moments.v3), end(moments.v4)]).toEqual([[3, 3], [3, 3]]);
   expect(courseGap(moved(v3), segmentsOf(moments.v4))).toBeGreaterThan(PIXEL);
   expect(courseGap(moved(v4), segmentsOf(moments.v3))).toBeGreaterThan(PIXEL);
+  // Codex (sub-chat 44's last round): a recorded transform moved by 20 pixels must move the course, markers and labels.
+  const shifted = shared(grows?.v3 ?? '', (grows?.v4 ?? '').split('@ 1 0 0 1 0 0').join('@ 1 0 0 1 20 20'));
+  expect(courseGap(pointsOf(shifted.v4), segmentsOf(moments.v3))).toBeGreaterThan(PIXEL);
+  expect(shifted.v4[4]?.markers).not.toEqual(moments.v4[4]?.markers);
+  expect(shifted.v4[4]?.labels).not.toEqual(moments.v4[4]?.labels);
   expect(courseGap([], [])).toBe(0);
   expect(courseGap(v4, [])).toBe(Number.POSITIVE_INFINITY);
 });
