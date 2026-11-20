@@ -112,8 +112,18 @@ describe('one gesture is one undo step, never merged by a timer (DEF-92, CROWD-0
     if (!begun.ok) throw new Error('the gesture did not open');
     store.select({ route, points: [b] });
     begun.gesture.apply(movePoint(route, b, { x: 0.5, y: 0.5 }));
-    expect(begun.gesture.cancel()).toEqual({ ok: true, changed: false });
+    expect(begun.gesture.cancel()).toEqual({ ok: true, changed: true });
     expect(store.getState()).toMatchObject({ project, selection: { route, points: [a] }, undo: null, gesture: null });
+  });
+
+  it('a cancelled gesture that changed nothing says so', () => {
+    const { project, route } = twoStops();
+    const store = storeOf(project);
+    const begun = store.begin('Line width');
+    if (!begun.ok) throw new Error('the gesture did not open');
+    begun.gesture.apply(setRouteSetting(route, 'line', 'thickness', 3));
+    expect(begun.gesture.cancel()).toEqual({ ok: true, changed: false });
+    expect(store.getState()).toMatchObject({ project, undo: null, gesture: null });
   });
 
   it('while a gesture is open, another gesture, a dispatch, Undo and Redo are refused, and nothing changes', () => {
@@ -285,6 +295,43 @@ describe('subscribers', () => {
     store.dispatch(setRouteSetting(route, 'line', 'thickness', 10));
     expect(heard).toEqual(['first', 'third']);
     expect(report).toHaveBeenCalledWith(failure);
+  });
+
+  it('a failing reporter never stops them either: the dispatch holds, and its failure is thrown again later, on its own', () => {
+    const { project, route } = twoStops();
+    const broken = new Error('a broken reporter');
+    const later: (() => void)[] = [];
+    const queued = vi.spyOn(globalThis, 'queueMicrotask').mockImplementation((task) => {
+      later.push(task);
+    });
+    try {
+      const store = createStore({
+        project,
+        nextId: counter('new'),
+        report: () => {
+          throw broken;
+        },
+      });
+      const heard: string[] = [];
+      store.subscribe(() => heard.push('first'));
+      store.subscribe(() => {
+        throw new Error('a broken panel');
+      });
+      store.subscribe(() => heard.push('third'));
+      expect(store.dispatch(setRouteSetting(route, 'line', 'thickness', 10))).toEqual({ ok: true, changed: true });
+      expect(heard).toEqual(['first', 'third']);
+      expect(thickness(store)).toBe(10);
+      expect(later).toHaveLength(1);
+      let thrown: unknown;
+      try {
+        later[0]?.();
+      } catch (error) {
+        thrown = error;
+      }
+      expect(thrown).toHaveProperty('cause', broken);
+    } finally {
+      queued.mockRestore();
+    }
   });
 
   it('a subscriber hears each change once, a dispatch once, and nothing after it stops', () => {

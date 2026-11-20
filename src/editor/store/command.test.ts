@@ -23,15 +23,21 @@ function oneStop(): { project: Project; route: string; a: string } {
 const storeOf = (project: Project, nextId: IdSource = counter('new')): Store => createStore({ project, nextId });
 
 describe('every change is a command, checked by the declarations', () => {
-  it('a scene setting with a route makes one undo entry (CROWD-06.3)', () => {
+  it('each scene setting with a route makes its own undo entry (CROWD-06.3)', () => {
     const { project } = oneStop();
     const store = storeOf(project);
+    const clock = () => store.getState().project.scene.settings.clock;
+    const fixedLengthMs = project.scene.settings.clock.fixedLengthMs;
     expect(store.dispatch(setSceneSetting('clock', 'length', 'fixed'))).toEqual({ ok: true, changed: true });
     expect(store.dispatch(setSceneSetting('clock', 'fixedLengthMs', 12_000))).toEqual({ ok: true, changed: true });
+    expect(clock()).toMatchObject({ length: 'fixed', fixedLengthMs: 12_000 });
     expect(store.getState().undo).toBe('Change the clock settings');
-    store.undo();
-    store.undo();
+    expect(store.undo()).toEqual({ ok: true, changed: true });
+    expect(clock()).toMatchObject({ length: 'fixed', fixedLengthMs });
+    expect(store.getState().undo).toBe('Change the clock settings');
+    expect(store.undo()).toEqual({ ok: true, changed: true });
     expect(store.getState().project).toBe(project);
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
   });
 
   it('a value outside its declared range is refused, naming the field, and nothing changes', () => {
@@ -95,7 +101,7 @@ describe('every change is a command, checked by the declarations', () => {
 });
 
 describe('the project never depends on the order of its edits (DEF-10)', () => {
-  it('the same edits in either order give the same project, key for key', () => {
+  it('independent edits in either order give the same project, key for key', () => {
     const { project, route, a } = oneStop();
     const edits: readonly Command[] = [
       setRouteSetting(route, 'line', 'thickness', 7),
@@ -105,8 +111,13 @@ describe('the project never depends on the order of its edits (DEF-10)', () => {
     ];
     const forward = storeOf(project);
     const backward = storeOf(project);
-    for (const edit of edits) forward.dispatch(edit);
-    for (const edit of [...edits].reverse()) backward.dispatch(edit);
+    const done = { ok: true, changed: true };
+    for (const edit of edits) expect(forward.dispatch(edit)).toEqual(done);
+    for (const edit of [...edits].reverse()) expect(backward.dispatch(edit)).toEqual(done);
+    const edited = forward.getState().project;
+    expect(edited.scene.routes[0]?.settings.line).toMatchObject({ thickness: 7, colour: '#0072b2' });
+    expect(edited.scene.settings.clock.holdAtStartMs).toBe(500);
+    expect(edited.scene.routes[0]?.points[0]).toMatchObject({ x: 0.25, y: 0.75 });
     expect(JSON.stringify(backward.getState().project)).toBe(JSON.stringify(forward.getState().project));
     expect(JSON.stringify(Object.keys(forward.getState().project.scene.routes[0]?.settings.line ?? {}))).toBe(
       JSON.stringify(Object.keys(project.scene.routes[0]?.settings.line ?? {})),

@@ -4,17 +4,23 @@
 // slider from its first move to its release, a typed value at its commit — and never by a timer: the store reads no
 // clock to decide what a step is (DEF-92, CROWD-06.2), where v3 merged saves by a debounce (undoRedo.js:99). A step
 // records the selection it found and the one it left, so Undo gives back the first and Redo the second (DEF-74). An
-// error in one subscriber never stops the others (the plan's §15, line 986, kept from v3's EventBus).
+// error in one subscriber never stops the others (the plan's §15, line 986, kept from v3's EventBus). Nothing the store
+// holds or hands out can be written to (own.ts): a project is frozen as it comes in and as a command gives it, a
+// selection is always the store's own frozen copy, and so is what `getState()` gives and what a command receives.
 import type { Project } from '../../adapters/io/format';
 import { checkScene, type IdSource } from '../../core/model/scene';
 import type { Command, Current, Refusal } from './command';
+import { own } from './own';
 import { sameValue } from './sameValue';
 import { NOTHING_SELECTED, repairSelection, type Selection } from './selection';
 
 /** v3's depth (UndoService.js:20): the oldest step goes when a new one would make more. */
 export const MAX_STEPS = 150;
 
-/** `changed`: for `dispatch` and `commit`, whether an undo step was made; for the rest, whether the state changed. */
+/**
+ * `changed`: for `dispatch` and `commit`, whether an undo step was made; for `cancel`, whether it put back a project or
+ * selection that the gesture had changed; for the rest, whether the state changed.
+ */
 type Outcome = { readonly ok: true; readonly changed: boolean } | { readonly ok: false; readonly refusal: Refusal };
 
 /** What a subscriber reads: the same object until something changes. */
@@ -74,6 +80,9 @@ interface Opened {
 
 const refused = (refusal: Refusal): Outcome => ({ ok: false, refusal });
 
+/** What a command receives and a step records: frozen, its project and selection the store's own already. */
+const currentOf = (project: Project, selection: Selection): Current => Object.freeze({ project, selection });
+
 function rethrowLater(error: unknown): void {
   queueMicrotask(() => {
     throw new Error('A subscriber to the editor’s store failed.', { cause: error });
@@ -90,19 +99,20 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
   const invalid = problemsOf(project);
   if (invalid !== null) throw new RangeError('The editor’s store was given a project its declarations refuse.');
 
-  let current: Current = { project, selection: NOTHING_SELECTED };
+  let current = currentOf(own(project), NOTHING_SELECTED);
   let undoSteps: readonly Step[] = [];
   let redoSteps: readonly Step[] = [];
   let opened: Opened | null = null;
   const listeners = new Set<{ readonly call: () => void }>();
 
-  const stateNow = (): StoreState => ({
-    project: current.project,
-    selection: current.selection,
-    undo: undoSteps.at(-1)?.label ?? null,
-    redo: redoSteps.at(-1)?.label ?? null,
-    gesture: opened?.label ?? null,
-  });
+  const stateNow = (): StoreState =>
+    Object.freeze({
+      project: current.project,
+      selection: current.selection,
+      undo: undoSteps.at(-1)?.label ?? null,
+      redo: redoSteps.at(-1)?.label ?? null,
+      gesture: opened?.label ?? null,
+    });
   let state = stateNow();
 
   function publish(): void {
@@ -111,21 +121,26 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
       try {
         listener.call();
       } catch (error) {
-        report(error);
+        try {
+          report(error);
+        } catch (failure) {
+          rethrowLater(failure);
+        }
       }
     }
   }
 
   /** Runs `command` on what is now and checks what it gives; changes `current` only when both hold. */
   function run(command: Command): Outcome {
-    const next = command.apply(current, { nextId });
+    const next = command.apply(current, Object.freeze({ nextId }));
     if ('why' in next) return refused(next);
     const invalidNext = problemsOf(next.project);
     if (invalidNext !== null) return refused(invalidNext);
-    const selection = repairSelection(next.project, next.selection);
+    const project = own(next.project);
+    const selection = repairSelection(project, next.selection);
     const sameSelection = sameValue(selection, current.selection);
-    const changed = next.project !== current.project || !sameSelection;
-    if (changed) current = { project: next.project, selection: sameSelection ? current.selection : selection };
+    const changed = project !== current.project || !sameSelection;
+    if (changed) current = currentOf(project, sameSelection ? current.selection : selection);
     return { ok: true, changed };
   }
 
@@ -137,7 +152,7 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
       undoSteps = [...undoSteps, { label: gesture.label, before: gesture.before, after: current }].slice(-MAX_STEPS);
       redoSteps = [];
     } else {
-      current = { project: gesture.before.project, selection: current.selection };
+      current = currentOf(gesture.before.project, current.selection);
     }
     publish();
     return { ok: true, changed: made };
@@ -162,9 +177,10 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
         cancel: () => {
           if (!live()) return refused({ why: 'gesture-closed' });
           opened = null;
+          const changed = !sameValue(current, gesture.before);
           current = gesture.before;
           publish();
-          return { ok: true, changed: false };
+          return { ok: true, changed };
         },
       },
     };
@@ -201,7 +217,7 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
     select: (selection) => {
       const repaired = repairSelection(current.project, selection);
       if (sameValue(repaired, current.selection)) return { ok: true, changed: false };
-      current = { project: current.project, selection: repaired };
+      current = currentOf(current.project, repaired);
       publish();
       return { ok: true, changed: true };
     },
@@ -219,7 +235,7 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
       opened = null;
       undoSteps = [];
       redoSteps = [];
-      current = { project: next, selection: NOTHING_SELECTED };
+      current = currentOf(own(next), NOTHING_SELECTED);
       publish();
       return { ok: true, changed: true };
     },
