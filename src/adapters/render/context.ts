@@ -53,6 +53,8 @@ export interface DrawContext {
   getLineDash(): number[];
   globalAlpha: number;
   globalCompositeOperation: GlobalCompositeOperation;
+  imageSmoothingEnabled: boolean;
+  imageSmoothingQuality: ImageSmoothingQuality;
   strokeStyle: Style;
   fillStyle: Style;
   lineWidth: number;
@@ -132,6 +134,10 @@ class Guarded implements DrawContext {
   set globalAlpha(value: number) { this.#target.globalAlpha = value; }
   get globalCompositeOperation(): GlobalCompositeOperation { return this.#target.globalCompositeOperation; }
   set globalCompositeOperation(value: GlobalCompositeOperation) { this.#target.globalCompositeOperation = value; }
+  get imageSmoothingEnabled(): boolean { return this.#target.imageSmoothingEnabled; }
+  set imageSmoothingEnabled(value: boolean) { this.#target.imageSmoothingEnabled = value; }
+  get imageSmoothingQuality(): ImageSmoothingQuality { return this.#target.imageSmoothingQuality; }
+  set imageSmoothingQuality(value: ImageSmoothingQuality) { this.#target.imageSmoothingQuality = value; }
   get strokeStyle(): Style { return this.#target.strokeStyle; }
   set strokeStyle(value: Style) { this.#target.strokeStyle = value; }
   get fillStyle(): Style { return this.#target.fillStyle; }

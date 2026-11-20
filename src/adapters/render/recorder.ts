@@ -20,6 +20,8 @@ const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
 interface Styles {
   globalAlpha: number;
   globalCompositeOperation: GlobalCompositeOperation;
+  imageSmoothingEnabled: boolean;
+  imageSmoothingQuality: ImageSmoothingQuality;
   strokeStyle: Style;
   fillStyle: Style;
   lineWidth: number;
@@ -36,6 +38,8 @@ type StyleName = keyof Styles;
 const STYLE_NAMES: readonly StyleName[] = [
   'globalAlpha',
   'globalCompositeOperation',
+  'imageSmoothingEnabled',
+  'imageSmoothingQuality',
   'strokeStyle',
   'fillStyle',
   'lineWidth',
@@ -50,6 +54,8 @@ const STYLE_NAMES: readonly StyleName[] = [
 const DEFAULTS: Readonly<Styles> = {
   globalAlpha: 1,
   globalCompositeOperation: 'source-over',
+  imageSmoothingEnabled: true,
+  imageSmoothingQuality: 'low',
   strokeStyle: '#000000',
   fillStyle: '#000000',
   lineWidth: 1,
@@ -64,6 +70,8 @@ const DEFAULTS: Readonly<Styles> = {
 const COMPOSITING: readonly StyleName[] = ['globalAlpha', 'globalCompositeOperation'];
 const STROKING: readonly StyleName[] = ['strokeStyle', 'lineWidth', 'lineCap', 'lineJoin', 'lineDashOffset'];
 const LETTERING: readonly StyleName[] = ['font', 'textAlign', 'textBaseline'];
+/** How a picture is resampled: a canvas's own defaults are on and 'low'; v3 drew every frame's pictures at 'high'. */
+const SMOOTHING: readonly StyleName[] = ['imageSmoothingEnabled', 'imageSmoothingQuality'];
 
 /** The styles each call that marks the surface draws with; the line dash goes with the stroking ones. */
 const DRAWN_WITH: ReadonlyMap<string, { readonly styles: readonly StyleName[]; readonly dash: boolean }> = new Map([
@@ -73,7 +81,7 @@ const DRAWN_WITH: ReadonlyMap<string, { readonly styles: readonly StyleName[]; r
   ['fill', { styles: ['fillStyle', ...COMPOSITING], dash: false }],
   ['fillRect', { styles: ['fillStyle', ...COMPOSITING], dash: false }],
   ['fillText', { styles: ['fillStyle', ...LETTERING, ...COMPOSITING], dash: false }],
-  ['drawImage', { styles: COMPOSITING, dash: false }],
+  ['drawImage', { styles: [...COMPOSITING, ...SMOOTHING], dash: false }],
   ['clearRect', { styles: [], dash: false }],
 ]);
 
@@ -101,8 +109,9 @@ function round(value: number): string {
   return Number.isFinite(value) ? String(Number(value.toFixed(3)) + 0) : String(value);
 }
 
-function describeStyle(value: Style | number): string {
+function describeStyle(value: Style | number | boolean): string {
   if (typeof value === 'number') return round(value);
+  if (typeof value === 'boolean') return String(value);
   return typeof value === 'string' ? value : 'gradient-or-pattern';
 }
 
@@ -336,6 +345,23 @@ export class Recorder implements DrawContext {
 
   set globalCompositeOperation(value: GlobalCompositeOperation) {
     this.#styles.globalCompositeOperation = value;
+  }
+
+  get imageSmoothingEnabled(): boolean {
+    return this.#styles.imageSmoothingEnabled;
+  }
+
+  set imageSmoothingEnabled(value: boolean) {
+    this.#styles.imageSmoothingEnabled = value;
+  }
+
+  get imageSmoothingQuality(): ImageSmoothingQuality {
+    return this.#styles.imageSmoothingQuality;
+  }
+
+  /** As a browser: a quality that is none of the three is ignored. */
+  set imageSmoothingQuality(value: ImageSmoothingQuality) {
+    if (value === 'low' || value === 'medium' || value === 'high') this.#styles.imageSmoothingQuality = value;
   }
 
   get strokeStyle(): Style {

@@ -244,6 +244,10 @@ function drawStage(context: DrawContext, run: Run, evaluated: readonly Evaluated
   context.resetTransform();
   context.clearRect(0, 0, size.width, size.height);
   context.save();
+  // Every picture the frame draws (the background, an image head or marker, the reveal's mask) is resampled as v3
+  // resampled it (imageSmoothingQuality high, its exporting.js and viewport.js); the frame's restore undoes it.
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = 'high';
   context.setTransform(...matrix);
   let mask: Surface | null = null;
   for (const layer of LAYERS) {

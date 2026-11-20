@@ -179,4 +179,30 @@ describe('the draw recorder', () => {
     recorder.drawImage({ width: 640, height: 480 }, 0, 0, 64, 48);
     expect(recorder.take()).toEqual(['drawImage image(640x480) 0 0 64 48 | @ 1 0 0 1 0 0']);
   });
+
+  test('an image is written with its smoothing when away from a canvas’s own (on, low), as v3’s frames are', () => {
+    const recorder = new Recorder();
+    const image = { width: 4, height: 3 };
+    recorder.imageSmoothingEnabled = true;
+    recorder.imageSmoothingQuality = 'low';
+    recorder.drawImage(image, 0, 0, 4, 3);
+    recorder.imageSmoothingQuality = 'high';
+    recorder.drawImage(image, 0, 0, 4, 3);
+    recorder.fillRect(0, 0, 1, 1);
+    recorder.save();
+    recorder.imageSmoothingEnabled = false;
+    recorder.drawImage(image, 0, 0, 4, 3);
+    recorder.restore();
+    recorder.drawImage(image, 0, 0, 4, 3);
+    expect(recorder.take()).toEqual([
+      'drawImage image(4x3) 0 0 4 3 | @ 1 0 0 1 0 0',
+      'drawImage image(4x3) 0 0 4 3 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high',
+      'fillRect 0 0 1 1 | @ 1 0 0 1 0 0',
+      'save',
+      'drawImage image(4x3) 0 0 4 3 | @ 1 0 0 1 0 0 | imageSmoothingEnabled=false imageSmoothingQuality=high',
+      'restore',
+      'drawImage image(4x3) 0 0 4 3 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high',
+    ]);
+    expect(recorder.state().styles).toEqual({ imageSmoothingQuality: 'high' });
+  });
 });

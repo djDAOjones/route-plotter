@@ -9,7 +9,7 @@ save
 resetTransform
 fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
 restore
-drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
 beginPath
 restore
 save
@@ -65,7 +65,7 @@ save
 resetTransform
 fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
 restore
-drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
 beginPath
 restore
 save
@@ -374,7 +374,7 @@ save
 resetTransform
 fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
 restore
-drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
 beginPath
 restore
 save
@@ -789,7 +789,7 @@ save
 resetTransform
 fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
 restore
-drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
 beginPath
 restore
 save
@@ -1343,7 +1343,7 @@ save
 resetTransform
 fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
 restore
-drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
 beginPath
 restore
 save
@@ -1897,7 +1897,7 @@ save
 resetTransform
 fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
 restore
-drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
 beginPath
 restore
 save
@@ -2292,7 +2292,7 @@ save
 resetTransform
 fillRect 0 0 1920 1080 | @ 1 0 0 1 0 0 | fillStyle=#ffffff
 restore
-drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0
+drawImage image(400x300) 240 0 1440 1080 | @ 1 0 0 1 0 0 | imageSmoothingQuality=high
 beginPath
 restore
 save

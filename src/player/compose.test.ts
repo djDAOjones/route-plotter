@@ -174,6 +174,20 @@ describe('compose', () => {
     expect(plain.lines.some((line) => line.startsWith('drawImage'))).toBe(false);
   });
 
+  test('every picture in a frame is smoothed as v3’s (imageSmoothingQuality high), and the caller’s context is left as it was', () => {
+    const picture = (context: DrawContext) => context.drawImage(image, 0, 0, 40, 30);
+    const catalogue = { route: [], scene: [sceneModule('bg', { layers: { background: picture } })] };
+    const recorder = new Recorder();
+    recorder.imageSmoothingEnabled = false;
+    const before = recorder.state();
+    compose(recorder, request(sceneOf(1)), catalogue);
+    const drawn = recorder.take().filter((line) => line.startsWith('drawImage'));
+    expect(drawn).toHaveLength(1);
+    expect(drawn[0]).toMatch(/^drawImage image\(400x300\) 0 0 40 30 \| @ [^|]+ \| imageSmoothingQuality=high$/);
+    expect(recorder.state()).toEqual(before);
+    expect([recorder.imageSmoothingEnabled, recorder.imageSmoothingQuality]).toEqual([false, 'low']);
+  });
+
   test('the scene’s view and the further zoom and pan are one transform; the overlays come last, in screen space', () => {
     const camera: View = { centre: { x: 0.5, y: 0.5 }, zoom: 2 };
     const catalogue = {
