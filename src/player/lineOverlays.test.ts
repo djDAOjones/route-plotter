@@ -297,6 +297,12 @@ function alongside(drawn: readonly { x: number; y: number }[], course: readonly 
   expect(off, name).toEqual([]);
 }
 
+/** A stroked path that is the course and nothing more: one moveTo, a lineTo for each further place, no other command. */
+function strokesAlong(path: readonly string[], course: Parameters<typeof alongside>[1], name: string): void {
+  expect(path.map((call) => call.split(' ')[0]), name).toEqual(course.map((_, i) => (i === 0 ? 'moveTo' : 'lineTo')));
+  alongside(places(path), course, name);
+}
+
 test('drawn straight onto a dirtied canvas, the lines’ overlay sets every style it uses and leaves the state and no path behind', () => {
   const scene = sceneOf(['hidden', 'whole'], { branch: true });
   const [frame, screen] = handed(scene);
@@ -340,7 +346,7 @@ test('the glow alone, onto a canvas with a path left open, strokes the stretch a
     const { stroked, left, course } = glowOnto(context, scene, 3, 1);
     expect(course.length, String(open)).toBeGreaterThan(1);
     expect(stroked, String(open)).toHaveLength(2);
-    for (const [i, path] of stroked.entries()) alongside(places(path), course, `${open ? 'a path open' : 'clean'}, stroke ${i}`);
+    for (const [i, path] of stroked.entries()) strokesAlong(path, course, `${open ? 'a path open' : 'clean'}, stroke ${i}`);
     expect(left, String(open)).toEqual([]);
   }
 });
@@ -360,7 +366,7 @@ test('a branch hovered glows along the branch alone; the line’s width is its l
   expect([white, blue].map(widthOf)).toEqual([12, 7]);
   expect([white?.includes('rgba(255, 255, 255, 0.85)'), blue?.includes('rgba(15, 98, 254, 0.45)')]).toEqual([true, true]);
   expect(stroked).toHaveLength(2);
-  for (const [i, path] of stroked.entries()) alongside(places(path), course, `stroke ${i}`);
+  for (const [i, path] of stroked.entries()) strokesAlong(path, course, `stroke ${i}`);
   // From the third point (0.6, 0.55) to the fifth (0.7, 0.8), on the picture drawn 1,440 wide from x = 240.
   const ends = [glow[0], glow[glow.length - 1]].map((at) => [Math.round(at?.x ?? 0), Math.round(at?.y ?? 0)]);
   expect(ends).toEqual([[1104, 594], [1248, 864]]);
