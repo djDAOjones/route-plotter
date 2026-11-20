@@ -19,9 +19,9 @@ One composer draws every frame for the editor's preview, the video export and th
 
 ## Now
 
-Updated: 2026-11-19
+Updated: 2026-11-20
 
-Next step: Start once CORE-02 has merged.
+Next step: None.
 
 Open question: None.
 
@@ -35,3 +35,4 @@ Open question: None.
 
 - 2026-11-18 — Filed by PLAN-6 from the architecture plan (`reviews/v4-architecture-plan-2026-11-18.md`, §19). The owner's instructions in force, verbatim: Q1's port sentence (quoted in CORE-02) and "Adopt the editor stack whole (Recommended)" (Q21). Under the owner's overnight grant G3, "Proceed on recommendations (Recommended)" (word for word in the plan's Appendix A), this item builds on the plan's recommended options, each provisional until he rules; those bearing on it: A5, A6, A25 (the plan's §18; the night's decisions list).
 - 2026-11-19 — PLAN-7 opens Phase 7 and adds the criterion on the pull request's `## What to try` section, accessibility coverage and the published page, from what Phase 6 taught: every app merge now publishes (PUB-01), the publishing step copies the section to the live `version.json`, and v4's gate runs the accessibility run at AAA (STACK-03). Each new screen or control is declared in `tests/a11y/project.mjs` (its state, snapshot, interactions and kept functions; a journey that meets something it cannot check is extended in the same pull request) and each feature it adds or rules out is recorded in `project/a11y/coverage.json`, never the catalogue.
+- 2026-11-20 — Closed by sub-chat 48. The owner's instructions in force for it, verbatim, are those quoted in the 2026-11-18 note: Q1's port sentence, "Adopt the editor stack whole (Recommended)" (Q21) and "Proceed on recommendations (Recommended)" (G3); no other is recorded. Its decisions are provisional under G3, awaiting his ruling (the decision entry lists them); D137's settings are filed as CORE-13.
