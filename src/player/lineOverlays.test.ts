@@ -232,3 +232,29 @@ test('a hidden line hovered glows round its guide; no glow for none hovered, ids
   expect(strokes(edited.lines.slice(plain.lines.length))).toEqual([]);
   expect(edited.reports).toEqual(plain.reports);
 });
+
+test('the "+" sits at the hovered stretch’s middle, after the glow: radius 9, 11 with the pointer on it, none with no insert (:401–450)', () => {
+  for (const [name, viewing] of Object.entries(VIEWINGS)) {
+    const scene = sceneOf(['whole']);
+    const unit = unitAt(viewing.zoom);
+    const drawn = (plus: Hovered['plus']) => both(scene, viewing, scene.routes, { hovered: hover(scene, plus) }).added;
+    const arcs = (lines: readonly string[]) => lines.filter((line) => line.startsWith('arc '));
+    expect(arcs(drawn('none')), name).toEqual([]);
+    for (const [plus, radius] of [['idle', 9], ['active', 11]] as const) {
+      const added = drawn(plus);
+      const [arc, ...others] = arcs(added);
+      expect(others, name).toEqual([]);
+      const first = added.indexOf(arc ?? '');
+      // The glow's two strokes come first; the "+" is its disc, then its arms.
+      expect(strokes(added.slice(0, first)), name).toHaveLength(2);
+      expect(Number(arc?.split(' ')[3]), name).toBeCloseTo(radius * unit, 6);
+      // The middle by index of the stretch's samples, as placed on screen (the glow's own places).
+      const glow = places(added.slice(0, first));
+      const [a, b] = [glow[Math.floor((glow.length - 1) / 2)], glow[Math.ceil((glow.length - 1) / 2)]];
+      const [centre] = places([(arc ?? '').replace(/^arc /, 'moveTo ')]);
+      expect(Math.hypot(((a?.x ?? 0) + (b?.x ?? 0)) / 2 - (centre?.x ?? 0), ((a?.y ?? 0) + (b?.y ?? 0)) / 2 - (centre?.y ?? 0)), name).toBeLessThan(0.1);
+      // v3's accent fills the disc while the pointer is on it; white otherwise (the kit's plusHandle, v3 :424–450).
+      expect(added.slice(first).find((line) => line.startsWith('fill')), name).toContain(plus === 'active' ? '#0f62fe' : 'rgba(255, 255, 255, 0.95)');
+    }
+  }
+});

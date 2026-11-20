@@ -18,10 +18,14 @@
 // frame.scale × screen.zoom (./line.ts), from the frame's settings; a hidden line's is the guide's, 2 × unit. v3's 9
 // and 4 went by its zoom clamp times its Graphics scale (:331); here by unitAt(screen.zoom) alone, as every editor
 // helper's (D153). v3 drew the glow beneath the path (:1319–1328); every overlay is drawn last, so this one lies over
-// the line (a decision for the owner). The glow is drawn after the guides.
+// the line (a decision for the owner). The glow is drawn after the guides, and the "+" after the glow: the kit's
+// plusHandle (v3 :424–450) at the stretch's middle, none where the editor offers no insert (v3 :403), active while the
+// pointer is on it (v3's leg-plus, :410). v3's middle is the middle sample by index of its evenly resampled leg
+// (segmentHitTest.js:115–128); pointAt reads a line's samples by index as v3 does (core/geometry/path.ts).
 import type { DrawContext } from '../../../adapters/render/context';
 import type { Frame } from '../../../adapters/render/layers';
-import { unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
+import { plusHandle, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
+import { pointAt } from '../../../core/geometry/path';
 import type { ImagePoint } from '../../../core/geometry/units';
 
 /** The guide's look (D157): alpha, width and dash in screen pixels at a zoom of 1. */
@@ -129,7 +133,7 @@ function stretchOf(hovered: HoveredLine, frame: Frame, screen: Screen, unit: num
 
 /**
  * The overlay that follows the lines of the routes named, as the frame holds each: a hidden line's faint guide, then
- * the hovered stretch's glow. Called with ids alone it draws the guides and nothing more.
+ * the hovered stretch's glow and its "+". Called with ids alone it draws the guides and nothing more.
  */
 export function lineOverlay(routeIds: readonly string[], { hovered = null }: LineChoices = {}): Overlay {
   return (context: DrawContext, frame: Frame, screen: Screen) => {
@@ -142,6 +146,11 @@ export function lineOverlay(routeIds: readonly string[], { hovered = null }: Lin
       if (runs.length > 0) guide(context, runs, route.settings.line.colour, unit);
     }
     const stretch = hovered === null ? null : stretchOf(hovered, frame, screen, unit);
-    if (stretch !== null) glow(context, stretch.runs, stretch.width, unit);
+    if (stretch === null || hovered === null) return;
+    glow(context, stretch.runs, stretch.width, unit);
+    if (hovered.plus === 'none') return;
+    const middle = pointAt(stretch.samples, 0.5);
+    const at = middle === null ? null : screen.place(middle);
+    if (at !== null) plusHandle(context, at, hovered.plus === 'active', unit);
   };
 }
