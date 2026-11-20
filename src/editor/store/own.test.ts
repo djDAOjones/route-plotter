@@ -117,7 +117,7 @@ describe('nothing changes the state or the history but a command', () => {
     expect(store.getState().selection).toEqual({ route, points: [a] });
   });
 
-  it('what a command receives cannot be written to, whether it then gives a change, a refusal or throws', () => {
+  it('what a command receives cannot be written to, whether it then gives back what it found, a refusal or throws, alone or in a gesture', () => {
     const { store, a, b } = withHistory();
     const vandal = (then: (current: Current) => Current | Refusal): Command => ({
       label: 'Vandal',
@@ -144,6 +144,15 @@ describe('nothing changes the state or the history but a command', () => {
     const begun = store.begin('Vandal');
     if (!begun.ok) throw new Error('the gesture did not open');
     expect(begun.gesture.apply(vandal((current) => current))).toEqual({ ok: true, changed: false });
+    expect(begun.gesture.apply(vandal(() => ({ why: 'missing', what: 'nothing' })))).toMatchObject({ ok: false });
+    expect(() =>
+      begun.gesture.apply(
+        vandal(() => {
+          throw new Error('a broken command');
+        }),
+      ),
+    ).toThrow('a broken command');
+    expect(store.getState().gesture).toBe('Vandal');
     expect(begun.gesture.commit()).toEqual({ ok: true, changed: false });
     expect(store.getState()).toMatchObject({ project: before.project, selection: before.selection, redo: before.redo });
     expect(history(store)).toEqual([
@@ -171,6 +180,49 @@ describe('nothing changes the state or the history but a command', () => {
       if (made !== undefined) made.settings.line.thickness = 30;
     }).toThrow(TypeError);
     expect(thickness(store)).toBe(11);
+  });
+});
+
+describe('only plain data is taken, and a refusal changes nothing (Codex’s second round)', () => {
+  it('a project with a getter, or in a class, is refused, at createStore and at Open, and nothing changes', () => {
+    const { project, route } = twoStops();
+    const live = { scene: project.scene };
+    const withGetter = {
+      get scene() {
+        return live.scene;
+      },
+      images: [],
+    };
+    class Wrapper {
+      readonly images = [];
+      get scene() {
+        return live.scene;
+      }
+    }
+    expect(() => storeOf(withGetter)).toThrow(TypeError);
+    expect(() => storeOf(new Wrapper())).toThrow(TypeError);
+    const store = storeOf(twoStops().project);
+    store.dispatch(setRouteSetting(route, 'line', 'thickness', 10));
+    const before = store.getState();
+    expect(() => store.open(withGetter)).toThrow(TypeError);
+    expect(() => store.open(new Wrapper())).toThrow(TypeError);
+    expect(store.getState()).toBe(before);
+    expect(store.undo()).toEqual({ ok: true, changed: true });
+    expect(thickness(store)).toBe(3);
+  });
+
+  it('a project refused partway leaves nothing of it taken: its parts are walked, and refused, again', () => {
+    const { project } = twoStops();
+    const bend = newPoint(counter('bend'), { x: 0.5, y: 0.5, kind: 'bend' });
+    Object.defineProperty(bend, 'x', { enumerable: true, get: () => 0.5 });
+    const route = firstRoute(project);
+    const scene = { ...project.scene, routes: [{ ...route, points: [...route.points, bend] }] };
+    expect(() => storeOf({ scene, images: [] })).toThrow(TypeError);
+    expect(() => storeOf({ scene, images: [] })).toThrow(TypeError);
+    const store = storeOf(twoStops().project);
+    const smuggle: Command = { label: 'Smuggle', apply: (current) => ({ ...current, project: { scene, images: [] } }) };
+    expect(() => store.dispatch(smuggle)).toThrow(TypeError);
+    expect(store.getState().undo).toBeNull();
   });
 });
 

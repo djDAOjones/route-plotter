@@ -56,7 +56,10 @@ export interface Store {
   select(selection: Selection): Outcome;
   undo(): Outcome;
   redo(): Outcome;
-  /** An opened project replaces the one held: nothing selected, no steps to undo or redo, any open gesture closed. */
+  /**
+   * An opened project replaces the one held: nothing selected, no steps to undo or redo, any open gesture closed. One
+   * that is not plain data throws a TypeError, and one its declarations refuse is refused, before anything changes.
+   */
   open(project: Project): Outcome;
 }
 
@@ -95,11 +98,13 @@ function problemsOf(project: Project): Refusal | null {
   return verdict.ok ? null : { why: 'invalid', problems: verdict.problems };
 }
 
+/** Throws a TypeError on a project that is not plain data (own.ts), a RangeError on one its declarations refuse. */
 export function createStore({ project, nextId, report = rethrowLater }: StoreOptions): Store {
-  const invalid = problemsOf(project);
+  const held = own(project);
+  const invalid = problemsOf(held);
   if (invalid !== null) throw new RangeError('The editor’s store was given a project its declarations refuse.');
 
-  let current = currentOf(own(project), NOTHING_SELECTED);
+  let current = currentOf(held, NOTHING_SELECTED);
   let undoSteps: readonly Step[] = [];
   let redoSteps: readonly Step[] = [];
   let opened: Opened | null = null;
@@ -134,9 +139,9 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
   function run(command: Command): Outcome {
     const next = command.apply(current, Object.freeze({ nextId }));
     if ('why' in next) return refused(next);
-    const invalidNext = problemsOf(next.project);
-    if (invalidNext !== null) return refused(invalidNext);
     const project = own(next.project);
+    const invalidNext = problemsOf(project);
+    if (invalidNext !== null) return refused(invalidNext);
     const selection = repairSelection(project, next.selection);
     const sameSelection = sameValue(selection, current.selection);
     const changed = project !== current.project || !sameSelection;
@@ -230,12 +235,13 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
       return travel(redoSteps, undoSteps, 'after') ?? refused({ why: 'nothing-to-redo' });
     },
     open: (next) => {
-      const invalidNext = problemsOf(next);
+      const project = own(next);
+      const invalidNext = problemsOf(project);
       if (invalidNext !== null) return refused(invalidNext);
       opened = null;
       undoSteps = [];
       redoSteps = [];
-      current = currentOf(own(next), NOTHING_SELECTED);
+      current = currentOf(project, NOTHING_SELECTED);
       publish();
       return { ok: true, changed: true };
     },
