@@ -70,3 +70,4 @@
 - CORE-04.13 — The hovered stretch's glow is drawn over the line, so it reads as a pale blue band, where v3 drew it beneath; to look at when the preview is wired (CORE-05, D158) — (from: CORE-04, 2026-11-20)
 - CORE-04.14 — v3's label Auto-position (`v3/src/app/wiringDom.js:1013–1076`) is not ported; it comes with the editor's label controls, once each label holds its own offset (CORE-13, CORE-12, D149) — (from: CORE-04, 2026-11-20)
 - CORE-04.15 — v3's video export switch "Text labels" (`suppressLabels`) has no v4 setting; it comes with the export's own options (CORE-08, D149) — (from: CORE-04, 2026-11-20)
+- CORE-04.16 — INTAKE.21, held for CORE-04 in the plan's §16: golden sampling at fixed moments can miss a beacon's short window; CORE-04's goldens draw no beacon, the Arrival effects being FEAT-01's, so its goldens should sample inside each beacon window — (from: CORE-04, 2026-11-20)
