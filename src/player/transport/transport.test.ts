@@ -118,6 +118,30 @@ function rig(scene: Scene = sceneOf(), endsAtMs = 10_000) {
   };
 }
 
+/** A rig whose holder's reporter throws: while `failing` is on, each write tells a subscriber that throws, and throws. */
+function throwingRig() {
+  const frames = handMade();
+  const reports: unknown[] = [];
+  let on = false;
+  const holder = heldPlayback((error) => {
+    throw error;
+  });
+  holder.subscribe(() => {
+    if (on) throw new Error('a subscriber that fails');
+  });
+  const { catalogue } = counting();
+  const inputs: ContentRequest = { scene: sceneOf(), seed: 7, size: { width: 1920, height: 1080 }, image: null };
+  const transport = createTransport({
+    frames: frames.source, holder, inputs: () => inputs, report: (error) => reports.push(error), catalogue,
+  });
+  return {
+    frames, holder, reports, transport,
+    failing: (failing: boolean) => {
+      on = failing;
+    },
+  };
+}
+
 describe('the transport', () => {
   test('starts at the start, paused, at normal speed, with nothing booked and nothing built', () => {
     const { frames, holder, count } = rig();
@@ -308,7 +332,9 @@ describe('the transport', () => {
     expect(onOpen).toBe(playLength(inputs().scene.settings.clock, contentEnd(inputs(), catalogue)));
   });
 
-  test('DEF-42.1: a dragged slider rebuilds timing at most once a frame', () => {
+  // DEF-42.1, the transport's half (Codex's finding A on a3ced7d): the drag never reads the length, so this proves only
+  // that the transport builds nothing until it is read and once at a frame. The reader's half is the next test's.
+  test('DEF-42.1, the transport’s half: nothing is built until the length is read, and a frame builds once', () => {
     const { frames, count, transport, change, inputs } = rig(sceneOf(2));
     const drag = () => {
       for (let i = 0; i < 20; i += 1) change({ scene: { ...inputs().scene } });
@@ -328,6 +354,81 @@ describe('the transport', () => {
     drag();
     expect(count.builds).toBe(2);
     expect(frames.booked()).toBe(0);
+  });
+
+  // DEF-42.1, the reader's half. The length is built on demand, once per scene object, never deferred: paused there is
+  // no frame to wait for, and a stale length is what REL-698.1 forbids. So a reader that reads it on every change builds
+  // on every change, and coalescing is the reader's duty: an interface reads `length()` only when it draws, and draws
+  // at most once a frame. Stage 6 (the preview and Open) proves that with the real play bar on the real store.
+  test('DEF-42.1, the reader’s half: each changed scene is built once, however often its length is read', () => {
+    const { count, transport, change, inputs } = rig(sceneOf(2));
+    const lengths = new Set<number>();
+    for (let i = 0; i < 20; i += 1) {
+      change({ scene: { ...inputs().scene } });
+      for (let read = 0; read < 3; read += 1) lengths.add(transport.length());
+    }
+    expect(count.builds).toBe(20);
+    expect(lengths.size).toBe(1);
+  });
+
+  test('Play books a frame only if what is held still plays after its write (finding B)', () => {
+    const { frames, holder, transport } = rig();
+    holder.subscribe(() => {
+      if (holder.playback().playing) transport.pause();
+    });
+    transport.play();
+    expect(holder.playback()).toEqual(AT_START);
+    expect(frames.booked()).toBe(0);
+  });
+
+  test('a write whose telling throws never strands the playback: Play still books, and the error is thrown on (finding C)', () => {
+    const { frames, holder, transport, failing } = throwingRig();
+    failing(true);
+    expect(() => transport.play()).toThrow('a subscriber that fails');
+    expect(holder.playback().playing).toBe(true);
+    expect(frames.booked()).toBe(1);
+    failing(false);
+    frames.run(0);
+    expect(holder.playback().atMs).toBeCloseTo(FIRST_FRAME_MS);
+    expect(frames.booked()).toBe(1);
+  });
+
+  // Every other place the transport writes and then acts already goes by what is held: Pause cancels before it writes,
+  // seek and setSpeed keep `playing` as it is, and a frame books in its `finally` only if what is held plays. This
+  // guards that each still holds when the write throws: playing with one frame booked, or paused with none.
+  test('a throwing write leaves a frame booked exactly while playing: pause, seek, speed and both of a frame’s stops', () => {
+    const { frames, holder, transport, failing, reports } = throwingRig();
+    const booked = () => expect(frames.booked()).toBe(holder.playback().playing ? 1 : 0);
+    const throwing = (act: () => void) => {
+      failing(true);
+      expect(act).toThrow('a subscriber that fails');
+      failing(false);
+      booked();
+    };
+    transport.play();
+    throwing(() => transport.seek(500));
+    throwing(() => transport.setSpeed(2));
+    throwing(() => transport.pause());
+    expect(holder.playback().playing).toBe(false);
+    throwing(() => transport.seek(700));
+    transport.seek(transport.length() - 50);
+    transport.play();
+    frames.run(0);
+    failing(true);
+    frames.run(100);
+    failing(false);
+    expect(holder.playback()).toEqual({ playing: false, atMs: transport.length(), speed: 1 });
+    booked();
+    transport.setSpeed(-1);
+    transport.seek(50);
+    transport.play();
+    frames.run(200);
+    failing(true);
+    frames.run(300);
+    failing(false);
+    expect(holder.playback()).toEqual(AT_START);
+    booked();
+    expect(reports).toHaveLength(2);
   });
 
   test('a frame and the transport read the content’s end from the one sum (D174)', () => {

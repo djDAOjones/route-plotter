@@ -5,6 +5,11 @@
 // and so is where the playback is kept, a `PlaybackHolder`: the editor's store's slice, or `heldPlayback` for a player
 // with no store. The play length comes from compose.ts's own sum (D174), built when a frame runs or a command needs it
 // and the inputs are not those it was built from: never on a timer, never later (REL-698.1, REL-703.2, DEF-42.1).
+// DEF-42.1 has two halves. The transport's: nothing is built until the length is read, and a frame builds it once
+// however many changes came before. The reader's, carried to stage 6 (the preview and Open), which proves it with the
+// real play bar on the real store: an interface reads `length()` only when it draws, and draws at most once a frame
+// (the transport builds once per changed scene, however often it is read). What the transport does after it writes
+// the playback goes by what the holder then holds, however the write ended (Codex's findings B and C on a3ced7d).
 import { playLength } from '../../core/clock/clock';
 import type { Scene } from '../../core/model/scene';
 import { CATALOGUE, type Catalogue } from '../../features/catalogue';
@@ -115,6 +120,15 @@ export function createTransport<H>({ frames, holder, inputs, report, catalogue =
     frames.cancel(handle);
   }
 
+  /**
+   * After Play's write: a frame booked while what is held plays, none while it is paused, however the write ended. A
+   * subscriber told may have paused (finding B), and a write whose telling threw has still been kept (finding C).
+   */
+  function follow(): void {
+    if (holder.playback().playing) book();
+    else unbook();
+  }
+
   /** One frame: moves the position by the time since the last, times the speed; stops on an end, as Pause does. */
   function advance(timeMs: number): void {
     const now = holder.playback();
@@ -151,9 +165,12 @@ export function createTransport<H>({ frames, holder, inputs, report, catalogue =
       if (now.playing) return;
       const lengthMs = lengthNow();
       lastMs = null;
-      if (now.speed > 0 && now.atMs >= lengthMs) write(true, 0, 1);
-      else write(true, Math.min(Math.max(now.atMs, 0), lengthMs), now.speed);
-      book();
+      try {
+        if (now.speed > 0 && now.atMs >= lengthMs) write(true, 0, 1);
+        else write(true, Math.min(Math.max(now.atMs, 0), lengthMs), now.speed);
+      } finally {
+        follow();
+      }
     },
     pause: () => {
       unbook();
