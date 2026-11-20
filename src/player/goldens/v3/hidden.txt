@@ -1,0 +1,377 @@
+# v3's own recording of the scene "hidden", by v3's unchanged code at commit 858b0cf of v3/, in export mode at
+# 1920 x 1080, with V3-FRAMES-43-record.test.js (kept in the lane folder). A fixture: nothing regenerates it in CI.
+# the start: progress 0, 0 ms of 8788
+main clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+main set:fillStyle #ffffff
+main fillRect 0 0 1920 1080 @ 1 0 0 1 0 0 | fillStyle=#ffffff
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 240 0 1440 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+vector clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+vector set:lineCap round
+vector set:lineJoin round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Start
+vector measureText Start
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 509.727 729.164 @ 1 0 0 1 0 0
+vector lineTo 546.273 729.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 729.164 552.818 735.709 @ 1 0 0 1 0 0
+vector lineTo 552.818 776.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 782.836 546.273 782.836 @ 1 0 0 1 0 0
+vector lineTo 509.727 782.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 782.836 503.182 776.291 @ 1 0 0 1 0 0
+vector lineTo 503.182 735.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 729.164 509.727 729.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Start 528 756 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 528 756 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+main drawImage [canvas vector] 0 0 1920 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+# a quarter: progress 0.25, 2197 ms of 8788
+main clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+main set:fillStyle #ffffff
+main fillRect 0 0 1920 1080 @ 1 0 0 1 0 0 | fillStyle=#ffffff
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 240 0 1440 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+vector clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+vector set:lineCap round
+vector set:lineJoin round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Start
+vector measureText Start
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 509.727 729.164 @ 1 0 0 1 0 0
+vector lineTo 546.273 729.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 729.164 552.818 735.709 @ 1 0 0 1 0 0
+vector lineTo 552.818 776.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 782.836 546.273 782.836 @ 1 0 0 1 0 0
+vector lineTo 509.727 782.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 782.836 503.182 776.291 @ 1 0 0 1 0 0
+vector lineTo 503.182 735.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 729.164 509.727 729.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Start 528 756 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 528 756 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+main drawImage [canvas vector] 0 0 1920 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+# the middle: progress 0.5, 4394 ms of 8788
+main clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+main set:fillStyle #ffffff
+main fillRect 0 0 1920 1080 @ 1 0 0 1 0 0 | fillStyle=#ffffff
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 240 0 1440 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+vector clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+vector set:lineCap round
+vector set:lineJoin round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Start
+vector measureText Start
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 509.727 729.164 @ 1 0 0 1 0 0
+vector lineTo 546.273 729.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 729.164 552.818 735.709 @ 1 0 0 1 0 0
+vector lineTo 552.818 776.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 782.836 546.273 782.836 @ 1 0 0 1 0 0
+vector lineTo 509.727 782.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 782.836 503.182 776.291 @ 1 0 0 1 0 0
+vector lineTo 503.182 735.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 729.164 509.727 729.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Start 528 756 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 528 756 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Middle
+vector measureText Middle
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1010.727 513.164 @ 1 0 0 1 0 0
+vector lineTo 1053.273 513.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 513.164 1059.818 519.709 @ 1 0 0 1 0 0
+vector lineTo 1059.818 560.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 566.836 1053.273 566.836 @ 1 0 0 1 0 0
+vector lineTo 1010.727 566.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 566.836 1004.182 560.291 @ 1 0 0 1 0 0
+vector lineTo 1004.182 519.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 513.164 1010.727 513.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Middle 1032 540 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1032 540 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+main drawImage [canvas vector] 0 0 1920 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+# three quarters: progress 0.75, 6591 ms of 8788
+main clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+main set:fillStyle #ffffff
+main fillRect 0 0 1920 1080 @ 1 0 0 1 0 0 | fillStyle=#ffffff
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 240 0 1440 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+vector clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+vector set:lineCap round
+vector set:lineJoin round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Start
+vector measureText Start
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 509.727 729.164 @ 1 0 0 1 0 0
+vector lineTo 546.273 729.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 729.164 552.818 735.709 @ 1 0 0 1 0 0
+vector lineTo 552.818 776.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 782.836 546.273 782.836 @ 1 0 0 1 0 0
+vector lineTo 509.727 782.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 782.836 503.182 776.291 @ 1 0 0 1 0 0
+vector lineTo 503.182 735.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 729.164 509.727 729.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Start 528 756 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 528 756 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Middle
+vector measureText Middle
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1010.727 513.164 @ 1 0 0 1 0 0
+vector lineTo 1053.273 513.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 513.164 1059.818 519.709 @ 1 0 0 1 0 0
+vector lineTo 1059.818 560.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 566.836 1053.273 566.836 @ 1 0 0 1 0 0
+vector lineTo 1010.727 566.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 566.836 1004.182 560.291 @ 1 0 0 1 0 0
+vector lineTo 1004.182 519.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 513.164 1010.727 513.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Middle 1032 540 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1032 540 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText End
+vector measureText End
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1379.727 351.164 @ 1 0 0 1 0 0
+vector lineTo 1404.273 351.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1410.818 351.164 1410.818 357.709 @ 1 0 0 1 0 0
+vector lineTo 1410.818 398.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1410.818 404.836 1404.273 404.836 @ 1 0 0 1 0 0
+vector lineTo 1379.727 404.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1373.182 404.836 1373.182 398.291 @ 1 0 0 1 0 0
+vector lineTo 1373.182 357.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1373.182 351.164 1379.727 351.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText End 1392 378 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1392 378 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+main drawImage [canvas vector] 0 0 1920 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+# the end: progress 1, 8788 ms of 8788
+main clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+main set:fillStyle #ffffff
+main fillRect 0 0 1920 1080 @ 1 0 0 1 0 0 | fillStyle=#ffffff
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 240 0 1440 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+vector clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+vector set:lineCap round
+vector set:lineJoin round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Start
+vector measureText Start
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 509.727 729.164 @ 1 0 0 1 0 0
+vector lineTo 546.273 729.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 729.164 552.818 735.709 @ 1 0 0 1 0 0
+vector lineTo 552.818 776.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 782.836 546.273 782.836 @ 1 0 0 1 0 0
+vector lineTo 509.727 782.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 782.836 503.182 776.291 @ 1 0 0 1 0 0
+vector lineTo 503.182 735.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 729.164 509.727 729.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Start 528 756 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 528 756 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Middle
+vector measureText Middle
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1010.727 513.164 @ 1 0 0 1 0 0
+vector lineTo 1053.273 513.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 513.164 1059.818 519.709 @ 1 0 0 1 0 0
+vector lineTo 1059.818 560.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 566.836 1053.273 566.836 @ 1 0 0 1 0 0
+vector lineTo 1010.727 566.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 566.836 1004.182 560.291 @ 1 0 0 1 0 0
+vector lineTo 1004.182 519.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 513.164 1010.727 513.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Middle 1032 540 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1032 540 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText End
+vector measureText End
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1379.727 351.164 @ 1 0 0 1 0 0
+vector lineTo 1404.273 351.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1410.818 351.164 1410.818 357.709 @ 1 0 0 1 0 0
+vector lineTo 1410.818 398.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1410.818 404.836 1404.273 404.836 @ 1 0 0 1 0 0
+vector lineTo 1379.727 404.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1373.182 404.836 1373.182 398.291 @ 1 0 0 1 0 0
+vector lineTo 1373.182 357.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1373.182 351.164 1379.727 351.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText End 1392 378 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1392 378 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+main drawImage [canvas vector] 0 0 1920 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high

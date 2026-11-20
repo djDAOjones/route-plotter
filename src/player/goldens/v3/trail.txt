@@ -1,0 +1,943 @@
+# v3's own recording of the scene "trail", by v3's unchanged code at commit 858b0cf of v3/, in export mode at
+# 1920 x 1080, with V3-FRAMES-43-record.test.js (kept in the lane folder). A fixture: nothing regenerates it in CI.
+# the start: progress 0, 0 ms of 10046
+main clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+main set:fillStyle #ffffff
+main fillRect 0 0 1920 1080 @ 1 0 0 1 0 0 | fillStyle=#ffffff
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 240 0 1440 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+vector clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+vector set:lineCap round
+vector set:lineJoin round
+vector setLineDash []
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Start
+vector measureText Start
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 509.727 729.164 @ 1 0 0 1 0 0
+vector lineTo 546.273 729.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 729.164 552.818 735.709 @ 1 0 0 1 0 0
+vector lineTo 552.818 776.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 782.836 546.273 782.836 @ 1 0 0 1 0 0
+vector lineTo 509.727 782.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 782.836 503.182 776.291 @ 1 0 0 1 0 0
+vector lineTo 503.182 735.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 729.164 509.727 729.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Start 528 756 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 528 756 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+main drawImage [canvas vector] 0 0 1920 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+# a quarter: progress 0.25, 2511 ms of 10046
+main clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+main set:fillStyle #ffffff
+main fillRect 0 0 1920 1080 @ 1 0 0 1 0 0 | fillStyle=#ffffff
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 240 0 1440 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+vector clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+vector set:lineCap round
+vector set:lineJoin round
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 8.182
+vector setLineDash []
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 779.59 344.445 @ 1 0 0 1 0 0
+vector lineTo 781.652 345.952 @ 1 0 0 1 0 0
+vector lineTo 783.708 347.465 @ 1 0 0 1 0 0
+vector lineTo 785.755 348.984 @ 1 0 0 1 0 0
+vector lineTo 787.798 350.507 @ 1 0 0 1 0 0
+vector lineTo 789.837 352.034 @ 1 0 0 1 0 0
+vector lineTo 791.868 353.567 @ 1 0 0 1 0 0
+vector lineTo 793.896 355.103 @ 1 0 0 1 0 0
+vector lineTo 795.921 356.641 @ 1 0 0 1 0 0
+vector lineTo 797.94 358.184 @ 1 0 0 1 0 0
+vector lineTo 799.956 359.729 @ 1 0 0 1 0 0
+vector lineTo 801.968 361.278 @ 1 0 0 1 0 0
+vector lineTo 803.977 362.828 @ 1 0 0 1 0 0
+vector lineTo 805.984 364.381 @ 1 0 0 1 0 0
+vector lineTo 807.986 365.937 @ 1 0 0 1 0 0
+vector lineTo 809.987 367.494 @ 1 0 0 1 0 0
+vector lineTo 811.984 369.054 @ 1 0 0 1 0 0
+vector lineTo 813.979 370.615 @ 1 0 0 1 0 0
+vector lineTo 815.972 372.178 @ 1 0 0 1 0 0
+vector lineTo 817.963 373.744 @ 1 0 0 1 0 0
+vector lineTo 819.951 375.31 @ 1 0 0 1 0 0
+vector lineTo 821.937 376.878 @ 1 0 0 1 0 0
+vector lineTo 823.922 378.447 @ 1 0 0 1 0 0
+vector lineTo 825.904 380.018 @ 1 0 0 1 0 0
+vector lineTo 827.885 381.59 @ 1 0 0 1 0 0
+vector lineTo 829.864 383.164 @ 1 0 0 1 0 0
+vector lineTo 831.842 384.738 @ 1 0 0 1 0 0
+vector lineTo 833.818 386.314 @ 1 0 0 1 0 0
+vector lineTo 835.792 387.89 @ 1 0 0 1 0 0
+vector lineTo 837.766 389.468 @ 1 0 0 1 0 0
+vector lineTo 839.738 391.047 @ 1 0 0 1 0 0
+vector lineTo 841.708 392.626 @ 1 0 0 1 0 0
+vector lineTo 843.678 394.206 @ 1 0 0 1 0 0
+vector lineTo 845.646 395.788 @ 1 0 0 1 0 0
+vector lineTo 847.613 397.369 @ 1 0 0 1 0 0
+vector lineTo 849.58 398.952 @ 1 0 0 1 0 0
+vector lineTo 851.545 400.535 @ 1 0 0 1 0 0
+vector lineTo 853.51 402.119 @ 1 0 0 1 0 0
+vector lineTo 855.473 403.704 @ 1 0 0 1 0 0
+vector lineTo 857.436 405.289 @ 1 0 0 1 0 0
+vector lineTo 859.398 406.875 @ 1 0 0 1 0 0
+vector lineTo 861.359 408.461 @ 1 0 0 1 0 0
+vector lineTo 863.32 410.048 @ 1 0 0 1 0 0
+vector lineTo 865.279 411.635 @ 1 0 0 1 0 0
+vector lineTo 867.239 413.223 @ 1 0 0 1 0 0
+vector lineTo 869.197 414.811 @ 1 0 0 1 0 0
+vector lineTo 871.155 416.399 @ 1 0 0 1 0 0
+vector lineTo 873.113 417.988 @ 1 0 0 1 0 0
+vector lineTo 875.07 419.577 @ 1 0 0 1 0 0
+vector lineTo 877.027 421.167 @ 1 0 0 1 0 0
+vector lineTo 878.983 422.756 @ 1 0 0 1 0 0
+vector lineTo 880.939 424.347 @ 1 0 0 1 0 0
+vector lineTo 882.895 425.937 @ 1 0 0 1 0 0
+vector lineTo 884.85 427.527 @ 1 0 0 1 0 0
+vector lineTo 886.805 429.118 @ 1 0 0 1 0 0
+vector lineTo 888.76 430.709 @ 1 0 0 1 0 0
+vector lineTo 890.715 432.299 @ 1 0 0 1 0 0
+vector lineTo 892.669 433.89 @ 1 0 0 1 0 0
+vector lineTo 894.624 435.481 @ 1 0 0 1 0 0
+vector lineTo 896.578 437.073 @ 1 0 0 1 0 0
+vector lineTo 898.532 438.664 @ 1 0 0 1 0 0
+vector lineTo 900.487 440.255 @ 1 0 0 1 0 0
+vector lineTo 902.441 441.846 @ 1 0 0 1 0 0
+vector lineTo 904.395 443.438 @ 1 0 0 1 0 0
+vector lineTo 906.349 445.029 @ 1 0 0 1 0 0
+vector lineTo 908.304 446.62 @ 1 0 0 1 0 0
+vector lineTo 910.258 448.211 @ 1 0 0 1 0 0
+vector lineTo 912.213 449.802 @ 1 0 0 1 0 0
+vector lineTo 914.168 451.392 @ 1 0 0 1 0 0
+vector lineTo 916.123 452.983 @ 1 0 0 1 0 0
+vector lineTo 918.078 454.573 @ 1 0 0 1 0 0
+vector lineTo 920.034 456.163 @ 1 0 0 1 0 0
+vector lineTo 921.99 457.753 @ 1 0 0 1 0 0
+vector lineTo 923.947 459.343 @ 1 0 0 1 0 0
+vector lineTo 925.904 460.932 @ 1 0 0 1 0 0
+vector lineTo 927.861 462.521 @ 1 0 0 1 0 0
+vector lineTo 929.819 464.11 @ 1 0 0 1 0 0
+vector lineTo 931.778 465.698 @ 1 0 0 1 0 0
+vector lineTo 933.737 467.286 @ 1 0 0 1 0 0
+vector lineTo 935.697 468.873 @ 1 0 0 1 0 0
+vector lineTo 937.657 470.46 @ 1 0 0 1 0 0
+vector lineTo 939.619 472.046 @ 1 0 0 1 0 0
+vector lineTo 941.58 473.632 @ 1 0 0 1 0 0
+vector lineTo 943.543 475.216 @ 1 0 0 1 0 0
+vector lineTo 945.507 476.801 @ 1 0 0 1 0 0
+vector lineTo 947.472 478.384 @ 1 0 0 1 0 0
+vector lineTo 949.438 479.967 @ 1 0 0 1 0 0
+vector lineTo 951.405 481.549 @ 1 0 0 1 0 0
+vector lineTo 953.373 483.131 @ 1 0 0 1 0 0
+vector lineTo 955.342 484.711 @ 1 0 0 1 0 0
+vector lineTo 957.313 486.291 @ 1 0 0 1 0 0
+vector lineTo 959.284 487.869 @ 1 0 0 1 0 0
+vector lineTo 961.258 489.446 @ 1 0 0 1 0 0
+vector lineTo 963.233 491.023 @ 1 0 0 1 0 0
+vector lineTo 965.21 492.597 @ 1 0 0 1 0 0
+vector lineTo 967.188 494.171 @ 1 0 0 1 0 0
+vector lineTo 969.169 495.743 @ 1 0 0 1 0 0
+vector lineTo 971.151 497.314 @ 1 0 0 1 0 0
+vector lineTo 973.136 498.883 @ 1 0 0 1 0 0
+vector lineTo 975.123 500.45 @ 1 0 0 1 0 0
+vector lineTo 977.111 502.016 @ 1 0 0 1 0 0
+vector lineTo 979.104 503.579 @ 1 0 0 1 0 0
+vector lineTo 981.098 505.141 @ 1 0 0 1 0 0
+vector lineTo 983.096 506.7 @ 1 0 0 1 0 0
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=8.182 lineCap=round lineJoin=round
+vector set:strokeStyle #D55E00
+vector set:lineWidth 4.909
+vector setLineDash []
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 779.59 344.445 @ 1 0 0 1 0 0
+vector lineTo 781.652 345.952 @ 1 0 0 1 0 0
+vector lineTo 783.708 347.465 @ 1 0 0 1 0 0
+vector lineTo 785.755 348.984 @ 1 0 0 1 0 0
+vector lineTo 787.798 350.507 @ 1 0 0 1 0 0
+vector lineTo 789.837 352.034 @ 1 0 0 1 0 0
+vector lineTo 791.868 353.567 @ 1 0 0 1 0 0
+vector lineTo 793.896 355.103 @ 1 0 0 1 0 0
+vector lineTo 795.921 356.641 @ 1 0 0 1 0 0
+vector lineTo 797.94 358.184 @ 1 0 0 1 0 0
+vector lineTo 799.956 359.729 @ 1 0 0 1 0 0
+vector lineTo 801.968 361.278 @ 1 0 0 1 0 0
+vector lineTo 803.977 362.828 @ 1 0 0 1 0 0
+vector lineTo 805.984 364.381 @ 1 0 0 1 0 0
+vector lineTo 807.986 365.937 @ 1 0 0 1 0 0
+vector lineTo 809.987 367.494 @ 1 0 0 1 0 0
+vector lineTo 811.984 369.054 @ 1 0 0 1 0 0
+vector lineTo 813.979 370.615 @ 1 0 0 1 0 0
+vector lineTo 815.972 372.178 @ 1 0 0 1 0 0
+vector lineTo 817.963 373.744 @ 1 0 0 1 0 0
+vector lineTo 819.951 375.31 @ 1 0 0 1 0 0
+vector lineTo 821.937 376.878 @ 1 0 0 1 0 0
+vector lineTo 823.922 378.447 @ 1 0 0 1 0 0
+vector lineTo 825.904 380.018 @ 1 0 0 1 0 0
+vector lineTo 827.885 381.59 @ 1 0 0 1 0 0
+vector lineTo 829.864 383.164 @ 1 0 0 1 0 0
+vector lineTo 831.842 384.738 @ 1 0 0 1 0 0
+vector lineTo 833.818 386.314 @ 1 0 0 1 0 0
+vector lineTo 835.792 387.89 @ 1 0 0 1 0 0
+vector lineTo 837.766 389.468 @ 1 0 0 1 0 0
+vector lineTo 839.738 391.047 @ 1 0 0 1 0 0
+vector lineTo 841.708 392.626 @ 1 0 0 1 0 0
+vector lineTo 843.678 394.206 @ 1 0 0 1 0 0
+vector lineTo 845.646 395.788 @ 1 0 0 1 0 0
+vector lineTo 847.613 397.369 @ 1 0 0 1 0 0
+vector lineTo 849.58 398.952 @ 1 0 0 1 0 0
+vector lineTo 851.545 400.535 @ 1 0 0 1 0 0
+vector lineTo 853.51 402.119 @ 1 0 0 1 0 0
+vector lineTo 855.473 403.704 @ 1 0 0 1 0 0
+vector lineTo 857.436 405.289 @ 1 0 0 1 0 0
+vector lineTo 859.398 406.875 @ 1 0 0 1 0 0
+vector lineTo 861.359 408.461 @ 1 0 0 1 0 0
+vector lineTo 863.32 410.048 @ 1 0 0 1 0 0
+vector lineTo 865.279 411.635 @ 1 0 0 1 0 0
+vector lineTo 867.239 413.223 @ 1 0 0 1 0 0
+vector lineTo 869.197 414.811 @ 1 0 0 1 0 0
+vector lineTo 871.155 416.399 @ 1 0 0 1 0 0
+vector lineTo 873.113 417.988 @ 1 0 0 1 0 0
+vector lineTo 875.07 419.577 @ 1 0 0 1 0 0
+vector lineTo 877.027 421.167 @ 1 0 0 1 0 0
+vector lineTo 878.983 422.756 @ 1 0 0 1 0 0
+vector lineTo 880.939 424.347 @ 1 0 0 1 0 0
+vector lineTo 882.895 425.937 @ 1 0 0 1 0 0
+vector lineTo 884.85 427.527 @ 1 0 0 1 0 0
+vector lineTo 886.805 429.118 @ 1 0 0 1 0 0
+vector lineTo 888.76 430.709 @ 1 0 0 1 0 0
+vector lineTo 890.715 432.299 @ 1 0 0 1 0 0
+vector lineTo 892.669 433.89 @ 1 0 0 1 0 0
+vector lineTo 894.624 435.481 @ 1 0 0 1 0 0
+vector lineTo 896.578 437.073 @ 1 0 0 1 0 0
+vector lineTo 898.532 438.664 @ 1 0 0 1 0 0
+vector lineTo 900.487 440.255 @ 1 0 0 1 0 0
+vector lineTo 902.441 441.846 @ 1 0 0 1 0 0
+vector lineTo 904.395 443.438 @ 1 0 0 1 0 0
+vector lineTo 906.349 445.029 @ 1 0 0 1 0 0
+vector lineTo 908.304 446.62 @ 1 0 0 1 0 0
+vector lineTo 910.258 448.211 @ 1 0 0 1 0 0
+vector lineTo 912.213 449.802 @ 1 0 0 1 0 0
+vector lineTo 914.168 451.392 @ 1 0 0 1 0 0
+vector lineTo 916.123 452.983 @ 1 0 0 1 0 0
+vector lineTo 918.078 454.573 @ 1 0 0 1 0 0
+vector lineTo 920.034 456.163 @ 1 0 0 1 0 0
+vector lineTo 921.99 457.753 @ 1 0 0 1 0 0
+vector lineTo 923.947 459.343 @ 1 0 0 1 0 0
+vector lineTo 925.904 460.932 @ 1 0 0 1 0 0
+vector lineTo 927.861 462.521 @ 1 0 0 1 0 0
+vector lineTo 929.819 464.11 @ 1 0 0 1 0 0
+vector lineTo 931.778 465.698 @ 1 0 0 1 0 0
+vector lineTo 933.737 467.286 @ 1 0 0 1 0 0
+vector lineTo 935.697 468.873 @ 1 0 0 1 0 0
+vector lineTo 937.657 470.46 @ 1 0 0 1 0 0
+vector lineTo 939.619 472.046 @ 1 0 0 1 0 0
+vector lineTo 941.58 473.632 @ 1 0 0 1 0 0
+vector lineTo 943.543 475.216 @ 1 0 0 1 0 0
+vector lineTo 945.507 476.801 @ 1 0 0 1 0 0
+vector lineTo 947.472 478.384 @ 1 0 0 1 0 0
+vector lineTo 949.438 479.967 @ 1 0 0 1 0 0
+vector lineTo 951.405 481.549 @ 1 0 0 1 0 0
+vector lineTo 953.373 483.131 @ 1 0 0 1 0 0
+vector lineTo 955.342 484.711 @ 1 0 0 1 0 0
+vector lineTo 957.313 486.291 @ 1 0 0 1 0 0
+vector lineTo 959.284 487.869 @ 1 0 0 1 0 0
+vector lineTo 961.258 489.446 @ 1 0 0 1 0 0
+vector lineTo 963.233 491.023 @ 1 0 0 1 0 0
+vector lineTo 965.21 492.597 @ 1 0 0 1 0 0
+vector lineTo 967.188 494.171 @ 1 0 0 1 0 0
+vector lineTo 969.169 495.743 @ 1 0 0 1 0 0
+vector lineTo 971.151 497.314 @ 1 0 0 1 0 0
+vector lineTo 973.136 498.883 @ 1 0 0 1 0 0
+vector lineTo 975.123 500.45 @ 1 0 0 1 0 0
+vector lineTo 977.111 502.016 @ 1 0 0 1 0 0
+vector lineTo 979.104 503.579 @ 1 0 0 1 0 0
+vector lineTo 981.098 505.141 @ 1 0 0 1 0 0
+vector lineTo 983.096 506.7 @ 1 0 0 1 0 0
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#D55E00 lineWidth=4.909 lineCap=round lineJoin=round
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 8.182
+vector setLineDash []
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 983.096 506.7 @ 1 0 0 1 0 0
+vector lineTo 984.608 507.876 @ 1 0 0 1 0 0
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=8.182 lineCap=round lineJoin=round
+vector set:strokeStyle #D55E00
+vector set:lineWidth 4.909
+vector setLineDash []
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 983.096 506.7 @ 1 0 0 1 0 0
+vector lineTo 984.608 507.876 @ 1 0 0 1 0 0
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#D55E00 lineWidth=4.909 lineCap=round lineJoin=round
+vector setLineDash []
+vector save
+vector translate 986.612 509.431
+vector rotate 0.662
+vector beginPath
+vector set:fillStyle #111111
+vector moveTo 13.091 0 @ 0.789 0.615 -0.615 0.789 986.612 509.431
+vector lineTo -6.545 6.545 @ 0.789 0.615 -0.615 0.789 986.612 509.431
+vector lineTo -3.273 0 @ 0.789 0.615 -0.615 0.789 986.612 509.431
+vector lineTo -6.545 -6.545 @ 0.789 0.615 -0.615 0.789 986.612 509.431
+vector closePath
+vector fill @ 0.789 0.615 -0.615 0.789 986.612 509.431 | fillStyle=#111111
+vector restore
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Start
+vector measureText Start
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 509.727 729.164 @ 1 0 0 1 0 0
+vector lineTo 546.273 729.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 729.164 552.818 735.709 @ 1 0 0 1 0 0
+vector lineTo 552.818 776.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 782.836 546.273 782.836 @ 1 0 0 1 0 0
+vector lineTo 509.727 782.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 782.836 503.182 776.291 @ 1 0 0 1 0 0
+vector lineTo 503.182 735.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 729.164 509.727 729.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Start 528 756 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 528 756 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 0.473
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Middle
+vector measureText Middle
+vector save
+vector set:globalAlpha 0.402
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1010.727 513.164 @ 1 0 0 1 0 0
+vector lineTo 1053.273 513.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 513.164 1059.818 519.709 @ 1 0 0 1 0 0
+vector lineTo 1059.818 560.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 566.836 1053.273 566.836 @ 1 0 0 1 0 0
+vector lineTo 1010.727 566.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 566.836 1004.182 560.291 @ 1 0 0 1 0 0
+vector lineTo 1004.182 519.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 513.164 1010.727 513.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.402
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Middle 1032 540 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle globalAlpha=0.473
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1032 540 7.327 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+main drawImage [canvas vector] 0 0 1920 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+# the middle: progress 0.5, 5023 ms of 10046
+main clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+main set:fillStyle #ffffff
+main fillRect 0 0 1920 1080 @ 1 0 0 1 0 0 | fillStyle=#ffffff
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 240 0 1440 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+vector clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+vector set:lineCap round
+vector set:lineJoin round
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 8.182
+vector setLineDash []
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 1047.634 535.821 @ 1 0 0 1 0 0
+vector lineTo 1050.209 534.885 @ 1 0 0 1 0 0
+vector lineTo 1052.776 533.927 @ 1 0 0 1 0 0
+vector lineTo 1055.336 532.952 @ 1 0 0 1 0 0
+vector lineTo 1057.889 531.962 @ 1 0 0 1 0 0
+vector lineTo 1060.436 530.961 @ 1 0 0 1 0 0
+vector lineTo 1062.977 529.948 @ 1 0 0 1 0 0
+vector lineTo 1065.512 528.926 @ 1 0 0 1 0 0
+vector lineTo 1068.043 527.896 @ 1 0 0 1 0 0
+vector lineTo 1070.57 526.859 @ 1 0 0 1 0 0
+vector lineTo 1073.093 525.817 @ 1 0 0 1 0 0
+vector lineTo 1075.611 524.767 @ 1 0 0 1 0 0
+vector lineTo 1078.126 523.712 @ 1 0 0 1 0 0
+vector lineTo 1080.639 522.653 @ 1 0 0 1 0 0
+vector lineTo 1083.148 521.589 @ 1 0 0 1 0 0
+vector lineTo 1085.654 520.521 @ 1 0 0 1 0 0
+vector lineTo 1088.158 519.45 @ 1 0 0 1 0 0
+vector lineTo 1090.659 518.374 @ 1 0 0 1 0 0
+vector lineTo 1093.157 517.296 @ 1 0 0 1 0 0
+vector lineTo 1095.655 516.215 @ 1 0 0 1 0 0
+vector lineTo 1098.148 515.13 @ 1 0 0 1 0 0
+vector lineTo 1100.641 514.043 @ 1 0 0 1 0 0
+vector lineTo 1103.131 512.953 @ 1 0 0 1 0 0
+vector lineTo 1105.62 511.861 @ 1 0 0 1 0 0
+vector lineTo 1108.108 510.767 @ 1 0 0 1 0 0
+vector lineTo 1110.592 509.669 @ 1 0 0 1 0 0
+vector lineTo 1113.077 508.571 @ 1 0 0 1 0 0
+vector lineTo 1115.559 507.47 @ 1 0 0 1 0 0
+vector lineTo 1118.039 506.367 @ 1 0 0 1 0 0
+vector lineTo 1120.519 505.263 @ 1 0 0 1 0 0
+vector lineTo 1122.997 504.156 @ 1 0 0 1 0 0
+vector lineTo 1125.474 503.049 @ 1 0 0 1 0 0
+vector lineTo 1127.949 501.939 @ 1 0 0 1 0 0
+vector lineTo 1130.424 500.828 @ 1 0 0 1 0 0
+vector lineTo 1132.897 499.715 @ 1 0 0 1 0 0
+vector lineTo 1135.37 498.602 @ 1 0 0 1 0 0
+vector lineTo 1137.841 497.486 @ 1 0 0 1 0 0
+vector lineTo 1140.311 496.37 @ 1 0 0 1 0 0
+vector lineTo 1142.78 495.252 @ 1 0 0 1 0 0
+vector lineTo 1145.248 494.133 @ 1 0 0 1 0 0
+vector lineTo 1147.715 493.012 @ 1 0 0 1 0 0
+vector lineTo 1150.182 491.891 @ 1 0 0 1 0 0
+vector lineTo 1152.647 490.768 @ 1 0 0 1 0 0
+vector lineTo 1155.112 489.645 @ 1 0 0 1 0 0
+vector lineTo 1157.575 488.52 @ 1 0 0 1 0 0
+vector lineTo 1160.039 487.395 @ 1 0 0 1 0 0
+vector lineTo 1162.5 486.268 @ 1 0 0 1 0 0
+vector lineTo 1164.962 485.14 @ 1 0 0 1 0 0
+vector lineTo 1167.422 484.012 @ 1 0 0 1 0 0
+vector lineTo 1169.883 482.882 @ 1 0 0 1 0 0
+vector lineTo 1172.342 481.752 @ 1 0 0 1 0 0
+vector lineTo 1174.8 480.621 @ 1 0 0 1 0 0
+vector lineTo 1177.258 479.489 @ 1 0 0 1 0 0
+vector lineTo 1179.716 478.356 @ 1 0 0 1 0 0
+vector lineTo 1182.172 477.222 @ 1 0 0 1 0 0
+vector lineTo 1184.628 476.088 @ 1 0 0 1 0 0
+vector lineTo 1187.083 474.953 @ 1 0 0 1 0 0
+vector lineTo 1189.538 473.817 @ 1 0 0 1 0 0
+vector lineTo 1191.992 472.68 @ 1 0 0 1 0 0
+vector lineTo 1194.446 471.543 @ 1 0 0 1 0 0
+vector lineTo 1196.898 470.405 @ 1 0 0 1 0 0
+vector lineTo 1199.351 469.266 @ 1 0 0 1 0 0
+vector lineTo 1201.803 468.127 @ 1 0 0 1 0 0
+vector lineTo 1204.254 466.987 @ 1 0 0 1 0 0
+vector lineTo 1206.705 465.846 @ 1 0 0 1 0 0
+vector lineTo 1209.155 464.705 @ 1 0 0 1 0 0
+vector lineTo 1211.605 463.563 @ 1 0 0 1 0 0
+vector lineTo 1214.055 462.421 @ 1 0 0 1 0 0
+vector lineTo 1216.504 461.278 @ 1 0 0 1 0 0
+vector lineTo 1218.952 460.134 @ 1 0 0 1 0 0
+vector lineTo 1221.4 458.99 @ 1 0 0 1 0 0
+vector lineTo 1223.848 457.845 @ 1 0 0 1 0 0
+vector lineTo 1226.295 456.7 @ 1 0 0 1 0 0
+vector lineTo 1228.741 455.554 @ 1 0 0 1 0 0
+vector lineTo 1231.188 454.408 @ 1 0 0 1 0 0
+vector lineTo 1233.633 453.261 @ 1 0 0 1 0 0
+vector lineTo 1236.079 452.114 @ 1 0 0 1 0 0
+vector lineTo 1238.524 450.966 @ 1 0 0 1 0 0
+vector lineTo 1240.968 449.818 @ 1 0 0 1 0 0
+vector lineTo 1243.412 448.669 @ 1 0 0 1 0 0
+vector lineTo 1245.856 447.52 @ 1 0 0 1 0 0
+vector lineTo 1248.3 446.371 @ 1 0 0 1 0 0
+vector lineTo 1250.743 445.221 @ 1 0 0 1 0 0
+vector lineTo 1253.185 444.07 @ 1 0 0 1 0 0
+vector lineTo 1255.628 442.919 @ 1 0 0 1 0 0
+vector lineTo 1258.07 441.768 @ 1 0 0 1 0 0
+vector lineTo 1260.511 440.616 @ 1 0 0 1 0 0
+vector lineTo 1262.953 439.464 @ 1 0 0 1 0 0
+vector lineTo 1265.394 438.311 @ 1 0 0 1 0 0
+vector lineTo 1267.834 437.158 @ 1 0 0 1 0 0
+vector lineTo 1270.274 436.005 @ 1 0 0 1 0 0
+vector lineTo 1272.714 434.851 @ 1 0 0 1 0 0
+vector lineTo 1275.154 433.697 @ 1 0 0 1 0 0
+vector lineTo 1277.593 432.542 @ 1 0 0 1 0 0
+vector lineTo 1280.032 431.387 @ 1 0 0 1 0 0
+vector lineTo 1282.471 430.232 @ 1 0 0 1 0 0
+vector lineTo 1284.909 429.076 @ 1 0 0 1 0 0
+vector lineTo 1287.347 427.92 @ 1 0 0 1 0 0
+vector lineTo 1289.785 426.764 @ 1 0 0 1 0 0
+vector lineTo 1292.223 425.607 @ 1 0 0 1 0 0
+vector lineTo 1294.66 424.45 @ 1 0 0 1 0 0
+vector lineTo 1297.097 423.292 @ 1 0 0 1 0 0
+vector lineTo 1299.533 422.135 @ 1 0 0 1 0 0
+vector lineTo 1301.97 420.976 @ 1 0 0 1 0 0
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=8.182 lineCap=round lineJoin=round
+vector set:strokeStyle #D55E00
+vector set:lineWidth 4.909
+vector setLineDash []
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 1047.634 535.821 @ 1 0 0 1 0 0
+vector lineTo 1050.209 534.885 @ 1 0 0 1 0 0
+vector lineTo 1052.776 533.927 @ 1 0 0 1 0 0
+vector lineTo 1055.336 532.952 @ 1 0 0 1 0 0
+vector lineTo 1057.889 531.962 @ 1 0 0 1 0 0
+vector lineTo 1060.436 530.961 @ 1 0 0 1 0 0
+vector lineTo 1062.977 529.948 @ 1 0 0 1 0 0
+vector lineTo 1065.512 528.926 @ 1 0 0 1 0 0
+vector lineTo 1068.043 527.896 @ 1 0 0 1 0 0
+vector lineTo 1070.57 526.859 @ 1 0 0 1 0 0
+vector lineTo 1073.093 525.817 @ 1 0 0 1 0 0
+vector lineTo 1075.611 524.767 @ 1 0 0 1 0 0
+vector lineTo 1078.126 523.712 @ 1 0 0 1 0 0
+vector lineTo 1080.639 522.653 @ 1 0 0 1 0 0
+vector lineTo 1083.148 521.589 @ 1 0 0 1 0 0
+vector lineTo 1085.654 520.521 @ 1 0 0 1 0 0
+vector lineTo 1088.158 519.45 @ 1 0 0 1 0 0
+vector lineTo 1090.659 518.374 @ 1 0 0 1 0 0
+vector lineTo 1093.157 517.296 @ 1 0 0 1 0 0
+vector lineTo 1095.655 516.215 @ 1 0 0 1 0 0
+vector lineTo 1098.148 515.13 @ 1 0 0 1 0 0
+vector lineTo 1100.641 514.043 @ 1 0 0 1 0 0
+vector lineTo 1103.131 512.953 @ 1 0 0 1 0 0
+vector lineTo 1105.62 511.861 @ 1 0 0 1 0 0
+vector lineTo 1108.108 510.767 @ 1 0 0 1 0 0
+vector lineTo 1110.592 509.669 @ 1 0 0 1 0 0
+vector lineTo 1113.077 508.571 @ 1 0 0 1 0 0
+vector lineTo 1115.559 507.47 @ 1 0 0 1 0 0
+vector lineTo 1118.039 506.367 @ 1 0 0 1 0 0
+vector lineTo 1120.519 505.263 @ 1 0 0 1 0 0
+vector lineTo 1122.997 504.156 @ 1 0 0 1 0 0
+vector lineTo 1125.474 503.049 @ 1 0 0 1 0 0
+vector lineTo 1127.949 501.939 @ 1 0 0 1 0 0
+vector lineTo 1130.424 500.828 @ 1 0 0 1 0 0
+vector lineTo 1132.897 499.715 @ 1 0 0 1 0 0
+vector lineTo 1135.37 498.602 @ 1 0 0 1 0 0
+vector lineTo 1137.841 497.486 @ 1 0 0 1 0 0
+vector lineTo 1140.311 496.37 @ 1 0 0 1 0 0
+vector lineTo 1142.78 495.252 @ 1 0 0 1 0 0
+vector lineTo 1145.248 494.133 @ 1 0 0 1 0 0
+vector lineTo 1147.715 493.012 @ 1 0 0 1 0 0
+vector lineTo 1150.182 491.891 @ 1 0 0 1 0 0
+vector lineTo 1152.647 490.768 @ 1 0 0 1 0 0
+vector lineTo 1155.112 489.645 @ 1 0 0 1 0 0
+vector lineTo 1157.575 488.52 @ 1 0 0 1 0 0
+vector lineTo 1160.039 487.395 @ 1 0 0 1 0 0
+vector lineTo 1162.5 486.268 @ 1 0 0 1 0 0
+vector lineTo 1164.962 485.14 @ 1 0 0 1 0 0
+vector lineTo 1167.422 484.012 @ 1 0 0 1 0 0
+vector lineTo 1169.883 482.882 @ 1 0 0 1 0 0
+vector lineTo 1172.342 481.752 @ 1 0 0 1 0 0
+vector lineTo 1174.8 480.621 @ 1 0 0 1 0 0
+vector lineTo 1177.258 479.489 @ 1 0 0 1 0 0
+vector lineTo 1179.716 478.356 @ 1 0 0 1 0 0
+vector lineTo 1182.172 477.222 @ 1 0 0 1 0 0
+vector lineTo 1184.628 476.088 @ 1 0 0 1 0 0
+vector lineTo 1187.083 474.953 @ 1 0 0 1 0 0
+vector lineTo 1189.538 473.817 @ 1 0 0 1 0 0
+vector lineTo 1191.992 472.68 @ 1 0 0 1 0 0
+vector lineTo 1194.446 471.543 @ 1 0 0 1 0 0
+vector lineTo 1196.898 470.405 @ 1 0 0 1 0 0
+vector lineTo 1199.351 469.266 @ 1 0 0 1 0 0
+vector lineTo 1201.803 468.127 @ 1 0 0 1 0 0
+vector lineTo 1204.254 466.987 @ 1 0 0 1 0 0
+vector lineTo 1206.705 465.846 @ 1 0 0 1 0 0
+vector lineTo 1209.155 464.705 @ 1 0 0 1 0 0
+vector lineTo 1211.605 463.563 @ 1 0 0 1 0 0
+vector lineTo 1214.055 462.421 @ 1 0 0 1 0 0
+vector lineTo 1216.504 461.278 @ 1 0 0 1 0 0
+vector lineTo 1218.952 460.134 @ 1 0 0 1 0 0
+vector lineTo 1221.4 458.99 @ 1 0 0 1 0 0
+vector lineTo 1223.848 457.845 @ 1 0 0 1 0 0
+vector lineTo 1226.295 456.7 @ 1 0 0 1 0 0
+vector lineTo 1228.741 455.554 @ 1 0 0 1 0 0
+vector lineTo 1231.188 454.408 @ 1 0 0 1 0 0
+vector lineTo 1233.633 453.261 @ 1 0 0 1 0 0
+vector lineTo 1236.079 452.114 @ 1 0 0 1 0 0
+vector lineTo 1238.524 450.966 @ 1 0 0 1 0 0
+vector lineTo 1240.968 449.818 @ 1 0 0 1 0 0
+vector lineTo 1243.412 448.669 @ 1 0 0 1 0 0
+vector lineTo 1245.856 447.52 @ 1 0 0 1 0 0
+vector lineTo 1248.3 446.371 @ 1 0 0 1 0 0
+vector lineTo 1250.743 445.221 @ 1 0 0 1 0 0
+vector lineTo 1253.185 444.07 @ 1 0 0 1 0 0
+vector lineTo 1255.628 442.919 @ 1 0 0 1 0 0
+vector lineTo 1258.07 441.768 @ 1 0 0 1 0 0
+vector lineTo 1260.511 440.616 @ 1 0 0 1 0 0
+vector lineTo 1262.953 439.464 @ 1 0 0 1 0 0
+vector lineTo 1265.394 438.311 @ 1 0 0 1 0 0
+vector lineTo 1267.834 437.158 @ 1 0 0 1 0 0
+vector lineTo 1270.274 436.005 @ 1 0 0 1 0 0
+vector lineTo 1272.714 434.851 @ 1 0 0 1 0 0
+vector lineTo 1275.154 433.697 @ 1 0 0 1 0 0
+vector lineTo 1277.593 432.542 @ 1 0 0 1 0 0
+vector lineTo 1280.032 431.387 @ 1 0 0 1 0 0
+vector lineTo 1282.471 430.232 @ 1 0 0 1 0 0
+vector lineTo 1284.909 429.076 @ 1 0 0 1 0 0
+vector lineTo 1287.347 427.92 @ 1 0 0 1 0 0
+vector lineTo 1289.785 426.764 @ 1 0 0 1 0 0
+vector lineTo 1292.223 425.607 @ 1 0 0 1 0 0
+vector lineTo 1294.66 424.45 @ 1 0 0 1 0 0
+vector lineTo 1297.097 423.292 @ 1 0 0 1 0 0
+vector lineTo 1299.533 422.135 @ 1 0 0 1 0 0
+vector lineTo 1301.97 420.976 @ 1 0 0 1 0 0
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#D55E00 lineWidth=4.909 lineCap=round lineJoin=round
+vector set:strokeStyle #FFFFFF
+vector set:lineWidth 8.182
+vector setLineDash []
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 1301.97 420.976 @ 1 0 0 1 0 0
+vector lineTo 1303.909 420.054 @ 1 0 0 1 0 0
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#FFFFFF lineWidth=8.182 lineCap=round lineJoin=round
+vector set:strokeStyle #D55E00
+vector set:lineWidth 4.909
+vector setLineDash []
+vector set:lineCap round
+vector set:lineJoin round
+vector beginPath
+vector moveTo 1301.97 420.976 @ 1 0 0 1 0 0
+vector lineTo 1303.909 420.054 @ 1 0 0 1 0 0
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=#D55E00 lineWidth=4.909 lineCap=round lineJoin=round
+vector setLineDash []
+vector save
+vector translate 1306.345 418.895
+vector rotate -0.444
+vector beginPath
+vector set:fillStyle #111111
+vector moveTo 13.091 0 @ 0.903 -0.429 0.429 0.903 1306.345 418.895
+vector lineTo -6.545 6.545 @ 0.903 -0.429 0.429 0.903 1306.345 418.895
+vector lineTo -3.273 0 @ 0.903 -0.429 0.429 0.903 1306.345 418.895
+vector lineTo -6.545 -6.545 @ 0.903 -0.429 0.429 0.903 1306.345 418.895
+vector closePath
+vector fill @ 0.903 -0.429 0.429 0.903 1306.345 418.895 | fillStyle=#111111
+vector restore
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Start
+vector measureText Start
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 509.727 729.164 @ 1 0 0 1 0 0
+vector lineTo 546.273 729.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 729.164 552.818 735.709 @ 1 0 0 1 0 0
+vector lineTo 552.818 776.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 782.836 546.273 782.836 @ 1 0 0 1 0 0
+vector lineTo 509.727 782.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 782.836 503.182 776.291 @ 1 0 0 1 0 0
+vector lineTo 503.182 735.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 729.164 509.727 729.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Start 528 756 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 528 756 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Middle
+vector measureText Middle
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1010.727 513.164 @ 1 0 0 1 0 0
+vector lineTo 1053.273 513.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 513.164 1059.818 519.709 @ 1 0 0 1 0 0
+vector lineTo 1059.818 560.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 566.836 1053.273 566.836 @ 1 0 0 1 0 0
+vector lineTo 1010.727 566.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 566.836 1004.182 560.291 @ 1 0 0 1 0 0
+vector lineTo 1004.182 519.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 513.164 1010.727 513.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Middle 1032 540 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1032 540 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+main drawImage [canvas vector] 0 0 1920 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+# three quarters: progress 0.75, 7534 ms of 10046
+main clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+main set:fillStyle #ffffff
+main fillRect 0 0 1920 1080 @ 1 0 0 1 0 0 | fillStyle=#ffffff
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 240 0 1440 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+vector clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+vector set:lineCap round
+vector set:lineJoin round
+vector setLineDash []
+vector save
+vector translate 1389.556 379.142
+vector rotate -0.423
+vector beginPath
+vector set:fillStyle #111111
+vector moveTo 13.091 0 @ 0.912 -0.41 0.41 0.912 1389.556 379.142
+vector lineTo -6.545 6.545 @ 0.912 -0.41 0.41 0.912 1389.556 379.142
+vector lineTo -3.273 0 @ 0.912 -0.41 0.41 0.912 1389.556 379.142
+vector lineTo -6.545 -6.545 @ 0.912 -0.41 0.41 0.912 1389.556 379.142
+vector closePath
+vector fill @ 0.912 -0.41 0.41 0.912 1389.556 379.142 | fillStyle=#111111
+vector restore
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Start
+vector measureText Start
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 509.727 729.164 @ 1 0 0 1 0 0
+vector lineTo 546.273 729.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 729.164 552.818 735.709 @ 1 0 0 1 0 0
+vector lineTo 552.818 776.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 782.836 546.273 782.836 @ 1 0 0 1 0 0
+vector lineTo 509.727 782.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 782.836 503.182 776.291 @ 1 0 0 1 0 0
+vector lineTo 503.182 735.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 729.164 509.727 729.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Start 528 756 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 528 756 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Middle
+vector measureText Middle
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1010.727 513.164 @ 1 0 0 1 0 0
+vector lineTo 1053.273 513.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 513.164 1059.818 519.709 @ 1 0 0 1 0 0
+vector lineTo 1059.818 560.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 566.836 1053.273 566.836 @ 1 0 0 1 0 0
+vector lineTo 1010.727 566.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 566.836 1004.182 560.291 @ 1 0 0 1 0 0
+vector lineTo 1004.182 519.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 513.164 1010.727 513.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Middle 1032 540 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1032 540 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText End
+vector measureText End
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1379.727 351.164 @ 1 0 0 1 0 0
+vector lineTo 1404.273 351.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1410.818 351.164 1410.818 357.709 @ 1 0 0 1 0 0
+vector lineTo 1410.818 398.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1410.818 404.836 1404.273 404.836 @ 1 0 0 1 0 0
+vector lineTo 1379.727 404.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1373.182 404.836 1373.182 398.291 @ 1 0 0 1 0 0
+vector lineTo 1373.182 357.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1373.182 351.164 1379.727 351.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText End 1392 378 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1392 378 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+main drawImage [canvas vector] 0 0 1920 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+# the end: progress 1, 10046 ms of 10046
+main clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+main set:fillStyle #ffffff
+main fillRect 0 0 1920 1080 @ 1 0 0 1 0 0 | fillStyle=#ffffff
+main drawImage [image image/jpeg base64 2440192 bytes /9j/4QBORXhp…] 240 0 1440 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
+vector clearRect 0 0 1920 1080 @ 1 0 0 1 0 0
+vector set:lineCap round
+vector set:lineJoin round
+vector setLineDash []
+vector save
+vector translate 1389.556 379.142
+vector rotate -0.423
+vector beginPath
+vector set:fillStyle #111111
+vector moveTo 13.091 0 @ 0.912 -0.41 0.41 0.912 1389.556 379.142
+vector lineTo -6.545 6.545 @ 0.912 -0.41 0.41 0.912 1389.556 379.142
+vector lineTo -3.273 0 @ 0.912 -0.41 0.41 0.912 1389.556 379.142
+vector lineTo -6.545 -6.545 @ 0.912 -0.41 0.41 0.912 1389.556 379.142
+vector closePath
+vector fill @ 0.912 -0.41 0.41 0.912 1389.556 379.142 | fillStyle=#111111
+vector restore
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Start
+vector measureText Start
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 509.727 729.164 @ 1 0 0 1 0 0
+vector lineTo 546.273 729.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 729.164 552.818 735.709 @ 1 0 0 1 0 0
+vector lineTo 552.818 776.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 552.818 782.836 546.273 782.836 @ 1 0 0 1 0 0
+vector lineTo 509.727 782.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 782.836 503.182 776.291 @ 1 0 0 1 0 0
+vector lineTo 503.182 735.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 503.182 729.164 509.727 729.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Start 528 756 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 528 756 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText Middle
+vector measureText Middle
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1010.727 513.164 @ 1 0 0 1 0 0
+vector lineTo 1053.273 513.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 513.164 1059.818 519.709 @ 1 0 0 1 0 0
+vector lineTo 1059.818 560.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1059.818 566.836 1053.273 566.836 @ 1 0 0 1 0 0
+vector lineTo 1010.727 566.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 566.836 1004.182 560.291 @ 1 0 0 1 0 0
+vector lineTo 1004.182 519.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1004.182 513.164 1010.727 513.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText Middle 1032 540 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1032 540 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+vector save
+vector set:globalAlpha 1
+vector set:font 26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+vector set:textAlign center
+vector set:textBaseline middle
+vector measureText End
+vector measureText End
+vector save
+vector set:globalAlpha 0.85
+vector set:fillStyle #FFFFFF
+vector beginPath
+vector moveTo 1379.727 351.164 @ 1 0 0 1 0 0
+vector lineTo 1404.273 351.164 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1410.818 351.164 1410.818 357.709 @ 1 0 0 1 0 0
+vector lineTo 1410.818 398.291 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1410.818 404.836 1404.273 404.836 @ 1 0 0 1 0 0
+vector lineTo 1379.727 404.836 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1373.182 404.836 1373.182 398.291 @ 1 0 0 1 0 0
+vector lineTo 1373.182 357.709 @ 1 0 0 1 0 0
+vector quadraticCurveTo 1373.182 351.164 1379.727 351.164 @ 1 0 0 1 0 0
+vector closePath
+vector fill @ 1 0 0 1 0 0 | fillStyle=#FFFFFF globalAlpha=0.85
+vector restore
+vector set:fillStyle #1a1a1a
+vector fillText End 1392 378 @ 1 0 0 1 0 0 | fillStyle=#1a1a1a font=26.181818181818183px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif textAlign=center textBaseline=middle
+vector restore
+vector set:fillStyle #D55E00
+vector set:strokeStyle white
+vector set:lineWidth 3.273
+vector beginPath
+vector arc 1392 378 13.091 0 6.283 @ 1 0 0 1 0 0
+vector fill @ 1 0 0 1 0 0 | fillStyle=#D55E00
+vector stroke @ 1 0 0 1 0 0 | strokeStyle=white lineWidth=3.273 lineCap=round lineJoin=round
+main drawImage [canvas vector] 0 0 1920 1080 @ 1 0 0 1 0 0 | imageSmoothingQuality=high
