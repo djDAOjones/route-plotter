@@ -13,9 +13,12 @@
 //   start when on the end going forwards (DEF-62).
 // - Reverse (J) and forward (L), v3's live handler (wiringControllers.js 238 to 271): already playing that way, twice
 //   as fast, 4 times at most; else that way at normal speed; and play if not playing. v3 kept a direction and a size
-//   of its own and reset them on every pause, end and reset (wiringBus.js 410 to 438); here both are read from what is
-//   held (playing, the speed's sign and size), since the player's pause and its stops on an end leave the speed at 1.
-//   D177: L while playing forwards doubles however the playing began; v3's first L after its Play button did not.
+//   of its own (`jklDirection`, `jklSpeed`, line 235), which only its toggle reset; its reset on a pause, an end and a
+//   reset (wiringBus.js 410 to 438, playback.js 151) cleared two other fields, so after any of those its L could resume
+//   at the old speed. Here both are read from what is held (playing, the speed's sign and size), and the player's
+//   pause and its stops on an end leave the speed at 1: J and L begin again at normal speed after each (D179), as
+//   v3's own comment says they should ("speed multipliers are temporary review aids"). D177: L while playing forwards
+//   doubles however the playing began; v3's first L after its Play button did not.
 // - Skip to start (v3's `reset()`, wiringControllers.js 162 to 164): it stops, at the start, at normal speed
 //   (AnimationEngine.js 483 to 497, AnimationState.js 22: playing false). Skip to end (`seekToProgress(1.0)`, line 165):
 //   it moves to the end and leaves playing as it was; a forward playing then stops on the end at its next frame, as

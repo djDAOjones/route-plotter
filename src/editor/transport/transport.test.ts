@@ -140,7 +140,7 @@ describe('the editor’s transport: J and L, as v3’s live handler', () => {
     expect(said).toEqual([WORDS.playing]);
   });
 
-  it('after a pause, a stop on an end or a skip to the start, J and L begin again at normal speed (v3 reset its own)', () => {
+  it('D179: after a pause, a stop on an end or a skip to the start, J and L begin again at normal speed', () => {
     const { store, frames, editor } = editorOf();
     editor.forward();
     editor.forward();

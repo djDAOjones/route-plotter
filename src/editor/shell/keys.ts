@@ -20,23 +20,20 @@
 // Not ported: v3's mouse bindings, the stored custom bindings, the categories' icons and `formatBinding`'s symbols;
 // a help row spells a chord in words ("Cmd+Shift+Z", "Ctrl+Shift+Z"), which is all a row needs.
 
-/** Every action a key may ask for: the shell binds each to a function of the same name. */
-export type ActionId = 'playPause' | 'reverse' | 'forward' | 'skipToStart' | 'skipToEnd' | 'undo' | 'redo';
-
 /** `command` is Cmd on a Mac and Ctrl elsewhere. */
 type Modifier = 'command' | 'shift';
 
 /** Where help lists an action. */
 type Group = 'Playback' | 'General';
 
-interface KeyEntry {
-  readonly action: ActionId;
+interface KeyEntry<A extends string = ActionId, G extends Group = Group> {
+  readonly action: A;
   /** The keys, as a KeyboardEvent's `key` names them; a letter in lower case. */
   readonly keys: readonly string[];
   readonly modifiers: readonly Modifier[];
   /** The words help shows for it, in the glossary's words. */
   readonly words: string;
-  readonly group: Group;
+  readonly group: G;
 }
 
 /** A key press, by the fields of a KeyboardEvent that dispatch reads. */
@@ -57,11 +54,14 @@ interface HelpRow {
   readonly words: string;
 }
 
-const entry = (action: ActionId, keys: readonly string[], words: string, group: Group, modifiers: readonly Modifier[] = []): KeyEntry =>
+/** One entry, its action's name and its group kept as written, so a type read from the table sees each row. */
+const entry = <A extends string, G extends Group>(
+  action: A, keys: readonly string[], words: string, group: G, modifiers: readonly Modifier[] = [],
+): KeyEntry<A, G> =>
   Object.freeze({ action, keys: Object.freeze([...keys]), modifiers: Object.freeze([...modifiers]), words, group });
 
 /** The table: one entry per action. */
-export const KEYS: readonly KeyEntry[] = Object.freeze([
+export const KEYS = Object.freeze([
   entry('playPause', [' ', 'k'], 'Play/pause', 'Playback'),
   entry('reverse', ['j'], 'Play reverse', 'Playback'),
   entry('forward', ['l'], 'Play forward', 'Playback'),
@@ -70,6 +70,12 @@ export const KEYS: readonly KeyEntry[] = Object.freeze([
   entry('undo', ['z'], 'Undo', 'General', ['command']),
   entry('redo', ['z'], 'Redo', 'General', ['command', 'shift']),
 ]);
+
+/** Every action a key may ask for, read from the table: the shell binds each to a function of the same name. */
+export type ActionId = (typeof KEYS)[number]['action'];
+
+/** The actions help lists in `group`, read from the table's rows. */
+export type ActionIn<G extends Group> = Extract<(typeof KEYS)[number], { readonly group: G }>['action'];
 
 /** Whether `entry` takes `press` on this machine; dispatch gives the first that does. */
 export function matches({ keys, modifiers }: KeyEntry, press: KeyPress, mac: boolean): boolean {
