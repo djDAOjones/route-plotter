@@ -268,6 +268,35 @@ function handed(scene: Scene): Parameters<Overlay> extends [unknown, ...infer Re
   return [frame, screen];
 }
 
+/** A recorder that also keeps the path each stroke strokes, which the recorder's text alone does not say. */
+class Watching extends Recorder {
+  readonly stroked: string[][] = [];
+  override stroke(): void {
+    this.stroked.push([...this.state().path]);
+    super.stroke();
+  }
+}
+
+/** The glow alone of a route's line (no ids, so no guide; `'none'`, so no "+"), onto `context` as the composer hands it a frame,
+ *  with the course it should take: that line's own samples, as the frame holds them, placed on screen. */
+function glowOnto(context: Watching, scene: Scene, lineAt: number, routeAt: number) {
+  const [frame, screen] = handed(scene);
+  OVERLAY_MAKERS.lines([], { hovered: hover(scene, 'none', lineAt, routeAt) })(context, frame, screen);
+  const route = scene.routes[routeAt];
+  const samples = screen.routes.get(route?.id ?? '')?.timeline.shapes.get(route?.lines[lineAt]?.id ?? '')?.samples ?? [];
+  return { stroked: context.stroked, left: context.state().path, course: samples.map((sample) => screen.place(sample)) };
+}
+
+/** The same course, place by place and in order, to within 0.01 px (the recorder rounds to a thousandth). */
+function alongside(drawn: readonly { x: number; y: number }[], course: readonly ({ x: number; y: number } | null)[], name: string): void {
+  expect(drawn, name).toHaveLength(course.length);
+  const off = drawn.filter((at, i) => {
+    const want = course[i];
+    return want === null || want === undefined || Math.hypot(want.x - at.x, want.y - at.y) > 0.01;
+  });
+  expect(off, name).toEqual([]);
+}
+
 test('drawn straight onto a dirtied canvas, the lines’ overlay sets every style it uses and leaves the state and no path behind', () => {
   const scene = sceneOf(['hidden', 'whole'], { branch: true });
   const [frame, screen] = handed(scene);
@@ -299,6 +328,23 @@ test('drawn straight onto a dirtied canvas, the lines’ overlay sets every styl
   }
 });
 
+test('the glow alone, onto a canvas with a path left open, strokes the stretch and nothing else, twice, and leaves no path', () => {
+  // No guide clears the open path before the glow and no "+" clears it after: the glow's own two beginPath() calls alone.
+  const scene = sceneOf(['hidden', 'whole'], { branch: true });
+  for (const open of [false, true]) {
+    const context = new Watching();
+    if (open) {
+      context.moveTo(1, 2);
+      context.lineTo(3, 4);
+    }
+    const { stroked, left, course } = glowOnto(context, scene, 3, 1);
+    expect(course.length, String(open)).toBeGreaterThan(1);
+    expect(stroked, String(open)).toHaveLength(2);
+    for (const [i, path] of stroked.entries()) alongside(places(path), course, `${open ? 'a path open' : 'clean'}, stroke ${i}`);
+    expect(left, String(open)).toEqual([]);
+  }
+});
+
 test('a branch hovered glows along the branch alone; the line’s width is its layer’s, frame.scale included (2 at 2160p)', () => {
   const viewing = VIEWINGS['a zoom of 1'];
   const scene = sceneOf(['whole'], { branch: true });
@@ -306,6 +352,15 @@ test('a branch hovered glows along the branch alone; the line’s width is its l
   const glow = places(added);
   const drawn = places(plain.lines);
   expect(glow.filter(({ x, y }) => !drawn.some((at) => Math.hypot(at.x - x, at.y - y) <= 0.1))).toEqual([]);
+  // Its whole course is the branch's own line (index 3), place by place: nothing of the trunk, between the ends or beyond.
+  const { stroked, course } = glowOnto(new Watching(), scene, 3, 0);
+  alongside(glow, course, 'through the composer');
+  // Its two strokes, white at the line's 3 + 9, then blue at + 4, each of that course alone.
+  const [white, blue] = strokes(added);
+  expect([white, blue].map(widthOf)).toEqual([12, 7]);
+  expect([white?.includes('rgba(255, 255, 255, 0.85)'), blue?.includes('rgba(15, 98, 254, 0.45)')]).toEqual([true, true]);
+  expect(stroked).toHaveLength(2);
+  for (const [i, path] of stroked.entries()) alongside(places(path), course, `stroke ${i}`);
   // From the third point (0.6, 0.55) to the fifth (0.7, 0.8), on the picture drawn 1,440 wide from x = 240.
   const ends = [glow[0], glow[glow.length - 1]].map((at) => [Math.round(at?.x ?? 0), Math.round(at?.y ?? 0)]);
   expect(ends).toEqual([[1104, 594], [1248, 864]]);
