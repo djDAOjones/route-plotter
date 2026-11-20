@@ -5,7 +5,7 @@
 // - the line's drawn course: every point of one side's line lies within a pixel of the other side's line, both ways,
 //   over the five moments together (each side's sizes, pieces and progression differ: D126, D104, D163); for a comet,
 //   which never shows the whole line, within a pixel of the other side's whole course instead (the orchestrator's
-//   ruling, brief 45); for a hidden line, no line on either side;
+//   ruling, brief 45); for a hidden line, no line on either side; for branch-whole, left out by name (below);
 // - each stop marker's place: every marker either side shows whole, the other side shows at that moment too;
 // - each label's text and place, the same way. (A mark part grown or faded in shows where a moment falls a little
 //   before a stop's arrival on one side only, because the moments fall at different places: D104; trail's list.)
@@ -39,8 +39,13 @@ interface Moment {
   readonly labels: Mark[];
 }
 
-/** How a scene's course is pinned, where not both ways: a comet (trail) or no line at all (hidden). */
-const COURSE: Readonly<Record<string, 'comet' | 'no line'>> = { trail: 'comet', hidden: 'no line' };
+/**
+ * How a scene's course is pinned, where not both ways: a comet (trail), no line at all (hidden), or left out by name.
+ * branch-whole's is left out (sub-chat 46; a ruling for the orchestrator): v3 shapes the trunk as one curve through the
+ * fork, while v4 ends a run of its curve at a fork (src/core/timing/shape.ts:1–5, the plan's §6), so from just past the
+ * bend to the trunk's end the two lines part by up to 6.86 px. Its branch agrees within a pixel; markers stay checked.
+ */
+const COURSE: Readonly<Record<string, 'comet' | 'no line' | 'left out'>> = { trail: 'comet', hidden: 'no line', 'branch-whole': 'left out' };
 
 const NUMBER = String.raw`(-?\d+(?:\.\d+)?(?:e-?\d+)?)`;
 const PATH_CALL = new RegExp(`^(moveTo|lineTo) ${NUMBER} ${NUMBER} @`);
