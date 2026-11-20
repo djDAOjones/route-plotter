@@ -12,6 +12,8 @@ import { OVERLAY_MAKERS } from '../features/catalogue.editor';
 import { compose, type FrameRequest } from './compose';
 
 type Appearance = Route['settings']['line']['appearance'];
+type Choices = NonNullable<Parameters<typeof OVERLAY_MAKERS.lines>[1]>;
+type Hovered = NonNullable<Choices['hovered']>;
 
 const counter = () => {
   let n = 0;
@@ -104,12 +106,19 @@ function sameCourse(guide: readonly { x: number; y: number }[], line: readonly {
   expect(near(line, guide), name).toEqual([]);
 }
 const strokes = (lines: readonly string[]) => lines.filter((line) => line.startsWith('stroke '));
+const widthOf = (stroke: string | undefined) => Number(/lineWidth=([\d.]+)/.exec(stroke ?? '')?.[1] ?? 1); // 1, the default, is not written
+
+/** A route's line, by their places in the scene, under the pointer. */
+function hover(scene: Scene, plus: Hovered['plus'] = 'none', lineAt = 1, routeAt = 0): Hovered {
+  const route = scene.routes[routeAt];
+  return { routeId: route?.id ?? '', lineId: route?.lines[lineAt]?.id ?? '', plus };
+}
 
 /** The frame without overlays, then with the lines' overlay for the routes handed: the overlay's lines follow the first. */
-function both(scene: Scene, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS], routes: readonly Route[] = scene.routes) {
+function both(scene: Scene, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS], routes: readonly Route[] = scene.routes, choices?: Choices) {
   const routeIds = routes.map((route) => route.id);
   const plain = draw(request(scene, { viewing: viewing.viewing }), viewing.catalogue);
-  const edited = draw(request(scene, { viewing: viewing.viewing, overlays: [OVERLAY_MAKERS.lines(routeIds)] }), viewing.catalogue);
+  const edited = draw(request(scene, { viewing: viewing.viewing, overlays: [OVERLAY_MAKERS.lines(routeIds, choices)] }), viewing.catalogue);
   expect(edited.lines.slice(0, plain.lines.length)).toEqual(plain.lines);
   expect(edited.reports).toEqual([]);
   return { plain, added: edited.lines.slice(plain.lines.length) };
@@ -129,7 +138,7 @@ test('a hidden line’s guide runs on screen where the line would run, thin, das
       const unit = unitAt(viewing.zoom);
       const [stroke, ...more] = strokes(added);
       expect(more, name).toEqual([]);
-      expect(Number(/lineWidth=([\d.]+)/.exec(stroke ?? '')?.[1] ?? 1), name).toBe(2 * unit); // 1, the default, is not written
+      expect(widthOf(stroke), name).toBe(2 * unit);
       expect(stroke, name).toContain(`lineDash=${6 * unit},${4 * unit}`);
       expect(stroke, name).toContain('globalAlpha=0.5');
       expect(stroke, name).toContain(hidden.routes[0]?.settings.line.colour ?? 'none');
@@ -160,7 +169,7 @@ test('a frame asked for without overlays holds no guide; with it, that frame is 
   for (const [name, { viewing }] of Object.entries(VIEWINGS)) {
     const exported = draw(request(scene, { viewing }));
     const routeIds = scene.routes.map((route) => route.id);
-    const overlays = [OVERLAY_MAKERS.lines(routeIds), OVERLAY_MAKERS.points(routeIds, { selected: [] })];
+    const overlays = [OVERLAY_MAKERS.lines(routeIds, { hovered: hover(scene, 'active', 2, 1) }), OVERLAY_MAKERS.points(routeIds, { selected: [] })];
     const edited = draw(request(scene, { viewing, overlays }));
     expect(draw(request(scene, { viewing, overlays: [] })), name).toEqual(exported);
     expect(edited.lines.slice(0, exported.lines.length), name).toEqual(exported.lines);
@@ -170,4 +179,56 @@ test('a frame asked for without overlays holds no guide; with it, that frame is 
     expect(strokes(edited.lines.slice(exported.lines.length)).filter((line) => /lineDash=/.test(line)), name).toHaveLength(1);
     expect(draw(request(scene, { viewing, overlays })), name).toEqual(edited);
   }
+});
+
+test('the hovered stretch glows as v3’s: white at the line’s width + 9, then the accent at + 4, along that line alone (:333–349)', () => {
+  for (const [name, viewing] of Object.entries(VIEWINGS)) {
+    const scene = sceneOf(['whole']);
+    const { plain, added } = both(scene, viewing, scene.routes, { hovered: hover(scene) });
+    const [white, accent, ...more] = strokes(added);
+    expect(more, name).toEqual([]);
+    // The line's width on screen is its layer's: thickness 3 × frame.scale (1 at 1080p) × the zoom; 9 and 4 by unitAt (D153).
+    const line = 3 * viewing.zoom;
+    const unit = unitAt(viewing.zoom);
+    expect(white, name).toContain('rgba(255, 255, 255, 0.85)');
+    expect(widthOf(white), name).toBeCloseTo(line + 9 * unit, 6);
+    expect(accent, name).toContain('rgba(15, 98, 254, 0.45)'); // v3's HOVER_ACCENT_GLOW, constants.js:49
+    expect(widthOf(accent), name).toBeCloseTo(line + 4 * unit, 6);
+    expect(white, name).toContain('lineCap=round');
+    // Along the line where its own layer draws it (within 0.1 px), and the hovered line alone, not the route's other two.
+    const glow = places(added);
+    const drawn = places(plain.lines);
+    expect(glow.filter(({ x, y }) => !drawn.some((at) => Math.hypot(at.x - x, at.y - y) <= 0.1)), name).toEqual([]);
+    expect(glow.length, name).toBeGreaterThan(5);
+    expect(glow.length, name).toBeLessThan(drawn.length / 2);
+    if (name !== 'a zoom of 1') continue;
+    // From the line's first point to its last: (0.4, 0.3) and (0.6, 0.55) of the picture drawn 1,440 wide from x = 240.
+    const ends = [glow[0], glow[glow.length - 1]].map((at) => [Math.round(at?.x ?? 0), Math.round(at?.y ?? 0)]);
+    expect(ends).toEqual([[816, 324], [1104, 594]]);
+  }
+});
+
+test('a hidden line hovered glows round its guide; no glow for none hovered, ids that match nothing, or another route’s line', () => {
+  const viewing = VIEWINGS['a zoom of 1'];
+  const hidden = sceneOf(['hidden']);
+  const [guide, white, accent, ...more] = strokes(both(hidden, viewing, hidden.routes, { hovered: hover(hidden) }).added);
+  expect(guide).toContain('lineDash=');
+  expect(more).toEqual([]);
+  // The guide's 2 wide, not the hidden line's thickness, under v3's 9 and 4.
+  expect([white, accent].map(widthOf)).toEqual([2 + 9, 2 + 4]);
+  const two = sceneOf(['whole', 'whole']);
+  const [first, second] = two.routes;
+  const glows = (hovered: Hovered | null, routes: readonly Route[] = two.routes) => strokes(both(two, viewing, routes, { hovered }).added);
+  expect(glows(null)).toEqual([]);
+  expect(glows({ routeId: 'no-such-route', lineId: first?.lines[0]?.id ?? '', plus: 'idle' })).toEqual([]);
+  expect(glows({ routeId: first?.id ?? '', lineId: 'no-such-line', plus: 'idle' })).toEqual([]);
+  expect(glows({ routeId: first?.id ?? '', lineId: second?.lines[0]?.id ?? '', plus: 'idle' })).toEqual([]);
+  // The stretch names its own route: it glows whether or not its route is among those whose guides are asked for.
+  expect(glows(hover(two, 'none', 0, 1), [])).toHaveLength(2);
+  // A thickness not a number gives no width: nothing drawn, nothing thrown.
+  const odd = { ...two, routes: two.routes.map((route) => ({ ...route, settings: { ...route.settings, line: { ...route.settings.line, thickness: Number.NaN } } })) };
+  const plain = draw(request(odd), viewing.catalogue);
+  const edited = draw(request(odd, { overlays: [OVERLAY_MAKERS.lines([], { hovered: hover(odd) })] }), viewing.catalogue);
+  expect(strokes(edited.lines.slice(plain.lines.length))).toEqual([]);
+  expect(edited.reports).toEqual(plain.reports);
 });

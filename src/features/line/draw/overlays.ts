@@ -11,31 +11,65 @@
 // v3's other editor helpers are (D153), so it reads as a guide and never as the line, whatever the line's own
 // thickness. Each line is its own run, broken where a place is not a number. A route named twice is drawn once, an
 // id the frame does not hold draws nothing; nothing is kept between frames (D147).
+//
+// The hovered stretch (v3's hovered leg, RenderingService.js:315–350): one line of one route, named by the editor by
+// route id and line id, glows as v3's did, a white stroke along its samples at the line's width on screen + 9, then
+// v3's accent glow at + 4, round caps and joins. The line's width on screen is what its layer draws, thickness ×
+// frame.scale × screen.zoom (./line.ts), from the frame's settings; a hidden line's is the guide's, 2 × unit. v3's 9
+// and 4 went by its zoom clamp times its Graphics scale (:331); here by unitAt(screen.zoom) alone, as every editor
+// helper's (D153). v3 drew the glow beneath the path (:1319–1328); every overlay is drawn last, so this one lies over
+// the line (a decision for the owner). The glow is drawn after the guides.
 import type { DrawContext } from '../../../adapters/render/context';
 import type { Frame } from '../../../adapters/render/layers';
 import { unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
+import type { ImagePoint } from '../../../core/geometry/units';
 
 /** The guide's look (D157): alpha, width and dash in screen pixels at a zoom of 1. */
 const GUIDE = { alpha: 0.5, width: 2, dash: [6, 4] } as const;
 
-type ScreenRoute = NonNullable<ReturnType<Screen['routes']['get']>>;
+/** v3's hovered-leg glow (RenderingService.js:343–348): white, then HOVER_ACCENT_GLOW (constants.js:49), each wider than the line by so much at a zoom of 1. */
+const GLOW = [
+  { colour: 'rgba(255, 255, 255, 0.85)', wider: 9 },
+  { colour: 'rgba(15, 98, 254, 0.45)', wider: 4 },
+] as const;
 
-/** A route's lines on screen, in the route's order: runs of two places or more, broken where a place is not a number. */
-function runsOf(route: ScreenRoute, screen: Screen): Place[][] {
+/** The stretch under the pointer: one line of one route; `plus` is what the editor says of its "+". */
+interface HoveredLine {
+  readonly routeId: string;
+  readonly lineId: string;
+  /** No "+" where no insert is offered (v3 :403); `active` while the pointer is on the "+" itself (v3's leg-plus). */
+  readonly plus: 'none' | 'idle' | 'active';
+}
+
+/** What the editor chooses besides the routes: plain values, never a module's state. */
+interface LineChoices {
+  readonly hovered?: HoveredLine | null;
+}
+
+/** A line's samples on screen: runs of two places or more, broken where a place is not a number. */
+function runsOf(samples: readonly ImagePoint[], screen: Screen): Place[][] {
   const runs: Place[][] = [];
-  for (const line of route.shape.lines) {
-    let run: Place[] = [];
-    for (const sample of route.timeline.shapes.get(line.id)?.samples ?? []) {
-      const at = screen.place(sample);
-      if (at !== null) run.push(at);
-      else {
-        if (run.length > 1) runs.push(run);
-        run = [];
-      }
+  let run: Place[] = [];
+  for (const sample of samples) {
+    const at = screen.place(sample);
+    if (at !== null) run.push(at);
+    else {
+      if (run.length > 1) runs.push(run);
+      run = [];
     }
-    if (run.length > 1) runs.push(run);
   }
+  if (run.length > 1) runs.push(run);
   return runs;
+}
+
+/** The runs as one path. */
+function trace(context: DrawContext, runs: readonly Place[][]): void {
+  for (const run of runs) {
+    for (const [i, at] of run.entries()) {
+      if (i === 0) context.moveTo(at.x, at.y);
+      else context.lineTo(at.x, at.y);
+    }
+  }
 }
 
 /** The guide: one stroke of the route's runs, with every style it uses set here and put back after. */
@@ -51,12 +85,7 @@ function guide(context: DrawContext, runs: readonly Place[][], colour: string, u
     context.lineWidth = GUIDE.width * unit;
     context.strokeStyle = colour;
     context.beginPath();
-    for (const run of runs) {
-      for (const [i, at] of run.entries()) {
-        if (i === 0) context.moveTo(at.x, at.y);
-        else context.lineTo(at.x, at.y);
-      }
-    }
+    trace(context, runs);
     context.stroke();
   } finally {
     context.beginPath();
@@ -64,16 +93,55 @@ function guide(context: DrawContext, runs: readonly Place[][], colour: string, u
   }
 }
 
-/** The overlay that follows the lines of the routes named: a hidden line's faint guide, as the frame holds each route. */
-export function lineOverlay(routeIds: readonly string[]): Overlay {
+/** The glow: v3's two strokes along the stretch, wider than the line on screen, with every style it uses set here and put back after. */
+function glow(context: DrawContext, runs: readonly Place[][], width: number, unit: number): void {
+  context.save();
+  try {
+    context.globalAlpha = 1;
+    context.globalCompositeOperation = 'source-over';
+    context.setLineDash([]);
+    context.lineDashOffset = 0;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.beginPath();
+    trace(context, runs);
+    for (const { colour, wider } of GLOW) {
+      context.strokeStyle = colour;
+      context.lineWidth = width + wider * unit;
+      context.stroke();
+    }
+  } finally {
+    context.beginPath();
+    context.restore();
+  }
+}
+
+/** The hovered stretch as the frame holds it: its runs on screen and the line's width there; null where it draws nothing. */
+function stretchOf(hovered: HoveredLine, frame: Frame, screen: Screen, unit: number) {
+  const route = screen.routes.get(hovered.routeId);
+  const samples = route?.timeline.shapes.get(hovered.lineId)?.samples;
+  if (route === undefined || samples === undefined) return null;
+  const { appearance, thickness } = route.settings.line;
+  const width = appearance === 'hidden' ? GUIDE.width * unit : thickness * frame.scale * screen.zoom;
+  const runs = runsOf(samples, screen);
+  return runs.length > 0 && Number.isFinite(width) && width > 0 ? { runs, width, samples } : null;
+}
+
+/**
+ * The overlay that follows the lines of the routes named, as the frame holds each: a hidden line's faint guide, then
+ * the hovered stretch's glow. Called with ids alone it draws the guides and nothing more.
+ */
+export function lineOverlay(routeIds: readonly string[], { hovered = null }: LineChoices = {}): Overlay {
   return (context: DrawContext, frame: Frame, screen: Screen) => {
     const unit = unitAt(screen.zoom);
     if (!Number.isFinite(unit) || unit <= 0) return;
     for (const id of new Set(routeIds)) {
       const route = screen.routes.get(id);
       if (route === undefined || route.settings.line.appearance !== 'hidden') continue;
-      const runs = runsOf(route, screen);
+      const runs = route.shape.lines.flatMap((line) => runsOf(route.timeline.shapes.get(line.id)?.samples ?? [], screen));
       if (runs.length > 0) guide(context, runs, route.settings.line.colour, unit);
     }
+    const stretch = hovered === null ? null : stretchOf(hovered, frame, screen, unit);
+    if (stretch !== null) glow(context, stretch.runs, stretch.width, unit);
   };
 }
