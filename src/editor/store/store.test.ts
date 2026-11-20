@@ -4,6 +4,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Project } from '../../adapters/io/format';
 import { newLine, newPoint, newRoute, newScene, type IdSource } from '../../core/model/scene';
+import { AT_START } from '../../player/transport/transport';
 import { addRoute, movePoint, removeRoute, setRouteSetting, setSceneSetting } from './command';
 import { NOTHING_SELECTED } from './selection';
 import { MAX_STEPS, createStore, type Store } from './store';
@@ -267,7 +268,9 @@ describe('history, as v3 kept it', () => {
     if (!begun.ok) throw new Error('the gesture did not open');
     const opened = twoStops().project;
     expect(store.open(opened)).toEqual({ ok: true, changed: true });
-    expect(store.getState()).toEqual({ project: opened, selection: NOTHING_SELECTED, undo: null, redo: null, gesture: null });
+    expect(store.getState()).toEqual({
+      project: opened, selection: NOTHING_SELECTED, undo: null, redo: null, gesture: null, playback: AT_START,
+    });
     expect(begun.gesture.apply(movePoint(route, a, { x: 0, y: 0 }))).toEqual({ ok: false, refusal: { why: 'gesture-closed' } });
   });
 

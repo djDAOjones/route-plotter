@@ -13,8 +13,18 @@
 // a change is kept, to be told of it: one that throws never undoes the change, never stops the others being told, and
 // is reported. Either way, what `getState()` shows is always what the next command receives. The store does not claim
 // to withstand code written to break it.
+//
+// Beside the project, outside the undo history, the store holds the player's transport's slice (stage 2): what an
+// interface shows of it, playing or not, the position and the speed. A change to it is never a step, never clears
+// Redo, is taken while a gesture is open and tells subscribers as any change does, with a new state whose project is
+// the same object; Open puts it back to `AT_START`; Undo, Redo and a gesture leave it, since a step and a gesture's
+// start record only the project and the selection. The store is thus a `PlaybackHolder` by shape, and a transport is
+// made on it (`createTransport({ holder: store, … })`); the transport never imports the store (rule 6). The claim holds
+// for the slice: `setPlayback` reads each of its argument's fields once, before anything changes, and refuses one that
+// is not a whole, finite playback with nothing told; a subscriber told of the change that throws never undoes it.
 import type { Project } from '../../adapters/io/format';
 import { checkScene, type IdSource } from '../../core/model/scene';
+import { AT_START, FASTEST, SLOWEST, type Playback, type PlaybackHolder } from '../../player/transport/transport';
 import type { Command, Current, Refusal } from './command';
 import { own } from './own';
 import { sameValue } from './sameValue';
@@ -39,6 +49,8 @@ interface StoreState {
   readonly redo: string | null;
   /** The words of the open gesture, or null when none is open. */
   readonly gesture: string | null;
+  /** The transport's slice: playing or not, the position and the speed; outside the undo history. */
+  readonly playback: Playback;
 }
 
 /** An open gesture: what it applies shows at once; `commit` makes it one step, `cancel` puts back what it found. */
@@ -50,8 +62,15 @@ interface Gesture {
 
 type Begun = { readonly ok: true; readonly gesture: Gesture } | { readonly ok: false; readonly refusal: Refusal };
 
-export interface Store {
+export interface Store extends PlaybackHolder {
   getState(): StoreState;
+  /** The transport's slice, as `getState().playback` shows it. */
+  playback(): Playback;
+  /**
+   * Keeps `next` as the transport's slice: never a step, Redo kept, taken while a gesture is open. One that is not a
+   * whole, finite playback is refused before anything changes; one the same as what is held changes nothing.
+   */
+  setPlayback(next: Playback): Outcome;
   /** Calls `listener` after every change; gives back the call that stops it. */
   subscribe(listener: () => void): () => void;
   /** One command as one step: a gesture opened, applied and committed at once. */
@@ -98,6 +117,17 @@ function rethrowLater(error: unknown): void {
   });
 }
 
+/**
+ * What `setPlayback` keeps: each field of `next` read once, then frozen; null when it is not a whole, finite playback
+ * (transport.ts's `Playback`: a position from 0, a speed of 0.1 to 16 times either way).
+ */
+function playbackOf(next: Playback): Playback | null {
+  const { playing, atMs, speed } = next;
+  const size = Math.abs(speed);
+  const whole = typeof playing === 'boolean' && Number.isFinite(atMs) && atMs >= 0 && size >= SLOWEST && size <= FASTEST;
+  return whole ? Object.freeze({ playing, atMs, speed }) : null;
+}
+
 /** The scene's problems, or null when CORE-01's declarations hold for it. */
 function problemsOf(project: Project): Refusal | null {
   const verdict = checkScene(project.scene);
@@ -114,6 +144,7 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
   let undoSteps: readonly Step[] = [];
   let redoSteps: readonly Step[] = [];
   let opened: Opened | null = null;
+  let playback = AT_START;
   const listeners = new Set<{ readonly call: () => void }>();
 
   const stateNow = (): StoreState =>
@@ -123,6 +154,7 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
       undo: undoSteps.at(-1)?.label ?? null,
       redo: redoSteps.at(-1)?.label ?? null,
       gesture: opened?.label ?? null,
+      playback,
     });
   let state = stateNow();
 
@@ -211,6 +243,15 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
 
   return {
     getState: () => state,
+    playback: () => playback,
+    setPlayback: (next) => {
+      const kept = playbackOf(next);
+      if (kept === null) return refused({ why: 'not-a-playback' });
+      if (sameValue(kept, playback)) return { ok: true, changed: false };
+      playback = kept;
+      publish();
+      return { ok: true, changed: true };
+    },
     subscribe: (call) => {
       const listener = { call };
       listeners.add(listener);
@@ -249,6 +290,7 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
       undoSteps = [];
       redoSteps = [];
       current = currentOf(project, NOTHING_SELECTED);
+      playback = AT_START;
       publish();
       return { ok: true, changed: true };
     },

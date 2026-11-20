@@ -28,10 +28,10 @@ export interface Playback {
 export const AT_START: Playback = Object.freeze({ playing: false, atMs: 0, speed: 1 });
 
 /**
- * Where the transport keeps its playback: `playback` gives what is held; `setPlayback` keeps a new one and tells. It is
- * exported when the store's slice (stage 2's next step) imports it: knip refuses it unused until then.
+ * Where the transport keeps its playback: `playback` gives what is held; `setPlayback` keeps a new one and tells. The
+ * editor's store is one by shape (its slice); `heldPlayback` is one for a player with no store.
  */
-interface PlaybackHolder {
+export interface PlaybackHolder {
   playback(): Playback;
   setPlayback(next: Playback): void;
 }
@@ -69,8 +69,9 @@ export interface Transport {
 export const MAX_GAP_MS = 100;
 /** The first frame after Play moves as far as one frame at sixty a second (v3, lines 175 to 179): never a jump. */
 export const FIRST_FRAME_MS = 1000 / 60;
-const SLOWEST = 0.1;
-const FASTEST = 16;
+/** The slowest and fastest a playback plays, either way (v3's clamp): what the store's slice accepts. */
+export const SLOWEST = 0.1;
+export const FASTEST = 16;
 
 /** What a length is built from, by value: the scene as the object itself (the store's are frozen), then numbers. */
 type Key = readonly [Scene, number, number, number, number | null, number | null];

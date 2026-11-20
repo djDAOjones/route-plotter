@@ -19,7 +19,7 @@ type Problems = Extract<Checked<Scene>, { ok: false }>['problems'];
 
 /** Why the store changed nothing. */
 export type Refusal =
-  | { readonly why: 'gesture-open' | 'gesture-closed' | 'nothing-to-undo' | 'nothing-to-redo' }
+  | { readonly why: 'gesture-open' | 'gesture-closed' | 'nothing-to-undo' | 'nothing-to-redo' | 'not-a-playback' }
   | { readonly why: 'missing'; readonly what: string }
   | { readonly why: 'invalid'; readonly problems: Problems };
 
