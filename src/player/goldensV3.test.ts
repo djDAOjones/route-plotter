@@ -41,9 +41,10 @@ interface Moment {
 
 /**
  * How a scene's course is pinned, where not both ways: a comet (trail), no line at all (hidden), or left out by name.
- * branch-whole's is left out (sub-chat 46; a ruling for the orchestrator): v3 shapes the trunk as one curve through the
- * fork, while v4 ends a run of its curve at a fork (src/core/timing/shape.ts:1–5, the plan's §6), so from just past the
- * bend to the trunk's end the two lines part by up to 6.86 px. Its branch agrees within a pixel; markers stay checked.
+ * branch-whole's is left out, ruled by D167 (the line into a fork and each line out of it is its own curve): v3 shapes
+ * the trunk as one curve through the fork, while v4 ends a run of its curve at a fork (src/core/timing/shape.ts:1–5,
+ * the plan's §6), so from just past the bend to the trunk's end the two lines part by up to 6.86 px. It stays left out
+ * while each stretch at a fork is its own curve. Its branch agrees within a pixel; the markers are pinned each way.
  */
 const COURSE: Readonly<Record<string, 'comet' | 'no line' | 'left out'>> = { trail: 'comet', hidden: 'no line', 'branch-whole': 'left out' };
 
