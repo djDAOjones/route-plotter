@@ -1,4 +1,4 @@
-# the start: 0 ms of 10446
+# the start: 0 ms of 9199
 resetTransform
 clearRect 0 0 1920 1080 | @ 1 0 0 1 0 0
 save
@@ -604,10 +604,6 @@ lineTo 1387.385 806.538 @ 1 0 0 1 0 0
 lineTo 1389.692 808.269 @ 1 0 0 1 0 0
 lineTo 1392 810 @ 1 0 0 1 0 0
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#d55e00 lineWidth=3 lineCap=round lineJoin=round
-beginPath
-restore
-save
-beginPath
 beginPath
 restore
 save
@@ -621,29 +617,13 @@ restore
 save
 beginPath
 beginPath
-arc 384 972 8 0 6.283 clockwise @ 1 0 0 1 0 0
-fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
-stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
-beginPath
-restore
-save
-beginPath
-beginPath
-restore
-save
-beginPath
-beginPath
-restore
-save
-beginPath
-beginPath
 restore
 save
 beginPath
 beginPath
 restore
 restore
-# a quarter: 2612 ms of 10446
+# a quarter: 2300 ms of 9199
 resetTransform
 clearRect 0 0 1920 1080 | @ 1 0 0 1 0 0
 save
@@ -1249,10 +1229,6 @@ lineTo 1387.385 806.538 @ 1 0 0 1 0 0
 lineTo 1389.692 808.269 @ 1 0 0 1 0 0
 lineTo 1392 810 @ 1 0 0 1 0 0
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#d55e00 lineWidth=3 lineCap=round lineJoin=round
-beginPath
-restore
-save
-beginPath
 beginPath
 restore
 save
@@ -1262,19 +1238,7 @@ arc 456 540 8 0 6.283 clockwise @ 1 0 0 1 0 0
 fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
 beginPath
-arc 1032 540 8 0 6.283 clockwise @ 1 0 0 1 0 0
-fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
-stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
-beginPath
-restore
-save
-beginPath
-beginPath
-arc 384 972 8 0 6.283 clockwise @ 1 0 0 1 0 0
-fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
-stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
-beginPath
-arc 888 918 8 0 6.283 clockwise @ 1 0 0 1 0 0
+arc 1032 540 2.385 0 6.283 clockwise @ 1 0 0 1 0 0
 fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
 beginPath
@@ -1282,30 +1246,15 @@ restore
 save
 beginPath
 save
-translate 1032 540
-rotate 0.785
+translate 987.59 492.096
+rotate 0.821
 beginPath
-moveTo 8 0 @ 0.707 0.707 -0.707 0.707 1032 540
-lineTo -4 4 @ 0.707 0.707 -0.707 0.707 1032 540
-lineTo -2 0 @ 0.707 0.707 -0.707 0.707 1032 540
-lineTo -4 -4 @ 0.707 0.707 -0.707 0.707 1032 540
-closePath @ 0.707 0.707 -0.707 0.707 1032 540
-fill | @ 0.707 0.707 -0.707 0.707 1032 540 | fillStyle=#111111
-restore
-beginPath
-restore
-save
-beginPath
-save
-translate 888 918
-rotate -0.107
-beginPath
-moveTo 8 0 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -4 4 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -2 0 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -4 -4 @ 0.994 -0.107 0.107 0.994 888 918
-closePath @ 0.994 -0.107 0.107 0.994 888 918
-fill | @ 0.994 -0.107 0.107 0.994 888 918 | fillStyle=#111111
+moveTo 8 0 @ 0.681 0.732 -0.732 0.681 987.59 492.096
+lineTo -4 4 @ 0.681 0.732 -0.732 0.681 987.59 492.096
+lineTo -2 0 @ 0.681 0.732 -0.732 0.681 987.59 492.096
+lineTo -4 -4 @ 0.681 0.732 -0.732 0.681 987.59 492.096
+closePath @ 0.681 0.732 -0.732 0.681 987.59 492.096
+fill | @ 0.681 0.732 -0.732 0.681 987.59 492.096 | fillStyle=#111111
 restore
 beginPath
 restore
@@ -1313,12 +1262,8 @@ save
 beginPath
 beginPath
 restore
-save
-beginPath
-beginPath
 restore
-restore
-# the middle: 5223 ms of 10446
+# the middle: 4600 ms of 9199
 resetTransform
 clearRect 0 0 1920 1080 | @ 1 0 0 1 0 0
 save
@@ -1924,10 +1869,6 @@ lineTo 1387.385 806.538 @ 1 0 0 1 0 0
 lineTo 1389.692 808.269 @ 1 0 0 1 0 0
 lineTo 1392 810 @ 1 0 0 1 0 0
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#d55e00 lineWidth=3 lineCap=round lineJoin=round
-beginPath
-restore
-save
-beginPath
 beginPath
 restore
 save
@@ -1944,54 +1885,27 @@ beginPath
 restore
 save
 beginPath
-beginPath
-arc 384 972 8 0 6.283 clockwise @ 1 0 0 1 0 0
-fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
-stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
-beginPath
-arc 888 918 8 0 6.283 clockwise @ 1 0 0 1 0 0
-fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
-stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
-beginPath
-restore
 save
-beginPath
-save
-translate 1341.327 385.336
+translate 1180.846 465.577
 rotate -0.464
 beginPath
-moveTo 8 0 @ 0.894 -0.447 0.447 0.894 1341.327 385.336
-lineTo -4 4 @ 0.894 -0.447 0.447 0.894 1341.327 385.336
-lineTo -2 0 @ 0.894 -0.447 0.447 0.894 1341.327 385.336
-lineTo -4 -4 @ 0.894 -0.447 0.447 0.894 1341.327 385.336
-closePath @ 0.894 -0.447 0.447 0.894 1341.327 385.336
-fill | @ 0.894 -0.447 0.447 0.894 1341.327 385.336 | fillStyle=#111111
+moveTo 8 0 @ 0.894 -0.447 0.447 0.894 1180.846 465.577
+lineTo -4 4 @ 0.894 -0.447 0.447 0.894 1180.846 465.577
+lineTo -2 0 @ 0.894 -0.447 0.447 0.894 1180.846 465.577
+lineTo -4 -4 @ 0.894 -0.447 0.447 0.894 1180.846 465.577
+closePath @ 0.894 -0.447 0.447 0.894 1180.846 465.577
+fill | @ 0.894 -0.447 0.447 0.894 1180.846 465.577 | fillStyle=#111111
 restore
 save
-translate 1308.671 747.503
+translate 1165.132 639.849
 rotate 0.644
 beginPath
-moveTo 8 0 @ 0.8 0.6 -0.6 0.8 1308.671 747.503
-lineTo -4 4 @ 0.8 0.6 -0.6 0.8 1308.671 747.503
-lineTo -2 0 @ 0.8 0.6 -0.6 0.8 1308.671 747.503
-lineTo -4 -4 @ 0.8 0.6 -0.6 0.8 1308.671 747.503
-closePath @ 0.8 0.6 -0.6 0.8 1308.671 747.503
-fill | @ 0.8 0.6 -0.6 0.8 1308.671 747.503 | fillStyle=#111111
-restore
-beginPath
-restore
-save
-beginPath
-save
-translate 888 918
-rotate -0.107
-beginPath
-moveTo 8 0 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -4 4 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -2 0 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -4 -4 @ 0.994 -0.107 0.107 0.994 888 918
-closePath @ 0.994 -0.107 0.107 0.994 888 918
-fill | @ 0.994 -0.107 0.107 0.994 888 918 | fillStyle=#111111
+moveTo 8 0 @ 0.8 0.6 -0.6 0.8 1165.132 639.849
+lineTo -4 4 @ 0.8 0.6 -0.6 0.8 1165.132 639.849
+lineTo -2 0 @ 0.8 0.6 -0.6 0.8 1165.132 639.849
+lineTo -4 -4 @ 0.8 0.6 -0.6 0.8 1165.132 639.849
+closePath @ 0.8 0.6 -0.6 0.8 1165.132 639.849
+fill | @ 0.8 0.6 -0.6 0.8 1165.132 639.849 | fillStyle=#111111
 restore
 beginPath
 restore
@@ -1999,12 +1913,8 @@ save
 beginPath
 beginPath
 restore
-save
-beginPath
-beginPath
 restore
-restore
-# three quarters: 7835 ms of 10446
+# three quarters: 6899 ms of 9199
 resetTransform
 clearRect 0 0 1920 1080 | @ 1 0 0 1 0 0
 save
@@ -2610,10 +2520,6 @@ lineTo 1387.385 806.538 @ 1 0 0 1 0 0
 lineTo 1389.692 808.269 @ 1 0 0 1 0 0
 lineTo 1392 810 @ 1 0 0 1 0 0
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#d55e00 lineWidth=3 lineCap=round lineJoin=round
-beginPath
-restore
-save
-beginPath
 beginPath
 restore
 save
@@ -2632,18 +2538,6 @@ fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
 beginPath
 arc 1392 810 8 0 6.283 clockwise @ 1 0 0 1 0 0
-fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
-stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
-beginPath
-restore
-save
-beginPath
-beginPath
-arc 384 972 8 0 6.283 clockwise @ 1 0 0 1 0 0
-fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
-stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
-beginPath
-arc 888 918 8 0 6.283 clockwise @ 1 0 0 1 0 0
 fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
 beginPath
@@ -2676,29 +2570,10 @@ beginPath
 restore
 save
 beginPath
-save
-translate 888 918
-rotate -0.107
-beginPath
-moveTo 8 0 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -4 4 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -2 0 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -4 -4 @ 0.994 -0.107 0.107 0.994 888 918
-closePath @ 0.994 -0.107 0.107 0.994 888 918
-fill | @ 0.994 -0.107 0.107 0.994 888 918 | fillStyle=#111111
-restore
-beginPath
-restore
-save
-beginPath
-beginPath
-restore
-save
-beginPath
 beginPath
 restore
 restore
-# the end: 10446 ms of 10446
+# the end: 9199 ms of 9199
 resetTransform
 clearRect 0 0 1920 1080 | @ 1 0 0 1 0 0
 save
@@ -3309,10 +3184,6 @@ restore
 save
 beginPath
 beginPath
-restore
-save
-beginPath
-beginPath
 arc 456 540 8 0 6.283 clockwise @ 1 0 0 1 0 0
 fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
@@ -3326,18 +3197,6 @@ fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
 beginPath
 arc 1392 810 8 0 6.283 clockwise @ 1 0 0 1 0 0
-fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
-stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
-beginPath
-restore
-save
-beginPath
-beginPath
-arc 384 972 8 0 6.283 clockwise @ 1 0 0 1 0 0
-fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
-stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
-beginPath
-arc 888 918 8 0 6.283 clockwise @ 1 0 0 1 0 0
 fill | @ 1 0 0 1 0 0 | fillStyle=#d55e00
 stroke | @ 1 0 0 1 0 0 | strokeStyle=#ffffff lineWidth=2
 beginPath
@@ -3366,25 +3225,6 @@ lineTo -4 -4 @ 0.8 0.6 -0.6 0.8 1392 810
 closePath @ 0.8 0.6 -0.6 0.8 1392 810
 fill | @ 0.8 0.6 -0.6 0.8 1392 810 | fillStyle=#111111
 restore
-beginPath
-restore
-save
-beginPath
-save
-translate 888 918
-rotate -0.107
-beginPath
-moveTo 8 0 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -4 4 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -2 0 @ 0.994 -0.107 0.107 0.994 888 918
-lineTo -4 -4 @ 0.994 -0.107 0.107 0.994 888 918
-closePath @ 0.994 -0.107 0.107 0.994 888 918
-fill | @ 0.994 -0.107 0.107 0.994 888 918 | fillStyle=#111111
-restore
-beginPath
-restore
-save
-beginPath
 beginPath
 restore
 save
