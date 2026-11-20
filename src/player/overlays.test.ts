@@ -145,7 +145,11 @@ test('an overlay is handed the frame’s one zoom, and each route as the modules
   expect(screens[2]?.place({ x: 0.5, y: 0.5 })).toEqual({ x: 960, y: 540 });
   const route = scene.routes[0];
   expect(screens[0]?.routes.size).toBe(1);
-  expect(screens[0]?.routes.get(route?.id ?? '')).toBe(seen[0]);
+  // The very shape and timeline the module saw, and the scene's route's own settings.
+  const held = screens[0]?.routes.get(route?.id ?? '');
+  expect(held?.shape).toBe(seen[0]?.shape);
+  expect(held?.timeline).toBe(seen[0]?.timeline);
+  expect(held?.settings).toBe(route?.settings);
   expect(seen[0]?.shape.points).toBe(route?.points);
   const place = screens[0]?.place ?? (() => null);
   // The 400 × 300 picture is drawn 1,440 × 1,080 from x = 240 at 1080p; a point off the picture is still placed.

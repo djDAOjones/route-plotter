@@ -272,7 +272,8 @@ function drawStage(context: DrawContext, run: Run, evaluated: readonly Evaluated
 
 /**
  * What each overlay is handed besides the frame: the frame's one transform (the scene's view, then the further zoom
- * and pan), to place an image point on screen by, and each route as every module saw it, by its id.
+ * and pan), to place an image point on screen by, and each route by its id: its shape and timeline as every module saw
+ * them, and its settings as the scene holds them, so an overlay's maker reads from the frame what it was handed ids for.
  */
 function screenOf({ frame, matrix }: ReturnType<typeof viewStage>, routes: ReturnType<typeof routesStage>['routes']): Screen {
   // A canvas ignores a transform that is not finite (a pan or a zoom out of range), so the layers were drawn unmoved.
@@ -283,7 +284,8 @@ function screenOf({ frame, matrix }: ReturnType<typeof viewStage>, routes: Retur
     const y = zoom * at.y + dy;
     return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
   };
-  return { zoom, place, routes: new Map(routes.map((each) => [each.route.id, each.view])) };
+  const views = routes.map(({ route, view }) => [route.id, { ...view, settings: route.settings }] as const);
+  return { zoom, place, routes: new Map(views) };
 }
 
 /** Draw the scene at its time onto `context`; returns what could not be drawn. */

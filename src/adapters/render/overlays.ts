@@ -14,6 +14,7 @@
 // held: unitAt is that factor, for an overlay's maker to size v3's widths by.
 import type { RouteInput } from '../../core/feature/contract';
 import type { ImagePoint } from '../../core/geometry/units';
+import type { Route } from '../../core/model/scene';
 import type { DrawContext } from './context';
 import type { Frame } from './layers';
 
@@ -23,8 +24,11 @@ export interface Place {
   readonly y: number;
 }
 
-/** A route as every module saw it in this frame: its shape and its timeline. */
-type RouteView = RouteInput<unknown>['route'];
+/**
+ * A route in this frame: the very shape and timeline every module was handed, and the route's settings as the frame's
+ * scene holds them, so an overlay's maker, handed ids alone, reads both from the frame it draws over.
+ */
+type ScreenRoute = RouteInput<unknown>['route'] & { readonly settings: Route['settings'] };
 
 /** What the composer hands each overlay besides the frame. */
 export interface Screen {
@@ -32,8 +36,8 @@ export interface Screen {
   readonly zoom: number;
   /** Where an image point (shares of the picture) lies on screen under that transform; null if it is not a number. */
   readonly place: (point: ImagePoint) => Place | null;
-  /** Each route by its id: the very shape and timeline the modules were handed this frame. */
-  readonly routes: ReadonlyMap<string, RouteView>;
+  /** Each route by its id, as this frame holds it. */
+  readonly routes: ReadonlyMap<string, ScreenRoute>;
 }
 
 /** A drawing over the finished frame, in screen space, that only the editor asks for. */

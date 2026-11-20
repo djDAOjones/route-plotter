@@ -107,8 +107,9 @@ const strokes = (lines: readonly string[]) => lines.filter((line) => line.starts
 
 /** The frame without overlays, then with the lines' overlay for the routes handed: the overlay's lines follow the first. */
 function both(scene: Scene, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS], routes: readonly Route[] = scene.routes) {
+  const routeIds = routes.map((route) => route.id);
   const plain = draw(request(scene, { viewing: viewing.viewing }), viewing.catalogue);
-  const edited = draw(request(scene, { viewing: viewing.viewing, overlays: [OVERLAY_MAKERS.lines(routes)] }), viewing.catalogue);
+  const edited = draw(request(scene, { viewing: viewing.viewing, overlays: [OVERLAY_MAKERS.lines(routeIds)] }), viewing.catalogue);
   expect(edited.lines.slice(0, plain.lines.length)).toEqual(plain.lines);
   expect(edited.reports).toEqual([]);
   return { plain, added: edited.lines.slice(plain.lines.length) };
@@ -158,7 +159,8 @@ test('a frame asked for without overlays holds no guide; with it, that frame is 
   const scene = sceneOf(['hidden', 'whole'], { branch: true });
   for (const [name, { viewing }] of Object.entries(VIEWINGS)) {
     const exported = draw(request(scene, { viewing }));
-    const overlays = [OVERLAY_MAKERS.lines(scene.routes), OVERLAY_MAKERS.points(scene.routes, { selected: [] })];
+    const routeIds = scene.routes.map((route) => route.id);
+    const overlays = [OVERLAY_MAKERS.lines(routeIds), OVERLAY_MAKERS.points(routeIds, { selected: [] })];
     const edited = draw(request(scene, { viewing, overlays }));
     expect(draw(request(scene, { viewing, overlays: [] })), name).toEqual(exported);
     expect(edited.lines.slice(0, exported.lines.length), name).toEqual(exported.lines);

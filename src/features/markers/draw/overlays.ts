@@ -1,14 +1,16 @@
 // CORE-04 stage 6: the editor's overlays that follow a point (the plan's §8; DEF-99.1), ported from v3's
 // renderWaypoints (v3/src/services/RenderingService.js:2439–2516) and hover (:358–383). The editor hands the maker
-// the routes it is editing and plain ids (which points are selected, which one is under the pointer) and puts the overlay it gets back in the request's list; no
-// module ever sees them. The overlay finds each point where every module did (screen.routes) and draws with the
-// kit's shapes, in screen pixels, after every layer.
+// plain ids (the routes it is editing, which points are selected, which one is under the pointer) and puts the overlay
+// it gets back in the request's list; no module ever sees them. The overlay reads each route from the frame it draws
+// over (screen.routes: the shape every module was handed, and the settings the frame's scene holds, so a stop's look is
+// this frame's) and draws with the kit's shapes, in screen pixels, after every layer.
 //
 // Sizes, as v3's on screen (D153): a ring or a rectangle goes round its stop's marker as the markers' layer draws it,
 // look.size × frame.scale × screen.zoom (src/features/markers/draw/markers.ts; v4's markers have no zoom clamp), and
 // at the marker's whole size whatever its timing, as v3's editor showed every marker whole: a selection is never
 // invisible, even for a stop whose marker is not shown at that moment. v3's gaps and widths go by unitAt(screen.zoom).
-// Each route's points are walked once, whatever the number selected; nothing is kept between frames (D147).
+// Each route's points are walked once, whatever the number selected, and a route named twice is drawn once; an id the
+// frame does not hold draws nothing; nothing is kept between frames (D147).
 import { greyDot, hoverRing, selectionRect, selectionRing, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
 import type { Frame } from '../../../adapters/render/layers';
 import type { DrawContext } from '../../../adapters/render/context';
@@ -28,10 +30,10 @@ export interface PointChoices {
   readonly hovered?: PointRef | null;
 }
 
-/** The look a route's stops are drawn with: the markers' one place (D144); a test may hand another. */
-type LookFor = (route: Route) => MarkerLook;
+/** The look a route's stops are drawn with, from its settings in the frame: the markers' one place (D144); a test may hand another. */
+type LookFor = (settings: Route['settings']) => MarkerLook;
 
-const lookOfRoute: LookFor = (route) => lookOf(route.settings.markers);
+const lookOfSettings: LookFor = (settings) => lookOf(settings.markers);
 
 /** The ids chosen on each route, so each route's points are walked once whatever the number chosen. */
 function byRoute(refs: readonly PointRef[]): ReadonlyMap<string, ReadonlySet<string>> {
@@ -69,7 +71,7 @@ const NONE: ReadonlySet<string> = new Set();
  * editing, :2490–2495), each selected point's ring or rectangle in its turn (v3's order), then the hover ring on the
  * point under the pointer unless it is selected (:375). A route or a point not in the frame draws nothing.
  */
-export function pointOverlay(routes: readonly Route[], choices: PointChoices, lookFor: LookFor = lookOfRoute): Overlay {
+export function pointOverlay(routeIds: readonly string[], choices: PointChoices, lookFor: LookFor = lookOfSettings): Overlay {
   return (context: DrawContext, frame: Frame, screen: Screen) => {
     const selected = byRoute(choices.selected);
     const { hovered } = choices;
@@ -77,15 +79,15 @@ export function pointOverlay(routes: readonly Route[], choices: PointChoices, lo
     // v3's scaleSizeClamped: the reference scale and the Graphics scale (both in frame.scale), then the clamp.
     const bend = BEND.radius * frame.scale * unit;
     let hover: { readonly at: Place; readonly radius: number } | null = null;
-    for (const route of routes) {
-      const view = screen.routes.get(route.id);
-      if (view === undefined) continue;
-      const chosen = selected.get(route.id) ?? NONE;
-      const look = lookFor(route);
+    for (const id of new Set(routeIds)) {
+      const route = screen.routes.get(id);
+      if (route === undefined) continue;
+      const chosen = selected.get(id) ?? NONE;
+      const look = lookFor(route.settings);
       const half = look.size * frame.scale * screen.zoom;
       const boxedLook = boxed(look, frame);
-      const pointer = hovered?.routeId === route.id ? hovered.pointId : null;
-      for (const point of view.shape.points) {
+      const pointer = hovered?.routeId === id ? hovered.pointId : null;
+      for (const point of route.shape.points) {
         const at = screen.place(point);
         if (at === null) continue;
         const isBend = point.kind === 'bend';

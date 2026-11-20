@@ -130,7 +130,7 @@ const undotted = (lines: readonly string[]) =>
 /** The frame without overlays, then with the maker's overlay: the overlay's lines are what follows the first. */
 function both(scene: Scene, choices: Choices, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS], lookFor?: LookFor) {
   const plain = draw(request(scene, { viewing: viewing.viewing }), viewing.catalogue);
-  const overlay = OVERLAY_MAKERS.points(scene.routes, choices, lookFor);
+  const overlay = OVERLAY_MAKERS.points(scene.routes.map((route) => route.id), choices, lookFor);
   const edited = draw(request(scene, { viewing: viewing.viewing, overlays: [overlay] }), viewing.catalogue);
   expect(edited.lines.slice(0, plain.lines.length)).toEqual(plain.lines);
   expect(edited.reports).toEqual([]);
@@ -177,7 +177,7 @@ test('a picture and a square are boxed as v3’s: the marker’s box and a gap o
     const images = new Map([['pin', source]]);
     for (const [look, withImages] of [[lookOf('square'), false], [lookOf('custom', pin), true]] as const) {
       const plain = draw(request(scene, { viewing: viewing.viewing, images: withImages ? images : undefined }), viewing.catalogue);
-      const overlay = OVERLAY_MAKERS.points(scene.routes, choices, look);
+      const overlay = OVERLAY_MAKERS.points(scene.routes.map((route) => route.id), choices, look);
       const edited = draw(request(scene, { viewing: viewing.viewing, images: withImages ? images : undefined, overlays: [overlay] }), viewing.catalogue);
       const added = undotted(edited.lines.slice(plain.lines.length));
       expect(circles(added), name).toEqual([]);
@@ -210,7 +210,7 @@ test('a stop whose marker is not shown at that moment is still ringed, at its ma
     const ask = request(scene, { sceneMs: 1_000 });
     const plain = draw(ask);
     expect(circles(plain.lines).some((at) => Math.abs(at.x - last.x) < 1e-6), appearance).toBe(false);
-    const edited = draw({ ...ask, overlays: [OVERLAY_MAKERS.points(scene.routes, { selected: [refOf(route, route?.points[3])] })] });
+    const edited = draw({ ...ask, overlays: [OVERLAY_MAKERS.points(scene.routes.map((route) => route.id), { selected: [refOf(route, route?.points[3])] })] });
     const rings = circles(undotted(edited.lines.slice(plain.lines.length)));
     expect(rings, appearance).toHaveLength(2);
     for (const ring of rings) {
@@ -238,7 +238,7 @@ test('ids that match nothing draw nothing and throw nothing, and many selected d
   // A route the maker is handed that the frame does not draw: nothing, though its point is chosen.
   const alone = { ...scene, routes: [first].filter((route) => route !== undefined) };
   const plain = draw(request(alone));
-  const elsewhere = OVERLAY_MAKERS.points(second === undefined ? [] : [second], { selected: [refOf(second, second?.points[2])] });
+  const elsewhere = OVERLAY_MAKERS.points(second === undefined ? [] : [second.id], { selected: [refOf(second, second?.points[2])] });
   const edited = draw(request(alone, { overlays: [elsewhere] }));
   expect(edited.reports).toEqual([]);
   expect(edited.lines.slice(0, plain.lines.length)).toEqual(plain.lines);
@@ -283,7 +283,7 @@ test('every bend of the routes handed in has v3’s grey dot, radius 4 and edge 
     expect(widths(chosen), name).toEqual([unit, 2 * unit, 2 * unit, unit]);
   }
   // Only the routes handed in: one route, one dot.
-  const one = draw(request(scene, { overlays: [OVERLAY_MAKERS.points(second === undefined ? [] : [second], { selected: [] })] }));
+  const one = draw(request(scene, { overlays: [OVERLAY_MAKERS.points(second === undefined ? [] : [second.id], { selected: [] })] }));
   expect(circles(one.lines).filter((at) => Math.abs(at.r - 4) < 1e-9)).toHaveLength(1);
 });
 
@@ -331,7 +331,7 @@ test('a frame asked for without overlays holds none: with every point overlay, i
   for (const [name, { catalogue, viewing }] of Object.entries(VIEWINGS)) {
     for (const lookFor of looks) {
       const exported = draw(request(scene, { viewing }), catalogue);
-      const edited = draw(request(scene, { viewing, overlays: [OVERLAY_MAKERS.points(scene.routes, choices, lookFor)] }), catalogue);
+      const edited = draw(request(scene, { viewing, overlays: [OVERLAY_MAKERS.points(scene.routes.map((route) => route.id), choices, lookFor)] }), catalogue);
       expect(draw(request(scene, { viewing, overlays: [] }), catalogue), name).toEqual(exported);
       expect(edited.lines.slice(0, exported.lines.length), name).toEqual(exported.lines);
       expect(edited.reports, name).toEqual([]);
@@ -341,7 +341,7 @@ test('a frame asked for without overlays holds none: with every point overlay, i
       expect(added.length, name).toBeGreaterThan(10);
       for (const line of added) expect(exported.lines, `${name}: ${line}`).not.toContain(line);
       // Drawn twice at the same moment, the same lines.
-      expect(draw(request(scene, { viewing, overlays: [OVERLAY_MAKERS.points(scene.routes, choices, lookFor)] }), catalogue), name).toEqual(edited);
+      expect(draw(request(scene, { viewing, overlays: [OVERLAY_MAKERS.points(scene.routes.map((route) => route.id), choices, lookFor)] }), catalogue), name).toEqual(edited);
     }
   }
   // The composer's own lists hold no maker: only the editor's list of overlays reaches one.
