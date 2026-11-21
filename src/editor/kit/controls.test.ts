@@ -299,4 +299,12 @@ describe('the words', () => {
   it('a field shows plain words, none of them retired', () => {
     expect(NOT_A_NUMBER).not.toMatch(RETIRED_WORDS);
   });
+
+  it('a field says, word for word, what a number is when the text is not one (D181)', () => {
+    expect(NOT_A_NUMBER).toBe('Enter a number in figures, such as 12 or 0.5.');
+    const field = createNumberField(handmade(5));
+    field.type('12px');
+    expect(field.commit()).toEqual({ ok: false, why: 'Enter a number in figures, such as 12 or 0.5.' });
+    expect(field.shown().problem).toBe('Enter a number in figures, such as 12 or 0.5.');
+  });
 });

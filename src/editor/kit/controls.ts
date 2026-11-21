@@ -68,7 +68,10 @@ export function parseNumber(text: string): number | null {
 export interface Slider {
   /** The value to show: the value held, read now. */
   shown(): number | undefined;
-  /** Whether a drag this slider began is still open. */
+  /**
+   * Whether a drag this slider began still waits for its end (`end()` or `giveUp()`). Its edit may already have been
+   * closed elsewhere (Open ends the store's gesture); the drag is still reported until one of those ends it here.
+   */
   dragging(): boolean;
   /** A drag starts (pointer down on the thumb or track): begins an edit; refused, it changes nothing. */
   start(): Result;
@@ -82,7 +85,7 @@ export interface Slider {
   nudge(value: number): Result;
 }
 
-/** A slider's logic over `setting`. Its one state is the edit of a drag it began and has not ended. */
+/** A slider's logic over `setting`. Its one state is the edit of a drag it began and has not yet been told the end of. */
 export function createSlider(setting: Setting): Slider {
   let drag: Edit | null = null;
 

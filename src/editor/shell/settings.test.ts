@@ -267,4 +267,28 @@ describe('the words', () => {
   it('each refusal a field can show is plain, none of its words retired', () => {
     for (const [name, words] of Object.entries(WORDS)) expect(words, name).not.toMatch(RETIRED_WORDS);
   });
+
+  it('each refusal says, word for word, what was agreed (D181)', () => {
+    expect(WORDS).toEqual({
+      gestureOpen: 'Another change is in progress. Finish it, then try again.',
+      gestureClosed: 'That change was ended elsewhere, so nothing was kept.',
+      missing: 'This setting is no longer there.',
+      nothingToUndo: 'There is nothing to undo.',
+      nothingToRedo: 'There is nothing to redo.',
+      notAPlayback: 'That is not a position or speed the player can take.',
+    });
+  });
+
+  it('the model’s problem reaches the field in its declaration’s words, and another change in progress in the agreed words', () => {
+    const { store, route } = made();
+    const field = createNumberField(routeSetting(store, route, 'line', 'thickness'));
+    field.type('0');
+    expect(field.commit()).toEqual({ ok: false, why: 'Enter a number from 1 to 40 pixels.' });
+    const slider = createSlider(sceneSetting(store, 'clock', 'fixedLengthMs'));
+    slider.start();
+    field.type('8');
+    expect(field.commit()).toEqual({ ok: false, why: 'Another change is in progress. Finish it, then try again.' });
+    expect(field.shown().problem).toBe('Another change is in progress. Finish it, then try again.');
+    slider.giveUp();
+  });
 });
