@@ -70,6 +70,7 @@ function fitSetting<V>(
   };
   return {
     read: held,
+    subscribe: (listener) => store.subscribe(listener),
     begin: (): Begun => {
       const found = read(store.getState().project);
       if (typeof found !== 'number') return { ok: false, why: WORDS.missing };

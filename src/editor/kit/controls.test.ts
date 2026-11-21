@@ -27,6 +27,7 @@ function handmade(held: number | undefined = 5): Handmade {
     refuseSet: new Set(),
     open: () => open,
     read: () => setting.held,
+    subscribe: () => () => undefined,
     begin: () => {
       if (setting.refuseBegin !== null) {
         setting.log.push('begin refused');
@@ -292,6 +293,85 @@ describe('point 4: a refused begin changes nothing, and every edit begun ends on
       field.commit();
       expect(setting.open(), text).toBe(0);
     }
+  });
+});
+
+describe('a slider read through a widget that reports only where its thumb stands', () => {
+  it('the echo of the position held begins nothing and makes no step, with no press, during one, and while another change is in progress', () => {
+    const setting = handmade(5);
+    const slider = createSlider(setting);
+    expect(slider.report(5)).toEqual({ ok: true, changed: false });
+    setting.refuseBegin = 'Another change is in progress.';
+    expect(slider.report(5)).toEqual({ ok: true, changed: false });
+    setting.refuseBegin = null;
+    slider.press();
+    slider.report(7);
+    expect(slider.report(7)).toEqual({ ok: true, changed: false });
+    slider.release();
+    expect(setting.log).toEqual(['begin 1', 'set 1 7', 'commit 1']);
+  });
+
+  it('with no press, a report is a key’s nudge: an edit of one', () => {
+    const setting = handmade(5);
+    const slider = createSlider(setting);
+    expect(slider.report(6)).toEqual({ ok: true, changed: true });
+    expect([setting.held, setting.log, setting.open()]).toEqual([6, ['begin 1', 'set 1 6', 'commit 1'], 0]);
+  });
+
+  it('a press, its reports and the release are one drag: one edit, committed once', () => {
+    const setting = handmade(5);
+    const slider = createSlider(setting);
+    slider.press();
+    for (const at of [6, 8, 9]) slider.report(at);
+    expect([slider.pressed(), slider.dragging()]).toEqual([true, true]);
+    slider.release();
+    expect([setting.held, slider.pressed(), setting.log]).toEqual([
+      9,
+      false,
+      ['begin 1', 'set 1 6', 'set 1 8', 'set 1 9', 'commit 1'],
+    ]);
+  });
+
+  it('given up mid-drag (Escape, a touch cancelled), the reports and the release that follow change nothing', () => {
+    const setting = handmade(5);
+    const slider = createSlider(setting);
+    slider.press();
+    slider.report(8);
+    slider.giveUp();
+    expect([setting.held, slider.pressed()]).toEqual([5, true]);
+    expect(slider.report(9)).toEqual({ ok: true, changed: false });
+    expect(slider.report(10)).toEqual({ ok: true, changed: false });
+    expect(slider.release()).toEqual({ ok: true, changed: false });
+    expect([setting.held, setting.open(), setting.log]).toEqual([5, 0, ['begin 1', 'set 1 8', 'cancel 1']]);
+    expect(slider.report(6)).toEqual({ ok: true, changed: true });
+  });
+
+  it('a press refused changes nothing, nor do its reports, and the release ends the press', () => {
+    const setting = handmade(5);
+    const slider = createSlider(setting);
+    setting.refuseBegin = 'Another change is in progress.';
+    expect(slider.press()).toEqual({ ok: false, why: 'Another change is in progress.' });
+    expect(slider.report(9)).toEqual({ ok: true, changed: false });
+    slider.release();
+    expect([setting.held, slider.pressed(), setting.log]).toEqual([5, false, ['begin refused']]);
+  });
+
+  it('on a scale, the thumb stands at the position, a report is read as its value, and the readout is the value held exactly', () => {
+    const setting = handmade(5);
+    const slider = createSlider(setting, { toPosition: (value) => value * 10, toValue: (at) => at / 10 + 0.01 });
+    expect(slider.position()).toBe(50);
+    expect([slider.readout(50), slider.readout(70)]).toEqual([5, 7.01]);
+    expect(slider.report(50)).toEqual({ ok: true, changed: false });
+    slider.report(70);
+    expect([setting.held, slider.position()]).toEqual([7.01, 70.1]);
+  });
+
+  it('nothing held: no position, and a readout is the value the position stands for', () => {
+    const setting = handmade(5);
+    const slider = createSlider(setting);
+    setting.held = undefined;
+    expect(slider.position()).toBeUndefined();
+    expect(slider.readout(3)).toBe(3);
   });
 });
 

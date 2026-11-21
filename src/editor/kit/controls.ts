@@ -20,6 +20,10 @@
 //    began is none (the store's own rule, D170). Given up (Escape, the pointer lost), the edit is cancelled and the
 //    held value is as before. A key's nudge is an edit of one: begun, set and committed at once; during a drag it is
 //    one more position of that drag.
+//    A slider's widget that reports only where its thumb now stands (Carbon's does) is read through a press: what it
+//    reports while the pointer is down is a position of the drag, or nothing once the drag is given up or was refused;
+//    what it reports with no press is a key's nudge; and a report of the position already held is the widget's echo of
+//    a change made elsewhere, which begins nothing and makes no step, whatever else is open.
 // 4. A refused begin changes nothing: the control shows what is held, and says why and that nothing held changed. A
 //    control never sets, commits or cancels an edit it did not begin, and never leaves one open: every edit it begins
 //    ends in exactly one commit or one cancel, whatever order the events come in (a move with no start, two starts,
@@ -44,12 +48,26 @@ interface Edit {
 /** A begun edit, or why none could begin (another change in progress; the setting no longer there). */
 export type Begun = { readonly ok: true; readonly edit: Edit } | { readonly ok: false; readonly why: string };
 
-/** What a control is handed: the value held, read each time it is asked, and how to begin an edit of it. */
+/**
+ * What a control is handed: the value held, read each time it is asked; how to begin an edit of it; and how a page
+ * learns that it may have changed, so that it asks again.
+ */
 export interface Setting {
   /** The value held now; undefined when there is none to show, such as a setting of a route since removed. */
   read(): number | undefined;
   begin(): Begun;
+  /** Calls `listener` after any change that may have changed the value held; gives back the call that stops it. */
+  subscribe(listener: () => void): () => void;
 }
+
+/** How a slider's thumb position stands for a value, and back: a pair from sliderScales.ts, or the identity. */
+export interface Scale {
+  toPosition(value: number): number;
+  toValue(position: number): number;
+}
+
+/** A thumb whose position is the value itself. */
+export const IDENTITY: Scale = { toPosition: (value) => value, toValue: (position) => position };
 
 /** What a field says when the text it commits is not a number. */
 export const NOT_A_NUMBER = 'Enter a number in figures, such as 12 or 0.5.';
@@ -83,38 +101,83 @@ export interface Slider {
   giveUp(): Result;
   /** A key moves the slider to `value`: an edit of one, or one more position of the drag open. */
   nudge(value: number): Result;
+  /** Where the thumb shows the value held: its position on the scale; undefined when nothing is held. */
+  position(): number | undefined;
+  /** The value a thumb at `position` stands for, as read out: the value held, exactly, where the thumb shows it. */
+  readout(position: number): number;
+  /** Whether the pointer is down on the slider: between `press()` and `release()`, given up or not. */
+  pressed(): boolean;
+  /** The pointer goes down on the slider: a press, and the drag begun (`start()`); refused, the press changes nothing. */
+  press(): Result;
+  /**
+   * The widget says its thumb now stands at `position`. The position held already is its echo of a change made
+   * elsewhere: nothing. During a press, one more position of the drag, or nothing once it is given up or was refused.
+   * With no press, a key's nudge.
+   */
+  report(position: number): Result;
+  /** The pointer is let go: the press ends, and so does its drag (`end()`), if one is still open. */
+  release(): Result;
 }
 
-/** A slider's logic over `setting`. Its one state is the edit of a drag it began and has not yet been told the end of. */
-export function createSlider(setting: Setting): Slider {
+/**
+ * A slider's logic over `setting`, its thumb placed by `scale`. Its state is the edit of a drag it began and has not yet
+ * been told the end of, and whether the pointer is down on it.
+ */
+export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider {
   let drag: Edit | null = null;
+  let down = false;
 
   const move = (value: number): Result => (drag === null ? NOTHING : drag.set(value));
+  const start = (): Result => {
+    if (drag !== null) return NOTHING;
+    const begun = setting.begin();
+    if (!begun.ok) return { ok: false, why: begun.why };
+    drag = begun.edit;
+    return NOTHING;
+  };
+  const end = (): Result => {
+    if (drag === null) return NOTHING;
+    const edit = drag;
+    drag = null;
+    return edit.commit();
+  };
+  const position = (): number | undefined => {
+    const held = setting.read();
+    return held === undefined ? undefined : scale.toPosition(held);
+  };
+  const nudge = (value: number): Result => (drag === null ? editOfOne(setting, value) : move(value));
 
   return {
     shown: () => setting.read(),
     dragging: () => drag !== null,
-    start: () => {
-      if (drag !== null) return NOTHING;
-      const begun = setting.begin();
-      if (!begun.ok) return { ok: false, why: begun.why };
-      drag = begun.edit;
-      return NOTHING;
-    },
+    start,
     move,
-    end: () => {
-      if (drag === null) return NOTHING;
-      const edit = drag;
-      drag = null;
-      return edit.commit();
-    },
+    end,
     giveUp: () => {
       if (drag === null) return NOTHING;
       const edit = drag;
       drag = null;
       return edit.cancel();
     },
-    nudge: (value) => (drag === null ? editOfOne(setting, value) : move(value)),
+    nudge,
+    position,
+    readout: (at) => {
+      const held = setting.read();
+      return held !== undefined && at === position() ? held : scale.toValue(at);
+    },
+    pressed: () => down,
+    press: () => {
+      down = true;
+      return start();
+    },
+    report: (at) => {
+      if (at === position()) return NOTHING;
+      return down ? move(scale.toValue(at)) : nudge(scale.toValue(at));
+    },
+    release: () => {
+      down = false;
+      return end();
+    },
   };
 }
 

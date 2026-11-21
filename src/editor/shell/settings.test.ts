@@ -6,7 +6,7 @@ import type { Project } from '../../adapters/io/format';
 import { RETIRED_WORDS } from '../../adapters/io/fixtures';
 import { newLine, newPoint, newRoute, newScene, type IdSource } from '../../core/model/scene';
 import { createNumberField, createSlider } from '../kit/controls';
-import { addRoute, removeRoute } from '../store/command';
+import { addRoute, removeRoute, setRouteSetting } from '../store/command';
 import { createStore, type Store } from '../store/store';
 import { routeSetting, sceneSetting, WORDS } from './settings';
 
@@ -260,6 +260,19 @@ describe('the orders of events on the store (the claim’s point 4)', () => {
     expect([slider.dragging(), store.getState().undo]).toEqual([false, null]);
     expect(slider.start()).toEqual({ ok: true, changed: false });
     slider.end();
+  });
+});
+
+describe('a page learns of a change', () => {
+  it('a setting calls its listener after a change made elsewhere, until stopped', () => {
+    const { store, route } = made();
+    let calls = 0;
+    const stop = routeSetting(store, route, 'line', 'thickness').subscribe(() => (calls += 1));
+    store.dispatch(setRouteSetting(route, 'line', 'thickness', 9));
+    store.undo();
+    stop();
+    store.redo();
+    expect(calls).toBe(2);
   });
 });
 
