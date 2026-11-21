@@ -66,7 +66,7 @@
 
 - [ ] PRESET-01 — The five presets — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] EX-01 — One built-in scene for each of the five presets, in v4 — since 2026-10-05 — (from: CROWD-05, 2026-10-05)
-- [!] A11Y-03 — Extended accessibility depth, before v4.0 — since 2026-11-18 — blocked: the owner's VoiceOver grants on his Mac — (from: PLAN-6, 2026-11-18)
+- [ ] A11Y-03 — Extended accessibility depth, before v4.0 — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [!] REV-03 — Unified pointer transactions · Review assurance — since 2026-10-01 — blocked: v4's pointer input, then owner evidence — physical Android Chrome
 - [!] REV-05 — Accessibility assurance · Accessibility assurance — since 2026-10-01 — blocked: v4's extended accessibility depth before v4.0 is declared, then owner evidence — NVDA/VoiceOver + forced-colours + reduced-motion emulation
 - [!] V40-01 — Declare v4.0 — since 2026-11-18 — blocked: the owner's declaration — (from: PLAN-6, 2026-11-18)
