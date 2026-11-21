@@ -7,14 +7,76 @@
 // control. Each journey below checks what the shell has now, against the reviewed sequences under it, and fails as
 // soon as the shell gains what it cannot yet check (a field, a setting, a status region, content a control opens, a
 // control other than a link): the item that adds one writes its journey here, in the same pull request.
+// CORE-05, stage 5's first piece (2026-11-21): the shell gains its one status region, which the editor's keys write
+// to, and the keys themselves (Home and End; Space and the command chords Undo and Redo; the keys of one printable
+// character held off, D183). Its journeys are `fields-and-status` (4.1.3) and `character-key-shortcuts` (2.1.4).
+// CORE-05, stage 5's second piece (2026-11-21): Help, a button after the paragraph and the dialog it opens (also by
+// `?`), listing the shortcuts, with the switch for single-key shortcuts, on to begin with (D183). The shell's journeys
+// now open it: focus in, kept in, back to "Help" (2.4.3); the button and the switch by pointer (2.5.2); the switch's
+// help (3.3.5) and its change of no context (3.2.2); the single-key shortcuts both ways (2.1.4).
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
 // (2.4.3); each route and its title (2.4.2); the one place the shell links to. A change to the shell is reviewed here.
 const READING = ['Route Plotter', 'Version 4 is being built here.'];
-const FOCUS = ['link "GitHub"'];
+const FOCUS = ['link "GitHub"', 'button "Help"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
 const PROGRESS = 'https://github.com/djDAOjones/route-plotter';
+// The shell's one status region, and the words the editor's keys say in it (the editor's transport's own, WORDS).
+const STATUS = '[role=status]';
+const said = async (page) => (await page.locator(STATUS).textContent()) ?? '';
+const SKIPPED_TO_START = 'Skipped to start';
+const SKIPPED_TO_END = 'Skipped to end';
+// The keys of one printable character the editor's key table names: live while their switch is on, as the page opens,
+// and doing nothing while it is off (D183).
+const SINGLE_KEYS = ['j', 'k', 'l', ',', '.', '<', '>', '?'];
+// Help: its button, its dialog, and the switch in it for single-key shortcuts, with the sentence under it.
+const HELP = '#help';
+const SWITCH = '#single-keys';
+const helpButton = (page) => page.locator(HELP);
+const helpDialog = (page) => page.getByRole('dialog', { name: 'Help' });
+const singleKeys = (page) => page.locator(SWITCH);
+const focusIs = (page, sel) => page.evaluate((s) => !!document.activeElement?.matches(s), sel);
+// Focus goes back to "Help" a moment after Help closes (Carbon's `launcherButtonRef`, by a timer): wait for it.
+const backOnHelp = (page) => page.waitForFunction((s) => !!document.activeElement?.matches(s), HELP, { timeout: 2000 }).then(() => true, () => false);
+// The status region holds a message about 2 s: wait for it to empty before a check that it says nothing.
+const quiet = (page) => page.waitForFunction((s) => !document.querySelector(s)?.textContent, STATUS, { timeout: 5000 }).then(() => true, () => false);
+// Open Help by its button from the keyboard, Tab to its switch, press Space, close it by Escape. The switch is drawn
+// only while Help is open: what it said before and after the press, and whether focus came back to "Help".
+async function flipByKeyboard(page) {
+  await helpButton(page).focus();
+  await page.keyboard.press('Enter');
+  await helpDialog(page).waitFor();
+  for (let i = 0; i < 6 && !(await focusIs(page, SWITCH)); i++) await page.keyboard.press('Tab');
+  const before = await singleKeys(page).getAttribute('aria-checked');
+  await page.keyboard.press('Space');
+  const after = await singleKeys(page).getAttribute('aria-checked');
+  await page.keyboard.press('Escape');
+  return { before, after, back: await backOnHelp(page) };
+}
+// What Help shows, as reviewed: its close button, heading, the two groups of the key table and the switch. The chords
+// read Cmd on a Mac and Ctrl elsewhere. Carbon's "Close" tooltip, shown while Close has focus, is not listed.
+const helpOpen = (checked) => [
+  '- dialog "Help":',
+  '  - button "Close"',
+  '  - heading "Help" [level=2]',
+  '  - table "Playback":',
+  '    - caption: Playback',
+  '    - rowgroup:',
+  '      - row "Play/pause Space K"',
+  '      - row "Play reverse J"',
+  '      - row "Play forward L"',
+  '      - row "Skip to start Home , <"',
+  '      - row "Skip to end End . >"',
+  '  - table "General":',
+  '    - caption: General',
+  '    - rowgroup:',
+  '      - row /Undo (Cmd|Ctrl)\\+Z/',
+  '      - row /Redo (Cmd|Ctrl)\\+Shift\\+Z/',
+  '      - row "Open help ?"',
+  `  - switch "Single-key shortcuts"${checked ? ' [checked]' : ''}`,
+  '  - paragraph: Turned off, K, J, L, comma, <, full stop, > and ? do nothing. Space, Home, End, Undo and Redo keep working.',
+].join('\n');
 // The processes the shell presents (CONF03): none. A process is a series of steps toward a goal inside the app; the
 // shell has no form and no link to another of the app's pages, and its one link leaves Route Plotter for a page it does
 // not own, which is no step of a Route Plotter process and is not tested here. The item that adds a process names it
@@ -92,11 +154,26 @@ export default {
         '    - link "GitHub":',
         `      - /url: ${PROGRESS}`,
         '    - text: .',
+        '  - button "Help"',
+        '  - status',
       ].join('\n'),
-      interactions: [{ name: 'focus the progress link', run: async ({ page }) => { await progressLink(page).focus(); } }],
+      dialogs: [{ name: 'help', opener: HELP }],
+      interactions: [
+        { name: 'focus the progress link', run: async ({ page }) => { await progressLink(page).focus(); } },
+        { name: 'open help', run: async ({ page }) => { await helpButton(page).click(); await helpDialog(page).waitFor(); }, snapshot: helpOpen(true) },
+        {
+          name: 'turn single-key shortcuts off',
+          run: async ({ page }) => { await helpButton(page).click(); await singleKeys(page).click(); },
+          snapshot: helpOpen(false),
+        },
+      ],
       keeps: {
         content: ['h1', 'main p'],
-        functions: [{ name: 'follow the progress link', run: async ({ page }) => { await progressLink(page).click(); return arrives(page, PROGRESS); } }],
+        functions: [
+          { name: 'follow the progress link', run: async ({ page }) => { await progressLink(page).click(); return arrives(page, PROGRESS); } },
+          // Help is closed again after, so the page is left as found (the forced-colours test counts stateful controls next).
+          { name: 'open help', run: async ({ page }) => { await helpButton(page).click(); const shown = await helpDialog(page).isVisible(); await page.keyboard.press('Escape'); return shown && backOnHelp(page); } },
+        ],
       },
     },
     // { name: 'home', path: '/', snapshot: '- main:\n  - heading "Home" [level=1]', dialogs: [{ name: 'help', opener: '#help' }],
@@ -105,15 +182,29 @@ export default {
   ],
   // Keyboard functions run at no delay and with long gaps between keys: steps of { focus }, { press } or { type }.
   keyboardFunctions: [
+    // Enter on the focused link follows it: the editor's keys never take a link's own activation.
     { name: 'follow-progress-link', state: 'shell', steps: [{ focus: 'main a[href]' }, { press: 'Enter' }], check: async ({ page }) => arrives(page, PROGRESS) },
+    // The editor's keys, each checked by the words it says in the status region.
+    { name: 'skip-to-start-by-home', state: 'shell', steps: [{ press: 'Home' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_START },
+    { name: 'skip-to-end-by-end', state: 'shell', steps: [{ press: 'End' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_END },
+    // Help: opened by its button and by `?` (focus moves in), closed by Escape with focus back on "Help"; its switch
+    // turned off and on again by Space.
+    { name: 'open-help-by-button', state: 'shell', steps: [{ focus: HELP }, { press: 'Enter' }], check: async ({ page }) => (await helpDialog(page).isVisible()) && helpDialog(page).evaluate((e) => e.contains(document.activeElement)) },
+    { name: 'open-help-by-question-mark', state: 'shell', steps: [{ press: '?' }], check: async ({ page }) => (await helpDialog(page).isVisible()) && helpDialog(page).evaluate((e) => e.contains(document.activeElement)) },
+    { name: 'close-help-by-escape', state: 'shell', steps: [{ focus: HELP }, { press: 'Enter' }, { press: 'Escape' }], check: async ({ page }) => !(await helpDialog(page).isVisible()) && backOnHelp(page) },
+    { name: 'single-keys-off', state: 'shell', steps: [{ focus: HELP }, { press: 'Enter' }, { focus: SWITCH }, { press: 'Space' }], check: async ({ page }) => (await singleKeys(page).getAttribute('aria-checked')) === 'false' },
+    { name: 'single-keys-on', state: 'shell', steps: [{ focus: HELP }, { press: 'Enter' }, { focus: SWITCH }, { press: 'Space' }, { press: 'Space' }], check: async ({ page }) => (await singleKeys(page).getAttribute('aria-checked')) === 'true' },
     // { name: 'set-hold', state: 'home', steps: [{ focus: '#hold' }, { press: 'Meta+A' }, { type: '11' }, { press: 'Enter' }], check: async ({ page }) => (await page.locator('#hold').inputValue()) === '11' },
   ],
   // Authored journeys: a name, a catalogue method (j-* or keyboard), the rows it claims, and run({ page, expect, open, record }).
   journeys: [
     {
-      // 1.3.2: the text blocks, in reading order, match the reviewed sequence and run top to bottom on screen. 2.4.3:
-      // Tab meets the reviewed controls in order, top to bottom, and no control opens content (that needs its own
-      // journey: focus moves into what opens and returns when it closes).
+      // 1.3.2: the text blocks, in reading order, match the reviewed sequence and run top to bottom on screen (closed,
+      // Help's content is hidden and read by no one). 2.4.3: Tab meets the reviewed controls in order, top to bottom;
+      // the one control that opens content, "Help", opens its dialog with focus inside, Tab and Shift+Tab keep focus
+      // in it, and focus returns to "Help" when it closes: from where focus lands, one Escape; from "Close", whose
+      // Carbon tooltip shows while it has focus, the first Escape hides the tooltip (1.4.13's dismissal) and the second
+      // closes Help (D186). A further control that opens content needs its own check.
       name: 'reading-and-focus-order',
       method: 'j-order',
       rows: ['1.3.2', '2.4.3'],
@@ -130,8 +221,41 @@ export default {
 
         const { order, problems: focus } = await tabOrder(page, tab);
         const opens = await page.locator(OPENS).count();
-        if (opens) focus.push(`${opens} control(s) open content: write the journey that opens each, checks focus moves in, and returns it on close`);
-        record('2.4.3', !focus.length, focus.length ? focus.join('; ') : `Tab meets the ${order.length} reviewed control(s) in order, top to bottom (${order.join(', ')}); no control opens content`);
+        if (opens) focus.push(`${opens} element(s) open or are opened content at rest; Help's dialog, drawn only while open, is checked below: write the check for any other`);
+        await open('shell');
+        await helpButton(page).focus();
+        await page.keyboard.press('Enter');
+        const dialog = helpDialog(page);
+        const shown = await dialog.isVisible();
+        const inside = async () => dialog.evaluate((e) => e.contains(document.activeElement));
+        if (!shown) focus.push('Enter on "Help" did not open its dialog');
+        else {
+          if (!(await inside())) focus.push('focus did not move into Help when it opened');
+          for (const key of ['Tab', 'Tab', 'Tab', 'Shift+Tab', 'Shift+Tab']) {
+            await page.keyboard.press(key);
+            if (!(await inside())) { focus.push(`${key} took focus out of the open dialog`); break; }
+          }
+          if (!(await focusIs(page, SWITCH))) focus.push('Tab and Shift+Tab did not end on the switch');
+          await page.keyboard.press('Escape');
+          if (!(await backOnHelp(page))) focus.push('focus did not return to "Help" when its dialog closed by one Escape from the switch');
+          await helpButton(page).focus();
+          await page.keyboard.press('Enter');
+          await helpDialog(page).waitFor();
+          await page.keyboard.press('Escape');
+          if (!(await backOnHelp(page))) focus.push('focus did not return to "Help" when one Escape closed it from where focus landed');
+          await helpButton(page).focus();
+          await page.keyboard.press('Enter');
+          await helpDialog(page).waitFor();
+          await page.keyboard.press('Shift+Tab');
+          const onClose = await focusIs(page, '.cds--modal-close');
+          await page.keyboard.press('Escape');
+          const tipFirst = onClose && (await helpDialog(page).isVisible()) && !(await page.getByRole('tooltip', { name: 'Close' }).isVisible());
+          await page.keyboard.press('Escape');
+          if (!onClose) focus.push('Shift+Tab from where focus landed did not reach "Close"');
+          else if (!tipFirst) focus.push('on "Close", the first Escape did not hide its tooltip alone');
+          if (!(await backOnHelp(page))) focus.push('focus did not return to "Help" when a second Escape on "Close" closed it');
+        }
+        record('2.4.3', !focus.length, focus.length ? focus.join('; ') : `Tab meets the ${order.length} reviewed control(s) in order, top to bottom (${order.join(', ')}); "Help" opens its dialog with focus inside, Tab and Shift+Tab keep it there, and it returns to "Help" on Escape: one from where focus lands or from the switch; on "Close", the first hides its tooltip and the second closes (D186)`);
       },
     },
     {
@@ -151,7 +275,9 @@ export default {
     },
     {
       // 2.5.2: each control does nothing on the down-event, a press moved off it before release does nothing, and a
-      // whole press acts, on the up-event. Only links are known here; any other control needs its own journey.
+      // whole press acts, on the up-event: the progress link (followed), "Help" (its dialog opens) and, inside Help, the
+      // switch (it turns). A press on the switch is moved off to a point inside the dialog, as a press outside Help
+      // closes it. Any other control needs its own journey.
       name: 'pointer-cancellation',
       method: 'j-pointer',
       rows: ['2.5.2'],
@@ -164,7 +290,8 @@ export default {
           const control = page.locator(CONTROLS).filter({ visible: true }).nth(i);
           const name = await named(control);
           const href = await control.getAttribute('href');
-          if (!href) { problems.push(`${name} is not a link: write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
+          const isHelp = await control.evaluate((e, s) => e.matches(s), HELP);
+          if (!href && !isHelp) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
           const box = await control.boundingBox();
           const x = box.x + box.width / 2, y = box.y + box.height / 2;
           // A point well clear of every control, to move the press off to before release.
@@ -178,15 +305,49 @@ export default {
           }, CONTROLS);
           if (!off) { problems.push(`${name}: no clear point beside it to move a press off to`); continue; }
           const start = page.url();
+          const acted = async () => page.url() !== start || (await helpDialog(page).isVisible());
           await pointer.down(x, y);
           await page.waitForTimeout(250);
-          if (page.url() !== start) { problems.push(`${name} acted on the down-event`); continue; }
+          if (await acted()) { problems.push(`${name} acted on the down-event`); continue; }
           await pointer.move(off.x, off.y);
           await pointer.up();
           await page.waitForTimeout(400);
-          if (page.url() !== start) { problems.push(`${name}: a press moved off it before release still acted`); continue; }
+          if (await acted()) { problems.push(`${name}: a press moved off it before release still acted`); continue; }
           await pointer.down(x, y);
           await pointer.up();
+          if (isHelp) {
+            await page.waitForTimeout(400);
+            if (!(await helpDialog(page).isVisible())) { problems.push(`${name}: a whole press did not open Help`); continue; }
+            done.push(name);
+            // Inside Help, the switch: a point in the dialog clear of its controls to move the press off to.
+            const sw = singleKeys(page), was = await sw.getAttribute('aria-checked');
+            const sbox = await sw.boundingBox();
+            const sx = sbox.x + sbox.width / 2, sy = sbox.y + sbox.height / 2;
+            const inner = await page.evaluate(({ sel, ctl }) => {
+              const box = document.querySelector(sel)?.getBoundingClientRect();
+              const all = [...document.querySelectorAll(ctl)].filter((c) => c.getBoundingClientRect().width > 0);
+              if (!box) return null;
+              for (let py = box.top + 10; py < box.bottom; py += 10) for (let px = box.left + 10; px < box.right; px += 10) {
+                if (all.every((c) => { const r = c.getBoundingClientRect(); return px < r.left - 30 || px > r.right + 30 || py < r.top - 30 || py > r.bottom + 30; })) return { x: px, y: py };
+              }
+              return null;
+            }, { sel: '[role=dialog]', ctl: CONTROLS });
+            const swName = await named(sw);
+            if (!inner) { problems.push(`${swName}: no clear point inside Help to move a press off to`); continue; }
+            await pointer.down(sx, sy);
+            await page.waitForTimeout(250);
+            if ((await sw.getAttribute('aria-checked')) !== was) { problems.push(`${swName} turned on the down-event`); continue; }
+            await pointer.move(inner.x, inner.y);
+            await pointer.up();
+            await page.waitForTimeout(250);
+            if ((await sw.getAttribute('aria-checked')) !== was || !(await helpDialog(page).isVisible())) { problems.push(`${swName}: a press moved off it before release still acted`); continue; }
+            await pointer.down(sx, sy);
+            await pointer.up();
+            await page.waitForTimeout(250);
+            if ((await sw.getAttribute('aria-checked')) === was) problems.push(`${swName}: a whole press did not turn it`);
+            else done.push(swName);
+            continue;
+          }
           const target = new URL(href, start).href;
           if (!(await arrives(page, target))) problems.push(`${name}: a whole press did not follow it to ${target} (at ${page.url()})`);
           else done.push(name);
@@ -195,27 +356,96 @@ export default {
       },
     },
     {
-      // 3.3.5: no field takes input, so none needs help. 4.1.3: the shell raises no status message: nothing changes
-      // after it loads, and it holds no status region. A field or a status region needs its own journey.
+      // 3.3.5: the shell's one setting, the switch for single-key shortcuts in Help (drawn only while Help is open),
+      // has its help: the sentence under it, visible once Help is open and tied to it by aria-describedby, so it is
+      // read with the switch. A further field needs its own check here. 4.1.3: the shell's one status region, role status, is empty
+      // and nothing changes in the 2 s after the shell loads; a real key (Home, with the progress link focused) raises
+      // the editor's message in it, and focus stays on the link. A further status region needs its own check here.
       name: 'fields-and-status',
       method: 'j-forms',
       rows: ['3.3.5', '4.1.3'],
       run: async ({ page, open, record }) => {
         await open('shell');
-        const fields = await page.locator(FIELDS).count();
-        record('3.3.5', fields === 0, fields ? `${fields} field(s) take input: write the journey that reaches each one's help` : 'no field in the shell takes input, so none needs help');
+        const restFields = await page.locator(FIELDS).count();
+        await helpButton(page).click();
+        await helpDialog(page).waitFor();
+        const fields = restFields + await page.locator(FIELDS).count();
+        const onlySwitch = fields === 1 && (await page.locator(FIELDS).first().evaluate((e, s) => e.matches(s), SWITCH));
+        const helpText = await singleKeys(page).evaluate((e) => {
+          const id = e.getAttribute('aria-describedby'), el = id ? document.getElementById(id) : null;
+          return el && el.getBoundingClientRect().height > 0 ? (el.textContent ?? '').trim() : '';
+        });
+        const fieldProblems = [!onlySwitch && `${fields} field(s); the shell has one, the switch in Help: write the check that reaches each other one's help`, !helpText && 'the switch has no visible help tied to it by aria-describedby'].filter(Boolean);
+        record('3.3.5', !fieldProblems.length, fieldProblems.length ? fieldProblems.join('; ') : `the shell's one setting, the switch "Single-key shortcuts" in Help, has its help under it, tied to it and read with it: ${JSON.stringify(helpText)}`);
+        await open('shell');
         const live = await page.locator(LIVE).count();
+        const statuses = await page.locator(STATUS).count();
+        const atRest = await said(page);
         const changes = await page.evaluate(() => new Promise((done) => {
           let n = 0;
           const watch = new MutationObserver((list) => { n += list.length; });
           watch.observe(document.body, { subtree: true, childList: true, characterData: true });
           setTimeout(() => { watch.disconnect(); done(n); }, 2000);
         }));
-        record('4.1.3', !live && !changes, live ? `${live} status region(s): write the journey that raises each message and checks its role and that focus stays` : changes ? `the shell changed ${changes} time(s) after it loaded, with no status region` : 'the shell raises no status message: nothing changes in the 2 s after it loads, and it holds no status region');
+        await progressLink(page).focus();
+        await page.keyboard.press('Home');
+        const words = await said(page);
+        const focusStays = await page.evaluate((href) => document.activeElement?.getAttribute('href') === href, PROGRESS);
+        const problems = [
+          (live !== 1 || statuses !== 1) && `${live} live region(s), ${statuses} with role status: the shell has one, role status; write the check for any other`,
+          atRest && `the status region shows ${JSON.stringify(atRest)} at rest`,
+          changes && `the shell changed ${changes} time(s) in the 2 s after it loaded`,
+          words !== SKIPPED_TO_START && `Home said ${JSON.stringify(words)} in the status region, not ${JSON.stringify(SKIPPED_TO_START)}`,
+          !focusStays && 'focus left the progress link when Home raised the message',
+        ].filter(Boolean);
+        record('4.1.3', !problems.length, problems.length ? problems.join('; ') : `one status region, role status, empty at rest; nothing changes in the 2 s after the shell loads; Home, pressed on the focused progress link, says "${SKIPPED_TO_START}" in it and focus stays on the link`);
       },
     },
     {
-      // With real key events: 2.4.3, Tab meets the reviewed controls in order; 3.2.2, no setting to change; 3.2.5, left
+      // 2.1.4, both ways: as the page opens, single-key shortcuts are on and comma says "Skipped to start". Their switch
+      // in Help, turned off by the keyboard, turns them off: J, K, L, comma, full stop, <, > and ? pressed on the page
+      // and on the focused progress link then say nothing, open nothing and follow nothing, while Home still speaks
+      // (the listener was live throughout). Turned on again, full stop says "Skipped to end".
+      name: 'character-key-shortcuts',
+      method: 'keyboard',
+      rows: ['2.1.4'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const start = page.url();
+        const problems = [];
+        await page.keyboard.press(',');
+        if ((await said(page)) !== SKIPPED_TO_START) problems.push(`with the switch on, comma said ${JSON.stringify(await said(page))}, not ${JSON.stringify(SKIPPED_TO_START)}`);
+        const off = await flipByKeyboard(page);
+        if (off.before !== 'true') problems.push('the switch was not on as the page opened');
+        if (off.after !== 'false') problems.push('Space on the switch did not turn it off');
+        if (!off.back) problems.push('focus did not come back to "Help" after turning the switch off');
+        if (!(await quiet(page))) problems.push('the status region did not empty');
+        for (const where of ['the page', 'the focused progress link']) {
+          if (where === 'the page') await page.locator('main h1').click();
+          else await progressLink(page).focus();
+          for (const key of SINGLE_KEYS) {
+            await page.keyboard.press(key);
+            const words = await said(page);
+            if (words) problems.push(`with the switch off, ${key} on ${where} said ${JSON.stringify(words)}`);
+            if (await helpDialog(page).isVisible()) { problems.push(`with the switch off, ${key} on ${where} opened Help`); await page.keyboard.press('Escape'); }
+            if (page.url() !== start) { problems.push(`${key} on ${where} left the shell for ${page.url()}`); break; }
+          }
+        }
+        await page.keyboard.press('Home');
+        if ((await said(page)) !== SKIPPED_TO_START) problems.push('Home said nothing with the switch off: the editor\'s keys were not listened for, so the check proves nothing');
+        const on = await flipByKeyboard(page);
+        if (on.before !== 'false' || on.after !== 'true') problems.push(`the switch read ${String(on.before)} when Help opened again and ${String(on.after)} after Space, not false then true`);
+        if (!on.back) problems.push('focus did not come back to "Help" after turning the switch on');
+        if (!(await quiet(page))) problems.push('the status region did not empty');
+        await page.keyboard.press('.');
+        if ((await said(page)) !== SKIPPED_TO_END) problems.push(`with the switch on again, full stop said ${JSON.stringify(await said(page))}, not ${JSON.stringify(SKIPPED_TO_END)}`);
+        record('2.1.4', !problems.length, problems.length ? problems.join('; ') : `single-key shortcuts can be turned off (D183): on as the page opens, comma says "${SKIPPED_TO_START}"; with their switch in Help turned off by the keyboard, ${SINGLE_KEYS.join(' ')} pressed on the page and on the focused progress link say, open and follow nothing while Home still says "${SKIPPED_TO_START}"; turned on again, full stop says "${SKIPPED_TO_END}"`);
+      },
+    },
+    {
+      // With real key events: 2.4.3, Tab meets the reviewed controls in order; 3.2.2, the shell's one setting, the switch
+      // in Help, turned off and on by Space changes no context (same page, no new window, Help still open, focus still on
+      // the switch); 3.2.5, left
       // alone for 3 s nothing changes context, nothing refreshes the page and no link opens another window, so the one
       // change comes on request; P06, the shell's one task, following the progress link, runs by Tab and Enter and Back
       // recovers the shell (the destination stood in, not tested); CONF03, the shell presents no process (PROCESSES).
@@ -228,8 +458,22 @@ export default {
         record('2.4.3', !problems.length, problems.length ? problems.join('; ') : `Tab meets the ${order.length} reviewed control(s) in order, top to bottom: ${order.join(', ')}`);
         await open('shell');
         const start = page.url(), pages = page.context().pages().length;
-        const settings = await page.locator(FIELDS).count();
-        record('3.2.2', settings === 0, settings ? `${settings} setting(s): write the journey that changes each and checks no context changes` : 'no setting in the shell to change, so none changes context');
+        const context = [];
+        const atRest = await page.locator(FIELDS).count();
+        await helpButton(page).focus();
+        await page.keyboard.press('Enter');
+        await helpDialog(page).waitFor();
+        const settings = atRest + await page.locator(FIELDS).count();
+        if (settings !== 1) context.push(`${settings} setting(s); the shell has one, the switch in Help: write the check for any other`);
+        await singleKeys(page).focus();
+        for (const want of ['false', 'true']) {
+          await page.keyboard.press('Space');
+          if ((await singleKeys(page).getAttribute('aria-checked')) !== want) context.push(`Space did not turn the switch to ${want}`);
+          if (page.url() !== start || page.context().pages().length !== pages) context.push('turning the switch changed the page or opened a window');
+          if (!(await helpDialog(page).isVisible()) || !(await focusIs(page, SWITCH))) context.push('turning the switch closed Help or moved focus');
+        }
+        record('3.2.2', !context.length, context.length ? context.join('; ') : 'the shell\'s one setting, the switch "Single-key shortcuts" in Help, turned off and on by Space changes no context: same page, no new window, Help still open, focus still on the switch');
+        await open('shell');
         await page.waitForTimeout(3000);
         const idle = page.url() === start && page.context().pages().length === pages;
         const refresh = await page.locator('meta[http-equiv="refresh" i]').count();
@@ -271,9 +515,9 @@ export default {
   // Route Plotter's, written by STACK-03 with the first run. The item that changes a shared component or the environment
   // the run uses, or finds a failure, updates them, with the date.
   records: {
-    date: '2026-11-19',
+    date: '2026-11-21',
     rows: {
-      P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment has changed since. CORE-05, the editor shell, is a shared-component change and flags a wider run here' },
+      P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment had changed until 2026-11-21. That day CORE-05 began to change the shell, a shared component: one status region and the editor\'s keys, with their journeys broadened in the same change (fields-and-status, character-key-shortcuts, the keyboard functions skip-to-start-by-home and skip-to-end-by-end). Later the same day CORE-05 added Help, the first dialog and the first setting on the shell (the switch for single-key shortcuts, on to begin with), with the journeys that open it broadened in the same change (reading-and-focus-order, pointer-cancellation, fields-and-status, character-key-shortcuts both ways, keyboard-task) and the keyboard functions open-help-by-button, open-help-by-question-mark, close-help-by-escape, single-keys-off and single-keys-on. A wider run (the sampling, npm run a11y:sample) is flagged for when the frame\'s controls are on the page' },
       P10: { state: 'pass', note: 'no open finding: the first run\'s one product failure, a shell with no control for the focus test, was fixed by its progress link and retested in the same run (STACK-03, pull request #178, which shows both runs); a failure stays a failure until fixed' },
     },
   },

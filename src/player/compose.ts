@@ -67,9 +67,12 @@ interface Evaluated {
 
 type Fail = (routeId: string | null, featureId: string, reason: string) => void;
 
+/** What the content's end depends on: a frame's inputs, less its moment and where it is drawn (D174). */
+export type ContentRequest = Pick<FrameRequest, 'scene' | 'seed' | 'size' | 'image'>;
+
 /** What every stage shares: the request, the modules, the frame's render scale and the image's aspect. */
-interface Run {
-  readonly request: FrameRequest;
+interface Run<R extends ContentRequest = FrameRequest> {
+  readonly request: R;
   readonly catalogue: Catalogue;
   readonly scale: number;
   readonly aspect: number;
@@ -114,8 +117,15 @@ function basesOf<F extends { readonly id: string }, B>(routeId: string | null, f
   });
 }
 
-/** 1. Routes: each route's view and its modules; every module's end (the content's length); the routes' evaluations. */
-function routesStage(run: Run) {
+function runOf<R extends ContentRequest>(request: R, catalogue: Catalogue, fail: Fail): Run<R> {
+  return { request, catalogue, scale: renderScale(request.size, request.scene.settings.graphics.scale), aspect: aspectOf(request.image), fail };
+}
+
+/**
+ * 1a. What depends on the scene and not on the moment: each route's view and its modules, and every module's end, which
+ * give the content's end. A frame and the transport read it here alike (D174), so what plays is as long as what is drawn.
+ */
+function contentStage(run: Run<ContentRequest>) {
   const { request, catalogue, scale, aspect, fail } = run;
   const { scene } = request;
   const routes = scene.routes.map((route) => {
@@ -144,8 +154,19 @@ function routesStage(run: Run) {
     for (const entry of modules) endOf(route.id, entry.feature.id, entry, () => entry.feature.end(entry.basis));
   }
   for (const entry of scenes) endOf(null, entry.feature.id, entry, () => entry.feature.end(entry.basis));
-  const contentEnd = contentEndMs(scene, aspect, parts);
-  const contentMs = contentTime(scene.settings.clock, contentEnd, request.sceneMs);
+  return { routes, scenes, ended, contentEnd: contentEndMs(scene, aspect, parts) };
+}
+
+/** When a scene's content ends, by the sum every frame of it uses; module failures are a frame's to report. */
+export function contentEnd(request: ContentRequest, catalogue: Catalogue = CATALOGUE): number {
+  return contentStage(runOf(request, catalogue, () => undefined)).contentEnd;
+}
+
+/** 1. Routes: the content (1a), then the content's time at the frame's moment and the routes' evaluations. */
+function routesStage(run: Run) {
+  const { request, fail } = run;
+  const { routes, scenes, ended, contentEnd } = contentStage(run);
+  const contentMs = contentTime(request.scene.settings.clock, contentEnd, request.sceneMs);
 
   const evaluated: Evaluated[] = [];
   for (const { route, timeline, modules } of routes) {
@@ -296,8 +317,7 @@ function screenOf({ frame, matrix }: ReturnType<typeof viewStage>, routes: Retur
 export function compose(context: DrawContext, request: FrameRequest, catalogue: Catalogue = CATALOGUE): FrameReport[] {
   const reports: FrameReport[] = [];
   const fail: Fail = (routeId, featureId, reason) => reports.push({ routeId, featureId, reason });
-  const scale = renderScale(request.size, request.scene.settings.graphics.scale);
-  const run: Run = { request, catalogue, scale, aspect: aspectOf(request.image), fail };
+  const run = runOf(request, catalogue, fail);
 
   const routes = routesStage(run);
   const scene = sceneStage(run, routes);

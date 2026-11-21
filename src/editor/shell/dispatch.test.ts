@@ -1,0 +1,244 @@
+// CORE-05, stage 5: the shell's key dispatch, its claim point by point, on the real store and the real editor's
+// transport (a player's transport kept in the store, as bindings.test.ts makes one, recording nothing of its own).
+import { describe, expect, it } from 'vitest';
+import type { Project } from '../../adapters/io/format';
+import { newScene } from '../../core/model/scene';
+import type { Transport } from '../../player/transport/transport';
+import { addRoute } from '../store/command';
+import { createStore } from '../store/store';
+import { createEditorTransport, WORDS } from '../transport/transport';
+import { dispatchKey, type FocusKind, type PressPlace } from './dispatch';
+import { KEYS, type ActionIn, type KeyPress } from './keys';
+
+const UP = { ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, defaultPrevented: false };
+const press = (key: string, held: Partial<Omit<KeyPress, 'key'>> = {}): KeyPress => ({ ...UP, ...held, key });
+const OPEN: PressPlace = { typing: false, dialogOpen: false, focus: 'other' };
+const PLATFORMS = [true, false] as const;
+const LENGTH_MS = 10_000;
+
+/** Every way Ctrl, Cmd, Alt and Shift may be held. */
+const CHORDS = Array.from({ length: 16 }, (_, bits) => ({
+  ctrlKey: (bits & 1) !== 0,
+  metaKey: (bits & 2) !== 0,
+  altKey: (bits & 4) !== 0,
+  shiftKey: (bits & 8) !== 0,
+}));
+
+/** The command key held as `mac` has it, and Shift as asked. */
+const command = (mac: boolean, shiftKey = false) => ({ metaKey: mac, ctrlKey: !mac, shiftKey });
+
+/** Each entry's every key, pressed as the entry asks on `mac`. */
+function tablePresses(mac: boolean): { readonly action: string; readonly press: KeyPress }[] {
+  return KEYS.flatMap(({ action, keys, modifiers }) =>
+    keys.map((key) => ({
+      action,
+      press: press(key, modifiers.includes('command') ? command(mac, modifiers.includes('shift')) : {}),
+    })),
+  );
+}
+
+/** A real store on an empty project, the real editor's transport over a player's transport kept in it. */
+function rig() {
+  let n = 0;
+  const project: Project = { scene: newScene(() => `id-${String((n += 1))}`), images: [] };
+  const store = createStore({ project, nextId: () => `new-${String((n += 1))}` });
+  const keep = (change: Partial<ReturnType<typeof store.playback>>) => store.setPlayback({ ...store.playback(), ...change });
+  const player: Transport = {
+    play: () => keep({ playing: true }),
+    pause: () => keep({ playing: false, speed: 1 }),
+    seek: (ms) => keep({ atMs: Math.min(Math.max(ms, 0), LENGTH_MS) }),
+    setSpeed: (speed) => keep({ speed }),
+    length: () => LENGTH_MS,
+  };
+  const said: string[] = [];
+  const editor = createEditorTransport({ transport: player, playback: () => store.playback(), announce: (words) => said.push(words) });
+  const ran: string[] = [];
+  const outcomes: ReturnType<typeof store.undo>[] = [];
+  const recorded = (name: ActionIn<'Playback'>) => () => {
+    ran.push(name);
+    editor[name]();
+  };
+  const transport = {
+    playPause: recorded('playPause'),
+    reverse: recorded('reverse'),
+    forward: recorded('forward'),
+    skipToStart: recorded('skipToStart'),
+    skipToEnd: recorded('skipToEnd'),
+  };
+  const bound = {
+    undo: () => {
+      ran.push('undo');
+      const outcome = store.undo();
+      outcomes.push(outcome);
+      return outcome;
+    },
+    redo: () => {
+      ran.push('redo');
+      const outcome = store.redo();
+      outcomes.push(outcome);
+      return outcome;
+    },
+  };
+  const openHelp = () => {
+    ran.push('help');
+  };
+  const key = (pressed: KeyPress, { mac = true, place = OPEN, singleKeys = true } = {}) =>
+    dispatchKey({ press: pressed, mac, place, singleKeys, store: bound, transport, openHelp });
+  return { store, said, ran, outcomes, key };
+}
+
+describe('the shell’s key dispatch', () => {
+  it('point 1: each key of the table, pressed in the open, runs its one action once and is taken', () => {
+    for (const mac of PLATFORMS) {
+      for (const { action, press: pressed } of tablePresses(mac)) {
+        const { ran, key } = rig();
+        expect(key(pressed, { mac }), `${action} by ${JSON.stringify(pressed)}`).toBe(true);
+        expect(ran).toEqual([action]);
+      }
+    }
+  });
+
+  it('point 1: a key no entry names, a chord no entry asks for, or a press already taken runs nothing and is not taken', () => {
+    const { ran, said, key } = rig();
+    const others = [
+      // `?` left this list when it became Help's key (stage 5); point 4's tests press it.
+      press('a'), press('Escape'), press('Tab'), press('Enter'), press('ArrowLeft'),
+      press('l', { ctrlKey: true }), press('l', { metaKey: true }), press('k', { altKey: true }), press('z'),
+      press(' ', { defaultPrevented: true }), press('Home', { defaultPrevented: true }),
+      press('z', { metaKey: true, defaultPrevented: true }),
+    ];
+    for (const pressed of others) expect(key(pressed), JSON.stringify(pressed)).toBe(false);
+    expect(ran).toEqual([]);
+    expect(said).toEqual([]);
+  });
+
+  it('point 2: in a typing field no key and no chord is taken, and nothing runs', () => {
+    const { ran, said, key } = rig();
+    for (const { keys } of KEYS) {
+      for (const name of keys) {
+        for (const held of CHORDS) {
+          for (const mac of PLATFORMS) expect(key(press(name, held), { mac, place: { ...OPEN, typing: true } })).toBe(false);
+        }
+      }
+    }
+    expect(ran).toEqual([]);
+    expect(said).toEqual([]);
+  });
+
+  it('point 2: while a dialog is open nothing behind it runs, wherever focus is', () => {
+    const { ran, said, key } = rig();
+    const kinds: readonly FocusKind[] = ['button', 'link', 'menuitem', 'slider', 'other'];
+    for (const focus of kinds) {
+      for (const mac of PLATFORMS) {
+        for (const { press: pressed } of tablePresses(mac)) {
+          expect(key(pressed, { mac, place: { typing: false, dialogOpen: true, focus } })).toBe(false);
+        }
+      }
+    }
+    expect(ran).toEqual([]);
+    expect(said).toEqual([]);
+  });
+
+  it('point 2: a menu item keeps Space and Enter, and also Home and End; the rest still run from it', () => {
+    const { ran, key } = rig();
+    const place = { ...OPEN, focus: 'menuitem' as const };
+    expect(key(press(' '), { place })).toBe(false);
+    expect(key(press('Enter'), { place })).toBe(false);
+    expect(key(press('Home'), { place })).toBe(false);
+    expect(key(press('End'), { place })).toBe(false);
+    expect(key(press('k'), { place })).toBe(true);
+    expect(key(press('z', { metaKey: true }), { place })).toBe(true);
+    expect(ran).toEqual(['playPause', 'undo']);
+  });
+
+  it('point 2: a button or a link keeps Space (and Enter); every other key still runs from it', () => {
+    for (const focus of ['button', 'link'] as const) {
+      const { ran, key } = rig();
+      const place = { ...OPEN, focus };
+      expect(key(press(' '), { place }), focus).toBe(false);
+      expect(key(press(' ', { shiftKey: true }), { place }), focus).toBe(false);
+      expect(key(press('Enter'), { place }), focus).toBe(false);
+      expect(ran).toEqual([]);
+      expect(key(press('k'), { place })).toBe(true);
+      expect(key(press('Home'), { place })).toBe(true);
+      expect(key(press('End'), { place })).toBe(true);
+      expect(key(press('z', { metaKey: true }), { place })).toBe(true);
+      expect(ran).toEqual(['playPause', 'skipToStart', 'skipToEnd', 'undo']);
+    }
+  });
+
+  it('point 2: a slider keeps Home and End (and the arrows, Page Up and Down); Space and the rest still run from it', () => {
+    const { ran, key } = rig();
+    const place = { ...OPEN, focus: 'slider' as const };
+    expect(key(press('Home'), { place })).toBe(false);
+    expect(key(press('End'), { place })).toBe(false);
+    expect(ran).toEqual([]);
+    expect(key(press(' '), { place })).toBe(true);
+    expect(key(press(','), { place })).toBe(true);
+    expect(key(press('z', { metaKey: true, shiftKey: true }), { place })).toBe(true);
+    expect(ran).toEqual(['playPause', 'skipToStart', 'redo']);
+  });
+
+  it('point 3: a Playback action is the editor’s transport’s function of the same name, saying its own words', () => {
+    const { ran, said, key, store } = rig();
+    expect(key(press('End'))).toBe(true);
+    expect(store.playback().atMs).toBe(LENGTH_MS);
+    expect(key(press('Home'))).toBe(true);
+    expect(store.playback().atMs).toBe(0);
+    expect(key(press(' '))).toBe(true);
+    expect(store.playback().playing).toBe(true);
+    expect(key(press('k'))).toBe(true);
+    expect(key(press('l'))).toBe(true);
+    expect(key(press('j'))).toBe(true);
+    expect(store.playback().speed).toBe(-1);
+    expect(ran).toEqual(['skipToEnd', 'skipToStart', 'playPause', 'playPause', 'forward', 'reverse']);
+    expect(said).toEqual([WORDS.skippedToEnd, WORDS.skippedToStart, WORDS.playing, WORDS.paused, WORDS.playing]);
+  });
+
+  it('point 3: Undo and Redo are the store’s; a refusal changes nothing and the key is still taken', () => {
+    for (const mac of PLATFORMS) {
+      const { ran, outcomes, key, store } = rig();
+      const before = store.getState();
+      expect(key(press('z', command(mac)), { mac })).toBe(true);
+      expect(outcomes[0]).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+      expect(store.getState()).toBe(before);
+      expect(store.dispatch(addRoute()).ok).toBe(true);
+      const added = store.getState();
+      expect(key(press('Z', command(mac, true)), { mac })).toBe(true);
+      expect(outcomes[1]).toEqual({ ok: false, refusal: { why: 'nothing-to-redo' } });
+      expect(store.getState()).toBe(added);
+      expect(key(press('z', command(mac)), { mac })).toBe(true);
+      expect(store.getState().project).toEqual(before.project);
+      expect(key(press('z', command(mac, true)), { mac })).toBe(true);
+      expect(store.getState().project).toEqual(added.project);
+      expect(ran).toEqual(['undo', 'redo', 'undo', 'redo']);
+    }
+  });
+
+  it('point 4: with single-key shortcuts off, J, K, L , . < > ? are never taken; Space, Home, End and the chords run', () => {
+    for (const mac of PLATFORMS) {
+      const { ran, said, key } = rig();
+      const off = { mac, singleKeys: false };
+      const single = [
+        press('j'), press('k'), press('l'), press('J', { shiftKey: true }), press('K', { shiftKey: true }),
+        press('L', { shiftKey: true }), press(','), press('.'), press('<', { shiftKey: true }), press('>', { shiftKey: true }),
+        press('?', { shiftKey: true }), press('?'),
+      ];
+      for (const pressed of single) expect(key(pressed, off), JSON.stringify(pressed)).toBe(false);
+      expect(ran).toEqual([]);
+      expect(said).toEqual([]);
+      expect(key(press(' '), off)).toBe(true);
+      expect(key(press('Home'), off)).toBe(true);
+      expect(key(press('End'), off)).toBe(true);
+      expect(key(press('z', command(mac)), off)).toBe(true);
+      expect(key(press('z', command(mac, true)), off)).toBe(true);
+      expect(ran).toEqual(['playPause', 'skipToStart', 'skipToEnd', 'undo', 'redo']);
+    }
+  });
+
+  it('point 4: with single-key shortcuts on, the same keys are taken', () => {
+    const { ran, key } = rig();
+    for (const name of ['j', 'k', 'l', ',', '.', '<', '>', '?']) expect(key(press(name)), name).toBe(true);
+    expect(ran).toEqual(['reverse', 'playPause', 'forward', 'skipToStart', 'skipToEnd', 'skipToStart', 'skipToEnd', 'help']);
+  });
+});
