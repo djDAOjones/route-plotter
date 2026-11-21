@@ -1,8 +1,8 @@
 // CORE-05, stage 3: the editor's key table. One table, read both by dispatch (which action a key press means) and by
 // help (the rows it shows), so the two cannot differ: v3's did (its table called `,` and `.` "step", which nothing
 // did; its handler skipped with them, D175). The entries are v3's live keys (InteractionHandler.js 940 to 968 and 1034
-// to 1041; Undo and Redo, keybindings.js 295 to 308) and nothing else yet: Escape, help's `?` and the canvas's keys come
-// with the stages that give them something to do.
+// to 1041; Undo and Redo, keybindings.js 295 to 308) and help's `?` (keybindings.js 316 to 322, "Open help"), and
+// nothing else yet: Escape and the canvas's keys come with the stages that give them something to do.
 //
 // A press is given by shape (a real KeyboardEvent fits; a test needs none), and whether the machine is a Mac is handed
 // in: the module names no browser global. The shell binds each action's id to a function of the same name (the
@@ -69,6 +69,7 @@ export const KEYS = Object.freeze([
   entry('skipToEnd', ['End', '.', '>'], 'Skip to end', 'Playback'),
   entry('undo', ['z'], 'Undo', 'General', ['command']),
   entry('redo', ['z'], 'Redo', 'General', ['command', 'shift']),
+  entry('help', ['?'], 'Open help', 'General'),
 ]);
 
 /** Every action a key may ask for, read from the table: the shell binds each to a function of the same name. */

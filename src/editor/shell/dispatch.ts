@@ -14,20 +14,21 @@
 //    undo of typed text stays the field's). A focused button, link or menu item keeps Space and Enter, and a menu item
 //    also the arrows, Home and End (ARIA's menus and list boxes move with them); a slider keeps the arrows, Home,
 //    End, Page Up and Page Down. Every other key still runs from those places, since a browser leaves focus on a
-//    button after a click (DEF-13). While a dialog is open, nothing behind it runs.
-// 3. A Playback action calls the editor's transport's function of the same name; Undo and Redo call the store's. A
-//    refusal changes nothing (the store's and the transport's own rule) and still counts as taken: the key was the
-//    editor's.
+//    button after a click (DEF-13). While a dialog is open, nothing behind it runs, `?` included.
+// 3. A Playback action calls the editor's transport's function of the same name; Undo and Redo call the store's; Help
+//    (`?`) calls what the page hands in to open help. A refusal changes nothing (the store's and the transport's own
+//    rule) and still counts as taken: the key was the editor's.
 // 4. With single-key shortcuts off (D183, WCAG 2.2's 2.1.4), a key that is one printable character other than Space,
-//    matched by an entry that asks for no command key, is never taken: `j`, `k`, `l`, `,`, `.`, `<` and `>` do nothing,
-//    while Space, Home, End and the command chords (Undo, Redo) work as before. It is decided from the press and the
+//    matched by an entry that asks for no command key, is never taken: `j`, `k`, `l`, `,`, `.`, `<`, `>` and `?` do
+//    nothing (Help's own button, coming with its dialog, will not be held off), while Space, Home, End and the command chords (Undo, Redo) work. It is decided from the press and the
 //    entry it matched, not from a second list of keys.
 // It does not claim to withstand code written to break it.
 //
 // Ported from v3's guard (InteractionHandler.js 890 to 970), and where it differs:
 // - v3 counted every INPUT, TEXTAREA, SELECT and editable element as typing, so a range input took no shortcut at
 //   all; here a typing field is what the listener says it is, and a slider is its own kind, keeping only its keys.
-// - v3 let `?` (help) run inside a dialog; help has no key yet (it comes with its dialog), so nothing runs in one.
+// - v3 let `?` (help) run inside a dialog; here it does nothing while one is open (Help is open already, or another
+//   dialog holds the keys).
 // - v3 kept Space for a button, link, disclosure or menu item, and the arrows for a menu item or an option; Enter is
 //   kept here too, by name, though no entry has it, so adding one later cannot take a button's own activation; a
 //   menu item or an option also keeps Home and End, which v3 let skip the animation.
@@ -60,8 +61,10 @@ export interface KeyDispatch {
   readonly place: PressPlace;
   /** Whether keys of one printable character are shortcuts (D183); the page holds them off until their switch. */
   readonly singleKeys: boolean;
-  readonly store: Pick<Store, 'undo' | 'redo'>;
+  readonly store: Pick<Store, Exclude<ActionIn<'General'>, 'help'>>;
   readonly transport: Pick<EditorTransport, ActionIn<'Playback'>>;
+  /** Opens Help: the page's, handed in. */
+  readonly openHelp: () => void;
 }
 
 const ACTIVATION: readonly string[] = [' ', 'Enter'];
@@ -77,14 +80,15 @@ const KEPT: Readonly<Record<FocusKind, readonly string[]>> = Object.freeze({
 });
 
 /** Runs the action `press` means here, if any; true exactly when one ran (the listener then cancels the key). */
-export function dispatchKey({ press, mac, place, singleKeys, store, transport }: KeyDispatch): boolean {
+export function dispatchKey({ press, mac, place, singleKeys, store, transport, openHelp }: KeyDispatch): boolean {
   if (place.typing || place.dialogOpen || KEPT[place.focus].includes(press.key)) return false;
   const action = actionFor(press, mac);
   const entry = KEYS.find((candidate) => candidate.action === action);
   if (entry === undefined) return false;
   const singleKey = press.key.length === 1 && press.key !== ' ' && !entry.modifiers.includes('command');
   if (singleKey && !singleKeys) return false;
-  if (entry.group === 'Playback') transport[entry.action]();
+  if (entry.action === 'help') openHelp();
+  else if (entry.group === 'Playback') transport[entry.action]();
   else store[entry.action]();
   return true;
 }

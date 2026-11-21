@@ -14,6 +14,12 @@ const SINGLE_KEYS = false;
 
 const MAC = /Mac|iPhone|iPad/.test(navigator.userAgent);
 
+/**
+ * What `?` opens. Help's dialog is not on the page yet, and `?` is a key of one printable character, held off with the
+ * others, so this is never called until the dialog and its switch come together.
+ */
+const openHelp = (): void => undefined;
+
 /** Input types that take no typed text: each acts on a key as a button or a slider does. */
 const UNTYPED = new Set(['button', 'checkbox', 'color', 'file', 'image', 'radio', 'range', 'reset', 'submit']);
 const TYPING = 'textarea, select, [role="textbox"], [role="searchbox"], [role="combobox"]';
@@ -57,7 +63,7 @@ function placeOf(target: EventTarget | null): PressPlace {
 export function listenForKeys({ store, transport }: PageSession): () => void {
   const onKeyDown = (event: KeyboardEvent): void => {
     const place = placeOf(event.target);
-    if (dispatchKey({ press: event, mac: MAC, place, singleKeys: SINGLE_KEYS, store, transport })) event.preventDefault();
+    if (dispatchKey({ press: event, mac: MAC, place, singleKeys: SINGLE_KEYS, store, transport, openHelp })) event.preventDefault();
   };
   document.addEventListener('keydown', onKeyDown);
   return () => {

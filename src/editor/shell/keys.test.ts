@@ -55,9 +55,18 @@ describe('the key table, as dispatch reads it', () => {
     }
   });
 
+  it('means Help for `?`, with Shift held or not (v3’s key), and nothing with Ctrl, Cmd or Alt', () => {
+    for (const mac of PLATFORMS) {
+      expect(actionFor(press('?'), mac)).toBe('help');
+      expect(actionFor(press('?', { shiftKey: true }), mac)).toBe('help');
+      for (const held of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }]) expect(actionFor(press('?', held), mac)).toBeNull();
+    }
+  });
+
   it('means nothing for a key the table does not name', () => {
     for (const mac of PLATFORMS) {
-      for (const key of ['a', 'Escape', '?', 'Enter', 'Tab', 'ArrowLeft', 'Delete', 'Unidentified', '']) {
+      // `?` is Help's key now (CORE-05, stage 5), so it left this list.
+      for (const key of ['a', 'Escape', 'Enter', 'Tab', 'ArrowLeft', 'Delete', 'Unidentified', '']) {
         expect(actionFor(press(key), mac), key).toBeNull();
       }
     }
@@ -157,6 +166,7 @@ describe('the key table, as help reads it', () => {
       skipToEnd: ['End', '.', '>'],
       undo: ['Cmd+Z'],
       redo: ['Cmd+Shift+Z'],
+      help: ['?'],
     });
     expect(keysOf(false)).toMatchObject({ undo: ['Ctrl+Z'], redo: ['Ctrl+Shift+Z'] });
   });

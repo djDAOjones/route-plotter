@@ -79,8 +79,11 @@ function rig() {
       return outcome;
     },
   };
+  const openHelp = () => {
+    ran.push('help');
+  };
   const key = (pressed: KeyPress, { mac = true, place = OPEN, singleKeys = true } = {}) =>
-    dispatchKey({ press: pressed, mac, place, singleKeys, store: bound, transport });
+    dispatchKey({ press: pressed, mac, place, singleKeys, store: bound, transport, openHelp });
   return { store, said, ran, outcomes, key };
 }
 
@@ -98,7 +101,8 @@ describe('the shell’s key dispatch', () => {
   it('point 1: a key no entry names, a chord no entry asks for, or a press already taken runs nothing and is not taken', () => {
     const { ran, said, key } = rig();
     const others = [
-      press('a'), press('Escape'), press('?', { shiftKey: true }), press('Tab'), press('Enter'), press('ArrowLeft'),
+      // `?` left this list when it became Help's key (stage 5); point 4's tests press it.
+      press('a'), press('Escape'), press('Tab'), press('Enter'), press('ArrowLeft'),
       press('l', { ctrlKey: true }), press('l', { metaKey: true }), press('k', { altKey: true }), press('z'),
       press(' ', { defaultPrevented: true }), press('Home', { defaultPrevented: true }),
       press('z', { metaKey: true, defaultPrevented: true }),
@@ -211,13 +215,14 @@ describe('the shell’s key dispatch', () => {
     }
   });
 
-  it('point 4: with single-key shortcuts off, J, K, L , . < > are never taken; Space, Home, End and the chords run', () => {
+  it('point 4: with single-key shortcuts off, J, K, L , . < > ? are never taken; Space, Home, End and the chords run', () => {
     for (const mac of PLATFORMS) {
       const { ran, said, key } = rig();
       const off = { mac, singleKeys: false };
       const single = [
         press('j'), press('k'), press('l'), press('J', { shiftKey: true }), press('K', { shiftKey: true }),
         press('L', { shiftKey: true }), press(','), press('.'), press('<', { shiftKey: true }), press('>', { shiftKey: true }),
+        press('?', { shiftKey: true }), press('?'),
       ];
       for (const pressed of single) expect(key(pressed, off), JSON.stringify(pressed)).toBe(false);
       expect(ran).toEqual([]);
@@ -233,7 +238,7 @@ describe('the shell’s key dispatch', () => {
 
   it('point 4: with single-key shortcuts on, the same keys are taken', () => {
     const { ran, key } = rig();
-    for (const name of ['j', 'k', 'l', ',', '.', '<', '>']) expect(key(press(name)), name).toBe(true);
-    expect(ran).toEqual(['reverse', 'playPause', 'forward', 'skipToStart', 'skipToEnd', 'skipToStart', 'skipToEnd']);
+    for (const name of ['j', 'k', 'l', ',', '.', '<', '>', '?']) expect(key(press(name)), name).toBe(true);
+    expect(ran).toEqual(['reverse', 'playPause', 'forward', 'skipToStart', 'skipToEnd', 'skipToStart', 'skipToEnd', 'help']);
   });
 });
