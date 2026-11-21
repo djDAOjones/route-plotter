@@ -7,14 +7,18 @@ import { describe, expect, it } from 'vitest';
 import type { Project } from '../../adapters/io/format';
 import { newScene } from '../../core/model/scene';
 import type { Transport } from '../../player/transport/transport';
-import { createStore } from '../store/store';
+import { createStore, type Store } from '../store/store';
 import { createEditorTransport, type EditorTransport } from '../transport/transport';
 import { KEYS, type ActionIn } from './keys';
 
-/** The actions the store answers: the table's General rows but Help, which the page opens. */
-type StoreAction = Exclude<ActionIn<'General'>, 'help'>;
-/** Help is the one General row the store has no function for; a second such row fails the type check here. */
-const helpAlone: [Exclude<ActionIn<'General'>, StoreAction>] extends ['help'] ? true : never = true;
+/** The actions the store answers: the table's General rows that name one of the store's own members. */
+type StoreAction = Extract<ActionIn<'General'>, keyof Store>;
+/**
+ * The General rows the store has no member for, worked out from the store's real keys, must be exactly Help: Help
+ * taken from the table, a second page action added, or the store gaining a `help`, each fails the type check here.
+ */
+type PageOnly = Exclude<ActionIn<'General'>, keyof Store>;
+const helpAlone: [PageOnly] extends ['help'] ? (['help'] extends [PageOnly] ? true : never) : never = true;
 
 /**
  * Read from the table's own rows, not a list beside it: the editor's transport has a function for every Playback row,

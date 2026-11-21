@@ -64,7 +64,7 @@
     },
     "keyboard-shortcuts": {
       "state": "present",
-      "evidence": "CORE-05 (2026-11-21): the editor listens for its keys on the page (src/editor/shell/keydown.ts, dispatch.ts, keys.ts): Space plays or pauses, Home and End skip to start and end, Cmd or Ctrl with Z undoes and with Shift redoes; the keys of one printable character the table names (J, K, L, comma, full stop, < and >) are held off until their switch comes with help (D183). Journeys: character-key-shortcuts (2.1.4), fields-and-status (4.1.3), keyboard functions skip-to-start-by-home and skip-to-end-by-end"
+      "evidence": "CORE-05 (2026-11-21): the editor listens for its keys on the page (src/editor/shell/keydown.ts, dispatch.ts, keys.ts): Space plays or pauses, Home and End skip to start and end, Cmd or Ctrl with Z undoes and with Shift redoes, and the keys of one printable character the table names (J, K, L, comma, full stop, < and >, and ? for Help) are live while their switch, \"Single-key shortcuts\" in Help, is on, as the page opens, and do nothing while it is off (D183; src/editor/shell/Help.tsx, held for the visit in session.ts). Help, a button after the paragraph, opens a dialog (src/editor/kit/Dialog.tsx) listing every shortcut. Journeys: character-key-shortcuts (2.1.4, both ways), fields-and-status (3.3.5, 4.1.3), reading-and-focus-order (2.4.3), pointer-cancellation (2.5.2), keyboard-task (3.2.2); keyboard functions skip-to-start-by-home, skip-to-end-by-end, open-help-by-button, open-help-by-question-mark, close-help-by-escape, single-keys-off and single-keys-on"
     },
     "user-input": {
       "state": "unknown",

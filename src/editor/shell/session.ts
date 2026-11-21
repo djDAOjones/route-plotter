@@ -8,15 +8,20 @@
 // - The announcement queue writes the live region the page draws, through `holdRegion` (React's ref for it), with the
 //   browser's timer. Until the region is drawn a message is dropped; the page draws it before any key can reach it.
 // - The editor's transport speaks through the queue.
+// - The switch for single-key shortcuts (D183) is held here for the visit, on to begin with: the listener reads it at
+//   each key, Help shows and sets it. It is not stored (CORE-09's), not a scene setting, and makes no undo step.
 import { newScene } from '../../core/model/scene';
 import { createTransport, type FrameSource } from '../../player/transport/transport';
 import { createAnnouncementQueue, type Priority } from '../kit/announce';
 import { createStore, type Store } from '../store/store';
 import { createEditorTransport, type EditorTransport } from '../transport/transport';
+import { holdForVisit, type Held } from './held';
 
 export interface PageSession {
   readonly store: Store;
   readonly transport: EditorTransport;
+  /** Whether single-key shortcuts are on (D183). */
+  readonly singleKeys: Held<boolean>;
 }
 
 /** The live region the page draws now, or null before it is drawn and after it is gone. */
@@ -61,7 +66,7 @@ function make(): PageSession {
   });
   const { announce } = createAnnouncementQueue(regionNow, (callback, ms) => setTimeout(callback, ms));
   const transport = createEditorTransport({ transport: player, playback: () => store.playback(), announce });
-  return Object.freeze({ store, transport });
+  return Object.freeze({ store, transport, singleKeys: holdForVisit(true) });
 }
 
 let made: PageSession | null = null;

@@ -3,22 +3,19 @@
 //
 // The listener sits on `document` in the bubble phase, never capture: the kit's slider and number field stop Escape
 // with React's `stopPropagation`, which stops the native event at React's root, so they win over the editor.
+//
+// Who owns Escape, in order: an open drag, then typed text (both the kit's controls', which stop it there), then a menu,
+// then a dialog, then the selection. On this page only the dialog exists: Carbon's `Modal` closes on Escape by its own
+// listener on `document` and focus goes back to its opener (kit/Dialog.tsx). The key table has no Escape entry and
+// this listener no Escape branch: it gains one when a menu or the selection has something for Escape to do.
+//
+// Single-key shortcuts (D183, WCAG 2.2's 2.1.4) are read at each key from the session's switch, on to begin with and
+// held for the visit; Help shows and sets it.
 import { dispatchKey, type FocusKind, type PressPlace } from './dispatch';
 import type { PageSession } from './session';
 
-/**
- * Whether keys of one printable character (J, K, L, comma, full stop, < and >) are shortcuts. Held off (D183, WCAG
- * 2.2's 2.1.4) until the switch that turns them on is on the page; it comes with the help dialog.
- */
-const SINGLE_KEYS = false;
-
-const MAC = /Mac|iPhone|iPad/.test(navigator.userAgent);
-
-/**
- * What `?` opens. Help's dialog is not on the page yet, and `?` is a key of one printable character, held off with the
- * others, so this is never called until the dialog and its switch come together.
- */
-const openHelp = (): void => undefined;
+/** Whether this machine is a Mac: Undo is Cmd+Z here, and Help spells the chords so. */
+export const MAC = /Mac|iPhone|iPad/.test(navigator.userAgent);
 
 /** Input types that take no typed text: each acts on a key as a button or a slider does. */
 const UNTYPED = new Set(['button', 'checkbox', 'color', 'file', 'image', 'radio', 'range', 'reset', 'submit']);
@@ -59,11 +56,15 @@ function placeOf(target: EventTarget | null): PressPlace {
   return { typing, dialogOpen, focus };
 }
 
-/** Listens for the editor's keys on `document`; gives back the call that stops listening (React's effect cleanup). */
-export function listenForKeys({ store, transport }: PageSession): () => void {
+/**
+ * Listens for the editor's keys on `document`, `openHelp` being what `?` calls; gives back the call that stops
+ * listening (React's effect cleanup).
+ */
+export function listenForKeys({ store, transport, singleKeys }: PageSession, openHelp: () => void): () => void {
   const onKeyDown = (event: KeyboardEvent): void => {
     const place = placeOf(event.target);
-    if (dispatchKey({ press: event, mac: MAC, place, singleKeys: SINGLE_KEYS, store, transport, openHelp })) event.preventDefault();
+    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp });
+    if (taken) event.preventDefault();
   };
   document.addEventListener('keydown', onKeyDown);
   return () => {
