@@ -37,7 +37,7 @@ const helpButton = (page) => page.locator(HELP);
 const helpDialog = (page) => page.getByRole('dialog', { name: 'Help' });
 const singleKeys = (page) => page.locator(SWITCH);
 const focusIs = (page, sel) => page.evaluate((s) => !!document.activeElement?.matches(s), sel);
-// Focus goes back to "Help" a moment after Help closes (Carbon's `launcherButtonRef`, by a timer): wait for it.
+// Focus goes back to "Help" when Help closes (the kit's own call, kit/Dialog.tsx; Carbon's timer does not run on unmount): wait for it all the same.
 const backOnHelp = (page) => page.waitForFunction((s) => !!document.activeElement?.matches(s), HELP, { timeout: 2000 }).then(() => true, () => false);
 // The status region holds a message about 2 s: wait for it to empty before a check that it says nothing.
 const quiet = (page) => page.waitForFunction((s) => !document.querySelector(s)?.textContent, STATUS, { timeout: 5000 }).then(() => true, () => false);

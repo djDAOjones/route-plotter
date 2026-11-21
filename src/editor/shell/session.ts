@@ -7,14 +7,16 @@
 //   the store's playback plays (its claim's point 1): a still page asks for no frame.
 // - The announcement queue writes the live region the page draws, through `holdRegion` (React's ref for it), with the
 //   browser's timer. Until the region is drawn a message is dropped; the page draws it before any key can reach it.
-// - The editor's transport speaks through the queue.
+// - The editor's transport speaks through the queue. It is handed `canPlay`, `hasSomethingToPlay` on the store's scene
+//   as it is at each ask; the player's transport is handed `ended`, the saying of "Animation complete" (WORDS.complete)
+//   through the same queue when a playing stops on an end by itself.
 // - The switch for single-key shortcuts (D183) is held here for the visit, on to begin with: the listener reads it at
 //   each key, Help shows and sets it. It is not stored (CORE-09's), not a scene setting, and makes no undo step.
 import { newScene } from '../../core/model/scene';
 import { createTransport, type FrameSource } from '../../player/transport/transport';
 import { createAnnouncementQueue, type Priority } from '../kit/announce';
 import { createStore, type Store } from '../store/store';
-import { createEditorTransport, type EditorTransport } from '../transport/transport';
+import { createEditorTransport, hasSomethingToPlay, WORDS, type EditorTransport } from '../transport/transport';
 import { holdForVisit, type Held } from './held';
 
 export interface PageSession {
@@ -55,6 +57,7 @@ const frames: FrameSource<number> = {
 function make(): PageSession {
   const nextId = () => crypto.randomUUID();
   const store = createStore({ project: { scene: newScene(nextId), images: [] }, nextId });
+  const { announce } = createAnnouncementQueue(regionNow, (callback, ms) => setTimeout(callback, ms));
   const player = createTransport({
     frames,
     holder: store,
@@ -63,9 +66,16 @@ function make(): PageSession {
     report: (error) => {
       reportError(error);
     },
+    ended: () => {
+      announce(WORDS.complete);
+    },
   });
-  const { announce } = createAnnouncementQueue(regionNow, (callback, ms) => setTimeout(callback, ms));
-  const transport = createEditorTransport({ transport: player, playback: () => store.playback(), announce });
+  const transport = createEditorTransport({
+    transport: player,
+    playback: () => store.playback(),
+    announce,
+    canPlay: () => hasSomethingToPlay(store.getState().project.scene),
+  });
   return Object.freeze({ store, transport, singleKeys: holdForVisit(true) });
 }
 

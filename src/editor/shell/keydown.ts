@@ -9,6 +9,8 @@
 // listener on `document` and focus goes back to its opener (kit/Dialog.tsx). The key table has no Escape entry and
 // this listener no Escape branch: it gains one when a menu or the selection has something for Escape to do.
 //
+// A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).
+//
 // Single-key shortcuts (D183, WCAG 2.2's 2.1.4) are read at each key from the session's switch, on to begin with and
 // held for the visit; Help shows and sets it.
 import { dispatchKey, type FocusKind, type PressPlace } from './dispatch';

@@ -9,10 +9,12 @@
 // - Tab is kept inside by Carbon's wrap without sentinels (the `enable-focus-wrap-without-sentinels` flag, Modal.js
 //   106 and 121), so no hidden "Focus sentinel" link joins the page's reading or Tab order;
 // - Escape closes it (Modal.js 211 to 219, a keydown listener on `document` while it is open, which cancels the key);
-// - focus goes back to the opener after it closes (`launcherButtonRef`, Modal.js 235 to 247), but only by a
-//   `setTimeout`, a moment after the dialog has gone. So that focus is never left on a hidden control, the kit does it
-//   at once: it closes the dialog synchronously (`flushSync`, so Carbon's blur trap, Modal.js 135, sees it closed and
-//   lets focus leave) and then focuses the opener itself; Carbon's later call focuses the same element again.
+// - focus goes back to the opener when it closes, and the kit does that itself. Carbon's own return
+//   (`launcherButtonRef`) runs by a `setTimeout` only when a mounted modal turns from open to closed (Modal.js 239),
+//   and on unmount only when presence is enabled (Modal.js 251), which this kit does not enable. Here a closed dialog
+//   is unmounted (below), so Carbon's call does not run: the kit closes it synchronously (`flushSync`; the unmount
+//   takes Carbon's blur trap, Modal.js 135, with it) and then focuses the opener at once, never leaving focus on a
+//   control that has gone.
 // - It does not fade: Carbon's `.cds--modal` fades out over 240 ms with `visibility 0s linear 0.24s`, so for that time
 //   after Escape it is still visible to a reader and to the accessibility run's dialog check. Its own transition is
 //   switched off here (one rule, `NO_FADE`, on the element Carbon spreads the rest of its props onto, Modal.js 481), so
@@ -21,10 +23,12 @@
 // control hidden so as one it cannot find again (its state-cue check). Should one be drawn closed, the shell's listener
 // still counts it open only by Carbon's `is-visible` (keydown.ts, `isOpen`).
 //
-// No `<fieldset disabled>` inside a dialog, ever (UI-06.6): Carbon's Tab wrap (`selectorTabbable`,
-// internal/keyboard/navigation.js 29 to 34) leaves out a control that carries `disabled` itself, but not one inside a
-// disabled fieldset, so focus could be sent to a control that cannot take it. A control that is off carries
-// `disabled` itself. Dialog.test.ts holds this for every dialog the editor draws.
+// No `<fieldset disabled>` inside a dialog, ever (UI-06.6). Carbon finds where Tab goes by two lists that need not
+// agree: the wrap without sentinels uses the `tabbable` package, which leaves out a control inside a disabled
+// fieldset, and the blur fallback Carbon's own `selectorTabbable` (internal/keyboard/navigation.js 29 to 34), which
+// leaves out only a control that carries `disabled` itself; so the fallback could send focus to a control in such a
+// fieldset that cannot take it. A control that is off carries `disabled` itself. Dialog.test.ts holds this for the kit's own
+// drawing (a fixture's content); Help's content is held by Help.test.ts.
 import { FeatureFlags, Modal } from '@carbon/react';
 import { flushSync } from 'react-dom';
 import type { CSSProperties, ReactNode, RefObject } from 'react';

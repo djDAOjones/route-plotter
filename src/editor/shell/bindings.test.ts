@@ -32,7 +32,7 @@ const idle: Transport = { play: nothing, pause: nothing, seek: nothing, setSpeed
 
 describe('the key table and the functions the shell binds it to', () => {
   it('every playback action is the editor’s transport’s function of the same name, and it has no other but scrub', () => {
-    const editor = createEditorTransport({ transport: idle, playback: () => ({ playing: false, atMs: 0, speed: 1 }), announce: nothing });
+    const editor = createEditorTransport({ transport: idle, playback: () => ({ playing: false, atMs: 0, speed: 1 }), announce: nothing, canPlay: () => true });
     const playback = KEYS.filter(({ group }) => group === 'Playback').map(({ action }) => action);
     expect(sameNames).toBe(true);
     expect(Object.keys(editor).sort()).toEqual([...playback, 'scrub'].sort());

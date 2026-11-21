@@ -90,7 +90,7 @@ function counting(endsAtMs = 10_000, timesSeen: number[] = []) {
   return { count, catalogue };
 }
 
-function rig(scene: Scene = sceneOf(), endsAtMs = 10_000) {
+function rig(scene: Scene = sceneOf(), endsAtMs = 10_000, ended?: () => void) {
   const frames = handMade();
   const reports: unknown[] = [];
   const holder = heldPlayback((error) => reports.push(error));
@@ -104,7 +104,7 @@ function rig(scene: Scene = sceneOf(), endsAtMs = 10_000) {
     return inputs;
   };
   const transport = createTransport({
-    frames: frames.source, holder, inputs: read, report: (error) => reports.push(error), catalogue,
+    frames: frames.source, holder, inputs: read, report: (error) => reports.push(error), catalogue, ended,
   });
   return {
     frames, holder, seen, reports, count, catalogue, transport,
@@ -544,5 +544,93 @@ describe('the transport', () => {
       compose(new Recorder(), { ...inputs, sceneMs, surface: () => ({ context: new Recorder(), image: { width: 800, height: 600, close() {} } }) }, catalogue);
     }
     expect(timesSeen).toEqual([contentEnd(inputs, catalogue), contentEnd(inputs, catalogue), contentEnd(inputs, catalogue)]);
+  });
+});
+
+describe('the transport’s `ended` (the claim’s point 4: “Animation complete”)', () => {
+  /** A rig that counts each call of `ended`, with what was held when it was called. */
+  function endedRig(throws = false) {
+    const calls: Playback[] = [];
+    let holderOf: () => Playback = () => AT_START;
+    const made = rig(sceneOf(), 10_000, () => {
+      calls.push(holderOf());
+      if (throws) throw new Error('an ended that fails');
+    });
+    holderOf = () => made.holder.playback();
+    return { ...made, calls };
+  }
+
+  test('a frame that stops a forward playing on the end calls it once, after the stop is kept', () => {
+    const { frames, transport, calls } = endedRig();
+    const length = transport.length();
+    transport.seek(length - 30);
+    transport.play();
+    frames.run(0);
+    expect(calls).toEqual([]);
+    frames.run(100);
+    expect(calls).toEqual([{ playing: false, atMs: length, speed: 1 }]);
+    frames.run(200);
+    expect(calls).toHaveLength(1);
+  });
+
+  test('a frame that stops a backward playing on 0 calls it once', () => {
+    const { frames, transport, calls } = endedRig();
+    transport.seek(30);
+    transport.setSpeed(-2);
+    transport.play();
+    frames.run(0);
+    frames.run(100);
+    expect(calls).toEqual([{ playing: false, atMs: 0, speed: 1 }]);
+  });
+
+  test('nothing else calls it: pause, seek to either end, a speed, Play on the end, nor a paused written by someone else', () => {
+    const { frames, holder, transport, calls } = endedRig();
+    const length = transport.length();
+    transport.play();
+    frames.run(0);
+    transport.pause();
+    transport.seek(length);
+    transport.seek(0);
+    transport.setSpeed(-1);
+    transport.setSpeed(1);
+    transport.seek(length);
+    transport.play();
+    frames.run(16);
+    holder.setPlayback(AT_START);
+    frames.run(32);
+    expect(holder.playback()).toEqual(AT_START);
+    expect(calls).toEqual([]);
+  });
+
+  test('one that throws is reported as a frame’s error, and leaves no frame booked while paused (point 1)', () => {
+    const { frames, holder, transport, calls, reports } = endedRig(true);
+    const length = transport.length();
+    transport.seek(length - 30);
+    transport.play();
+    frames.run(0);
+    frames.run(100);
+    expect(calls).toHaveLength(1);
+    expect(reports).toEqual([new Error('an ended that fails')]);
+    expect(holder.playback()).toEqual({ playing: false, atMs: length, speed: 1 });
+    expect(frames.booked()).toBe(0);
+    transport.play();
+    expect(frames.booked()).toBe(1);
+  });
+
+  test('one that plays again and throws leaves a frame booked while playing, which moves it on (point 1)', () => {
+    const made = rig(sceneOf(), 10_000, () => {
+      made.transport.play();
+      throw new Error('an ended that plays and fails');
+    });
+    const { frames, holder, transport, reports } = made;
+    transport.seek(transport.length() - 30);
+    transport.play();
+    frames.run(0);
+    frames.run(100);
+    expect(reports).toEqual([new Error('an ended that plays and fails')]);
+    expect(holder.playback()).toEqual({ playing: true, atMs: 0, speed: 1 });
+    expect(frames.booked()).toBe(1);
+    frames.run(200);
+    expect(holder.playback().atMs).toBeCloseTo(FIRST_FRAME_MS);
   });
 });

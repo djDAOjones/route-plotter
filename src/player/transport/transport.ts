@@ -19,7 +19,12 @@
 // 3. Playing begins only through the transport's own commands. A "playing" written to the holder by anyone else,
 //    outside a telling the transport is in the middle of, is not followed until the next command or frame. (The
 //    editor's transport, stage 3, is the only thing that plays.)
-// 4. It does not claim to withstand code written to break it.
+// 4. `ended`, if handed in, is called by a frame of the transport's own that stops a playing on an end (either end),
+//    once, after that frame's write of the stop has returned, inside the frame's own `try`: so a throwing `ended` is
+//    reported as any frame's error is, and point 1 holds, the frame's `follow()` running after it however it ended.
+//    Nothing else calls it: not `pause`, `seek` or a skip, nor a "paused" written to the holder by someone else (point
+//    2), nor a frame whose write of the stop threw while telling (that error is reported; the stop is kept, unsaid).
+// 5. It does not claim to withstand code written to break it.
 import { playLength } from '../../core/clock/clock';
 import type { Scene } from '../../core/model/scene';
 import { CATALOGUE, type Catalogue } from '../../features/catalogue';
@@ -59,6 +64,8 @@ interface TransportOptions<H> {
   readonly inputs: () => ContentRequest;
   /** Where an error thrown in a frame goes; the next frame is booked all the same (DEF-26). */
   readonly report: (error: unknown) => void;
+  /** Called when a frame of its own stops a playing on an end (the claim's point 4): the editor says so. */
+  readonly ended?: () => void;
   readonly catalogue?: Catalogue;
 }
 
@@ -93,7 +100,9 @@ const sameKey = (a: Key, b: Key): boolean => a.every((value, i) => Object.is(val
 const samePlayback = (a: Playback, b: Playback): boolean =>
   a.playing === b.playing && Object.is(a.atMs, b.atMs) && Object.is(a.speed, b.speed);
 
-export function createTransport<H>({ frames, holder, inputs, report, catalogue = CATALOGUE }: TransportOptions<H>): Transport {
+export function createTransport<H>({
+  frames, holder, inputs, report, ended, catalogue = CATALOGUE,
+}: TransportOptions<H>): Transport {
   let built: { readonly key: Key; readonly lengthMs: number } | null = null;
   /** The frame booked now and its ticket: a callback carrying any other ticket, one cancelled, does nothing. */
   let booked: { readonly handle: H; readonly ticket: object } | null = null;
@@ -157,7 +166,8 @@ export function createTransport<H>({ frames, holder, inputs, report, catalogue =
     };
   }
 
-  /** One frame: moves the position by the time since the last, times the speed; stops on an end, as Pause does. */
+  /** One frame: moves the position by the time since the last, times the speed; stops on an end, as Pause does, and
+   *  then calls `ended` (the claim's point 4). */
   function advance(timeMs: number): void {
     const now = holder.playback();
     if (!now.playing) {
@@ -171,6 +181,7 @@ export function createTransport<H>({ frames, holder, inputs, report, catalogue =
     if (atMs >= lengthMs || (now.speed < 0 && atMs <= 0)) {
       lastMs = null;
       write(false, atMs >= lengthMs ? lengthMs : 0, 1);
+      ended?.();
     } else {
       write(true, atMs, now.speed);
     }

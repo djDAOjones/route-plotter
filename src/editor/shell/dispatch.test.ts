@@ -10,7 +10,7 @@ import { createEditorTransport, WORDS } from '../transport/transport';
 import { dispatchKey, type FocusKind, type PressPlace } from './dispatch';
 import { KEYS, type ActionIn, type KeyPress } from './keys';
 
-const UP = { ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, defaultPrevented: false };
+const UP = { ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, defaultPrevented: false, repeat: false };
 const press = (key: string, held: Partial<Omit<KeyPress, 'key'>> = {}): KeyPress => ({ ...UP, ...held, key });
 const OPEN: PressPlace = { typing: false, dialogOpen: false, focus: 'other' };
 const PLATFORMS = [true, false] as const;
@@ -51,7 +51,13 @@ function rig() {
     length: () => LENGTH_MS,
   };
   const said: string[] = [];
-  const editor = createEditorTransport({ transport: player, playback: () => store.playback(), announce: (words) => said.push(words) });
+  // Always something to play here: the refusal is the editor's transport's own (its tests); this holds the dispatch.
+  const editor = createEditorTransport({
+    transport: player,
+    playback: () => store.playback(),
+    announce: (words) => said.push(words),
+    canPlay: () => true,
+  });
   const ran: string[] = [];
   const outcomes: ReturnType<typeof store.undo>[] = [];
   const recorded = (name: ActionIn<'Playback'>) => () => {
@@ -240,5 +246,44 @@ describe('the shell’s key dispatch', () => {
     const { ran, key } = rig();
     for (const name of ['j', 'k', 'l', ',', '.', '<', '>', '?']) expect(key(press(name)), name).toBe(true);
     expect(ran).toEqual(['reverse', 'playPause', 'forward', 'skipToStart', 'skipToEnd', 'skipToStart', 'skipToEnd', 'help']);
+  });
+
+  it('point 5: a held key runs its action once and is still taken; Undo and Redo run at each repeat (D189)', () => {
+    for (const mac of PLATFORMS) {
+      const { ran, said, key, store, outcomes } = rig();
+      for (const pressed of [press(' '), press('k'), press('j'), press('l'), press('Home'), press(','), press('End'), press('?')]) {
+        expect(key({ ...pressed, repeat: true }, { mac }), `${pressed.key} held`).toBe(true);
+      }
+      expect(ran).toEqual([]);
+      expect(said).toEqual([]);
+      expect(key(press(' '), { mac })).toBe(true);
+      expect(key({ ...press(' '), repeat: true }, { mac })).toBe(true);
+      expect(key({ ...press(' '), repeat: true }, { mac })).toBe(true);
+      expect(store.playback().playing).toBe(true);
+      expect(ran).toEqual(['playPause']);
+      const routes = store.getState().project.scene.routes.length;
+      expect(store.dispatch(addRoute()).ok).toBe(true);
+      expect(store.dispatch(addRoute()).ok).toBe(true);
+      const undo = { ...press('z', command(mac)), repeat: true };
+      expect(key(undo, { mac })).toBe(true);
+      expect(key(undo, { mac })).toBe(true);
+      expect(key({ ...press('z', command(mac, true)), repeat: true }, { mac })).toBe(true);
+      expect(ran).toEqual(['playPause', 'undo', 'undo', 'redo']);
+      expect(outcomes.every((outcome) => outcome.ok)).toBe(true);
+      expect(store.getState().project.scene.routes).toHaveLength(routes + 1);
+    }
+  });
+
+  it('point 5: a held key is never taken where its first press would not be: typing, a dialog, a kept key, switched off', () => {
+    const { ran, key } = rig();
+    const held = (name: string) => ({ ...press(name), repeat: true });
+    expect(key(held(' '), { place: { ...OPEN, typing: true } })).toBe(false);
+    expect(key(held(' '), { place: { ...OPEN, dialogOpen: true } })).toBe(false);
+    expect(key(held(' '), { place: { ...OPEN, focus: 'button' } })).toBe(false);
+    expect(key(held('Home'), { place: { ...OPEN, focus: 'slider' } })).toBe(false);
+    expect(key(held('k'), { singleKeys: false })).toBe(false);
+    expect(key(held('x'))).toBe(false);
+    expect(key({ ...held(' '), defaultPrevented: true })).toBe(false);
+    expect(ran).toEqual([]);
   });
 });

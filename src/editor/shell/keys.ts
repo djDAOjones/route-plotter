@@ -16,6 +16,8 @@
 //   that key is held, the other and Alt up, and Shift as the entry declares it (Undo without, Redo with).
 // - Letters match whatever their case (Caps Lock, Shift), as v3's lower-casing did.
 // - A press another listener has already taken (`defaultPrevented`) means no action (DEF-13.1, the table's half).
+// - A held key repeats its press (`repeat`); the table does not decide on it, the dispatch does, by the entry's
+//   `repeats` (D189): on for Undo and Redo alone, which repeat as in every editor; off for every other entry.
 //
 // Not ported: v3's mouse bindings, the stored custom bindings, the categories' icons and `formatBinding`'s symbols;
 // a help row spells a chord in words ("Cmd+Shift+Z", "Ctrl+Shift+Z"), which is all a row needs.
@@ -34,6 +36,8 @@ interface KeyEntry<A extends string = ActionId, G extends Group = Group> {
   /** The words help shows for it, in the glossary's words. */
   readonly words: string;
   readonly group: G;
+  /** Whether a held key runs it again at each repeat (D189): Undo and Redo only. */
+  readonly repeats: boolean;
 }
 
 /** A key press, by the fields of a KeyboardEvent that dispatch reads. */
@@ -44,6 +48,8 @@ export interface KeyPress {
   readonly altKey: boolean;
   readonly shiftKey: boolean;
   readonly defaultPrevented: boolean;
+  /** The key is held down and this press is its repeat. */
+  readonly repeat: boolean;
 }
 
 /** One row of help: the keys as they are shown, and what they do. */
@@ -56,9 +62,9 @@ interface HelpRow {
 
 /** One entry, its action's name and its group kept as written, so a type read from the table sees each row. */
 const entry = <A extends string, G extends Group>(
-  action: A, keys: readonly string[], words: string, group: G, modifiers: readonly Modifier[] = [],
+  action: A, keys: readonly string[], words: string, group: G, modifiers: readonly Modifier[] = [], repeats = false,
 ): KeyEntry<A, G> =>
-  Object.freeze({ action, keys: Object.freeze([...keys]), modifiers: Object.freeze([...modifiers]), words, group });
+  Object.freeze({ action, keys: Object.freeze([...keys]), modifiers: Object.freeze([...modifiers]), words, group, repeats });
 
 /** The table: one entry per action. */
 export const KEYS = Object.freeze([
@@ -67,8 +73,8 @@ export const KEYS = Object.freeze([
   entry('forward', ['l'], 'Play forward', 'Playback'),
   entry('skipToStart', ['Home', ',', '<'], 'Skip to start', 'Playback'),
   entry('skipToEnd', ['End', '.', '>'], 'Skip to end', 'Playback'),
-  entry('undo', ['z'], 'Undo', 'General', ['command']),
-  entry('redo', ['z'], 'Redo', 'General', ['command', 'shift']),
+  entry('undo', ['z'], 'Undo', 'General', ['command'], true),
+  entry('redo', ['z'], 'Redo', 'General', ['command', 'shift'], true),
   entry('help', ['?'], 'Open help', 'General'),
 ]);
 

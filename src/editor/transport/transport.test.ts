@@ -9,7 +9,7 @@ import { newLine, newPoint, newRoute, newScene, type IdSource } from '../../core
 import { createTransport, FIRST_FRAME_MS, type FrameSource, type Transport } from '../../player/transport/transport';
 import type { Announce } from '../kit/announce';
 import { createStore } from '../store/store';
-import { createEditorTransport, JKL_FASTEST, WORDS } from './transport';
+import { createEditorTransport, hasSomethingToPlay, JKL_FASTEST, WORDS } from './transport';
 
 function counter(prefix: string): IdSource {
   let n = 0;
@@ -50,9 +50,17 @@ function handMade() {
   };
 }
 
-/** The editor's transport on a store, the player's transport made on it, and what it said. */
-function editorOf() {
-  const store = createStore({ project: twoStops(), nextId: counter('new') });
+/** The same with nothing to play: an empty scene. */
+function empty(): Project {
+  return { scene: newScene(counter('empty')), images: [] };
+}
+
+/**
+ * The editor's transport on a store, the player's transport made on it, and what it said: put together as the
+ * session puts them (`canPlay` read from the store's scene at each ask, `ended` saying `WORDS.complete`).
+ */
+function editorOf(project: Project = twoStops()) {
+  const store = createStore({ project, nextId: counter('new') });
   const frames = handMade();
   const reports: unknown[] = [];
   const player = createTransport({
@@ -60,10 +68,18 @@ function editorOf() {
     holder: store,
     inputs: () => ({ scene: store.getState().project.scene, seed: 1, size: { width: 1920, height: 1080 }, image: null }),
     report: (error) => reports.push(error),
+    ended: () => {
+      announce(WORDS.complete);
+    },
   });
   const said: string[] = [];
   const announce: Announce = (message) => said.push(message);
-  const editor = createEditorTransport({ transport: player, playback: () => store.playback(), announce });
+  const editor = createEditorTransport({
+    transport: player,
+    playback: () => store.playback(),
+    announce,
+    canPlay: () => hasSomethingToPlay(store.getState().project.scene),
+  });
   return { store, frames, player, editor, said, reports };
 }
 
@@ -202,7 +218,7 @@ describe('the editor’s transport: the two skips', () => {
     expect(said).toEqual([WORDS.skippedToEnd]);
   });
 
-  it('skip to end leaves a forward playing as it was, which stops on the end at its next frame (v3’s seek)', () => {
+  it('skip to end leaves a forward playing as it was, which stops on the end at its next frame, which says “Animation complete” (v3’s seek)', () => {
     const { store, frames, player, editor, said } = editorOf();
     editor.playPause();
     frames.run(0);
@@ -212,7 +228,7 @@ describe('the editor’s transport: the two skips', () => {
     frames.run(16);
     expect(store.playback()).toEqual({ playing: false, atMs: player.length(), speed: 1 });
     expect(frames.booked()).toBe(0);
-    expect(said).toEqual([WORDS.skippedToEnd]);
+    expect(said).toEqual([WORDS.skippedToEnd, WORDS.complete]);
   });
 });
 
@@ -249,6 +265,7 @@ describe('the editor’s transport: scrub', () => {
       transport: spy,
       playback: () => ({ playing: false, atMs: 0, speed: 1 }),
       announce: (message) => said.push(message),
+      canPlay: () => true,
     });
     editor.scrub(420);
     expect(calls).toEqual(['seek 420']);
@@ -261,22 +278,27 @@ describe('the editor’s transport: its words', () => {
     for (const [name, words] of Object.entries(WORDS)) expect(words, name).not.toMatch(RETIRED_WORDS);
   });
 
-  it('are all it says: every command, from playing and from paused, says only these', () => {
-    const { frames, editor, said } = editorOf();
-    const commands = [
+  it('are all it says: every command, from playing and from paused, with and without anything to play, says only these', () => {
+    const said: string[] = [];
+    for (const project of [twoStops(), empty()]) {
+      const { frames, editor, said: saidHere } = editorOf(project);
+      const commands = [
       () => editor.playPause(),
       () => editor.reverse(),
       () => editor.forward(),
       () => editor.skipToStart(),
       () => editor.skipToEnd(),
       () => editor.scrub(200),
-    ];
-    for (const first of commands) {
-      for (const then of commands) {
-        first();
-        frames.run(0);
-        then();
+      ];
+      for (const first of commands) {
+        for (const then of commands) {
+          first();
+          frames.run(0);
+          then();
+          for (let time = 100; time < 100_000 && frames.booked() > 0; time += 100) frames.run(time);
+        }
       }
+      said.push(...saidHere);
     }
     expect(said.length).toBeGreaterThan(0);
     const words: readonly string[] = Object.values(WORDS);
@@ -287,5 +309,116 @@ describe('the editor’s transport: its words', () => {
   it('are frozen, as is the transport', () => {
     expect(Object.isFrozen(WORDS)).toBe(true);
     expect(Object.isFrozen(editorOf().editor)).toBe(true);
+  });
+});
+
+describe('the editor’s transport: nothing to play (v3’s refusal, the claim’s point 2)', () => {
+  it('hasSomethingToPlay: some route with two or more points, and nothing less', () => {
+    const nextId = counter('rule');
+    const one = { ...newRoute(nextId), points: [newPoint(nextId, { x: 0.5, y: 0.5, kind: 'stop' })] };
+    const scene = newScene(nextId);
+    expect(hasSomethingToPlay(scene)).toBe(false);
+    expect(hasSomethingToPlay({ ...scene, routes: [newRoute(nextId)] })).toBe(false);
+    expect(hasSomethingToPlay({ ...scene, routes: [one, { ...one, id: 'other' }] })).toBe(false);
+    expect(hasSomethingToPlay(twoStops().scene)).toBe(true);
+    expect(hasSomethingToPlay({ ...scene, routes: [one, ...twoStops().scene.routes] })).toBe(true);
+  });
+
+  it('Play or pause, J and L each say why and change nothing: no play, no speed written, no frame', () => {
+    for (const command of ['playPause', 'reverse', 'forward'] as const) {
+      const { store, frames, player, editor, said } = editorOf(empty());
+      player.setSpeed(-2);
+      const before = store.playback();
+      editor[command]();
+      expect(store.playback(), command).toBe(before);
+      expect(frames.booked(), command).toBe(0);
+      expect(said, command).toEqual([WORDS.nothingToPlay]);
+    }
+  });
+
+  it('asks only when nothing plays, and at each ask: a scene that gains two points plays', () => {
+    let asks = 0;
+    let can = false;
+    const store = createStore({ project: twoStops(), nextId: counter('new') });
+    const frames = handMade();
+    const player = createTransport({
+      frames: frames.source,
+      holder: store,
+      inputs: () => ({ scene: store.getState().project.scene, seed: 1, size: { width: 1920, height: 1080 }, image: null }),
+      report: () => undefined,
+    });
+    const said: string[] = [];
+    const editor = createEditorTransport({
+      transport: player,
+      playback: () => store.playback(),
+      announce: (message) => said.push(message),
+      canPlay: () => {
+        asks += 1;
+        return can;
+      },
+    });
+    editor.playPause();
+    expect(store.playback().playing).toBe(false);
+    can = true;
+    editor.playPause();
+    expect(store.playback().playing).toBe(true);
+    expect(asks).toBe(2);
+    can = false;
+    editor.forward();
+    editor.reverse();
+    editor.skipToEnd();
+    editor.scrub(10);
+    editor.playPause();
+    expect(asks).toBe(2);
+    expect(said).toEqual([WORDS.nothingToPlay, WORDS.playing, WORDS.skippedToEnd, WORDS.paused]);
+  });
+
+  it('a pause, the two skips and a scrub are never refused and never ask', () => {
+    let asks = 0;
+    const { store, said } = editorOf(empty());
+    const refusing = createEditorTransport({
+      transport: createTransport({
+        frames: handMade().source,
+        holder: store,
+        inputs: () => ({ scene: store.getState().project.scene, seed: 1, size: { width: 1920, height: 1080 }, image: null }),
+        report: () => undefined,
+      }),
+      playback: () => store.playback(),
+      announce: (message) => said.push(message),
+      canPlay: () => {
+        asks += 1;
+        return false;
+      },
+    });
+    refusing.skipToEnd();
+    refusing.skipToStart();
+    refusing.scrub(0);
+    expect(asks).toBe(0);
+    expect(said).toEqual([WORDS.skippedToEnd, WORDS.skippedToStart]);
+  });
+});
+
+describe('the editor’s transport: “Animation complete”, said by the player’s `ended` as the session hands it in', () => {
+  it('is said once when a playing reaches the end by itself, either way, and not by Pause or a skip', () => {
+    const { store, frames, player, editor, said } = editorOf();
+    editor.playPause();
+    frames.run(0);
+    for (let time = 100; store.playback().playing; time += 100) frames.run(time);
+    expect(store.playback()).toEqual({ playing: false, atMs: player.length(), speed: 1 });
+    expect(said).toEqual([WORDS.playing, WORDS.complete]);
+    said.length = 0;
+    editor.reverse();
+    frames.run(0);
+    for (let time = 100; store.playback().playing; time += 100) frames.run(time);
+    expect(store.playback()).toEqual({ playing: false, atMs: 0, speed: 1 });
+    expect(said).toEqual([WORDS.playing, WORDS.complete]);
+    said.length = 0;
+    editor.playPause();
+    frames.run(0);
+    editor.playPause();
+    editor.skipToEnd();
+    editor.skipToStart();
+    frames.run(16);
+    expect(said).toEqual([WORDS.playing, WORDS.paused, WORDS.skippedToEnd, WORDS.skippedToStart]);
   });
 });

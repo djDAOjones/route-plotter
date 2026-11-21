@@ -22,6 +22,10 @@
 //    matched by an entry that asks for no command key, is never taken: `j`, `k`, `l`, `,`, `.`, `<`, `>` and `?` do
 //    nothing (Help's own button, coming with its dialog, will not be held off), while Space, Home, End and the command chords (Undo, Redo) work. It is decided from the press and the
 //    entry it matched, not from a second list of keys.
+// 5. A held key (`repeat`, D189) runs its action once: a repeated press runs nothing but is still taken wherever its
+//    entry would have run (so a held Space does not scroll the page behind), except an entry marked `repeats`, Undo
+//    and Redo, which run at each repeat as in every editor. Decided from the entry, not from a second list of keys;
+//    every check of points 1, 2 and 4 comes first, so a repeat is never taken where its first press would not be.
 // It does not claim to withstand code written to break it.
 //
 // Ported from v3's guard (InteractionHandler.js 890 to 970), and where it differs:
@@ -39,6 +43,8 @@
 //   stops every key behind it (the listener's `isOpen`: Carbon's `is-visible`, a native dialog's `open`).
 // - v3 answered `,` `.` `j` `k` `l` whatever modifier was held; the table's `matches` asks for no Ctrl, Cmd or Alt
 //   (DEF-63), and lets Shift through (`<` and `>` need it).
+// - v3 had no guard on a held key: its Space, held, played and paused at the keyboard's repeat rate. Here a held key
+//   runs once, Undo and Redo excepted (point 5, D189).
 import type { Store } from '../store/store';
 import type { EditorTransport } from '../transport/transport';
 import { actionFor, KEYS, type ActionIn, type KeyPress } from './keys';
@@ -87,6 +93,7 @@ export function dispatchKey({ press, mac, place, singleKeys, store, transport, o
   if (entry === undefined) return false;
   const singleKey = press.key.length === 1 && press.key !== ' ' && !entry.modifiers.includes('command');
   if (singleKey && !singleKeys) return false;
+  if (press.repeat && !entry.repeats) return true;
   if (entry.action === 'help') openHelp();
   else if (entry.group === 'Playback') transport[entry.action]();
   else store[entry.action]();
