@@ -5,13 +5,16 @@
 // a drag's move, an arrow key, or the echo of a new `value` prop. So the pointer going down on Carbon's own slider
 // element is caught here, before Carbon sees it, as the logic's `press()`; Carbon's `onChange` is the logic's
 // `report()`, which tells a drag's move from a key's nudge by the press, and the echo by the position held; and its
-// `onRelease` is `release()`. Escape during a drag, and a touch cancelled, give the drag up (`giveUp()`); the moves and
-// the release Carbon still sends until the pointer is let go then change nothing. Carbon's own text input is hidden:
+// `onRelease` is `release()`. Escape during a drag, and a touch cancelled, give the drag up (`giveUp()`); the moves, any
+// further press (a second finger) and the release Carbon still sends until the pointer is let go then change nothing
+// (a press while one is down is nothing until its release, even after a give-up). Carbon's own text input is hidden:
 // the kit's number field is the one place a number is typed (D181).
 //
 // Carbon keeps a thumb position of its own, brought into step only when its `value` prop changes. Where a report is
 // refused or changes nothing held (another change in progress; the model's check; a drag given up), its thumb would stay
-// where the user left it; so the slider is drawn again from what is held, and keeps the focus it had.
+// where the user left it; so the slider is drawn again from what is held, and keeps the focus it had. The slider is
+// drawn again whenever the value held changes, not only its position: on a scale, two values can stand at one position
+// and read out differently.
 import { Slider, usePrefix } from '@carbon/react';
 import {
   useCallback,
@@ -40,7 +43,7 @@ export interface SettingSliderProps {
   readonly step: number;
   /** Written after the readout's number, as in "%". */
   readonly unit?: string;
-  /** How a position stands for a value; the identity by default. */
+  /** How a position stands for a value; the identity by default. Keep it a constant: a new one gives up a drag. */
   readonly scale?: Scale;
 }
 
@@ -55,8 +58,9 @@ export function SettingSlider({ id, labelText, setting, min, max, step, unit = '
     [slider],
   );
   const subscribe = useCallback((listener: () => void) => setting.subscribe(listener), [setting]);
-  const read = useCallback(() => slider.position(), [slider]);
-  const position = useSyncExternalStore(subscribe, read, read);
+  const read = useCallback(() => setting.read(), [setting]);
+  const held = useSyncExternalStore(subscribe, read, read);
+  const position = held === undefined ? undefined : scale.toPosition(held);
 
   const prefix = usePrefix();
   const wrapper = useRef<HTMLDivElement>(null);

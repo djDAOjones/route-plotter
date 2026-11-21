@@ -23,17 +23,25 @@ export interface SettingFieldProps extends FieldProps {
 
 /** A number field for one setting that holds a number. */
 export function SettingField({ id, labelText, setting, format }: SettingFieldProps) {
-  const field = useMemo(() => createNumberField(setting, format), [setting, format]);
+  // One field for one `Setting`, whatever `format` is passed: a new formatter (an inline one, drawn again) must not
+  // drop text being typed (DEF-97), so it is used when drawing, not when the field is made.
+  const field = useMemo(() => createNumberField(setting), [setting]);
   const subscribe = useCallback((listener: () => void) => setting.subscribe(listener), [setting]);
   const read = useCallback(() => setting.read(), [setting]);
   useSyncExternalStore(subscribe, read, read);
-  return <NumberFieldView id={id} labelText={labelText} field={field} />;
+  return <NumberFieldView id={id} labelText={labelText} field={field} format={format} />;
+}
+
+interface ViewProps extends FieldProps {
+  readonly field: NumberField;
+  /** How the value held is written, when it is not the field's own way. */
+  readonly format?: ((value: number) => string) | undefined;
 }
 
 /** Draws `field` on Carbon's `TextInput` and passes on what the user does; drawn again after each of those. */
-export function NumberFieldView({ id, labelText, field }: FieldProps & { readonly field: NumberField }) {
+export function NumberFieldView({ id, labelText, field, format }: ViewProps) {
   const [, drawAgain] = useReducer((n: number) => n + 1, 0);
-  const shown = field.shown();
+  const shown = field.shown(format);
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Enter') {
       field.commit();

@@ -70,12 +70,26 @@ function attribute(markup: string, name: string): string | undefined {
   return new RegExp(`\\s${name}="([^"]*)"`).exec(markup)?.[1];
 }
 
-/** The thumb's attributes and the field input's value, as a page would be given them. */
+/** The opening tag of the one element in `markup` that `pattern` finds; '' when none or more than one. */
+function tag(markup: string, pattern: RegExp): string {
+  const found = markup.match(new RegExp(pattern.source, 'g')) ?? [];
+  return found.length === 1 ? (found[0] ?? '') : '';
+}
+const sliderTag = (markup: string) => tag(markup, /<[a-z]+\s[^>]*\brole="slider"[^>]*>/);
+const inputTag = (markup: string) => tag(markup, /<input\s(?![^>]*type="hidden")[^>]*>/);
+
+/** The attributes on the element with `role="slider"`, and the field input's own value, as a page would be given them. */
 const thumb = (markup: string) => ({
-  now: attribute(markup, 'aria-valuenow'),
-  text: attribute(markup, 'aria-valuetext'),
+  now: attribute(sliderTag(markup), 'aria-valuenow'),
+  text: attribute(sliderTag(markup), 'aria-valuetext'),
 });
-const input = (markup: string) => attribute(/<input[^>]*>/.exec(markup)?.[0] ?? '', 'value');
+const input = (markup: string) => attribute(inputTag(markup), 'value');
+
+/** The text of the element the input's `aria-errormessage` names, or undefined when it names none. */
+function errorFor(markup: string): string | undefined {
+  const id = attribute(inputTag(markup), 'aria-errormessage');
+  return id === undefined ? undefined : new RegExp(`<[a-z]+\\s[^>]*\\bid="${id}"[^>]*>([^<]*)<`).exec(markup)?.[1];
+}
 
 describe('DEF-20.1, as drawn: a control shows the value held, at start-up and after a change made elsewhere', () => {
   it('a slider and a field drawn on an opened project show its value, not a default', () => {
@@ -109,24 +123,29 @@ describe('DEF-97, as drawn: text typed stays as typed, with why it was refused',
     expect(typed.commit().ok).toBe(false);
     const refused = draw();
     expect(input(refused)).toBe('12px');
-    expect(refused).toContain('aria-invalid="true"');
-    expect(refused).toContain('Enter a number in figures, such as 12 or 0.5.');
+    expect(attribute(inputTag(refused), 'aria-invalid')).toBe('true');
+    expect(errorFor(refused)).toBe('Enter a number in figures, such as 12 or 0.5.');
     const other = createNumberField(routeSetting(store, route, 'line', 'thickness'));
     other.type('20');
     other.commit();
     store.undo();
     const after = draw();
-    expect([input(after), after.includes('aria-invalid="true"')]).toEqual(['12px', true]);
+    expect([input(after), attribute(inputTag(after), 'aria-invalid'), errorFor(after)]).toEqual([
+      '12px',
+      'true',
+      'Enter a number in figures, such as 12 or 0.5.',
+    ]);
   });
 
   it('a field with nothing typed is not marked invalid', () => {
     const { store, route } = opened();
-    expect(field(store, route)).not.toContain('aria-invalid');
+    const markup = field(store, route);
+    expect([input(markup), attribute(inputTag(markup), 'aria-invalid'), errorFor(markup)]).toEqual(['12', undefined, undefined]);
   });
 
   it('the field is typed as text, with a keypad for decimals', () => {
     const { store, route } = opened();
-    const markup = /<input[^>]*>/.exec(field(store, route))?.[0] ?? '';
+    const markup = inputTag(field(store, route));
     expect([attribute(markup, 'type'), attribute(markup, 'inputMode') ?? attribute(markup, 'inputmode')]).toEqual([
       'text',
       'decimal',

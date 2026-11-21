@@ -23,7 +23,9 @@
 //    A slider's widget that reports only where its thumb now stands (Carbon's does) is read through a press: what it
 //    reports while the pointer is down is a position of the drag, or nothing once the drag is given up or was refused;
 //    what it reports with no press is a key's nudge; and a report of the position already held is the widget's echo of
-//    a change made elsewhere, which begins nothing and makes no step, whatever else is open.
+//    a change made elsewhere, which begins nothing and makes no step, whatever else is open. A press while one is down
+//    (a second finger) is nothing until the release, also after a give-up or a refusal, so one press begins at most
+//    one edit. What that costs: if a release is ever lost, the next press is nothing, and its release clears it.
 // 4. A refused begin changes nothing: the control shows what is held, and says why and that nothing held changed. A
 //    control never sets, commits or cancels an edit it did not begin, and never leaves one open: every edit it begins
 //    ends in exactly one commit or one cancel, whatever order the events come in (a move with no start, two starts,
@@ -107,7 +109,10 @@ export interface Slider {
   readout(position: number): number;
   /** Whether the pointer is down on the slider: between `press()` and `release()`, given up or not. */
   pressed(): boolean;
-  /** The pointer goes down on the slider: a press, and the drag begun (`start()`); refused, the press changes nothing. */
+  /**
+   * The pointer goes down on the slider: a press, and the drag begun (`start()`); refused, the press changes nothing.
+   * While a press is down, given up or refused or not, another is nothing until `release()`.
+   */
   press(): Result;
   /**
    * The widget says its thumb now stands at `position`. The position held already is its echo of a change made
@@ -167,6 +172,7 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
     },
     pressed: () => down,
     press: () => {
+      if (down) return NOTHING;
       down = true;
       return start();
     },
@@ -201,7 +207,8 @@ interface FieldView {
 }
 
 export interface NumberField {
-  shown(): FieldView;
+  /** What to show; the value held is written with `format` when one is given, else with the field's own. */
+  shown(format?: (value: number) => string): FieldView;
   /** The text in the field is now `text`: kept exactly as typed. */
   type(text: string): void;
   /** Enter, or leaving the field: the text typed becomes the value held, or stays with why it could not. */
@@ -229,10 +236,10 @@ export function createNumberField(setting: Setting, format: (value: number) => s
   };
 
   return {
-    shown: () => {
+    shown: (write = format) => {
       if (typed !== null) return { text: typed, typing: true, problem };
       const held = setting.read();
-      return { text: held === undefined ? '' : format(held), typing: false, problem: null };
+      return { text: held === undefined ? '' : write(held), typing: false, problem: null };
     },
     type: (text) => {
       typed = text;

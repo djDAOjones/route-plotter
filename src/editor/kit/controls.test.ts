@@ -356,6 +356,71 @@ describe('a slider read through a widget that reports only where its thumb stand
     expect([setting.held, slider.pressed(), setting.log]).toEqual([5, false, ['begin refused']]);
   });
 
+  it('a second press while one is down, given up or refused, begins nothing until the release', () => {
+    const setting = handmade(5);
+    const slider = createSlider(setting);
+    slider.press();
+    slider.report(8);
+    slider.giveUp();
+    expect(slider.press()).toEqual({ ok: true, changed: false });
+    slider.report(9);
+    slider.release();
+    expect([setting.held, setting.log]).toEqual([5, ['begin 1', 'set 1 8', 'cancel 1']]);
+    setting.refuseBegin = 'busy';
+    slider.press();
+    setting.refuseBegin = null;
+    slider.press();
+    slider.report(9);
+    slider.release();
+    expect([setting.held, setting.log.slice(3)]).toEqual([5, ['begin refused']]);
+    slider.press();
+    slider.report(9);
+    slider.release();
+    expect([setting.held, setting.open()]).toEqual([9, 0]);
+  });
+
+  it('in every order of up to five presses, reports, releases and give-ups, a press begins at most one edit, and each edit ends exactly once', () => {
+    type Event = (slider: ReturnType<typeof createSlider>) => Result;
+    const events: Record<string, Event> = {
+      press: (slider) => slider.press(),
+      report: (slider) => slider.report(7),
+      refused: (slider) => slider.report(8),
+      release: (slider) => slider.release(),
+      giveUp: (slider) => slider.giveUp(),
+    };
+    const names = Object.keys(events);
+    let orders: string[][] = [[]];
+    for (let length = 1; length <= 5; length += 1) orders = [...orders, ...orders.filter((o) => o.length === length - 1).flatMap((o) => names.map((name) => [...o, name]))];
+    const begins = (log: readonly string[]) => log.filter((line) => line.startsWith('begin')).length;
+    for (const refuseBegin of [false, true]) {
+      for (const order of orders) {
+        const setting = handmade(5);
+        setting.refuseSet.add(8);
+        if (refuseBegin) setting.refuseBegin = 'busy';
+        const slider = createSlider(setting);
+        const label = `${order.join(', ')}${refuseBegin ? ' (begin refused)' : ''}`;
+        let pressedAt: number | null = null;
+        for (const name of order) {
+          if (name === 'press' && pressedAt === null) pressedAt = begins(setting.log);
+          events[name]?.(slider);
+          if (name === 'release' && pressedAt !== null) {
+            expect(begins(setting.log) - pressedAt, label).toBeLessThanOrEqual(1);
+            pressedAt = null;
+          }
+        }
+        if (pressedAt !== null) expect(begins(setting.log) - pressedAt, label).toBeLessThanOrEqual(1);
+        slider.giveUp();
+        slider.release();
+        expect(setting.open(), label).toBe(0);
+        const begun = setting.log.filter((line) => /^begin \d/.test(line)).map((line) => line.slice('begin '.length));
+        for (const n of begun) expect(setting.log.filter((line) => line === `commit ${n}` || line === `cancel ${n}`), label).toHaveLength(1);
+        expect(setting.log.filter((line) => line.startsWith('late ')), label).toEqual([]);
+        expect(slider.pressed(), label).toBe(false);
+      }
+    }
+    expect(orders.length).toBe(1 + 5 + 25 + 125 + 625 + 3125);
+  });
+
   it('on a scale, the thumb stands at the position, a report is read as its value, and the readout is the value held exactly', () => {
     const setting = handmade(5);
     const slider = createSlider(setting, { toPosition: (value) => value * 10, toValue: (at) => at / 10 + 0.01 });
