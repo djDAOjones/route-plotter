@@ -14,8 +14,8 @@ import { listenForKeys, MAC } from './shell/keydown';
 import { PlayBar } from './shell/PlayBar';
 import { holdRegion, pageSession } from './shell/session';
 
-/** The store's telling of a change, and whether it plays now: one function each for the page's life, so the play bar
- *  subscribes once. */
+/** The store's telling of a change, and whether it plays now: one function each for the page's life, so a draw of
+ *  App does not make the play bar subscribe anew. (The bar holds two subscriptions, one per hook.) */
 const toldOfChange = (listener: () => void) => pageSession().store.subscribe(listener);
 const playsNow = () => pageSession().store.playback().playing;
 

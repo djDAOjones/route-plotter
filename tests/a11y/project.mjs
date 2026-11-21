@@ -408,7 +408,7 @@ export default {
           if (!(await arrives(page, target))) problems.push(`${name}: a whole press did not follow it to ${target} (at ${page.url()})`);
           else done.push(name);
         }
-        record('2.5.2', !problems.length && done.length > 0, problems.length ? problems.join('; ') : done.length ? `${done.length} control(s) do nothing on the down-event or on a press moved off before release, and act on a whole press: ${done.join(', ')}` : 'no control to press');
+        record('2.5.2', !problems.length && done.length > 0, problems.length ? problems.join('; ') : done.length ? `${done.length} control(s) do nothing on the down-event or on a press moved off before release, and, where enabled, act on a whole press: ${done.join(', ')}` : 'no control to press');
       },
     },
     {

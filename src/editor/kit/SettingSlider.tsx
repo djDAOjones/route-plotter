@@ -43,12 +43,28 @@ export interface SettingSliderProps {
   readonly step: number;
   /** Written after the readout's number, as in "%". */
   readonly unit?: string;
+  /**
+   * Words read out in place of a number and `unit`, when given: for a thumb at `value` (its `aria-valuetext` and
+   * tooltip), and, with `end`, what the label at that end of the range shows, `value` then being the value held.
+   * Without it, the readout is the number and the unit, and each end's label the value there.
+   */
+  readonly readout?: (value: number, end?: 'start' | 'end') => string;
   /** How a position stands for a value; the identity by default. Keep it a constant: a new one gives up a drag. */
   readonly scale?: Scale;
 }
 
 /** A slider for one setting that holds a number; nothing is drawn while the setting holds none. */
-export function SettingSlider({ id, labelText, setting, min, max, step, unit = '', scale = IDENTITY }: SettingSliderProps) {
+export function SettingSlider({
+  id,
+  labelText,
+  setting,
+  min,
+  max,
+  step,
+  unit = '',
+  scale = IDENTITY,
+  readout,
+}: SettingSliderProps) {
   const slider = useMemo(() => createSlider(setting, scale), [setting, scale]);
   useEffect(
     () => () => {
@@ -97,7 +113,17 @@ export function SettingSlider({ id, labelText, setting, min, max, step, unit = '
     event.preventDefault();
   };
 
-  if (position === undefined) return null;
+  if (held === undefined || position === undefined) return null;
+  // Carbon draws `formatLabel(min, minLabel)` and `formatLabel(max, maxLabel)` at the range's ends and
+  // `formatLabel(value, undefined)` on the thumb: given words, the ends are handed theirs as Carbon's own labels.
+  const words =
+    readout === undefined
+      ? { formatLabel: (at: number) => formatUIValue(slider.readout(at), unit) }
+      : {
+          formatLabel: (at: number, label: string | undefined) => label ?? readout(slider.readout(at)),
+          minLabel: readout(held, 'start'),
+          maxLabel: readout(held, 'end'),
+        };
   return (
     // Presentation only: it catches the events Carbon's own slider receives, and is no control of its own.
     <div
@@ -117,7 +143,7 @@ export function SettingSlider({ id, labelText, setting, min, max, step, unit = '
         max={max}
         step={step}
         value={position}
-        formatLabel={(at) => formatUIValue(slider.readout(at), unit)}
+        {...words}
         onChange={({ value }) => {
           thumb.current = value;
           bringIntoStep(slider.report(value));

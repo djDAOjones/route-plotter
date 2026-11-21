@@ -11,6 +11,9 @@
 //   as it is at each ask, and the same function is the session's `canPlay`, which the Play button asks (one rule);
 //   the player's transport is handed `ended`, the saying of "Animation complete" (WORDS.complete)
 //   through the same queue when a playing stops on an end by itself.
+// - The timeline (timelineLogic.ts): its length reader reads the player's `length()` at most once a frame, booking that frame
+//   with the same frame source; its `Setting` scrubs through the editor's transport. Made once, here, so the page has
+//   one reader of the length (DEF-42.1's reader's half).
 // - The switch for single-key shortcuts (D183) is held here for the visit, on to begin with: the listener reads it at
 //   each key, Help shows and sets it. It is not stored (CORE-09's), not a scene setting, and makes no undo step.
 import { newScene } from '../../core/model/scene';
@@ -19,12 +22,15 @@ import { createAnnouncementQueue, type Priority } from '../kit/announce';
 import { createStore, type Store } from '../store/store';
 import { createEditorTransport, hasSomethingToPlay, WORDS, type EditorTransport } from '../transport/transport';
 import { holdForVisit, type Held } from './held';
+import { createLengthReader, createTimeline, type Timeline } from './timelineLogic';
 
 export interface PageSession {
   readonly store: Store;
   readonly transport: EditorTransport;
   /** Whether the scene has anything to play now: the one rule the editor's transport and the Play button ask. */
   readonly canPlay: () => boolean;
+  /** The play bar's timeline: its `Setting` and its words, over the page's one reader of the length. */
+  readonly timeline: Timeline;
   /** Whether single-key shortcuts are on (D183). */
   readonly singleKeys: Held<boolean>;
 }
@@ -80,7 +86,9 @@ function make(): PageSession {
     announce,
     canPlay,
   });
-  return Object.freeze({ store, transport, canPlay, singleKeys: holdForVisit(true) });
+  const length = createLengthReader({ store, length: () => player.length(), frames });
+  const timeline = createTimeline({ store, transport, length });
+  return Object.freeze({ store, transport, canPlay, timeline, singleKeys: holdForVisit(true) });
 }
 
 let made: PageSession | null = null;

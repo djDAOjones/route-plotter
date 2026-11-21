@@ -2,7 +2,8 @@
 // v3's order with their words visible; the middle one named "Play" while nothing plays and "Pause" while it plays;
 // Play disabled and described by the reason line, which shows the editor's transport's own words, only while there is
 // nothing to play and nothing plays; the name never holds the reason (UI-06 J-21). Each button's press is the
-// transport's function its key calls: proved on the page (tests/a11y/project.mjs), where a press is real.
+// transport's function its key calls. The two skips' presses are proved on the page (tests/a11y/project.mjs), where a
+// press is real; Play and Pause pressed are owed to stage 6's page, since today's page has nothing to play.
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
