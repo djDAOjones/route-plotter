@@ -15,6 +15,7 @@
 - CORE-02 — v4's geometry, the lead's timing and the clock stand in `src/core`: the lead's walk over the route graph, each line's shape within a whole route's sample budget, the lead's place at any moment and the scene's length from one clock, distances in image widths and the scene's length bounded, so animation that cycles cannot make a scene endless, by pull request (2026-11-19) — see decisions
 - CORE-03 — v4's save and open stand in `src/adapters/io`: a project saves as a ZIP of `project.json` and its images, the same bytes every time, and opens only through v3's ported file-safety guards and the core's own check, refusing in words, with nothing changed, a v3 file, another preview's format, an unknown feature or field and an image that does not decode; Save writes no file Open would refuse, by pull request (2026-11-19) — see decisions
 - CORE-04 — v4's renderer stands: one composer draws every frame in §8's four stages on the canvas kit, the core modules' drawing (background, clock, export; line, lead, markers, labels, pauses) listed in the catalogue, the editor's overlays drawn only from a list its caller passes; v4's goldens compared with v3's frames of five scenes, every difference named and ruled, by pull request (2026-11-20) — see decisions
+- PLAN-8 — the owner's answers to the night's decisions D1 to D180 are in the record, and his signed lines are written where the checker accepts them (2026-11-21) — see decisions
 
 ## Phase 6 — v4's foundations — the owner's overnight word of 2026-11-18 (PLAN-6)
 
