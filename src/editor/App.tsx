@@ -3,12 +3,21 @@
 // control that does nothing is not shown. CORE-05 builds the editor shell here; nothing in it draws or saves yet.
 // Stage 5: the page's one session, one keydown listener for the editor's keys, the live region the session's
 // announcements are written to (visually hidden, empty at rest), and Help: its button, always on the page after the
-// paragraph (a plain Carbon button until the frame's header comes), and its dialog, opened also by `?`.
+// paragraph (a plain Carbon button until the frame's header comes), and its dialog, opened also by `?`. Then the play
+// bar (PlayBar): "Skip to start", "Play" or "Pause" and "Skip to end", each calling the session's editor's transport
+// as its key does, and the line saying why Play is off while there is nothing to play (on this page, always: the
+// scene is empty until stage 6 brings Open).
 import { Button, Content, Heading, Link } from '@carbon/react';
 import { useEffect, useRef, useState } from 'react';
 import { Help } from './shell/Help';
 import { listenForKeys, MAC } from './shell/keydown';
+import { PlayBar } from './shell/PlayBar';
 import { holdRegion, pageSession } from './shell/session';
+
+/** The store's telling of a change, and whether it plays now: one function each for the page's life, so the play bar
+ *  subscribes once. */
+const toldOfChange = (listener: () => void) => pageSession().store.subscribe(listener);
+const playsNow = () => pageSession().store.playback().playing;
 
 export function App() {
   const [helpOpen, setHelpOpen] = useState(false);
@@ -36,6 +45,12 @@ export function App() {
       >
         Help
       </Button>
+      <PlayBar
+        transport={pageSession().transport}
+        subscribe={toldOfChange}
+        playing={playsNow}
+        canPlay={pageSession().canPlay}
+      />
       <div role="status" aria-live="polite" className="cds--visually-hidden" ref={holdRegion} />
       <Help
         opener={helpButton}

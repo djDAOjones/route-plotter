@@ -8,7 +8,8 @@
 // - The announcement queue writes the live region the page draws, through `holdRegion` (React's ref for it), with the
 //   browser's timer. Until the region is drawn a message is dropped; the page draws it before any key can reach it.
 // - The editor's transport speaks through the queue. It is handed `canPlay`, `hasSomethingToPlay` on the store's scene
-//   as it is at each ask; the player's transport is handed `ended`, the saying of "Animation complete" (WORDS.complete)
+//   as it is at each ask, and the same function is the session's `canPlay`, which the Play button asks (one rule);
+//   the player's transport is handed `ended`, the saying of "Animation complete" (WORDS.complete)
 //   through the same queue when a playing stops on an end by itself.
 // - The switch for single-key shortcuts (D183) is held here for the visit, on to begin with: the listener reads it at
 //   each key, Help shows and sets it. It is not stored (CORE-09's), not a scene setting, and makes no undo step.
@@ -22,6 +23,8 @@ import { holdForVisit, type Held } from './held';
 export interface PageSession {
   readonly store: Store;
   readonly transport: EditorTransport;
+  /** Whether the scene has anything to play now: the one rule the editor's transport and the Play button ask. */
+  readonly canPlay: () => boolean;
   /** Whether single-key shortcuts are on (D183). */
   readonly singleKeys: Held<boolean>;
 }
@@ -70,13 +73,14 @@ function make(): PageSession {
       announce(WORDS.complete);
     },
   });
+  const canPlay = () => hasSomethingToPlay(store.getState().project.scene);
   const transport = createEditorTransport({
     transport: player,
     playback: () => store.playback(),
     announce,
-    canPlay: () => hasSomethingToPlay(store.getState().project.scene),
+    canPlay,
   });
-  return Object.freeze({ store, transport, singleKeys: holdForVisit(true) });
+  return Object.freeze({ store, transport, canPlay, singleKeys: holdForVisit(true) });
 }
 
 let made: PageSession | null = null;

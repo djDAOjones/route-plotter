@@ -14,12 +14,18 @@
 // `?`), listing the shortcuts, with the switch for single-key shortcuts, on to begin with (D183). The shell's journeys
 // now open it: focus in, kept in, back to "Help" (2.4.3); the button and the switch by pointer (2.5.2); the switch's
 // help (3.3.5) and its change of no context (3.2.2); the single-key shortcuts both ways (2.1.4).
+// CORE-05, stage 5's third piece (2026-11-21): the play bar after "Help", a group "Playback" of three buttons, "Skip to
+// start", "Play" and "Skip to end", each calling what its key calls; with nothing to play (always, on this page, until
+// stage 6 brings Open) Play is disabled and described by the reason line under the group. The journeys: Tab meets
+// the two skips, not the disabled Play (2.4.3); the reason line is read after the group (1.3.2); each button by
+// pointer, Play doing nothing (2.5.2); Play's reason tied to it (3.3.5); the skips speak with focus kept (4.1.3); K
+// says the reason with the switch on, and nothing off, on a button too (2.1.4).
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
 // (2.4.3); each route and its title (2.4.2); the one place the shell links to. A change to the shell is reviewed here.
-const READING = ['Route Plotter', 'Version 4 is being built here.'];
-const FOCUS = ['link "GitHub"', 'button "Help"'];
+const READING = ['Route Plotter', 'Version 4 is being built here.', 'Add at least two points to a route to play.'];
+const FOCUS = ['link "GitHub"', 'button "Help"', 'button "Skip to start"', 'button "Skip to end"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
 const PROGRESS = 'https://github.com/djDAOjones/route-plotter';
 // The shell's one status region, and the words the editor's keys say in it (the editor's transport's own, WORDS).
@@ -27,6 +33,17 @@ const STATUS = '[role=status]';
 const said = async (page) => (await page.locator(STATUS).textContent()) ?? '';
 const SKIPPED_TO_START = 'Skipped to start';
 const SKIPPED_TO_END = 'Skipped to end';
+// Said when a start is refused, and shown under the play bar while there is nothing to play (WORDS.nothingToPlay).
+const NOTHING_TO_PLAY = 'Add at least two points to a route to play.';
+// The play bar's buttons and the line that says why Play is off.
+const SKIP_START = '#skip-to-start';
+const PLAY = '#play-pause';
+const SKIP_END = '#skip-to-end';
+const REASON = '#play-reason';
+const focusOn = (page, sel) => page.evaluate((s) => !!document.activeElement?.matches(s), sel);
+// True if the status region does not say `words` within `ms`: a second action a key must not also run (a message
+// waiting behind another shows when the first's hold ends, about 2 s).
+const neverSays = (page, words, ms = 3000) => page.waitForFunction(([s, w]) => document.querySelector(s)?.textContent === w, [STATUS, words], { timeout: ms }).then(() => false, () => true);
 // The keys of one printable character the editor's key table names: live while their switch is on, as the page opens,
 // and doing nothing while it is off (D183).
 const SINGLE_KEYS = ['j', 'k', 'l', ',', '.', '<', '>', '?'];
@@ -55,8 +72,11 @@ async function flipByKeyboard(page) {
   return { before, after, back: await backOnHelp(page) };
 }
 // What Help shows, as reviewed: its close button, heading, the two groups of the key table and the switch. The chords
-// read Cmd on a Mac and Ctrl elsewhere. Carbon's "Close" tooltip, shown while Close has focus, is not listed.
+// read Cmd on a Mac and Ctrl elsewhere. Carbon's "Close" tooltip, shown while Close has focus, is not listed. Behind
+// it, the play bar's Play stays disabled (a stated node, so listed).
 const helpOpen = (checked) => [
+  '- group "Playback":',
+  '  - button "Play" [disabled]',
   '- dialog "Help":',
   '  - button "Close"',
   '  - heading "Help" [level=2]',
@@ -155,6 +175,11 @@ export default {
         `      - /url: ${PROGRESS}`,
         '    - text: .',
         '  - button "Help"',
+        '  - group "Playback":',
+        '    - button "Skip to start"',
+        '    - button "Play" [disabled]',
+        '    - button "Skip to end"',
+        `  - paragraph: ${NOTHING_TO_PLAY}`,
         '  - status',
       ].join('\n'),
       dialogs: [{ name: 'help', opener: HELP }],
@@ -166,13 +191,18 @@ export default {
           run: async ({ page }) => { await helpButton(page).click(); await singleKeys(page).click(); },
           snapshot: helpOpen(false),
         },
+        // The skips change no control's state: Play stays disabled, so no snapshot after them.
+        { name: 'skip to start by its button', run: async ({ page }) => { await page.locator(SKIP_START).click(); } },
+        { name: 'skip to end by its button', run: async ({ page }) => { await page.locator(SKIP_END).click(); } },
       ],
       keeps: {
-        content: ['h1', 'main p'],
+        content: ['h1', 'main p', REASON],
         functions: [
           { name: 'follow the progress link', run: async ({ page }) => { await progressLink(page).click(); return arrives(page, PROGRESS); } },
           // Help is closed again after, so the page is left as found (the forced-colours test counts stateful controls next).
           { name: 'open help', run: async ({ page }) => { await helpButton(page).click(); const shown = await helpDialog(page).isVisible(); await page.keyboard.press('Escape'); return shown && backOnHelp(page); } },
+          { name: 'skip to start by its button', run: async ({ page }) => { await page.locator(SKIP_START).click(); return (await said(page)) === SKIPPED_TO_START; } },
+          { name: 'skip to end by its button', run: async ({ page }) => { await page.locator(SKIP_END).click(); return (await said(page)) === SKIPPED_TO_END; } },
         ],
       },
     },
@@ -194,6 +224,16 @@ export default {
     { name: 'close-help-by-escape', state: 'shell', steps: [{ focus: HELP }, { press: 'Enter' }, { press: 'Escape' }], check: async ({ page }) => !(await helpDialog(page).isVisible()) && backOnHelp(page) },
     { name: 'single-keys-off', state: 'shell', steps: [{ focus: HELP }, { press: 'Enter' }, { focus: SWITCH }, { press: 'Space' }], check: async ({ page }) => (await singleKeys(page).getAttribute('aria-checked')) === 'false' },
     { name: 'single-keys-on', state: 'shell', steps: [{ focus: HELP }, { press: 'Enter' }, { focus: SWITCH }, { press: 'Space' }, { press: 'Space' }], check: async ({ page }) => (await singleKeys(page).getAttribute('aria-checked')) === 'true' },
+    // The play bar's skips by their buttons, focus staying on the button. A focused button keeps Space and Enter
+    // (dispatch.ts's point 2): Space on "Skip to end" presses it alone, and Play/pause, Space's own action, never runs.
+    { name: 'skip-to-start-by-button', state: 'shell', steps: [{ focus: SKIP_START }, { press: 'Enter' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_START && focusOn(page, SKIP_START) },
+    { name: 'skip-to-end-by-button-space-kept', state: 'shell', steps: [{ focus: SKIP_END }, { press: 'Space' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_END && (await focusOn(page, SKIP_END)) && neverSays(page, NOTHING_TO_PLAY) },
+    // Nothing to play on this page: Space off any button, and K, J and L on a button and off it, say why and start nothing.
+    { name: 'play-refused-by-space', state: 'shell', steps: [{ press: 'Space' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY },
+    { name: 'play-refused-by-k', state: 'shell', steps: [{ press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY },
+    { name: 'play-refused-by-k-on-button', state: 'shell', steps: [{ focus: SKIP_START }, { press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_START) },
+    { name: 'play-refused-by-j-on-button', state: 'shell', steps: [{ focus: SKIP_START }, { press: 'j' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_START) },
+    { name: 'play-refused-by-l-on-button', state: 'shell', steps: [{ focus: SKIP_END }, { press: 'l' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_END) },
     // { name: 'set-hold', state: 'home', steps: [{ focus: '#hold' }, { press: 'Meta+A' }, { type: '11' }, { press: 'Enter' }], check: async ({ page }) => (await page.locator('#hold').inputValue()) === '11' },
   ],
   // Authored journeys: a name, a catalogue method (j-* or keyboard), the rows it claims, and run({ page, expect, open, record }).
@@ -204,7 +244,8 @@ export default {
       // the one control that opens content, "Help", opens its dialog with focus inside, Tab and Shift+Tab keep focus
       // in it, and focus returns to "Help" when it closes: from where focus lands, one Escape; from "Close", whose
       // Carbon tooltip shows while it has focus, the first Escape hides the tooltip (1.4.13's dismissal) and the second
-      // closes Help (D186). A further control that opens content needs its own check.
+      // closes Help (D186). A further control that opens content needs its own check. The play bar's reason line is read
+      // after the group; its disabled Play is not met by Tab (as v3), and the two skips are.
       name: 'reading-and-focus-order',
       method: 'j-order',
       rows: ['1.3.2', '2.4.3'],
@@ -277,7 +318,8 @@ export default {
       // 2.5.2: each control does nothing on the down-event, a press moved off it before release does nothing, and a
       // whole press acts, on the up-event: the progress link (followed), "Help" (its dialog opens) and, inside Help, the
       // switch (it turns). A press on the switch is moved off to a point inside the dialog, as a press outside Help
-      // closes it. Any other control needs its own journey.
+      // closes it. The play bar: each skip says its words on a whole press and nothing before; Play, disabled with
+      // nothing to play, does nothing on any press. Any other control needs its own journey.
       name: 'pointer-cancellation',
       method: 'j-pointer',
       rows: ['2.5.2'],
@@ -291,7 +333,9 @@ export default {
           const name = await named(control);
           const href = await control.getAttribute('href');
           const isHelp = await control.evaluate((e, s) => e.matches(s), HELP);
-          if (!href && !isHelp) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
+          const skip = await control.evaluate((e, [a, b]) => (e.matches(a) ? 'start' : e.matches(b) ? 'end' : ''), [SKIP_START, SKIP_END]);
+          const offPlay = await control.evaluate((e, s) => e.matches(s) && e.disabled, PLAY);
+          if (!href && !isHelp && !skip && !offPlay) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
           const box = await control.boundingBox();
           const x = box.x + box.width / 2, y = box.y + box.height / 2;
           // A point well clear of every control, to move the press off to before release.
@@ -305,7 +349,7 @@ export default {
           }, CONTROLS);
           if (!off) { problems.push(`${name}: no clear point beside it to move a press off to`); continue; }
           const start = page.url();
-          const acted = async () => page.url() !== start || (await helpDialog(page).isVisible());
+          const acted = async () => page.url() !== start || (await helpDialog(page).isVisible()) || (await said(page)) !== '';
           await pointer.down(x, y);
           await page.waitForTimeout(250);
           if (await acted()) { problems.push(`${name} acted on the down-event`); continue; }
@@ -315,6 +359,18 @@ export default {
           if (await acted()) { problems.push(`${name}: a press moved off it before release still acted`); continue; }
           await pointer.down(x, y);
           await pointer.up();
+          if (offPlay) {
+            await page.waitForTimeout(400);
+            if (await acted()) problems.push(`${name}, disabled, acted on a whole press`);
+            else done.push(`${name} (disabled: nothing)`);
+            continue;
+          }
+          if (skip) {
+            const want = skip === 'start' ? SKIPPED_TO_START : SKIPPED_TO_END;
+            if ((await said(page)) !== want) problems.push(`${name}: a whole press said ${JSON.stringify(await said(page))}, not ${JSON.stringify(want)}`);
+            else done.push(name);
+            continue;
+          }
           if (isHelp) {
             await page.waitForTimeout(400);
             if (!(await helpDialog(page).isVisible())) { problems.push(`${name}: a whole press did not open Help`); continue; }
@@ -358,7 +414,9 @@ export default {
     {
       // 3.3.5: the shell's one setting, the switch for single-key shortcuts in Help (drawn only while Help is open),
       // has its help: the sentence under it, visible once Help is open and tied to it by aria-describedby, so it is
-      // read with the switch. A further field needs its own check here. 4.1.3: the shell's one status region, role status, is empty
+      // read with the switch. A further field needs its own check here. The play bar's Play, disabled with nothing to
+      // play, has its reason: the line under the group, visible, tied to it by aria-describedby and not in its name
+      // (UI-06 J-21). 4.1.3: the shell's one status region, role status, is empty
       // and nothing changes in the 2 s after the shell loads; a real key (Home, with the progress link focused) raises
       // the editor's message in it, and focus stays on the link. A further status region needs its own check here.
       name: 'fields-and-status',
@@ -375,8 +433,21 @@ export default {
           const id = e.getAttribute('aria-describedby'), el = id ? document.getElementById(id) : null;
           return el && el.getBoundingClientRect().height > 0 ? (el.textContent ?? '').trim() : '';
         });
-        const fieldProblems = [!onlySwitch && `${fields} field(s); the shell has one, the switch in Help: write the check that reaches each other one's help`, !helpText && 'the switch has no visible help tied to it by aria-describedby'].filter(Boolean);
-        record('3.3.5', !fieldProblems.length, fieldProblems.length ? fieldProblems.join('; ') : `the shell's one setting, the switch "Single-key shortcuts" in Help, has its help under it, tied to it and read with it: ${JSON.stringify(helpText)}`);
+        await open('shell');
+        const play = page.locator(PLAY);
+        const reason = await play.evaluate((e) => {
+          const id = e.getAttribute('aria-describedby'), el = id ? document.getElementById(id) : null;
+          return el && el.getBoundingClientRect().height > 0 ? (el.textContent ?? '').trim() : '';
+        });
+        const playName = await named(play);
+        const fieldProblems = [
+          !onlySwitch && `${fields} field(s); the shell has one, the switch in Help: write the check that reaches each other one's help`,
+          !helpText && 'the switch has no visible help tied to it by aria-describedby',
+          !(await play.isDisabled()) && 'Play is not disabled with nothing to play',
+          reason !== NOTHING_TO_PLAY && `Play's description reads ${JSON.stringify(reason)}, not ${JSON.stringify(NOTHING_TO_PLAY)}, visible`,
+          playName !== 'button "Play" [disabled]' && `Play is named ${playName}: the reason belongs in its description, not its name`,
+        ].filter(Boolean);
+        record('3.3.5', !fieldProblems.length, fieldProblems.length ? fieldProblems.join('; ') : `the shell's one setting, the switch "Single-key shortcuts" in Help, has its help under it, tied to it and read with it: ${JSON.stringify(helpText)}; Play, disabled with nothing to play, keeps its name and is described by the visible line under the play bar: ${JSON.stringify(reason)}`);
         await open('shell');
         const live = await page.locator(LIVE).count();
         const statuses = await page.locator(STATUS).count();
@@ -391,21 +462,31 @@ export default {
         await page.keyboard.press('Home');
         const words = await said(page);
         const focusStays = await page.evaluate((href) => document.activeElement?.getAttribute('href') === href, PROGRESS);
+        const byButton = [];
+        for (const [sel, want] of [[SKIP_START, SKIPPED_TO_START], [SKIP_END, SKIPPED_TO_END]]) {
+          await open('shell');
+          await page.locator(sel).click();
+          const got = await said(page);
+          if (got !== want) byButton.push(`${sel} said ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+          if (!(await focusOn(page, sel))) byButton.push(`focus left ${sel} when it raised its message`);
+        }
         const problems = [
+          ...byButton,
           (live !== 1 || statuses !== 1) && `${live} live region(s), ${statuses} with role status: the shell has one, role status; write the check for any other`,
           atRest && `the status region shows ${JSON.stringify(atRest)} at rest`,
           changes && `the shell changed ${changes} time(s) in the 2 s after it loaded`,
           words !== SKIPPED_TO_START && `Home said ${JSON.stringify(words)} in the status region, not ${JSON.stringify(SKIPPED_TO_START)}`,
           !focusStays && 'focus left the progress link when Home raised the message',
         ].filter(Boolean);
-        record('4.1.3', !problems.length, problems.length ? problems.join('; ') : `one status region, role status, empty at rest; nothing changes in the 2 s after the shell loads; Home, pressed on the focused progress link, says "${SKIPPED_TO_START}" in it and focus stays on the link`);
+        record('4.1.3', !problems.length, problems.length ? problems.join('; ') : `one status region, role status, empty at rest; nothing changes in the 2 s after the shell loads; Home, pressed on the focused progress link, says "${SKIPPED_TO_START}" in it and focus stays on the link; "Skip to start" and "Skip to end", pressed, say "${SKIPPED_TO_START}" and "${SKIPPED_TO_END}" in it with focus kept on each`);
       },
     },
     {
       // 2.1.4, both ways: as the page opens, single-key shortcuts are on and comma says "Skipped to start". Their switch
       // in Help, turned off by the keyboard, turns them off: J, K, L, comma, full stop, <, > and ? pressed on the page
-      // and on the focused progress link then say nothing, open nothing and follow nothing, while Home still speaks
-      // (the listener was live throughout). Turned on again, full stop says "Skipped to end".
+      // and on the focused progress link and "Skip to start" then say nothing, open nothing and follow nothing, while Home still speaks
+      // (the listener was live throughout), on the focused "Skip to start" too. Turned on again, full stop says "Skipped
+      // to end" and K the reason there is nothing to play.
       name: 'character-key-shortcuts',
       method: 'keyboard',
       rows: ['2.1.4'],
@@ -420,9 +501,10 @@ export default {
         if (off.after !== 'false') problems.push('Space on the switch did not turn it off');
         if (!off.back) problems.push('focus did not come back to "Help" after turning the switch off');
         if (!(await quiet(page))) problems.push('the status region did not empty');
-        for (const where of ['the page', 'the focused progress link']) {
+        for (const where of ['the page', 'the focused progress link', 'the focused "Skip to start"']) {
           if (where === 'the page') await page.locator('main h1').click();
-          else await progressLink(page).focus();
+          else if (where === 'the focused progress link') await progressLink(page).focus();
+          else await page.locator(SKIP_START).focus();
           for (const key of SINGLE_KEYS) {
             await page.keyboard.press(key);
             const words = await said(page);
@@ -439,7 +521,10 @@ export default {
         if (!(await quiet(page))) problems.push('the status region did not empty');
         await page.keyboard.press('.');
         if ((await said(page)) !== SKIPPED_TO_END) problems.push(`with the switch on again, full stop said ${JSON.stringify(await said(page))}, not ${JSON.stringify(SKIPPED_TO_END)}`);
-        record('2.1.4', !problems.length, problems.length ? problems.join('; ') : `single-key shortcuts can be turned off (D183): on as the page opens, comma says "${SKIPPED_TO_START}"; with their switch in Help turned off by the keyboard, ${SINGLE_KEYS.join(' ')} pressed on the page and on the focused progress link say, open and follow nothing while Home still says "${SKIPPED_TO_START}"; turned on again, full stop says "${SKIPPED_TO_END}"`);
+        if (!(await quiet(page))) problems.push('the status region did not empty');
+        await page.keyboard.press('k');
+        if ((await said(page)) !== NOTHING_TO_PLAY) problems.push(`with the switch on again, K said ${JSON.stringify(await said(page))}, not ${JSON.stringify(NOTHING_TO_PLAY)}`);
+        record('2.1.4', !problems.length, problems.length ? problems.join('; ') : `single-key shortcuts can be turned off (D183): on as the page opens, comma says "${SKIPPED_TO_START}"; with their switch in Help turned off by the keyboard, ${SINGLE_KEYS.join(' ')} pressed on the page, on the focused progress link and on the focused "Skip to start" say, open and follow nothing while Home still says "${SKIPPED_TO_START}"; turned on again, full stop says "${SKIPPED_TO_END}"`);
       },
     },
     {
@@ -517,7 +602,7 @@ export default {
   records: {
     date: '2026-11-21',
     rows: {
-      P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment had changed until 2026-11-21. That day CORE-05 began to change the shell, a shared component: one status region and the editor\'s keys, with their journeys broadened in the same change (fields-and-status, character-key-shortcuts, the keyboard functions skip-to-start-by-home and skip-to-end-by-end). Later the same day CORE-05 added Help, the first dialog and the first setting on the shell (the switch for single-key shortcuts, on to begin with), with the journeys that open it broadened in the same change (reading-and-focus-order, pointer-cancellation, fields-and-status, character-key-shortcuts both ways, keyboard-task) and the keyboard functions open-help-by-button, open-help-by-question-mark, close-help-by-escape, single-keys-off and single-keys-on. A wider run (the sampling, npm run a11y:sample) is flagged for when the frame\'s controls are on the page' },
+      P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment had changed until 2026-11-21. That day CORE-05 began to change the shell, a shared component: one status region and the editor\'s keys, with their journeys broadened in the same change (fields-and-status, character-key-shortcuts, the keyboard functions skip-to-start-by-home and skip-to-end-by-end). Later the same day CORE-05 added Help, the first dialog and the first setting on the shell (the switch for single-key shortcuts, on to begin with), with the journeys that open it broadened in the same change (reading-and-focus-order, pointer-cancellation, fields-and-status, character-key-shortcuts both ways, keyboard-task) and the keyboard functions open-help-by-button, open-help-by-question-mark, close-help-by-escape, single-keys-off and single-keys-on. Later again that day CORE-05 added the play bar, a group of three buttons after Help with Play disabled and described by the reason line while there is nothing to play, with reading-and-focus-order, pointer-cancellation, fields-and-status and character-key-shortcuts broadened in the same change and the keyboard functions skip-to-start-by-button, skip-to-end-by-button-space-kept, play-refused-by-space, play-refused-by-k and play-refused-by-k-, -j- and -l-on-button. A wider run (the sampling, npm run a11y:sample) is flagged for when the frame\'s controls are on the page' },
       P10: { state: 'pass', note: 'no open finding: the first run\'s one product failure, a shell with no control for the focus test, was fixed by its progress link and retested in the same run (STACK-03, pull request #178, which shows both runs); a failure stays a failure until fixed' },
     },
   },

@@ -8,8 +8,9 @@
 //
 // Its claim:
 // 1. One key, at most one effect (DEF-13.1). The action the key table names for the press (`actionFor`) runs once, and
-//    the key is taken exactly when something ran; the listener cancels the key's default only when it was taken. A
-//    press another listener already took (`defaultPrevented`) runs nothing.
+//    the key is taken when something ran, and also when a held key's repeat of an action that does not repeat is
+//    passed over (point 5: it runs nothing, but the key was the editor's); the listener cancels the key's default only
+//    when it was taken. A press another listener already took (`defaultPrevented`) runs nothing.
 // 2. A key the focused place uses itself is never taken. In a typing field no key and no chord is (the browser's own
 //    undo of typed text stays the field's). A focused button, link or menu item keeps Space and Enter, and a menu item
 //    also the arrows, Home and End (ARIA's menus and list boxes move with them); a slider keeps the arrows, Home,
@@ -85,7 +86,7 @@ const KEPT: Readonly<Record<FocusKind, readonly string[]>> = Object.freeze({
   other: [],
 });
 
-/** Runs the action `press` means here, if any; true exactly when one ran (the listener then cancels the key). */
+/** Runs the action `press` means here, if any; true when one ran or a held repeat was passed over (point 5), and the listener then cancels the key. */
 export function dispatchKey({ press, mac, place, singleKeys, store, transport, openHelp }: KeyDispatch): boolean {
   if (place.typing || place.dialogOpen || KEPT[place.focus].includes(press.key)) return false;
   const action = actionFor(press, mac);

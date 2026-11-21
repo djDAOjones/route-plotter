@@ -306,6 +306,11 @@ describe('the editor’s transport: its words', () => {
     expect(new Set(said)).toEqual(new Set(words));
   });
 
+  it('say the refusal and the end in these words exactly (D190; v3’s “Animation complete”)', () => {
+    expect(WORDS.nothingToPlay).toBe('Add at least two points to a route to play.');
+    expect(WORDS.complete).toBe('Animation complete');
+  });
+
   it('are frozen, as is the transport', () => {
     expect(Object.isFrozen(WORDS)).toBe(true);
     expect(Object.isFrozen(editorOf().editor)).toBe(true);
@@ -322,6 +327,12 @@ describe('the editor’s transport: nothing to play (v3’s refusal, the claim�
     expect(hasSomethingToPlay({ ...scene, routes: [one, { ...one, id: 'other' }] })).toBe(false);
     expect(hasSomethingToPlay(twoStops().scene)).toBe(true);
     expect(hasSomethingToPlay({ ...scene, routes: [one, ...twoStops().scene.routes] })).toBe(true);
+  });
+
+  it('a route of three points plays too: two or more, not exactly two', () => {
+    const nextId = counter('three');
+    const points = [0.2, 0.5, 0.8].map((x) => newPoint(nextId, { x, y: x, kind: 'stop' }));
+    expect(hasSomethingToPlay({ ...newScene(nextId), routes: [{ ...newRoute(nextId), points }] })).toBe(true);
   });
 
   it('Play or pause, J and L each say why and change nothing: no play, no speed written, no frame', () => {
