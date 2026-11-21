@@ -18,7 +18,7 @@ the PLAN-8 decision entry of 2026-11-21 cites this file and rules on it.
   dialog (the label's words were written by the asking chat, not by him;
   what he chose is the option), or **typed**, his own words. His spelling is
   kept.
-- "Shown" is the sheet's wording of the entry's options, shortened only by
+- **Shown** is the sheet's wording of the entry's options, shortened only by
   leaving lines out, never reworded. The dialog's own option text was not
   kept by the asking chat, except where an entry says "the option read".
 - Readings, the asking chat's or this record's, are in a section of their
