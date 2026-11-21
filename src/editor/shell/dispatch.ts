@@ -1,7 +1,10 @@
 // CORE-05, stage 5: the shell's key dispatch. The one function the page's keydown listener calls: handed a press,
 // whether the machine is a Mac, what the page knows of where the key was pressed (plain data: the listener reads the
 // DOM, this reads none), whether single-key shortcuts are on, and the functions the key table's actions name. It runs
-// at most one action and says whether it took the key. No DOM, no browser global, no React: every rule is proved in Node.
+// at most one action and says whether it took the key. No DOM, no browser global, no React, so it is tested in Node,
+// on the real table: every entry, every kind of place, both switch positions. What today's table cannot show: Enter,
+// the arrows, Page Up and Page Down are kept (point 2) for entries the table does not have yet; no entry uses them, so
+// no test on the real table fails without them, and they are held by reading, not by a test.
 //
 // Its claim:
 // 1. One key, at most one effect (DEF-13.1). The action the key table names for the press (`actionFor`) runs once, and
@@ -29,7 +32,12 @@
 //   kept here too, by name, though no entry has it, so adding one later cannot take a button's own activation; a
 //   menu item or an option also keeps Home and End, which v3 let skip the animation.
 // - v3's network-edit-mode guard (the pen's `a` and Ctrl+D) has no v4 counterpart yet.
-// - v3 answered `,` `.` `j` `k` `l` whatever modifier was held; the table's `matches` asks for none (DEF-63).
+// - v3's handler could be switched off whole (`enabled === false`, line 893); nothing here does that: the listener is
+//   added once with the page and removed only with it.
+// - v3 asked whether the key's target sat inside an open modal; here a dialog really open anywhere in the document
+//   stops every key behind it (the listener's `isOpen`: Carbon's `is-visible`, a native dialog's `open`).
+// - v3 answered `,` `.` `j` `k` `l` whatever modifier was held; the table's `matches` asks for no Ctrl, Cmd or Alt
+//   (DEF-63), and lets Shift through (`<` and `>` need it).
 import type { Store } from '../store/store';
 import type { EditorTransport } from '../transport/transport';
 import { actionFor, KEYS, type ActionIn, type KeyPress } from './keys';

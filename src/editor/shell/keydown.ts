@@ -30,9 +30,20 @@ const KINDS: readonly (readonly [string, FocusKind])[] = [
   ],
 ];
 
+/**
+ * Whether a dialog marked modal is really open. Carbon's `Modal` keeps `aria-modal="true"` on its inner box while it is
+ * mounted and closed (Modal.js 404), and shows it open by `is-visible` on its outer `cds--modal` (line 160); a native
+ * `<dialog>` is open only when its `open` attribute is set.
+ */
+function isOpen(dialog: Element): boolean {
+  if (dialog instanceof HTMLDialogElement) return dialog.open;
+  const carbon = dialog.closest('.cds--modal');
+  return carbon === null || carbon.classList.contains('is-visible');
+}
+
 /** Where a key was pressed, as the dispatch reads it. */
 function placeOf(target: EventTarget | null): PressPlace {
-  const dialogOpen = document.querySelector('dialog[open], [aria-modal="true"]') !== null;
+  const dialogOpen = [...document.querySelectorAll('dialog, [aria-modal="true"]')].some(isOpen);
   if (!(target instanceof Element)) return { typing: false, dialogOpen, focus: 'other' };
   const typing =
     (target instanceof HTMLInputElement && !UNTYPED.has(target.type)) ||
