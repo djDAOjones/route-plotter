@@ -5,10 +5,12 @@
 // range's ends, handed the timeline's words. It is never switched off: v3's is not, and an empty scene has a length.
 //
 // It draws again whenever the words change, not only the thousandth held: within one thousandth of a long scene the
-// time now can pass a whole second.
+// time now can pass a whole second. Its look over Carbon's (timelineLook.css): a 44 px target round Carbon's knob
+// (2.5.5), and a track that narrows to fit a 320 px page (1.4.10).
 import { useCallback, useSyncExternalStore } from 'react';
 import { SettingSlider } from '../kit/SettingSlider';
 import { THOUSANDTHS, type Timeline as TimelineLogic } from './timelineLogic';
+import './timelineLook.css';
 
 export interface TimelineProps {
   /** The page's one timeline, made by the session. */
@@ -16,21 +18,23 @@ export interface TimelineProps {
 }
 
 /** The timeline's slider's id; its label is tied to it. */
-export const TIMELINE_ID = 'timeline';
+const TIMELINE_ID = 'timeline';
 
 export function Timeline({ timeline }: TimelineProps) {
   const { setting, readout, words } = timeline;
   const subscribe = useCallback((listener: () => void) => setting.subscribe(listener), [setting]);
   useSyncExternalStore(subscribe, words, words);
   return (
-    <SettingSlider
-      id={TIMELINE_ID}
-      labelText="Timeline"
-      setting={setting}
-      min={0}
-      max={THOUSANDTHS}
-      step={1}
-      readout={readout}
-    />
+    <div className="timeline-look">
+      <SettingSlider
+        id={TIMELINE_ID}
+        labelText="Timeline"
+        setting={setting}
+        min={0}
+        max={THOUSANDTHS}
+        step={1}
+        readout={readout}
+      />
+    </div>
   );
 }

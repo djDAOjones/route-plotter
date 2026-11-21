@@ -11,7 +11,7 @@ import { setSceneSetting } from '../store/command';
 import { createStore } from '../store/store';
 import { createEditorTransport } from '../transport/transport';
 import { createLengthReader, createTimeline } from './timelineLogic';
-import { Timeline, TIMELINE_ID } from './Timeline';
+import { Timeline } from './Timeline';
 
 function counter(prefix: string): IdSource {
   let n = 0;
@@ -44,17 +44,20 @@ function drawn(atMs: number, holdMs?: number) {
 const sliderTag = (html: string) => /<[a-z]+\s[^>]*\brole="slider"[^>]*>/.exec(html)?.[0] ?? '';
 const attribute = (tag: string, name: string) => new RegExp(`\\s${name}="([^"]*)"`).exec(tag)?.[1];
 /** The texts of Carbon's labels at the range's ends, in order. */
+/** The step of the input Carbon draws for the thumb (hidden, as the kit hides Carbon's text input). */
+const stepOf = (html: string) => [...html.matchAll(/<input\s[^>]*>/g)].map((m) => attribute(m[0], 'step'));
 const ends = (html: string) => [...html.matchAll(/class="[^"]*slider__range-label[^"]*"[^>]*>([^<]*)</g)].map((m) => m[1]);
 
 describe('the timeline, as it draws', () => {
   it('is a slider labelled “Timeline”, id timeline, 0 to 1000 step 1, never disabled', () => {
     const html = drawn(0);
     const tag = sliderTag(html);
-    expect(attribute(tag, 'id')).toBe(TIMELINE_ID);
+    expect(attribute(tag, 'id')).toBe('timeline');
     expect(attribute(tag, 'aria-valuemin')).toBe('0');
     expect(attribute(tag, 'aria-valuemax')).toBe('1000');
     expect(attribute(tag, 'tabindex')).toBe('0');
-    expect(html).toMatch(new RegExp(`<label[^>]*for="${TIMELINE_ID}"[^>]*>Timeline</label>`));
+    expect(html).toMatch(/<label[^>]*for="timeline"[^>]*>Timeline<\/label>/);
+    expect(stepOf(html)).toEqual(['1']);
     expect(html).not.toMatch(/disabled|aria-disabled/);
   });
 

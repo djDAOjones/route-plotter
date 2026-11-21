@@ -20,12 +20,18 @@
 // the two skips, not the disabled Play (2.4.3); the reason line is read after the group (1.3.2); each button by
 // pointer, Play doing nothing (2.5.2); Play's reason tied to it (3.3.5); the skips speak with focus kept (4.1.3); K
 // says the reason with the switch on, and nothing off, on a button too (2.1.4).
+// CORE-05, stage 5's sixth piece (2026-11-21): the timeline in the group "Playback" after the buttons, a slider over the
+// position (thousandths of the length) reading "0:00 of 0:02" on the empty scene (2 s, Hold at end's), the time now and
+// the whole time at its ends. The journeys: Tab meets it after "Skip to end" (2.4.3); its label read before the reason
+// line (1.3.2); a press on its track and a drag move it, Escape before the release gives either up (2.5.2), and a press
+// on the track is the single-pointer alternative to dragging (2.5.7); its label and two times (3.3.5); a key on it and
+// a skip elsewhere change no context and keep focus (3.2.2); single keys on it say nothing with the switch off (2.1.4).
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
 // (2.4.3); each route and its title (2.4.2); the one place the shell links to. A change to the shell is reviewed here.
-const READING = ['Route Plotter', 'Version 4 is being built here.', 'Add at least two points to a route to play.'];
-const FOCUS = ['link "GitHub"', 'button "Help"', 'button "Skip to start"', 'button "Skip to end"'];
+const READING = ['Route Plotter', 'Version 4 is being built here.', 'Timeline', 'Add at least two points to a route to play.'];
+const FOCUS = ['link "GitHub"', 'button "Help"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
 const PROGRESS = 'https://github.com/djDAOjones/route-plotter';
 // The shell's one status region, and the words the editor's keys say in it (the editor's transport's own, WORDS).
@@ -40,6 +46,17 @@ const SKIP_START = '#skip-to-start';
 const PLAY = '#play-pause';
 const SKIP_END = '#skip-to-end';
 const REASON = '#play-reason';
+// The timeline: its thumb (Carbon's role=slider) and track, what it holds and reads out, and where a press on its track
+// at `f` of its width lands. Each move of it is a scrub: no undo step, nothing said.
+const TIMELINE = '#timeline';
+const TRACK = '.cds--slider';
+const atNow = (page) => page.locator(TIMELINE).evaluate((e) => ({ now: Number(e.getAttribute('aria-valuenow')), text: e.getAttribute('aria-valuetext') }));
+// Carbon throttles a drag's moves and draws the thumb after React's effects: wait (up to 2 s) until it holds `ok(now)`.
+const comesTo = (page, ok) => page.waitForFunction(([s, f]) => new Function('n', `return ${f}`)(Number(document.querySelector(s)?.getAttribute('aria-valuenow'))), [TIMELINE, ok], { timeout: 2000 }).then(() => true, () => false);
+const onTrack = async (page, f) => { const b = await page.locator(TRACK).boundingBox(); return { x: b.x + b.width * f, y: b.y + b.height / 2 }; };
+// The fields a person meets: those drawn (Carbon keeps a hidden number input beside its slider, never shown, D181).
+const shownFields = (page) => page.locator(FIELDS).filter({ visible: true });
+const UNDO = process.platform === 'darwin' ? 'Meta+z' : 'Control+z';
 const focusOn = (page, sel) => page.evaluate((s) => !!document.activeElement?.matches(s), sel);
 // True if the status region does not say `words` within `ms`: a second action a key must not also run (a message
 // waiting behind another shows when the first's hold ends, about 2 s).
@@ -179,6 +196,9 @@ export default {
         '    - button "Skip to start"',
         '    - button "Play" [disabled]',
         '    - button "Skip to end"',
+        '    - text: Timeline 0:00',
+        '    - slider "Timeline"',
+        '    - text: 0:02',
         `  - paragraph: ${NOTHING_TO_PLAY}`,
         '  - status',
       ].join('\n'),
@@ -194,6 +214,8 @@ export default {
         // The skips change no control's state: Play stays disabled, so no snapshot after them.
         { name: 'skip to start by its button', run: async ({ page }) => { await page.locator(SKIP_START).click(); } },
         { name: 'skip to end by its button', run: async ({ page }) => { await page.locator(SKIP_END).click(); } },
+        // A key on the timeline moves its thumb: Carbon's slider draws no motion of its own for a key beyond the knob's.
+        { name: 'move the timeline by a key', run: async ({ page }) => { await page.locator(TIMELINE).focus(); await page.keyboard.press('Shift+ArrowRight'); } },
       ],
       keeps: {
         content: ['h1', 'main p', REASON],
@@ -203,6 +225,7 @@ export default {
           { name: 'open help', run: async ({ page }) => { await helpButton(page).click(); const shown = await helpDialog(page).isVisible(); await page.keyboard.press('Escape'); return shown && backOnHelp(page); } },
           { name: 'skip to start by its button', run: async ({ page }) => { await page.locator(SKIP_START).click(); return (await said(page)) === SKIPPED_TO_START; } },
           { name: 'skip to end by its button', run: async ({ page }) => { await page.locator(SKIP_END).click(); return (await said(page)) === SKIPPED_TO_END; } },
+          { name: 'move the timeline by a key', run: async ({ page }) => { await page.locator(SKIP_START).click(); await page.locator(TIMELINE).focus(); await page.keyboard.press('Shift+ArrowRight'); return (await atNow(page)).now === 4; } },
         ],
       },
     },
@@ -234,6 +257,22 @@ export default {
     { name: 'play-refused-by-k-on-button', state: 'shell', steps: [{ focus: SKIP_START }, { press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_START) },
     { name: 'play-refused-by-j-on-button', state: 'shell', steps: [{ focus: SKIP_START }, { press: 'j' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_START) },
     { name: 'play-refused-by-l-on-button', state: 'shell', steps: [{ focus: SKIP_END }, { press: 'l' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_END) },
+    // The timeline: an arrow moves it one thousandth and Shift with it four (Carbon's), and the words hold until a whole
+    // second is passed; End off it skips and its thumb follows; on it, K says the refusal and Escape with no drag keeps
+    // focus and the position. Home, End, Page Up and Page Down on it do nothing: the dispatch leaves them to a slider
+    // (dispatch.ts point 2) and Carbon's slider uses none of them.
+    { name: 'timeline-by-arrow', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'ArrowRight' }], check: async ({ page }) => (await atNow(page)).now === 1 && focusOn(page, TIMELINE) },
+    { name: 'timeline-by-shift-arrow', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'Shift+ArrowRight' }, { press: 'Shift+ArrowRight' }], check: async ({ page }) => (await atNow(page)).now === 8 && (await said(page)) === '' },
+    { name: 'timeline-words-follow-a-second', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'Shift+ArrowRight' }], check: async ({ page }) => {
+      const seen = [];
+      for (let i = 0; i < 130 && (await atNow(page)).now < 500; i++) { seen.push((await atNow(page)).text); await page.keyboard.press('Shift+ArrowRight'); }
+      const t = await atNow(page);
+      return seen.at(-1) === '0:00 of 0:02' && t.now === 500 && t.text === '0:01 of 0:02' && focusOn(page, TIMELINE);
+    } },
+    { name: 'timeline-follows-skip-to-end', state: 'shell', steps: [{ press: 'End' }], check: async ({ page }) => { const t = await atNow(page); return t.now === 1000 && t.text === '0:02 of 0:02' && (await said(page)) === SKIPPED_TO_END; } },
+    { name: 'timeline-home-end-left-to-slider', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'End' }, { press: 'PageUp' }], check: async ({ page }) => (await atNow(page)).now === 0 && (await said(page)) === '' && focusOn(page, TIMELINE) },
+    { name: 'play-refused-by-k-on-timeline', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && (await atNow(page)).now === 0 && focusOn(page, TIMELINE) },
+    { name: 'timeline-escape-no-drag', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'ArrowRight' }, { press: 'Escape' }], check: async ({ page }) => (await atNow(page)).now === 1 && focusOn(page, TIMELINE) },
     // { name: 'set-hold', state: 'home', steps: [{ focus: '#hold' }, { press: 'Meta+A' }, { type: '11' }, { press: 'Enter' }], check: async ({ page }) => (await page.locator('#hold').inputValue()) === '11' },
   ],
   // Authored journeys: a name, a catalogue method (j-* or keyboard), the rows it claims, and run({ page, expect, open, record }).
@@ -319,10 +358,14 @@ export default {
       // whole press acts, on the up-event: the progress link (followed), "Help" (its dialog opens) and, inside Help, the
       // switch (it turns). A press on the switch is moved off to a point inside the dialog, as a press outside Help
       // closes it. The play bar: each skip says its words on a whole press and nothing before; Play, disabled with
-      // nothing to play, does nothing on any press. Any other control needs its own journey.
+      // nothing to play, does nothing on any press. The timeline, a slider, moves on the down-event, as a slider's thumb
+      // follows the pointer: the press is given up by Escape before the release (the position back where the press found
+      // it, focus kept, and the moves and release after it change nothing), and the release keeps it with no undo step.
+      // 2.5.7: its one drag, the thumb along the track, has a single-pointer alternative with the same result, a press on
+      // the track where the thumb is wanted. Any other control needs its own journey.
       name: 'pointer-cancellation',
       method: 'j-pointer',
-      rows: ['2.5.2'],
+      rows: ['2.5.2', '2.5.7'],
       run: async ({ page, open, record, pointer }) => {
         await open('shell');
         const count = await page.locator(CONTROLS).filter({ visible: true }).count();
@@ -335,6 +378,39 @@ export default {
           const isHelp = await control.evaluate((e, s) => e.matches(s), HELP);
           const skip = await control.evaluate((e, [a, b]) => (e.matches(a) ? 'start' : e.matches(b) ? 'end' : ''), [SKIP_START, SKIP_END]);
           const offPlay = await control.evaluate((e, s) => e.matches(s) && e.disabled, PLAY);
+          if (await control.evaluate((e, s) => e.matches(s), TIMELINE)) {
+            const bad = [];
+            const half = await onTrack(page, 0.5), far = await onTrack(page, 0.9);
+            await page.mouse.move(half.x, half.y);
+            await page.mouse.down();
+            const pressedOk = await comesTo(page, 'n > 400 && n < 600');
+            const pressed = (await atNow(page)).now;
+            await page.mouse.move(far.x, far.y, { steps: 4 });
+            const draggedOk = await comesTo(page, 'n > 850');
+            const dragged = (await atNow(page)).now;
+            await page.keyboard.press('Escape');
+            await comesTo(page, 'n === 0');
+            const back = await atNow(page);
+            if (!pressedOk || !draggedOk) bad.push(`a press and drag on it read ${pressed} then ${dragged}, not about 500 then 900`);
+            if (back.now !== 0 || back.text !== '0:00 of 0:02') bad.push(`Escape mid-drag left it at ${back.now} (${back.text}), not where the press found it`);
+            if (!(await focusOn(page, TIMELINE))) bad.push('Escape mid-drag took focus off it');
+            await page.mouse.move(half.x, half.y, { steps: 4 });
+            await page.mouse.up();
+            await page.waitForTimeout(300);
+            if ((await atNow(page)).now !== 0) bad.push('the moves and release after Escape moved it');
+            await page.mouse.move(far.x, far.y);
+            await page.mouse.down();
+            await page.mouse.up();
+            await comesTo(page, 'n > 850');
+            const kept = await atNow(page);
+            if (kept.now < 800 || kept.text !== '0:01 of 0:02') bad.push(`a whole press on the track at 90 % left it at ${kept.now} (${kept.text})`);
+            await page.locator('main h1').click();
+            await page.keyboard.press(UNDO);
+            if ((await atNow(page)).now !== kept.now || (await said(page)) !== '') bad.push('Undo after the press changed the position or said something: a move of it made an undo step');
+            if (bad.length) problems.push(`${name}: ${bad.join('; ')}`);
+            else done.push(`${name} (moves on the press, given up by Escape, kept on the release with no undo step; a press on the track is the alternative to a drag)`);
+            continue;
+          }
           if (!href && !isHelp && !skip && !offPlay) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
           const box = await control.boundingBox();
           const x = box.x + box.width / 2, y = box.y + box.height / 2;
@@ -408,6 +484,8 @@ export default {
           if (!(await arrives(page, target))) problems.push(`${name}: a whole press did not follow it to ${target} (at ${page.url()})`);
           else done.push(name);
         }
+        const slid = done.some((d) => d.startsWith('slider "Timeline"'));
+        record('2.5.7', slid && !problems.some((p) => p.startsWith('slider')), slid ? 'the one drag, the timeline\'s thumb along its track, has a single-pointer alternative with the same result: a press on the track at 90 % puts the thumb there (0:01 of 0:02), as a drag does' : problems.find((p) => p.startsWith('slider')) ?? 'the timeline was not met');
         record('2.5.2', !problems.length && done.length > 0, problems.length ? problems.join('; ') : done.length ? `${done.length} control(s) do nothing on the down-event or on a press moved off before release, and, where enabled, act on a whole press: ${done.join(', ')}` : 'no control to press');
       },
     },
@@ -424,11 +502,12 @@ export default {
       rows: ['3.3.5', '4.1.3'],
       run: async ({ page, open, record }) => {
         await open('shell');
-        const restFields = await page.locator(FIELDS).count();
+        const rest = await shownFields(page).evaluateAll((all, s) => all.map((e) => e.matches(s)), TIMELINE);
         await helpButton(page).click();
         await helpDialog(page).waitFor();
-        const fields = restFields + await page.locator(FIELDS).count();
-        const onlySwitch = fields === 1 && (await page.locator(FIELDS).first().evaluate((e, s) => e.matches(s), SWITCH));
+        const inHelp = await helpDialog(page).locator(FIELDS).filter({ visible: true }).evaluateAll((all, s) => all.map((e) => e.matches(s)), SWITCH);
+        const fields = rest.length + inHelp.length;
+        const onlySwitch = rest.length === 1 && rest[0] && inHelp.length === 1 && inHelp[0];
         const helpText = await singleKeys(page).evaluate((e) => {
           const id = e.getAttribute('aria-describedby'), el = id ? document.getElementById(id) : null;
           return el && el.getBoundingClientRect().height > 0 ? (el.textContent ?? '').trim() : '';
@@ -440,12 +519,19 @@ export default {
           return el && el.getBoundingClientRect().height > 0 ? (el.textContent ?? '').trim() : '';
         });
         const playName = await named(play);
+        // The timeline asks for no text: its help is its visible label, tied to it, and the two times at its ends.
+        const timeline = await page.locator(TIMELINE).evaluate((e) => {
+          const id = e.getAttribute('aria-labelledby'), label = id ? document.getElementById(id) : null;
+          const ends = [...document.querySelectorAll('.cds--slider__range-label')].map((x) => x.getBoundingClientRect().height > 0 ? (x.textContent ?? '').trim() : '');
+          return { label: label && label.getBoundingClientRect().height > 0 ? (label.textContent ?? '').trim() : '', ends };
+        });
         const fieldProblems = [
-          !onlySwitch && `${fields} field(s); the shell has one, the switch in Help: write the check that reaches each other one's help`,
+          !onlySwitch && `${fields} field(s); the shell has two, the timeline and the switch in Help: write the check that reaches each other one's help`,
           !helpText && 'the switch has no visible help tied to it by aria-describedby',
           !(await play.isDisabled()) && 'Play is not disabled with nothing to play',
           reason !== NOTHING_TO_PLAY && `Play's description reads ${JSON.stringify(reason)}, not ${JSON.stringify(NOTHING_TO_PLAY)}, visible`,
           playName !== 'button "Play" [disabled]' && `Play is named ${playName}: the reason belongs in its description, not its name`,
+          (timeline.label !== 'Timeline' || timeline.ends.join(' ') !== '0:00 0:02') && `the timeline's visible label and times read ${JSON.stringify(timeline)}, not "Timeline" with 0:00 and 0:02`,
         ].filter(Boolean);
         record('3.3.5', !fieldProblems.length, fieldProblems.length ? fieldProblems.join('; ') : `the shell's one setting, the switch "Single-key shortcuts" in Help, has its help under it, tied to it and read with it: ${JSON.stringify(helpText)}; Play, disabled with nothing to play, keeps its name and is described by the visible line under the play bar: ${JSON.stringify(reason)}`);
         await open('shell');
@@ -501,9 +587,10 @@ export default {
         if (off.after !== 'false') problems.push('Space on the switch did not turn it off');
         if (!off.back) problems.push('focus did not come back to "Help" after turning the switch off');
         if (!(await quiet(page))) problems.push('the status region did not empty');
-        for (const where of ['the page', 'the focused progress link', 'the focused "Skip to start"']) {
+        for (const where of ['the page', 'the focused progress link', 'the focused "Skip to start"', 'the focused timeline']) {
           if (where === 'the page') await page.locator('main h1').click();
           else if (where === 'the focused progress link') await progressLink(page).focus();
+          else if (where === 'the focused timeline') await page.locator(TIMELINE).focus();
           else await page.locator(SKIP_START).focus();
           for (const key of SINGLE_KEYS) {
             await page.keyboard.press(key);
@@ -513,6 +600,7 @@ export default {
             if (page.url() !== start) { problems.push(`${key} on ${where} left the shell for ${page.url()}`); break; }
           }
         }
+        await page.locator('main h1').click();
         await page.keyboard.press('Home');
         if ((await said(page)) !== SKIPPED_TO_START) problems.push('Home said nothing with the switch off: the editor\'s keys were not listened for, so the check proves nothing');
         const on = await flipByKeyboard(page);
@@ -544,12 +632,18 @@ export default {
         await open('shell');
         const start = page.url(), pages = page.context().pages().length;
         const context = [];
-        const atRest = await page.locator(FIELDS).count();
+        const atRest = await shownFields(page).count();
+        await page.locator(TIMELINE).focus();
+        for (const key of ['Shift+ArrowRight', 'ArrowLeft']) {
+          await page.keyboard.press(key);
+          if (page.url() !== start || page.context().pages().length !== pages || !(await focusOn(page, TIMELINE))) context.push(`${key} on the timeline changed the page, opened a window or moved focus`);
+        }
+        if ((await atNow(page)).now !== 3) context.push('Shift+Right then Left on the timeline did not move it to 3');
         await helpButton(page).focus();
         await page.keyboard.press('Enter');
         await helpDialog(page).waitFor();
-        const settings = atRest + await page.locator(FIELDS).count();
-        if (settings !== 1) context.push(`${settings} setting(s); the shell has one, the switch in Help: write the check for any other`);
+        const settings = atRest + await helpDialog(page).locator(FIELDS).filter({ visible: true }).count();
+        if (settings !== 2) context.push(`${settings} setting(s); the shell has two, the timeline and the switch in Help: write the check for any other`);
         await singleKeys(page).focus();
         for (const want of ['false', 'true']) {
           await page.keyboard.press('Space');
@@ -557,7 +651,7 @@ export default {
           if (page.url() !== start || page.context().pages().length !== pages) context.push('turning the switch changed the page or opened a window');
           if (!(await helpDialog(page).isVisible()) || !(await focusIs(page, SWITCH))) context.push('turning the switch closed Help or moved focus');
         }
-        record('3.2.2', !context.length, context.length ? context.join('; ') : 'the shell\'s one setting, the switch "Single-key shortcuts" in Help, turned off and on by Space changes no context: same page, no new window, Help still open, focus still on the switch');
+        record('3.2.2', !context.length, context.length ? context.join('; ') : 'the shell\'s two settings change no context: the timeline moved by Shift+Right and Left (same page, no new window, focus kept on it), and the switch "Single-key shortcuts" in Help turned off and on by Space (same page, no new window, Help still open, focus still on the switch)');
         await open('shell');
         await page.waitForTimeout(3000);
         const idle = page.url() === start && page.context().pages().length === pages;
@@ -602,7 +696,7 @@ export default {
   records: {
     date: '2026-11-21',
     rows: {
-      P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment had changed until 2026-11-21. That day CORE-05 began to change the shell, a shared component: one status region and the editor\'s keys, with their journeys broadened in the same change (fields-and-status, character-key-shortcuts, the keyboard functions skip-to-start-by-home and skip-to-end-by-end). Later the same day CORE-05 added Help, the first dialog and the first setting on the shell (the switch for single-key shortcuts, on to begin with), with the journeys that open it broadened in the same change (reading-and-focus-order, pointer-cancellation, fields-and-status, character-key-shortcuts both ways, keyboard-task) and the keyboard functions open-help-by-button, open-help-by-question-mark, close-help-by-escape, single-keys-off and single-keys-on. Later again that day CORE-05 added the play bar, a group of three buttons after Help with Play disabled and described by the reason line while there is nothing to play, with reading-and-focus-order, pointer-cancellation, fields-and-status and character-key-shortcuts broadened in the same change and the keyboard functions skip-to-start-by-button, skip-to-end-by-button-space-kept, play-refused-by-space, play-refused-by-k and play-refused-by-k-, -j- and -l-on-button. A wider run (the sampling, npm run a11y:sample) is flagged for when the frame\'s controls are on the page' },
+      P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment had changed until 2026-11-21. That day CORE-05 began to change the shell, a shared component: one status region and the editor\'s keys, with their journeys broadened in the same change (fields-and-status, character-key-shortcuts, the keyboard functions skip-to-start-by-home and skip-to-end-by-end). Later the same day CORE-05 added Help, the first dialog and the first setting on the shell (the switch for single-key shortcuts, on to begin with), with the journeys that open it broadened in the same change (reading-and-focus-order, pointer-cancellation, fields-and-status, character-key-shortcuts both ways, keyboard-task) and the keyboard functions open-help-by-button, open-help-by-question-mark, close-help-by-escape, single-keys-off and single-keys-on. Later again that day CORE-05 added the play bar, a group of three buttons after Help with Play disabled and described by the reason line while there is nothing to play, with reading-and-focus-order, pointer-cancellation, fields-and-status and character-key-shortcuts broadened in the same change and the keyboard functions skip-to-start-by-button, skip-to-end-by-button-space-kept, play-refused-by-space, play-refused-by-k and play-refused-by-k-, -j- and -l-on-button. A wider run (the sampling, npm run a11y:sample) is flagged for when the frame\'s controls are on the page On 2026-11-21 too, CORE-05 put the timeline in the play bar, the shell\'s first slider, with its own look over Carbon\'s (a 44 px target round Carbon\'s knob, a track that narrows), and caught Escape before Carbon\'s tooltip in the kit\'s slider, with the journeys broadened in the same change (flag a wider run).' },
       P10: { state: 'pass', note: 'no open finding: the first run\'s one product failure, a shell with no control for the focus test, was fixed by its progress link and retested in the same run (STACK-03, pull request #178, which shows both runs); a failure stays a failure until fixed' },
     },
   },

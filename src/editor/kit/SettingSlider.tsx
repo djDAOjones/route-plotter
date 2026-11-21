@@ -7,8 +7,11 @@
 // `report()`, which tells a drag's move from a key's nudge by the press, and the echo by the position held; and its
 // `onRelease` is `release()`. Escape during a drag, and a touch cancelled, give the drag up (`giveUp()`); the moves, any
 // further press (a second finger) and the release Carbon still sends until the pointer is let go then change nothing
-// (a press while one is down is nothing until its release, even after a give-up). Carbon's own text input is hidden:
-// the kit's number field is the one place a number is typed (D181).
+// (a press while one is down is nothing until its release, even after a give-up). Escape is caught on its way down,
+// before Carbon sees it: the thumb's tooltip, open while it has the pointer or focus, takes Escape and stops it
+// (Tooltip.js 77), so a drag would not be given up (seen on the page, brief 66). With no drag, Escape goes on to the
+// tooltip, which it hides. Carbon's own text input is hidden: the kit's number field is the one place a number is
+// typed (D181).
 //
 // Carbon keeps a thumb position of its own, brought into step only when its `value` prop changes. Where a report is
 // refused or changes nothing held (another change in progress; the model's check; a drag given up), its thumb would stay
@@ -132,7 +135,7 @@ export function SettingSlider({
       onMouseDownCapture={onPress}
       onTouchStartCapture={onPress}
       onTouchCancel={() => slider.giveUp()}
-      onKeyDown={onKeyDown}
+      onKeyDownCapture={onKeyDown}
     >
       <Slider
         key={drawing}

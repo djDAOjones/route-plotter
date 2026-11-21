@@ -3,7 +3,9 @@
 // focus stays on it when its words change; no `aria-pressed`); "Skip to end". Carbon buttons with their words visible,
 // no icon-only button (Carbon's icon button brings a tooltip: content on hover and focus, and it takes the first
 // Escape, D186). Each calls the same function of the page's one editor's transport that its key calls (DEF-62,
-// INTAKE.26): the key table's Play/pause, Skip to start and Skip to end; no second path.
+// INTAKE.26): the key table's Play/pause, Skip to start and Skip to end; no second path. After them, in the same group
+// and on a line of its own, what the page hands it: the timeline (brief 66's ruling 1), so Tab meets it after "Skip to
+// end", and the reason line stays last, after the group.
 //
 // Play with nothing to play, as v3 (playback.js 50 to 61, UIController.js 1399 to 1411): the button is disabled and
 // described (`aria-describedby`) by the line under the group, drawn only then, which shows the editor's transport's
@@ -13,7 +15,7 @@
 // one the keys ask, when the bar draws and again whenever the store tells of a change: no second rule. A pause is
 // never refused, so "Pause" is never disabled.
 import { Button } from '@carbon/react';
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore, type ReactNode } from 'react';
 import { WORDS, type EditorTransport } from '../transport/transport';
 
 export interface PlayBarProps {
@@ -25,6 +27,8 @@ export interface PlayBarProps {
   readonly playing: () => boolean;
   /** Whether the scene has anything to play now: the session's, the one the editor's transport asks. */
   readonly canPlay: () => boolean;
+  /** What stands in the group after the three buttons, on a line of its own: the timeline (v3's order). */
+  readonly children?: ReactNode;
 }
 
 /** The id of the line that says why Play is off, which describes Play while it is. */
@@ -33,9 +37,11 @@ export const PLAY_REASON = 'play-reason';
 /** Space between the buttons and above the group (Carbon's spacing-05): touching at a fractional pixel, each button's
  *  edge was hit by its neighbour, so focus was partly hidden by author content (2.4.12, seen in the accessibility run). */
 const APART = { display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '1rem' } as const;
+/** The timeline's line: the whole width, under the buttons. */
+const LINE = { flexBasis: '100%' } as const;
 
 /** The play bar: a group named "Playback" of three buttons, and the reason line while Play is off. */
-export function PlayBar({ transport, subscribe, playing, canPlay }: PlayBarProps) {
+export function PlayBar({ transport, subscribe, playing, canPlay, children }: PlayBarProps) {
   const plays = useSyncExternalStore(subscribe, playing, playing);
   const can = useSyncExternalStore(subscribe, canPlay, canPlay);
   const off = !plays && !can;
@@ -71,6 +77,7 @@ export function PlayBar({ transport, subscribe, playing, canPlay }: PlayBarProps
         >
           Skip to end
         </Button>
+        {children !== undefined && <div style={LINE}>{children}</div>}
       </div>
       {off && <p id={PLAY_REASON}>{WORDS.nothingToPlay}</p>}
     </>

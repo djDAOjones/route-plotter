@@ -6,13 +6,15 @@
 // paragraph (a plain Carbon button until the frame's header comes), and its dialog, opened also by `?`. Then the play
 // bar (PlayBar): "Skip to start", "Play" or "Pause" and "Skip to end", each calling the session's editor's transport
 // as its key does, and the line saying why Play is off while there is nothing to play (on this page, always: the
-// scene is empty until stage 6 brings Open).
+// scene is empty until stage 6 brings Open). In the bar's group, after the buttons, the timeline (Timeline): a slider
+// over the position, reading the time now of the whole time; an empty scene is 2 s long (Hold at end's), so it moves.
 import { Button, Content, Heading, Link } from '@carbon/react';
 import { useEffect, useRef, useState } from 'react';
 import { Help } from './shell/Help';
 import { listenForKeys, MAC } from './shell/keydown';
 import { PlayBar } from './shell/PlayBar';
 import { holdRegion, pageSession } from './shell/session';
+import { Timeline } from './shell/Timeline';
 
 /** The store's telling of a change, and whether it plays now: one function each for the page's life, so a draw of
  *  App does not make the play bar subscribe anew. (The bar holds two subscriptions, one per hook.) */
@@ -50,7 +52,9 @@ export function App() {
         subscribe={toldOfChange}
         playing={playsNow}
         canPlay={pageSession().canPlay}
-      />
+      >
+        <Timeline timeline={pageSession().timeline} />
+      </PlayBar>
       <div role="status" aria-live="polite" className="cds--visually-hidden" ref={holdRegion} />
       <Help
         opener={helpButton}
