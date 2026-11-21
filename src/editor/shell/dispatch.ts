@@ -9,9 +9,9 @@
 //    press another listener already took (`defaultPrevented`) runs nothing.
 // 2. A key the focused place uses itself is never taken. In a typing field no key and no chord is (the browser's own
 //    undo of typed text stays the field's). A focused button, link or menu item keeps Space and Enter, and a menu item
-//    also the arrows; a slider keeps the arrows, Home, End, Page Up and Page Down. Every other key still runs from
-//    those places, since a browser leaves focus on a button after a click (DEF-13). While a dialog is open, nothing
-//    behind it runs.
+//    also the arrows, Home and End (ARIA's menus and list boxes move with them); a slider keeps the arrows, Home,
+//    End, Page Up and Page Down. Every other key still runs from those places, since a browser leaves focus on a
+//    button after a click (DEF-13). While a dialog is open, nothing behind it runs.
 // 3. A Playback action calls the editor's transport's function of the same name; Undo and Redo call the store's. A
 //    refusal changes nothing (the store's and the transport's own rule) and still counts as taken: the key was the
 //    editor's.
@@ -26,7 +26,8 @@
 //   all; here a typing field is what the listener says it is, and a slider is its own kind, keeping only its keys.
 // - v3 let `?` (help) run inside a dialog; help has no key yet (it comes with its dialog), so nothing runs in one.
 // - v3 kept Space for a button, link, disclosure or menu item, and the arrows for a menu item or an option; Enter is
-//   kept here too, by name, though no entry has it, so adding one later cannot take a button's own activation.
+//   kept here too, by name, though no entry has it, so adding one later cannot take a button's own activation; a
+//   menu item or an option also keeps Home and End, which v3 let skip the animation.
 // - v3's network-edit-mode guard (the pen's `a` and Ctrl+D) has no v4 counterpart yet.
 // - v3 answered `,` `.` `j` `k` `l` whatever modifier was held; the table's `matches` asks for none (DEF-63).
 import type { Store } from '../store/store';
@@ -62,7 +63,7 @@ const ARROWS: readonly string[] = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRi
 const KEPT: Readonly<Record<FocusKind, readonly string[]>> = Object.freeze({
   button: ACTIVATION,
   link: ACTIVATION,
-  menuitem: [...ACTIVATION, ...ARROWS],
+  menuitem: [...ACTIVATION, ...ARROWS, 'Home', 'End'],
   slider: [...ARROWS, 'Home', 'End', 'PageUp', 'PageDown'],
   other: [],
 });

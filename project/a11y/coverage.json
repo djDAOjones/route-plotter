@@ -63,8 +63,8 @@
       "evidence": ""
     },
     "keyboard-shortcuts": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "present",
+      "evidence": "CORE-05 (2026-11-21): the editor listens for its keys on the page (src/editor/shell/keydown.ts, dispatch.ts, keys.ts): Space plays or pauses, Home and End skip to start and end, Cmd or Ctrl with Z undoes and with Shift redoes; the keys of one printable character the table names (J, K, L, comma, full stop, < and >) are held off until their switch comes with help (D183). Journeys: character-key-shortcuts (2.1.4), fields-and-status (4.1.3), keyboard functions skip-to-start-by-home and skip-to-end-by-end"
     },
     "user-input": {
       "state": "unknown",
@@ -347,7 +347,7 @@
     "2.1.4": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []

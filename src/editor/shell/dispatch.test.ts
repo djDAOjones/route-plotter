@@ -135,8 +135,20 @@ describe('the shell’s key dispatch', () => {
     expect(said).toEqual([]);
   });
 
-  it('point 2: a button, a link or a menu item keeps Space (and Enter); every other key still runs from it', () => {
-    for (const focus of ['button', 'link', 'menuitem'] as const) {
+  it('point 2: a menu item keeps Space and Enter, and also Home and End; the rest still run from it', () => {
+    const { ran, key } = rig();
+    const place = { ...OPEN, focus: 'menuitem' as const };
+    expect(key(press(' '), { place })).toBe(false);
+    expect(key(press('Enter'), { place })).toBe(false);
+    expect(key(press('Home'), { place })).toBe(false);
+    expect(key(press('End'), { place })).toBe(false);
+    expect(key(press('k'), { place })).toBe(true);
+    expect(key(press('z', { metaKey: true }), { place })).toBe(true);
+    expect(ran).toEqual(['playPause', 'undo']);
+  });
+
+  it('point 2: a button or a link keeps Space (and Enter); every other key still runs from it', () => {
+    for (const focus of ['button', 'link'] as const) {
       const { ran, key } = rig();
       const place = { ...OPEN, focus };
       expect(key(press(' '), { place }), focus).toBe(false);

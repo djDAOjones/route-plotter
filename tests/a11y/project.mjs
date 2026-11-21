@@ -7,6 +7,9 @@
 // control. Each journey below checks what the shell has now, against the reviewed sequences under it, and fails as
 // soon as the shell gains what it cannot yet check (a field, a setting, a status region, content a control opens, a
 // control other than a link): the item that adds one writes its journey here, in the same pull request.
+// CORE-05, stage 5's first piece (2026-11-21): the shell gains its one status region, which the editor's keys write
+// to, and the keys themselves (Home and End; Space and the command chords Undo and Redo; the keys of one printable
+// character held off, D183). Its journeys are `fields-and-status` (4.1.3) and `character-key-shortcuts` (2.1.4).
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
@@ -15,6 +18,13 @@ const READING = ['Route Plotter', 'Version 4 is being built here.'];
 const FOCUS = ['link "GitHub"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
 const PROGRESS = 'https://github.com/djDAOjones/route-plotter';
+// The shell's one status region, and the words the editor's keys say in it (the editor's transport's own, WORDS).
+const STATUS = '[role=status]';
+const said = async (page) => (await page.locator(STATUS).textContent()) ?? '';
+const SKIPPED_TO_START = 'Skipped to start';
+const SKIPPED_TO_END = 'Skipped to end';
+// The keys of one printable character the editor's key table names, held off on the page until their switch (D183).
+const SINGLE_KEYS = ['j', 'k', 'l', ',', '.', '<', '>'];
 // The processes the shell presents (CONF03): none. A process is a series of steps toward a goal inside the app; the
 // shell has no form and no link to another of the app's pages, and its one link leaves Route Plotter for a page it does
 // not own, which is no step of a Route Plotter process and is not tested here. The item that adds a process names it
@@ -92,6 +102,7 @@ export default {
         '    - link "GitHub":',
         `      - /url: ${PROGRESS}`,
         '    - text: .',
+        '  - status',
       ].join('\n'),
       interactions: [{ name: 'focus the progress link', run: async ({ page }) => { await progressLink(page).focus(); } }],
       keeps: {
@@ -105,7 +116,11 @@ export default {
   ],
   // Keyboard functions run at no delay and with long gaps between keys: steps of { focus }, { press } or { type }.
   keyboardFunctions: [
+    // Enter on the focused link follows it: the editor's keys never take a link's own activation.
     { name: 'follow-progress-link', state: 'shell', steps: [{ focus: 'main a[href]' }, { press: 'Enter' }], check: async ({ page }) => arrives(page, PROGRESS) },
+    // The editor's keys, each checked by the words it says in the status region.
+    { name: 'skip-to-start-by-home', state: 'shell', steps: [{ press: 'Home' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_START },
+    { name: 'skip-to-end-by-end', state: 'shell', steps: [{ press: 'End' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_END },
     // { name: 'set-hold', state: 'home', steps: [{ focus: '#hold' }, { press: 'Meta+A' }, { type: '11' }, { press: 'Enter' }], check: async ({ page }) => (await page.locator('#hold').inputValue()) === '11' },
   ],
   // Authored journeys: a name, a catalogue method (j-* or keyboard), the rows it claims, and run({ page, expect, open, record }).
@@ -195,8 +210,9 @@ export default {
       },
     },
     {
-      // 3.3.5: no field takes input, so none needs help. 4.1.3: the shell raises no status message: nothing changes
-      // after it loads, and it holds no status region. A field or a status region needs its own journey.
+      // 3.3.5: no field takes input, so none needs help. 4.1.3: the shell's one status region, role status, is empty
+      // and nothing changes in the 2 s after the shell loads; a real key (Home, with the progress link focused) raises
+      // the editor's message in it, and focus stays on the link. A further status region needs its own check here.
       name: 'fields-and-status',
       method: 'j-forms',
       rows: ['3.3.5', '4.1.3'],
@@ -205,13 +221,53 @@ export default {
         const fields = await page.locator(FIELDS).count();
         record('3.3.5', fields === 0, fields ? `${fields} field(s) take input: write the journey that reaches each one's help` : 'no field in the shell takes input, so none needs help');
         const live = await page.locator(LIVE).count();
+        const statuses = await page.locator(STATUS).count();
+        const atRest = await said(page);
         const changes = await page.evaluate(() => new Promise((done) => {
           let n = 0;
           const watch = new MutationObserver((list) => { n += list.length; });
           watch.observe(document.body, { subtree: true, childList: true, characterData: true });
           setTimeout(() => { watch.disconnect(); done(n); }, 2000);
         }));
-        record('4.1.3', !live && !changes, live ? `${live} status region(s): write the journey that raises each message and checks its role and that focus stays` : changes ? `the shell changed ${changes} time(s) after it loaded, with no status region` : 'the shell raises no status message: nothing changes in the 2 s after it loads, and it holds no status region');
+        await progressLink(page).focus();
+        await page.keyboard.press('Home');
+        const words = await said(page);
+        const focusStays = await page.evaluate((href) => document.activeElement?.getAttribute('href') === href, PROGRESS);
+        const problems = [
+          (live !== 1 || statuses !== 1) && `${live} live region(s), ${statuses} with role status: the shell has one, role status; write the check for any other`,
+          atRest && `the status region shows ${JSON.stringify(atRest)} at rest`,
+          changes && `the shell changed ${changes} time(s) in the 2 s after it loaded`,
+          words !== SKIPPED_TO_START && `Home said ${JSON.stringify(words)} in the status region, not ${JSON.stringify(SKIPPED_TO_START)}`,
+          !focusStays && 'focus left the progress link when Home raised the message',
+        ].filter(Boolean);
+        record('4.1.3', !problems.length, problems.length ? problems.join('; ') : `one status region, role status, empty at rest; nothing changes in the 2 s after the shell loads; Home, pressed on the focused progress link, says "${SKIPPED_TO_START}" in it and focus stays on the link`);
+      },
+    },
+    {
+      // 2.1.4: no shortcut of one printable character is live on the page. The keys the editor's table names (J, K, L,
+      // comma, full stop, < and >) are held off until their switch is on the page (D183): pressed on the page and on
+      // the focused link, each says nothing and the link is not followed. Home still says its words afterwards, so the
+      // editor's listener was live throughout. When the switch comes, this journey checks it turns them off.
+      name: 'character-key-shortcuts',
+      method: 'keyboard',
+      rows: ['2.1.4'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const start = page.url();
+        const problems = [];
+        for (const where of ['the page', 'the focused progress link']) {
+          if (where !== 'the page') await progressLink(page).focus();
+          for (const key of SINGLE_KEYS) {
+            await page.keyboard.press(key);
+            const words = await said(page);
+            if (words) problems.push(`${key} on ${where} said ${JSON.stringify(words)}`);
+            if (page.url() !== start) { problems.push(`${key} on ${where} left the shell for ${page.url()}`); break; }
+          }
+        }
+        await page.keyboard.press('Home');
+        const live = (await said(page)) === SKIPPED_TO_START;
+        if (!live) problems.push('Home said nothing after them: the editor\'s keys were not listened for, so the check proves nothing');
+        record('2.1.4', !problems.length, problems.length ? problems.join('; ') : `no shortcut of one printable character is live: ${SINGLE_KEYS.join(' ')} pressed on the page and on the focused progress link say nothing and follow nothing, and Home then says "${SKIPPED_TO_START}" (D183: their switch comes with help)`);
       },
     },
     {
@@ -271,9 +327,9 @@ export default {
   // Route Plotter's, written by STACK-03 with the first run. The item that changes a shared component or the environment
   // the run uses, or finds a failure, updates them, with the date.
   records: {
-    date: '2026-11-19',
+    date: '2026-11-21',
     rows: {
-      P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment has changed since. CORE-05, the editor shell, is a shared-component change and flags a wider run here' },
+      P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment had changed until 2026-11-21. That day CORE-05 began to change the shell, a shared component: one status region and the editor\'s keys, with their journeys broadened in the same change (fields-and-status, character-key-shortcuts, the keyboard functions skip-to-start-by-home and skip-to-end-by-end). A wider run (the sampling, npm run a11y:sample) is flagged for when the frame\'s controls are on the page' },
       P10: { state: 'pass', note: 'no open finding: the first run\'s one product failure, a shell with no control for the focus test, was fixed by its progress link and retested in the same run (STACK-03, pull request #178, which shows both runs); a failure stays a failure until fixed' },
     },
   },
