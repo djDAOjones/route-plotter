@@ -110,7 +110,8 @@ async function flipByKeyboard(page) {
   return { before, after, back: await backOnHelp(page) };
 }
 // What Help shows, as reviewed: its close button, heading, the two groups of the key table and the switch. The chords
-// read Cmd on a Mac and Ctrl elsewhere. Carbon's "Close" tooltip, shown while Close has focus, is not listed. Behind
+// read Cmd on a Mac and Ctrl elsewhere; a punctuation key is read by its name (comma, full stop, less than, greater
+// than, question mark). Carbon's "Close" tooltip, shown while Close has focus, is not listed. Behind
 // it, the play bar's Play stays disabled (a stated node, so listed).
 const helpOpen = (checked) => [
   '- group "Playback":',
@@ -124,14 +125,14 @@ const helpOpen = (checked) => [
   '      - row "Play/pause Space K"',
   '      - row "Play reverse J"',
   '      - row "Play forward L"',
-  '      - row "Skip to start Home , <"',
-  '      - row "Skip to end End . >"',
+  '      - row "Skip to start Home comma less than"',
+  '      - row "Skip to end End full stop greater than"',
   '  - table "General":',
   '    - caption: General',
   '    - rowgroup:',
   '      - row /Undo (Cmd|Ctrl)\\+Z/',
   '      - row /Redo (Cmd|Ctrl)\\+Shift\\+Z/',
-  '      - row "Open help ?"',
+  '      - row "Open help question mark"',
   `  - switch "Single-key shortcuts"${checked ? ' [checked]' : ''}`,
   '  - paragraph: Turned off, K, J, L, comma, <, full stop, > and ? do nothing. Space, Home, End, Undo and Redo keep working.',
 ].join('\n');

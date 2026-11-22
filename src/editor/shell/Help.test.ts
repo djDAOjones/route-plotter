@@ -1,11 +1,12 @@
 // CORE-05, stage 5: what Help draws (react-dom/server, no page), and the switch's value held for the visit. Help: one
 // table for each of the key table's groups, a row for each action with its words and every key help spells; then the
-// switch for single-key shortcuts, its state as held, its sentence read from the table; no disabled fieldset (UI-06.6).
+// switch for single-key shortcuts, its state as held, its sentence read from the table; each punctuation key read out by
+// its name; no disabled fieldset (UI-06.6).
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { holdForVisit } from './held';
-import { Help, singleKeysShown, switchHelp } from './Help';
+import { Help, KEY_NAMES, singleKeysShown, switchHelp } from './Help';
 import { helpRows } from './keys';
 
 const nothing = (): void => undefined;
@@ -22,7 +23,7 @@ describe('Help, as it draws', () => {
       const rows = [...html.matchAll(/<tr><th scope="row">([^<]*)<\/th><td>(.*?)<\/td><\/tr>/g)];
       expect(rows.map((m) => m[1])).toEqual(helpRows(mac).map(({ words }) => words));
       rows.forEach((m, i) => {
-        const keys = [...(m[2] ?? '').matchAll(/<kbd>([^<]*)<\/kbd>/g)].map((k) => k[1]);
+        const keys = [...(m[2] ?? '').matchAll(/<kbd[^>]*>([^<]*)<\/kbd>/g)].map((k) => k[1]);
         expect(keys).toEqual(helpRows(mac)[i]?.keys.map(escape));
       });
     }
@@ -42,6 +43,18 @@ describe('Help, as it draws', () => {
     expect(switchHelp(true)).toBe(
       'Turned off, K, J, L, comma, <, full stop, > and ? do nothing. Space, Home, End, Undo and Redo keep working.',
     );
+  });
+
+  it('reads each punctuation key out by its name, the key as seen hidden from a screen reader, and every other key as it is', () => {
+    expect(KEY_NAMES).toEqual({ ',': 'comma', '.': 'full stop', '<': 'less than', '>': 'greater than', '?': 'question mark' });
+    for (const mac of [true, false]) {
+      const html = draw(true, mac);
+      for (const key of helpRows(mac).flatMap(({ keys }) => keys)) {
+        const name = KEY_NAMES[key];
+        if (name === undefined) expect(html).toContain(`<kbd>${escape(key)}</kbd>`);
+        else expect(html).toContain(`<kbd aria-hidden="true">${escape(key)}</kbd><span class="cds--visually-hidden">${name}</span>`);
+      }
+    }
   });
 
   it('draws no disabled fieldset (UI-06.6)', () => {

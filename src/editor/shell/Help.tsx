@@ -1,7 +1,8 @@
 // CORE-05, stage 5: Help, the page's first dialog. It lists the keyboard shortcuts from the key table (`helpRows`),
 // one table for each of the table's groups, a row for each action with its words and its keys; then the switch that
 // turns single-key shortcuts on and off (D183), with the sentence that says what it stops and what keeps working. No
-// other text but its heading. Opened by its button or `?`, through the kit's one dialog.
+// other text but its heading. A punctuation key in the tables is read out by its name (comma, full stop, less than,
+// greater than, question mark), what is seen unchanged. Opened by its button or `?`, through the kit's one dialog.
 import { useSyncExternalStore, type RefObject } from 'react';
 import { Dialog } from '../kit/Dialog';
 import { Switch } from '../kit/Switch';
@@ -20,6 +21,12 @@ export interface HelpProps {
 
 /** How the sentence under the switch names a key of one character that a reader could miss. */
 const SPOKEN: Readonly<Record<string, string>> = { ',': 'comma', '.': 'full stop' };
+
+/**
+ * What a screen reader says for a punctuation key in the tables, which it might otherwise pass over: the key is drawn as
+ * it is seen but hidden from it, and this name beside it is hidden from sight.
+ */
+export const KEY_NAMES: Readonly<Record<string, string>> = { ...SPOKEN, '<': 'less than', '>': 'greater than', '?': 'question mark' };
 
 /** The keys of one printable character the table names, as help shows them: what the switch turns off. */
 export function singleKeysShown(mac: boolean): readonly string[] {
@@ -47,7 +54,21 @@ export function Help({ opener, open, onClose, mac, singleKeys }: HelpProps) {
             {rows.filter((row) => row.group === group).map(({ action, keys, words }) => (
               <tr key={action}>
                 <th scope="row">{words}</th>
-                <td>{keys.map((key, i) => <span key={key}>{i > 0 ? ' ' : ''}<kbd>{key}</kbd></span>)}</td>
+                <td>
+                  {keys.map((key, i) => (
+                    <span key={key}>
+                      {i > 0 ? ' ' : ''}
+                      {KEY_NAMES[key] === undefined ? (
+                        <kbd>{key}</kbd>
+                      ) : (
+                        <>
+                          <kbd aria-hidden="true">{key}</kbd>
+                          <span className="cds--visually-hidden">{KEY_NAMES[key]}</span>
+                        </>
+                      )}
+                    </span>
+                  ))}
+                </td>
               </tr>
             ))}
           </tbody>
