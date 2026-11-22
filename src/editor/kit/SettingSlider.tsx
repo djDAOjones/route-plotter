@@ -13,6 +13,17 @@
 // tooltip, which it hides. Carbon's own text input is hidden: the kit's number field is the one place a number is
 // typed (D181).
 //
+// Carbon's slider takes only the arrows (and Shift with them); Home, End, Page Up and Page Down are the kit's (the
+// claim's point 5, controls.ts; D193). Caught with Escape on the way down, on the thumb only and with no Control, Alt or
+// Meta held, each is the rule's position (`sliderKeyMove`) given as a key's nudge, an edit of one; while the pointer is
+// down (`pressed()`), given up or not, it moves nothing. Its default is cancelled either way, so the page does not
+// scroll under the slider; it still travels on, and the page's listener runs nothing for a key whose default is
+// cancelled (dispatch.ts, point 1). After a key that moved, Carbon's slider is drawn again from what is held, focus
+// kept, rather than left to follow its `value` prop: Carbon follows a prop by setting its own state and then reporting
+// it, so two keys in one frame left it reporting the first key's position after the second's was held, which read as a
+// new nudge, and the two answered each other until React gave up (seen on the page, brief 67). A new Carbon slider
+// starts at the position held and reports nothing.
+//
 // Carbon keeps a thumb position of its own, brought into step only when its `value` prop changes. Where a report is
 // refused or changes nothing held (another change in progress; the model's check; a drag given up), its thumb would stay
 // where the user left it; so the slider is drawn again from what is held, and keeps the focus it had. The slider is
@@ -30,7 +41,7 @@ import {
   type KeyboardEvent,
   type SyntheticEvent,
 } from 'react';
-import { createSlider, IDENTITY, type Result, type Scale, type Setting } from './controls';
+import { createSlider, IDENTITY, sliderKeyMove, type Result, type Scale, type Setting } from './controls';
 import { formatUIValue } from './sliderScales';
 
 export interface SettingSliderProps {
@@ -95,6 +106,10 @@ export function SettingSlider({
   const bringIntoStep = (result: Result | 'released') => {
     if (result !== 'released' && result.ok && result.changed) return;
     if (slider.pressed() || thumb.current === undefined || thumb.current === slider.position()) return;
+    drawFromHeld();
+  };
+  /** Draws a new Carbon slider from what is held, the focus kept where it was. */
+  const drawFromHeld = () => {
     const element = wrapper.current;
     refocus.current = element !== null && element.contains(element.ownerDocument.activeElement);
     thumb.current = undefined;
@@ -110,10 +125,21 @@ export function SettingSlider({
     if (event.target instanceof Element && event.target.closest(`.${prefix}--slider`) !== null) slider.press();
   };
   const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key !== 'Escape' || !slider.dragging()) return;
-    slider.giveUp();
-    event.stopPropagation();
+    if (event.key === 'Escape') {
+      if (!slider.dragging()) return;
+      slider.giveUp();
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+    const at = slider.position();
+    if (at === undefined || !(event.target instanceof Element) || !event.target.matches('[role="slider"]')) return;
+    const move = sliderKeyMove(event, at, { min, max, step }, slider.pressed());
+    if (!move.taken) return;
     event.preventDefault();
+    if (move.to === null) return;
+    slider.nudge(scale.toValue(move.to));
+    drawFromHeld();
   };
 
   if (held === undefined || position === undefined) return null;

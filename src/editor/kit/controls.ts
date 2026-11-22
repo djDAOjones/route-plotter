@@ -30,6 +30,12 @@
 //    control never sets, commits or cancels an edit it did not begin, and never leaves one open: every edit it begins
 //    ends in exactly one commit or one cancel, whatever order the events come in (a move with no start, two starts,
 //    two ends, an end after a give-up).
+// 5. A slider takes Home, End, Page Up and Page Down itself, as a browser's own range input does (D193), where the
+//    widget handles only the arrows: Home moves to the range's start, End to its end, Page Up up by a tenth of the
+//    range and Page Down down by a tenth, a tenth being whole steps, never fewer than one, and the result kept inside
+//    the range. With Control, Alt or Meta held the key is not the slider's; Shift changes nothing. While a press is down,
+//    given up or not, the four keys move nothing (a drag given up stays given up), but they are still the slider's. A
+//    held key repeats, as an arrow does. A move is a key's nudge (point 3): an edit of one.
 //
 // It does not claim to withstand code written to break it, nor a `Setting` that breaks the contract below.
 
@@ -197,6 +203,55 @@ function editOfOne(setting: Setting, value: number): Result {
     return set;
   }
   return begun.edit.commit();
+}
+
+/** A key as a slider reads it: its name and the modifiers held. */
+export interface SliderKey {
+  readonly key: string;
+  readonly ctrlKey: boolean;
+  readonly altKey: boolean;
+  readonly metaKey: boolean;
+}
+
+/** A slider's range and step, as positions. */
+export interface SliderRange {
+  readonly min: number;
+  readonly max: number;
+  readonly step: number;
+}
+
+/**
+ * What one of a slider's own keys (point 5) does: nothing, being no such key (`taken` false: leave it to the page); or,
+ * being one, the position it moves the thumb to, null when it moves nothing (a press is down; the thumb already there).
+ */
+export type SliderKeyMove = { readonly taken: false } | { readonly taken: true; readonly to: number | null };
+
+const PASSED: SliderKeyMove = { taken: false };
+
+/** Point 5: what `press` does to a thumb at `at` in `range`, `pressed` saying whether the pointer is down on it. */
+export function sliderKeyMove(press: SliderKey, at: number, range: SliderRange, pressed: boolean): SliderKeyMove {
+  if (press.ctrlKey || press.altKey || press.metaKey) return PASSED;
+  const { min, max, step } = range;
+  const tenth = Math.max(1, Math.round((max - min) / 10 / step)) * step;
+  let target: number;
+  switch (press.key) {
+    case 'Home':
+      target = min;
+      break;
+    case 'End':
+      target = max;
+      break;
+    case 'PageUp':
+      target = at + tenth;
+      break;
+    case 'PageDown':
+      target = at - tenth;
+      break;
+    default:
+      return PASSED;
+  }
+  const to = Math.min(max, Math.max(min, target));
+  return { taken: true, to: pressed || to === at ? null : to };
 }
 
 /** What a number field shows: its text, whether that is text being typed, and why its last commit was refused. */

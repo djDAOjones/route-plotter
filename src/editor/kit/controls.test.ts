@@ -2,7 +2,16 @@
 // region). The same logic on the real store, through the shell's fitting, is in src/editor/shell/settings.test.ts.
 import { describe, expect, it } from 'vitest';
 import { RETIRED_WORDS } from '../../adapters/io/fixtures';
-import { createNumberField, createSlider, NOT_A_NUMBER, parseNumber, type Result, type Setting } from './controls';
+import {
+  createNumberField,
+  createSlider,
+  NOT_A_NUMBER,
+  parseNumber,
+  sliderKeyMove,
+  type Result,
+  type Setting,
+  type SliderKey,
+} from './controls';
 
 interface Handmade extends Setting {
   held: number | undefined;
@@ -451,5 +460,82 @@ describe('the words', () => {
     field.type('12px');
     expect(field.commit()).toEqual({ ok: false, why: 'Enter a number in figures, such as 12 or 0.5.' });
     expect(field.shown().problem).toBe('Enter a number in figures, such as 12 or 0.5.');
+  });
+});
+
+describe("point 5: a slider's own Home, End, Page Up and Page Down (D193)", () => {
+  const key = (name: string, held: Partial<SliderKey> = {}): SliderKey => ({
+    key: name,
+    ctrlKey: false,
+    altKey: false,
+    metaKey: false,
+    ...held,
+  });
+  /** The timeline's range: thousandths of the length. */
+  const TIMELINE = { min: 0, max: 1000, step: 1 };
+  const to = (name: string, at: number, range = TIMELINE, pressed = false) =>
+    sliderKeyMove(key(name), at, range, pressed);
+
+  it('Home goes to the start, End to the end, Page Up and Page Down by a tenth of the range', () => {
+    expect([to('Home', 400), to('End', 400), to('PageUp', 400), to('PageDown', 400)]).toEqual([
+      { taken: true, to: 0 },
+      { taken: true, to: 1000 },
+      { taken: true, to: 500 },
+      { taken: true, to: 300 },
+    ]);
+    expect(to('PageUp', 5, { min: -50, max: 50, step: 1 })).toEqual({ taken: true, to: 15 });
+  });
+
+  it('a tenth is whole steps, never fewer than one', () => {
+    // 100 / 10 is 3⅓ steps of 3: three steps, 9.
+    expect(to('PageUp', 50, { min: 0, max: 100, step: 3 })).toEqual({ taken: true, to: 59 });
+    // 4 / 10 is 0.4 of a step: one step.
+    expect(to('PageUp', 2, { min: 0, max: 4, step: 1 })).toEqual({ taken: true, to: 3 });
+    expect(to('PageDown', 2, { min: 0, max: 4, step: 1 })).toEqual({ taken: true, to: 1 });
+  });
+
+  it('the result is kept inside the range', () => {
+    expect(to('PageUp', 950)).toEqual({ taken: true, to: 1000 });
+    expect(to('PageDown', 30)).toEqual({ taken: true, to: 0 });
+    expect(to('PageDown', -45, { min: -50, max: 50, step: 1 })).toEqual({ taken: true, to: -50 });
+  });
+
+  it('a key that would not move the thumb is still the slider\'s, and moves nothing', () => {
+    expect([to('Home', 0), to('End', 1000), to('PageUp', 1000), to('PageDown', 0)]).toEqual(
+      Array(4).fill({ taken: true, to: null }),
+    );
+  });
+
+  it('while a press is down the four keys move nothing, and are still the slider\'s', () => {
+    for (const name of ['Home', 'End', 'PageUp', 'PageDown']) {
+      expect(to(name, 400, TIMELINE, true)).toEqual({ taken: true, to: null });
+    }
+  });
+
+  it('with Control, Alt or Meta held the key is not the slider\'s; Shift changes nothing', () => {
+    for (const held of [{ ctrlKey: true }, { altKey: true }, { metaKey: true }]) {
+      expect(sliderKeyMove(key('End', held), 400, TIMELINE, false)).toEqual({ taken: false });
+    }
+    const shifted = { ...key('PageUp'), shiftKey: true };
+    expect(sliderKeyMove(shifted, 400, TIMELINE, false)).toEqual({ taken: true, to: 500 });
+  });
+
+  it('any other key is not the slider\'s', () => {
+    for (const name of ['ArrowRight', 'ArrowUp', 'Escape', ' ', 'k', 'Enter']) {
+      expect(to(name, 400)).toEqual({ taken: false });
+    }
+  });
+
+  it('a held key repeats: each press moves on from where the last left it; Home held moves once', () => {
+    const at = [0];
+    for (let n = 0; n < 3; n += 1) {
+      const move = to('PageUp', at[at.length - 1] ?? 0);
+      if (move.taken && move.to !== null) at.push(move.to);
+    }
+    expect(at).toEqual([0, 100, 200, 300]);
+    expect([to('Home', 300), to('Home', 0)]).toEqual([
+      { taken: true, to: 0 },
+      { taken: true, to: null },
+    ]);
   });
 });

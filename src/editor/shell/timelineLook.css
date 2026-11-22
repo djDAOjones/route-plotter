@@ -42,8 +42,13 @@
 .timeline-look .cds--slider__thumb:focus::before {
   background: var(--cds-interactive);
 }
+/* In forced colours the knob is the system's text colour in every state: the rule matches the hover, active and focus
+ * rules above selector for selector, so, coming later, it wins over each (the focused knob's blue among them). */
 @media (forced-colors: active) {
-  .timeline-look .cds--slider__thumb::before {
+  .timeline-look .cds--slider__thumb::before,
+  .timeline-look .cds--slider__thumb:hover::before,
+  .timeline-look .cds--slider__thumb:active::before,
+  .timeline-look .cds--slider__thumb:focus::before {
     background: CanvasText;
     forced-color-adjust: none;
   }

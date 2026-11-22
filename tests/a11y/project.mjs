@@ -26,6 +26,11 @@
 // line (1.3.2); a press on its track and a drag move it, Escape before the release gives either up (2.5.2), and a press
 // on the track is the single-pointer alternative to dragging (2.5.7); its label and two times (3.3.5); a key on it and
 // a skip elsewhere change no context and keep focus (3.2.2); single keys on it say nothing with the switch off (2.1.4).
+// CORE-05, stage 5's seventh piece (2026-11-21): the timeline takes Home, End, Page Up and Page Down itself (the kit's
+// slider, D193), proved by keyboard functions in place of the one that found them doing nothing. Codex's findings on
+// the sixth: a completed drag compared with a press on the track at the same point (2.5.7); 2.5.2's words for the
+// slider; the thumb drawn where its value says; 3.3.5's report naming the timeline; every press of the pointer journey
+// through the pointer adapter, so the touch run can credit it.
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
@@ -54,6 +59,17 @@ const atNow = (page) => page.locator(TIMELINE).evaluate((e) => ({ now: Number(e.
 // Carbon throttles a drag's moves and draws the thumb after React's effects: wait (up to 2 s) until it holds `ok(now)`.
 const comesTo = (page, ok) => page.waitForFunction(([s, f]) => new Function('n', `return ${f}`)(Number(document.querySelector(s)?.getAttribute('aria-valuenow'))), [TIMELINE, ok], { timeout: 2000 }).then(() => true, () => false);
 const onTrack = async (page, f) => { const b = await page.locator(TRACK).boundingBox(); return { x: b.x + b.width * f, y: b.y + b.height / 2 }; };
+// Whether the thumb is drawn at `f` of the track (wait up to 2 s): the centre of its box within two pixels of that
+// point, a pixel for rounding either side; Carbon keeps the value it reports and the place it draws apart.
+const thumbAt = (page, f) => page.waitForFunction(([t, s, at]) => {
+  const track = document.querySelector(s)?.getBoundingClientRect(), thumb = document.querySelector(t)?.getBoundingClientRect();
+  return !!track && !!thumb && Math.abs(thumb.left + thumb.width / 2 - (track.left + track.width * at)) <= 2;
+}, [TIMELINE, TRACK, f], { timeout: 2000 }).then(() => true, () => false);
+// A drag through the pointer adapter: down at `from`, then `steps` moves to `to` (the adapter moves in one step).
+const dragBy = async (pointer, from, to, steps = 4) => {
+  await pointer.down(from.x, from.y);
+  for (let i = 1; i <= steps; i++) await pointer.move(from.x + ((to.x - from.x) * i) / steps, from.y + ((to.y - from.y) * i) / steps);
+};
 // The fields a person meets: those drawn (Carbon keeps a hidden number input beside its slider, never shown, D181).
 const shownFields = (page) => page.locator(FIELDS).filter({ visible: true });
 const UNDO = process.platform === 'darwin' ? 'Meta+z' : 'Control+z';
@@ -258,9 +274,11 @@ export default {
     { name: 'play-refused-by-j-on-button', state: 'shell', steps: [{ focus: SKIP_START }, { press: 'j' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_START) },
     { name: 'play-refused-by-l-on-button', state: 'shell', steps: [{ focus: SKIP_END }, { press: 'l' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_END) },
     // The timeline: an arrow moves it one thousandth and Shift with it four (Carbon's), and the words hold until a whole
-    // second is passed; End off it skips and its thumb follows; on it, K says the refusal and Escape with no drag keeps
-    // focus and the position. Home, End, Page Up and Page Down on it do nothing: the dispatch leaves them to a slider
-    // (dispatch.ts point 2) and Carbon's slider uses none of them.
+    // second is passed; End off it skips and its thumb follows, drawn at the track's end, and Home brings it back to the
+    // start; on it, K says the refusal and Escape with no drag keeps focus and the position. Home, End, Page Up and Page
+    // Down on it are the slider's (the kit's, D193): from an interior value Page Up moves a tenth up and Page Down back,
+    // End to the end and Home to the start, nothing said and focus kept, and Undo after changes nothing; a held Page Up
+    // repeats, even three presses in one frame.
     { name: 'timeline-by-arrow', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'ArrowRight' }], check: async ({ page }) => (await atNow(page)).now === 1 && focusOn(page, TIMELINE) },
     { name: 'timeline-by-shift-arrow', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'Shift+ArrowRight' }, { press: 'Shift+ArrowRight' }], check: async ({ page }) => (await atNow(page)).now === 8 && (await said(page)) === '' },
     { name: 'timeline-words-follow-a-second', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'Shift+ArrowRight' }], check: async ({ page }) => {
@@ -269,8 +287,27 @@ export default {
       const t = await atNow(page);
       return seen.at(-1) === '0:00 of 0:02' && t.now === 500 && t.text === '0:01 of 0:02' && focusOn(page, TIMELINE);
     } },
-    { name: 'timeline-follows-skip-to-end', state: 'shell', steps: [{ press: 'End' }], check: async ({ page }) => { const t = await atNow(page); return t.now === 1000 && t.text === '0:02 of 0:02' && (await said(page)) === SKIPPED_TO_END; } },
-    { name: 'timeline-home-end-left-to-slider', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'End' }, { press: 'PageUp' }], check: async ({ page }) => (await atNow(page)).now === 0 && (await said(page)) === '' && focusOn(page, TIMELINE) },
+    { name: 'timeline-follows-skip-to-end', state: 'shell', steps: [{ press: 'End' }], check: async ({ page }) => {
+      const t = await atNow(page);
+      if (t.now !== 1000 || t.text !== '0:02 of 0:02' || (await said(page)) !== SKIPPED_TO_END || !(await thumbAt(page, 1))) return false;
+      await page.keyboard.press('Home');
+      return (await comesTo(page, 'n === 0')) && thumbAt(page, 0);
+    } },
+    { name: 'timeline-page-home-end-on-slider', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'Shift+ArrowRight' }], check: async ({ page }) => {
+      const after = async (key, want) => { await page.keyboard.press(key); return (await comesTo(page, `n === ${want}`)) && (await focusOn(page, TIMELINE)); };
+      if ((await atNow(page)).now !== 4) return false;
+      if (!(await after('PageUp', 104)) || !(await after('PageDown', 4)) || !(await after('End', 1000))) return false;
+      if ((await atNow(page)).text !== '0:02 of 0:02' || !(await neverSays(page, SKIPPED_TO_END, 1000)) || (await said(page)) !== '') return false;
+      if (!(await after('Home', 0)) || !(await neverSays(page, SKIPPED_TO_START, 1000))) return false;
+      await page.keyboard.press(UNDO);
+      await page.waitForTimeout(400);
+      return (await atNow(page)).now === 0 && (await said(page)) === '' && focusOn(page, TIMELINE);
+    } },
+    { name: 'timeline-page-up-held', state: 'shell', steps: [{ focus: TIMELINE }], check: async ({ page }) => {
+      for (let i = 0; i < 3; i++) await page.keyboard.down('PageUp');
+      await page.keyboard.up('PageUp');
+      return (await comesTo(page, 'n === 300')) && (await said(page)) === '' && focusOn(page, TIMELINE);
+    } },
     { name: 'play-refused-by-k-on-timeline', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && (await atNow(page)).now === 0 && focusOn(page, TIMELINE) },
     { name: 'timeline-escape-no-drag', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'ArrowRight' }, { press: 'Escape' }], check: async ({ page }) => (await atNow(page)).now === 1 && focusOn(page, TIMELINE) },
     // { name: 'set-hold', state: 'home', steps: [{ focus: '#hold' }, { press: 'Meta+A' }, { type: '11' }, { press: 'Enter' }], check: async ({ page }) => (await page.locator('#hold').inputValue()) === '11' },
@@ -354,22 +391,25 @@ export default {
       },
     },
     {
-      // 2.5.2: each control does nothing on the down-event, a press moved off it before release does nothing, and a
-      // whole press acts, on the up-event: the progress link (followed), "Help" (its dialog opens) and, inside Help, the
-      // switch (it turns). A press on the switch is moved off to a point inside the dialog, as a press outside Help
-      // closes it. The play bar: each skip says its words on a whole press and nothing before; Play, disabled with
-      // nothing to play, does nothing on any press. The timeline, a slider, moves on the down-event, as a slider's thumb
-      // follows the pointer: the press is given up by Escape before the release (the position back where the press found
-      // it, focus kept, and the moves and release after it change nothing), and the release keeps it with no undo step.
-      // 2.5.7: its one drag, the thumb along the track, has a single-pointer alternative with the same result, a press on
-      // the track where the thumb is wanted. Any other control needs its own journey.
+      // 2.5.2: each button, link and switch does nothing on the down-event, a press moved off it before release does
+      // nothing, and a whole press acts, on the up-event: the progress link (followed), "Help" (its dialog opens) and,
+      // inside Help, the switch (it turns). A press on the switch is moved off to a point inside the dialog, as a press
+      // outside Help closes it. The play bar: each skip says its words on a whole press and nothing before; Play,
+      // disabled with nothing to play, does nothing on any press. The timeline, a slider, does move on the down-event, as
+      // a provisional scrub: Escape before the release aborts it (the position back where the press found it, focus
+      // kept, and the moves and release after it change nothing), and the release completes it with no undo step.
+      // 2.5.7: its one drag, the thumb along the track, has a single-pointer alternative with the same result: a drag of
+      // the thumb completed at 70 % of the track, then, on a fresh page, a whole press on the track at the same point,
+      // the two positions compared. Every press goes through the pointer adapter, so a touch run can credit it. Any other
+      // control needs its own journey.
       name: 'pointer-cancellation',
       method: 'j-pointer',
       rows: ['2.5.2', '2.5.7'],
       run: async ({ page, open, record, pointer }) => {
         await open('shell');
         const count = await page.locator(CONTROLS).filter({ visible: true }).count();
-        const problems = [], done = [];
+        const problems = [], done = [], slider = [];
+        let compared = '';
         for (let i = 0; i < count; i++) {
           await open('shell');
           const control = page.locator(CONTROLS).filter({ visible: true }).nth(i);
@@ -380,35 +420,57 @@ export default {
           const offPlay = await control.evaluate((e, s) => e.matches(s) && e.disabled, PLAY);
           if (await control.evaluate((e, s) => e.matches(s), TIMELINE)) {
             const bad = [];
+            // 2.5.2: a press on the track and a drag, aborted by Escape before the release.
             const half = await onTrack(page, 0.5), far = await onTrack(page, 0.9);
-            await page.mouse.move(half.x, half.y);
-            await page.mouse.down();
+            await pointer.down(half.x, half.y);
             const pressedOk = await comesTo(page, 'n > 400 && n < 600');
             const pressed = (await atNow(page)).now;
-            await page.mouse.move(far.x, far.y, { steps: 4 });
+            for (const f of [0.6, 0.7, 0.8, 0.9]) { const at = await onTrack(page, f); await pointer.move(at.x, at.y); }
             const draggedOk = await comesTo(page, 'n > 850');
-            const dragged = (await atNow(page)).now;
+            const moved = (await atNow(page)).now;
             await page.keyboard.press('Escape');
             await comesTo(page, 'n === 0');
             const back = await atNow(page);
-            if (!pressedOk || !draggedOk) bad.push(`a press and drag on it read ${pressed} then ${dragged}, not about 500 then 900`);
+            if (!pressedOk || !draggedOk) bad.push(`a press and drag on it read ${pressed} then ${moved}, not about 500 then 900`);
             if (back.now !== 0 || back.text !== '0:00 of 0:02') bad.push(`Escape mid-drag left it at ${back.now} (${back.text}), not where the press found it`);
             if (!(await focusOn(page, TIMELINE))) bad.push('Escape mid-drag took focus off it');
-            await page.mouse.move(half.x, half.y, { steps: 4 });
-            await page.mouse.up();
+            await pointer.move(half.x, half.y);
+            await pointer.up();
             await page.waitForTimeout(300);
             if ((await atNow(page)).now !== 0) bad.push('the moves and release after Escape moved it');
-            await page.mouse.move(far.x, far.y);
-            await page.mouse.down();
-            await page.mouse.up();
-            await comesTo(page, 'n > 850');
-            const kept = await atNow(page);
-            if (kept.now < 800 || kept.text !== '0:01 of 0:02') bad.push(`a whole press on the track at 90 % left it at ${kept.now} (${kept.text})`);
-            await page.locator('main h1').click();
+            // 2.5.7: a drag of the thumb completed at 70 %, kept on the release with no undo step.
+            const thumb = await page.locator(TIMELINE).boundingBox(), seventy = await onTrack(page, 0.7);
+            const width = (await page.locator(TRACK).boundingBox()).width;
+            await dragBy(pointer, { x: thumb.x + thumb.width / 2, y: thumb.y + thumb.height / 2 }, seventy, 6);
+            // Carbon throttles a drag's moves and its release takes no point, so a quick last move can be dropped: the
+            // pointer rests at 70 % and moves there once more before the release, as a person's would.
+            await page.waitForTimeout(100);
+            await pointer.move(seventy.x, seventy.y);
+            const reached = await comesTo(page, 'n > 650 && n < 750');
+            const beforeUp = (await atNow(page)).now;
+            await pointer.up();
+            await page.waitForTimeout(300);
+            const dragged = await atNow(page);
+            if (!reached || dragged.now !== beforeUp) bad.push(`a drag of the thumb to 70 % read ${beforeUp} before the release and ${dragged.now} after it`);
+            await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
             await page.keyboard.press(UNDO);
+            await page.waitForTimeout(300);
+            if ((await atNow(page)).now !== dragged.now || (await said(page)) !== '') bad.push('Undo after the drag changed the position or said something: the drag made an undo step');
+            // The same point by a whole press on the track, from the start on a fresh page. A pixel of the track is
+            // 1000 / its width thousandths; the two may differ by two pixels' worth (rounding of each point), at least 2.
+            await open('shell');
+            await pointer.down(seventy.x, seventy.y);
+            await pointer.up();
+            await comesTo(page, 'n > 650');
+            const kept = await atNow(page);
+            const tolerance = Math.max(2, Math.ceil(2000 / width));
+            if (Math.abs(kept.now - dragged.now) > tolerance || kept.text !== dragged.text) bad.push(`a whole press on the track at 70 % left it at ${kept.now} (${kept.text}), the drag at ${dragged.now} (${dragged.text}), more than ${tolerance} apart`);
+            await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+            await page.keyboard.press(UNDO);
+            await page.waitForTimeout(300);
             if ((await atNow(page)).now !== kept.now || (await said(page)) !== '') bad.push('Undo after the press changed the position or said something: a move of it made an undo step');
             if (bad.length) problems.push(`${name}: ${bad.join('; ')}`);
-            else done.push(`${name} (moves on the press, given up by Escape, kept on the release with no undo step; a press on the track is the alternative to a drag)`);
+            else { slider.push(`${name}`); compared = `a drag of the thumb completed at 70 % of the track held ${dragged.now} (${dragged.text}), and a whole press on the track at the same point ${kept.now} (${kept.text}), within ${tolerance} (two pixels); neither made an undo step`; }
             continue;
           }
           if (!href && !isHelp && !skip && !offPlay) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
@@ -484,13 +546,14 @@ export default {
           if (!(await arrives(page, target))) problems.push(`${name}: a whole press did not follow it to ${target} (at ${page.url()})`);
           else done.push(name);
         }
-        const slid = done.some((d) => d.startsWith('slider "Timeline"'));
-        record('2.5.7', slid && !problems.some((p) => p.startsWith('slider')), slid ? 'the one drag, the timeline\'s thumb along its track, has a single-pointer alternative with the same result: a press on the track at 90 % puts the thumb there (0:01 of 0:02), as a drag does' : problems.find((p) => p.startsWith('slider')) ?? 'the timeline was not met');
-        record('2.5.2', !problems.length && done.length > 0, problems.length ? problems.join('; ') : done.length ? `${done.length} control(s) do nothing on the down-event or on a press moved off before release, and, where enabled, act on a whole press: ${done.join(', ')}` : 'no control to press');
+        const slid = slider.length > 0;
+        record('2.5.7', slid && !problems.some((p) => p.startsWith('slider')), slid ? `the one drag, the timeline's thumb along its track, has a single-pointer alternative with the same result: ${compared}` : problems.find((p) => p.startsWith('slider')) ?? 'the timeline was not met');
+        record('2.5.2', !problems.length && done.length > 0 && slid, problems.length ? problems.join('; ') : done.length && slid ? `${done.length} button(s), link(s) and switch(es) do nothing on the down-event or on a press moved off before release, and, where enabled, act on a whole press, on the up-event: ${done.join(', ')}; the slider, ${slider.join(', ')}, moves on the down-event as a provisional scrub, which Escape aborts before the release (abort before completion) and the release completes, with no undo step` : 'no control to press, or the timeline not met');
       },
     },
     {
-      // 3.3.5: the shell's one setting, the switch for single-key shortcuts in Help (drawn only while Help is open),
+      // 3.3.5: the shell's two fields. The timeline asks for no text: its help is its visible label, tied to it, and the
+      // two times at its ends. The switch for single-key shortcuts in Help (drawn only while Help is open)
       // has its help: the sentence under it, visible once Help is open and tied to it by aria-describedby, so it is
       // read with the switch. A further field needs its own check here. The play bar's Play, disabled with nothing to
       // play, has its reason: the line under the group, visible, tied to it by aria-describedby and not in its name
@@ -533,7 +596,7 @@ export default {
           playName !== 'button "Play" [disabled]' && `Play is named ${playName}: the reason belongs in its description, not its name`,
           (timeline.label !== 'Timeline' || timeline.ends.join(' ') !== '0:00 0:02') && `the timeline's visible label and times read ${JSON.stringify(timeline)}, not "Timeline" with 0:00 and 0:02`,
         ].filter(Boolean);
-        record('3.3.5', !fieldProblems.length, fieldProblems.length ? fieldProblems.join('; ') : `the shell's one setting, the switch "Single-key shortcuts" in Help, has its help under it, tied to it and read with it: ${JSON.stringify(helpText)}; Play, disabled with nothing to play, keeps its name and is described by the visible line under the play bar: ${JSON.stringify(reason)}`);
+        record('3.3.5', !fieldProblems.length, fieldProblems.length ? fieldProblems.join('; ') : `the shell's two fields have their help: the switch "Single-key shortcuts" in Help, its help under it, tied to it and read with it: ${JSON.stringify(helpText)}; the timeline, asking for no text, has its visible label "Timeline" tied to it and the two times at its ends, ${timeline.ends.join(' and ')}; Play, disabled with nothing to play, keeps its name and is described by the visible line under the play bar: ${JSON.stringify(reason)}`);
         await open('shell');
         const live = await page.locator(LIVE).count();
         const statuses = await page.locator(STATUS).count();
