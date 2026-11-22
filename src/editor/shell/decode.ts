@@ -3,9 +3,10 @@
 // io's tests hand in their own. The plan keeps a decoder helper in the shell, not in the adapters (PLAN-49).
 // Its claim: a copy of the bytes (`slice`: a plain ArrayBuffer, as a Blob takes), as a Blob of the type io names, is
 // decoded by the browser's own decoder; the size it decoded to is given back and the bitmap closed at once; when the
-// browser cannot decode them (it throws or rejects), null. It keeps nothing: no bitmap, no bytes. That an image which
-// decodes opens and one which does not is refused, on the page, is the next chat's journeys' to prove (brief 77): on
-// the page today, not yet proved.
+// browser cannot decode them (it throws or rejects), null. It keeps nothing: no bitmap, no bytes. Proved on the page
+// (tests/a11y/project.mjs, brief 77): an-image-that-decodes opens a project holding a real PNG the page's canvas made,
+// and an-image-that-does-not-decode refuses one whose image is a PNG header alone, its size readable by io, so that
+// only this decoder can refuse it; a decoder giving null for all fails the first, one trusting the header the second.
 import type { Decode } from '../../adapters/io/images';
 
 export const decode: Decode = async (bytes, type) => {

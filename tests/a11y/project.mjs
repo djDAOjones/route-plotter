@@ -116,12 +116,35 @@ const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damage
 // (No import statement: the run's loader would make this file CommonJS. Node's own modules are reached by
 // `process.getBuiltinModule`, jszip through a require made at the repository's root (the run's A11Y_ROOT, else the
 // working folder); both only when a journey asks for the file.)
-const projectFile = async () => {
+// With `png` (bytes), the golden gains one image as io names it (format.ts): the record { id, type } in project.json's
+// `images`, and its bytes at `images/1.png` in the ZIP; nothing else changes.
+const projectFile = async (png) => {
   const root = process.env.A11Y_ROOT || process.cwd();
   const zip = new (process.getBuiltinModule('node:module').createRequire(`${root}/package.json`)('jszip'))();
-  zip.file('project.json', process.getBuiltinModule('node:fs').readFileSync(`${root}/src/editor/shell/goldens/two-stops.project.json`));
-  return { name: 'two-stops.zip', mimeType: 'application/zip', buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }) };
+  const golden = process.getBuiltinModule('node:fs').readFileSync(`${root}/src/editor/shell/goldens/two-stops.project.json`, 'utf8');
+  if (!png) zip.file('project.json', golden);
+  else {
+    if (!golden.endsWith('"images":[]}')) throw new Error('the golden no longer ends with its empty images list');
+    zip.file('project.json', golden.replace(/"images":\[\]}$/, '"images":[{"id":"golden-5","type":"image/png"}]}'));
+    zip.file('images/1.png', png, { createFolders: false }); // as io's Save: no `images/` folder entry, which io refuses
+  }
+  return { name: png ? 'with-image.zip' : 'two-stops.zip', mimeType: 'application/zip', buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }) };
 };
+// A real PNG, 4 by 4, made by the page's own canvas (`toBlob`) in the run.
+const canvasPng = async (page) => Buffer.from(await page.evaluate(() => new Promise((resolve) => {
+  const c = Object.assign(document.createElement('canvas'), { width: 4, height: 4 });
+  const g = c.getContext('2d'); g.fillStyle = '#003a65'; g.fillRect(0, 0, 4, 4);
+  c.toBlob(async (b) => resolve([...new Uint8Array(await b.arrayBuffer())]), 'image/png');
+})));
+// A PNG header and nothing more: the signature and a whole IHDR chunk (4 by 4, its check value right), so io reads its
+// size and only the browser's decoder can find it damaged.
+const headerOnlyPng = () => {
+  const ihdr = Buffer.from([0x49, 0x48, 0x44, 0x52, 0, 0, 0, 4, 0, 0, 0, 4, 8, 6, 0, 0, 0]);
+  const crc = Buffer.alloc(4); crc.writeUInt32BE(process.getBuiltinModule('node:zlib').crc32(ihdr));
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]), ihdr, crc]);
+};
+// io's words for an image that does not decode (words.ts, openedInvalid, with images.ts's problem).
+const NOT_SHOWN = 'This project could not be opened, because some of it is outside what Route Plotter allows (images[0]: expected a PNG image that can be shown, found a damaged image). Nothing was opened.';
 const TEXT_FILE = { name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Not a project.\n') };
 // Presses "Open project" (a real click, or `key` with focus on it) and chooses `file` in the chooser it opens; false
 // when no chooser opened.
@@ -1194,6 +1217,68 @@ export default {
         if (backwards(held).length) wrong.push(`with the press held still the position went back: ${backwards(held).join(', ')}`);
         if (!(end > first)) wrong.push(`with the press held still the playing did not go on (${first} to ${end})`);
         record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `no input: never back, ${gained} ms gained over ${Math.round(clock)} ms of frames; a press held still at 50 %: at ${first}, never pulled back, playing on to ${end}`);
+      },
+    },
+    {
+      // 4.1.3 (stage 6, the browser's decoder): the golden with one image, a real PNG the page's canvas made, opens:
+      // "Project opened" said, no alert, Play offered.
+      name: 'an-image-that-decodes',
+      method: 'j-forms',
+      rows: ['4.1.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const png = await canvasPng(page);
+        const wrong = [];
+        await choose(page, await projectFile(png));
+        if (!(await saysOpened(page))) wrong.push(`the status region never said "${OPENED}"`);
+        if (await alerts(page).count()) wrong.push(`an alert showed: ${JSON.stringify(await alerts(page).first().textContent({ timeout: 2000 }).catch(() => ''))}`);
+        if (await page.locator(PLAY).isDisabled()) wrong.push('Play is still disabled');
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `the golden with a ${png.length}-byte PNG from the page's canvas opened: "${OPENED}" said, no alert, Play offered`);
+      },
+    },
+    {
+      // 4.1.3 (stage 6, the browser's decoder): the same project whose image is a PNG header and nothing more is refused
+      // by one alert in io's own words, the status region silent, nothing opened (Play still off).
+      name: 'an-image-that-does-not-decode',
+      method: 'j-forms',
+      rows: ['4.1.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const heard = await hear(page);
+        const wrong = [];
+        await choose(page, await projectFile(headerOnlyPng()));
+        await alerts(page).first().waitFor({ timeout: 5000 }).catch(() => undefined);
+        const count = await alerts(page).count();
+        const words = ((await alerts(page).first().textContent({ timeout: 2000 }).catch(() => '')) ?? '').replace(/\s+/g, ' ');
+        if (count !== 1) wrong.push(`${count} alert(s), not one`);
+        if (!words.includes('Could not open with-image.zip') || !words.includes(NOT_SHOWN)) wrong.push(`the alert is not io's refusal of the image: ${JSON.stringify(words)}`);
+        if (!(await neverSays(page, OPENED, 2500)) || (await heard()).length) wrong.push(`the status region said ${JSON.stringify(await heard())}`);
+        if (!(await page.locator(PLAY).isDisabled())) wrong.push('Play is enabled: something was opened');
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `a PNG header alone, its size readable, refused by the browser's decoder: one alert, "${NOT_SHOWN}"; the status region silent; nothing opened`);
+      },
+    },
+    {
+      // 4.1.3 (stage 6): after a refusal, a second choice, the golden: the alert is gone before "Project opened" is said,
+      // and stays gone.
+      name: 'a-second-choice-clears-it',
+      method: 'j-forms',
+      rows: ['4.1.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const wrong = [];
+        await choose(page, TEXT_FILE);
+        if (!(await alerts(page).first().waitFor({ timeout: 5000 }).then(() => true, () => false))) wrong.push('the text file showed no alert');
+        await page.evaluate(([s, w]) => {
+          const r = document.querySelector(s);
+          window.__alertsAtOpened = null;
+          new MutationObserver(() => { if (r.textContent === w && window.__alertsAtOpened === null) window.__alertsAtOpened = document.querySelectorAll('[role=alert]').length; }).observe(r, { childList: true, characterData: true, subtree: true });
+        }, [STATUS, OPENED]);
+        await choose(page, await projectFile());
+        if (!(await saysOpened(page))) wrong.push(`the status region never said "${OPENED}"`);
+        const atOpened = await page.evaluate(() => window.__alertsAtOpened);
+        if (atOpened !== 0) wrong.push(`${atOpened} alert(s) showed when "${OPENED}" was said`);
+        if (await alerts(page).count()) wrong.push('an alert shows after the open');
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `after a refusal, the golden chosen: no alert when "${OPENED}" was said, nor after`);
       },
     },
   ],
