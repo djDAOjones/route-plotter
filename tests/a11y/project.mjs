@@ -597,19 +597,25 @@ export default {
     {
       // 1.4.13: the page's two pieces of content shown on hover or focus, both Carbon's tooltips: Help's "Close" (its
       // close button's) and the timeline's thumb (the value words, "0:00 of 0:02"). Each is shown both ways, by focus
-      // and by the pointer resting on it, and each way meets three conditions, measured on the tooltip's content as
-      // drawn (a box, shown, its words), the opposite state measured first. Dismissible: one Escape hides it with the
-      // pointer unmoved, focus where it was and nothing else changed (Help still open, D186; the timeline where it
-      // was); one case apart, Close shown by hover with focus elsewhere in Help, where Carbon's Modal and Tooltip both
-      // hear Escape on the document and one Escape closes Help (ruled with D195): that tooltip is held to 1.4.13's
-      // exception, content that obscures nothing, measured at the run's width and at 320 px (its box and caret meet no
-      // words outside it and no control or image but Close, where they show), and what Escape does there is pinned (Help closed, focus
-      // on "Help"), so that a change in Carbon's listeners fails here and the case is ruled again. Hoverable: from the trigger the pointer moves in steps onto the tooltip's content and rests there past
-      // Carbon's leave delay (300 ms), the content still shown. Persistent: held by focus or hover and nothing pressed,
-      // it is still shown after a rest past every Carbon delay, and it goes when the focus or the pointer goes. The
-      // thumb's tooltip covers part of the label "Timeline" while the thumb has focus: 1.4.13 allows that because one
-      // Escape hides it, which this journey proves. Nothing is pressed; hovering has no touch form. A further piece of
-      // content shown on hover or focus needs its own check here.
+      // and by the pointer resting on it. Shown is measured on the tooltip's content as drawn (a box, shown, its exact
+      // words); hidden on the content's box alone (not drawn, whatever its words); the opposite state measured first.
+      // Dismissible: one Escape hides it with the pointer unmoved, focus where it was and nothing else changed (Help
+      // still open, D186; the timeline where it was); one case apart, Close shown by hover with focus elsewhere in Help,
+      // where Carbon's Modal and Tooltip both hear Escape on the document and one Escape closes Help (ruled with D195):
+      // that tooltip is held to 1.4.13's exception, content that obscures nothing, measured at the run's width and at
+      // 320 px: its box and caret meet no words outside it and no control or image but Close, where they show, judged
+      // by hit-testing (the first element under five points of each overlap, the tooltip's own set aside; a translucent
+      // layer over words, or words with pointer-events: none, would not be counted, and that is not yet settled). What
+      // Escape does there is pinned (Help closed, focus on "Help"), so that a change in Carbon's listeners fails here and
+      // the case is ruled again. Hoverable: shown by hover, the pointer moves in steps from the trigger onto the
+      // content; shown by focus, the pointer, away, comes onto the content in steps from the side away from the trigger;
+      // either way it rests there 1 s, past Carbon's leave delay (300 ms), the pointer's own last position on the
+      // content, the content still shown (and, by focus, focus unmoved). Not claimed: the pointer leaving the content
+      // again while focus stays. Persistent: held by focus or hover and nothing pressed, it is still shown after a rest
+      // past every Carbon delay, and it goes when the focus or the pointer goes. The thumb's tooltip covers part of the
+      // label "Timeline" while the thumb has focus: 1.4.13 allows that because one Escape hides it, which this journey
+      // proves. Nothing is pressed; hovering has no touch form. A further piece of content shown on hover or focus
+      // needs its own check here.
       name: 'content-on-hover-or-focus',
       method: 'j-hover',
       rows: ['1.4.13'],
@@ -624,7 +630,10 @@ export default {
           const r = c.getBoundingClientRect(), cs = getComputedStyle(c);
           return { shown: r.width > 0 && r.height > 0 && cs.display !== 'none' && cs.visibility !== 'hidden' && Number(cs.opacity) > 0, text: c.textContent ?? '', at: { x: r.x + r.width / 2, y: r.y + r.height / 2 } };
         }, sel);
+        // Shown: the content drawn with these exact words. Hidden: the content not drawn at all, whatever its words, so
+        // a tooltip left drawn with other words is not taken for hidden.
         const showing = async (sel, words) => { const t = await tip(sel); return t.shown && t.text === words; };
+        const hidden = async (sel) => !(await tip(sel)).shown;
         // What the shown tooltip covers: its content's box (required to have a size, or the check fails) and its caret's,
         // against the client rectangles of every text node outside the tooltip (a Range over each) and the box of every
         // control and image but its own trigger and the elements holding it, each counted where it shows (below). Blank
@@ -662,6 +671,9 @@ export default {
           return hits;
         }, [sel, CONTROLS]);
         const focused = () => page.evaluate(() => document.activeElement?.id || document.activeElement?.getAttribute('aria-label') || document.activeElement?.tagName || '');
+        // Where the pointer really is (its last mousemove), and whether the tooltip's drawn content is what lies under it.
+        const track = () => page.evaluate(() => { window.__at = null; addEventListener('mousemove', (e) => { window.__at = { x: e.clientX, y: e.clientY }; }, true); });
+        const onContent = () => page.evaluate(() => { const p = window.__at; return !!p && !!document.elementFromPoint(p.x, p.y)?.closest('[role=tooltip] .cds--popover-content'); });
         const centre = async (sel) => { const b = await page.locator(sel).boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
         const TIPS = [
           {
@@ -685,7 +697,7 @@ export default {
           const words = t.words || (await atNow(page)).text;
           const bad = (what) => problems.push(`${t.name}: ${what}`);
           // By focus.
-          if (await showing(t.trigger, words)) bad('shown before focus');
+          if (!(await hidden(t.trigger))) bad('shown before focus');
           await t.focus();
           if (!(await page.locator(t.trigger).evaluate((e) => e === document.activeElement))) bad('focus did not reach the trigger');
           if (!(await showing(t.trigger, words))) bad('not shown on focus');
@@ -694,17 +706,39 @@ export default {
           let who = await focused(), kept = await t.kept();
           await page.keyboard.press('Escape');
           await rest(400);
-          if (await showing(t.trigger, words)) bad('shown by focus: still shown after one Escape (dismissible)');
+          if (!(await hidden(t.trigger))) bad('shown by focus: still shown after one Escape (dismissible)');
           if ((await focused()) !== who) bad(`shown by focus: Escape moved focus from ${who} to ${await focused()}`);
           if ((await t.kept()) !== kept) bad(`shown by focus: Escape changed what it must not (${kept} to ${await t.kept()})`);
+          // Hoverable when shown by focus: the pointer, away, comes onto the content from the side away from the trigger
+          // (so it never passes over the trigger, which would show it by hover) in steps, and rests there 1 s.
+          await t.setup(); await t.focus();
+          if (!(await showing(t.trigger, words))) bad('not shown on focus before the pointer came');
+          else {
+            who = await focused();
+            const from = await centre(t.trigger), box = await page.evaluate((s) => {
+              const r = document.querySelector(s)?.closest('.cds--popover-container')?.querySelector('[role=tooltip] .cds--popover-content')?.getBoundingClientRect();
+              return r ? { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width, h: r.height } : null;
+            }, t.trigger);
+            const dx = box.x - from.x, dy = box.y - from.y, len = Math.hypot(dx, dy) || 1;
+            const reach = Math.abs(dx / len) * box.w / 2 + Math.abs(dy / len) * box.h / 2 + 20;
+            const near = { x: box.x + (dx / len) * reach, y: box.y + (dy / len) * reach };
+            await track();
+            await page.mouse.move(near.x, near.y, { steps: 5 });
+            for (let i = 1; i <= 5; i++) { await page.mouse.move(near.x + ((box.x - near.x) * i) / 5, near.y + ((box.y - near.y) * i) / 5); await rest(50); }
+            const under = await onContent();
+            await rest(1000);
+            if (!under) bad('shown by focus: the pointer did not come to rest on the content');
+            if (!(await showing(t.trigger, words))) bad('shown by focus: the pointer rested 1 s on the content: no longer shown (hoverable)');
+            if ((await focused()) !== who) bad(`shown by focus: the pointer on the content moved focus from ${who} to ${await focused()}`);
+          }
           await t.setup(); await t.focus();
           if (!(await showing(t.trigger, words))) bad('not shown on focus again');
           await page.keyboard.press('Tab');
           await rest(400);
-          if (await showing(t.trigger, words)) bad('still shown after focus went (persistent: it goes with the focus)');
+          if (!(await hidden(t.trigger))) bad('still shown after focus went (persistent: it goes with the focus)');
           // By the pointer.
           await t.setup();
-          if (await showing(t.trigger, words)) bad('shown before hover');
+          if (!(await hidden(t.trigger))) bad('shown before hover');
           const on = await centre(t.trigger);
           await page.mouse.move(on.x, on.y, { steps: 5 });
           await rest(500);
@@ -714,15 +748,16 @@ export default {
           const to = (await tip(t.trigger)).at;
           if (!to) bad('no content to move onto');
           else {
+            await track();
             for (let i = 1; i <= 10; i++) { await page.mouse.move(on.x + ((to.x - on.x) * i) / 10, on.y + ((to.y - on.y) * i) / 10); await rest(50); }
-            const under = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('[role=tooltip]'), [to.x, to.y]);
+            const under = await onContent();
             await rest(1000);
             if (!under) bad('the pointer did not come to rest on the content');
             if (!(await showing(t.trigger, words))) bad('the pointer rested 1 s on the content: no longer shown (hoverable)');
           }
           await page.mouse.move(OFF.x, OFF.y, { steps: 3 });
           await rest(700);
-          if (await showing(t.trigger, words)) bad('still shown 700 ms after the pointer went (persistent: it goes with the pointer)');
+          if (!(await hidden(t.trigger))) bad('still shown 700 ms after the pointer went (persistent: it goes with the pointer)');
           await t.setup();
           await page.mouse.move(on.x, on.y, { steps: 5 });
           await rest(500);
@@ -755,13 +790,13 @@ export default {
             who = await focused(); kept = await t.kept();
             await page.keyboard.press('Escape');
             await rest(400);
-            if (await showing(t.trigger, words)) bad('shown by hover: still shown after one Escape (dismissible)');
+            if (!(await hidden(t.trigger))) bad('shown by hover: still shown after one Escape (dismissible)');
             if ((await focused()) !== who) bad(`shown by hover: Escape moved focus from ${who} to ${await focused()}`);
             if ((await t.kept()) !== kept) bad(`shown by hover: Escape changed what it must not (${kept} to ${await t.kept()})`);
           }
           done.push(t.name);
         }
-        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, kept while the pointer moves onto it and rests, held past every delay, gone with the focus or the pointer; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close shown by hover, which obscures no words and no other control at the run's width and at 320 px (the exception), one Escape there closing Help with focus back on "Help"`);
+        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, and kept, shown either way, while the pointer moves onto it and rests; held past every delay; its content no longer drawn once the focus or the pointer goes; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close shown by hover, which obscures no words and no other control where hit-testing finds them showing, at the run's width and at 320 px (the exception), one Escape there closing Help with focus back on "Help"`);
       },
     },
     {
