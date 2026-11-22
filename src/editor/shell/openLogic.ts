@@ -65,10 +65,21 @@ import { WORDS as IO_WORDS, type Problem, type Refusal } from '../../adapters/io
 import type { Announce } from '../kit/announce';
 import type { Store } from '../store/store';
 
-/** Every word the opener says: only the open itself (a refusal's words are io's, shown by the page). */
+/** Every word of Open: the opener says only `opened`; the rest are Open's control and notice's (Open.tsx). A refusal's
+ *  own words are io's. */
 export const OPEN_WORDS = Object.freeze({
   /** Said once a project is opened: v3's "Project loaded", in the word every v4 refusal uses (provisional). */
   opened: 'Project opened',
+  /** The button: v3's "Open project". */
+  button: 'Open project',
+  /** The busy line: v3's "Opening <name>…"; an open of bytes has no name. */
+  opening: (name: string | null) => (name === null ? 'Opening the file…' : `Opening ${name}…`),
+  /** A refusal's title: v3's "Could not open <name>". */
+  refused: (name: string) => `Could not open ${name}`,
+  /** A refusal's title when the state has no name (an open of bytes). */
+  refusedNoName: 'Could not open the file',
+  /** The refusal's close button's name. */
+  close: 'Close',
 });
 
 /** What the page reads: the same frozen object until one field changes. */
