@@ -61,9 +61,17 @@ describe('OpenNotice, as it draws', () => {
     expect(html).toContain(`<div class="cds--inline-notification__title" dir="auto">${OPEN_WORDS.refused('walk.zip')}</div>`);
     expect(OPEN_WORDS.refused('walk.zip')).toBe('Could not open walk.zip');
     expect(html).toContain(`<div class="cds--inline-notification__subtitle" dir="auto">${asText(io.refusal.message)}</div>`);
+    expect(html).toMatch(/<svg[^>]*aria-label="Error"[^>]*role="img"[^>]*>.*<title>Error<\/title><\/svg>/);
+    expect(OPEN_WORDS.error).toBe('Error');
     expect(count(html, /<button/g)).toBe(1);
     expect(html).toMatch(/<button type="button" aria-label="Close" title="Close" class="cds--inline-notification__close-button">/);
     expect(html).not.toMatch(/inline-loading|aria-live/);
+  });
+
+  it('an open of bytes under way, with no name: “Opening the file…”', () => {
+    const opener = openerOf();
+    void opener.open(NOT_A_FILE);
+    expect(notice(opener)).toContain('<div class="cds--inline-loading__text">Opening the file…</div>');
   });
 
   it('a refusal with no name (an open of bytes) is titled “Could not open the file”', async () => {

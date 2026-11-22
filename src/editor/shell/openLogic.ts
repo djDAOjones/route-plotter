@@ -52,7 +52,8 @@
 //    changes nothing and is refused in io's words: `{ reason: 'unsafe', message: WORDS.openedUnsafe('it could not be
 //    read') }`.
 // 11. The latest ask wins across the read too: a file still being read when a later open is asked for is superseded as
-//    point 6 has it, whichever settles first; its bytes are not handed to `openProject`.
+//    point 6 has it, whichever settles first; its bytes are not handed to `openProject`. So is an ask made by a
+//    listener while it is told of another ask's start (for `open` and `openFile` alike): the later ask is the latest.
 // 12. The state's `name` is the name of the file it speaks of (the one being opened, or the one refused), kept and
 //    given as it came (it is text a user's file brought: nothing here reads it as markup); null at rest and for
 //    `open(bytes)`. `dismiss()` clears a refusal held, and its name, with one telling; while an open is under way, and
@@ -80,6 +81,8 @@ export const OPEN_WORDS = Object.freeze({
   refusedNoName: 'Could not open the file',
   /** The refusal's close button's name. */
   close: 'Close',
+  /** The refusal's icon's name: said before its title, the one thing beside colour that says what it is. */
+  error: 'Error',
 });
 
 /** What the page reads: the same frozen object until one field changes. */
@@ -190,8 +193,10 @@ export function createOpener({ store, announce, decode, openProject = ioOpenProj
   /** One ask begins: it is now the latest, under way, any refusal held cleared at once (points 2, 6, 7). */
   const begin = (name: string | null): number => {
     asked += 1;
+    // Taken before anyone is told: a listener told of this ask may ask for another, which must then be the latest.
+    const mine = asked;
     hold({ opening: true, refusal: null, name });
-    return asked;
+    return mine;
   };
 
   /** One ask ends, with what io gave it (points 1 to 7). */

@@ -23,8 +23,8 @@
 //    <name>" (v3's; "Could not open the file" when the state has no name), its words the refusal's `message` exactly as
 //    held, and one close button named "Close", handed `opener.dismiss` (read: pressing it is the page's to prove). It
 //    never closes by itself (an inline notification has no timer) and never hides itself: Carbon's own closing is
-//    refused (`onClose` gives false), so what shows is always the opener's state. No loading line with it. Carbon's
-//    error icon inside it is named "error icon" (its own words), so a screen reader may say them before the title.
+//    refused (`onClose` gives false), so what shows is always the opener's state. No loading line with it. Its error
+//    icon is named "Error" (ours, not Carbon's "error icon"), said before the title.
 // 6. How it is spoken (ruled by brief 75): the open itself through the queue ("Project opened", openLogic.ts); a refusal
 //    by its own `role="alert"`, never through the queue as well; the opening line by its polite live region.
 // 7. A file's name is text a user's file brought: it is drawn as text, never as markup.
@@ -72,6 +72,7 @@ export function OpenNotice({ opener }: OpenProps) {
       title={name === null ? OPEN_WORDS.refusedNoName : OPEN_WORDS.refused(name)}
       subtitle={refusal.message}
       aria-label={OPEN_WORDS.close}
+      statusIconDescription={OPEN_WORDS.error}
       onClose={() => {
         opener.dismiss();
         return false;

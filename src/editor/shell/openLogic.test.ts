@@ -843,3 +843,47 @@ describe('point 12: the name, and the dismissal', () => {
     expect(await asked).toEqual({ kind: 'opened' });
   });
 });
+
+describe('point 11 (Codex on 0075a60): an ask made by a listener told of another ask’s start', () => {
+  /** A session whose listener asks for B once, while it is told that A (named `aName`) is opening. */
+  async function askedInside(ask: (opener: ReturnType<typeof sessionOf>['opener'], fileB: Uint8Array) => Promise<unknown>) {
+    const io = countingOpen();
+    const [fileA, fileB] = await Promise.all([fileOf(routeOf(2, 0, 'a')), fileOf(routeOf(3, 0, 'b'))]);
+    const session = sessionOf(empty(), { openProject: io.openProject });
+    let b: Promise<unknown> | null = null;
+    let once = false;
+    session.opener.subscribe(() => {
+      // Set before asking: B's own start tells this listener again, inside the ask.
+      if (!once && session.opener.read().opening) {
+        once = true;
+        b = ask(session.opener, fileB);
+      }
+    });
+    return { io, fileA, fileB, later: () => b, ...session };
+  }
+
+  it('openFile: A is superseded and its bytes never reach openProject; B alone opens, said once', async () => {
+    const run = await askedInside((opener, fileB) => opener.openFile(fileOfBytes('b.zip', fileB).file));
+    const a = await run.opener.openFile(fileOfBytes('a.zip', run.fileA).file);
+    expect(a).toEqual({ kind: 'superseded' });
+    expect(await run.later()).toEqual({ kind: 'opened' });
+    expect(run.io.handed).toHaveLength(1);
+    expect([...(run.io.handed[0] ?? [])]).toEqual([...run.fileB]);
+    expect(run.opens.store).toBe(1);
+    expect(run.store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(run.said).toEqual([OPEN_WORDS.opened]);
+    expect(run.opener.read()).toEqual({ opening: false, refusal: null, name: null });
+  });
+
+  it('open(bytes): A is superseded (its bytes are handed to io, as open reads at once, but never reach the store); B alone opens, said once', async () => {
+    const run = await askedInside((opener, fileB) => opener.open(fileB));
+    const a = await run.opener.open(run.fileA);
+    expect(a).toEqual({ kind: 'superseded' });
+    expect(await run.later()).toEqual({ kind: 'opened' });
+    expect(run.io.handed).toHaveLength(2);
+    expect(run.opens.store).toBe(1);
+    expect(run.store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(run.said).toEqual([OPEN_WORDS.opened]);
+    expect(run.opener.read()).toEqual({ opening: false, refusal: null, name: null });
+  });
+});
