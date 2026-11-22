@@ -13,6 +13,16 @@
 .frame__name {
   margin: 0;
 }
+/* Open before Help, a gap between them, wrapping when the header has no room (stage 6). */
+.frame__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+/* Open's notice: first in main, across every column (stage 6). */
+.frame__notice {
+  grid-column: 1 / -1;
+}
 .frame__region + .frame__region {
   margin-block-start: 2rem;
 }

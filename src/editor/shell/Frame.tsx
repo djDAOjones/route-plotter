@@ -10,13 +10,21 @@
 // column, the panels over the export panel. Reading and focus order: header, outline, points list, preview, play bar,
 // panels, export panel; at a narrow width one column in that same order (frameLook.css). With only the centre filled,
 // the centre takes the page.
+// Stage 6 (brief 75, ruling 4) adds two places for Open, each drawing nothing unfilled: `open`, in the header's actions
+// before Help (Help stays last, at the header's end, as v3's was), and `notice`, first in `main`, before the columns and
+// across their whole width, in a plain `div` (no landmark, no heading: an alert names itself). Reading order: header,
+// name, Open, Help; then the notice, then the columns.
 import { Content, Header } from '@carbon/react';
 import type { ReactNode } from 'react';
 import './frameLook.css';
 
 export interface FrameProps {
-  /** The header's button: Help. */
+  /** The header's last button: Help. */
   readonly help: ReactNode;
+  /** The header's button before Help: Open. */
+  readonly open?: ReactNode;
+  /** Open's notice: first in `main`, across the columns. */
+  readonly notice?: ReactNode;
   /** Today's paragraph, in the centre above the preview (stage 6 replaces it). */
   readonly intro?: ReactNode;
   readonly outline?: ReactNode;
@@ -67,7 +75,7 @@ function column(place: string, regions: readonly ReactNode[]): ReactNode {
   return shown.length ? <div className={`frame__column frame__column--${place}`}>{shown}</div> : null;
 }
 
-export function Frame({ help, intro, outline, pointsList, preview, transport, panels, exportPanel, children }: FrameProps) {
+export function Frame({ help, open, notice, intro, outline, pointsList, preview, transport, panels, exportPanel, children }: FrameProps) {
   const left = column('left', [region('outline', outline), region('pointsList', pointsList)]);
   const right = column('right', [region('panels', panels), region('exportPanel', exportPanel)]);
   const sides = [left !== null && 'frame--left', right !== null && 'frame--right'].filter(Boolean).join(' ');
@@ -77,9 +85,13 @@ export function Frame({ help, intro, outline, pointsList, preview, transport, pa
         <h1 id={NAME_ID} className="frame__name">
           {PAGE_NAME}
         </h1>
-        <div className="frame__actions">{help}</div>
+        <div className="frame__actions">
+          {filled(open) && open}
+          {help}
+        </div>
       </Header>
       <Content className={sides ? `frame ${sides}` : 'frame'}>
+        {filled(notice) && <div className="frame__notice">{notice}</div>}
         {left}
         <div className="frame__column frame__column--centre">
           {intro}

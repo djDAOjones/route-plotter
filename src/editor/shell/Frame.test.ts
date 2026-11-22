@@ -16,6 +16,24 @@ const slotsInOrder = (html: string) => [...html.matchAll(/data-slot="([^"]+)"/g)
 const NAMED: readonly (keyof typeof SLOTS)[] = ['outline', 'pointsList', 'preview', 'panels', 'exportPanel'];
 
 describe('the frame, as it draws', () => {
+  it('Open, filled alone, stands in the header before Help; the notice, filled alone, first in main in a plain div', () => {
+    const withOpen = draw({ open: mark('open') });
+    const banner = /<header[^>]*>(.*)<\/header>/.exec(withOpen)?.[1] ?? '';
+    expect(banner).toMatch(/<div class="frame__actions"><i data-slot="open"><\/i><button id="help">Help<\/button><\/div>$/);
+    expect(withOpen).not.toContain('frame__notice');
+    const withNotice = draw({ notice: mark('notice') });
+    expect(withNotice).toMatch(/<main[^>]*><div class="frame__notice"><i data-slot="notice"><\/i><\/div><div class="frame__column frame__column--centre">/);
+    expect(withNotice).toMatch(/<div class="frame__actions"><button id="help">Help<\/button><\/div>/);
+    expect(withNotice).not.toMatch(/<section|<h2|role=/);
+  });
+
+  it('unfilled, Open and the notice draw nothing at all', () => {
+    for (const html of [draw(), draw({ open: null, notice: undefined }), draw({ open: false, notice: null })]) {
+      expect(html).not.toContain('frame__notice');
+      expect(html).toMatch(/<div class="frame__actions"><button id="help">Help<\/button><\/div>/);
+    }
+  });
+
   it('draws one banner holding the page’s one h1, not a link, and Help', () => {
     const html = draw();
     const banner = /<header[^>]*>(.*)<\/header>/.exec(html)?.[1] ?? '';
@@ -56,8 +74,13 @@ describe('the frame, as it draws', () => {
       outline: mark('outline'),
       intro: mark('intro'),
       children: mark('after'),
+      notice: mark('notice'),
+      open: mark('open'),
     });
-    expect(slotsInOrder(html)).toEqual(['outline', 'pointsList', 'intro', 'preview', 'transport', 'panels', 'exportPanel', 'after']);
+    expect(slotsInOrder(html)).toEqual(['open', 'notice', 'outline', 'pointsList', 'intro', 'preview', 'transport', 'panels', 'exportPanel', 'after']);
+    const order = ['<header', '<h1', 'data-slot="open"', 'id="help"', '</header>', '<main', 'data-slot="notice"', 'frame__column--left'].map((at) => html.indexOf(at));
+    expect(order.every((at, i) => at >= 0 && (i === 0 || at > (order[i - 1] ?? -1)))).toBe(true);
+    expect(html).toMatch(/<main[^>]*><div class="frame__notice">/);
     expect(regions(html).map(({ name }) => name)).toEqual(['Outline', 'Points', 'Preview', 'Settings', 'Export']);
     expect(html).toMatch(/class="[^"]*frame--left frame--right/);
     expect(html.match(/<h1/g)).toHaveLength(1);
