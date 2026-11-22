@@ -33,9 +33,11 @@
 //    held now is also an echo, as before, whatever else is open. Anything else is the user's. At most four positions
 //    are awaited, the oldest let go first: in React's order only two can be owed at once (the one whose echo is due,
 //    and the one just handed), and a position left waiting that never comes would swallow a later move onto it. A
-//    widget drawn anew stands where it was drawn and awaits nothing. What the rule costs: while a position is
-//    awaited, a move of the user's that lands exactly on it is taken for the echo and lost (for an arrow during a
-//    playing, measured by brief 79). A press while one is down (a second finger) is nothing until the release, also
+//    widget drawn anew stands where it was drawn and awaits nothing. Where the thumb stands is a forecast from what was
+//    handed and reported, not a reading of the widget. An awaited position that never comes waits until a later echo,
+//    the bound or a new widget clears it: no clock. While one waits, the page does not draw its widget again
+//    (SettingSlider). What the rule costs: while a position is awaited, a move of the user's that lands exactly on it
+//    is taken for the echo and lost (for an arrow during a playing, measured by brief 79). A press while one is down (a second finger) is nothing until the release, also
 //    after a give-up or a refusal, so one press begins at most one edit. What that costs: if a release is ever lost,
 //    the next press is nothing, and its release clears it.
 // 4. A refused begin changes nothing: the control shows what is held, and says why and that nothing held changed. A

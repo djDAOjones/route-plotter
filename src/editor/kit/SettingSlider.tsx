@@ -39,7 +39,6 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
   useSyncExternalStore,
@@ -84,7 +83,32 @@ export function SettingSlider({
   scale = IDENTITY,
   readout,
 }: SettingSliderProps) {
-  const slider = useMemo(() => createSlider(setting, scale), [setting, scale]);
+  const wrapper = useRef<HTMLDivElement>(null);
+  const refocus = useRef(false);
+  // A new logic (a new setting or scale) gets a new Carbon slider, so the two lifetimes agree: `drawn()` is true each
+  // time it is said, and no report an old Carbon slider still owes can reach a new logic (brief 79, Codex's finding).
+  // The logic's `life` is part of Carbon's key, made anew while rendering (React's pattern for state that follows a
+  // prop). The focus is kept: `inside` follows focus events, and a new Carbon slider takes the focus back only when it
+  // was inside and nothing else has it now (Chromium's focusout on a removed element has no related element, so a
+  // move of focus to nowhere before the change also counts as inside; that is the cost).
+  const [owned, own] = useState(() => ({ setting, scale, slider: createSlider(setting, scale), life: 0 }));
+  let current = owned;
+  if (owned.setting !== setting || owned.scale !== scale) {
+    current = { setting, scale, slider: createSlider(setting, scale), life: owned.life + 1 };
+    own(current);
+  }
+  const { slider, life } = current;
+  const inside = useRef(false);
+  const lifeSeen = useRef(life);
+  useLayoutEffect(() => {
+    if (lifeSeen.current === life) return;
+    lifeSeen.current = life;
+    const element = wrapper.current;
+    const at = element?.ownerDocument.activeElement;
+    if (inside.current && (at === null || at === undefined || at === element?.ownerDocument.body)) {
+      element?.querySelector<HTMLElement>('[role="slider"]')?.focus({ preventScroll: true });
+    }
+  }, [life]);
   useEffect(
     () => () => {
       slider.giveUp();
@@ -98,13 +122,11 @@ export function SettingSlider({
   const position = held === undefined ? undefined : scale.toPosition(held);
 
   const prefix = usePrefix();
-  const wrapper = useRef<HTMLDivElement>(null);
-  const refocus = useRef(false);
   const [drawing, drawAgain] = useState(0);
   /** What the logic was last told: which slider, which Carbon slider (`drawing`), and the position handed. */
   const told = useRef<{ slider: typeof slider; drawing: number; position: number | undefined } | null>(null);
   // A layout effect, so the logic hears of a new position before Carbon's own effects follow it and report it. A new
-  // Carbon slider (the first draw, a draw again, a new setting, one drawn after none) stands where it is drawn.
+  // Carbon slider (the first draw, a draw again, a new logic, one drawn after none) stands where it is drawn.
   useLayoutEffect(() => {
     const last = told.current;
     told.current = { slider, drawing, position };
@@ -178,9 +200,16 @@ export function SettingSlider({
       onTouchStartCapture={onPress}
       onTouchCancel={() => slider.giveUp()}
       onKeyDownCapture={onKeyDown}
+      onFocusCapture={() => {
+        inside.current = true;
+      }}
+      onBlurCapture={(event) => {
+        const to = event.relatedTarget;
+        if (to instanceof Node) inside.current = wrapper.current?.contains(to) ?? false;
+      }}
     >
       <Slider
-        key={drawing}
+        key={`${String(life)}.${String(drawing)}`}
         id={id}
         labelText={labelText}
         hideTextInput
