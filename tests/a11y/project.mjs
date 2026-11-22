@@ -595,6 +595,176 @@ export default {
       },
     },
     {
+      // 1.4.13: the page's two pieces of content shown on hover or focus, both Carbon's tooltips: Help's "Close" (its
+      // close button's) and the timeline's thumb (the value words, "0:00 of 0:02"). Each is shown both ways, by focus
+      // and by the pointer resting on it, and each way meets three conditions, measured on the tooltip's content as
+      // drawn (a box, shown, its words), the opposite state measured first. Dismissible: one Escape hides it with the
+      // pointer unmoved, focus where it was and nothing else changed (Help still open, D186; the timeline where it
+      // was); one case apart, Close shown by hover with focus elsewhere in Help, where Carbon's Modal and Tooltip both
+      // hear Escape on the document and one Escape closes Help (ruled with D195): that tooltip is held to 1.4.13's
+      // exception, content that obscures nothing, measured at the run's width and at 320 px (its box and caret meet no
+      // words outside it and no control or image but Close, where they show), and what Escape does there is pinned (Help closed, focus
+      // on "Help"), so that a change in Carbon's listeners fails here and the case is ruled again. Hoverable: from the trigger the pointer moves in steps onto the tooltip's content and rests there past
+      // Carbon's leave delay (300 ms), the content still shown. Persistent: held by focus or hover and nothing pressed,
+      // it is still shown after a rest past every Carbon delay, and it goes when the focus or the pointer goes. The
+      // thumb's tooltip covers part of the label "Timeline" while the thumb has focus: 1.4.13 allows that because one
+      // Escape hides it, which this journey proves. Nothing is pressed; hovering has no touch form. A further piece of
+      // content shown on hover or focus needs its own check here.
+      name: 'content-on-hover-or-focus',
+      method: 'j-hover',
+      rows: ['1.4.13'],
+      run: async ({ page, open, record }) => {
+        const OFF = { x: 5, y: 5 };
+        const rest = (ms) => page.waitForTimeout(ms);
+        // The tooltip's content as drawn: Carbon puts role=tooltip on a wrapper the size of the trigger, and draws the
+        // words in its .cds--popover-content, display none while closed.
+        const tip = (sel) => page.evaluate((s) => {
+          const c = document.querySelector(s)?.closest('.cds--popover-container')?.querySelector('[role=tooltip] .cds--popover-content');
+          if (!c) return { shown: false, text: '', at: null };
+          const r = c.getBoundingClientRect(), cs = getComputedStyle(c);
+          return { shown: r.width > 0 && r.height > 0 && cs.display !== 'none' && cs.visibility !== 'hidden' && Number(cs.opacity) > 0, text: c.textContent ?? '', at: { x: r.x + r.width / 2, y: r.y + r.height / 2 } };
+        }, sel);
+        const showing = async (sel, words) => { const t = await tip(sel); return t.shown && t.text === words; };
+        // What the shown tooltip covers: its content's box (required to have a size, or the check fails) and its caret's,
+        // against the client rectangles of every text node outside the tooltip (a Range over each) and the box of every
+        // control and image but its own trigger and the elements holding it, each counted where it shows (below). Blank
+        // space of an element is not content.
+        const obscures = (sel) => page.evaluate(([s, controls]) => {
+          const trigger = document.querySelector(s), wrap = trigger?.closest('.cds--popover-container')?.querySelector('[role=tooltip]');
+          const sized = (r) => !!r && r.width > 0 && r.height > 0;
+          const content = wrap?.querySelector('.cds--popover-content')?.getBoundingClientRect();
+          if (!sized(content)) return ['(no tooltip box to measure)'];
+          const boxes = [content, wrap.querySelector('.cds--popover-caret')?.getBoundingClientRect()].filter(sized);
+          // Where a rectangle overlaps a box, whether the element `seen` is what shows there, the tooltip set aside: the
+          // first element under five points of the overlap (its centre and corners, a pixel in) that is not the
+          // tooltip's own. Words or a control under something opaque (the page behind the dialog, at 320 px) show
+          // nowhere, so the tooltip hides nothing of them.
+          const meets = (r, seen) => r.width > 0 && r.height > 0 && boxes.some((b) => {
+            const left = Math.max(r.left, b.left), right = Math.min(r.right, b.right), top = Math.max(r.top, b.top), bottom = Math.min(r.bottom, b.bottom);
+            if (!(left < right && top < bottom)) return false;
+            const xs = [left + 1, (left + right) / 2, right - 1], ys = [top + 1, (top + bottom) / 2, bottom - 1];
+            return [[xs[1], ys[1]], [xs[0], ys[0]], [xs[2], ys[0]], [xs[0], ys[2]], [xs[2], ys[2]]].some(([x, y]) => {
+              const first = document.elementsFromPoint(x, y).find((e) => !wrap.contains(e));
+              return !!first && (first === seen || seen.contains(first));
+            });
+          });
+          const hits = [];
+          const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+          for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+            if (!n.textContent.trim() || wrap.contains(n) || getComputedStyle(n.parentElement).visibility === 'hidden') continue;
+            const range = document.createRange(); range.selectNodeContents(n);
+            if ([...range.getClientRects()].some((r) => meets(r, n.parentElement))) hits.push(`the words "${n.textContent.trim().slice(0, 30)}"`);
+          }
+          for (const e of document.querySelectorAll(`${controls}, img, svg, canvas, video, [role=img]`)) {
+            if (e === trigger || trigger.contains(e) || e.contains(trigger) || wrap.contains(e)) continue;
+            if (meets(e.getBoundingClientRect(), e)) hits.push(`the ${e.tagName.toLowerCase()} ${e.id || e.getAttribute('aria-label') || ''}`.trim());
+          }
+          return hits;
+        }, [sel, CONTROLS]);
+        const focused = () => page.evaluate(() => document.activeElement?.id || document.activeElement?.getAttribute('aria-label') || document.activeElement?.tagName || '');
+        const centre = async (sel) => { const b = await page.locator(sel).boundingBox(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; };
+        const TIPS = [
+          {
+            name: 'Close', trigger: '[role=dialog] .cds--modal-close', words: 'Close', byException: true,
+            // Help opened from the keyboard, the pointer away; focus lands at the content's start, not on Close.
+            setup: async () => { await open('shell'); await page.mouse.move(OFF.x, OFF.y); await helpButton(page).focus(); await page.keyboard.press('Enter'); await helpDialog(page).waitFor(); },
+            // Shift+Tab from the content's start reaches Close (the kit's Dialog).
+            focus: async () => { await page.keyboard.press('Shift+Tab'); },
+            kept: async () => String(await helpDialog(page).isVisible()),
+          },
+          {
+            name: 'the timeline', trigger: TIMELINE, words: '',
+            setup: async () => { await open('shell'); await page.mouse.move(OFF.x, OFF.y); },
+            focus: async () => { await page.locator(TIMELINE).focus(); },
+            kept: async () => String((await atNow(page)).now),
+          },
+        ];
+        const problems = [], done = [];
+        for (const t of TIPS) {
+          await t.setup();
+          const words = t.words || (await atNow(page)).text;
+          const bad = (what) => problems.push(`${t.name}: ${what}`);
+          // By focus.
+          if (await showing(t.trigger, words)) bad('shown before focus');
+          await t.focus();
+          if (!(await page.locator(t.trigger).evaluate((e) => e === document.activeElement))) bad('focus did not reach the trigger');
+          if (!(await showing(t.trigger, words))) bad('not shown on focus');
+          await rest(1500);
+          if (!(await showing(t.trigger, words))) bad('focus held 1.5 s: no longer shown (persistent)');
+          let who = await focused(), kept = await t.kept();
+          await page.keyboard.press('Escape');
+          await rest(400);
+          if (await showing(t.trigger, words)) bad('shown by focus: still shown after one Escape (dismissible)');
+          if ((await focused()) !== who) bad(`shown by focus: Escape moved focus from ${who} to ${await focused()}`);
+          if ((await t.kept()) !== kept) bad(`shown by focus: Escape changed what it must not (${kept} to ${await t.kept()})`);
+          await t.setup(); await t.focus();
+          if (!(await showing(t.trigger, words))) bad('not shown on focus again');
+          await page.keyboard.press('Tab');
+          await rest(400);
+          if (await showing(t.trigger, words)) bad('still shown after focus went (persistent: it goes with the focus)');
+          // By the pointer.
+          await t.setup();
+          if (await showing(t.trigger, words)) bad('shown before hover');
+          const on = await centre(t.trigger);
+          await page.mouse.move(on.x, on.y, { steps: 5 });
+          await rest(500);
+          if (!(await showing(t.trigger, words))) bad('not shown on hover');
+          await rest(1500);
+          if (!(await showing(t.trigger, words))) bad('hover held 1.5 s: no longer shown (persistent)');
+          const to = (await tip(t.trigger)).at;
+          if (!to) bad('no content to move onto');
+          else {
+            for (let i = 1; i <= 10; i++) { await page.mouse.move(on.x + ((to.x - on.x) * i) / 10, on.y + ((to.y - on.y) * i) / 10); await rest(50); }
+            const under = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('[role=tooltip]'), [to.x, to.y]);
+            await rest(1000);
+            if (!under) bad('the pointer did not come to rest on the content');
+            if (!(await showing(t.trigger, words))) bad('the pointer rested 1 s on the content: no longer shown (hoverable)');
+          }
+          await page.mouse.move(OFF.x, OFF.y, { steps: 3 });
+          await rest(700);
+          if (await showing(t.trigger, words)) bad('still shown 700 ms after the pointer went (persistent: it goes with the pointer)');
+          await t.setup();
+          await page.mouse.move(on.x, on.y, { steps: 5 });
+          await rest(500);
+          if (!(await showing(t.trigger, words))) bad('not shown on hover again');
+          if (t.byException) {
+            // Close shown by hover: dismissal is not required of content that obscures nothing (1.4.13's exception),
+            // measured here at the run's width and, below, at 320 px.
+            const hits = await obscures(t.trigger);
+            if (hits.length) bad(`shown by hover: it obscures ${hits.join(', ')}`);
+            const width = page.viewportSize();
+            await page.setViewportSize({ width: 320, height: width.height });
+            await t.setup();
+            const narrow = await centre(t.trigger);
+            await page.mouse.move(narrow.x, narrow.y, { steps: 5 });
+            await rest(500);
+            if (!(await showing(t.trigger, words))) bad('not shown on hover at 320 px');
+            const narrowHits = await obscures(t.trigger);
+            if (narrowHits.length) bad(`shown by hover at 320 px: it obscures ${narrowHits.join(', ')}`);
+            await page.setViewportSize(width);
+            await t.setup();
+            await page.mouse.move(on.x, on.y, { steps: 5 });
+            await rest(500);
+            if (!(await showing(t.trigger, words))) bad('not shown on hover before Escape');
+            // Pinned as Carbon has it: one Escape closes Help, and focus goes back to "Help".
+            await page.keyboard.press('Escape');
+            await rest(400);
+            if (await helpDialog(page).isVisible()) bad('shown by hover: one Escape left Help open (the pinned behaviour changed: rule again)');
+            if (!(await focusIs(page, HELP))) bad(`shown by hover: after one Escape focus is on ${await focused()}, not "Help" (the pinned behaviour changed: rule again)`);
+          } else {
+            who = await focused(); kept = await t.kept();
+            await page.keyboard.press('Escape');
+            await rest(400);
+            if (await showing(t.trigger, words)) bad('shown by hover: still shown after one Escape (dismissible)');
+            if ((await focused()) !== who) bad(`shown by hover: Escape moved focus from ${who} to ${await focused()}`);
+            if ((await t.kept()) !== kept) bad(`shown by hover: Escape changed what it must not (${kept} to ${await t.kept()})`);
+          }
+          done.push(t.name);
+        }
+        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, kept while the pointer moves onto it and rests, held past every delay, gone with the focus or the pointer; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close shown by hover, which obscures no words and no other control at the run's width and at 320 px (the exception), one Escape there closing Help with focus back on "Help"`);
+      },
+    },
+    {
       // 3.3.5: the shell's two fields. The timeline asks for no text: its help is its visible label, tied to it, and the
       // two times at its ends. The switch for single-key shortcuts in Help (drawn only while Help is open)
       // has its help: the sentence under it, visible once Help is open and tied to it by aria-describedby, so it is

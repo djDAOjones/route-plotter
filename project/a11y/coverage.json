@@ -59,8 +59,8 @@
       "evidence": ""
     },
     "hover-focus-content": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "present",
+      "evidence": "CORE-05 (2026-11-22): the page shows two pieces of content on hover or focus, both Carbon's tooltips: Help's \"Close\" (its close button's) and the timeline thumb's value words (\"0:00 of 0:02\"); nothing else on the page shows any (probed: Help, the link, the play bar's three buttons, the switch). The journey content-on-hover-or-focus (tests/a11y/project.mjs) shows each by focus and by hover and finds each hoverable (the pointer moved onto it and rested past Carbon's 300 ms leave delay) and persistent (held 1.5 s, gone with the focus or the pointer); each is dismissed by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close's tooltip shown by hover with focus elsewhere in Help, which is credited by 1.4.13's exception: it obscures nothing (its box and caret meet no words where they show, the dialog's heading \"Help\" among them, and no control or image but Close, measured at the run's width and at 320 px). There one Escape closes Help, focus back on \"Help\" (Carbon's Modal and Tooltip both hear Escape on the document; ruled with D195, provisional), and the journey pins it. The thumb's tooltip covers part of the label \"Timeline\" while the thumb has focus; one Escape hides it. Measured on Help only: a later dialog with a longer heading, or anything placed beside Close, must be measured again."
     },
     "keyboard-shortcuts": {
       "state": "present",
@@ -315,7 +315,7 @@
     "1.4.13": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
