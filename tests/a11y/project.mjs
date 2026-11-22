@@ -31,17 +31,12 @@
 // the sixth: a completed drag compared with a press on the track at the same point (2.5.7); 2.5.2's words for the
 // slider; the thumb drawn where its value says; 3.3.5's report naming the timeline; every press of the pointer journey
 // through the pointer adapter, so the touch run can credit it.
-// CORE-05, stage 5's eighth piece (2026-11-22): the frame (src/editor/shell/Frame.tsx). A banner above main, Carbon's
-// header in the page's flow (not fixed), holding the page's one h1, "Route Plotter", and Help; main holds the paragraph
-// and the play bar, and the named slots that later items fill, which draw nothing yet. Help is now met before the
-// progress link: FOCUS, the shell's snapshot and the waits for the h1 (now in the header) follow. The theme's colours
-// come from the University's tokens (buttons, links, the focused knob); the contrast and focus rows measure them.
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
 // (2.4.3); each route and its title (2.4.2); the one place the shell links to. A change to the shell is reviewed here.
 const READING = ['Route Plotter', 'Version 4 is being built here.', 'Timeline', 'Add at least two points to a route to play.'];
-const FOCUS = ['button "Help"', 'link "GitHub"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
+const FOCUS = ['link "GitHub"', 'button "Help"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
 const PROGRESS = 'https://github.com/djDAOjones/route-plotter';
 // The shell's one status region, and the words the editor's keys say in it (the editor's transport's own, WORDS).
@@ -155,13 +150,13 @@ async function offline({ page }) {
     ? route.fulfill({ status: 200, contentType: 'text/html', body: STAND_IN })
     : route.abort()));
 }
-// The shell as a reader meets it once it has settled (its h1 is the header's, outside main, since the frame). React draws it after the page's load event, and its bundled IBM
+// The shell as a reader meets it once it has settled. React draws it after the page's load event, and its bundled IBM
 // Plex fonts load only then: on CI's Linux runner, whose fallback font is wider, the link moved 63 px when they arrived,
 // after the focus test had measured it (wish STACK-03.6). Each state opens offline and settled: drawn, laid out, and its
 // fonts loaded.
 async function settled({ page }) {
   await offline({ page });
-  await page.locator('header h1').waitFor();
+  await page.locator('main h1').waitFor();
   await page.evaluate(async () => { void document.body.getBoundingClientRect(); await document.fonts.ready; });
 }
 const arrives = (page, url) => page.waitForURL(url, { timeout: 5000 }).then(() => true, () => false);
@@ -205,15 +200,14 @@ export default {
       path: '/',
       setup: settled,
       snapshot: [
-        '- banner "Route Plotter":',
-        '  - heading "Route Plotter" [level=1]',
-        '  - button "Help"',
         '- main:',
+        '  - heading "Route Plotter" [level=1]',
         '  - paragraph:',
         '    - text: Version 4 is being built here. It cannot make anything yet. Its progress is on',
         '    - link "GitHub":',
         `      - /url: ${PROGRESS}`,
         '    - text: .',
+        '  - button "Help"',
         '  - group "Playback":',
         '    - button "Skip to start"',
         '    - button "Play" [disabled]',
@@ -694,7 +688,7 @@ export default {
         if (!off.back) problems.push('focus did not come back to "Help" after turning the switch off');
         if (!(await quiet(page))) problems.push('the status region did not empty');
         for (const where of ['the page', 'the focused progress link', 'the focused "Skip to start"', 'the focused timeline']) {
-          if (where === 'the page') await page.locator('header h1').click();
+          if (where === 'the page') await page.locator('main h1').click();
           else if (where === 'the focused progress link') await progressLink(page).focus();
           else if (where === 'the focused timeline') await page.locator(TIMELINE).focus();
           else await page.locator(SKIP_START).focus();
@@ -706,7 +700,7 @@ export default {
             if (page.url() !== start) { problems.push(`${key} on ${where} left the shell for ${page.url()}`); break; }
           }
         }
-        await page.locator('header h1').click();
+        await page.locator('main h1').click();
         await page.keyboard.press('Home');
         if ((await said(page)) !== SKIPPED_TO_START) problems.push('Home said nothing with the switch off: the editor\'s keys were not listened for, so the check proves nothing');
         const on = await flipByKeyboard(page);
@@ -800,9 +794,9 @@ export default {
   // Route Plotter's, written by STACK-03 with the first run. The item that changes a shared component or the environment
   // the run uses, or finds a failure, updates them, with the date.
   records: {
-    date: '2026-11-22',
+    date: '2026-11-21',
     rows: {
-      P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment had changed until 2026-11-21. That day CORE-05 began to change the shell, a shared component: one status region and the editor\'s keys, with their journeys broadened in the same change (fields-and-status, character-key-shortcuts, the keyboard functions skip-to-start-by-home and skip-to-end-by-end). Later the same day CORE-05 added Help, the first dialog and the first setting on the shell (the switch for single-key shortcuts, on to begin with), with the journeys that open it broadened in the same change (reading-and-focus-order, pointer-cancellation, fields-and-status, character-key-shortcuts both ways, keyboard-task) and the keyboard functions open-help-by-button, open-help-by-question-mark, close-help-by-escape, single-keys-off and single-keys-on. Later again that day CORE-05 added the play bar, a group of three buttons after Help with Play disabled and described by the reason line while there is nothing to play, with reading-and-focus-order, pointer-cancellation, fields-and-status and character-key-shortcuts broadened in the same change and the keyboard functions skip-to-start-by-button, skip-to-end-by-button-space-kept, play-refused-by-space, play-refused-by-k and play-refused-by-k-, -j- and -l-on-button. A wider run (the sampling, npm run a11y:sample) is flagged for when the frame\'s controls are on the page On 2026-11-21 too, CORE-05 put the timeline in the play bar, the shell\'s first slider, with its own look over Carbon\'s (a 44 px target round Carbon\'s knob, a track that narrows), and caught Escape before Carbon\'s tooltip in the kit\'s slider, with the journeys broadened in the same change (flag a wider run). On 2026-11-22 CORE-05 drew the shell through its frame: a banner above main (Carbon\'s header, in the page\'s flow, not fixed) holding the page\'s one h1 and Help, which Tab now meets before the progress link, and named slots that draw nothing until later items fill them; and the theme\'s colours from the University\'s tokens (the primary button, links and the focused knob), with the shell\'s snapshot, FOCUS and the waits for the h1 changed in the same change and the contrast and focus rows measuring the new colours (flag a wider run: the frame is the shared component every later screen stands in).' },
+      P09: { state: 'pass', note: 'STACK-03 made the first run, against the shell, its baseline; no shared component or environment had changed until 2026-11-21. That day CORE-05 began to change the shell, a shared component: one status region and the editor\'s keys, with their journeys broadened in the same change (fields-and-status, character-key-shortcuts, the keyboard functions skip-to-start-by-home and skip-to-end-by-end). Later the same day CORE-05 added Help, the first dialog and the first setting on the shell (the switch for single-key shortcuts, on to begin with), with the journeys that open it broadened in the same change (reading-and-focus-order, pointer-cancellation, fields-and-status, character-key-shortcuts both ways, keyboard-task) and the keyboard functions open-help-by-button, open-help-by-question-mark, close-help-by-escape, single-keys-off and single-keys-on. Later again that day CORE-05 added the play bar, a group of three buttons after Help with Play disabled and described by the reason line while there is nothing to play, with reading-and-focus-order, pointer-cancellation, fields-and-status and character-key-shortcuts broadened in the same change and the keyboard functions skip-to-start-by-button, skip-to-end-by-button-space-kept, play-refused-by-space, play-refused-by-k and play-refused-by-k-, -j- and -l-on-button. A wider run (the sampling, npm run a11y:sample) is flagged for when the frame\'s controls are on the page On 2026-11-21 too, CORE-05 put the timeline in the play bar, the shell\'s first slider, with its own look over Carbon\'s (a 44 px target round Carbon\'s knob, a track that narrows), and caught Escape before Carbon\'s tooltip in the kit\'s slider, with the journeys broadened in the same change (flag a wider run).' },
       P10: { state: 'pass', note: 'no open finding: the first run\'s one product failure, a shell with no control for the focus test, was fixed by its progress link and retested in the same run (STACK-03, pull request #178, which shows both runs); a failure stays a failure until fixed' },
     },
   },
