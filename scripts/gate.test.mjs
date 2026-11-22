@@ -598,7 +598,7 @@ describe('the gate as wired in this repository', () => {
     assert.match(project, /name: 'shell',\n\s+path: '\/'/);
     // Each check measures the shell settled, drawn and with its fonts loaded (wish STACK-03.6), and offline.
     assert.match(project, /setup: settled,/);
-    assert.match(project, /await offline\(\{ page \}\);\n\s+await page\.locator\('main h1'\)\.waitFor\(\);/);
+    assert.match(project, /await offline\(\{ page \}\);\n\s+await page\.locator\('header h1'\)\.waitFor\(\);/);
     // Vite's native config loader: its default bundles the configuration into node_modules/.vite-temp first.
     assert.match(project, /command: 'npm run preview -- --port 4173 --strictPort --configLoader native'/);
     // The routed document stays out of the live site's folder.
