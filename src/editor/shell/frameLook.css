@@ -1,0 +1,41 @@
+/* CORE-05, stage 5: the frame's layout (brief 69's ruling 6). The header: the name at the start, Help at the end, on
+ * one line while there is room and wrapping (1.4.10, 1.4.12) when there is not. The page's main: one column in the
+ * reading order (left column, centre, right column) at a narrow width; from 66rem, the side columns that are filled
+ * stand beside the centre, each 20rem. With neither side filled, the centre is the page as before (the theme holds
+ * main to 48rem). Spacing from Carbon's scale: spacing-05 (1rem), spacing-07 (2rem).
+ */
+.frame__header {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0.75rem 1rem 1rem;
+}
+.frame__name {
+  margin: 0;
+}
+.frame__region + .frame__region {
+  margin-block-start: 2rem;
+}
+.frame__heading {
+  margin-block-end: 1rem;
+}
+.frame {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 66rem) {
+  .frame.frame--left,
+  .frame.frame--right {
+    max-width: 90rem;
+  }
+  .frame.frame--left {
+    grid-template-columns: 20rem minmax(0, 1fr);
+  }
+  .frame.frame--right {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+  .frame.frame--left.frame--right {
+    grid-template-columns: 20rem minmax(0, 1fr) 20rem;
+  }
+}
