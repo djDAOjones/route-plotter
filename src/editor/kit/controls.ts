@@ -7,8 +7,9 @@
 // The claim, which the code is held to:
 //
 // 1. What a control shows is worked out from the value held, each time it is asked. A control keeps no copy of the
-//    held value, so there is nothing to bring into step at start-up, after Open or after Undo (DEF-20.1). The one thing
-//    it keeps is text being typed, and an edit it has begun and not yet ended.
+//    held value, so there is nothing to bring into step at start-up, after Open or after Undo (DEF-20.1). What it keeps
+//    is text being typed, an edit it has begun and not yet ended, and, for a slider, what its widget was handed and has
+//    not yet said back, and where the widget's thumb stands (point 3): never read as the value held.
 // 2. Text typed into a number field is kept exactly as typed until the user commits it (Enter, or leaving the field)
 //    or gives it up (Escape). No change to the held value from elsewhere, no refused commit and no re-reading replaces
 //    it (DEF-97). A commit that is not a number, or that the edit refuses (the model's check; another change in
@@ -22,10 +23,21 @@
 //    one more position of that drag.
 //    A slider's widget that reports only where its thumb now stands (Carbon's does) is read through a press: what it
 //    reports while the pointer is down is a position of the drag, or nothing once the drag is given up or was refused;
-//    what it reports with no press is a key's nudge; and a report of the position already held is the widget's echo of
-//    a change made elsewhere, which begins nothing and makes no step, whatever else is open. A press while one is down
-//    (a second finger) is nothing until the release, also after a give-up or a refusal, so one press begins at most
-//    one edit. What that costs: if a release is ever lost, the next press is nothing, and its release clears it.
+//    what it reports with no press is a key's nudge. Such a widget also reports where a position it was handed puts its
+//    thumb, and may do so late, after the value held has moved on (Carbon follows its `value` prop in an effect and
+//    reports from another, two passes later). So the slider is told each position its widget is handed, and where the
+//    widget stood when it was drawn. A handed position is awaited unless the thumb already stands there, or will once
+//    what is awaited has come (a widget that reports changes only will say nothing). A report of an awaited position
+//    is the widget's echo, pointer down or not: it begins nothing, sets nothing and makes no step, and it clears that
+//    position and every one handed before it (the widget may skip straight to the latest). A report of the position
+//    held now is also an echo, as before, whatever else is open. Anything else is the user's. At most four positions
+//    are awaited, the oldest let go first: in React's order only two can be owed at once (the one whose echo is due,
+//    and the one just handed), and a position left waiting that never comes would swallow a later move onto it. A
+//    widget drawn anew stands where it was drawn and awaits nothing. What the rule costs: while a position is
+//    awaited, a move of the user's that lands exactly on it is taken for the echo and lost (for an arrow during a
+//    playing, measured by brief 79). A press while one is down (a second finger) is nothing until the release, also
+//    after a give-up or a refusal, so one press begins at most one edit. What that costs: if a release is ever lost,
+//    the next press is nothing, and its release clears it.
 // 4. A refused begin changes nothing: the control shows what is held, and says why and that nothing held changed. A
 //    control never sets, commits or cancels an edit it did not begin, and never leaves one open: every edit it begins
 //    ends in exactly one commit or one cancel, whatever order the events come in (a move with no start, two starts,
@@ -121,22 +133,37 @@ export interface Slider {
    */
   press(): Result;
   /**
-   * The widget says its thumb now stands at `position`. The position held already is its echo of a change made
-   * elsewhere: nothing. During a press, one more position of the drag, or nothing once it is given up or was refused.
-   * With no press, a key's nudge.
+   * The widget says its thumb now stands at `position`. A position it was handed and has not yet said back, or the
+   * position held already, is its echo: nothing (an awaited one is cleared, with every one handed before it). Else,
+   * during a press, one more position of the drag, or nothing once it is given up or was refused; with no press, a
+   * key's nudge.
    */
   report(position: number): Result;
+  /** The widget is handed `position` to show (its value changed): awaited, unless its thumb stands there already. */
+  handed(position: number): void;
+  /** A new widget is drawn standing at `position`: it will say nothing of it, so nothing is awaited. */
+  drawn(position: number): void;
+  /** Whether a position the widget was handed is still awaited. */
+  awaiting(): boolean;
+  /** Where the widget's thumb stands, or will once what is awaited has come; undefined until it is drawn or reports. */
+  thumb(): number | undefined;
   /** The pointer is let go: the press ends, and so does its drag (`end()`), if one is still open. */
   release(): Result;
 }
 
+/** How many handed positions a slider awaits at most (point 3): two can be owed at once, the rest is room. */
+export const AWAITED_AT_MOST = 4;
+
 /**
  * A slider's logic over `setting`, its thumb placed by `scale`. Its state is the edit of a drag it began and has not yet
- * been told the end of, and whether the pointer is down on it.
+ * been told the end of, whether the pointer is down on it, the positions its widget was handed and has not yet said
+ * back, oldest first, and where the widget's thumb stands.
  */
 export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider {
   let drag: Edit | null = null;
   let down = false;
+  let awaited: number[] = [];
+  let thumb: number | undefined;
 
   const move = (value: number): Result => (drag === null ? NOTHING : drag.set(value));
   const start = (): Result => {
@@ -183,9 +210,27 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
       return start();
     },
     report: (at) => {
+      const echo = awaited.indexOf(at);
+      if (echo !== -1) {
+        // Where the thumb will stand is unchanged: the last awaited position, or, that one come, this one.
+        awaited = awaited.slice(echo + 1);
+        return NOTHING;
+      }
+      thumb = at;
       if (at === position()) return NOTHING;
       return down ? move(scale.toValue(at)) : nudge(scale.toValue(at));
     },
+    handed: (at) => {
+      if (at === thumb) return;
+      thumb = at;
+      awaited = [...awaited, at].slice(-AWAITED_AT_MOST);
+    },
+    drawn: (at) => {
+      awaited = [];
+      thumb = at;
+    },
+    awaiting: () => awaited.length > 0,
+    thumb: () => thumb,
     release: () => {
       down = false;
       return end();

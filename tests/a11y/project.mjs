@@ -175,20 +175,25 @@ const alerts = (page) => page.locator('[role=alert]');
 // J or L on "Open project" (brief 76's ruling 4: they do what they do on any button). The journeys' project opened by
 // a press of the button, focus put back on it and the key pressed: "Playing animation" said (it waits behind "Project
 // opened"), focus still on the button and no file chooser opened by the key; L then moves the position on, and J, from
-// the start, plays back into the start and stops there: "Animation complete", the position 0. (J from the middle, after
-// a press on the timeline, now and then crashes the page: FINDING-78, owed to the kit, so J is proved from the start.)
+// the middle (a press on the timeline's track first), plays back into the start and stops there: "Animation
+// complete", the position 0. (FINDING-78's crash of J after a press, Carbon's late echo, is mended: brief 79.)
 const PLAYING = 'Playing animation';
 const COMPLETE = 'Animation complete';
 const comesToWords = (page, w) => page.waitForFunction(([s, words]) => document.querySelector(s)?.textContent === words, [STATUS, w], { timeout: 6000 }).then(() => true, () => false);
 async function playsFromOpen(page, key) {
   if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) return false;
+  if (key === 'j') {
+    const middle = await onTrack(page, 0.5);
+    await page.mouse.click(middle.x, middle.y);
+    if (!(await comesTo(page, 'Math.abs(n - 500) <= 10'))) return false;
+  }
   let choosers = 0;
   page.on('filechooser', () => { choosers++; });
   await page.locator(OPEN).focus();
   await page.keyboard.press(key);
   if (!(await comesToWords(page, PLAYING))) return false;
-  // L moves on; J never leaves 0 (a forward playing would stand past it when "Playing animation" is said) and ends.
-  const moved = key === 'l' ? await comesTo(page, 'n > 0') : (await atNow(page)).now === 0 && (await comesToWords(page, COMPLETE)) && (await atNow(page)).now === 0;
+  // L moves on; J, from the middle, stands short of it and above 0 when "Playing animation" is said, and ends at 0.
+  const moved = key === 'l' ? await comesTo(page, 'n > 0') : (await atNow(page)).now > 0 && (await atNow(page)).now <= 510 && (await comesToWords(page, COMPLETE)) && (await atNow(page)).now === 0;
   return moved && (await focusOn(page, OPEN)) && choosers === 0;
 }
 // Open Help by its button from the keyboard, Tab to its switch, press Space, close it by Escape. The switch is drawn
@@ -409,6 +414,26 @@ export default {
       if (t.now !== 1000 || t.text !== '0:02 of 0:02' || (await said(page)) !== SKIPPED_TO_END || !(await thumbAt(page, 1))) return false;
       await page.keyboard.press('Home');
       return (await comesTo(page, 'n === 0')) && thumbAt(page, 0);
+    } },
+    // End then Home as two steps, so the fast run sends them with no gap: Carbon's echo of 1000 comes after 0 is held,
+    // which the kit's slider once took for a key's nudge (Home lost, or React's error 185 and the timeline gone,
+    // FINDING-78; brief 79). The position comes to 0, the thumb is drawn at the start, "Skipped to start" is said (it
+    // waits behind "Skipped to end", about 2 s) and the timeline is still there; then, heard this time, the pair again:
+    // no page error.
+    { name: 'timeline-end-then-home', state: 'shell', steps: [{ press: 'End' }, { press: 'Home' }], check: async ({ page }) => {
+      const settled = async () => (await comesTo(page, 'n === 0')) && (await thumbAt(page, 0)) && (await comesToWords(page, SKIPPED_TO_START)) && (await atNow(page)).now === 0;
+      if (!(await settled())) return false;
+      const errors = [];
+      const onError = (e) => errors.push(String(e));
+      page.on('pageerror', onError);
+      try {
+        await page.keyboard.press('End');
+        await page.keyboard.press('Home');
+        await page.waitForTimeout(800);
+        return (await page.locator(TIMELINE).count()) === 1 && (await settled()) && errors.length === 0;
+      } finally {
+        page.off('pageerror', onError);
+      }
     } },
     { name: 'timeline-page-home-end-on-slider', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'Shift+ArrowRight' }], check: async ({ page }) => {
       const after = async (key, want) => { await page.keyboard.press(key); return (await comesTo(page, `n === ${want}`)) && (await focusOn(page, TIMELINE)); };
@@ -1290,6 +1315,75 @@ export default {
         if (backwards(held).length) wrong.push(`with the press held still the position went back: ${backwards(held).join(', ')}`);
         if (!(end > first)) wrong.push(`with the press held still the playing did not go on (${first} to ${end})`);
         record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `no input: never back, ${gained} ms gained over ${Math.round(clock)} ms of frames; a press held still at 50 %: at ${first}, never pulled back, playing on to ${end}`);
+      },
+    },
+    {
+      // 2.1.1 (brief 79, FINDING-78): Carbon's slider echoes a new position two passes after it is handed, and on a slow
+      // page that is after the value held has moved on; the kit's slider once took that late echo for a key's nudge.
+      // React's scheduler is slowed here (each MessageChannel delivery, its tasks, held 60 ms: a slow machine), set before
+      // the page loads. End then Home with no gap: the position comes to 0, the thumb at the start, "Skipped to start"
+      // said last. Then the journeys' project, a press on the track's middle and J on "Open project": the position goes
+      // down to 0, never up, and "Animation complete" is said. Through both, the timeline stays and no page error is
+      // heard. Before the fix both crashed the page with React's error 185 (5 of 5 each, sub-chat 79).
+      name: 'the-late-echo',
+      method: 'keyboard',
+      rows: ['2.1.1'],
+      run: async ({ page, open, record }) => {
+        await page.addInitScript(() => {
+          const Real = window.MessageChannel;
+          window.MessageChannel = function () {
+            const ch = new Real();
+            const send = ch.port2.postMessage.bind(ch.port2);
+            ch.port2.postMessage = (m) => setTimeout(() => send(m), 60);
+            return ch;
+          };
+        });
+        const errors = [];
+        page.on('pageerror', (e) => errors.push(String(e).slice(0, 120)));
+        const wrong = [];
+        const there = async () => (await page.locator(TIMELINE).count()) === 1;
+        await open('shell');
+        const heard = await hear(page);
+        await page.keyboard.press('End');
+        await page.keyboard.press('Home');
+        await page.waitForTimeout(1500);
+        if (!(await there())) wrong.push('End then Home: the timeline is gone');
+        else {
+          const { now } = await atNow(page);
+          if (now !== 0) wrong.push(`End then Home: the position is ${now}`);
+          if (!(await thumbAt(page, 0))) wrong.push('End then Home: the thumb is not drawn at the start');
+          // "Skipped to start" waits behind "Skipped to end" (about 2 s): wait for it, then it must be the last said.
+          await comesToWords(page, SKIPPED_TO_START);
+          const words = await heard();
+          if (words.at(-1) !== SKIPPED_TO_START) wrong.push(`End then Home: said last "${words.at(-1)}"`);
+          if ((await atNow(page)).now !== 0) wrong.push('End then Home: the position left 0 later');
+        }
+        await open('shell');
+        await choose(page, await projectFile());
+        if (!(await saysOpened(page))) wrong.push('the journeys\' project was not opened');
+        const middle = await onTrack(page, 0.5);
+        await page.mouse.click(middle.x, middle.y);
+        if (!(await comesTo(page, 'Math.abs(n - 500) <= 10'))) wrong.push('the press on the track did not put the position at its middle');
+        await page.locator(OPEN).focus();
+        await page.keyboard.press('j');
+        // Each frame's position until "Animation complete" is said (or 10 s): null once the timeline is gone.
+        const run = await page.evaluate(([t, s, w]) => new Promise((resolve) => {
+          const seen = [], until = performance.now() + 10000;
+          const tick = () => {
+            const v = document.querySelector(t)?.getAttribute('aria-valuenow');
+            seen.push(v == null ? null : Number(v));
+            const done = document.querySelector(s)?.textContent === w;
+            if (done || v == null || performance.now() > until) resolve({ seen, done }); else requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        }), [TIMELINE, STATUS, COMPLETE]);
+        const ups = run.seen.slice(1).flatMap((v, i) => (v !== null && run.seen[i] !== null && v > run.seen[i] ? [`${run.seen[i]} to ${v}`] : []));
+        if (run.seen.includes(null) || !(await there())) wrong.push('J after a press: the timeline is gone');
+        if (ups.length) wrong.push(`J after a press: the position went up: ${ups.slice(0, 5).join(', ')}`);
+        if (!run.done) wrong.push('J after a press: "Animation complete" was not said');
+        if ((await there()) && (await atNow(page)).now !== 0) wrong.push(`J after a press: ended at ${(await atNow(page)).now}`);
+        if (errors.length) wrong.push(`page error: ${errors[0]}`);
+        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `with React's scheduler slowed 60 ms a task: End then Home at no gap stands at 0, "Skipped to start" said last; J after a press at 50 % plays down to 0 over ${run.seen.length} frames, never up, "Animation complete" said; the timeline stays, no page error`);
       },
     },
     {

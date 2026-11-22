@@ -2,10 +2,13 @@
 // sends into the logic's calls and draws the position the logic gives; every rule about values is the logic's.
 //
 // Carbon never says a drag has started, and reports every change of its thumb through `onChange`, whatever the cause:
-// a drag's move, an arrow key, or the echo of a new `value` prop. So the pointer going down on Carbon's own slider
-// element is caught here, before Carbon sees it, as the logic's `press()`; Carbon's `onChange` is the logic's
-// `report()`, which tells a drag's move from a key's nudge by the press, and the echo by the position held; and its
-// `onRelease` is `release()`. Escape during a drag, and a touch cancelled, give the drag up (`giveUp()`); the moves, any
+// a drag's move, an arrow key, or the echo of a new `value` prop, which comes two passes after the prop and so may
+// come after the value held has moved on (End then Home with no gap; the frames of a playing; brief 79). So the
+// pointer going down on Carbon's own slider element is caught here, before Carbon sees it, as the logic's `press()`;
+// each draw in which the `value` prop changes is told to the logic as `handed()`, and each new Carbon slider as
+// `drawn()`, before Carbon's effects run; Carbon's `onChange` is the logic's `report()`, which tells the echo by the
+// positions handed and not yet said back and by the position held, and a drag's move from a key's nudge by the press;
+// and its `onRelease` is `release()`. Escape during a drag, and a touch cancelled, give the drag up (`giveUp()`); the moves, any
 // further press (a second finger) and the release Carbon still sends until the pointer is let go then change nothing
 // (a press while one is down is nothing until its release, even after a give-up). Escape is caught on its way down,
 // before Carbon sees it: the thumb's tooltip, open while it has the pointer or focus, takes Escape and stops it
@@ -25,10 +28,12 @@
 // starts at the position held and reports nothing.
 //
 // Carbon keeps a thumb position of its own, brought into step only when its `value` prop changes. Where a report is
-// refused or changes nothing held (another change in progress; the model's check; a drag given up), its thumb would stay
-// where the user left it; so the slider is drawn again from what is held, and keeps the focus it had. The slider is
-// drawn again whenever the value held changes, not only its position: on a scale, two values can stand at one position
-// and read out differently.
+// refused or changes nothing held (another change in progress; the model's check; a drag given up; an echo of an older
+// position), its thumb would stay where it was left; so the slider is drawn again from what is held, and keeps the
+// focus it had, but not during a press, nor while a handed position is still awaited (Carbon is on its way to it, and
+// a draw on each late echo of a playing would take the focus and the thumb's tooltip away frame by frame). The slider
+// is drawn again whenever the value held changes, not only its position: on a scale, two values can stand at one
+// position and read out differently.
 import { Slider, usePrefix } from '@carbon/react';
 import {
   useCallback,
@@ -94,10 +99,20 @@ export function SettingSlider({
 
   const prefix = usePrefix();
   const wrapper = useRef<HTMLDivElement>(null);
-  /** Where Carbon's thumb stands, as it last said; undefined until it has said. */
-  const thumb = useRef<number | undefined>(undefined);
   const refocus = useRef(false);
   const [drawing, drawAgain] = useState(0);
+  /** What the logic was last told: which slider, which Carbon slider (`drawing`), and the position handed. */
+  const told = useRef<{ slider: typeof slider; drawing: number; position: number | undefined } | null>(null);
+  // A layout effect, so the logic hears of a new position before Carbon's own effects follow it and report it. A new
+  // Carbon slider (the first draw, a draw again, a new setting, one drawn after none) stands where it is drawn.
+  useLayoutEffect(() => {
+    const last = told.current;
+    told.current = { slider, drawing, position };
+    if (position === undefined) return;
+    if (last === null || last.slider !== slider || last.drawing !== drawing || last.position === undefined) {
+      slider.drawn(position);
+    } else if (last.position !== position) slider.handed(position);
+  }, [slider, drawing, position]);
 
   /**
    * Draws Carbon's slider again from what is held when its thumb stands elsewhere and nothing else will move it: after a
@@ -105,14 +120,15 @@ export function SettingSlider({
    */
   const bringIntoStep = (result: Result | 'released') => {
     if (result !== 'released' && result.ok && result.changed) return;
-    if (slider.pressed() || thumb.current === undefined || thumb.current === slider.position()) return;
+    if (slider.pressed() || slider.awaiting()) return;
+    const thumb = slider.thumb();
+    if (thumb === undefined || thumb === slider.position()) return;
     drawFromHeld();
   };
   /** Draws a new Carbon slider from what is held, the focus kept where it was. */
   const drawFromHeld = () => {
     const element = wrapper.current;
     refocus.current = element !== null && element.contains(element.ownerDocument.activeElement);
-    thumb.current = undefined;
     drawAgain((n) => n + 1);
   };
   useLayoutEffect(() => {
@@ -174,7 +190,6 @@ export function SettingSlider({
         value={position}
         {...words}
         onChange={({ value }) => {
-          thumb.current = value;
           bringIntoStep(slider.report(value));
         }}
         onRelease={() => {

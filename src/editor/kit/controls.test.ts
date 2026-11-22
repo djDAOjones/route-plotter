@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { RETIRED_WORDS } from '../../adapters/io/fixtures';
 import {
+  AWAITED_AT_MOST,
   createNumberField,
   createSlider,
   NOT_A_NUMBER,
@@ -446,6 +447,95 @@ describe('a slider read through a widget that reports only where its thumb stand
     setting.held = undefined;
     expect(slider.position()).toBeUndefined();
     expect(slider.readout(3)).toBe(3);
+  });
+});
+
+describe("point 3: a widget's late echo of a position it was handed (brief 79)", () => {
+  // The order the page showed (PROBE-79): End off the slider hands 1000, Home hands 0, and only then does Carbon report
+  // 1000, the echo of the first, while 0 is held.
+  it('End then Home with the first echo late: the echo begins nothing, Home stands, and the second echo is nothing', () => {
+    const setting = handmade(0);
+    const slider = createSlider(setting);
+    slider.drawn(0);
+    setting.held = 1000;
+    slider.handed(1000);
+    setting.held = 0;
+    slider.handed(0);
+    expect(slider.report(1000)).toEqual({ ok: true, changed: false });
+    expect([setting.held, setting.log]).toEqual([0, []]);
+    expect(slider.report(0)).toEqual({ ok: true, changed: false });
+    expect([setting.held, setting.log, slider.awaiting(), slider.thumb()]).toEqual([0, [], false, 0]);
+  });
+
+  it('the same with the pointer down: the late echo is no position of the drag', () => {
+    const setting = handmade(0);
+    const slider = createSlider(setting);
+    slider.drawn(0);
+    slider.press();
+    setting.held = 1000;
+    slider.handed(1000);
+    setting.held = 0;
+    slider.handed(0);
+    expect(slider.report(1000)).toEqual({ ok: true, changed: false });
+    expect(slider.report(0)).toEqual({ ok: true, changed: false });
+    slider.release();
+    expect([setting.held, setting.log]).toEqual([0, ['begin 1', 'commit 1']]);
+  });
+
+  it('a position handed where the thumb already stands is not awaited: right, left onto the old place, right again, each taken', () => {
+    const setting = handmade(50);
+    const slider = createSlider(setting);
+    slider.drawn(50);
+    for (const at of [51, 50, 51]) {
+      expect(slider.report(at), String(at)).toEqual({ ok: true, changed: true });
+      slider.handed(at);
+      expect(slider.awaiting(), String(at)).toBe(false);
+    }
+    expect([setting.held, setting.log.filter((l) => l.startsWith('commit')).length]).toEqual([51, 3]);
+  });
+
+  it('an echo that skips older handed positions clears them: a later report of one is the user’s', () => {
+    const setting = handmade(0);
+    const slider = createSlider(setting);
+    slider.drawn(0);
+    for (const at of [10, 20, 30]) {
+      setting.held = at;
+      slider.handed(at);
+    }
+    expect(slider.report(30)).toEqual({ ok: true, changed: false });
+    expect(slider.awaiting()).toBe(false);
+    expect(slider.report(10)).toEqual({ ok: true, changed: true });
+    expect(setting.held).toBe(10);
+  });
+
+  it(`at most ${String(AWAITED_AT_MOST)} positions are awaited, the oldest let go first`, () => {
+    const setting = handmade(0);
+    const slider = createSlider(setting);
+    slider.drawn(0);
+    for (let at = 1; at <= AWAITED_AT_MOST + 1; at++) {
+      setting.held = at;
+      slider.handed(at);
+    }
+    expect(slider.report(1)).toEqual({ ok: true, changed: true });
+    expect(setting.held).toBe(1);
+    expect(slider.report(2)).toEqual({ ok: true, changed: false });
+    expect(setting.held).toBe(1);
+  });
+
+  it('a widget drawn again from what is held awaits nothing', () => {
+    const setting = handmade(0);
+    const slider = createSlider(setting);
+    expect(slider.thumb()).toBeUndefined();
+    slider.drawn(0);
+    setting.held = 1000;
+    slider.handed(1000);
+    setting.held = 0;
+    slider.handed(0);
+    expect(slider.awaiting()).toBe(true);
+    slider.drawn(0);
+    expect([slider.awaiting(), slider.thumb()]).toEqual([false, 0]);
+    expect(slider.report(1000)).toEqual({ ok: true, changed: true });
+    expect(setting.held).toBe(1000);
   });
 });
 
