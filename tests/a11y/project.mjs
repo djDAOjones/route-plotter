@@ -375,7 +375,11 @@ export default {
       const t = await atNow(page);
       return seen.at(-1) === '0:00 of 0:02' && t.now === 500 && t.text === '0:01 of 0:02' && focusOn(page, TIMELINE);
     } },
+    // End off the slider writes the store at once, but Carbon copies the value it is handed into its own state in an
+    // effect, a setState React runs as a later task (React 19, Carbon 1.118): wait for the value (it must come within
+    // 2 s), then read the words, as the Home half does. Read at once, it failed once on CI at no delay (brief 78).
     { name: 'timeline-follows-skip-to-end', state: 'shell', steps: [{ press: 'End' }], check: async ({ page }) => {
+      if (!(await comesTo(page, 'n === 1000'))) return false;
       const t = await atNow(page);
       if (t.now !== 1000 || t.text !== '0:02 of 0:02' || (await said(page)) !== SKIPPED_TO_END || !(await thumbAt(page, 1))) return false;
       await page.keyboard.press('Home');
