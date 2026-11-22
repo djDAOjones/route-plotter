@@ -727,8 +727,8 @@ export default {
       // where Carbon's Modal and Tooltip both hear Escape on the document and one Escape closes Help (ruled with D195):
       // that tooltip is held to 1.4.13's exception, content that obscures nothing, measured at the run's width and at
       // 320 px: its box and caret meet no words outside it and no control or image but Close, where they show, judged
-      // by hit-testing (the first element under five points of each overlap, the tooltip's own set aside; a translucent
-      // layer over words, or words with pointer-events: none, would not be counted, and that is not yet settled). What
+      // by what is painted (two pictures of each overlap with the tooltip unpainted, with and without the words' parent
+      // or the control; equal pictures, nothing of it shows there; obscures() below says how it checks itself). What
       // Escape does there is pinned (Help closed, focus on "Help"), so that a change in Carbon's listeners fails here and
       // the case is ruled again. Hoverable: shown by hover, the pointer moves in steps from the trigger onto the
       // content; shown by focus, the pointer, away, comes onto the content in steps from the side away from the trigger;
@@ -759,40 +759,76 @@ export default {
         const hidden = async (sel) => !(await tip(sel)).shown;
         // What the shown tooltip covers: its content's box (required to have a size, or the check fails) and its caret's,
         // against the client rectangles of every text node outside the tooltip (a Range over each) and the box of every
-        // control and image but its own trigger and the elements holding it, each counted where it shows (below). Blank
-        // space of an element is not content.
-        const obscures = (sel) => page.evaluate(([s, controls]) => {
-          const trigger = document.querySelector(s), wrap = trigger?.closest('.cds--popover-container')?.querySelector('[role=tooltip]');
-          const sized = (r) => !!r && r.width > 0 && r.height > 0;
-          const content = wrap?.querySelector('.cds--popover-content')?.getBoundingClientRect();
-          if (!sized(content)) return ['(no tooltip box to measure)'];
-          const boxes = [content, wrap.querySelector('.cds--popover-caret')?.getBoundingClientRect()].filter(sized);
-          // Where a rectangle overlaps a box, whether the element `seen` is what shows there, the tooltip set aside: the
-          // first element under five points of the overlap (its centre and corners, a pixel in) that is not the
-          // tooltip's own. Words or a control under something opaque (the page behind the dialog, at 320 px) show
-          // nowhere, so the tooltip hides nothing of them.
-          const meets = (r, seen) => r.width > 0 && r.height > 0 && boxes.some((b) => {
-            const left = Math.max(r.left, b.left), right = Math.min(r.right, b.right), top = Math.max(r.top, b.top), bottom = Math.min(r.bottom, b.bottom);
-            if (!(left < right && top < bottom)) return false;
-            const xs = [left + 1, (left + right) / 2, right - 1], ys = [top + 1, (top + bottom) / 2, bottom - 1];
-            return [[xs[1], ys[1]], [xs[0], ys[0]], [xs[2], ys[0]], [xs[0], ys[2]], [xs[2], ys[2]]].some(([x, y]) => {
-              const first = document.elementsFromPoint(x, y).find((e) => !wrap.contains(e));
-              return !!first && (first === seen || seen.contains(first));
+        // control and image but its own trigger and the elements holding it: for each, the rectangles where it overlaps
+        // a box (geometry alone; blank space of an element is not content). Where it shows there is judged by what is
+        // painted, as 1.4.13's "obscure" asks, not by hit-testing: each overlap's rectangle (grown outward to whole pixels,
+        // kept inside the viewport) is pictured with the tooltip's content and caret unpainted but still hit (opacity 0,
+        // no transition; never visibility or display, which would end the hover under test), the base, and again with the
+        // candidate unpainted too (words: their parent element; a control or image: itself). Equal pictures: nothing of
+        // it is painted there, so the tooltip hides nothing of it (words under Help's opaque container at 320 px). Unequal:
+        // it shows there, and it is reported. Unpainting the words' parent unpaints its children too, so the measure can
+        // report more than the words (the safe side); a candidate holding the tooltip or its trigger, which cannot be
+        // unpainted alone, counts as showing. It checks itself: the bases are taken again after the candidates, and if
+        // they differ the page under the tooltip is not still and nothing is established. It leaves the state as it
+        // found it: every style it set is taken off (the element's own style attribute put back), and the journey then
+        // checks the tooltip is still shown with its words and the pointer's last position unmoved.
+        const obscures = async (sel) => {
+          const found = await page.evaluate(([s, controls]) => {
+            const trigger = document.querySelector(s), wrap = trigger?.closest('.cds--popover-container')?.querySelector('[role=tooltip]');
+            const sized = (r) => !!r && r.width > 0 && r.height > 0;
+            const contentEl = wrap?.querySelector('.cds--popover-content'), content = contentEl?.getBoundingClientRect();
+            if (!sized(content)) return null;
+            const caretEl = wrap.querySelector('.cds--popover-caret');
+            const boxes = [content, caretEl?.getBoundingClientRect()].filter(sized);
+            const W = innerWidth, H = innerHeight;
+            const overlaps = (r) => (sized(r) ? boxes : []).flatMap((b) => {
+              const left = Math.max(r.left, b.left), right = Math.min(r.right, b.right), top = Math.max(r.top, b.top), bottom = Math.min(r.bottom, b.bottom);
+              if (!(left < right && top < bottom)) return [];
+              const x = Math.max(0, Math.floor(left)), y = Math.max(0, Math.floor(top)), x2 = Math.min(W, Math.ceil(right)), y2 = Math.min(H, Math.ceil(bottom));
+              return x2 > x && y2 > y ? [{ x, y, width: x2 - x, height: y2 - y }] : [];
             });
-          });
-          const hits = [];
-          const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-          for (let n = walk.nextNode(); n; n = walk.nextNode()) {
-            if (!n.textContent.trim() || wrap.contains(n) || getComputedStyle(n.parentElement).visibility === 'hidden') continue;
-            const range = document.createRange(); range.selectNodeContents(n);
-            if ([...range.getClientRects()].some((r) => meets(r, n.parentElement))) hits.push(`the words "${n.textContent.trim().slice(0, 30)}"`);
+            const cands = [];
+            const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+            for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+              if (!n.textContent.trim() || wrap.contains(n) || getComputedStyle(n.parentElement).visibility === 'hidden') continue;
+              const range = document.createRange(); range.selectNodeContents(n);
+              const rects = [...range.getClientRects()].flatMap(overlaps);
+              if (rects.length) cands.push({ label: `the words "${n.textContent.trim().slice(0, 30)}"`, el: n.parentElement, rects });
+            }
+            for (const e of document.querySelectorAll(`${controls}, img, svg, canvas, video, [role=img]`)) {
+              if (e === trigger || trigger.contains(e) || e.contains(trigger) || wrap.contains(e)) continue;
+              const rects = overlaps(e.getBoundingClientRect());
+              if (rects.length) cands.push({ label: `the ${e.tagName.toLowerCase()} ${e.id || e.getAttribute('aria-label') || ''}`.trim(), el: e, rects });
+            }
+            // Unpainting and painting again: inline opacity 0 with no transition, each element's own style attribute
+            // kept and put back (opacity taken off while the transition is still none, so nothing fades back in).
+            const kept = new Map();
+            const off = (els) => { for (const e of els) { if (!kept.has(e)) kept.set(e, e.getAttribute('style')); e.style.setProperty('transition', 'none', 'important'); e.style.setProperty('opacity', '0', 'important'); } };
+            const on = (els) => { for (const e of els) { if (!kept.has(e)) continue; e.style.setProperty('transition', 'none', 'important'); e.style.removeProperty('opacity'); void getComputedStyle(e).opacity; const was = kept.get(e); kept.delete(e); if (was === null) e.removeAttribute('style'); else e.setAttribute('style', was); } };
+            window.__paint = { tip: [contentEl, caretEl].filter(Boolean), cands: cands.map((c) => c.el), off, on };
+            return cands.map((c) => ({ label: c.label, rects: c.rects, holds: c.el.contains(trigger) || c.el.contains(wrap) }));
+          }, [sel, CONTROLS]);
+          if (!found) return { hits: ['(no tooltip box to measure)'], still: true, candidates: 0, pictures: 0 };
+          const key = (r) => `${r.x},${r.y},${r.width},${r.height}`;
+          const shot = (r) => page.screenshot({ clip: r });
+          const rects = [...new Map(found.flatMap((c) => c.rects).map((r) => [key(r), r])).values()];
+          const hits = [], base = new Map();
+          let pictures = 0;
+          await page.evaluate(() => window.__paint.off(window.__paint.tip));
+          for (const r of rects) { base.set(key(r), await shot(r)); pictures++; }
+          for (const [i, c] of found.entries()) {
+            if (c.holds) { hits.push(c.label); continue; }
+            await page.evaluate((k) => window.__paint.off([window.__paint.cands[k]]), i);
+            let shows = false;
+            for (const r of c.rects) { if (!(await shot(r)).equals(base.get(key(r)))) shows = true; pictures++; }
+            await page.evaluate((k) => window.__paint.on([window.__paint.cands[k]]), i);
+            if (shows) hits.push(c.label);
           }
-          for (const e of document.querySelectorAll(`${controls}, img, svg, canvas, video, [role=img]`)) {
-            if (e === trigger || trigger.contains(e) || e.contains(trigger) || wrap.contains(e)) continue;
-            if (meets(e.getBoundingClientRect(), e)) hits.push(`the ${e.tagName.toLowerCase()} ${e.id || e.getAttribute('aria-label') || ''}`.trim());
-          }
-          return hits;
-        }, [sel, CONTROLS]);
+          let still = true;
+          for (const r of rects) { if (!(await shot(r)).equals(base.get(key(r)))) still = false; pictures++; }
+          await page.evaluate(() => window.__paint.on(window.__paint.tip));
+          return { hits, still, candidates: found.length, pictures };
+        };
         const focused = () => page.evaluate(() => document.activeElement?.id || document.activeElement?.getAttribute('aria-label') || document.activeElement?.tagName || '');
         // Where the pointer really is (its last mousemove), and whether the tooltip's drawn content is what lies under it.
         const track = () => page.evaluate(() => { window.__at = null; addEventListener('mousemove', (e) => { window.__at = { x: e.clientX, y: e.clientY }; }, true); });
@@ -881,24 +917,32 @@ export default {
           await page.mouse.move(OFF.x, OFF.y, { steps: 3 });
           await rest(700);
           if (!(await hidden(t.trigger))) bad('still shown 700 ms after the pointer went (persistent: it goes with the pointer)');
-          await t.setup();
+          await t.setup(); await track();
           await page.mouse.move(on.x, on.y, { steps: 5 });
           await rest(500);
           if (!(await showing(t.trigger, words))) bad('not shown on hover again');
           if (t.byException) {
             // Close shown by hover: dismissal is not required of content that obscures nothing (1.4.13's exception),
-            // measured here at the run's width and, below, at 320 px.
-            const hits = await obscures(t.trigger);
-            if (hits.length) bad(`shown by hover: it obscures ${hits.join(', ')}`);
+            // measured here at the run's width and, below, at 320 px; after each measure, the state it found: the
+            // tooltip still shown with its words, the pointer's last position unmoved.
+            const measured = async (at) => {
+              const was = await page.evaluate(() => window.__at), before = await showing(t.trigger, words);
+              const { hits, still } = await obscures(t.trigger);
+              if (!still) bad(`shown by hover${at}: the page under the tooltip is not still (its base pictures differ), so what it obscures is not established`);
+              if (hits.length) bad(`shown by hover${at}: it obscures ${hits.join(', ')}`);
+              if (before && !(await showing(t.trigger, words))) bad(`shown by hover${at}: after the measure no longer shown with its words (the measure changed the state)`);
+              const now = await page.evaluate(() => window.__at);
+              if (!was || !now || was.x !== now.x || was.y !== now.y) bad(`shown by hover${at}: the pointer's last position is not the one before the measure`);
+            };
+            await measured('');
             const width = page.viewportSize();
             await page.setViewportSize({ width: 320, height: width.height });
-            await t.setup();
+            await t.setup(); await track();
             const narrow = await centre(t.trigger);
             await page.mouse.move(narrow.x, narrow.y, { steps: 5 });
             await rest(500);
             if (!(await showing(t.trigger, words))) bad('not shown on hover at 320 px');
-            const narrowHits = await obscures(t.trigger);
-            if (narrowHits.length) bad(`shown by hover at 320 px: it obscures ${narrowHits.join(', ')}`);
+            await measured(' at 320 px');
             await page.setViewportSize(width);
             await t.setup();
             await page.mouse.move(on.x, on.y, { steps: 5 });
@@ -919,7 +963,7 @@ export default {
           }
           done.push(t.name);
         }
-        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, and kept, shown either way, while the pointer moves onto it and rests; held past every delay; its content no longer drawn once the focus or the pointer goes; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close shown by hover, which obscures no words and no other control where hit-testing finds them showing, at the run's width and at 320 px (the exception), one Escape there closing Help with focus back on "Help"`);
+        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, and kept, shown either way, while the pointer moves onto it and rests; held past every delay; its content no longer drawn once the focus or the pointer goes; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close shown by hover, which obscures no words and no other control where they are painted (two pictures of each overlap, the tooltip unpainted, with and without the words' parent or the control, equal; the page still under it; the state left as found), at the run's width and at 320 px (the exception), one Escape there closing Help with focus back on "Help"`);
       },
     },
     {
