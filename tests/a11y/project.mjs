@@ -303,10 +303,44 @@ export default {
       await page.waitForTimeout(400);
       return (await atNow(page)).now === 0 && (await said(page)) === '' && focusOn(page, TIMELINE);
     } },
+    // A held Page Up: three downs as fast as Playwright sends them, then the up. It checks the repeat; it also failed 10
+    // of 10 with the redraw taken out, but that rests on timing, which timeline-two-keys-one-task does not.
     { name: 'timeline-page-up-held', state: 'shell', steps: [{ focus: TIMELINE }], check: async ({ page }) => {
       for (let i = 0; i < 3; i++) await page.keyboard.down('PageUp');
       await page.keyboard.up('PageUp');
       return (await comesTo(page, 'n === 300')) && (await said(page)) === '' && focusOn(page, TIMELINE);
+    } },
+    // The crash two of these keys once caused (brief 67), reproduced in a fixed order rather than left to timing: two
+    // Page Up downs on the thumb in one task, the second after React has drawn the first's position and before Carbon
+    // has reported it, then the up. They must reach 200 with focus kept and no page error. With the redraw after a key
+    // taken out of the kit's slider (bringIntoStep in its place), this failed 10 runs of 10, each with React's error 185
+    // and the timeline gone (sub-chat 68); with the redraw, it passed 10 of 10. Sending both downs before React draws
+    // the first did not crash without the redraw, so that order is not the one tested.
+    { name: 'timeline-two-keys-one-task', state: 'shell', steps: [{ focus: TIMELINE }], check: async ({ page }) => {
+      const errors = [];
+      const onError = (e) => errors.push(String(e));
+      page.on('pageerror', onError);
+      try {
+        await page.evaluate(async (s) => {
+          // Each key goes where a browser sends it, the focused element, which must be the thumb (the redraw puts a new
+          // thumb in the old one's place, focused).
+          const send = (type) => {
+            const at = document.activeElement;
+            if (at?.matches(s)) at.dispatchEvent(new KeyboardEvent(type, { key: 'PageUp', code: 'PageUp', bubbles: true, cancelable: true, composed: true }));
+          };
+          send('keydown');
+          // React draws the first key's position in a microtask queued during it; this one comes after, still before
+          // any frame or timer, so Carbon has been given the first position and has not yet reported it.
+          await new Promise((r) => queueMicrotask(r));
+          send('keydown');
+          send('keyup');
+        }, TIMELINE);
+        const reached = await comesTo(page, 'n === 200');
+        await page.waitForTimeout(500);
+        return reached && errors.length === 0 && (await atNow(page)).now === 200 && (await said(page)) === '' && focusOn(page, TIMELINE);
+      } finally {
+        page.off('pageerror', onError);
+      }
     } },
     { name: 'play-refused-by-k-on-timeline', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && (await atNow(page)).now === 0 && focusOn(page, TIMELINE) },
     { name: 'timeline-escape-no-drag', state: 'shell', steps: [{ focus: TIMELINE }, { press: 'ArrowRight' }, { press: 'Escape' }], check: async ({ page }) => (await atNow(page)).now === 1 && focusOn(page, TIMELINE) },
@@ -426,6 +460,9 @@ export default {
             const pressedOk = await comesTo(page, 'n > 400 && n < 600');
             const pressed = (await atNow(page)).now;
             for (const f of [0.6, 0.7, 0.8, 0.9]) { const at = await onTrack(page, f); await pointer.move(at.x, at.y); }
+            // As below: Carbon can drop a drag's last quick move, so the pointer rests at 90 % and moves there once more.
+            await page.waitForTimeout(100);
+            await pointer.move(far.x, far.y);
             const draggedOk = await comesTo(page, 'n > 850');
             const moved = (await atNow(page)).now;
             await page.keyboard.press('Escape');

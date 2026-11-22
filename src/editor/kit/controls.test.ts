@@ -489,6 +489,9 @@ describe("point 5: a slider's own Home, End, Page Up and Page Down (D193)", () =
   it('a tenth is whole steps, never fewer than one', () => {
     // 100 / 10 is 3⅓ steps of 3: three steps, 9.
     expect(to('PageUp', 50, { min: 0, max: 100, step: 3 })).toEqual({ taken: true, to: 59 });
+    // 100 / 10 is 1⅔ steps of 6: rounded up, two steps, 12 (a floor would give one, 6).
+    expect(to('PageUp', 0, { min: 0, max: 100, step: 6 })).toEqual({ taken: true, to: 12 });
+    expect(to('PageDown', 50, { min: 0, max: 100, step: 6 })).toEqual({ taken: true, to: 38 });
     // 4 / 10 is 0.4 of a step: one step.
     expect(to('PageUp', 2, { min: 0, max: 4, step: 1 })).toEqual({ taken: true, to: 3 });
     expect(to('PageDown', 2, { min: 0, max: 4, step: 1 })).toEqual({ taken: true, to: 1 });
