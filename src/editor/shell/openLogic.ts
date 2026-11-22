@@ -19,20 +19,28 @@
 //    refusal with no problems, is one problem for the whole project. A stand-in `openProject` that throws is given back
 //    as io's own catch-all is (`WORDS.openedUnsafe`, "it is damaged").
 // 4. DEF-67: when a project opens, `announce` is handed `OPEN_WORDS.opened`, once, after the store has taken it; the
-//    opener says nothing else, ever. It neither pauses nor touches either transport: the store's Open writes "paused"
+//    opener says nothing else, ever. A throw from `announce` is caught and dropped: the open has happened and stays
+//    opened (point 6). It neither pauses nor touches either transport: the store's Open writes "paused"
 //    at the start (AT_START), which the player's transport's frame already booked meets, saying nothing and booking no
 //    more (its claim's point 2). So nothing says "Animation paused", whether or not something was playing.
 // 5. Criterion 3's open half: the store's Open puts the playback at the start, at normal speed, not playing; so once
 //    the open's promise settles, the editor's transport's `play()` plays at once from 0 at normal speed, the length
 //    built from the opened scene (the player's transport builds it when its inputs, the store's scene, are not those
 //    it last built from). Opening never starts a playing by itself.
-// 6. Only the latest open asked for may reach the store. An earlier one still being read when a later one is asked for
-//    changes nothing, holds nothing and says nothing when it settles, whichever settles first: its caller is given
-//    `{ kind: 'superseded' }`. The latest's caller is given `{ kind: 'opened' }` or `{ kind: 'refused', refusal }`.
+// 6. Only the latest open asked for may reach the store. One for which a later open was asked before it was read (before
+//    its project could reach the store) changes nothing, holds nothing and says nothing when it settles, whichever
+//    settles first: its caller is given `{ kind: 'superseded' }`. Otherwise its caller is given `{ kind: 'opened' }` or
+//    `{ kind: 'refused', refusal }`. An open the store has taken stands as opened, and "Project opened" is said for it,
+//    even when a later open is asked for during its completion (by a store subscriber, by `announce`, by a listener);
+//    every write of the opener's state at an open's completion is made only while it is still the latest asked for, so
+//    `opening` and `refusal` are then the later one's. A refusal so overtaken is given to its caller but not held.
 // 7. Whether an open is under way is held in the opener's state (`read().opening`, with a telling when it changes): true
 //    from the moment an open is asked for until the latest one asked for settles. Nothing is said or drawn for it here.
-// 8. It keeps nothing of a file between opens but the refusal of point 2: no bytes, no project (the store owns its own
-//    copy). Its state holds `opening` and `refusal` only, and is the same frozen object until one of them changes.
+//    Each of the opener's listeners is called in its own `try`: a throw is caught and dropped, the others are still told,
+//    and `open` neither stops nor rejects (the state is written before anyone is told).
+// 8. The opener itself keeps nothing of a file between opens but the refusal of point 2: no bytes, no project (the store
+//    owns its own copy); what a decoder or a stand-in `openProject` handed in keeps is its own. Its state holds `opening`
+//    and `refusal` only, and is the same frozen object until one of them changes.
 import { openProject as ioOpenProject, type Opened } from '../../adapters/io/open';
 import type { Decode } from '../../adapters/io/images';
 import type { Project } from '../../adapters/io/format';
@@ -58,11 +66,12 @@ interface OpenerState {
 type OpenResult =
   | { readonly kind: 'opened' }
   | { readonly kind: 'refused'; readonly refusal: Refusal }
-  /** A later open was asked for before this one settled: this one changed nothing. */
+  /** A later open was asked for before this one was read, so it never reached the store and changed nothing. An open
+   * the store has taken is `opened`, whatever was asked for after. */
   | { readonly kind: 'superseded' };
 
 export interface Opener {
-  /** Opens a project file's bytes into the store; never rejects. */
+  /** Opens a project file's bytes into the store; never rejects (claim points 4 and 7). */
   open(bytes: Uint8Array): Promise<OpenResult>;
   read(): OpenerState;
   /** Calls `listener` when the state changes; gives back the call that stops it. */
@@ -109,7 +118,15 @@ export function createOpener({ store, announce, decode, openProject = ioOpenProj
   const hold = (next: OpenerState): void => {
     if (next.opening === state.opening && next.refusal === state.refusal) return;
     state = next.opening || next.refusal !== null ? Object.freeze({ ...next }) : QUIET;
-    for (const listener of [...listeners]) listener();
+    for (const listener of [...listeners]) {
+      // A listener's throw is dropped: the state is written already, the others must still be told, and a rejected
+      // open would leave the page saying "opening" for ever (point 7).
+      try {
+        listener();
+      } catch {
+        // dropped
+      }
+    }
   };
 
   const read = async (bytes: Uint8Array): Promise<Opened> => {
@@ -128,13 +145,19 @@ export function createOpener({ store, announce, decode, openProject = ioOpenProj
       const opened = await read(bytes);
       if (mine !== asked) return { kind: 'superseded' };
       const refusal = opened.ok ? intoStore(store, opened.project) : opened.refusal;
-      if (refusal === null) {
-        announce(OPEN_WORDS.opened);
-        hold({ opening: false, refusal: null });
-        return { kind: 'opened' };
+      if (refusal !== null) {
+        if (mine === asked) hold({ opening: false, refusal });
+        return { kind: 'refused', refusal };
       }
-      hold({ opening: false, refusal });
-      return { kind: 'refused', refusal };
+      // The store has taken it: it is opened whatever happens next. A throw from `announce` is dropped, not given back
+      // as a refusal (nothing was refused; the page's queue does not throw; a rejected open would leave "opening" held).
+      try {
+        announce(OPEN_WORDS.opened);
+      } catch {
+        // dropped
+      }
+      if (mine === asked) hold({ opening: false, refusal: null });
+      return { kind: 'opened' };
     },
     read: () => state,
     subscribe: (listener: () => void): (() => void) => {

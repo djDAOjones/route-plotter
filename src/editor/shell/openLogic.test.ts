@@ -108,12 +108,18 @@ function handMade() {
 }
 
 /** The store, both transports, a queue that records and the opener, as the session will make them. */
-function sessionOf(project: Project, opener: Partial<Pick<OpenerOptions, 'decode' | 'openProject'>> = {}) {
+function sessionOf(
+  project: Project,
+  opener: Partial<Pick<OpenerOptions, 'decode' | 'openProject'>> = {},
+  /** Called after each saying is recorded: a test may ask for an open there, or throw. */
+  onSay: (message: string) => void = () => undefined,
+) {
   const store = createStore({ project, nextId: counter('new') });
   const frames = handMade();
   const said: string[] = [];
   const announce = (message: string) => {
     said.push(message);
+    onSay(message);
   };
   const player = createTransport({
     frames: frames.source,
@@ -162,6 +168,10 @@ function lengthOf(project: Project): number {
 }
 
 const NOT_A_FILE = Uint8Array.of(1, 2, 3, 4);
+
+/** The refusal given for a store's throw, or a store refusal with no problems: one problem for the whole project. */
+const WHOLE_PROBLEMS = [{ path: '', rule: 'type' as const, expected: 'a project the editor can hold', received: 'one it could not take' }];
+const WHOLE_PROJECT = { reason: 'invalid', message: IO_WORDS.openedInvalid(WHOLE_PROBLEMS), problems: WHOLE_PROBLEMS };
 
 describe('point 1: bytes are opened through openProject and nothing else, then into the store', () => {
   it('hands openProject the bytes and the decoder; on a project, the store opens it, once', async () => {
@@ -245,10 +255,10 @@ describe('point 3 (ruling 3c): the store’s own refusal or throw changes nothin
     const result = await opener.open(NOT_A_FILE);
     if (result.kind !== 'refused' || result.refusal.reason !== 'invalid') throw new Error('invalid expected');
     expect(opens.store).toBe(1);
-    expect(result.refusal.problems.length).toBeGreaterThan(0);
-    for (const { path } of result.refusal.problems) expect(path).toMatch(/^scene(\.|$)/);
-    expect(result.refusal.problems.some(({ path }) => path.includes('holdAtStartMs'))).toBe(true);
-    expect(result.refusal.message).toBe(IO_WORDS.openedInvalid(result.refusal.problems));
+    const problems = [
+      { path: 'scene.settings.clock.holdAtStartMs', rule: 'range' as const, expected: 'a whole number from 0 to 10000 milliseconds', received: '-5' },
+    ];
+    expect(result.refusal).toEqual({ reason: 'invalid', message: IO_WORDS.openedInvalid(problems), problems });
     expect(store.getState()).toBe(before);
     expect(opener.read().refusal).toBe(result.refusal);
     expect(said).toEqual([]);
@@ -264,11 +274,37 @@ describe('point 3 (ruling 3c): the store’s own refusal or throw changes nothin
     });
     const before = store.getState();
     const result = await opener.open(NOT_A_FILE);
-    if (result.kind !== 'refused' || result.refusal.reason !== 'invalid') throw new Error('invalid expected');
-    expect(result.refusal.problems).toHaveLength(1);
-    expect(result.refusal.message).toBe(IO_WORDS.openedInvalid(result.refusal.problems));
+    expect(result).toEqual({ kind: 'refused', refusal: WHOLE_PROJECT });
+    if (result.kind !== 'refused') throw new Error('refused expected');
+    expect(opener.read().refusal).toBe(result.refusal);
     expect(store.getState()).toBe(before);
     expect(said).toEqual([]);
+  });
+
+  it('a stand-in store refusing with no problems gives the same whole-project refusal', async () => {
+    const opener = createOpener({
+      store: { open: () => ({ ok: false, refusal: { why: 'gesture-open' } }) },
+      announce: () => undefined,
+      decode: atOnce,
+      openProject: () => Promise.resolve({ ok: true, project: routeOf(2, 0, 'a') }),
+    });
+    expect(await opener.open(NOT_A_FILE)).toEqual({ kind: 'refused', refusal: WHOLE_PROJECT });
+    expect(opener.read().refusal).toEqual(WHOLE_PROJECT);
+  });
+
+  it('a store problem at the scene itself (path \'\') comes back at `scene`', async () => {
+    const problem = { path: '', rule: 'type' as const, expected: 'a scene', received: 'something else' };
+    const opener = createOpener({
+      store: { open: () => ({ ok: false, refusal: { why: 'invalid', problems: [problem] } }) },
+      announce: () => undefined,
+      decode: atOnce,
+      openProject: () => Promise.resolve({ ok: true, project: routeOf(2, 0, 'a') }),
+    });
+    const problems = [{ ...problem, path: 'scene' }];
+    expect(await opener.open(NOT_A_FILE)).toEqual({
+      kind: 'refused',
+      refusal: { reason: 'invalid', message: IO_WORDS.openedInvalid(problems), problems },
+    });
   });
 
   it('a stand-in Open that throws is given back as io’s catch-all', async () => {
@@ -433,7 +469,7 @@ describe('point 8: it keeps nothing of a file between opens but the refusal', ()
     expect(opener.read()).toBe(refused);
   });
 
-  it('the project opened is not held by the opener: changing it after changes nothing in the store', async () => {
+  it('the store keeps its own copy of the project opened: changing the one handed in changes nothing there', async () => {
     const project = routeOf(2, 0, 'a');
     const { store, opener } = sessionOf(empty(), { openProject: () => Promise.resolve({ ok: true, project }) });
     await opener.open(NOT_A_FILE);
@@ -443,5 +479,131 @@ describe('point 8: it keeps nothing of a file between opens but the refusal', ()
     expect(store.getState()).toBe(held);
     expect(held.project.scene.routes).toHaveLength(1);
     expect(held.project.images[0]?.bytes[0]).toBe(0x89);
+  });
+});
+
+describe('point 6 and ruling A: an open asked for during another’s completion', () => {
+  /** A's file, B's file and a session where both are decoded by hand (A's image first, then B's). */
+  async function twoOpens(onSay?: (message: string) => void) {
+    const decoder = byHand();
+    const [fileA, fileB] = await Promise.all([fileOf(routeOf(2, 0, 'a')), fileOf(routeOf(3, 0, 'b'))]);
+    const session = sessionOf(empty(), { decode: decoder.decode }, onSay);
+    return { decoder, fileA, fileB, ...session };
+  }
+
+  /** After A is opened with B asked for during its completion: B is held as under way, then opens in turn. */
+  async function thenB(run: Awaited<ReturnType<typeof twoOpens>>, b: () => Promise<unknown> | null) {
+    const { decoder, store, said, opener } = run;
+    expect(opener.read()).toEqual({ opening: true, refusal: null });
+    expect(said).toEqual([OPEN_WORDS.opened]);
+    expect(store.getState().project.scene).toEqual(routeOf(2, 0, 'a').scene);
+    await decoder.asked(2);
+    decoder.settle(1);
+    expect(await b()).toEqual({ kind: 'opened' });
+    expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(said).toEqual([OPEN_WORDS.opened, OPEN_WORDS.opened]);
+    expect(opener.read()).toEqual({ opening: false, refusal: null });
+  }
+
+  it('B asked for by a store subscriber during A’s store.open: A is opened, B is under way, then B opens', async () => {
+    const run = await twoOpens();
+    let b: Promise<unknown> | null = null;
+    run.store.subscribe(() => {
+      b ??= run.opener.open(run.fileB);
+    });
+    const a = run.opener.open(run.fileA);
+    await run.decoder.asked(1);
+    run.decoder.settle(0);
+    expect(await a).toEqual({ kind: 'opened' });
+    expect(b).not.toBeNull();
+    await thenB(run, () => b);
+  });
+
+  it('B asked for from inside announce: A is opened, B is under way, then B opens', async () => {
+    let ask: (() => void) | null = null;
+    const run = await twoOpens(() => {
+      const once = ask;
+      ask = null;
+      once?.();
+    });
+    let b: Promise<unknown> | null = null;
+    ask = () => {
+      b = run.opener.open(run.fileB);
+    };
+    const a = run.opener.open(run.fileA);
+    await run.decoder.asked(1);
+    run.decoder.settle(0);
+    expect(await a).toEqual({ kind: 'opened' });
+    expect(b).not.toBeNull();
+    await thenB(run, () => b);
+  });
+
+  it('A refused by the store after B was asked for during its store.open: A’s caller is told why; B’s state is held', async () => {
+    const decoder = byHand();
+    const fileB = await fileOf(routeOf(3, 0, 'b'));
+    const later: { b: Promise<unknown> | null } = { b: null };
+    const real = createStore({ project: empty(), nextId: counter('s') });
+    const refusing = {
+      open: (next: Project) => {
+        later.b ??= opener.open(fileB);
+        return real.open(next);
+      },
+    };
+    const project = routeOf(2, 0, 'a');
+    const bad = { ...project, scene: { ...project.scene, settings: { ...project.scene.settings, clock: { ...project.scene.settings.clock, holdAtStartMs: -5 } } } };
+    let first = true;
+    const opener = createOpener({
+      store: refusing,
+      announce: () => undefined,
+      decode: decoder.decode,
+      openProject: (bytes, decode) => {
+        if (first) {
+          first = false;
+          return Promise.resolve({ ok: true, project: bad });
+        }
+        return openProject(bytes, decode);
+      },
+    });
+    const a = await opener.open(NOT_A_FILE);
+    expect(a).toMatchObject({ kind: 'refused', refusal: { reason: 'invalid' } });
+    expect(opener.read()).toEqual({ opening: true, refusal: null });
+    await decoder.asked(1);
+    decoder.settle(0);
+    expect(await later.b).toEqual({ kind: 'opened' });
+    expect(opener.read()).toEqual({ opening: false, refusal: null });
+  });
+});
+
+describe('ruling B: a throwing announce', () => {
+  it('the open is still opened, `opening` goes false, the promise resolves, and a second open works', async () => {
+    let throws = true;
+    const { store, said, opener } = sessionOf(empty(), {}, () => {
+      if (throws) {
+        throws = false;
+        throw new Error('queue broke');
+      }
+    });
+    expect(await opener.open(await fileOf(routeOf(2, 0, 'a')))).toEqual({ kind: 'opened' });
+    expect(opener.read()).toEqual({ opening: false, refusal: null });
+    expect(store.getState().project.scene).toEqual(routeOf(2, 0, 'a').scene);
+    expect(await opener.open(await fileOf(routeOf(3, 0, 'b')))).toEqual({ kind: 'opened' });
+    expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(said).toEqual([OPEN_WORDS.opened, OPEN_WORDS.opened]);
+  });
+});
+
+describe('ruling C: a throwing listener', () => {
+  it('the others are still told each time, and open neither stops nor rejects', async () => {
+    const { opener } = sessionOf(empty());
+    opener.subscribe(() => {
+      if (opener.read().opening) throw new Error('listener broke');
+    });
+    const seen: boolean[] = [];
+    opener.subscribe(() => {
+      seen.push(opener.read().opening);
+    });
+    expect(await opener.open(await fileOf(routeOf(2, 0, 'a')))).toEqual({ kind: 'opened' });
+    expect(seen).toEqual([true, false]);
+    expect(opener.read()).toEqual({ opening: false, refusal: null });
   });
 });
