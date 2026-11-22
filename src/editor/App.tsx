@@ -5,15 +5,20 @@
 // announcements are written to (visually hidden, empty at rest), and Help: its button, in the frame's header, and its
 // dialog, opened also by `?`. Then the play bar (PlayBar): "Skip to start", "Play" or "Pause" and "Skip to end", each
 // calling the session's editor's transport as its key does, and the line saying why Play is off while there is nothing
-// to play (on this page, always: the scene is empty until stage 6 brings Open). In the bar's group, after the buttons, the timeline (Timeline): a slider
+// to play (until a project is opened: the page starts on an empty scene). In the bar's group, after the buttons, the timeline (Timeline): a slider
 // over the position, reading the time now of the whole time; an empty scene is 2 s long (Hold at end's), so it moves.
 // All of it is drawn through the frame (Frame): its header holds the page's name and Help; its slots, the paragraph
 // and the play bar today. App is the wiring.
+// Stage 6: "Open project" (OpenButton) in the frame's header before Help, and its notice (OpenNotice: the busy line, or
+// a refusal's alert) first in main, both drawn from the session's one opener. When the refusal's Close is pressed, focus
+// goes to "Open project" (the notice is gone, and focus must not fall to the page's body), as Help returns focus to its
+// opener.
 import { Button, Link } from '@carbon/react';
 import { useEffect, useRef, useState } from 'react';
 import { Frame } from './shell/Frame';
 import { Help } from './shell/Help';
 import { listenForKeys, MAC } from './shell/keydown';
+import { OpenButton, OpenNotice, type OpenProps } from './shell/Open';
 import { PlayBar } from './shell/PlayBar';
 import { holdRegion, pageSession } from './shell/session';
 import { Timeline } from './shell/Timeline';
@@ -22,6 +27,17 @@ import { Timeline } from './shell/Timeline';
  *  App does not make the play bar subscribe anew. (The bar holds two subscriptions, one per hook.) */
 const toldOfChange = (listener: () => void) => pageSession().store.subscribe(listener);
 const playsNow = () => pageSession().store.playback().playing;
+
+/** The notice's opener: the session's, but Close also puts focus on "Open project" before the notice goes. */
+const noticeOpener: OpenProps['opener'] = {
+  read: () => pageSession().opener.read(),
+  subscribe: (listener) => pageSession().opener.subscribe(listener),
+  openFile: (file) => pageSession().opener.openFile(file),
+  dismiss: () => {
+    document.getElementById('open-project')?.focus();
+    pageSession().opener.dismiss();
+  },
+};
 
 export function App() {
   const [helpOpen, setHelpOpen] = useState(false);
@@ -35,6 +51,8 @@ export function App() {
   );
   return (
     <Frame
+      open={<OpenButton opener={pageSession().opener} />}
+      notice={<OpenNotice opener={noticeOpener} />}
       help={
         <Button
           id="help"

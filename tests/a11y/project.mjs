@@ -36,12 +36,22 @@
 // and the play bar, and the named slots that later items fill, which draw nothing yet. Help is now met before the
 // progress link: FOCUS, the shell's snapshot and the waits for the h1 (now in the header) follow. The theme's colours
 // come from the University's tokens (buttons, links, the focused knob); the contrast and focus rows measure them.
+// CORE-05, stage 6 (2026-11-22, brief 76): "Open project" in the banner before Help (FOCUS and the shell's snapshot
+// follow; the page reads the same blocks at rest), over a file input that is `hidden`, so in neither the tree nor the
+// tab order. The journeys open the journeys' project (the golden src/editor/shell/goldens/two-stops.project.json,
+// io's Save's own project.json, zipped here with jszip; 6 s long) through the browser's chooser: "Project opened" said
+// once (4.1.3), a project opened over a playing says no pause and stands at 0 (DEF-67), a file that is no project
+// refused by one alert in io's words with the status region silent (4.1.3), its Close putting focus back on the
+// button (2.4.3), and the timeline neither echoing an older position during a playing nor pulling back a press held
+// still (2.5.2); pointer-cancellation meets "Open project" too (no chooser on the down-event or on a press moved off).
+// The `user-input` feature stays unknown: turned present, the report failed 1.3.5, 3.3.2, 3.3.3, 3.3.4 and 3.3.6 for
+// want of a j-forms journey crediting them (brief 77, ruling 3: owed at the close).
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
 // (2.4.3); each route and its title (2.4.2); the one place the shell links to. A change to the shell is reviewed here.
 const READING = ['Route Plotter', 'Version 4 is being built here.', 'Timeline', 'Add at least two points to a route to play.'];
-const FOCUS = ['button "Help"', 'link "GitHub"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
+const FOCUS = ['button "Open project"', 'button "Help"', 'link "GitHub"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
 const PROGRESS = 'https://github.com/djDAOjones/route-plotter';
 // The shell's one status region, and the words the editor's keys say in it (the editor's transport's own, WORDS).
@@ -96,6 +106,47 @@ const focusIs = (page, sel) => page.evaluate((s) => !!document.activeElement?.ma
 const backOnHelp = (page) => page.waitForFunction((s) => !!document.activeElement?.matches(s), HELP, { timeout: 2000 }).then(() => true, () => false);
 // The status region holds a message about 2 s: wait for it to empty before a check that it says nothing.
 const quiet = (page) => page.waitForFunction((s) => !document.querySelector(s)?.textContent, STATUS, { timeout: 5000 }).then(() => true, () => false);
+// Open (stage 6): its button; the journeys' project, the golden io's Save writes (openGolden.test.ts proves it), 6 s
+// long, zipped here as a saved file is; a text file io refuses, in its words.
+const OPEN = '#open-project';
+const OPENED = 'Project opened';
+const PAUSED = 'Animation paused';
+const LENGTH_MS = 6000;
+const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damaged. Nothing was opened.';
+// (No import statement: the run's loader would make this file CommonJS. Node's own modules are reached by
+// `process.getBuiltinModule`, jszip through a require made at the repository's root (the run's A11Y_ROOT, else the
+// working folder); both only when a journey asks for the file.)
+const projectFile = async () => {
+  const root = process.env.A11Y_ROOT || process.cwd();
+  const zip = new (process.getBuiltinModule('node:module').createRequire(`${root}/package.json`)('jszip'))();
+  zip.file('project.json', process.getBuiltinModule('node:fs').readFileSync(`${root}/src/editor/shell/goldens/two-stops.project.json`));
+  return { name: 'two-stops.zip', mimeType: 'application/zip', buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }) };
+};
+const TEXT_FILE = { name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Not a project.\n') };
+// Presses "Open project" (a real click, or `key` with focus on it) and chooses `file` in the chooser it opens; false
+// when no chooser opened.
+const choose = async (page, file, key) => {
+  const chooser = page.waitForEvent('filechooser', { timeout: 3000 }).then((c) => c, () => null);
+  if (key) { await page.locator(OPEN).focus(); await page.keyboard.press(key); } else await page.locator(OPEN).click();
+  const c = await chooser;
+  if (c && file) await c.setFiles(file);
+  return c !== null;
+};
+// Records every text the status region shows from now on, in order; the getter gives the non-empty ones.
+const hear = async (page) => {
+  await page.evaluate((s) => { const r = document.querySelector(s); window.__heard = []; new MutationObserver(() => window.__heard.push(r.textContent ?? '')).observe(r, { childList: true, characterData: true, subtree: true }); }, STATUS);
+  return async () => (await page.evaluate(() => window.__heard)).filter(Boolean);
+};
+const saysOpened = (page) => page.waitForFunction(([s, w]) => document.querySelector(s)?.textContent === w, [STATUS, OPENED], { timeout: 6000 }).then(() => true, () => false);
+// The timeline's position at each of `n` frames: [the frame's time, aria-valuenow].
+const sample = (page, n) => page.evaluate(([sel, count]) => new Promise((resolve) => {
+  const s = [], el = document.querySelector(sel);
+  const tick = (t) => { s.push([t, Number(el.getAttribute('aria-valuenow'))]); if (s.length < count) requestAnimationFrame(tick); else resolve(s); };
+  requestAnimationFrame(tick);
+}), [TIMELINE, n]);
+const backwards = (s) => s.slice(1).flatMap(([, v], i) => (v < s[i][1] ? [`${s[i][1]} to ${v}`] : []));
+const playLabel = (page) => page.locator(PLAY).textContent();
+const alerts = (page) => page.locator('[role=alert]');
 // Open Help by its button from the keyboard, Tab to its switch, press Space, close it by Escape. The switch is drawn
 // only while Help is open: what it said before and after the press, and whether focus came back to "Help".
 async function flipByKeyboard(page) {
@@ -208,6 +259,7 @@ export default {
       snapshot: [
         '- banner "Route Plotter":',
         '  - heading "Route Plotter" [level=1]',
+        '  - button "Open project"',
         '  - button "Help"',
         '- main:',
         '  - paragraph:',
@@ -279,6 +331,12 @@ export default {
     { name: 'play-refused-by-k', state: 'shell', steps: [{ press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY },
     { name: 'play-refused-by-k-on-button', state: 'shell', steps: [{ focus: SKIP_START }, { press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_START) },
     { name: 'play-refused-by-j-on-button', state: 'shell', steps: [{ focus: SKIP_START }, { press: 'j' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_START) },
+    // "Open project" (stage 6): Enter and Space on it open the browser's file chooser, and a project chosen through it
+    // opens; Space starts no playing (Space is Play's key elsewhere; on the empty scene a leak would say why Play is
+    // off); K on it is K anywhere (on the empty scene, the refusal), focus kept. No key opens a file elsewhere.
+    { name: 'open-by-enter-on-button', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => (await choose(page, await projectFile(), 'Enter')) && (await saysOpened(page)) && focusOn(page, OPEN) },
+    { name: 'open-by-space-plays-nothing', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => (await choose(page, null, 'Space')) && (await neverSays(page, NOTHING_TO_PLAY)) && !(await said(page)) && focusOn(page, OPEN) },
+    { name: 'play-refused-by-k-on-open', state: 'shell', steps: [{ focus: OPEN }, { press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, OPEN) },
     { name: 'play-refused-by-l-on-button', state: 'shell', steps: [{ focus: SKIP_END }, { press: 'l' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_END) },
     // The timeline: an arrow moves it one thousandth and Shift with it four (Carbon's), and the words hold until a whole
     // second is passed; End off it skips and its thumb follows, drawn at the track's end, and Home brings it back to the
@@ -441,8 +499,9 @@ export default {
       // kept, and the moves and release after it change nothing), and the release completes it with no undo step.
       // 2.5.7: its one drag, the thumb along the track, has a single-pointer alternative with the same result: a drag of
       // the thumb completed at 70 % of the track, then, on a fresh page, a whole press on the track at the same point,
-      // the two positions compared. Every press goes through the pointer adapter, so a touch run can credit it. Any other
-      // control needs its own journey.
+      // the two positions compared. Every press goes through the pointer adapter, so a touch run can credit it. "Open project"
+      // (stage 6) opens the browser's file chooser on a whole press only, none on the down-event or on a press moved
+      // off. Any other control needs its own journey.
       name: 'pointer-cancellation',
       method: 'j-pointer',
       rows: ['2.5.2', '2.5.7'],
@@ -451,14 +510,19 @@ export default {
         const count = await page.locator(CONTROLS).filter({ visible: true }).count();
         const problems = [], done = [], slider = [];
         let compared = '';
+        // "Open project" acts by opening the browser's file chooser: each one opened is counted (stage 6).
+        let choosers = 0;
+        page.on('filechooser', () => { choosers += 1; });
         for (let i = 0; i < count; i++) {
           await open('shell');
+          choosers = 0;
           const control = page.locator(CONTROLS).filter({ visible: true }).nth(i);
           const name = await named(control);
           const href = await control.getAttribute('href');
           const isHelp = await control.evaluate((e, s) => e.matches(s), HELP);
           const skip = await control.evaluate((e, [a, b]) => (e.matches(a) ? 'start' : e.matches(b) ? 'end' : ''), [SKIP_START, SKIP_END]);
           const offPlay = await control.evaluate((e, s) => e.matches(s) && e.disabled, PLAY);
+          const isOpen = await control.evaluate((e, s) => e.matches(s), OPEN);
           if (await control.evaluate((e, s) => e.matches(s), TIMELINE)) {
             const bad = [];
             // 2.5.2: a press on the track and a drag, aborted by Escape before the release.
@@ -517,7 +581,7 @@ export default {
             else { slider.push(`${name}`); compared = `a drag of the thumb completed at 70 % of the track held ${dragged.now} (${dragged.text}), and a whole press on the track at the same point ${kept.now} (${kept.text}), within ${tolerance} (two pixels); neither made an undo step`; }
             continue;
           }
-          if (!href && !isHelp && !skip && !offPlay) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
+          if (!href && !isHelp && !skip && !offPlay && !isOpen) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
           const box = await control.boundingBox();
           const x = box.x + box.width / 2, y = box.y + box.height / 2;
           // A point well clear of every control, to move the press off to before release.
@@ -531,7 +595,7 @@ export default {
           }, CONTROLS);
           if (!off) { problems.push(`${name}: no clear point beside it to move a press off to`); continue; }
           const start = page.url();
-          const acted = async () => page.url() !== start || (await helpDialog(page).isVisible()) || (await said(page)) !== '';
+          const acted = async () => page.url() !== start || (await helpDialog(page).isVisible()) || (await said(page)) !== '' || choosers > 0;
           await pointer.down(x, y);
           await page.waitForTimeout(250);
           if (await acted()) { problems.push(`${name} acted on the down-event`); continue; }
@@ -541,6 +605,12 @@ export default {
           if (await acted()) { problems.push(`${name}: a press moved off it before release still acted`); continue; }
           await pointer.down(x, y);
           await pointer.up();
+          if (isOpen) {
+            await page.waitForTimeout(400);
+            if (choosers !== 1) problems.push(`${name}: a whole press opened ${choosers} file chooser(s), not one`);
+            else done.push(`${name} (the file chooser on the release)`);
+            continue;
+          }
           if (offPlay) {
             await page.waitForTimeout(400);
             if (await acted()) problems.push(`${name}, disabled, acted on a whole press`);
@@ -984,6 +1054,146 @@ export default {
         const forms = await page.locator('form').count();
         const inApp = await page.evaluate((origin) => [...document.querySelectorAll('a[href]')].filter((a) => a.origin === origin && a.pathname !== location.pathname).length, ORIGIN);
         record('CONF03', !PROCESSES.length && !forms && !inApp, PROCESSES.length ? `${PROCESSES.length} declared process(es): write the journey that runs every step of each` : forms || inApp ? `${forms} form(s) and ${inApp} link(s) to other pages of the app: declare the process they present in PROCESSES and run every step` : 'the shell presents no process: no form and no link to another of the app\'s pages; its one link leaves Route Plotter, so its destination is no step of a Route Plotter process');
+      },
+    },
+    {
+      // 4.1.3 (stage 6): "Open project" pressed and the journeys' project chosen: the status region says "Project
+      // opened", once, and nothing else, with no alert and focus kept on the button; the line saying why Play is off is
+      // gone; Play pressed plays from 0, the position rising. Criterion 3's open half on the page.
+      name: 'open-a-project',
+      method: 'j-forms',
+      rows: ['4.1.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const heard = await hear(page);
+        const wrong = [];
+        if (!(await choose(page, await projectFile()))) wrong.push('a press on "Open project" opened no file chooser');
+        if (!(await saysOpened(page))) wrong.push(`the status region never said "${OPENED}"`);
+        await quiet(page);
+        const texts = await heard();
+        if (JSON.stringify(texts) !== JSON.stringify([OPENED])) wrong.push(`the status region said ${JSON.stringify(texts)}, not "${OPENED}" once and nothing else`);
+        if (await alerts(page).count()) wrong.push('an alert showed');
+        if (!(await focusOn(page, OPEN))) wrong.push('focus left "Open project"');
+        if (await page.getByText(NOTHING_TO_PLAY).count()) wrong.push('the line saying why Play is off still shows');
+        const from = (await atNow(page)).now;
+        await page.locator(PLAY).click();
+        const played = await sample(page, 30);
+        const last = played.at(-1)[1];
+        if (from !== 0) wrong.push(`the position before Play was ${from}, not 0`);
+        if (!(last > 0) || backwards(played).length) wrong.push(`after Play the position went ${played.map(([, v]) => v).join(', ')}, not rising from 0`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${OPENED}" said once and nothing else, no alert, focus kept on "Open project", the reason line gone; Play played from 0 to ${last} thousandths in 30 frames`);
+      },
+    },
+    {
+      // 4.1.3 and DEF-67 (stage 6): a project opened while another plays: the status region never says "Animation
+      // paused", says "Project opened", and the position is back at 0 with nothing playing.
+      name: 'open-over-a-playing',
+      method: 'j-forms',
+      rows: ['4.1.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        await choose(page, await projectFile());
+        await saysOpened(page);
+        await page.locator(PLAY).click();
+        const playing = await comesTo(page, 'n >= 50');
+        const heard = await hear(page);
+        const wrong = [];
+        if (!playing) wrong.push('the first project did not play');
+        await choose(page, await projectFile());
+        if (!(await neverSays(page, PAUSED))) wrong.push(`the status region said "${PAUSED}"`);
+        if (!(await saysOpened(page))) wrong.push(`the status region never said "${OPENED}"`);
+        const texts = await heard();
+        if (texts.includes(PAUSED)) wrong.push(`"${PAUSED}" was among what the region said: ${JSON.stringify(texts)}`);
+        const still = await sample(page, 20);
+        if (still.some(([, v]) => v !== 0)) wrong.push(`the position went ${still.map(([, v]) => v).join(', ')}, not held at 0`);
+        if ((await playLabel(page)) !== 'Play') wrong.push(`the play button reads "${await playLabel(page)}", not "Play"`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `opened over a playing: "${OPENED}" said, "${PAUSED}" never (the region said ${JSON.stringify(texts)}), the position at 0 for 20 frames, Play offered`);
+      },
+    },
+    {
+      // 4.1.3 (stage 6): a file that is no project is refused by one alert (role alert, said by itself), titled with the
+      // file's name and holding io's sentence whole, the status region saying nothing; focus stays on "Open project"
+      // and the play bar is as it was. After Close the same file chosen again is a new choice, refused again.
+      name: 'refused-not-a-project',
+      method: 'j-forms',
+      rows: ['4.1.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const heard = await hear(page);
+        const bar = async () => JSON.stringify([await playLabel(page), await page.locator(PLAY).isDisabled(), (await atNow(page)).now, await page.getByText(NOTHING_TO_PLAY).count()]);
+        const before = await bar();
+        const wrong = [];
+        await choose(page, TEXT_FILE);
+        await alerts(page).first().waitFor({ timeout: 5000 }).catch(() => undefined);
+        const count = await alerts(page).count();
+        const words = ((await alerts(page).first().textContent({ timeout: 2000 }).catch(() => '')) ?? '').replace(/\s+/g, ' ');
+        const title = ((await alerts(page).first().locator('.cds--inline-notification__title').textContent({ timeout: 2000 }).catch(() => '')) ?? '').trim();
+        if (count !== 1) wrong.push(`${count} alert(s), not one`);
+        if (title !== `Could not open ${TEXT_FILE.name}`) wrong.push(`the alert's title is ${JSON.stringify(title)}, not "Could not open ${TEXT_FILE.name}"`);
+        if (!words.includes(NOT_A_PROJECT)) wrong.push(`the alert does not hold io's sentence whole: ${JSON.stringify(words)}`);
+        if (await neverSays(page, OPENED, 2500) === false || (await heard()).length) wrong.push(`the status region said ${JSON.stringify(await heard())}`);
+        if (!(await focusOn(page, OPEN))) wrong.push('focus left "Open project"');
+        if ((await bar()) !== before) wrong.push(`the play bar was ${before} and is ${await bar()}`);
+        await page.getByRole('button', { name: 'Close' }).click();
+        const gone = !(await alerts(page).count());
+        if (!gone) wrong.push('Close left the alert');
+        await choose(page, TEXT_FILE);
+        const again = await alerts(page).first().waitFor({ timeout: 5000 }).then(() => true, () => false);
+        if (!again) wrong.push('the same file chosen again showed no alert');
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `one alert, "Could not open ${TEXT_FILE.name}" and io's sentence whole; the status region silent; focus kept; the play bar as it was; Close removed it, and the same file chosen again was refused again`);
+      },
+    },
+    {
+      // 2.4.3 (stage 6): Close on a refusal's alert removes it and puts focus on "Open project", not on the page's
+      // body, and Tab from there goes on to "Help" as the reviewed order has it.
+      name: 'refused-close-returns-focus',
+      method: 'j-order',
+      rows: ['2.4.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        await choose(page, TEXT_FILE);
+        await alerts(page).first().waitFor({ timeout: 5000 }).catch(() => undefined);
+        const wrong = [];
+        if (!(await alerts(page).count())) wrong.push('no alert showed');
+        await page.getByRole('button', { name: 'Close' }).click();
+        if (await alerts(page).count()) wrong.push('Close left the alert');
+        if (!(await focusOn(page, OPEN))) wrong.push(`focus went to ${await page.evaluate(() => document.activeElement?.tagName ?? 'nothing')}, not "Open project"`);
+        await page.keyboard.press('Tab');
+        if (!(await focusOn(page, HELP))) wrong.push('Tab from "Open project" did not go on to "Help"');
+        record('2.4.3', !wrong.length, wrong.length ? wrong.join('; ') : 'Close removed the alert and put focus on "Open project"; Tab went on to "Help"');
+      },
+    },
+    {
+      // 2.5.2 (stage 6, the echo, HANDOVER-65's test): Carbon's slider reports every change of its thumb, the echo of a
+      // new position included; an echo of an older one would read as a nudge and scrub back. During a playing with no
+      // input for 60 frames the position never goes backwards and gains what the frame clock gained (a scrub would lose
+      // time); then a press held still on the track at 50 % moves the position there on the down-event, as a
+      // provisional scrub, and nothing pulls it back after: it never goes backwards and the playing goes on from there.
+      name: 'the-echo',
+      method: 'j-pointer',
+      rows: ['2.5.2'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('shell');
+        await choose(page, await projectFile());
+        await saysOpened(page);
+        await page.locator(PLAY).click();
+        const free = await sample(page, 60);
+        const moving = free.filter(([, v]) => v > 0);
+        const wrong = [];
+        if (moving.length < 30) wrong.push(`the playing moved in only ${moving.length} of 60 frames`);
+        const [[t0, v0], [t1, v1]] = [moving[0] ?? [0, 0], moving.at(-1) ?? [0, 0]];
+        const gained = ((v1 - v0) * LENGTH_MS) / 1000, clock = t1 - t0;
+        if (backwards(free).length) wrong.push(`with no input the position went back: ${backwards(free).join(', ')}`);
+        if (Math.abs(gained - clock) > 50) wrong.push(`with no input the position gained ${gained} ms over ${Math.round(clock)} ms of frames`);
+        const at = await onTrack(page, 0.5);
+        await pointer.down(at.x, at.y);
+        const held = await sample(page, 45);
+        await pointer.up();
+        const first = held[0][1], end = held.at(-1)[1];
+        if (Math.abs(first - 500) > 10) wrong.push(`the press at 50 % put the position at ${first}`);
+        if (backwards(held).length) wrong.push(`with the press held still the position went back: ${backwards(held).join(', ')}`);
+        if (!(end > first)) wrong.push(`with the press held still the playing did not go on (${first} to ${end})`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `no input: never back, ${gained} ms gained over ${Math.round(clock)} ms of frames; a press held still at 50 %: at ${first}, never pulled back, playing on to ${end}`);
       },
     },
   ],

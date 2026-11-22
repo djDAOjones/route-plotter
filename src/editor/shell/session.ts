@@ -16,12 +16,18 @@
 //   one reader of the length (DEF-42.1's reader's half).
 // - The switch for single-key shortcuts (D183) is held here for the visit, on to begin with: the listener reads it at
 //   each key, Help shows and sets it. It is not stored (CORE-09's), not a scene setting, and makes no undo step.
+// - Stage 6: the opener (openLogic.ts), made once beside the transports from the session's own store, the queue's
+//   `announce` and the browser's decoder (decode.ts): Open's button and notice are drawn from it. An opened project's
+//   picture is not yet handed to the player's transport (`image: null` below, the preview's piece), so a scene is
+//   measured as a square until then.
 import { newScene } from '../../core/model/scene';
 import { createTransport, type FrameSource } from '../../player/transport/transport';
 import { createAnnouncementQueue, type Priority } from '../kit/announce';
 import { createStore, type Store } from '../store/store';
 import { createEditorTransport, hasSomethingToPlay, WORDS, type EditorTransport } from '../transport/transport';
+import { decode } from './decode';
 import { holdForVisit, type Held } from './held';
+import { createOpener, type Opener } from './openLogic';
 import { createLengthReader, createTimeline, type Timeline } from './timelineLogic';
 
 export interface PageSession {
@@ -33,6 +39,8 @@ export interface PageSession {
   readonly timeline: Timeline;
   /** Whether single-key shortcuts are on (D183). */
   readonly singleKeys: Held<boolean>;
+  /** Open's opener: a project file's bytes into the store (stage 6). */
+  readonly opener: Opener;
 }
 
 /** The live region the page draws now, or null before it is drawn and after it is gone. */
@@ -88,7 +96,8 @@ function make(): PageSession {
   });
   const length = createLengthReader({ store, length: () => player.length(), frames });
   const timeline = createTimeline({ store, transport, length });
-  return Object.freeze({ store, transport, canPlay, timeline, singleKeys: holdForVisit(true) });
+  const opener = createOpener({ store, announce, decode });
+  return Object.freeze({ store, transport, canPlay, timeline, singleKeys: holdForVisit(true), opener });
 }
 
 let made: PageSession | null = null;
