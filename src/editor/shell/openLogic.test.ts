@@ -8,6 +8,7 @@ import type { Project } from '../../adapters/io/format';
 import type { Decode } from '../../adapters/io/images';
 import { openProject } from '../../adapters/io/open';
 import { saveProject } from '../../adapters/io/save';
+import { ARCHIVE_LIMITS } from '../../adapters/io/limits';
 import { WORDS as IO_WORDS } from '../../adapters/io/words';
 import { newLine, newPoint, newRoute, newScene, type IdSource } from '../../core/model/scene';
 import { AT_START, createTransport, FIRST_FRAME_MS, heldPlayback, type FrameSource } from '../../player/transport/transport';
@@ -233,7 +234,7 @@ describe('point 2 (ruling 3b): a refusal changes nothing, is given back and held
     const file = await fileOf(routeOf(2, 0, 'a'));
     const told = tellings.count;
     const next = opener.open(file);
-    expect(opener.read()).toEqual({ opening: true, refusal: null });
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: null });
     expect(tellings.count).toBe(told + 1);
     expect(await next).toEqual({ kind: 'opened' });
     expect(opener.read().refusal).toBeNull();
@@ -397,7 +398,7 @@ describe('point 6 (ruling 3f): only the latest open asked for reaches the store'
     expect(store.getState()).toBe(afterB);
     expect(opens.store).toBe(1);
     expect(said).toEqual([OPEN_WORDS.opened]);
-    expect(opener.read()).toEqual({ opening: false, refusal: null });
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
   });
 
   it('the earlier settling first: it changes nothing and says nothing; the later then opens', async () => {
@@ -428,7 +429,7 @@ describe('point 6 (ruling 3f): only the latest open asked for reaches the store'
     const a = opener.open(NOT_A_FILE);
     const b = opener.open(file);
     expect(await a).toEqual({ kind: 'superseded' });
-    expect(opener.read()).toEqual({ opening: true, refusal: null });
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: null });
     await decoder.asked(1);
     decoder.settle(0);
     expect(await b).toEqual({ kind: 'opened' });
@@ -454,17 +455,17 @@ describe('point 7: whether an open is under way is held, with a telling when it 
 });
 
 describe('point 8: it keeps nothing of a file between opens but the refusal', () => {
-  it('its state holds `opening` and `refusal` only, frozen, the same object until one changes', async () => {
+  it('its state holds `opening`, `refusal` and `name` only, frozen, the same object until one changes', async () => {
     const { opener } = sessionOf(empty());
     const first = opener.read();
-    expect(Object.keys(first).sort()).toEqual(['opening', 'refusal']);
+    expect(Object.keys(first).sort()).toEqual(['name', 'opening', 'refusal']);
     expect(Object.isFrozen(first)).toBe(true);
     expect(opener.read()).toBe(first);
     await opener.open(await fileOf(routeOf(2, 0, 'a')));
-    expect(opener.read()).toEqual({ opening: false, refusal: null });
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
     await opener.open(NOT_A_FILE);
     const refused = opener.read();
-    expect(Object.keys(refused).sort()).toEqual(['opening', 'refusal']);
+    expect(Object.keys(refused).sort()).toEqual(['name', 'opening', 'refusal']);
     expect(Object.isFrozen(refused)).toBe(true);
     expect(opener.read()).toBe(refused);
   });
@@ -494,7 +495,7 @@ describe('point 6 and ruling A: an open asked for during another’s completion'
   /** After A is opened with B asked for during its completion: B is held as under way, then opens in turn. */
   async function thenB(run: Awaited<ReturnType<typeof twoOpens>>, b: () => Promise<unknown> | null) {
     const { decoder, store, said, opener } = run;
-    expect(opener.read()).toEqual({ opening: true, refusal: null });
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: null });
     expect(said).toEqual([OPEN_WORDS.opened]);
     expect(store.getState().project.scene).toEqual(routeOf(2, 0, 'a').scene);
     await decoder.asked(2);
@@ -502,7 +503,7 @@ describe('point 6 and ruling A: an open asked for during another’s completion'
     expect(await b()).toEqual({ kind: 'opened' });
     expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
     expect(said).toEqual([OPEN_WORDS.opened, OPEN_WORDS.opened]);
-    expect(opener.read()).toEqual({ opening: false, refusal: null });
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
   }
 
   it('B asked for by a store subscriber during A’s store.open: A is opened, B is under way, then B opens', async () => {
@@ -566,11 +567,11 @@ describe('point 6 and ruling A: an open asked for during another’s completion'
     });
     const a = await opener.open(NOT_A_FILE);
     expect(a).toMatchObject({ kind: 'refused', refusal: { reason: 'invalid' } });
-    expect(opener.read()).toEqual({ opening: true, refusal: null });
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: null });
     await decoder.asked(1);
     decoder.settle(0);
     expect(await later.b).toEqual({ kind: 'opened' });
-    expect(opener.read()).toEqual({ opening: false, refusal: null });
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
   });
 });
 
@@ -584,7 +585,7 @@ describe('ruling B: a throwing announce', () => {
       }
     });
     expect(await opener.open(await fileOf(routeOf(2, 0, 'a')))).toEqual({ kind: 'opened' });
-    expect(opener.read()).toEqual({ opening: false, refusal: null });
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
     expect(store.getState().project.scene).toEqual(routeOf(2, 0, 'a').scene);
     expect(await opener.open(await fileOf(routeOf(3, 0, 'b')))).toEqual({ kind: 'opened' });
     expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
@@ -604,6 +605,241 @@ describe('ruling C: a throwing listener', () => {
     });
     expect(await opener.open(await fileOf(routeOf(2, 0, 'a')))).toEqual({ kind: 'opened' });
     expect(seen).toEqual([true, false]);
-    expect(opener.read()).toEqual({ opening: false, refusal: null });
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
+  });
+});
+
+/** A file whose read gives `bytes` at once, counting its reads; `size` is the bytes' unless one is given. */
+function fileOfBytes(name: string, bytes: Uint8Array, size = bytes.byteLength) {
+  const reads = { count: 0 };
+  const file = {
+    name,
+    size,
+    arrayBuffer: () => {
+      reads.count += 1;
+      return Promise.resolve(bytes.slice().buffer);
+    },
+  };
+  return { file, reads };
+}
+
+/** A file whose read the test settles by hand (`give`) or fails (`fail`). */
+function fileByHand(name: string, bytes: Uint8Array) {
+  let give: () => void = () => undefined;
+  let fail: () => void = () => undefined;
+  const file = {
+    name,
+    size: bytes.byteLength,
+    arrayBuffer: () =>
+      new Promise<ArrayBuffer>((resolve, reject) => {
+        give = () => {
+          resolve(bytes.slice().buffer);
+        };
+        fail = () => {
+          reject(new Error('NotReadableError'));
+        };
+      }),
+  };
+  return { file, give: () => { give(); }, fail: () => { fail(); } };
+}
+
+/** An io Open that counts the bytes handed to it and is io's own. */
+function countingOpen() {
+  const handed: Uint8Array[] = [];
+  return {
+    handed,
+    openProject: (bytes: Uint8Array, decode: Decode) => {
+      handed.push(bytes);
+      return openProject(bytes, decode);
+    },
+  };
+}
+
+describe('openFile: one ask, as open; once read, open’s own path', () => {
+  it('a file read whole opens as its bytes do: the store takes it, "Project opened" is said, the state is at rest', async () => {
+    const io = countingOpen();
+    const bytes = await fileOf(routeOf(2, 0, 'a'));
+    const { file, reads } = fileOfBytes('walk.zip', bytes);
+    const { store, said, opener, opens, tellings } = sessionOf(empty(), { openProject: io.openProject });
+    expect(await opener.openFile(file)).toEqual({ kind: 'opened' });
+    expect(reads.count).toBe(1);
+    expect(io.handed).toHaveLength(1);
+    expect([...(io.handed[0] ?? [])]).toEqual([...bytes]);
+    expect(opens.store).toBe(1);
+    expect(store.getState().project.scene).toEqual(routeOf(2, 0, 'a').scene);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
+    expect(tellings.count).toBe(2);
+  });
+
+  it('a file io refuses: io’s refusal as it stands, held with the file’s name; nothing changes or is said', async () => {
+    const { store, said, opener, opens } = sessionOf(routeOf(2, 0, 'a'));
+    const before = store.getState();
+    const result = await opener.openFile(fileOfBytes('notes.zip', NOT_A_FILE).file);
+    const io = await openProject(NOT_A_FILE, atOnce);
+    if (result.kind !== 'refused' || io.ok) throw new Error('refused expected');
+    expect(result.refusal).toEqual(io.refusal);
+    expect(opener.read()).toEqual({ opening: false, refusal: result.refusal, name: 'notes.zip' });
+    expect(store.getState()).toBe(before);
+    expect(opens.store).toBe(0);
+    expect(said).toEqual([]);
+  });
+});
+
+describe('point 9: a file too large is never read', () => {
+  it('over 50 MB: arrayBuffer is not called; io’s own refusal for that size, the same as io gives 50 MB and one byte', async () => {
+    const io = countingOpen();
+    const { file, reads } = fileOfBytes('huge.zip', NOT_A_FILE, ARCHIVE_LIMITS.zipBytes + 1);
+    const { store, said, opener, opens } = sessionOf(routeOf(2, 0, 'a'), { openProject: io.openProject });
+    const before = store.getState();
+    const result = await opener.openFile(file);
+    expect(reads.count).toBe(0);
+    expect(io.handed).toHaveLength(0);
+    const ioOwn = await openProject(new Uint8Array(ARCHIVE_LIMITS.zipBytes + 1), atOnce);
+    if (result.kind !== 'refused' || ioOwn.ok) throw new Error('refused expected');
+    expect(result.refusal).toEqual(ioOwn.refusal);
+    expect(result.refusal).toEqual({ reason: 'too-large', message: IO_WORDS.openedTooLarge('a project file holds at most 50 MB') });
+    expect(opener.read()).toEqual({ opening: false, refusal: result.refusal, name: 'huge.zip' });
+    expect(store.getState()).toBe(before);
+    expect(opens.store).toBe(0);
+    expect(said).toEqual([]);
+  });
+
+  it('at exactly 50 MB the file is read and opened', async () => {
+    const { file, reads } = fileOfBytes('edge.zip', await fileOf(routeOf(2, 0, 'a')), ARCHIVE_LIMITS.zipBytes);
+    const { opener } = sessionOf(empty());
+    expect(await opener.openFile(file)).toEqual({ kind: 'opened' });
+    expect(reads.count).toBe(1);
+  });
+});
+
+describe('point 10: a file that cannot be read', () => {
+  const unreadable = { reason: 'unsafe', message: IO_WORDS.openedUnsafe('it could not be read') };
+
+  it('a read that rejects: nothing changes, refused in io’s words, held with the name', async () => {
+    const io = countingOpen();
+    const { store, said, opener, opens } = sessionOf(routeOf(2, 0, 'a'), { openProject: io.openProject });
+    const before = store.getState();
+    const by = fileByHand('moved.zip', NOT_A_FILE);
+    const asked = opener.openFile(by.file);
+    by.fail();
+    expect(await asked).toEqual({ kind: 'refused', refusal: unreadable });
+    expect(opener.read()).toEqual({ opening: false, refusal: unreadable, name: 'moved.zip' });
+    expect(io.handed).toHaveLength(0);
+    expect(store.getState()).toBe(before);
+    expect(opens.store).toBe(0);
+    expect(said).toEqual([]);
+  });
+
+  it('a read that throws at once is refused the same, and openFile does not reject', async () => {
+    const { opener } = sessionOf(empty());
+    const file = {
+      name: 'gone.zip',
+      size: 10,
+      arrayBuffer: (): Promise<ArrayBuffer> => {
+        throw new Error('NotFoundError');
+      },
+    };
+    expect(await opener.openFile(file)).toEqual({ kind: 'refused', refusal: unreadable });
+  });
+});
+
+describe('point 11: the latest ask wins across the read too', () => {
+  it('a later open asked while a file is read opens; the file, read after, is superseded and never unpacked', async () => {
+    const io = countingOpen();
+    const fileB = await fileOf(routeOf(3, 0, 'b'));
+    const { store, said, opener, opens } = sessionOf(empty(), { openProject: io.openProject });
+    const by = fileByHand('a.zip', await fileOf(routeOf(2, 0, 'a')));
+    const a = opener.openFile(by.file);
+    expect(await opener.open(fileB)).toEqual({ kind: 'opened' });
+    const afterB = store.getState();
+    by.give();
+    expect(await a).toEqual({ kind: 'superseded' });
+    expect(io.handed).toHaveLength(1);
+    expect(store.getState()).toBe(afterB);
+    expect(afterB.project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(opens.store).toBe(1);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
+  });
+
+  it('the earlier file read first: superseded, nothing changes; the later file then opens, its name held meanwhile', async () => {
+    const io = countingOpen();
+    const { store, said, opener, opens } = sessionOf(empty(), { openProject: io.openProject });
+    const before = store.getState();
+    const byA = fileByHand('a.zip', await fileOf(routeOf(2, 0, 'a')));
+    const byB = fileByHand('b.zip', await fileOf(routeOf(3, 0, 'b')));
+    const a = opener.openFile(byA.file);
+    const b = opener.openFile(byB.file);
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: 'b.zip' });
+    byA.give();
+    expect(await a).toEqual({ kind: 'superseded' });
+    expect(store.getState()).toBe(before);
+    expect(io.handed).toHaveLength(0);
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: 'b.zip' });
+    byB.give();
+    expect(await b).toEqual({ kind: 'opened' });
+    expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(opens.store).toBe(1);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+  });
+
+  it('an earlier file whose read fails after a later was asked for holds no refusal', async () => {
+    const { opener } = sessionOf(empty());
+    const byA = fileByHand('a.zip', NOT_A_FILE);
+    const byB = fileByHand('b.zip', await fileOf(routeOf(2, 0, 'a')));
+    const a = opener.openFile(byA.file);
+    const b = opener.openFile(byB.file);
+    byA.fail();
+    expect(await a).toEqual({ kind: 'superseded' });
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: 'b.zip' });
+    byB.give();
+    expect(await b).toEqual({ kind: 'opened' });
+  });
+});
+
+describe('point 12: the name, and the dismissal', () => {
+  it('the name is held while the file is read and with its refusal, as it came; null at rest and for open(bytes)', async () => {
+    const { opener } = sessionOf(empty());
+    expect(opener.read().name).toBeNull();
+    const odd = '<b>walk</b> & "co".zip';
+    const by = fileByHand(odd, NOT_A_FILE);
+    const asked = opener.openFile(by.file);
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: odd });
+    by.give();
+    await asked;
+    expect(opener.read().name).toBe(odd);
+    expect(opener.read().refusal).not.toBeNull();
+    await opener.open(NOT_A_FILE);
+    expect(opener.read().name).toBeNull();
+    expect(opener.read().refusal).not.toBeNull();
+  });
+
+  it('dismiss clears a refusal held and its name, with one telling', async () => {
+    const { opener, tellings } = sessionOf(empty());
+    await opener.openFile(fileOfBytes('notes.zip', NOT_A_FILE).file);
+    const told = tellings.count;
+    opener.dismiss();
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
+    expect(tellings.count).toBe(told + 1);
+    opener.dismiss();
+    expect(tellings.count).toBe(told + 1);
+  });
+
+  it('dismiss at rest, and while an open is under way, does nothing and tells nobody', async () => {
+    const { opener, tellings } = sessionOf(empty());
+    const rest = opener.read();
+    opener.dismiss();
+    expect(opener.read()).toBe(rest);
+    expect(tellings.count).toBe(0);
+    const by = fileByHand('slow.zip', await fileOf(routeOf(2, 0, 'a')));
+    const asked = opener.openFile(by.file);
+    const under = opener.read();
+    const told = tellings.count;
+    opener.dismiss();
+    expect(opener.read()).toBe(under);
+    expect(tellings.count).toBe(told);
+    by.give();
+    expect(await asked).toEqual({ kind: 'opened' });
   });
 });

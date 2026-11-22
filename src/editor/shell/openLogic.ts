@@ -38,12 +38,29 @@
 //    from the moment an open is asked for until the latest one asked for settles. Nothing is said or drawn for it here.
 //    Each of the opener's listeners is called in its own `try`: a throw is caught and dropped, the others are still told,
 //    and `open` neither stops nor rejects (the state is written before anyone is told).
-// 8. The opener itself keeps nothing of a file between opens but the refusal of point 2: no bytes, no project (the store
-//    owns its own copy); what a decoder or a stand-in `openProject` handed in keeps is its own. Its state holds `opening`
-//    and `refusal` only, and is the same frozen object until one of them changes.
+// 8. The opener itself keeps nothing of a file between opens but the refusal of point 2 and its name (point 12): no
+//    bytes, no project (the store owns its own copy); what a decoder or a stand-in `openProject` handed in keeps is its
+//    own. Its state holds `opening`, `refusal` and `name` only, and is the same frozen object until one of them changes.
+//
+// `openFile(file)` (brief 75) is one ask, as `open` is: it counts as one, gives the same results and never rejects;
+// once the file's bytes are read it is `open`'s own path, so points 1 to 8 hold for it as they stand. `file` is anything
+// with a `name`, a `size` and `arrayBuffer()` (a browser's `File` is one; Node's tests make their own).
+// 9. A file too large is never read: if `file.size` is over `ARCHIVE_LIMITS.zipBytes` (50 MB), `arrayBuffer` is not
+//    called, and the refusal is io's own for that case, in its words (`reason: 'too-large'`, the sentence preflight.ts
+//    gives a file over the limit). A file of gigabytes read whole would hang the page before io could refuse it.
+// 10. A file that cannot be read (`arrayBuffer()` rejects or throws: the file was moved, or the browser refuses it)
+//    changes nothing and is refused in io's words: `{ reason: 'unsafe', message: WORDS.openedUnsafe('it could not be
+//    read') }`.
+// 11. The latest ask wins across the read too: a file still being read when a later open is asked for is superseded as
+//    point 6 has it, whichever settles first; its bytes are not handed to `openProject`.
+// 12. The state's `name` is the name of the file it speaks of (the one being opened, or the one refused), kept and
+//    given as it came (it is text a user's file brought: nothing here reads it as markup); null at rest and for
+//    `open(bytes)`. `dismiss()` clears a refusal held, and its name, with one telling; while an open is under way, and
+//    at rest, it does nothing and tells nobody.
 import { openProject as ioOpenProject, type Opened } from '../../adapters/io/open';
 import type { Decode } from '../../adapters/io/images';
 import type { Project } from '../../adapters/io/format';
+import { ARCHIVE_LIMITS } from '../../adapters/io/limits';
 import { WORDS as IO_WORDS, type Problem, type Refusal } from '../../adapters/io/words';
 import type { Announce } from '../kit/announce';
 import type { Store } from '../store/store';
@@ -60,6 +77,15 @@ interface OpenerState {
   readonly opening: boolean;
   /** Why the latest open was refused, as io words it, or null: cleared when a new open is asked for. */
   readonly refusal: Refusal | null;
+  /** The name of the file the state speaks of (opening or refused), as it came; null at rest and for `open(bytes)`. */
+  readonly name: string | null;
+}
+
+/** A file asked for: a browser's `File` is one. */
+interface ProjectFile {
+  readonly name: string;
+  readonly size: number;
+  arrayBuffer(): Promise<ArrayBuffer>;
 }
 
 /** What `open` gives its caller. */
@@ -73,6 +99,10 @@ type OpenResult =
 export interface Opener {
   /** Opens a project file's bytes into the store; never rejects (claim points 4 and 7). */
   open(bytes: Uint8Array): Promise<OpenResult>;
+  /** Opens a project file: one ask, as `open` (claim points 9 to 12); never rejects. */
+  openFile(file: ProjectFile): Promise<OpenResult>;
+  /** Clears a refusal held, and its name; does nothing while an open is under way or at rest (point 12). */
+  dismiss(): void;
   read(): OpenerState;
   /** Calls `listener` when the state changes; gives back the call that stops it. */
   subscribe(listener: () => void): () => void;
@@ -87,7 +117,16 @@ export interface OpenerOptions {
   readonly openProject?: (bytes: Uint8Array, decode: Decode) => Promise<Opened>;
 }
 
-const QUIET: OpenerState = Object.freeze({ opening: false, refusal: null });
+const QUIET: OpenerState = Object.freeze({ opening: false, refusal: null, name: null });
+
+/** io's refusal of a file over the limit, in the words preflight.ts gives it (point 9). */
+const TOO_LARGE: Refusal = Object.freeze({
+  reason: 'too-large',
+  message: IO_WORDS.openedTooLarge(`a project file holds at most ${String(ARCHIVE_LIMITS.zipBytes / (1024 * 1024))} MB`),
+});
+
+/** A file whose bytes could not be read, in io's words (point 10). */
+const UNREADABLE: Refusal = Object.freeze({ reason: 'unsafe', message: IO_WORDS.openedUnsafe('it could not be read') });
 
 /** The store's refusal or throw, as io words a refusal: the store's problems under `scene`, or one for the whole. */
 function storeRefusal(problems: readonly Problem[] | null): Refusal {
@@ -116,7 +155,7 @@ export function createOpener({ store, announce, decode, openProject = ioOpenProj
   const listeners = new Set<() => void>();
 
   const hold = (next: OpenerState): void => {
-    if (next.opening === state.opening && next.refusal === state.refusal) return;
+    if (next.opening === state.opening && next.refusal === state.refusal && next.name === state.name) return;
     state = next.opening || next.refusal !== null ? Object.freeze({ ...next }) : QUIET;
     for (const listener of [...listeners]) {
       // A listener's throw is dropped: the state is written already, the others must still be told, and a rejected
@@ -129,7 +168,7 @@ export function createOpener({ store, announce, decode, openProject = ioOpenProj
     }
   };
 
-  const read = async (bytes: Uint8Array): Promise<Opened> => {
+  const unpack = async (bytes: Uint8Array): Promise<Opened> => {
     try {
       return await openProject(bytes, decode);
     } catch {
@@ -137,27 +176,52 @@ export function createOpener({ store, announce, decode, openProject = ioOpenProj
     }
   };
 
+  /** One ask begins: it is now the latest, under way, any refusal held cleared at once (points 2, 6, 7). */
+  const begin = (name: string | null): number => {
+    asked += 1;
+    hold({ opening: true, refusal: null, name });
+    return asked;
+  };
+
+  /** One ask ends, with what io gave it (points 1 to 7). */
+  const settle = (mine: number, name: string | null, opened: Opened): OpenResult => {
+    if (mine !== asked) return { kind: 'superseded' };
+    const refusal = opened.ok ? intoStore(store, opened.project) : opened.refusal;
+    if (refusal !== null) {
+      if (mine === asked) hold({ opening: false, refusal, name });
+      return { kind: 'refused', refusal };
+    }
+    // The store has taken it: it is opened whatever happens next. A throw from `announce` is dropped, not given back
+    // as a refusal (nothing was refused; the page's queue does not throw; a rejected open would leave "opening" held).
+    try {
+      announce(OPEN_WORDS.opened);
+    } catch {
+      // dropped
+    }
+    if (mine === asked) hold({ opening: false, refusal: null, name: null });
+    return { kind: 'opened' };
+  };
+
   return Object.freeze({
     open: async (bytes: Uint8Array): Promise<OpenResult> => {
-      asked += 1;
-      const mine = asked;
-      hold({ opening: true, refusal: null });
-      const opened = await read(bytes);
-      if (mine !== asked) return { kind: 'superseded' };
-      const refusal = opened.ok ? intoStore(store, opened.project) : opened.refusal;
-      if (refusal !== null) {
-        if (mine === asked) hold({ opening: false, refusal });
-        return { kind: 'refused', refusal };
-      }
-      // The store has taken it: it is opened whatever happens next. A throw from `announce` is dropped, not given back
-      // as a refusal (nothing was refused; the page's queue does not throw; a rejected open would leave "opening" held).
+      const mine = begin(null);
+      return settle(mine, null, await unpack(bytes));
+    },
+    openFile: async (file: ProjectFile): Promise<OpenResult> => {
+      const { name, size } = file;
+      const mine = begin(name);
+      if (size > ARCHIVE_LIMITS.zipBytes) return settle(mine, name, { ok: false, refusal: TOO_LARGE });
+      let bytes: Uint8Array;
       try {
-        announce(OPEN_WORDS.opened);
+        bytes = new Uint8Array(await file.arrayBuffer());
       } catch {
-        // dropped
+        return settle(mine, name, { ok: false, refusal: UNREADABLE });
       }
-      if (mine === asked) hold({ opening: false, refusal: null });
-      return { kind: 'opened' };
+      if (mine !== asked) return { kind: 'superseded' };
+      return settle(mine, name, await unpack(bytes));
+    },
+    dismiss: (): void => {
+      if (!state.opening && state.refusal !== null) hold(QUIET);
     },
     read: () => state,
     subscribe: (listener: () => void): (() => void) => {
