@@ -45,7 +45,9 @@
 // button (2.4.3), and the timeline neither echoing an older position during a playing nor pulling back a press held
 // still (2.5.2); pointer-cancellation meets "Open project" too (no chooser on the down-event or on a press moved off).
 // The `user-input` feature stays unknown: turned present, the report failed 1.3.5, 3.3.2, 3.3.3, 3.3.4 and 3.3.6 for
-// want of a j-forms journey crediting them (brief 77, ruling 3: owed at the close).
+// want of a j-forms journey crediting them (brief 77, ruling 3: owed at the close). Brief 78 tried holding 1.3.5,
+// 3.3.4 and 3.3.6 not applicable: the coverage tool refuses it (a row is not applicable only when its own trigger
+// feature, here `user-input` itself, is declared absent), so the feature stays unknown and the six rows owed.
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
@@ -170,6 +172,25 @@ const sample = (page, n) => page.evaluate(([sel, count]) => new Promise((resolve
 const backwards = (s) => s.slice(1).flatMap(([, v], i) => (v < s[i][1] ? [`${s[i][1]} to ${v}`] : []));
 const playLabel = (page) => page.locator(PLAY).textContent();
 const alerts = (page) => page.locator('[role=alert]');
+// J or L on "Open project" (brief 76's ruling 4: they do what they do on any button). The journeys' project opened by
+// a press of the button, focus put back on it and the key pressed: "Playing animation" said (it waits behind "Project
+// opened"), focus still on the button and no file chooser opened by the key; L then moves the position on, and J, from
+// the start, plays back into the start and stops there: "Animation complete", the position 0. (J from the middle, after
+// a press on the timeline, now and then crashes the page: FINDING-78, owed to the kit, so J is proved from the start.)
+const PLAYING = 'Playing animation';
+const COMPLETE = 'Animation complete';
+const comesToWords = (page, w) => page.waitForFunction(([s, words]) => document.querySelector(s)?.textContent === words, [STATUS, w], { timeout: 6000 }).then(() => true, () => false);
+async function playsFromOpen(page, key) {
+  if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) return false;
+  let choosers = 0;
+  page.on('filechooser', () => { choosers++; });
+  await page.locator(OPEN).focus();
+  await page.keyboard.press(key);
+  if (!(await comesToWords(page, PLAYING))) return false;
+  // L moves on; J never leaves 0 (a forward playing would stand past it when "Playing animation" is said) and ends.
+  const moved = key === 'l' ? await comesTo(page, 'n > 0') : (await atNow(page)).now === 0 && (await comesToWords(page, COMPLETE)) && (await atNow(page)).now === 0;
+  return moved && (await focusOn(page, OPEN)) && choosers === 0;
+}
 // Open Help by its button from the keyboard, Tab to its switch, press Space, close it by Escape. The switch is drawn
 // only while Help is open: what it said before and after the press, and whether focus came back to "Help".
 async function flipByKeyboard(page) {
@@ -360,6 +381,10 @@ export default {
     { name: 'open-by-enter-on-button', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => (await choose(page, await projectFile(), 'Enter')) && (await saysOpened(page)) && focusOn(page, OPEN) },
     { name: 'open-by-space-plays-nothing', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => (await choose(page, null, 'Space')) && (await neverSays(page, NOTHING_TO_PLAY)) && !(await said(page)) && focusOn(page, OPEN) },
     { name: 'play-refused-by-k-on-open', state: 'shell', steps: [{ focus: OPEN }, { press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, OPEN) },
+    // With the project opened, L on it plays forward and J plays back (from the start, into it), as on any button; no
+    // chooser, focus kept.
+    { name: 'play-forward-by-l-on-open', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => playsFromOpen(page, 'l') },
+    { name: 'play-reverse-by-j-on-open', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => playsFromOpen(page, 'j') },
     { name: 'play-refused-by-l-on-button', state: 'shell', steps: [{ focus: SKIP_END }, { press: 'l' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_END) },
     // The timeline: an arrow moves it one thousandth and Shift with it four (Carbon's), and the words hold until a whole
     // second is passed; End off it skips and its thumb follows, drawn at the track's end, and Home brings it back to the
