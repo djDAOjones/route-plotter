@@ -1330,8 +1330,10 @@ export default {
           const i = s.findIndex(([, v], k) => k > 0 && v !== from && !skip(v));
           if (i < 0) return [`it never moved off ${from}`];
           const [t1] = s[i - 1], [, v1] = s[i];
-          const moved = s.slice(i - 1).filter(([, v], k) => k === 0 || !skip(v));
-          const steps = moved.slice(1).flatMap(([t, v], k) => (v > moved[k][1] + 20 ? [`${v} straight after ${moved[k][1]}, a step of more than 20, at ${Math.round(t - t1)} ms after ${v1}`] : []));
+          // From the first move on every sample is kept (`skip` names only the leading ones, before it): a later 1000,
+          // or any fall, on the restart or the resume is a playing gone back, and fails (Codex on brief 83).
+          const moved = s.slice(i);
+          const steps = moved.slice(1).flatMap(([t, v], k) => (v > moved[k][1] + 20 ? [`${v} straight after ${moved[k][1]}, a step of more than 20, at ${Math.round(t - t1)} ms after ${v1}`] : v < moved[k][1] ? [`${v} straight after ${moved[k][1]}, a fall, at ${Math.round(t - t1)} ms after ${v1}`] : []));
           return [...(v1 > from + 10 ? [`its first move was to ${v1}`] : []), ...s.slice(i + 1).filter(([t, v]) => v > v1 + Math.ceil((t - t1) / 6) + 10).map(([t, v]) => `${v} at ${Math.round(t - t1)} ms after ${v1}`), ...steps];
         };
         await page.locator(PLAY).click();
@@ -1373,15 +1375,16 @@ export default {
     },
     {
       // 4.1.3 (stage 6, brief 81's step 4): while an open is under way Open draws one line, "Opening <name>…", in
-      // Carbon's live region made polite (Open.tsx, point 4), gone by the time "Project opened" is said (the two may
-      // come in one batch, so not "before"). A MutationObserver
-      // set on the page before the choice records every text holding "Opening", with its nearest aria-live, and whether
-      // it was still there at a moment the status region said "Project opened"; no timed wait in the page and no slowed
-      // read (io's read is async, so the line is drawn before it ends, the golden as it is). Carbon's nested assertive
-      // region (its spinner's "loading", A11Y-03) is recorded, not failed. The line is one and can be seen (Codex on
-      // brief 81, asked for by brief 83): at each moment the observer also records how many lines there were, and for
-      // each whether it has a box (getClientRects) and is not hidden (checkVisibility, with visibility and opacity); a
-      // hidden line, or a moment with more than one, fails. Paint is not claimed: a quick open may end inside one frame.
+      // Carbon's live region made polite (Open.tsx, point 4), gone by the time "Project opened" is said (the two
+      // may come in one batch, so not "before"). A MutationObserver set on the page before the choice records
+      // every text holding "Opening", with its nearest aria-live, and whether it was still there at a callback
+      // where the status region said "Project opened"; no timed wait in the page and no slowed read (io's read is
+      // async, so the line is drawn before it ends, the golden as it is). Carbon's nested assertive region (its
+      // spinner's "loading", A11Y-03) is recorded, not failed. The line is one and can be seen (Codex on brief
+      // 81, asked for by brief 83): at each of the observer's callbacks it also records how many lines there
+      // were, and for each whether it has a box (getClientRects) and is not hidden (checkVisibility, with
+      // visibility and opacity); a hidden line, or a callback that finds more than one, fails; between two
+      // callbacks nothing is seen. Paint is not claimed: a quick open may end inside one frame.
       name: 'the-opening-line',
       method: 'j-forms',
       rows: ['4.1.3'],
@@ -1406,7 +1409,7 @@ export default {
         if (seen.some((s) => s.said === OPENED)) wrong.push(`the line was still there when "${OPENED}" was said`);
         if (line.some((s) => !s.shown)) wrong.push('the line was there but had no box or was hidden');
         const most = Math.max(0, ...seen.map((s) => s.count));
-        if (most > 1) wrong.push(`${most} lines holding "Opening" at one moment`);
+        if (most > 1) wrong.push(`${most} lines holding "Opening" at one of the observer's callbacks`);
         if (await page.locator('main').getByText('Opening', { exact: false }).count()) wrong.push('the line is still there after the open');
         const inner = [...new Set(line.flatMap((s) => s.inner))];
         record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${words}" seen, one line with a box and not hidden, in a polite region while the open was under way (Carbon's nested regions: ${JSON.stringify(inner)}, recorded), gone by the time "${OPENED}" was said`);
