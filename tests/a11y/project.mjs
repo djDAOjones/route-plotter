@@ -376,7 +376,9 @@ export default {
     {
       // Open's refusal showing, for a text file whose name is 60 characters with no spaces (stage 6, brief 80): its
       // title and io's sentence wrap inside the page at 320 px, nothing cut and no sideways scroll (1.4.10, reflow),
-      // and no control that takes focus is covered by it (2.4.12, focus). The name breaks anywhere (frameLook.css).
+      // and, at the pack's 1280 by 800 (its focus walk's size, keyboard.spec.ts), no control that takes focus is covered
+      // by it (2.4.12, focus). A focus walk at 320 px is owed (Codex on brief 81, to a later tests chat). The name breaks
+      // anywhere (frameLook.css).
       name: 'refused-long-name',
       path: '/',
       // The choice leaves focus on "Open project" (the claim: refused-close-returns-focus); the pack's walk Tabs on from
@@ -1295,14 +1297,36 @@ export default {
         const heard = await hear(page);
         const button = await page.locator(PLAY).elementHandle();
         const values = (s) => s.map(([, v]) => v);
-        // How far a playing can have gone since the press (Codex, brief 81): the journeys' scene is 6 s long, 1000
-        // thousandths, so one thousandth for each 6 ms since the click (its time taken on the button, in the frames'
-        // own clock), and 10 thousandths over that (60 ms: a slow frame, and the position drawn a frame late, or rounded).
-        // A sample past that has jumped: a resume from 30 that lands on 700, a restart that begins at 300 ms (50).
+        // How far a playing can have gone (Codex on brief 81, twice): bounded by what the playing did, never by the click,
+        // since a page slow after the press holds time in which nothing plays (the player's first frame moves one frame's
+        // worth however long it waited). A recorder starts a frame before the press and runs through it (`pressed`); of
+        // the frames after the press, the first that has moved off `from` (for a restart, off 1000 and 0) is at most
+        // from + 10, and each later one at most that value + ceil((t − t0) / 6) + 10, t0 the time of the frame before
+        // that first move was seen: the timeline shows a frame's move at the next frame, and the first frame after a
+        // long task can carry an early time (seen: blocked 300 ms, +3 then +16 in 17 ms). The journeys' scene is 6 s for
+        // 1000 thousandths, one for each 6 ms of the frames' own clock, and 10 (60 ms) for a slow frame and rounding. A
+        // resume from 30 that lands on 700, a restart that begins at 300 ms (50), fail.
         await page.locator(PLAY).evaluate((b) => b.addEventListener('click', () => { window.__pressedAt = performance.now(); }));
-        const past = async (s, from) => {
-          const at = await page.evaluate(() => window.__pressedAt);
-          return s.filter(([t, v]) => !(v <= from + Math.ceil(Math.max(0, t - at) / 6) + 10)).map(([t, v]) => `${v} at ${Math.round(t - at)} ms`);
+        // Presses Play with the recorder running; gives back [the frame's time, aria-valuenow] for `n` frames after it.
+        const pressed = async (n) => {
+          await page.evaluate(([sel, count]) => {
+            window.__pressedAt = undefined;
+            window.__rec = new Promise((resolve) => {
+              const s = [], el = document.querySelector(sel);
+              const tick = (t) => { s.push([t, Number(el.getAttribute('aria-valuenow'))]); if (s.filter(([u]) => u > (window.__pressedAt ?? Infinity)).length < count) requestAnimationFrame(tick); else resolve(s); };
+              requestAnimationFrame(tick);
+            });
+            return new Promise((r) => requestAnimationFrame(() => r()));
+          }, [TIMELINE, n]);
+          await page.locator(PLAY).click();
+          return page.evaluate(async () => { const s = await window.__rec; return s.slice(Math.max(0, s.findIndex(([t]) => t > window.__pressedAt) - 1)); });
+        };
+        // `s` from the last frame before the press: the frames after it, and the one before for t0.
+        const past = (s, from, skip = () => false) => {
+          const i = s.findIndex(([, v], k) => k > 0 && v !== from && !skip(v));
+          if (i < 0) return [`it never moved off ${from}`];
+          const [t1] = s[i - 1], [, v1] = s[i];
+          return [...(v1 > from + 10 ? [`its first move was to ${v1}`] : []), ...s.slice(i + 1).filter(([t, v]) => v > v1 + Math.ceil((t - t1) / 6) + 10).map(([t, v]) => `${v} at ${Math.round(t - t1)} ms after ${v1}`)];
         };
         await page.locator(PLAY).click();
         if (!(await comesToWords(page, PLAYING))) wrong.push(`Play: "${PLAYING}" was not said`);
@@ -1315,12 +1339,11 @@ export default {
         const still = values(await sample(page, 30));
         const stood = still[0];
         if (new Set(still).size !== 1 || stood <= 0 || stood >= 1000) wrong.push(`Pause: over thirty frames the position was ${[...new Set(still)].join(', ')}`);
-        await page.locator(PLAY).click();
-        const resumedAt = await sample(page, 10);
-        const resumed = values(resumedAt);
+        const resumedAt = await pressed(10);
+        const resumed = values(resumedAt.slice(1));
         if (resumed.some((v) => v < stood) || !(resumed.at(-1) > stood)) wrong.push(`Play again: from ${stood} the position went ${resumed.join(', ')}`);
-        const jumped = await past(resumedAt, stood);
-        if (jumped.length) wrong.push(`Play again: from ${stood}, further than the time since the press allows: ${jumped.join(', ')}`);
+        const jumped = past(resumedAt, stood);
+        if (jumped.length) wrong.push(`Play again: from ${stood}, further than the playing allows: ${jumped.join(', ')}`);
         if (!(await isNamed(page, 'Pause', button))) wrong.push('Play again: the same button is not named "Pause"');
         const done = await page.waitForFunction(([st, w]) => document.querySelector(st)?.textContent === w, [STATUS, COMPLETE], { timeout: 12000 }).then(() => true, () => false);
         if (!done) wrong.push(`left to run: "${COMPLETE}" was not said`);
@@ -1331,20 +1354,21 @@ export default {
         const texts = await heard();
         const expected = [PLAYING, PAUSED, PLAYING, COMPLETE];
         if (!once || JSON.stringify(texts) !== JSON.stringify(expected)) wrong.push(`the status region said ${JSON.stringify(await heard())}, not ${JSON.stringify(expected)}`);
-        await page.locator(PLAY).click();
-        const againAt = await sample(page, 10);
-        const again = values(againAt);
+        const againAt = await pressed(10);
+        // The frame before the press, and any frame still showing the end (the move is shown a frame late), left out.
+        const again = values(againAt.slice(1)).filter((v, k, a) => !(v === 1000 && a.slice(0, k + 1).every((u) => u === 1000)));
         if (!(await comesToWords(page, PLAYING))) wrong.push(`Play at the end: "${PLAYING}" was not said`);
         if (!(again.at(-1) < 500) || !(again.at(-1) > again[0]) || again[0] > 100) wrong.push(`Play at the end: the position went ${again.join(', ')}, not from the start`);
-        const partWay = await past(againAt.filter(([, v]) => v < 1000), 0);
-        if (partWay.length) wrong.push(`Play at the end: further from the start than the time since the press allows: ${partWay.join(', ')}`);
+        const partWay = past(againAt, 0, (v) => v === 1000);
+        if (partWay.length) wrong.push(`Play at the end: further from the start than the playing allows: ${partWay.join(', ')}`);
         if (!(await isNamed(page, 'Pause', button))) wrong.push('Play at the end: the same button is not named "Pause"');
-        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `by the pointer on the one button: Play, "${PLAYING}", named "Pause", rising; Pause, "${PAUSED}", named "Play", standing at ${stood} over thirty frames; Play again from ${stood}, no further than the time since the press allows; left to run, "${COMPLETE}" once at 1000; said ${JSON.stringify(expected)} and nothing else; Play at the end played from the start, no further than the time since the press allows`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `by the pointer on the one button: Play, "${PLAYING}", named "Pause", rising; Pause, "${PAUSED}", named "Play", standing at ${stood} over thirty frames; Play again from ${stood}, no further than the playing allows; left to run, "${COMPLETE}" once at 1000; said ${JSON.stringify(expected)} and nothing else; Play at the end played from the start, no further than the playing allows`);
       },
     },
     {
       // 4.1.3 (stage 6, brief 81's step 4): while an open is under way Open draws one line, "Opening <name>…", in
-      // Carbon's live region made polite (Open.tsx, point 4), gone once "Project opened" is said. A MutationObserver
+      // Carbon's live region made polite (Open.tsx, point 4), gone by the time "Project opened" is said (the two may
+      // come in one batch, so not "before"). A MutationObserver
       // set on the page before the choice records every text holding "Opening", with its nearest aria-live, and whether
       // it was still there at a moment the status region said "Project opened"; no timed wait in the page and no slowed
       // read (io's read is async, so the line is drawn before it ends, the golden as it is). Carbon's nested assertive
@@ -1373,7 +1397,7 @@ export default {
         if (seen.some((s) => s.said === OPENED)) wrong.push(`the line was still there when "${OPENED}" was said`);
         if (await page.locator('main').getByText('Opening', { exact: false }).count()) wrong.push('the line is still there after the open');
         const inner = [...new Set(line.flatMap((s) => s.inner))];
-        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${words}" seen in a polite region while the open was under way (Carbon's nested regions: ${JSON.stringify(inner)}, recorded), gone before "${OPENED}" was said`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${words}" seen in a polite region while the open was under way (Carbon's nested regions: ${JSON.stringify(inner)}, recorded), gone by the time "${OPENED}" was said`);
       },
     },
     {
