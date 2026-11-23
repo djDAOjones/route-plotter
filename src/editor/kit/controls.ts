@@ -54,6 +54,14 @@
 //    the range. With Control, Alt or Meta held the key is not the slider's; Shift changes nothing. While a press is down,
 //    given up or not, the four keys move nothing (a drag given up stays given up), but they are still the slider's. A
 //    held key repeats, as an arrow does. A move is a key's nudge (point 3): an edit of one.
+// 6. A slider's thumb reads out the value its position stands for, and where it shows the value held, the value held
+//    exactly (on a scale two values can stand at one position). A widget asked for the words of another position with
+//    no press down is behind, not moved, when that position is the one it was last handed or drawn, or while a position
+//    it was handed is still awaited: it reads out the value held. Carbon draws once with its old thumb in the pass where
+//    the value held has stepped, before it is handed the new position (the frames of a playing, brief 86): read as its
+//    own value, a long scene's words would go back a second for that frame. Anything else, a drag's thumb or a key's
+//    before its report, reads out its own value. What the rule costs: a key pressed while a handed position is awaited
+//    reads out the value held for its one draw before its report.
 //
 // It does not claim to withstand code written to break it, nor a `Setting` that breaks the contract below.
 
@@ -129,7 +137,10 @@ export interface Slider {
   nudge(value: number): Result;
   /** Where the thumb shows the value held: its position on the scale; undefined when nothing is held. */
   position(): number | undefined;
-  /** The value a thumb at `position` stands for, as read out: the value held, exactly, where the thumb shows it. */
+  /**
+   * The value a thumb at `position` stands for, as read out: the value held, exactly, where the thumb shows it, or
+   * where the widget is only behind it (no press, and the position last handed or drawn, or one awaited; point 6).
+   */
   readout(position: number): number;
   /** Whether the pointer is down on the slider: between `press()` and `release()`, given up or not. */
   pressed(): boolean;
@@ -214,7 +225,9 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
     position,
     readout: (at) => {
       const held = setting.read();
-      return held !== undefined && at === position() ? held : scale.toValue(at);
+      if (held === undefined) return scale.toValue(at);
+      const behind = !down && (at === last || awaited.length > 0);
+      return at === position() || behind ? held : scale.toValue(at);
     },
     pressed: () => down,
     press: () => {

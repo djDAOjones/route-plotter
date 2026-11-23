@@ -293,6 +293,41 @@ describe('the timeline’s words: v3’s time now “of” the whole time', () =
   });
 });
 
+describe('the timeline’s words on a twenty-minute scene, through the kit’s slider (brief 86)', () => {
+  it('as the thousandth steps, the words asked for the widget’s old thumb are the time now, never a second back', () => {
+    const { store, frames, editor, length, timeline } = timelineOf();
+    expect(store.dispatch(setSceneSetting('clock', 'length', 'fixed')).ok).toBe(true);
+    expect(store.dispatch(setSceneSetting('clock', 'fixedLengthMs', 1_200_000)).ok).toBe(true);
+    frames.run(16);
+    expect(length.held()).toBe(1_200_000);
+    const slider = createSlider(timeline.setting);
+    expect(timeline.setting.read()).toBe(0);
+    slider.drawn(0);
+    editor.playPause();
+    const said: string[] = [];
+    const draw = (at: number) => said.push(timeline.readout(slider.readout(at)));
+    // The page's three frames (sub-chat 83's probe at 4,440, 4,640 and 4,657 ms), played by hand from 4.1 s, where the
+    // thousandth is still 3 (1.2 s each) and the time now already says 0:04.
+    editor.scrub(4100);
+    frames.run(1000);
+    expect([Math.floor(store.playback().atMs / 100), timeline.setting.read()]).toEqual([41, 3]);
+    slider.handed(3); // as the page does: handed 3, which the widget follows and says back
+    expect(slider.report(3)).toEqual({ ok: true, changed: false });
+    draw(3);
+    // 100 ms later the thousandth steps to 4; the widget draws its old thumb, 3, before it is handed 4, and after.
+    frames.run(1100);
+    expect([Math.floor(store.playback().atMs / 100), timeline.setting.read()]).toEqual([42, 4]);
+    draw(3);
+    slider.handed(4);
+    draw(3);
+    // A frame later the widget follows and says it back.
+    frames.run(1117);
+    expect(slider.report(4)).toEqual({ ok: true, changed: false });
+    draw(4);
+    expect(said).toEqual(['0:04 of 20:00', '0:04 of 20:00', '0:04 of 20:00', '0:04 of 20:00']);
+  });
+});
+
 describe('the timeline as the kit’s slider: a drag, Escape and a key, also while a playing runs (ruling 4)', () => {
   it('a drag while playing scrubs at each move, the playing goes on from there, and the release keeps nothing as a step', () => {
     const { store, editor, timeline, frames } = timelineOf();

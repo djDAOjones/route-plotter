@@ -450,6 +450,64 @@ describe('a slider read through a widget that reports only where its thumb stand
   });
 });
 
+describe('point 6: a widget behind the value held reads out the value held; a thumb moved reads out its own', () => {
+  it('the draw before the widget is handed the new position: the position last drawn reads out the value held', () => {
+    const setting = handmade(3);
+    const slider = createSlider(setting);
+    slider.drawn(3);
+    setting.held = 4; // the value held steps; the widget still draws its old thumb, and handed() has not run
+    expect([slider.awaiting(), slider.thumb()]).toEqual([false, 3]);
+    expect(slider.readout(3)).toBe(4);
+    expect(slider.readout(5)).toBe(5); // a thumb neither last drawn nor awaited: its own value
+  });
+
+  it('after it is handed: while the new position is awaited, an old position reads out the value held; the echo ends it', () => {
+    const setting = handmade(3);
+    const slider = createSlider(setting);
+    slider.drawn(3);
+    setting.held = 4;
+    slider.handed(4);
+    expect(slider.awaiting()).toBe(true);
+    expect([slider.readout(3), slider.readout(4)]).toEqual([4, 4]);
+    expect(slider.report(4)).toEqual({ ok: true, changed: false }); // the echo
+    expect(slider.awaiting()).toBe(false);
+    expect(slider.readout(3)).toBe(3); // no longer behind: a thumb at 3 now is a key's, its own value
+  });
+
+  it('a drag’s thumb reads out its own value, also at the position last handed, and a key’s thumb before its report', () => {
+    const setting = handmade(3);
+    const slider = createSlider(setting);
+    slider.drawn(3);
+    expect(slider.readout(4)).toBe(4); // a key's thumb, drawn before its report
+    slider.press();
+    slider.report(6);
+    expect(setting.held).toBe(6);
+    expect([slider.readout(3), slider.readout(8)]).toEqual([3, 8]); // the press down: the thumb leads, never behind
+    slider.handed(6);
+    slider.release();
+    expect(slider.readout(6)).toBe(6);
+  });
+
+  it('what the rule costs: a key’s thumb drawn while a handed position is awaited reads out the value held', () => {
+    const setting = handmade(3);
+    const slider = createSlider(setting);
+    slider.drawn(3);
+    setting.held = 4;
+    slider.handed(4);
+    expect(slider.readout(5)).toBe(4);
+  });
+
+  it('on a scale, a widget behind reads out the value held exactly, not the value its old position stands for', () => {
+    const setting = handmade(5);
+    const slider = createSlider(setting, { toPosition: (value) => Math.round(value * 10), toValue: (at) => at / 10 });
+    slider.drawn(50);
+    setting.held = 6.04;
+    expect(slider.readout(50)).toBe(6.04);
+    slider.handed(60);
+    expect([slider.readout(50), slider.readout(60)]).toEqual([6.04, 6.04]);
+  });
+});
+
 describe("point 3: a widget's late echo of a position it was handed (brief 79)", () => {
   // The order the page showed (PROBE-79): End off the slider hands 1000, Home hands 0, and only then does Carbon report
   // 1000, the echo of the first, while 0 is held.

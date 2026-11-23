@@ -122,19 +122,27 @@ const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damage
 // `images`, and its bytes at `images/1.png` in the ZIP; nothing else changes.
 // With `upright`, the golden's second stop moves from (0.75, 0.5) to (0.25, 1), so its line runs down the picture and
 // a picture's shape changes how long it measures (a distance is in image widths: widthsBetween, units.ts).
-const projectFile = async (png, upright) => {
+// With `long`, the golden's clock is made a fixed twenty minutes (one replacement in its text, which throws if the
+// golden's words have moved; the route unchanged).
+const LONG_MS = 1200000;
+const projectFile = async (png, upright, long = false) => {
   const root = process.env.A11Y_ROOT || process.cwd();
   const zip = new (process.getBuiltinModule('node:module').createRequire(`${root}/package.json`)('jszip'))();
   const read = process.getBuiltinModule('node:fs').readFileSync(`${root}/src/editor/shell/goldens/two-stops.project.json`, 'utf8');
   if (upright && !read.includes('"x":0.75,"y":0.5')) throw new Error('the golden\'s second stop is no longer at (0.75, 0.5)');
-  const golden = upright ? read.replace('"x":0.75,"y":0.5', '"x":0.25,"y":1') : read;
+  let golden = upright ? read.replace('"x":0.75,"y":0.5', '"x":0.25,"y":1') : read;
+  if (long) {
+    const from = '"clock":{"length":"from content","fixedLengthMs":10000,';
+    if (golden.split(from).length !== 2) throw new Error('the golden\'s clock no longer reads "from content" with fixedLengthMs 10000, once');
+    golden = golden.replace(from, `"clock":{"length":"fixed","fixedLengthMs":${LONG_MS},`);
+  }
   if (!png) zip.file('project.json', golden);
   else {
     if (!golden.endsWith('"images":[]}')) throw new Error('the golden no longer ends with its empty images list');
     zip.file('project.json', golden.replace(/"images":\[\]}$/, '"images":[{"id":"golden-5","type":"image/png"}]}'));
     zip.file('images/1.png', png, { createFolders: false }); // as io's Save: no `images/` folder entry, which io refuses
   }
-  return { name: png ? 'with-image.zip' : 'two-stops.zip', mimeType: 'application/zip', buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }) };
+  return { name: png ? 'with-image.zip' : long ? 'long.zip' : 'two-stops.zip', mimeType: 'application/zip', buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }) };
 };
 // A real PNG, 4 by 4, made by the page's own canvas (`toBlob`) in the run.
 const canvasPng = async (page) => Buffer.from(await page.evaluate(() => new Promise((resolve) => {
@@ -1721,6 +1729,42 @@ export default {
         if (backwards(held).length) wrong.push(`with the press held still the position went back: ${backwards(held).join(', ')}`);
         if (!(end > first)) wrong.push(`with the press held still the playing did not go on (${first} to ${end})`);
         record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `no input: never back, ${gained} ms gained over ${Math.round(clock)} ms of frames; a press held still at 50 %: at ${first}, never pulled back, playing on to ${end}`);
+      },
+    },
+    {
+      // 2.5.2 (stage 6, brief 66's owed test, recorded under the-echo's row by orchestrator 27; brief 86): on a long scene
+      // one thousandth of the timeline is more than a second, so its words (aria-valuetext, "m:ss of m:ss", the claim in
+      // timelineLogic.ts) must move on while aria-valuenow does not; and as the value steps, Carbon draws one frame with
+      // its old thumb, whose words must still be the time now (the kit's readout, controls.ts point 3), never a second
+      // back. The golden made twenty minutes long (1.2 s a thousandth), opened, played by the pointer for about five
+      // seconds, each frame's value and words recorded, then paused: the seconds in the words went forward at least twice
+      // while the value stood (against the frame before, the value the same in that frame and the next), and, over every
+      // pair of frames, the time in them never went backwards.
+      name: 'the-long-scene-words',
+      method: 'j-pointer',
+      rows: ['2.5.2'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('shell');
+        const wrong = [];
+        if (!(await choose(page, await projectFile(undefined, false, true))) || !(await saysOpened(page))) wrong.push('the long scene was not opened');
+        const box = await page.locator(PLAY).boundingBox();
+        await pointer.tap(box.x + box.width / 2, box.y + box.height / 2);
+        const frames = await page.evaluate((sel) => new Promise((resolve) => {
+          const s = [], el = document.querySelector(sel), end = performance.now() + 5000;
+          const tick = (t) => { s.push([Number(el.getAttribute('aria-valuenow')), el.getAttribute('aria-valuetext') ?? '']); if (t < end) requestAnimationFrame(tick); else resolve(s); };
+          requestAnimationFrame(tick);
+        }), TIMELINE);
+        await pointer.tap(box.x + box.width / 2, box.y + box.height / 2);
+        const seconds = (w) => { const m = /^(\d+):(\d\d) of /.exec(w); return m ? Number(m[1]) * 60 + Number(m[2]) : NaN; };
+        const bad = frames.filter(([, w]) => Number.isNaN(seconds(w)));
+        if (bad.length) wrong.push(`words not "m:ss of m:ss": ${JSON.stringify(bad[0][1])}`);
+        // An advance counts only where the value stands in the frame before it, at it and in the frame after: at a step
+        // of the value, aria-valuenow may follow the words a frame late, which is not the words moving within one.
+        const stood = frames.slice(1, -1).filter(([v, w], k) => v === frames[k][0] && v === frames[k + 2][0] && seconds(w) > seconds(frames[k][1])).map(([v, w]) => `${w} at ${v}`);
+        if (stood.length < 2) wrong.push(`the seconds in the words went forward at an unchanged value ${stood.length} time(s) in ${frames.length} frames (${[...new Set(frames.map(([v, w]) => `${v} ${w}`))].join(', ')})`);
+        const back = frames.slice(1).map((f, k) => [frames[k], f]).filter(([a, b]) => seconds(b[1]) < seconds(a[1])).map(([a, b]) => `${a[1]} then ${b[1]} at ${b[0]}`);
+        if (back.length) wrong.push(`the time in the words went backwards: ${back.join(', ')}`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `a twenty-minute scene played by the pointer for 5 s (${frames.length} frames, values ${frames[0][0]} to ${frames.at(-1)[0]}): the seconds in the words went forward at an unchanged value ${stood.length} times (${stood.join(', ')}), the time in them never backwards`);
       },
     },
     {
