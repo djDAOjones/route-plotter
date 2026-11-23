@@ -171,6 +171,23 @@ const sample = (page, n) => page.evaluate(([sel, count]) => new Promise((resolve
 }), [TIMELINE, n]);
 const backwards = (s) => s.slice(1).flatMap(([, v], i) => (v < s[i][1] ? [`${s[i][1]} to ${v}`] : []));
 const playLabel = (page) => page.locator(PLAY).textContent();
+// Whether the one button named `name` (its accessible name, exactly) is the element `handle`, still connected: the
+// play bar's claim, one element whose words change, so focus stays on it.
+const isNamed = (page, name, handle) => page.getByRole('button', { name, exact: true }).evaluate((e, h) => e === h && e.isConnected, handle, { timeout: 3000 }).catch(() => false);
+// The journeys' project opened and the status region quiet again, then Tab from "Skip to start" onto Play: true when
+// focus is on Play. `key` then presses it; `twice`, the same key again once "Playing animation" is said.
+async function playKeyOnScene(page, key, twice) {
+  if (!(await choose(page, await projectFile())) || !(await saysOpened(page)) || !(await quiet(page))) return false;
+  await page.locator(SKIP_START).focus();
+  await page.keyboard.press('Tab');
+  if (!(await focusOn(page, PLAY))) return false;
+  const button = await page.locator(PLAY).elementHandle();
+  await page.keyboard.press(key);
+  if (!(await comesToWords(page, PLAYING)) || !(await isNamed(page, 'Pause', button)) || !(await focusOn(page, PLAY))) return false;
+  if (!twice) return true;
+  await page.keyboard.press(key);
+  return (await comesToWords(page, PAUSED)) && (await isNamed(page, 'Play', button)) && focusOn(page, PLAY);
+}
 const alerts = (page) => page.locator('[role=alert]');
 // J or L on "Open project" (brief 76's ruling 4: they do what they do on any button). The journeys' project opened by
 // a press of the button, focus put back on it and the key pressed: "Playing animation" said (it waits behind "Project
@@ -390,6 +407,10 @@ export default {
     // chooser, focus kept.
     { name: 'play-forward-by-l-on-open', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => playsFromOpen(page, 'l') },
     { name: 'play-reverse-by-j-on-open', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => playsFromOpen(page, 'j') },
+    // The play bar on a scene (stage 6): Tab onto Play, Space plays ("Playing animation", the same button now named
+    // "Pause", focus on it); Enter on it then pauses ("Animation paused", named "Play" again, focus kept).
+    { name: 'play-by-space-on-a-scene', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => playKeyOnScene(page, 'Space') },
+    { name: 'pause-by-enter-on-a-scene', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => playKeyOnScene(page, 'Enter', true) },
     { name: 'play-refused-by-l-on-button', state: 'shell', steps: [{ focus: SKIP_END }, { press: 'l' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, SKIP_END) },
     // The timeline: an arrow moves it one thousandth and Shift with it four (Carbon's), and the words hold until a whole
     // second is passed; End off it skips and its thumb follows, drawn at the track's end, and Home brings it back to the
@@ -1203,6 +1224,57 @@ export default {
         if (from !== 0) wrong.push(`the position before Play was ${from}, not 0`);
         if (!(last > 0) || backwards(played).length) wrong.push(`after Play the position went ${played.map(([, v]) => v).join(', ')}, not rising from 0`);
         record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${OPENED}" said once and nothing else, no alert, focus kept on "Open project", the reason line gone; Play played from 0 to ${last} thousandths in 30 frames`);
+      },
+    },
+    {
+      // 4.1.3 (stage 6): Play and Pause pressed on a scene, by the pointer, as the play bar's claim says (PlayBar.tsx;
+      // the words are the editor's transport's, transport.ts). Play: "Playing animation", the one button now named
+      // "Pause", the position rising. Pause: "Animation paused", named "Play" again, the position then standing (thirty
+      // frames, one value, neither the start nor the end). Play again goes on from there. Left to run out: "Animation
+      // complete", once, named "Play", at the end; the status region said those four and nothing else. Play pressed at
+      // the end plays from the start (the player's `play`, DEF-62) and says "Playing animation". The same element
+      // throughout.
+      name: 'play-and-pause',
+      method: 'j-forms',
+      rows: ['4.1.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const wrong = [];
+        if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) wrong.push('the journeys\' project was not opened');
+        await quiet(page);
+        const heard = await hear(page);
+        const button = await page.locator(PLAY).elementHandle();
+        const values = (s) => s.map(([, v]) => v);
+        await page.locator(PLAY).click();
+        if (!(await comesToWords(page, PLAYING))) wrong.push(`Play: "${PLAYING}" was not said`);
+        if (!(await isNamed(page, 'Pause', button))) wrong.push('Play: the same button is not now named "Pause"');
+        const rising = await sample(page, 10);
+        if (!(rising.at(-1)[1] > rising[0][1]) || backwards(rising).length) wrong.push(`Play: the position went ${values(rising).join(', ')}`);
+        await page.locator(PLAY).click();
+        if (!(await comesToWords(page, PAUSED))) wrong.push(`Pause: "${PAUSED}" was not said`);
+        if (!(await isNamed(page, 'Play', button))) wrong.push('Pause: the same button is not named "Play" again');
+        const still = values(await sample(page, 30));
+        const stood = still[0];
+        if (new Set(still).size !== 1 || stood <= 0 || stood >= 1000) wrong.push(`Pause: over thirty frames the position was ${[...new Set(still)].join(', ')}`);
+        await page.locator(PLAY).click();
+        const resumed = values(await sample(page, 10));
+        if (resumed.some((v) => v < stood) || !(resumed.at(-1) > stood)) wrong.push(`Play again: from ${stood} the position went ${resumed.join(', ')}`);
+        if (!(await isNamed(page, 'Pause', button))) wrong.push('Play again: the same button is not named "Pause"');
+        const done = await page.waitForFunction(([st, w]) => document.querySelector(st)?.textContent === w, [STATUS, COMPLETE], { timeout: 12000 }).then(() => true, () => false);
+        if (!done) wrong.push(`left to run: "${COMPLETE}" was not said`);
+        if (!(await isNamed(page, 'Play', button))) wrong.push('at the end: the same button is not named "Play"');
+        if ((await atNow(page)).now !== 1000) wrong.push(`at the end: the position is ${(await atNow(page)).now}`);
+        await quiet(page);
+        const once = await neverSays(page, COMPLETE, 2500);
+        const texts = await heard();
+        const expected = [PLAYING, PAUSED, PLAYING, COMPLETE];
+        if (!once || JSON.stringify(texts) !== JSON.stringify(expected)) wrong.push(`the status region said ${JSON.stringify(await heard())}, not ${JSON.stringify(expected)}`);
+        await page.locator(PLAY).click();
+        const again = values(await sample(page, 10));
+        if (!(await comesToWords(page, PLAYING))) wrong.push(`Play at the end: "${PLAYING}" was not said`);
+        if (!(again.at(-1) < 500) || !(again.at(-1) > again[0]) || again[0] > 100) wrong.push(`Play at the end: the position went ${again.join(', ')}, not from the start`);
+        if (!(await isNamed(page, 'Pause', button))) wrong.push('Play at the end: the same button is not named "Pause"');
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `by the pointer on the one button: Play, "${PLAYING}", named "Pause", rising; Pause, "${PAUSED}", named "Play", standing at ${stood} over thirty frames; Play again from ${stood}; left to run, "${COMPLETE}" once at 1000; said ${JSON.stringify(expected)} and nothing else; Play at the end played from the start`);
       },
     },
     {
