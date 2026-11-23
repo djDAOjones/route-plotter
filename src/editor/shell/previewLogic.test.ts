@@ -45,6 +45,20 @@ function upTheMiddle(images: Project['images'] = []): Project {
   return { scene: { ...newScene(nextId), routes: [route] }, images };
 }
 
+/**
+ * `upTheMiddle` with a bend half-way: stop (0.5, 0.9), bend (0.5, 0.5), stop (0.5, 0.1), so the overlay draws a mark
+ * for a point not selected (the bend's grey dot) as well as the selected point's rings.
+ */
+function withBend(images: Project['images'] = []): Project {
+  const nextId = counter('bend');
+  const a = { ...newPoint(nextId, { x: 0.5, y: 0.9, kind: 'stop' }), pauseMs: 0 };
+  const m = newPoint(nextId, { x: 0.5, y: 0.5, kind: 'bend' });
+  const b = { ...newPoint(nextId, { x: 0.5, y: 0.1, kind: 'stop' }), pauseMs: 0 };
+  const lines = [newLine(nextId, a.id, m.id), newLine(nextId, m.id, b.id)];
+  const route = { ...newRoute(nextId), points: [a, m, b], lines, leadStart: a.id };
+  return { scene: { ...newScene(nextId), routes: [route] }, images };
+}
+
 const wide = { id: 'wide', type: 'image/png' as const, bytes: png(200, 100) };
 const tall = { id: 'tall', type: 'image/png' as const, bytes: png(100, 300) };
 const broken = { id: 'broken', type: 'image/png' as const, bytes: new Uint8Array(10) };
@@ -113,6 +127,18 @@ describe('the inputs: one source for a frame and the length (ruling 2)', () => {
     store.open(upTheMiddle([tall]));
     expect(holder.inputs().image).toEqual({ width: 100, height: 300 });
     expect(holder.inputs().image).not.toBe(first);
+  });
+
+  it('reads a record that comes back as the background no more: the very object it gave first (Codex, 2)', () => {
+    const store = storeOf(upTheMiddle([wide]));
+    const holder = createFrameInputs({ store });
+    const first = holder.inputs().image;
+    const records = store.getState().project.images;
+    store.open(upTheMiddle([tall]));
+    expect(holder.inputs().image).toEqual({ width: 100, height: 300 });
+    reopen(store, records);
+    expect(store.getState().project.images[0]).toBe(records[0]);
+    expect(holder.inputs().image).toBe(first);
   });
 
   it('gives no size for a header that cannot be read', () => {
@@ -411,6 +437,39 @@ describe('when a frame is drawn (ruling 4)', () => {
     expect(frames.booked()).toBe(0);
   });
 
+  it('(b) books for the background’s size alone, with a stub store whose scene, position and selection stay (Codex, 4)', () => {
+    // The real store's Open makes a new scene object and clears the selection, so a stub of its state is swapped here:
+    // only the first image changes, the picture held stays none.
+    let state = storeOf(upTheMiddle([wide])).getState();
+    const listeners = new Set<() => void>();
+    const store = {
+      getState: () => state,
+      subscribe: (listener: () => void) => {
+        listeners.add(listener);
+        return () => listeners.delete(listener);
+      },
+    };
+    const swap = (images: Project['images']) => {
+      state = { ...state, project: { ...state.project, images } };
+      for (const listener of [...listeners]) listener();
+    };
+    const frames = handMade();
+    const requests: FrameRequest[] = [];
+    const drawer = createDrawer({
+      store, inputs: createFrameInputs({ store }), pictures: { held: () => null, subscribe: () => () => undefined },
+      frames: frames.source, report: () => undefined, failed: () => undefined,
+    });
+    drawer.attach({ paint: (request) => (requests.push(request), []), surface: blank });
+    frames.run();
+    swap([{ ...wide, id: 'same-size' }]);
+    expect(frames.booked()).toBe(0);
+    swap([tall]);
+    expect(frames.booked()).toBe(1);
+    frames.run();
+    expect(requests.map((request) => request.image)).toEqual([{ width: 200, height: 100 }, { width: 100, height: 300 }]);
+    expect(requests[1]?.scene).toBe(requests[0]?.scene);
+  });
+
   it('(a) draws once a frame however many changes a frame, and nothing over a still run', () => {
     const { store, drawer, target, frames, requests } = drawerOf();
     drawer.attach(target);
@@ -476,6 +535,28 @@ describe('when a frame is drawn (ruling 4)', () => {
     store.select({ route: null, points: [] });
     frames.run();
     expect(recorder.take()).toEqual(none);
+  });
+
+  it('(d) draws the rings of the selected point only, at its place; the point not selected keeps its own mark (Codex, 6)', () => {
+    const recorder = new Recorder();
+    const project = withBend([wide]);
+    const { store, drawer, target, frames } = drawerOf(project, (request) => compose(recorder, request));
+    drawer.attach(target);
+    frames.run();
+    const none = recorder.take();
+    const route = store.getState().project.scene.routes[0];
+    const top = route?.points[2]?.id ?? '';
+    store.select({ route: route?.id ?? null, points: [top] });
+    frames.run();
+    // The picture, 200 × 100, is fitted whole into the 1920 × 1080 frame: 9.6 times, 1920 × 960, 60 px down. So x 0.5
+    // is 960 px; the selected top stop, y 0.1, is 60 + 96 = 156 px; the bend, y 0.5, is 540 px; the first stop, y 0.9,
+    // is 924 px. The overlay walks the points in order: the first stop, not selected, draws nothing; the bend draws
+    // its grey dot (radius 4) and no ring; the top stop draws the selection ring (the marker's half-width 8, + 4),
+    // white then black, two arcs at the one place.
+    const arcs = recorder.take().slice(none.length).filter((line) => line.startsWith('arc'));
+    const centre = (line: string) => line.split(' ').slice(1, 4).join(' ');
+    expect(arcs.map(centre)).toEqual(['960 540 4', '960 156 12', '960 156 12']);
+    expect(arcs.some((line) => centre(line).startsWith('960 924'))).toBe(false);
   });
 
   it('(e) reports a paint that throws, then books on the next change', () => {

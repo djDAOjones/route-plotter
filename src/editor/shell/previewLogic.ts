@@ -8,9 +8,9 @@
 //    the editor picks an image by its place (provisional; the file names no background, D132).
 // 2. One source for what a frame and the play length are made from, the inputs (`createFrameInputs`): `inputs()` gives
 //    the store's scene as it is now, the seed `SEED` (1), the size last given to `resize` (from `START_SIZE`, 1920 by
-//    1080) and the background's size from its header (`sizeOf`), read once for each background record and null with
-//    no background or a header that cannot be read. Nothing waits for a decoder: an open's own telling already reads
-//    the opened picture's size. `resize` takes whole numbers of 1 or more and ignores anything else; its listeners are
+//    1080) and the background's size from its header (`sizeOf`), read once for each background record (kept by the
+//    record, so a record that comes back is not read again) and null with no background or a header that cannot be
+//    read. Nothing waits for a decoder: an open's own telling already reads the opened picture's size. `resize` takes whole numbers of 1 or more and ignores anything else; its listeners are
 //    told only when the size changes. The session hands `inputs` to the player's transport; the drawer reads the same.
 // 3. The picture to draw (`createPictures`) is loaded through the loader handed in, `load(bytes, type)`, apart from the
 //    inputs: it is asked when a record becomes the background, never with no background, never for a record whose
@@ -88,17 +88,18 @@ export interface FrameInputs {
 
 export function createFrameInputs({ store }: { readonly store: Pick<Store, 'getState'> }): FrameInputs {
   let size = START_SIZE;
-  let read: { readonly record: ImageRecord; readonly size: Size | null } | null = null;
+  /** Each background record's header size, kept by the record: read once, the same frozen object after (Codex, 2). */
+  const read = new WeakMap<ImageRecord, Size | null>();
   const listeners: Listeners = new Set();
 
   const imageSize = (): Size | null => {
     const record = backgroundOf(store.getState().project);
     if (record === null) return null;
-    if (read?.record !== record) {
+    if (!read.has(record)) {
       const found = sizeOf(record.bytes, record.type);
-      read = { record, size: found === null ? null : Object.freeze({ width: found.width, height: found.height }) };
+      read.set(record, found === null ? null : Object.freeze({ width: found.width, height: found.height }));
     }
-    return read.size;
+    return read.get(record) ?? null;
   };
 
   return {
