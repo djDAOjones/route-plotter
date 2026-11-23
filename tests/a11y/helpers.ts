@@ -60,7 +60,7 @@ export const test = base.extend<{ a11yBrowser: void }>({
 });
 export { expect };
 
-export type State = { name?: string; path: string; setup?: (a: { page: Page }) => Promise<void>; snapshot?: string; snapshotRoot?: string; interactions?: { name: string; run: (a: { page: Page }) => Promise<void>; snapshot?: string }[]; keeps?: { content?: string[]; cues?: string[]; functions?: { name: string; run: (a: { page: Page }) => Promise<boolean> }[] } };
+export type State = { name?: string; path: string; setAside?: { selector: string; reason: string }[]; setup?: (a: { page: Page }) => Promise<void>; snapshot?: string; snapshotRoot?: string; interactions?: { name: string; run: (a: { page: Page }) => Promise<void>; snapshot?: string }[]; keeps?: { content?: string[]; cues?: string[]; functions?: { name: string; run: (a: { page: Page }) => Promise<boolean> }[] } };
 export async function open(page: Page, state: State) {
   await page.goto(state.path);
   if (state.setup) await state.setup({ page });
@@ -115,8 +115,8 @@ export async function axeScan(page: Page, testInfo: TestInfo) {
 // judge it (V31-A11Y-VERDICTS): the element's opacity, its text shadow, whether its control is renamed by aria-label
 // or aria-labelledby, and why the page sets it aside — in a disabled widget or group, in the label of a disabled
 // widget, or invisible, clipped to nothing or off the page.
-export async function contrastPairs(page: Page) {
-  const raw = await page.evaluate(() => {
+export async function contrastPairs(page: Page, setAside: string[] = []) {
+  const raw = await page.evaluate((aside: string[]) => {
     // The flat tree's parent: the slot an element is assigned to, else its parent, else a shadow root's host.
     const up = (e: Element): Element | null => e.assignedSlot ?? e.parentElement ?? ((e.parentNode as ShadowRoot | null)?.host ?? null);
     const parse = (c: string) => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number); return [p[0], p[1], p[2], p[3] ?? 1]; };
@@ -218,6 +218,9 @@ export async function contrastPairs(page: Page) {
     }
     // Meaningful graphics: any not hidden from assistive technology, and an icon that alone identifies its control. The
     // page reports each SVG's painted shapes in paint order with the page colour behind it; graphics.mjs judges them.
+    // A raster or canvas graphic in an element the state declares set aside (setAside, each with its reason) is counted
+    // there and not measured; an SVG never is.
+    const asideCount = aside.map(() => 0);
     const graphicsRaw: { el: string; bg: number[]; shapes: { tag: string; exact: boolean; round: boolean; box: { left: number; top: number; right: number; bottom: number }; fill: number[] | null; stroke: number[] | null }[]; open: string }[] = [];
     const controlOf = (e: Element) => e.closest('button, a[href], summary, [role=button], [role=link], [role=tab], [role=menuitem], [role=checkbox], [role=switch], [role=option]');
     for (const g of document.querySelectorAll('svg, img, canvas, [role=img], input[type=image]')) {
@@ -225,7 +228,7 @@ export async function contrastPairs(page: Page) {
       const ctl = controlOf(g);
       const needed = ctl ? !((ctl as HTMLElement).innerText || '').replace(/[^\p{L}\p{N}]/gu, '') : !g.closest('[aria-hidden="true"], [role=presentation], [role=none]') && !(g.tagName === 'IMG' && g.getAttribute('alt') === '');
       if (!needed) continue;
-      if (g.tagName.toLowerCase() !== 'svg') { graphicsUnresolved.push(`${name(g)}: a raster or canvas graphic, not measured`); continue; }
+      if (g.tagName.toLowerCase() !== 'svg') { const i = aside.findIndex((sel) => g.closest(sel)); if (i >= 0) { asideCount[i] += 1; continue; } graphicsUnresolved.push(`${name(g)}: a raster or canvas graphic, not measured`); continue; }
       const bg = background(g.parentElement);
       if (!bg) { graphicsUnresolved.push(`${name(g)} over an image`); continue; }
       let open = '';
@@ -252,8 +255,8 @@ export async function contrastPairs(page: Page) {
       }
       graphicsRaw.push({ el: name(g), bg, shapes, open });
     }
-    return { text, boundaries, native, graphicsRaw, unresolved, graphicsUnresolved };
-  });
+    return { text, boundaries, native, graphicsRaw, unresolved, graphicsUnresolved, asideCount };
+  }, setAside);
   // The shapes are judged here, in plain Node, by the module the confined suite holds to known answers.
   const graphics: { el: string; state: 'pass' | 'fail'; low: number; shapes: number; reason: string }[] = [], graphicsUnresolved = [...raw.graphicsUnresolved];
   for (const g of raw.graphicsRaw) {
@@ -261,7 +264,7 @@ export async function contrastPairs(page: Page) {
     if (v.state === 'unresolved') graphicsUnresolved.push(`${g.el}: ${v.reason}`);
     else graphics.push({ el: g.el, state: v.state, low: v.low, shapes: v.shapes, reason: v.reason });
   }
-  return { text: raw.text, boundaries: raw.boundaries, native: raw.native, graphics, unresolved: raw.unresolved, graphicsUnresolved };
+  return { text: raw.text, boundaries: raw.boundaries, native: raw.native, graphics, unresolved: raw.unresolved, graphicsUnresolved, setAside: raw.asideCount };
 }
 
 // State cues: each toggle, unchecked radio, unselected tab or option is activated — by Space, else Enter, else a pointer
@@ -315,18 +318,23 @@ export async function stateCues(page: Page, state: State, limit = 20) {
 }
 
 export async function contrastRows(page: Page, state: State): Promise<Rows> {
-  const { text, boundaries, native, graphics, unresolved, graphicsUnresolved } = await contrastPairs(page);
+  const declared = state.setAside ?? [];
+  const { text, boundaries, native, graphics, unresolved, graphicsUnresolved, setAside } = await contrastPairs(page, declared.map((d) => d.selector));
+  // A declaration answers for what it sets aside: one with no reason, or one that sets no visible graphic aside here,
+  // fails the row, so none can linger or stand empty.
+  const misdeclared = declared.flatMap((d, i) => [...(d.reason?.trim() ? [] : [`set aside ${d.selector}: no reason given`]), ...(setAside[i] ? [] : [`set aside ${d.selector}: no visible raster or canvas graphic on state ${state.name ?? state.path} stands in it`])]);
+  const asideWords = declared.length ? `; ${setAside.reduce((a, b) => a + b, 0)} raster or canvas graphic(s) set aside, not measured: ${declared.map((d, i) => `${d.selector} (${setAside[i]}), ${d.reason}`).join('; ')}` : '';
   const short = (r: number) => r.toFixed(2);
   const nativeLow: string[] = [];
   for (const n of native) { const [i, el] = n.split(' '); if (!(await ink(page, page.locator(`[data-a11y-ink="${i}"]`)))) nativeLow.push(`${el}: no pixel at 3:1 against its surround`); }
   await page.evaluate(() => document.querySelectorAll('[data-a11y-ink]').forEach((e) => e.removeAttribute('data-a11y-ink')));
   const cues = await stateCues(page, state);
-  const fail1411 = [...boundaries.filter((b) => b.ratio < 3).map((b) => `${b.el} boundary ${short(b.ratio)}:1`), ...nativeLow, ...graphics.filter((g) => g.state === 'fail').map((g) => `${g.el}: ${g.reason}`), ...cues.fails];
+  const fail1411 = [...misdeclared, ...boundaries.filter((b) => b.ratio < 3).map((b) => `${b.el} boundary ${short(b.ratio)}:1`), ...nativeLow, ...graphics.filter((g) => g.state === 'fail').map((g) => `${g.el}: ${g.reason}`), ...cues.fails];
   const open1411 = [...graphicsUnresolved, ...cues.unresolved];
   const rows: Rows = {
     // contrast.mjs judges the text: what WCAG exempts set aside, a text shadow measured or a review, no pair not run.
     '1.4.3': textRow(text, 4.5, 3, unresolved),
-    '1.4.11': fail1411.length ? verdict(fail1411, '') : open1411.length ? { state: 'not_run', reason: `unresolved: ${open1411.slice(0, 5).join('; ')}` } : { state: 'pass', reason: `${boundaries.length + native.length} boundary(ies), ${graphics.length} graphic(s) and ${cues.measured} state cue(s) at 3:1` },
+    '1.4.11': fail1411.length ? verdict(fail1411, '') : open1411.length ? { state: 'not_run', reason: `unresolved: ${open1411.slice(0, 5).join('; ')}` } : { state: 'pass', reason: `${boundaries.length + native.length} boundary(ies), ${graphics.length} graphic(s) and ${cues.measured} state cue(s) at 3:1${asideWords}` },
   };
   if (AAA) rows['1.4.6'] = textRow(text, 7, 4.5, unresolved);
   return rows;
