@@ -1245,6 +1245,15 @@ export default {
         const heard = await hear(page);
         const button = await page.locator(PLAY).elementHandle();
         const values = (s) => s.map(([, v]) => v);
+        // How far a playing can have gone since the press (Codex, brief 81): the journeys' scene is 6 s long, 1000
+        // thousandths, so one thousandth for each 6 ms since the click (its time taken on the button, in the frames'
+        // own clock), and 10 thousandths over that (60 ms: a slow frame, and the position drawn a frame late, or rounded).
+        // A sample past that has jumped: a resume from 30 that lands on 700, a restart that begins at 300 ms (50).
+        await page.locator(PLAY).evaluate((b) => b.addEventListener('click', () => { window.__pressedAt = performance.now(); }));
+        const past = async (s, from) => {
+          const at = await page.evaluate(() => window.__pressedAt);
+          return s.filter(([t, v]) => !(v <= from + Math.ceil(Math.max(0, t - at) / 6) + 10)).map(([t, v]) => `${v} at ${Math.round(t - at)} ms`);
+        };
         await page.locator(PLAY).click();
         if (!(await comesToWords(page, PLAYING))) wrong.push(`Play: "${PLAYING}" was not said`);
         if (!(await isNamed(page, 'Pause', button))) wrong.push('Play: the same button is not now named "Pause"');
@@ -1257,8 +1266,11 @@ export default {
         const stood = still[0];
         if (new Set(still).size !== 1 || stood <= 0 || stood >= 1000) wrong.push(`Pause: over thirty frames the position was ${[...new Set(still)].join(', ')}`);
         await page.locator(PLAY).click();
-        const resumed = values(await sample(page, 10));
+        const resumedAt = await sample(page, 10);
+        const resumed = values(resumedAt);
         if (resumed.some((v) => v < stood) || !(resumed.at(-1) > stood)) wrong.push(`Play again: from ${stood} the position went ${resumed.join(', ')}`);
+        const jumped = await past(resumedAt, stood);
+        if (jumped.length) wrong.push(`Play again: from ${stood}, further than the time since the press allows: ${jumped.join(', ')}`);
         if (!(await isNamed(page, 'Pause', button))) wrong.push('Play again: the same button is not named "Pause"');
         const done = await page.waitForFunction(([st, w]) => document.querySelector(st)?.textContent === w, [STATUS, COMPLETE], { timeout: 12000 }).then(() => true, () => false);
         if (!done) wrong.push(`left to run: "${COMPLETE}" was not said`);
@@ -1270,11 +1282,14 @@ export default {
         const expected = [PLAYING, PAUSED, PLAYING, COMPLETE];
         if (!once || JSON.stringify(texts) !== JSON.stringify(expected)) wrong.push(`the status region said ${JSON.stringify(await heard())}, not ${JSON.stringify(expected)}`);
         await page.locator(PLAY).click();
-        const again = values(await sample(page, 10));
+        const againAt = await sample(page, 10);
+        const again = values(againAt);
         if (!(await comesToWords(page, PLAYING))) wrong.push(`Play at the end: "${PLAYING}" was not said`);
         if (!(again.at(-1) < 500) || !(again.at(-1) > again[0]) || again[0] > 100) wrong.push(`Play at the end: the position went ${again.join(', ')}, not from the start`);
+        const partWay = await past(againAt.filter(([, v]) => v < 1000), 0);
+        if (partWay.length) wrong.push(`Play at the end: further from the start than the time since the press allows: ${partWay.join(', ')}`);
         if (!(await isNamed(page, 'Pause', button))) wrong.push('Play at the end: the same button is not named "Pause"');
-        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `by the pointer on the one button: Play, "${PLAYING}", named "Pause", rising; Pause, "${PAUSED}", named "Play", standing at ${stood} over thirty frames; Play again from ${stood}; left to run, "${COMPLETE}" once at 1000; said ${JSON.stringify(expected)} and nothing else; Play at the end played from the start`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `by the pointer on the one button: Play, "${PLAYING}", named "Pause", rising; Pause, "${PAUSED}", named "Play", standing at ${stood} over thirty frames; Play again from ${stood}, no further than the time since the press allows; left to run, "${COMPLETE}" once at 1000; said ${JSON.stringify(expected)} and nothing else; Play at the end played from the start, no further than the time since the press allows`);
       },
     },
     {
