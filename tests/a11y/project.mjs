@@ -1343,6 +1343,40 @@ export default {
       },
     },
     {
+      // 4.1.3 (stage 6, brief 81's step 4): while an open is under way Open draws one line, "Opening <name>…", in
+      // Carbon's live region made polite (Open.tsx, point 4), gone once "Project opened" is said. A MutationObserver
+      // set on the page before the choice records every text holding "Opening", with its nearest aria-live, and whether
+      // it was still there at a moment the status region said "Project opened"; no timed wait in the page and no slowed
+      // read (io's read is async, so the line is drawn before it ends, the golden as it is). Carbon's nested assertive
+      // region (its spinner's "loading", A11Y-03) is recorded, not failed.
+      name: 'the-opening-line',
+      method: 'j-forms',
+      rows: ['4.1.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        await page.evaluate((st) => {
+          window.__opening = [];
+          new MutationObserver(() => {
+            const lines = [...document.querySelectorAll('main *')].filter((e) => e.children.length === 0 && /Opening/.test(e.textContent ?? ''));
+            const said = document.querySelector(st)?.textContent ?? '';
+            for (const e of lines) window.__opening.push({ text: e.textContent, live: e.closest('[aria-live]')?.getAttribute('aria-live') ?? null, inner: [...(e.closest('[aria-live]')?.querySelectorAll('[aria-live]') ?? [])].map((n) => n.getAttribute('aria-live')), said });
+          }).observe(document.body, { childList: true, subtree: true, characterData: true });
+        }, STATUS);
+        const file = await projectFile();
+        const wrong = [];
+        if (!(await choose(page, file)) || !(await saysOpened(page))) wrong.push(`"${OPENED}" was not said`);
+        const seen = await page.evaluate(() => window.__opening);
+        const words = `Opening ${file.name}\u2026`;
+        const line = seen.filter((s) => s.text === words);
+        if (!line.length) wrong.push(`"${words}" was never seen; seen ${JSON.stringify(seen.map((s) => s.text))}`);
+        if (line.some((s) => s.live !== 'polite')) wrong.push(`the line's region was ${JSON.stringify([...new Set(line.map((s) => s.live))])}, not polite`);
+        if (seen.some((s) => s.said === OPENED)) wrong.push(`the line was still there when "${OPENED}" was said`);
+        if (await page.locator('main').getByText('Opening', { exact: false }).count()) wrong.push('the line is still there after the open');
+        const inner = [...new Set(line.flatMap((s) => s.inner))];
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${words}" seen in a polite region while the open was under way (Carbon's nested regions: ${JSON.stringify(inner)}, recorded), gone before "${OPENED}" was said`);
+      },
+    },
+    {
       // 4.1.3 and DEF-67 (stage 6): a project opened while another plays: the status region never says "Animation
       // paused", says "Project opened", and the position is back at 0 with nothing playing.
       name: 'open-over-a-playing',
