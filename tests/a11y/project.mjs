@@ -1305,7 +1305,11 @@ export default {
         // that first move was seen: the timeline shows a frame's move at the next frame, and the first frame after a
         // long task can carry an early time (seen: blocked 300 ms, +3 then +16 in 17 ms). The journeys' scene is 6 s for
         // 1000 thousandths, one for each 6 ms of the frames' own clock, and 10 (60 ms) for a slow frame and rounding. A
-        // resume from 30 that lands on 700, a restart that begins at 300 ms (50), fail.
+        // resume from 30 that lands on 700, a restart that begins at 300 ms (50), fail. Beside those, from the first move
+        // on, no sample is more than 20 past the one before it (Codex on brief 82): the player moves at most
+        // `MAX_GAP_MS`, 100 ms, a frame (src/player/transport/transport.ts), which is 17 thousandths of the 6 s scene,
+        // and 3 for rounding and a draw a frame late; one long interval no longer pays for a jump, so Codex's own
+        // example, 30, 30, 33 at 300 ms, then 83 at 317 ms, is refused by these words (83 is 50 past 33).
         await page.locator(PLAY).evaluate((b) => b.addEventListener('click', () => { window.__pressedAt = performance.now(); }));
         // Presses Play with the recorder running; gives back [the frame's time, aria-valuenow] for `n` frames after it.
         const pressed = async (n) => {
@@ -1326,7 +1330,9 @@ export default {
           const i = s.findIndex(([, v], k) => k > 0 && v !== from && !skip(v));
           if (i < 0) return [`it never moved off ${from}`];
           const [t1] = s[i - 1], [, v1] = s[i];
-          return [...(v1 > from + 10 ? [`its first move was to ${v1}`] : []), ...s.slice(i + 1).filter(([t, v]) => v > v1 + Math.ceil((t - t1) / 6) + 10).map(([t, v]) => `${v} at ${Math.round(t - t1)} ms after ${v1}`)];
+          const moved = s.slice(i - 1).filter(([, v], k) => k === 0 || !skip(v));
+          const steps = moved.slice(1).flatMap(([t, v], k) => (v > moved[k][1] + 20 ? [`${v} straight after ${moved[k][1]}, a step of more than 20, at ${Math.round(t - t1)} ms after ${v1}`] : []));
+          return [...(v1 > from + 10 ? [`its first move was to ${v1}`] : []), ...s.slice(i + 1).filter(([t, v]) => v > v1 + Math.ceil((t - t1) / 6) + 10).map(([t, v]) => `${v} at ${Math.round(t - t1)} ms after ${v1}`), ...steps];
         };
         await page.locator(PLAY).click();
         if (!(await comesToWords(page, PLAYING))) wrong.push(`Play: "${PLAYING}" was not said`);
@@ -1362,7 +1368,7 @@ export default {
         const partWay = past(againAt, 0, (v) => v === 1000);
         if (partWay.length) wrong.push(`Play at the end: further from the start than the playing allows: ${partWay.join(', ')}`);
         if (!(await isNamed(page, 'Pause', button))) wrong.push('Play at the end: the same button is not named "Pause"');
-        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `by the pointer on the one button: Play, "${PLAYING}", named "Pause", rising; Pause, "${PAUSED}", named "Play", standing at ${stood} over thirty frames; Play again from ${stood}, no further than the playing allows; left to run, "${COMPLETE}" once at 1000; said ${JSON.stringify(expected)} and nothing else; Play at the end played from the start, no further than the playing allows`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `by the pointer on the one button: Play, "${PLAYING}", named "Pause", rising; Pause, "${PAUSED}", named "Play", standing at ${stood} over thirty frames; Play again from ${stood}, no further than the playing allows and no step of more than 20 a sample; left to run, "${COMPLETE}" once at 1000; said ${JSON.stringify(expected)} and nothing else; Play at the end played from the start, no further than the playing allows and no step of more than 20 a sample`);
       },
     },
     {
