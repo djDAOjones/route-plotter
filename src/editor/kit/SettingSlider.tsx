@@ -30,8 +30,10 @@
 // Carbon keeps a thumb position of its own, brought into step only when its `value` prop changes. Where a report is
 // refused or changes nothing held (another change in progress; the model's check; a drag given up; an echo of an older
 // position), its thumb would stay where it was left; so the slider is drawn again from what is held, and keeps the
-// focus it had, but not during a press, nor while a handed position is still awaited (Carbon is on its way to it, and
-// a draw on each late echo of a playing would take the focus and the thumb's tooltip away frame by frame). The slider
+// focus it had, but not during a press, and only when the logic says the thumb stands off the position last handed or
+// drawn with nothing awaited (`standsOff()`), never by reading the value held: a late echo of a playing on a slow page
+// comes after the value held has moved on and before the draw that hands it, and a draw on each such echo would take
+// the focus and the thumb's tooltip away frame by frame (48 new Carbon sliders in one slowed playing, brief 80). The slider
 // is drawn again whenever the value held changes, not only its position: on a scale, two values can stand at one
 // position and read out differently.
 import { Slider, usePrefix } from '@carbon/react';
@@ -142,9 +144,7 @@ export function SettingSlider({
    */
   const bringIntoStep = (result: Result | 'released') => {
     if (result !== 'released' && result.ok && result.changed) return;
-    if (slider.pressed() || slider.awaiting()) return;
-    const thumb = slider.thumb();
-    if (thumb === undefined || thumb === slider.position()) return;
+    if (slider.pressed() || !slider.standsOff()) return;
     drawFromHeld();
   };
   /** Draws a new Carbon slider from what is held, the focus kept where it was. */

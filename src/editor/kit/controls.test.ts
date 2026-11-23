@@ -537,6 +537,71 @@ describe("point 3: a widget's late echo of a position it was handed (brief 79)",
     expect(slider.report(1000)).toEqual({ ok: true, changed: true });
     expect(setting.held).toBe(1000);
   });
+
+  // Brief 80's probe: on a slow page, during a playing, the echo of one frame's position comes after the store has moved
+  // to the next and before the draw that hands it; asked of the value held, each such echo drew a new widget.
+  describe('whether the widget stands off what it was handed: asked of what it was told, never of the value held', () => {
+    it('an awaited echo that comes after the value held has moved on (not yet handed): it does not stand off', () => {
+      const setting = handmade(0);
+      const slider = createSlider(setting);
+      slider.drawn(0);
+      setting.held = 10;
+      slider.handed(10);
+      setting.held = 20;
+      expect(slider.report(10)).toEqual({ ok: true, changed: false });
+      expect([slider.awaiting(), slider.thumb(), slider.standsOff()]).toEqual([false, 10, false]);
+      slider.handed(20);
+      expect(slider.standsOff()).toBe(false);
+    });
+
+    it('an older echo while a later position is awaited: it does not stand off', () => {
+      const setting = handmade(0);
+      const slider = createSlider(setting);
+      slider.drawn(0);
+      setting.held = 10;
+      slider.handed(10);
+      setting.held = 20;
+      slider.handed(20);
+      expect(slider.report(10)).toEqual({ ok: true, changed: false });
+      expect([slider.awaiting(), slider.standsOff()]).toEqual([true, false]);
+    });
+
+    it('a nudge refused, or one whose edit is refused: it stands off, so the widget is drawn again', () => {
+      const setting = handmade(50);
+      const slider = createSlider(setting);
+      slider.drawn(50);
+      setting.refuseSet.add(51);
+      expect(slider.report(51).ok).toBe(false);
+      expect([setting.held, slider.standsOff()]).toEqual([50, true]);
+      slider.drawn(50);
+      setting.refuseBegin = 'busy';
+      expect(slider.report(49).ok).toBe(false);
+      expect([setting.held, slider.standsOff()]).toEqual([50, true]);
+    });
+
+    it('a drag refused at its press, at the release: it stands off', () => {
+      const setting = handmade(50);
+      const slider = createSlider(setting);
+      slider.drawn(50);
+      setting.refuseBegin = 'busy';
+      slider.press();
+      expect(slider.report(60)).toEqual({ ok: true, changed: false });
+      slider.release();
+      expect([setting.held, slider.standsOff()]).toEqual([50, true]);
+    });
+
+    it('after a new widget is drawn, or before any: it does not stand off', () => {
+      const setting = handmade(50);
+      const slider = createSlider(setting);
+      expect(slider.standsOff()).toBe(false);
+      slider.drawn(50);
+      setting.refuseSet.add(51);
+      slider.report(51);
+      expect(slider.standsOff()).toBe(true);
+      slider.drawn(50);
+      expect(slider.standsOff()).toBe(false);
+    });
+  });
 });
 
 describe('the words', () => {

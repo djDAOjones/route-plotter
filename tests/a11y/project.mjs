@@ -1365,6 +1365,8 @@ export default {
         await page.mouse.click(middle.x, middle.y);
         if (!(await comesTo(page, 'Math.abs(n - 500) <= 10'))) wrong.push('the press on the track did not put the position at its middle');
         await page.locator(OPEN).focus();
+        // The thumb's element before J: a late echo on this slow page must not draw Carbon's slider anew (brief 80).
+        const thumbBefore = await page.locator(TIMELINE).elementHandle();
         await page.keyboard.press('j');
         // Each frame's position until "Animation complete" is said (or 10 s): null once the timeline is gone.
         const run = await page.evaluate(([t, s, w]) => new Promise((resolve) => {
@@ -1381,9 +1383,10 @@ export default {
         if (run.seen.includes(null) || !(await there())) wrong.push('J after a press: the timeline is gone');
         if (ups.length) wrong.push(`J after a press: the position went up: ${ups.slice(0, 5).join(', ')}`);
         if (!run.done) wrong.push('J after a press: "Animation complete" was not said');
+        if (!(await thumbBefore.evaluate((el, t) => el.isConnected && document.querySelector(t) === el, TIMELINE))) wrong.push('J after a press: the thumb was drawn anew during the playing');
         if ((await there()) && (await atNow(page)).now !== 0) wrong.push(`J after a press: ended at ${(await atNow(page)).now}`);
         if (errors.length) wrong.push(`page error: ${errors[0]}`);
-        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `with React's scheduler slowed 60 ms a task: End then Home at no gap stands at 0, "Skipped to start" said last; J after a press at 50 % plays down to 0 over ${run.seen.length} frames, never up, "Animation complete" said; the timeline stays, no page error`);
+        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `with React's scheduler slowed 60 ms a task: End then Home at no gap stands at 0, "Skipped to start" said last; J after a press at 50 % plays down to 0 over ${run.seen.length} frames, never up, "Animation complete" said; the thumb's element the same throughout, the timeline stays, no page error`);
       },
     },
     {

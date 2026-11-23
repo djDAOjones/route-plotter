@@ -35,8 +35,12 @@
 //    and the one just handed), and a position left waiting that never comes would swallow a later move onto it. A
 //    widget drawn anew stands where it was drawn and awaits nothing. Where the thumb stands is a forecast from what was
 //    handed and reported, not a reading of the widget. An awaited position that never comes waits until a later echo,
-//    the bound or a new widget clears it: no clock. While one waits, the page does not draw its widget again
-//    (SettingSlider). What the rule costs: while a position is awaited, a move of the user's that lands exactly on it
+//    the bound or a new widget clears it: no clock. The slider also keeps the position its widget was last handed or
+//    drawn, and says the widget stands off it only when the thumb is known, nothing is awaited, and the thumb is
+//    elsewhere: that is when a refused or empty report, or a release, draws the widget again (SettingSlider), and
+//    never while a handed position is awaited or for an echo that comes after the value held has moved on (that value
+//    is on its way to the widget). A key of the kit's own (Home, End, Page Up, Page Down) and a new setting or scale
+//    draw a new widget without asking. What the rule costs: while a position is awaited, a move of the user's that lands exactly on it
 //    is taken for the echo and lost (for an arrow during a playing, measured by brief 79). A press while one is down (a second finger) is nothing until the release, also
 //    after a give-up or a refusal, so one press begins at most one edit. What that costs: if a release is ever lost,
 //    the next press is nothing, and its release clears it.
@@ -149,6 +153,12 @@ export interface Slider {
   awaiting(): boolean;
   /** Where the widget's thumb stands, or will once what is awaited has come; undefined until it is drawn or reports. */
   thumb(): number | undefined;
+  /**
+   * Whether the widget's thumb stands off the position it was last handed or drawn, with nothing awaited: only then
+   * must it be drawn again to show what it was handed. Asked of what the slider was told, never of the value held: a
+   * value held that differs from the position last handed is on its way to the widget, which hands it.
+   */
+  standsOff(): boolean;
   /** The pointer is let go: the press ends, and so does its drag (`end()`), if one is still open. */
   release(): Result;
 }
@@ -166,6 +176,7 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
   let down = false;
   let awaited: number[] = [];
   let thumb: number | undefined;
+  let last: number | undefined;
 
   const move = (value: number): Result => (drag === null ? NOTHING : drag.set(value));
   const start = (): Result => {
@@ -223,6 +234,7 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
       return down ? move(scale.toValue(at)) : nudge(scale.toValue(at));
     },
     handed: (at) => {
+      last = at;
       if (at === thumb) return;
       thumb = at;
       awaited = [...awaited, at].slice(-AWAITED_AT_MOST);
@@ -230,9 +242,11 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
     drawn: (at) => {
       awaited = [];
       thumb = at;
+      last = at;
     },
     awaiting: () => awaited.length > 0,
     thumb: () => thumb,
+    standsOff: () => thumb !== undefined && last !== undefined && awaited.length === 0 && thumb !== last,
     release: () => {
       down = false;
       return end();
