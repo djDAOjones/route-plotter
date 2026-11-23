@@ -148,6 +148,9 @@ const headerOnlyPng = () => {
 // io's words for an image that does not decode (words.ts, openedInvalid, with images.ts's problem).
 const NOT_SHOWN = 'This project could not be opened, because some of it is outside what Route Plotter allows (images[0]: expected a PNG image that can be shown, found a damaged image). Nothing was opened.';
 const TEXT_FILE = { name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Not a project.\n') };
+// The same text under a name of 60 characters with no spaces: the refusal's title carries it (brief 80, step 2).
+const LONG_NAME = `${'a'.repeat(56)}.txt`;
+const LONG_TEXT_FILE = { ...TEXT_FILE, name: LONG_NAME };
 // Presses "Open project" (a real click, or `key` with focus on it) and chooses `file` in the chooser it opens; false
 // when no chooser opened.
 const choose = async (page, file, key) => {
@@ -367,6 +370,53 @@ export default {
           { name: 'skip to start by its button', run: async ({ page }) => { await page.locator(SKIP_START).click(); return (await said(page)) === SKIPPED_TO_START; } },
           { name: 'skip to end by its button', run: async ({ page }) => { await page.locator(SKIP_END).click(); return (await said(page)) === SKIPPED_TO_END; } },
           { name: 'move the timeline by a key', run: async ({ page }) => { await page.locator(SKIP_START).click(); await page.locator(TIMELINE).focus(); await page.keyboard.press('Shift+ArrowRight'); return (await atNow(page)).now === 4; } },
+        ],
+      },
+    },
+    {
+      // Open's refusal showing, for a text file whose name is 60 characters with no spaces (stage 6, brief 80): its
+      // title and io's sentence wrap inside the page at 320 px, nothing cut and no sideways scroll (1.4.10, reflow),
+      // and no control that takes focus is covered by it (2.4.12, focus). The name breaks anywhere (frameLook.css).
+      name: 'refused-long-name',
+      path: '/',
+      // The choice leaves focus on "Open project" (the claim: refused-close-returns-focus); the pack's walk Tabs on from
+      // wherever focus stands and stops when it leaves the page, so from there it never comes back to Open (6 of 7,
+      // brief 81). A press on the banner's blank corner puts the Tab starting point at the document's start, where the
+      // other state's walk starts; a blur would not (Chromium keeps the starting point on Open). Nothing is hidden by it:
+      // every control is still reached by Tab alone, Open first.
+      setup: async ({ page }) => { await settled({ page }); await choose(page, LONG_TEXT_FILE); await alerts(page).waitFor(); await page.mouse.click(1, 1); },
+      snapshot: [
+        '- banner "Route Plotter":',
+        '  - heading "Route Plotter" [level=1]',
+        '  - button "Open project"',
+        '  - button "Help"',
+        '- main:',
+        '  - alert:',
+        '    - img "Error"',
+        `    - text: Could not open ${LONG_NAME} ${NOT_A_PROJECT}`,
+        '    - button "Close"',
+        '  - paragraph:',
+        '    - text: Version 4 is being built here. It cannot make anything yet. Its progress is on',
+        '    - link "GitHub":',
+        `      - /url: ${PROGRESS}`,
+        '    - text: .',
+        '  - group "Playback":',
+        '    - button "Skip to start"',
+        '    - button "Play" [disabled]',
+        '    - button "Skip to end"',
+        '    - text: Timeline 0:00',
+        '    - slider "Timeline"',
+        '    - text: 0:02',
+        `  - paragraph: ${NOTHING_TO_PLAY}`,
+        '  - status',
+      ].join('\n'),
+      dialogs: [],
+      // Nothing here draws motion: the notice stands until it is closed.
+      interactions: [],
+      keeps: {
+        content: ['[role=alert] .cds--inline-notification__title', '[role=alert] .cds--inline-notification__subtitle'],
+        functions: [
+          { name: 'close the notice', run: async ({ page }) => { await alerts(page).getByRole('button', { name: 'Close' }).click(); return (await alerts(page).count()) === 0 && focusOn(page, OPEN); } },
         ],
       },
     },

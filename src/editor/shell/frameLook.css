@@ -19,9 +19,23 @@
   flex-wrap: wrap;
   gap: 1rem;
 }
-/* Open's notice: first in main, across every column (stage 6). */
+/* Open's notice: first in main, across every column (stage 6). A file name with no spaces breaks anywhere, so a
+   long one wraps inside the page at 320 px rather than scrolling it sideways (1.4.10, brief 80). */
 .frame__notice {
   grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+}
+/* The notice's Close keeps the theme's ring (3 px, at 2.4.13), drawn inside the button in Carbon's focus colour for an
+   inverse surface: the notice is dark (#393939), where the theme's #0f62fe outside the button is 2.3:1 on its left and
+   bottom (351 of the 368 px a 2 px perimeter asks, brief 81); --cds-focus-inverse (#fff) on #393939 is 11.7:1. */
+.frame__notice .cds--inline-notification__close-button:focus-visible {
+  outline-color: var(--cds-focus-inverse) !important;
+  outline-offset: -3px !important;
+}
+@media (forced-colors: active) {
+  .frame__notice .cds--inline-notification__close-button:focus-visible {
+    outline-color: Highlight !important;
+  }
 }
 .frame__region + .frame__region {
   margin-block-start: 2rem;
