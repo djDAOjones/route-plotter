@@ -1378,7 +1378,10 @@ export default {
       // set on the page before the choice records every text holding "Opening", with its nearest aria-live, and whether
       // it was still there at a moment the status region said "Project opened"; no timed wait in the page and no slowed
       // read (io's read is async, so the line is drawn before it ends, the golden as it is). Carbon's nested assertive
-      // region (its spinner's "loading", A11Y-03) is recorded, not failed.
+      // region (its spinner's "loading", A11Y-03) is recorded, not failed. The line is one and can be seen (Codex on
+      // brief 81, asked for by brief 83): at each moment the observer also records how many lines there were, and for
+      // each whether it has a box (getClientRects) and is not hidden (checkVisibility, with visibility and opacity); a
+      // hidden line, or a moment with more than one, fails. Paint is not claimed: a quick open may end inside one frame.
       name: 'the-opening-line',
       method: 'j-forms',
       rows: ['4.1.3'],
@@ -1389,7 +1392,7 @@ export default {
           new MutationObserver(() => {
             const lines = [...document.querySelectorAll('main *')].filter((e) => e.children.length === 0 && /Opening/.test(e.textContent ?? ''));
             const said = document.querySelector(st)?.textContent ?? '';
-            for (const e of lines) window.__opening.push({ text: e.textContent, live: e.closest('[aria-live]')?.getAttribute('aria-live') ?? null, inner: [...(e.closest('[aria-live]')?.querySelectorAll('[aria-live]') ?? [])].map((n) => n.getAttribute('aria-live')), said });
+            for (const e of lines) window.__opening.push({ text: e.textContent, live: e.closest('[aria-live]')?.getAttribute('aria-live') ?? null, inner: [...(e.closest('[aria-live]')?.querySelectorAll('[aria-live]') ?? [])].map((n) => n.getAttribute('aria-live')), said, count: lines.length, shown: e.getClientRects().length > 0 && e.checkVisibility({ visibilityProperty: true, opacityProperty: true }) });
           }).observe(document.body, { childList: true, subtree: true, characterData: true });
         }, STATUS);
         const file = await projectFile();
@@ -1401,9 +1404,12 @@ export default {
         if (!line.length) wrong.push(`"${words}" was never seen; seen ${JSON.stringify(seen.map((s) => s.text))}`);
         if (line.some((s) => s.live !== 'polite')) wrong.push(`the line's region was ${JSON.stringify([...new Set(line.map((s) => s.live))])}, not polite`);
         if (seen.some((s) => s.said === OPENED)) wrong.push(`the line was still there when "${OPENED}" was said`);
+        if (line.some((s) => !s.shown)) wrong.push('the line was there but had no box or was hidden');
+        const most = Math.max(0, ...seen.map((s) => s.count));
+        if (most > 1) wrong.push(`${most} lines holding "Opening" at one moment`);
         if (await page.locator('main').getByText('Opening', { exact: false }).count()) wrong.push('the line is still there after the open');
         const inner = [...new Set(line.flatMap((s) => s.inner))];
-        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${words}" seen in a polite region while the open was under way (Carbon's nested regions: ${JSON.stringify(inner)}, recorded), gone by the time "${OPENED}" was said`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${words}" seen, one line with a box and not hidden, in a polite region while the open was under way (Carbon's nested regions: ${JSON.stringify(inner)}, recorded), gone by the time "${OPENED}" was said`);
       },
     },
     {
