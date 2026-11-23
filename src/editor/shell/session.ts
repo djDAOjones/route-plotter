@@ -21,6 +21,11 @@
 //   transport reads what the length is made from through the preview's inputs (previewLogic.ts): the store's scene,
 //   the seed, the size and the background's size from its header, so an opened project is measured by its picture
 //   from the open's own telling, not as a square.
+// - Stage 6, the preview (brief 84): the inputs are made once and kept, and the same holder's `inputs` is handed to
+//   the player's transport and to the drawer (one source, D174); the background's pictures, loaded by the browser's
+//   decoder (loadPicture.ts) and never closed, as the session lives as long as the page; and the drawer, on the
+//   session's own frame source. A paint that throws, a picture that cannot be loaded and a frame's reports when they
+//   change go to the page's `reportError`; nothing is shown on the page for them (a later item's).
 import { newScene } from '../../core/model/scene';
 import { createTransport, type FrameSource } from '../../player/transport/transport';
 import { createAnnouncementQueue, type Priority } from '../kit/announce';
@@ -29,7 +34,8 @@ import { createEditorTransport, hasSomethingToPlay, WORDS, type EditorTransport 
 import { decode } from './decode';
 import { holdForVisit, type Held } from './held';
 import { createOpener, type Opener } from './openLogic';
-import { createFrameInputs } from './previewLogic';
+import { loadPicture } from './loadPicture';
+import { createDrawer, createFrameInputs, createPictures, type Drawer, type FrameInputs } from './previewLogic';
 import { createLengthReader, createTimeline, type Timeline } from './timelineLogic';
 
 export interface PageSession {
@@ -43,6 +49,8 @@ export interface PageSession {
   readonly singleKeys: Held<boolean>;
   /** Open's opener: a project file's bytes into the store (stage 6). */
   readonly opener: Opener;
+  /** What the preview's canvas needs: the one inputs (its size and shape) and the one drawer (brief 84). */
+  readonly preview: { readonly inputs: FrameInputs; readonly drawer: Drawer };
 }
 
 /** The live region the page draws now, or null before it is drawn and after it is gone. */
@@ -77,10 +85,11 @@ function make(): PageSession {
   const nextId = () => crypto.randomUUID();
   const store = createStore({ project: { scene: newScene(nextId), images: [] }, nextId });
   const { announce } = createAnnouncementQueue(regionNow, (callback, ms) => setTimeout(callback, ms));
+  const inputs = createFrameInputs({ store });
   const player = createTransport({
     frames,
     holder: store,
-    inputs: createFrameInputs({ store }).inputs,
+    inputs: inputs.inputs,
     report: (error) => {
       reportError(error);
     },
@@ -98,7 +107,23 @@ function make(): PageSession {
   const length = createLengthReader({ store, length: () => player.length(), frames });
   const timeline = createTimeline({ store, transport, length });
   const opener = createOpener({ store, announce, decode });
-  return Object.freeze({ store, transport, canPlay, timeline, singleKeys: holdForVisit(true), opener });
+  const pictures = createPictures({ store, load: loadPicture, report: (error) => { reportError(error); } });
+  const drawer = createDrawer({
+    store,
+    inputs,
+    pictures,
+    frames,
+    report: (error) => {
+      reportError(error);
+    },
+    failed: (reports) => {
+      if (reports.length === 0) return;
+      const said = reports.map(({ routeId, featureId, reason }) => `${featureId}${routeId === null ? '' : ` (route ${routeId})`}: ${reason}`);
+      reportError(new Error(`The preview could not draw: ${said.join('; ')}`));
+    },
+  });
+  const preview = Object.freeze({ inputs, drawer });
+  return Object.freeze({ store, transport, canPlay, timeline, singleKeys: holdForVisit(true), opener, preview });
 }
 
 let made: PageSession | null = null;

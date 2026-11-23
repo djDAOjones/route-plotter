@@ -13,6 +13,8 @@
 // a refusal's alert) first in main, both drawn from the session's one opener. When the refusal's Close is pressed, focus
 // goes to "Open project" (the notice is gone, and focus must not fall to the page's body), as Help returns focus to its
 // opener.
+// Stage 6, the preview (brief 84): the canvas (Preview) in the frame's `preview` slot, on the session's one inputs and
+// drawer; the paragraph stays above it (its link is what the shell's journeys stand on; its going is a later chat's).
 import { Button, Link } from '@carbon/react';
 import { useEffect, useRef, useState } from 'react';
 import { Frame } from './shell/Frame';
@@ -20,6 +22,7 @@ import { Help } from './shell/Help';
 import { listenForKeys, MAC } from './shell/keydown';
 import { OpenButton, OpenNotice, type OpenProps } from './shell/Open';
 import { PlayBar } from './shell/PlayBar';
+import { Preview } from './shell/Preview';
 import { holdRegion, pageSession } from './shell/session';
 import { Timeline } from './shell/Timeline';
 
@@ -70,6 +73,7 @@ export function App() {
           <Link inline href="https://github.com/djDAOjones/route-plotter">GitHub</Link>.
         </p>
       }
+      preview={<Preview drawer={pageSession().preview.drawer} inputs={pageSession().preview.inputs} subscribe={toldOfChange} />}
       transport={
         <PlayBar
           transport={pageSession().transport}

@@ -63,3 +63,16 @@
     grid-template-columns: 20rem minmax(0, 1fr) 20rem;
   }
 }
+/* The preview's canvas (brief 84, Preview.tsx's point 5): its shape and width are set on it from the background's
+   shape; here it stands on a line of its own, never wider than its slot, centred in it, on Carbon's first layer so
+   the frame's edges show where the picture does not fill it. The canvas fills it. */
+.preview {
+  max-width: 100%;
+  margin-inline: auto;
+  background: var(--cds-layer-01, #f4f4f4);
+}
+.preview__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

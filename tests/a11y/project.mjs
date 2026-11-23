@@ -52,7 +52,7 @@
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
 // (2.4.3); each route and its title (2.4.2); the one place the shell links to. A change to the shell is reviewed here.
-const READING = ['Route Plotter', 'Version 4 is being built here.', 'Timeline', 'Add at least two points to a route to play.'];
+const READING = ['Route Plotter', 'Version 4 is being built here.', 'Preview', 'Timeline', 'Add at least two points to a route to play.'];
 const FOCUS = ['button "Open project"', 'button "Help"', 'link "GitHub"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
 const PROGRESS = 'https://github.com/djDAOjones/route-plotter';
@@ -120,10 +120,14 @@ const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damage
 // working folder); both only when a journey asks for the file.)
 // With `png` (bytes), the golden gains one image as io names it (format.ts): the record { id, type } in project.json's
 // `images`, and its bytes at `images/1.png` in the ZIP; nothing else changes.
-const projectFile = async (png) => {
+// With `upright`, the golden's second stop moves from (0.75, 0.5) to (0.25, 1), so its line runs down the picture and
+// a picture's shape changes how long it measures (a distance is in image widths: widthsBetween, units.ts).
+const projectFile = async (png, upright) => {
   const root = process.env.A11Y_ROOT || process.cwd();
   const zip = new (process.getBuiltinModule('node:module').createRequire(`${root}/package.json`)('jszip'))();
-  const golden = process.getBuiltinModule('node:fs').readFileSync(`${root}/src/editor/shell/goldens/two-stops.project.json`, 'utf8');
+  const read = process.getBuiltinModule('node:fs').readFileSync(`${root}/src/editor/shell/goldens/two-stops.project.json`, 'utf8');
+  if (upright && !read.includes('"x":0.75,"y":0.5')) throw new Error('the golden\'s second stop is no longer at (0.75, 0.5)');
+  const golden = upright ? read.replace('"x":0.75,"y":0.5', '"x":0.25,"y":1') : read;
   if (!png) zip.file('project.json', golden);
   else {
     if (!golden.endsWith('"images":[]}')) throw new Error('the golden no longer ends with its empty images list');
@@ -138,6 +142,53 @@ const canvasPng = async (page) => Buffer.from(await page.evaluate(() => new Prom
   const g = c.getContext('2d'); g.fillStyle = '#003a65'; g.fillRect(0, 0, 4, 4);
   c.toBlob(async (b) => resolve([...new Uint8Array(await b.arrayBuffer())]), 'image/png');
 })));
+// The preview (brief 84): its box, an image named "Route animation preview", and its canvas, read back through the
+// page's own context, never a screenshot. `pixels`: its size, a hash of every pixel and how many are drawn at all;
+// `pixelAt`: the pixel at fractions of its size. The golden's line and markers are #d55e00.
+const PREVIEW = '.preview';
+const CANVAS = '.preview__canvas';
+const ORANGE = [213, 94, 0];
+const BLUE = [51, 102, 204]; // #3366cc, the plain picture's
+// 1.4.11 (finding 85, ruled; D200): the preview is set aside from the contrast check on every state that shows it. Its
+// pixels are the user's own picture and routes in their own colours, as the export draws them (1.4.11's essential
+// presentation), and nothing of the editor's own is drawn on it yet. The item that first draws the editor's own marks
+// there (a selected route's rings, hover: CORE-06) narrows or replaces this, and measures them by their pixels.
+const PREVIEW_ASIDE = [{ selector: PREVIEW, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); nothing of the editor's own is drawn on it yet" }];
+const pixels = (page) => page.locator(CANVAS).evaluate((c) => {
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  let hash = 0, drawn = 0;
+  for (let i = 0; i < d.length; i += 4) { hash = (hash * 31 + d[i] + d[i + 1] * 7 + d[i + 2] * 13 + d[i + 3] * 17) | 0; if (d[i + 3]) drawn += 1; }
+  return { width: c.width, height: c.height, hash, drawn };
+});
+const pixelAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y]) => [...c.getContext('2d').getImageData(Math.floor(x * c.width), Math.floor(y * c.height), 1, 1).data], [fx, fy]);
+// The most opaque pixel of the seven in a column round that place: a line 3 px thick falls between rows, so the one
+// row at its centre may be its anti-aliased edge.
+const strokeAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y]) => {
+  const d = c.getContext('2d').getImageData(Math.floor(x * c.width), Math.floor(y * c.height) - 3, 1, 7).data;
+  let best = [0, 0, 0, 0];
+  for (let i = 0; i < d.length; i += 4) if (d[i + 3] > best[3]) best = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+  return best;
+}, [fx, fy]);
+const near = (p, rgb) => p[3] > 200 && rgb.every((v, i) => Math.abs(p[i] - v) <= 24);
+const boxOf = (page) => page.locator(PREVIEW).evaluate((e) => { const r = e.getBoundingClientRect(); return { width: r.width, height: r.height, ratio: devicePixelRatio }; });
+// Two frames on, so a frame booked by what just happened has been drawn.
+const twoFrames = (page) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+// The x of a point at `x` across a project with no picture: the scene measures as a square, fitted to the frame's
+// height and centred in it (compose.ts), so (width - height) / 2 + x * height, over the width.
+const squareX = ({ width, height }, x) => ((width - height) / 2 + x * height) / width;
+// A PNG of `w` by `h` of one colour, made by the page's own canvas.
+const plainPng = async (page, w, h, colour) => Buffer.from(await page.evaluate(([w, h, colour]) => new Promise((resolve) => {
+  const c = Object.assign(document.createElement('canvas'), { width: w, height: h });
+  const g = c.getContext('2d'); g.fillStyle = colour; g.fillRect(0, 0, w, h);
+  c.toBlob(async (b) => resolve([...new Uint8Array(await b.arrayBuffer())]), 'image/png');
+}), [w, h, colour]));
+// Counts the frames the composer draws on the page's canvases from now on: it clears the whole frame first, once a
+// frame (compose.ts), so each clearRect is one frame.
+const countFrames = (page) => page.evaluate(() => {
+  window.__frames = 0;
+  const clear = CanvasRenderingContext2D.prototype.clearRect;
+  CanvasRenderingContext2D.prototype.clearRect = function (...a) { window.__frames += 1; return clear.apply(this, a); };
+});
 // A PNG header and nothing more: the signature and a whole IHDR chunk (4 by 4, its check value right), so io reads its
 // size and only the browser's decoder can find it damaged.
 const headerOnlyPng = () => {
@@ -324,6 +375,7 @@ export default {
     {
       name: 'shell',
       path: '/',
+      setAside: PREVIEW_ASIDE,
       setup: settled,
       snapshot: [
         '- banner "Route Plotter":',
@@ -336,6 +388,9 @@ export default {
         '    - link "GitHub":',
         `      - /url: ${PROGRESS}`,
         '    - text: .',
+        '  - region "Preview":',
+        '    - heading "Preview" [level=2]',
+        '    - img "Route animation preview"',
         '  - group "Playback":',
         '    - button "Skip to start"',
         '    - button "Play" [disabled]',
@@ -362,7 +417,7 @@ export default {
         { name: 'move the timeline by a key', run: async ({ page }) => { await page.locator(TIMELINE).focus(); await page.keyboard.press('Shift+ArrowRight'); } },
       ],
       keeps: {
-        content: ['h1', 'main p', REASON],
+        content: ['h1', 'main p', PREVIEW, REASON],
         functions: [
           { name: 'follow the progress link', run: async ({ page }) => { await progressLink(page).click(); return arrives(page, PROGRESS); } },
           // Help is closed again after, so the page is left as found (the forced-colours test counts stateful controls next).
@@ -381,6 +436,7 @@ export default {
       // anywhere (frameLook.css).
       name: 'refused-long-name',
       path: '/',
+      setAside: PREVIEW_ASIDE,
       // The choice leaves focus on "Open project" (the claim: refused-close-returns-focus); the pack's walk Tabs on from
       // wherever focus stands and stops when it leaves the page, so from there it never comes back to Open (6 of 7,
       // brief 81). A press on the banner's blank corner puts the Tab starting point at the document's start, where the
@@ -402,6 +458,9 @@ export default {
         '    - link "GitHub":',
         `      - /url: ${PROGRESS}`,
         '    - text: .',
+        '  - region "Preview":',
+        '    - heading "Preview" [level=2]',
+        '    - img "Route animation preview"',
         '  - group "Playback":',
         '    - button "Skip to start"',
         '    - button "Play" [disabled]',
@@ -1276,6 +1335,143 @@ export default {
         if (from !== 0) wrong.push(`the position before Play was ${from}, not 0`);
         if (!(last > 0) || backwards(played).length) wrong.push(`after Play the position went ${played.map(([, v]) => v).join(', ')}, not rising from 0`);
         record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${OPENED}" said once and nothing else, no alert, focus kept on "Open project", the reason line gone; Play played from 0 to ${last} thousandths in 30 frames`);
+      },
+    },
+    {
+      // The preview (brief 84, a): before any open the canvas is sized to its box times the pixel ratio (a paint ran)
+      // and holds an empty scene's frame, nothing drawn; the golden opened, its pixels differ, the line's colour stands
+      // at the start's place by arithmetic (a square fitted to the frame's height, centred: squareX) and not yet at the
+      // middle (the line grows from the start); left alone a second, nothing changes (no motion until Play: 2.2.2).
+      name: 'the-preview-draws',
+      method: 'j-timing',
+      rows: ['2.2.2'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        await twoFrames(page);
+        const wrong = [];
+        const box = await boxOf(page);
+        const empty = await pixels(page);
+        const sized = [Math.round(box.width * box.ratio), Math.round(box.height * box.ratio)];
+        if (empty.width !== sized[0] || empty.height !== sized[1]) wrong.push(`the canvas is ${empty.width} by ${empty.height}, not its box times the ratio, ${sized.join(' by ')}`);
+        if (empty.drawn) wrong.push(`before any open ${empty.drawn} pixels are drawn, not an empty scene's none`);
+        if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) wrong.push('the project did not open');
+        await twoFrames(page);
+        const opened = await pixels(page);
+        const x = squareX(opened, 0.25);
+        const start = await strokeAt(page, x, 0.5);
+        const middle = await strokeAt(page, 0.5, 0.5);
+        if (opened.hash === empty.hash) wrong.push('the canvas did not change when the project opened');
+        if (!near(start, ORANGE)) wrong.push(`at the start's place (${x.toFixed(4)}, 0.5) the canvas holds ${start.join(', ')}, not the line's #d55e00`);
+        if (near(middle, ORANGE)) wrong.push('at 0:00 the line already stands at the middle');
+        await page.waitForTimeout(1000);
+        if ((await pixels(page)).hash !== opened.hash) wrong.push('left alone a second, the canvas changed');
+        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `the canvas ${sized.join(' by ')}, its box times the ratio, empty before an open; the golden opened: changed, #d55e00 at (${x.toFixed(4)}, 0.5), the start's place ((${opened.width} - ${opened.height}) / 2 + 0.25 x ${opened.height}, over ${opened.width}), none at the middle; still over a second with nothing playing`);
+      },
+    },
+    {
+      // The preview (brief 84, b): Play moves the picture (two moments differ); Pause holds it (the same pixels half a
+      // second on: a playing can be stopped, 2.2.2); played to the end, "Animation complete", the canvas holds what a
+      // press of End draws from a fresh open, the whole line, the middle in the line's colour: the end is drawn.
+      name: 'the-preview-plays',
+      method: 'j-timing',
+      rows: ['2.2.2'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const wrong = [];
+        if (!(await choose(page, await projectFile())) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the project did not open');
+        await page.locator(PLAY).click();
+        await page.waitForTimeout(300);
+        const one = await pixels(page);
+        await page.waitForTimeout(300);
+        const two = await pixels(page);
+        if (one.hash === two.hash) wrong.push('playing, the canvas did not change between two moments 300 ms apart');
+        await page.locator(PLAY).click();
+        if (!(await comesToWords(page, PAUSED))) wrong.push(`Pause: "${PAUSED}" was not said`);
+        await twoFrames(page);
+        const paused = await pixels(page);
+        await page.waitForTimeout(500);
+        if ((await pixels(page)).hash !== paused.hash) wrong.push('paused, the canvas still changed');
+        await page.locator(PLAY).click();
+        const done = await page.waitForFunction(([st, w]) => document.querySelector(st)?.textContent === w, [STATUS, COMPLETE], { timeout: 12000 }).then(() => true, () => false);
+        if (!done) wrong.push(`"${COMPLETE}" was not said`);
+        await twoFrames(page);
+        const ended = await pixels(page);
+        const middle = await strokeAt(page, 0.5, 0.5);
+        await open('shell');
+        if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) wrong.push('the second open failed');
+        await page.keyboard.press('End');
+        await twoFrames(page);
+        const byEnd = await pixels(page);
+        if (ended.hash !== byEnd.hash) wrong.push('at "Animation complete" the canvas is not what End draws from a fresh open');
+        // At the end the line's trail stands faded behind the head (101 of 255 measured at the middle): its colour, seen.
+        if (!(middle[3] >= 64 && ORANGE.every((v, i) => Math.abs(middle[i] - v) <= 24))) wrong.push(`at the end the middle holds ${middle.join(', ')}, not the line's colour`);
+        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `playing, the canvas changed between two moments; Pause held it half a second; at "${COMPLETE}" it equals End from a fresh open, the middle #d55e00: the end drawn`);
+      },
+    },
+    {
+      // The preview (brief 84, c): a project whose picture is 200 by 100 of #3366cc, its second stop at (0.25, 1) so the
+      // line runs down it. The picture is loaded by the page (loadPicture.ts) and drawn: its colour read in two corners;
+      // the box takes its shape (2 to 1); and the length is the picture's measure: 0.5 heights down a 2:1 picture is
+      // 0.25 widths, 1.25 s at the golden's speed (0.2 widths a second), with a stop's 1.5 s and the 2 s hold 4.75 s,
+      // "0:04"; the same project with no picture measures as a square, 0.5 widths, 2.5 s, 6 s, "0:06".
+      name: 'the-preview-shows-the-picture',
+      method: 'j-timing',
+      rows: ['2.2.2'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const wrong = [];
+        if (!(await choose(page, await projectFile(null, true))) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the project with no picture did not open');
+        const square = (await atNow(page)).text?.split(' of ')[1];
+        const png = await plainPng(page, 200, 100, '#3366cc');
+        if (!(await choose(page, await projectFile(png, true))) || !(await saysOpened(page))) wrong.push('the project with the picture did not open');
+        const shown = await page.waitForFunction(([sel, rgb]) => {
+          const c = document.querySelector(sel);
+          const [r, g, b, a] = c.getContext('2d').getImageData(Math.floor(0.05 * c.width), Math.floor(0.05 * c.height), 1, 1).data;
+          return a > 200 && Math.abs(r - rgb[0]) <= 24 && Math.abs(g - rgb[1]) <= 24 && Math.abs(b - rgb[2]) <= 24;
+        }, [CANVAS, BLUE], { timeout: 3000 }).then(() => true, () => false);
+        const corner = await pixelAt(page, 0.95, 0.95);
+        const box = await boxOf(page);
+        const pictured = (await atNow(page)).text?.split(' of ')[1];
+        // A picture that arrives late draws once, and then nothing moves: the same pixels half a second on (2.2.2).
+        await twoFrames(page);
+        const drawn = await pixels(page);
+        await page.waitForTimeout(500);
+        if ((await pixels(page)).hash !== drawn.hash) wrong.push('with the picture drawn and nothing playing, the canvas changed over half a second');
+        if (!shown || !near(corner, BLUE)) wrong.push(`the picture's #3366cc is not on the canvas at (0.05, 0.05) and (0.95, 0.95) (${corner.join(', ')} at the second)`);
+        if (Math.abs(box.width / box.height - 2) > 0.02) wrong.push(`the box is ${box.width} by ${box.height}, not the picture's 2 to 1`);
+        if (pictured !== '0:04') wrong.push(`with the picture the length reads "${pictured}", not the picture's measure, "0:04"`);
+        if (square !== '0:06') wrong.push(`with no picture the length reads "${square}", not the square's "0:06"`);
+        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `the picture's #3366cc read at (0.05, 0.05) and (0.95, 0.95); the box ${box.width} by ${box.height}, 2 to 1; the length "${pictured}" (0.25 widths, 4.75 s), not the square's "${square}" (6 s); still half a second on with nothing playing`);
+      },
+    },
+    {
+      // The preview (brief 84, e): the frames the composer draws, counted through the page (one clearRect a frame):
+      // over a still second after an open, none; over sixty frames of a playing, some, and never more than one in a
+      // frame (2.2.2: nothing moves unless played).
+      name: 'the-preview-is-still',
+      method: 'j-timing',
+      rows: ['2.2.2'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const wrong = [];
+        await countFrames(page);
+        if (!(await choose(page, await projectFile())) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the project did not open');
+        await twoFrames(page);
+        await page.evaluate(() => { window.__frames = 0; });
+        await page.waitForTimeout(1000);
+        const still = await page.evaluate(() => window.__frames);
+        if (still) wrong.push(`over a still second the composer drew ${still} frames`);
+        const counted = page.evaluate(() => new Promise((resolve) => {
+          const each = []; let last = window.__frames;
+          const tick = () => { each.push(window.__frames - last); last = window.__frames; if (each.length < 60) requestAnimationFrame(tick); else resolve(each); };
+          requestAnimationFrame(tick);
+        }));
+        await page.locator(PLAY).click();
+        const each = await counted;
+        const most = Math.max(...each), total = each.reduce((a, b) => a + b, 0);
+        if (most > 1) wrong.push(`playing, the composer drew ${most} frames in one`);
+        if (total < 30) wrong.push(`playing, the composer drew ${total} frames in 60`);
+        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `no frame over a still second; playing, ${total} frames in 60, never more than one in one`);
       },
     },
     {
