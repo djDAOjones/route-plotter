@@ -17,9 +17,10 @@
 // - The switch for single-key shortcuts (D183) is held here for the visit, on to begin with: the listener reads it at
 //   each key, Help shows and sets it. It is not stored (CORE-09's), not a scene setting, and makes no undo step.
 // - Stage 6: the opener (openLogic.ts), made once beside the transports from the session's own store, the queue's
-//   `announce` and the browser's decoder (decode.ts): Open's button and notice are drawn from it. An opened project's
-//   picture is not yet handed to the player's transport (`image: null` below, the preview's piece), so a scene is
-//   measured as a square until then.
+//   `announce` and the browser's decoder (decode.ts): Open's button and notice are drawn from it. The player's
+//   transport reads what the length is made from through the preview's inputs (previewLogic.ts): the store's scene,
+//   the seed, the size and the background's size from its header, so an opened project is measured by its picture
+//   from the open's own telling, not as a square.
 import { newScene } from '../../core/model/scene';
 import { createTransport, type FrameSource } from '../../player/transport/transport';
 import { createAnnouncementQueue, type Priority } from '../kit/announce';
@@ -28,6 +29,7 @@ import { createEditorTransport, hasSomethingToPlay, WORDS, type EditorTransport 
 import { decode } from './decode';
 import { holdForVisit, type Held } from './held';
 import { createOpener, type Opener } from './openLogic';
+import { createFrameInputs } from './previewLogic';
 import { createLengthReader, createTimeline, type Timeline } from './timelineLogic';
 
 export interface PageSession {
@@ -78,8 +80,7 @@ function make(): PageSession {
   const player = createTransport({
     frames,
     holder: store,
-    // The seed and size are placeholders until the preview draws: an empty scene's length needs neither.
-    inputs: () => ({ scene: store.getState().project.scene, seed: 1, size: { width: 1920, height: 1080 }, image: null }),
+    inputs: createFrameInputs({ store }).inputs,
     report: (error) => {
       reportError(error);
     },
