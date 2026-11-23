@@ -20,8 +20,8 @@ frame stays a pure function of (timelineMs, projectState, seed). The
 editor is strict TypeScript with React and Carbon React; the exported
 player has neither. WCAG 2.2 AAA; Okabe-Ito for map data; Chromium-only
 for now. `main` is the live site: branch, pull request, the owner
-orders each merge; once v4's core works end to end, each app merge
-publishes until v4.0. The current work is the v4 programme (PLAN-5):
+orders each merge; v4 publishes at any point and after each app
+item, until v4.0. The current work is the v4 programme (PLAN-5):
 the architecture plan first, before any code.
 
 ## What we are building
@@ -134,11 +134,8 @@ v3, frozen at 3.3.726:
 
 - None of the owner's is open on v3's formats: v3 is frozen and keeps
   opening formats 6 to 9, and v4 opens no v3 file (2026-11-18).
-- For the architecture plan (MERGE-01) to bring to the owner: where
-  each feature lives, scene or route; which pieces of v3's engine are
-  not worth porting; whether v4 keeps browser storage keys of its own;
-  and whether the Xerte copy's readiness is a condition for v4
-  replacing v3 on Pages.
+- None of the architecture plan's is open: its answers are in
+  `reviews/v4-plan-question-round-answers-2026-11-19.md`.
 
 ## Signed
 
