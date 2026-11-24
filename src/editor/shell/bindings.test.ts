@@ -1,7 +1,8 @@
 // CORE-05, stage 3: the key table's actions and the functions the shell will bind them to meet by name. Each playback
 // action the table lists is a function of the editor's transport, and the transport has none the table lacks but
-// `scrub`, which the play bar's slider calls and no key does; Undo and Redo are the store's; Help (`?`) is the page's,
-// handed to the dispatch, and is the one General action the store does not answer. So neither side can gain
+// `scrub`, which the play bar's slider calls and no key does; Undo and Redo are the store's; Help (`?`) and Open
+// project (Cmd or Ctrl+O, D207) are the page's, handed to the dispatch, and are the two General actions the store does
+// not answer. So neither side can gain
 // one the other lacks without failing here: at run time, and in the type check, which reads the table's own rows.
 import { describe, expect, it } from 'vitest';
 import type { Project } from '../../adapters/io/format';
@@ -14,11 +15,13 @@ import { KEYS, type ActionIn } from './keys';
 /** The actions the store answers: the table's General rows that name one of the store's own members. */
 type StoreAction = Extract<ActionIn<'General'>, keyof Store>;
 /**
- * The General rows the store has no member for, worked out from the store's real keys, must be exactly Help: Help
- * taken from the table, a second page action added, or the store gaining a `help`, each fails the type check here.
+ * The General rows the store has no member for, worked out from the store's real keys, must be exactly Help and Open
+ * project: either taken from the table, a third page action added, or the store gaining one of them, each fails the
+ * type check here.
  */
 type PageOnly = Exclude<ActionIn<'General'>, keyof Store>;
-const helpAlone: [PageOnly] extends ['help'] ? (['help'] extends [PageOnly] ? true : never) : never = true;
+type PageActions = 'help' | 'openProject';
+const pageAlone: [PageOnly] extends [PageActions] ? ([PageActions] extends [PageOnly] ? true : never) : never = true;
 
 /**
  * Read from the table's own rows, not a list beside it: the editor's transport has a function for every Playback row,
@@ -46,9 +49,10 @@ describe('the key table and the functions the shell binds it to', () => {
     const store = createStore({ project, nextId: () => `new-${String((n += 1))}` });
     const others = KEYS.filter(({ group }) => group !== 'Playback').map(({ action }) => action);
     const answered: readonly StoreAction[] = ['undo', 'redo'];
-    expect(helpAlone).toBe(true);
-    expect(others).toEqual([...answered, 'help']);
+    expect(pageAlone).toBe(true);
+    expect(others).toEqual(['openProject', ...answered, 'help']);
     expect('help' in store).toBe(false);
+    expect('openProject' in store).toBe(false);
     for (const action of answered) expect(typeof store[action], action).toBe('function');
   });
 });

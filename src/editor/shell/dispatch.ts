@@ -15,13 +15,18 @@
 //    undo of typed text stays the field's). A focused button, link or menu item keeps Space and Enter, and a menu item
 //    also the arrows, Home and End (ARIA's menus and list boxes move with them); a slider keeps the arrows, Home,
 //    End, Page Up and Page Down. Every other key still runs from those places, since a browser leaves focus on a
-//    button after a click (DEF-13). While a dialog is open, nothing behind it runs, `?` included.
+//    button after a click (DEF-13). While a dialog is open, nothing behind it runs, `?` included. One entry apart,
+//    Open project (Cmd or Ctrl+O, D207): the chord is the editor's wherever it is pressed and is always taken, so the
+//    browser's own "Open File" never opens over the editor; it opens the chooser from anywhere, a typing field
+//    included (a chord types nothing), except while a dialog is open, where it is taken and runs nothing. A held
+//    chord's repeat runs nothing (point 5).
 // 3. A Playback action calls the editor's transport's function of the same name; Undo and Redo call the store's; Help
-//    (`?`) calls what the page hands in to open help. A refusal changes nothing (the store's and the transport's own
+//    (`?`) calls what the page hands in to open help, and Open project what it hands in to open the file chooser. A refusal changes nothing (the store's and the transport's own
 //    rule) and still counts as taken: the key was the editor's.
 // 4. With single-key shortcuts off (D183, WCAG 2.2's 2.1.4), a key that is one printable character other than Space,
 //    matched by an entry that asks for no command key, is never taken: `j`, `k`, `l`, `,`, `.`, `<`, `>` and `?` do
-//    nothing (Help's own button, coming with its dialog, will not be held off), while Space, Home, End and the command chords (Undo, Redo) work. It is decided from the press and the
+//    nothing (Help's own button, coming with its dialog, will not be held off), while Space, Home, End and the command
+//    chords (Open project, Undo, Redo) work. It is decided from the press and the
 //    entry it matched, not from a second list of keys.
 // 5. A held key (`repeat`, D189) runs its action once: a repeated press runs nothing but is still taken wherever its
 //    entry would have run (so a held Space does not scroll the page behind), except an entry marked `repeats`, Undo
@@ -69,10 +74,12 @@ export interface KeyDispatch {
   readonly place: PressPlace;
   /** Whether keys of one printable character are shortcuts (D183); the page holds them off until their switch. */
   readonly singleKeys: boolean;
-  readonly store: Pick<Store, Exclude<ActionIn<'General'>, 'help'>>;
+  readonly store: Pick<Store, Exclude<ActionIn<'General'>, 'help' | 'openProject'>>;
   readonly transport: Pick<EditorTransport, ActionIn<'Playback'>>;
   /** Opens Help: the page's, handed in. */
   readonly openHelp: () => void;
+  /** Opens the file chooser for a project: the Open button's own, handed in by the page. */
+  readonly openProject: () => void;
 }
 
 const ACTIVATION: readonly string[] = [' ', 'Enter'];
@@ -88,15 +95,19 @@ const KEPT: Readonly<Record<FocusKind, readonly string[]>> = Object.freeze({
 });
 
 /** Runs the action `press` means here, if any; true when one ran or a held repeat was passed over (point 5), and the listener then cancels the key. */
-export function dispatchKey({ press, mac, place, singleKeys, store, transport, openHelp }: KeyDispatch): boolean {
-  if (place.typing || place.dialogOpen || KEPT[place.focus].includes(press.key)) return false;
+export function dispatchKey({ press, mac, place, singleKeys, store, transport, openHelp, openProject }: KeyDispatch): boolean {
   const action = actionFor(press, mac);
+  // Open project's chord is the editor's everywhere (point 2): taken in a dialog, where it runs nothing.
+  const everywhere = action === 'openProject';
+  if (place.dialogOpen) return everywhere;
+  if (!everywhere && (place.typing || KEPT[place.focus].includes(press.key))) return false;
   const entry = KEYS.find((candidate) => candidate.action === action);
   if (entry === undefined) return false;
   const singleKey = press.key.length === 1 && press.key !== ' ' && !entry.modifiers.includes('command');
   if (singleKey && !singleKeys) return false;
   if (press.repeat && !entry.repeats) return true;
   if (entry.action === 'help') openHelp();
+  else if (entry.action === 'openProject') openProject();
   else if (entry.group === 'Playback') transport[entry.action]();
   else store[entry.action]();
   return true;

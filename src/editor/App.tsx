@@ -13,6 +13,7 @@
 // a refusal's alert) first in main, both drawn from the session's one opener. When the refusal's Close is pressed, focus
 // goes to "Open project" (the notice is gone, and focus must not fall to the page's body), as Help returns focus to its
 // opener.
+// Cmd or Ctrl+O (D207) presses "Open project" itself, so the key and the button open the one chooser and cannot differ.
 // Stage 6, the preview (brief 84): the canvas (Preview) in the frame's `preview` slot, on the session's one inputs and
 // drawer; the paragraph stays above it (its link is what the shell's journeys stand on; its going is a later chat's).
 import { Button, Link } from '@carbon/react';
@@ -47,9 +48,15 @@ export function App() {
   const helpButton = useRef<HTMLButtonElement>(null);
   useEffect(
     () =>
-      listenForKeys(pageSession(), () => {
-        setHelpOpen(true);
-      }),
+      listenForKeys(
+        pageSession(),
+        () => {
+          setHelpOpen(true);
+        },
+        () => {
+          document.getElementById('open-project')?.click();
+        },
+      ),
     [],
   );
   return (

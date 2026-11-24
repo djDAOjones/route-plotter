@@ -8,7 +8,7 @@ import { addRoute } from '../store/command';
 import { createStore } from '../store/store';
 import { createEditorTransport, WORDS } from '../transport/transport';
 import { dispatchKey, type FocusKind, type PressPlace } from './dispatch';
-import { KEYS, type ActionIn, type KeyPress } from './keys';
+import { actionFor, KEYS, type ActionIn, type KeyPress } from './keys';
 
 const UP = { ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, defaultPrevented: false, repeat: false };
 const press = (key: string, held: Partial<Omit<KeyPress, 'key'>> = {}): KeyPress => ({ ...UP, ...held, key });
@@ -91,8 +91,11 @@ function rig() {
   const openHelp = () => {
     ran.push('help');
   };
+  const openProject = () => {
+    ran.push('openProject');
+  };
   const key = (pressed: KeyPress, { mac = true, place = OPEN, singleKeys = true } = {}) =>
-    dispatchKey({ press: pressed, mac, place, singleKeys, store: bound, transport, openHelp });
+    dispatchKey({ press: pressed, mac, place, singleKeys, store: bound, transport, openHelp, openProject });
   return { store, said, ran, outcomes, key };
 }
 
@@ -121,12 +124,16 @@ describe('the shell’s key dispatch', () => {
     expect(said).toEqual([]);
   });
 
-  it('point 2: in a typing field no key and no chord is taken, and nothing runs', () => {
+  it('point 2: in a typing field no key and no chord is taken, and nothing runs, Open project’s chord apart', () => {
     const { ran, said, key } = rig();
     for (const { keys } of KEYS) {
       for (const name of keys) {
         for (const held of CHORDS) {
-          for (const mac of PLATFORMS) expect(key(press(name, held), { mac, place: { ...OPEN, typing: true } })).toBe(false);
+          for (const mac of PLATFORMS) {
+            const pressed = press(name, held);
+            if (actionFor(pressed, mac) === 'openProject') continue;
+            expect(key(pressed, { mac, place: { ...OPEN, typing: true } })).toBe(false);
+          }
         }
       }
     }
@@ -134,13 +141,13 @@ describe('the shell’s key dispatch', () => {
     expect(said).toEqual([]);
   });
 
-  it('point 2: while a dialog is open nothing behind it runs, wherever focus is', () => {
+  it('point 2: while a dialog is open nothing behind it runs, wherever focus is; only Open project’s chord is taken', () => {
     const { ran, said, key } = rig();
     const kinds: readonly FocusKind[] = ['button', 'link', 'menuitem', 'slider', 'other'];
     for (const focus of kinds) {
       for (const mac of PLATFORMS) {
-        for (const { press: pressed } of tablePresses(mac)) {
-          expect(key(pressed, { mac, place: { typing: false, dialogOpen: true, focus } })).toBe(false);
+        for (const { action, press: pressed } of tablePresses(mac)) {
+          expect(key(pressed, { mac, place: { typing: false, dialogOpen: true, focus } }), action).toBe(action === 'openProject');
         }
       }
     }
@@ -307,5 +314,57 @@ describe('the shell’s key dispatch', () => {
     expect(key(held('x'))).toBe(false);
     expect(key({ ...held(' '), defaultPrevented: true })).toBe(false);
     expect(ran).toEqual([]);
+  });
+});
+
+// D207: Cmd or Ctrl+O is the editor's wherever it is pressed and is always taken, so the browser's own "Open File" never
+// opens over the editor; it opens the chooser from every kind of place, a typing field included, but not while a dialog
+// is open. What a test here cannot show: whether Chrome hands a real Cmd or Ctrl+O to the page at all.
+describe('Open project’s chord (D207)', () => {
+  const kinds: readonly FocusKind[] = ['button', 'link', 'menuitem', 'slider', 'other'];
+  const chord = (mac: boolean, held: Partial<Omit<KeyPress, 'key'>> = {}) => press('o', { ...command(mac), ...held });
+
+  it('opens the chooser from every kind of place, a typing field included, and is taken', () => {
+    for (const mac of PLATFORMS) {
+      for (const focus of kinds) {
+        for (const typing of [false, true]) {
+          const { ran, said, key } = rig();
+          expect(key(chord(mac), { mac, place: { typing, dialogOpen: false, focus } })).toBe(true);
+          expect(ran).toEqual(['openProject']);
+          expect(said).toEqual([]);
+        }
+      }
+    }
+  });
+
+  it('while a dialog is open it is taken and runs nothing', () => {
+    for (const mac of PLATFORMS) {
+      for (const focus of kinds) {
+        const { ran, key } = rig();
+        expect(key(chord(mac), { mac, place: { typing: true, dialogOpen: true, focus } })).toBe(true);
+        expect(ran).toEqual([]);
+      }
+    }
+  });
+
+  it('the other machine’s chord, Shift or Alt held, or a press already taken: no match, not taken', () => {
+    for (const mac of PLATFORMS) {
+      const { ran, key } = rig();
+      const misses = [
+        press('o', command(!mac)), chord(mac, { shiftKey: true }), chord(mac, { altKey: true }),
+        chord(mac, { defaultPrevented: true }), press('o'),
+      ];
+      for (const pressed of misses) expect(key(pressed, { mac }), JSON.stringify(pressed)).toBe(false);
+      expect(ran).toEqual([]);
+    }
+  });
+
+  it('works with single-key shortcuts off, and a held chord opens it once', () => {
+    for (const mac of PLATFORMS) {
+      const { ran, key } = rig();
+      expect(key(chord(mac), { mac, singleKeys: false })).toBe(true);
+      expect(key(chord(mac, { repeat: true }), { mac })).toBe(true);
+      expect(ran).toEqual(['openProject']);
+    }
   });
 });

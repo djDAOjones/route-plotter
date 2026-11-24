@@ -60,13 +60,17 @@ function placeOf(target: EventTarget | null): PressPlace {
 }
 
 /**
- * Listens for the editor's keys on `document`, `openHelp` being what `?` calls; gives back the call that stops
- * listening (React's effect cleanup).
+ * Listens for the editor's keys on `document`, `openHelp` being what `?` calls and `openProject` what Cmd or Ctrl+O
+ * calls; gives back the call that stops listening (React's effect cleanup).
  */
-export function listenForKeys({ store, transport, singleKeys }: PageSession, openHelp: () => void): () => void {
+export function listenForKeys(
+  { store, transport, singleKeys }: PageSession,
+  openHelp: () => void,
+  openProject: () => void,
+): () => void {
   const onKeyDown = (event: KeyboardEvent): void => {
     const place = placeOf(event.target);
-    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp });
+    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject });
     if (taken) event.preventDefault();
   };
   document.addEventListener('keydown', onKeyDown);

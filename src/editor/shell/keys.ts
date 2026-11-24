@@ -3,7 +3,8 @@
 // did; its handler skipped with them, D175). The entries are v3's live keys (InteractionHandler.js 940 to 968 and 1034
 // to 1041; Undo and Redo, keybindings.js 295 to 308) and help's `?` (keybindings.js 316 to 322, "Open help"), save that
 // `,` and `.` now do what v3's table said: step one frame back and forward (D205, the owner's choice of 24 Nov), while
-// Home and `<`, End and `>` still skip. Nothing else yet: Escape and the canvas's keys come with the stages that give
+// Home and `<`, End and `>` still skip; and Cmd or Ctrl+O, "Open project" (D207, the owner's choice of 24 Nov; v3 had
+// no key for it), which opens the Open button's own file chooser. Nothing else yet: Escape and the canvas's keys come with the stages that give
 // them something to do.
 //
 // A press is given by shape (a real KeyboardEvent fits; a test needs none), and whether the machine is a Mac is handed
@@ -15,7 +16,8 @@
 //   takes a browser chord such as Ctrl or Cmd with L (DEF-63; v3 answered `l` whatever was held). Shift is not asked:
 //   `<` and `>` need it on most keyboards, and v3 let Shift with any of these through.
 // - `command` is Cmd on a Mac and Ctrl elsewhere (v3's `meta`); an entry that declares it matches only when exactly
-//   that key is held, the other and Alt up, and Shift as the entry declares it (Undo without, Redo with).
+//   that key is held, the other and Alt up, and Shift as the entry declares it (Open project and Undo without, Redo
+//   with).
 // - Letters match whatever their case (Caps Lock, Shift), as v3's lower-casing did.
 // - A press another listener has already taken (`defaultPrevented`) means no action (DEF-13.1, the table's half).
 // - A held key repeats its press (`repeat`); the table does not decide on it, the dispatch does, by the entry's
@@ -78,6 +80,7 @@ export const KEYS = Object.freeze([
   entry('skipToEnd', ['End', '>'], 'Skip to end', 'Playback'),
   entry('stepBack', [','], 'Step back one frame', 'Playback', [], true),
   entry('stepForward', ['.'], 'Step forward one frame', 'Playback', [], true),
+  entry('openProject', ['o'], 'Open project', 'General', ['command']),
   entry('undo', ['z'], 'Undo', 'General', ['command'], true),
   entry('redo', ['z'], 'Redo', 'General', ['command', 'shift'], true),
   entry('help', ['?'], 'Open help', 'General'),

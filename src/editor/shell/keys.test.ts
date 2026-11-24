@@ -104,8 +104,24 @@ describe('DEF-63: no shortcut takes a browser chord such as Ctrl or Cmd with L',
     }
   });
 
-  it('Undo’s and Redo’s chords are the only ones the table declares', () => {
-    expect(KEYS.filter(({ modifiers }) => modifiers.length > 0).map(({ action }) => action)).toEqual(['undo', 'redo']);
+  it('Open project’s, Undo’s and Redo’s chords are the only ones the table declares', () => {
+    expect(KEYS.filter(({ modifiers }) => modifiers.length > 0).map(({ action }) => action)).toEqual(['openProject', 'undo', 'redo']);
+  });
+
+  // D207: Cmd+O on a Mac, Ctrl+O elsewhere, either case of the letter; the other command key, Shift or Alt held, no match.
+  it('Open project is Cmd+O on a Mac and Ctrl+O elsewhere, and nothing else', () => {
+    for (const mac of PLATFORMS) {
+      const [own, other] = mac ? ['metaKey', 'ctrlKey'] : ['ctrlKey', 'metaKey'];
+      for (const letter of ['o', 'O']) expect(actionFor(press(letter, { [own]: true }), mac)).toBe('openProject');
+      expect(actionFor(press('o', { [other]: true }), mac)).toBeNull();
+      expect(actionFor(press('o', { metaKey: true, ctrlKey: true }), mac)).toBeNull();
+      expect(actionFor(press('o', { [own]: true, shiftKey: true }), mac)).toBeNull();
+      expect(actionFor(press('o', { [own]: true, altKey: true }), mac)).toBeNull();
+      expect(actionFor(press('o'), mac)).toBeNull();
+      expect(helpRows(mac).find(({ action }) => action === 'openProject')).toEqual({
+        action: 'openProject', group: 'General', keys: [mac ? 'Cmd+O' : 'Ctrl+O'], words: 'Open project',
+      });
+    }
   });
 });
 
@@ -168,11 +184,12 @@ describe('the key table, as help reads it', () => {
       skipToEnd: ['End', '>'],
       stepBack: [','],
       stepForward: ['.'],
+      openProject: ['Cmd+O'],
       undo: ['Cmd+Z'],
       redo: ['Cmd+Shift+Z'],
       help: ['?'],
     });
-    expect(keysOf(false)).toMatchObject({ undo: ['Ctrl+Z'], redo: ['Ctrl+Shift+Z'] });
+    expect(keysOf(false)).toMatchObject({ openProject: ['Ctrl+O'], undo: ['Ctrl+Z'], redo: ['Ctrl+Shift+Z'] });
   });
 
   it('says that the comma and full stop step one frame, as they now do (D205; D175 had them skip), and repeat when held', () => {

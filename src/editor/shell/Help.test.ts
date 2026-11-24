@@ -41,7 +41,7 @@ describe('Help, as it draws', () => {
   it('names in the sentence every key of one character the table has, and nothing else is a single key', () => {
     expect(singleKeysShown(true)).toEqual(['K', 'J', 'L', '<', '>', ',', '.', '?']);
     expect(switchHelp(true)).toBe(
-      'Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Undo and Redo keep working.',
+      'Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Open project, Undo and Redo keep working.',
     );
   });
 
