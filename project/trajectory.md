@@ -17,6 +17,7 @@
 - CORE-04 — v4's renderer stands: one composer draws every frame in §8's four stages on the canvas kit, the core modules' drawing (background, clock, export; line, lead, markers, labels, pauses) listed in the catalogue, the editor's overlays drawn only from a list its caller passes; v4's goldens compared with v3's frames of five scenes, every difference named and ruled, by pull request (2026-11-20) — see decisions
 - PLAN-8 — the owner's answers to the night's decisions D1 to D180 are in the record, and his signed lines are written where the checker accepts them (2026-11-21) — see decisions
 - GATE-03 — a change to the gate's own test file alone runs the gate's tests, v4's gate and the record checker, not frozen v3's suite; two older tests narrowed by that one path, on the owner's word, by pull request (2026-11-24) — see decisions
+- PLAN-9 — the owner's answers on the review of decisions D1 to D200 are in the record, and GATE-04 and CORE-14 are filed (2026-11-24) — see decisions
 
 ## Phase 6 — v4's foundations — the owner's overnight word of 2026-11-18 (PLAN-6)
 
