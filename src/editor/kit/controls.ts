@@ -56,12 +56,14 @@
 //    held key repeats, as an arrow does. A move is a key's nudge (point 3): an edit of one.
 // 6. A slider's thumb reads out the value its position stands for, and where it shows the value held, the value held
 //    exactly (on a scale two values can stand at one position). A widget asked for the words of another position with
-//    no press down is behind, not moved, when that position is the one it was last handed or drawn, or while a position
-//    it was handed is still awaited: it reads out the value held. Carbon draws once with its old thumb in the pass where
-//    the value held has stepped, before it is handed the new position (the frames of a playing, brief 86): read as its
-//    own value, a long scene's words would go back a second for that frame. Anything else, a drag's thumb or a key's
-//    before its report, reads out its own value. What the rule costs: a key pressed while a handed position is awaited
-//    reads out the value held for its one draw before its report.
+//    no press down is behind, not moved, when that position is the one it was last handed or drawn and its thumb has
+//    not moved since (it still stands there), or, whatever the position, while a position it was handed is still
+//    awaited: it reads out the value held. Carbon draws once with its old thumb in the pass where the value held has
+//    stepped, before it is handed the new position (the frames of a playing, brief 86): read as its own value, a long
+//    scene's words would go back a second for that frame. Anything else, a drag's thumb or a key's before its report,
+//    reads out its own value; so does a key that goes back to the position last handed, its thumb having moved off it.
+//    What the rule costs: a key pressed while a handed position is awaited reads out the value held for its one draw
+//    before its report.
 //
 // It does not claim to withstand code written to break it, nor a `Setting` that breaks the contract below.
 
@@ -139,7 +141,8 @@ export interface Slider {
   position(): number | undefined;
   /**
    * The value a thumb at `position` stands for, as read out: the value held, exactly, where the thumb shows it, or
-   * where the widget is only behind it (no press, and the position last handed or drawn, or one awaited; point 6).
+   * where the widget is only behind it (no press, and the position last handed or drawn with its thumb still there,
+   * or any position while one handed is still awaited; point 6).
    */
   readout(position: number): number;
   /** Whether the pointer is down on the slider: between `press()` and `release()`, given up or not. */
@@ -226,7 +229,7 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
     readout: (at) => {
       const held = setting.read();
       if (held === undefined) return scale.toValue(at);
-      const behind = !down && (at === last || awaited.length > 0);
+      const behind = !down && ((at === last && thumb === last) || awaited.length > 0);
       return at === position() || behind ? held : scale.toValue(at);
     },
     pressed: () => down,

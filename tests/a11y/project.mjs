@@ -1735,7 +1735,7 @@ export default {
       // 2.5.2 (stage 6, brief 66's owed test, recorded under the-echo's row by orchestrator 27; brief 86): on a long scene
       // one thousandth of the timeline is more than a second, so its words (aria-valuetext, "m:ss of m:ss", the claim in
       // timelineLogic.ts) must move on while aria-valuenow does not; and as the value steps, Carbon draws one frame with
-      // its old thumb, whose words must still be the time now (the kit's readout, controls.ts point 3), never a second
+      // its old thumb, whose words must still be the time now (the kit's readout, controls.ts point 6), never a second
       // back. The golden made twenty minutes long (1.2 s a thousandth), opened, played by the pointer for about five
       // seconds, each frame's value and words recorded, then paused: the seconds in the words went forward at least twice
       // while the value stood (against the frame before, the value the same in that frame and the next), and, over every

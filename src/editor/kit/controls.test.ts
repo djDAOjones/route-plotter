@@ -488,6 +488,17 @@ describe('point 6: a widget behind the value held reads out the value held; a th
     expect(slider.readout(6)).toBe(6);
   });
 
+  it('a key that goes back to the position last drawn, before the first key is handed, reads out its own value', () => {
+    const setting = handmade(3);
+    const slider = createSlider(setting);
+    slider.drawn(3);
+    expect(slider.report(4)).toEqual({ ok: true, changed: true }); // a key: 4 held, the thumb at 4, nothing awaited
+    expect([slider.awaiting(), slider.thumb()]).toEqual([false, 4]);
+    expect(slider.readout(3)).toBe(3); // a key back, drawn before handed(4): its own value, not the 4 held
+    slider.report(3);
+    expect(setting.held).toBe(3);
+  });
+
   it('what the rule costs: a key’s thumb drawn while a handed position is awaited reads out the value held', () => {
     const setting = handmade(3);
     const slider = createSlider(setting);
