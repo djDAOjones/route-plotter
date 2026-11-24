@@ -26,6 +26,20 @@
      owner's word, as the rules file says. -->
 
 
+## 2026-11-24 — PLAN-9 — The owner's ten answers on the review of decisions D1 to D200 stand as he chose them, and two items are filed
+**Decision:** His answers of 2026-11-24 on D202 to D211 stand as he chose them, each the recommended option; where each is built is the orchestrator's placing, his to change; GATE-04 (the accessibility run's port) and CORE-14 (a label's fade) are filed in Phase 7. Because he chose them by question dialogs and none is yet in the record.
+**Rationale:** The questions, the labels he selected and the options' words, with his three typed lines, are in `reviews/v4-owner-answers-review-2026-11-24.md`, copied from the session notes. Each answer below is a label he selected, written by the asking chat; the placing of each is the orchestrator's (D217 in the night's decisions list), in force unless he objects.
+
+D202, "Video's shape (b) (Recommended)": the preview takes the video's shape. D205, "Step a frame (b) (Recommended)": comma and full stop step one frame, pausing a playing scene. D206, "One Escape always (b) (Recommended)": one Escape always closes Help. D207, "Try it, then add (b) (Recommended)", then "Enough, add it": Cmd or Ctrl+O opens a project and is listed in Help; the first real key press on the built page is the check that Chrome gives the key up, and if it does not the row comes out of Help. These four are CORE-05's, built on its branch before it closes and written into its item file and the record at its close.
+
+D203, "Half a second (b) (Recommended)": a label fades over 500 ms of the lead's moving whatever the pauses; filed as CORE-14, since it changes merged code. D204, "Stop at 0.8 (b) (Recommended)": the trail-length setting's top becomes 0.8, taken with the run-on's rework (wish PLAN-9.1, beside PLAN-8.2); his earlier typed words on D141 still govern the run-on, quoted whole in CORE-04's Notes. D208, "Line with a halo (b) (Recommended)", and D209, "Remove and enlarge (b) (Recommended)": CORE-06's, at its start, each a dated line in its Notes; wish CORE-04.13 is settled by D208 and not retired until it is built. D210, "Leave both (a) (Recommended)": nothing changes; his steer, that the publishing check is made simpler when GitHub's 90-day log limit first stops a publish, is wish PLAN-9.2, beside GATE-02.2. D211, "Leave as it is (a) (Recommended)": nothing changes. The option he chose read "Right if nobody but you and Gary relies on the address." That sentence is the asking chat's: choosing it is read as leaving the address as it is, not as his statement about who uses the address.
+
+GATE-04 is the orchestrator's D216, from the owner's suggestion 6 of 2026-11-24, built after CORE-05 merges. D201 is in GATE-03's entry. D212 to D214 are the session notes' working rules, not this repository's. D215, D218 and D219 wait for his answer, and nothing of them is written here; the profile's Session line stands as it is (wish PLAN-8.7). D181 to D200 remain CORE-05's, for its close.
+
+What this entry changes in CORE-04's (2026-11-20): D203 the labels' fade, D204 the trail setting's top, D208 the hovered stretch's glow, each owed as above. D202 and D205 to D207 change choices of CORE-05's that are not in the record yet.
+**Supersedes:** 2026-11-20 — CORE-04 — The renderer and the core's drawing: one composer, the core modules' drawing, the editor's overlays apart, compared with v3
+**Deferred:** CORE-05, CORE-06, CORE-14, GATE-04
+
 ## 2026-11-24 — GATE-03 — The gate's own test file gets a class of its own, which runs v4's gate, not v3's suite
 **Decision:** `scripts/gate.test.mjs`, named exactly, sorts as `gate`, which runs the gate's lane, v4's gate and the record checker, not frozen v3's suite, narrowing for that one file GATE-01's and GATE-02's rule that a change to the gate or its tests runs everything. The owner gave his word to merge, the button "Yes, merge then" (2026-11-24). Because each change to the file now runs v3's 43-minute suite.
 **Rationale:** The owner's words, verbatim, typed or picked by him on 2026-11-24: "investigate to what extent development can run in parralel on this project, and to what extent quality and efficiency may suffer"; to "Draft the gate change that stops the 43-minute v3 run on CORE-05 pushes?", "Draft it"; to "Who should land this draft?", "The orchestrator". A reading, not his words: he wants the draft taken through as an item, with his own word on the merge; he has not ruled that it is right, and was told it reverses a deliberate choice.
@@ -969,28 +983,6 @@ consistent names and specific errors; wcag-2.2-aaa 2.5.5, 2.1.3, 2.4.12 and
 house-conventions' app ownership, additive persistence and behavioral tests.
 Physical-device and screen-reader assurance remain REV-03/REV-05. This is a
 part advance; CROWD-08 remains open for E–G.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-14 — REL-721 — v3.3.721 ships CROWD-08 Part C's finish areas
-
-**Decision:** v3.3.721 ships CROWD-08 Part C's centred Exit finish areas, while the item remains in progress for D–G.
-
-**Rationale:** Released under GATELESS-1 and PLAN-4 after PR #144 merged as 722ba1d7deb7068aefce8ef7baa69187f108c479; final source head 353e40276d3bb565608850e6093a2d776c061f08 had independent gpt-6-astra xhigh approval in round 1 and successful pull_request Verify 38625793245. The existing Part C decision owns the geometry and interaction choices. Before publication, the area-storage correction PR #145 merged as c20be408fbbf69bce696f0c065fc0418b4e806dc; its final head b598a3707b47159a77a29b227148145cd17364f7 had independent xhigh approval in round 1 and successful pull_request Verify 38637633075. The separate area-budget decision owns the stopped prepublication attempt and the shared Start/Finish refusal fix. This release includes both reviewed changes. Deploy 2c2ae17c3c607d0f98f31d8058c50a46f7fbcefa: 154 test files, 3708 passing tests and 2 existing todos; shell/build/check passed, zero unhandled errors; push succeeded, main-branch Verify 38645187383 and Pages checks succeeded, github-pages deployment 7078404693 reached that exact SHA, and published SHA-256 comparison was match 22, mismatch 0, errors 0. Live readiness and Open day playback/export smoke passed after clearing localStorage, sessionStorage and IndexedDB: six-waypoint Open day played to 3002 ms, then the end in 1442 further frames with zero queued; MP4 9,819,817 bytes, ftypisom, 1920×1080, 29.033333 s, decoded frames at 1 and 2 s differ in 7525 sampled pixels; HTML 2,054,517 bytes with CSP, embedded project and exact live player; no unexpected console/JS errors or failed application resources. The original live HTML export also played from start to end in a fresh tab, with moving pixels, a hidden error panel and no external resources; these headless checks do not substitute for the owner's saved-file check. Annotated tag v3.3.721 was pushed at the deploy SHA. These export/player changes independently require saving and opening MP4 and HTML from disk; that check is owed pending the owner's completion or an explicit waiver for this release. For the separate v3.3.719 check, the owner answered on 14 October, verbatim: “I’ll save and open both exports”. The lead records a promise, pending confirmation that both opened successfully; it is neither completion nor a waiver and does not cover v3.3.721. CROWD-08 continues with Part D after this release record; no phase or whole-item close is claimed. House conventions: publication evidence lives in this record, implementation choices in the existing Part C decision, and outstanding owner assurance remains open.
-
-**Supersedes:** none
-
-**Deferred:** none
-
-## 2026-10-14 — CROWD-08 — Area edits preserve a project that can be saved and reopened
-
-**Decision:** Start and Finish area edits validate a detached canonical project against the loader and archive limits before changing the model or undo history, so an area cannot make a previously storable project exceed those limits.
-
-**Rationale:** Part D's independent brief review found that a new Entry weight could cross whole-project budgets; the implementing lead then reproduced the same gap in the shared B/C area setter on main after PR #144. A canonical project accepted at 100,000 tree values became 100,005 after adding an Exit area, and the loader refused it. The v3.3.721 release was stopped before publication: its first local gate and dry run passed, but the publishing helper's second gate was interrupted; no deploy commit or version bump occurred and live v3.3.720 remained unchanged. This focused correction stays under CROWD-08 and precedes the renewed release cycle.
-
-The existing app-owned setter now validates the proposed saved scene with the loader and the real ZIP metadata preparation, including referenced image manifests and the matching background filename. The check precedes pending-undo flushing and mutation. A refusal retains the model, selection, history and saved state; the card shows a linked, announced error, and the outline uses its existing form-error path. Rejected shape choices and numeric drafts remain unaccepted until validation succeeds; correcting an error to the unchanged stored value clears it without an edit. Both Entry and Exit use this owner. Packing, clocks and playback are unchanged. Standards: house conventions for one mutation owner, additive persistence and regression/mutation evidence; carbon native number/select fields; nielsen 3 and 9 for preserving work and actionable errors; wcag-2.2-aaa 3.3.6 and 2.1.3 for validated reversible submissions and keyboard correction. The source PR owns verification; publication evidence belongs to REL-721. CROWD-08 remains in progress for D–G.
 
 **Supersedes:** none
 
