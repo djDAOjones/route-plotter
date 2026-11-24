@@ -41,6 +41,7 @@
 - [ ] CORE-05 — The editor shell — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-06 — Drawing routes on the canvas — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-13 — The settings the drawing already takes — since 2026-11-20 — (from: CORE-04, 2026-11-20)
+- [!] GATE-03 — The gate's own test file gets a class of its own — since 2026-11-24 — blocked: the owner's ruling on narrowing two older gate tests, and his word on the merge
 - [ ] CORE-12 — The core panels and the points list — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-07 — The scene outline — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-08 — Video export: the core works end to end — since 2026-11-18 — (from: PLAN-6, 2026-11-18)

@@ -4,7 +4,8 @@
  * what changed (Recommended)").
  *
  * Every changed path is put in one class: record, v3, v4, pages (the live
- * site), step (the publishing step's own files) or other. A change whose
+ * site), step (the publishing step's own files), gate (the gate's own test
+ * file) or other. A change whose
  * paths are all record runs the record checker alone. Otherwise the gate's
  * own tests run, then each lane the classes ask for, then the record checker;
  * a single path of class other, or a change that cannot be read, runs
@@ -124,6 +125,20 @@ export const PUBLISHING = {
 };
 
 /**
+ * The gate's own test file, scripts/gate.test.mjs, named exactly. Its tests
+ * pin what v4's files say (the accessibility run's project file among them),
+ * so a v4 item changes it along with them. A change to it cannot change how a
+ * lane is sorted or run, and frozen v3 reads nothing of it, so it asks for the
+ * gate's lane, which runs it, and v4's gate, whose files it reads; not frozen
+ * v3's suite. scripts/gate.mjs itself stays other: a change to the sorting or
+ * to a lane's commands still runs everything (GATE-03).
+ */
+export const GATE_TESTS = {
+  files: ['scripts/gate.test.mjs'],
+  dirs: []
+};
+
+/**
  * How the publishing step's own commits are known: one parent, made and
  * committed by the Actions bot, a line beginning with the trailer, and no path
  * changed outside PAGES. The step writes exactly these (scripts/publish.mjs).
@@ -180,7 +195,7 @@ const inList = (path, list) => list.files.includes(path) || list.dirs.some(dir =
  * they sit in its folders (GATE-02).
  * @param {string} path
  * @param {{ v4?: { files: string[], dirs: string[] } }} [lists]
- * @returns {'record'|'v3'|'pages'|'step'|'v4'|'other'}
+ * @returns {'record'|'v3'|'pages'|'step'|'gate'|'v4'|'other'}
  */
 export function classify(path, { v4 = V4 } = {}) {
   if (inList(path, A11Y)) return 'v4';
@@ -188,6 +203,7 @@ export function classify(path, { v4 = V4 } = {}) {
   if (inList(path, V3)) return 'v3';
   if (inList(path, PAGES)) return 'pages';
   if (inList(path, PUBLISHING)) return 'step';
+  if (inList(path, GATE_TESTS)) return 'gate';
   if (inList(path, v4)) return 'v4';
   return 'other';
 }
@@ -225,10 +241,13 @@ export function plan(paths, { v4 = V4, pages = 'hand' } = {}) {
     return { lanes: everything, reason: 'a path is outside the record, v3 and v4 lists', classes };
   }
   // GATE-02: the publishing step's own files ask for the gate's lane, which holds the step's tests, and v4's, whose
-  // dead-code check reads the scripts the workflows run.
-  const wants = lane => found.has(lane) || (lane === 'v4' && found.has('step') && v4Exists);
+  // dead-code check reads the scripts the workflows run. GATE-03: the gate's own test file asks for the same two: the
+  // gate's lane runs it, and it pins what v4's files say.
+  const ownFiles = found.has('step') || found.has('gate');
+  const wants = lane => found.has(lane) || (lane === 'v4' && ownFiles && v4Exists);
   const lanes = ['gate', ...['v3', 'v4'].filter(wants), 'record'];
-  const touched = [...['v3', 'v4'].filter(l => found.has(l)), ...(found.has('step') ? ['the publishing step'] : [])];
+  const touched = [...['v3', 'v4'].filter(l => found.has(l)), ...(found.has('step') ? ['the publishing step'] : []),
+    ...(found.has('gate') ? ["the gate's own tests"] : [])];
   return { lanes, reason: `the change touches ${touched.join(' and ')}`, classes };
 }
 
