@@ -973,3 +973,25 @@ Fresh calculators on complete authored tuples isolate eligible route and network
 **Supersedes:** none
 
 **Deferred:** none
+
+## 2026-10-14 — REL-721 — v3.3.721 ships CROWD-08 Part C's finish areas
+
+**Decision:** v3.3.721 ships CROWD-08 Part C's centred Exit finish areas, while the item remains in progress for D–G.
+
+**Rationale:** Released under GATELESS-1 and PLAN-4 after PR #144 merged as 722ba1d7deb7068aefce8ef7baa69187f108c479; final source head 353e40276d3bb565608850e6093a2d776c061f08 had independent gpt-6-astra xhigh approval in round 1 and successful pull_request Verify 38625793245. The existing Part C decision owns the geometry and interaction choices. Before publication, the area-storage correction PR #145 merged as c20be408fbbf69bce696f0c065fc0418b4e806dc; its final head b598a3707b47159a77a29b227148145cd17364f7 had independent xhigh approval in round 1 and successful pull_request Verify 38637633075. The separate area-budget decision owns the stopped prepublication attempt and the shared Start/Finish refusal fix. This release includes both reviewed changes. Deploy 2c2ae17c3c607d0f98f31d8058c50a46f7fbcefa: 154 test files, 3708 passing tests and 2 existing todos; shell/build/check passed, zero unhandled errors; push succeeded, main-branch Verify 38645187383 and Pages checks succeeded, github-pages deployment 7078404693 reached that exact SHA, and published SHA-256 comparison was match 22, mismatch 0, errors 0. Live readiness and Open day playback/export smoke passed after clearing localStorage, sessionStorage and IndexedDB: six-waypoint Open day played to 3002 ms, then the end in 1442 further frames with zero queued; MP4 9,819,817 bytes, ftypisom, 1920×1080, 29.033333 s, decoded frames at 1 and 2 s differ in 7525 sampled pixels; HTML 2,054,517 bytes with CSP, embedded project and exact live player; no unexpected console/JS errors or failed application resources. The original live HTML export also played from start to end in a fresh tab, with moving pixels, a hidden error panel and no external resources; these headless checks do not substitute for the owner's saved-file check. Annotated tag v3.3.721 was pushed at the deploy SHA. These export/player changes independently require saving and opening MP4 and HTML from disk; that check is owed pending the owner's completion or an explicit waiver for this release. For the separate v3.3.719 check, the owner answered on 14 October, verbatim: “I’ll save and open both exports”. The lead records a promise, pending confirmation that both opened successfully; it is neither completion nor a waiver and does not cover v3.3.721. CROWD-08 continues with Part D after this release record; no phase or whole-item close is claimed. House conventions: publication evidence lives in this record, implementation choices in the existing Part C decision, and outstanding owner assurance remains open.
+
+**Supersedes:** none
+
+**Deferred:** none
+
+## 2026-10-14 — CROWD-08 — Area edits preserve a project that can be saved and reopened
+
+**Decision:** Start and Finish area edits validate a detached canonical project against the loader and archive limits before changing the model or undo history, so an area cannot make a previously storable project exceed those limits.
+
+**Rationale:** Part D's independent brief review found that a new Entry weight could cross whole-project budgets; the implementing lead then reproduced the same gap in the shared B/C area setter on main after PR #144. A canonical project accepted at 100,000 tree values became 100,005 after adding an Exit area, and the loader refused it. The v3.3.721 release was stopped before publication: its first local gate and dry run passed, but the publishing helper's second gate was interrupted; no deploy commit or version bump occurred and live v3.3.720 remained unchanged. This focused correction stays under CROWD-08 and precedes the renewed release cycle.
+
+The existing app-owned setter now validates the proposed saved scene with the loader and the real ZIP metadata preparation, including referenced image manifests and the matching background filename. The check precedes pending-undo flushing and mutation. A refusal retains the model, selection, history and saved state; the card shows a linked, announced error, and the outline uses its existing form-error path. Rejected shape choices and numeric drafts remain unaccepted until validation succeeds; correcting an error to the unchanged stored value clears it without an edit. Both Entry and Exit use this owner. Packing, clocks and playback are unchanged. Standards: house conventions for one mutation owner, additive persistence and regression/mutation evidence; carbon native number/select fields; nielsen 3 and 9 for preserving work and actionable errors; wcag-2.2-aaa 3.3.6 and 2.1.3 for validated reversible submissions and keyboard correction. The source PR owns verification; publication evidence belongs to REL-721. CROWD-08 remains in progress for D–G.
+
+**Supersedes:** none
+
+**Deferred:** none
