@@ -304,8 +304,10 @@ const helpOpen = (checked) => [
   '      - row "Play/pause Space K"',
   '      - row "Play reverse J"',
   '      - row "Play forward L"',
-  '      - row "Skip to start Home comma less than"',
-  '      - row "Skip to end End full stop greater than"',
+  '      - row "Skip to start Home less than"',
+  '      - row "Skip to end End greater than"',
+  '      - row "Step back one frame comma"',
+  '      - row "Step forward one frame full stop"',
   '  - table "General":',
   '    - caption: General',
   '    - rowgroup:',
@@ -313,7 +315,7 @@ const helpOpen = (checked) => [
   '      - row /Redo (Cmd|Ctrl)\\+Shift\\+Z/',
   '      - row "Open help question mark"',
   `  - switch "Single-key shortcuts"${checked ? ' [checked]' : ''}`,
-  '  - paragraph: Turned off, K, J, L, comma, <, full stop, > and ? do nothing. Space, Home, End, Undo and Redo keep working.',
+  '  - paragraph: Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Undo and Redo keep working.',
 ].join('\n');
 // The processes the shell presents (CONF03): none. A process is a series of steps toward a goal inside the app; the
 // shell has no form and no link to another of the app's pages, and its one link leaves Route Plotter for a page it does
@@ -500,6 +502,10 @@ export default {
     // The editor's keys, each checked by the words it says in the status region.
     { name: 'skip-to-start-by-home', state: 'shell', steps: [{ press: 'Home' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_START },
     { name: 'skip-to-end-by-end', state: 'shell', steps: [{ press: 'End' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_END },
+    // Comma and full stop step one frame (D205): the empty shell's scene is 2 s long and its export frame rate 25, so a
+    // frame is 40 ms, 20 thousandths on the timeline. From a pause a step says nothing; the timeline's value carries it.
+    { name: 'step-forward-by-full-stop', state: 'shell', steps: [{ press: '.' }], check: async ({ page }) => (await comesTo(page, 'n === 20')) && neverSays(page, SKIPPED_TO_END, 1000) },
+    { name: 'step-back-by-comma', state: 'shell', steps: [{ press: '.' }, { press: '.' }, { press: '.' }, { press: ',' }], check: async ({ page }) => (await comesTo(page, 'n === 40')) && neverSays(page, SKIPPED_TO_START, 1000) },
     // Help: opened by its button and by `?` (focus moves in), closed by Escape with focus back on "Help"; its switch
     // turned off and on again by Space.
     { name: 'open-help-by-button', state: 'shell', steps: [{ focus: HELP }, { press: 'Enter' }], check: async ({ page }) => (await helpDialog(page).isVisible()) && helpDialog(page).evaluate((e) => e.contains(document.activeElement)) },
@@ -1211,11 +1217,12 @@ export default {
       },
     },
     {
-      // 2.1.4, both ways: as the page opens, single-key shortcuts are on and comma says "Skipped to start". Their switch
+      // 2.1.4, both ways: as the page opens, single-key shortcuts are on and < says "Skipped to start". Their switch
       // in Help, turned off by the keyboard, turns them off: J, K, L, comma, full stop, <, > and ? pressed on the page
-      // and on the focused progress link and "Skip to start" then say nothing, open nothing and follow nothing, while Home still speaks
-      // (the listener was live throughout), on the focused "Skip to start" too. Turned on again, full stop says "Skipped
-      // to end" and K the reason there is nothing to play.
+      // and on the focused progress link and "Skip to start" then say nothing, open nothing, follow nothing and move
+      // the timeline not at all (a frame step says nothing even when on, D205), while Home still speaks (the listener
+      // was live throughout), on the focused "Skip to start" too. Turned on again, full stop steps one frame, > says
+      // "Skipped to end" and K the reason there is nothing to play.
       name: 'character-key-shortcuts',
       method: 'keyboard',
       rows: ['2.1.4'],
@@ -1223,8 +1230,8 @@ export default {
         await open('shell');
         const start = page.url();
         const problems = [];
-        await page.keyboard.press(',');
-        if ((await said(page)) !== SKIPPED_TO_START) problems.push(`with the switch on, comma said ${JSON.stringify(await said(page))}, not ${JSON.stringify(SKIPPED_TO_START)}`);
+        await page.keyboard.press('<');
+        if ((await said(page)) !== SKIPPED_TO_START) problems.push(`with the switch on, < said ${JSON.stringify(await said(page))}, not ${JSON.stringify(SKIPPED_TO_START)}`);
         const off = await flipByKeyboard(page);
         if (off.before !== 'true') problems.push('the switch was not on as the page opened');
         if (off.after !== 'false') problems.push('Space on the switch did not turn it off');
@@ -1239,6 +1246,7 @@ export default {
             await page.keyboard.press(key);
             const words = await said(page);
             if (words) problems.push(`with the switch off, ${key} on ${where} said ${JSON.stringify(words)}`);
+            if ((await atNow(page)).now !== 0) { problems.push(`with the switch off, ${key} on ${where} moved the timeline to ${String((await atNow(page)).now)}`); await page.keyboard.press('Home'); }
             if (await helpDialog(page).isVisible()) { problems.push(`with the switch off, ${key} on ${where} opened Help`); await page.keyboard.press('Escape'); }
             if (page.url() !== start) { problems.push(`${key} on ${where} left the shell for ${page.url()}`); break; }
           }
@@ -1250,12 +1258,15 @@ export default {
         if (on.before !== 'false' || on.after !== 'true') problems.push(`the switch read ${String(on.before)} when Help opened again and ${String(on.after)} after Space, not false then true`);
         if (!on.back) problems.push('focus did not come back to "Help" after turning the switch on');
         if (!(await quiet(page))) problems.push('the status region did not empty');
+        await page.locator('header h1').click();
         await page.keyboard.press('.');
-        if ((await said(page)) !== SKIPPED_TO_END) problems.push(`with the switch on again, full stop said ${JSON.stringify(await said(page))}, not ${JSON.stringify(SKIPPED_TO_END)}`);
+        if (!(await comesTo(page, 'n === 20'))) problems.push(`with the switch on again, full stop moved the timeline to ${String((await atNow(page)).now)}, not one frame (20)`);
+        await page.keyboard.press('>');
+        if ((await said(page)) !== SKIPPED_TO_END) problems.push(`with the switch on again, > said ${JSON.stringify(await said(page))}, not ${JSON.stringify(SKIPPED_TO_END)}`);
         if (!(await quiet(page))) problems.push('the status region did not empty');
         await page.keyboard.press('k');
         if ((await said(page)) !== NOTHING_TO_PLAY) problems.push(`with the switch on again, K said ${JSON.stringify(await said(page))}, not ${JSON.stringify(NOTHING_TO_PLAY)}`);
-        record('2.1.4', !problems.length, problems.length ? problems.join('; ') : `single-key shortcuts can be turned off (D183): on as the page opens, comma says "${SKIPPED_TO_START}"; with their switch in Help turned off by the keyboard, ${SINGLE_KEYS.join(' ')} pressed on the page, on the focused progress link and on the focused "Skip to start" say, open and follow nothing while Home still says "${SKIPPED_TO_START}"; turned on again, full stop says "${SKIPPED_TO_END}"`);
+        record('2.1.4', !problems.length, problems.length ? problems.join('; ') : `single-key shortcuts can be turned off (D183): on as the page opens, < says "${SKIPPED_TO_START}"; with their switch in Help turned off by the keyboard, ${SINGLE_KEYS.join(' ')} pressed on the page, on the focused progress link, on the focused "Skip to start" and on the focused timeline say, open, follow and move nothing while Home still says "${SKIPPED_TO_START}"; turned on again, full stop steps one frame (20 thousandths) and > says "${SKIPPED_TO_END}"`);
       },
     },
     {
