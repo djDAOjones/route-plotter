@@ -24,6 +24,8 @@ import {
 } from './gate.mjs';
 // GATE-02: the accessibility pack's files and the publishing step's own class.
 import { A11Y, PUBLISHING, siteIntroducer } from './gate.mjs';
+// GATE-03: the gate's own test file's class.
+import { GATE_TESTS } from './gate.mjs';
 
 const EVERYTHING = ['gate', 'v3', 'v4', 'record'];
 const NO_V4 = { files: [], dirs: [] };
@@ -69,7 +71,7 @@ describe('classify', () => {
 
   test('everything else is other, near misses included', () => {
     for (const path of [
-      '.github/workflows/ci.yml', 'scripts/gate.mjs', 'scripts/gate.test.mjs', 'scripts/new-script.sh',
+      '.github/workflows/ci.yml', 'scripts/gate.mjs', 'scripts/new-script.sh',
       '.npmrc', 'vitest.config.mjs', 'playwright.config.ts', 'dist/index.html', '.nvmrc', '.gitignore', '.editorconfig', '.claude/settings.json',
       'specs/dot-crowd-navigator/README.md', '_Joe/dev notes/task list.md',
       'Route Plotter v3.code-workspace',
@@ -130,6 +132,17 @@ describe('classify', () => {
     assert.equal(classify('v3/scripts/publish.mjs'), 'v3');
   });
 
+  test("the gate's own test file is a class of its own, named exactly (GATE-03)", () => {
+    assert.deepEqual(GATE_TESTS, { files: ['scripts/gate.test.mjs'], dirs: [] });
+    assert.equal(classify('scripts/gate.test.mjs'), 'gate');
+    // The sorting itself, and anything spelt nearly the same, stays other, so it runs everything.
+    for (const path of ['scripts/gate.mjs', 'scripts/gate.test.js', 'scripts/gate.test.mjs.orig', 'scripts/Gate.test.mjs',
+      'scripts/gate/gate.test.mjs', 'gate.test.mjs', 'scripts/gate.spec.mjs']) {
+      assert.equal(classify(path), 'other', path);
+    }
+    assert.equal(classify('v3/scripts/gate.test.mjs'), 'v3');
+  });
+
   test("STACK-04's measures script is v4's, whose lane runs it (GATE-02)", () => {
     assert.equal(classify('scripts/measures.mjs'), 'v4');
     assert.deepEqual(plan(['scripts/measures.mjs']).lanes, ['gate', 'v4', 'record']);
@@ -171,7 +184,7 @@ describe('plan', () => {
     assert.deepEqual(plan(['src/main.tsx', 'project/backlog.md']).lanes, ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['src/main.tsx', 'v3/src/app/main.js']).lanes, ['gate', 'v3', 'v4', 'record']);
     assert.deepEqual(plan(['v3/src/app/main.js']).lanes, ['gate', 'v3', 'record']);
-    for (const path of ['.github/workflows/ci.yml', 'scripts/gate.mjs', 'scripts/gate.test.mjs']) {
+    for (const path of ['.github/workflows/ci.yml', 'scripts/gate.mjs']) {
       assert.deepEqual(plan([path]).lanes, EVERYTHING, path);
     }
   });
@@ -211,6 +224,35 @@ describe('plan', () => {
     assert.match(words, /because the change touches the publishing step$/);
     assert.match(describePlan(plan(['scripts/publish.mjs', 'src/main.tsx']), 'a test'),
       /touches v4 and the publishing step$/);
+  });
+
+  test("the gate's own test file runs the gate's lane and v4's gate, never v3's suite (GATE-03)", () => {
+    // The gate's lane runs the file; frozen v3 names it nowhere, so v3's suite has nothing of it to prove.
+    assert.ok(LANES.gate.commands.flat(2).includes('scripts/gate.test.mjs'), "the gate's lane runs its own tests");
+    assert.ok(!LANES.v3.commands.flat(2).some(word => word.includes('gate')), "v3's lane runs nothing of the gate's");
+    // git grep ends 1 when it finds nothing, 0 when it lists a file, more on an error.
+    const named = spawnSync('git', ['grep', '-l', '-F', 'gate.test', '--', 'v3/'], { cwd: ROOT, encoding: 'utf8' });
+    assert.equal(named.status, 1, `frozen v3 names the file nowhere: ${named.stdout}${named.stderr}`);
+    assert.deepEqual(plan(['scripts/gate.test.mjs']).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/gate.test.mjs', 'project/backlog.md']).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/gate.test.mjs', 'src/main.tsx', 'tests/a11y/project.mjs']).lanes,
+      ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/gate.test.mjs', 'scripts/publish.mjs']).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/gate.test.mjs', 'docs/index.html'], { pages: 'step' }).lanes,
+      ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/gate.test.mjs', 'v3/build.js']).lanes, ['gate', 'v3', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/gate.test.mjs'], { v4: NO_V4 }).lanes, ['gate', 'record']);
+    // Beside the sorting itself, a path on no list, or a hand change to the live site, everything runs, as before.
+    assert.deepEqual(plan(['scripts/gate.test.mjs', 'scripts/gate.mjs']).lanes, EVERYTHING);
+    assert.deepEqual(plan(['scripts/gate.test.mjs', '.nvmrc']).lanes, EVERYTHING);
+    assert.deepEqual(plan(['scripts/gate.test.mjs', 'docs/index.html']).lanes, EVERYTHING);
+    const words = describePlan(plan(['scripts/gate.test.mjs', 'project/backlog.md']), 'a test');
+    assert.match(words, /gate\s+scripts\/gate\.test\.mjs/);
+    assert.match(words, /because the change touches the gate's own tests$/);
+    assert.match(describePlan(plan(['scripts/gate.test.mjs', 'src/main.tsx']), 'a test'),
+      /touches v4 and the gate's own tests$/);
+    assert.match(describePlan(plan(['scripts/gate.test.mjs', 'scripts/publish.mjs']), 'a test'),
+      /touches the publishing step and the gate's own tests$/);
   });
 
   test('the plan says why, path by path', () => {
