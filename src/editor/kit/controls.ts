@@ -41,7 +41,22 @@
 //    never while a handed position is awaited or for an echo that comes after the value held has moved on (that value
 //    is on its way to the widget). A key of the kit's own (Home, End, Page Up, Page Down) and a new setting or scale
 //    draw a new widget without asking. What the rule costs: while a position is awaited, a move of the user's that lands exactly on it
-//    is taken for the echo and lost (for an arrow during a playing, measured by brief 79). A press while one is down (a second finger) is nothing until the release, also
+//    is taken for the echo and lost (for an arrow during a playing, measured by brief 79).
+//    In a drag every handed position is one the thumb has just reported, so none is awaited; yet on a slow page the
+//    widget follows a position handed before late, after the drag has gone on, and once took that for a move of the
+//    drag: the two answered each other until React gave up (brief 88, error 185). So a position handed during a press
+//    where the thumb already stands goes on a trail, apart from what is awaited (it changes neither `awaiting()`, nor a
+//    readout, nor `standsOff()`). A report of a trail position other than the one last handed moves nothing and makes
+//    no step, press or no press; the thumb is noted there, and the trail positions handed before it are let go (the
+//    widget follows in the order handed). A report of the position last handed lets go of the whole trail: the widget
+//    has followed the newest. A release that finds the thumb where such a report left it, off the value held, with
+//    nothing awaited, moves the drag there first and then ends it. That is how a late follow (S1: the widget then
+//    follows the newest before the release, and the value stands) is told from a drag back onto a place just left (S3:
+//    the release comes first, and the drag ends where the thumb was let go). The trail is let go at the next press and
+//    at a new widget, and holds at most as many positions as are awaited. What it costs: a drag back exactly onto a
+//    place it just left shows the older value until the next move or the release; and until the widget follows the
+//    newest, a key that lands on a trail position is taken for a late follow (one press lost; the widget is drawn
+//    again from the value held). A press while one is down (a second finger) is nothing until the release, also
 //    after a give-up or a refusal, so one press begins at most one edit. What that costs: if a release is ever lost,
 //    the next press is nothing, and its release clears it.
 // 4. A refused begin changes nothing: the control shows what is held, and says why and that nothing held changed. A
@@ -154,12 +169,15 @@ export interface Slider {
   press(): Result;
   /**
    * The widget says its thumb now stands at `position`. A position it was handed and has not yet said back, or the
-   * position held already, is its echo: nothing (an awaited one is cleared, with every one handed before it). Else,
-   * during a press, one more position of the drag, or nothing once it is given up or was refused; with no press, a
+   * position held already, is its echo: nothing (an awaited one is cleared, with every one handed before it); so is a
+   * position on the trail other than the one last handed, a late follow (point 3). Else, during a press, one more position of the drag, or nothing once it is given up or was refused; with no press, a
    * key's nudge.
    */
   report(position: number): Result;
-  /** The widget is handed `position` to show (its value changed): awaited, unless its thumb stands there already. */
+  /**
+   * The widget is handed `position` to show (its value changed): awaited, unless its thumb stands there already; then,
+   * during a press, put on the trail (point 3).
+   */
   handed(position: number): void;
   /** A new widget is drawn standing at `position`: it will say nothing of it, so nothing is awaited. */
   drawn(position: number): void;
@@ -173,7 +191,10 @@ export interface Slider {
    * value held that differs from the position last handed is on its way to the widget, which hands it.
    */
   standsOff(): boolean;
-  /** The pointer is let go: the press ends, and so does its drag (`end()`), if one is still open. */
+  /**
+   * The pointer is let go: the press ends, and so does its drag (`end()`), if one is still open; first moved to the
+   * thumb where a report on the trail left it off the value held (point 3).
+   */
   release(): Result;
 }
 
@@ -191,6 +212,10 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
   let awaited: number[] = [];
   let thumb: number | undefined;
   let last: number | undefined;
+  /** Positions handed during this press where the thumb already stood, oldest first: not awaited (point 3, the trail). */
+  let trail: number[] = [];
+  /** Whether the thumb was last reported on the trail, where nothing was moved for it. */
+  let parked = false;
 
   const move = (value: number): Result => (drag === null ? NOTHING : drag.set(value));
   const start = (): Result => {
@@ -236,6 +261,8 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
     press: () => {
       if (down) return NOTHING;
       down = true;
+      trail = [];
+      parked = false;
       return start();
     },
     report: (at) => {
@@ -246,17 +273,32 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
         return NOTHING;
       }
       thumb = at;
+      // Carbon's late follow of a position on the trail: the thumb is noted there, nothing moves. Its follows come in
+      // the order handed, so those before it are let go; its follow of the newest lets go of them all.
+      const late = trail.indexOf(at);
+      if (late !== -1 && at !== last) {
+        trail = trail.slice(late + 1);
+        parked = true;
+        return NOTHING;
+      }
+      parked = false;
+      if (at === last) trail = [];
       if (at === position()) return NOTHING;
       return down ? move(scale.toValue(at)) : nudge(scale.toValue(at));
     },
     handed: (at) => {
       last = at;
-      if (at === thumb) return;
+      if (at === thumb) {
+        if (down) trail = [...trail, at].slice(-AWAITED_AT_MOST);
+        return;
+      }
       thumb = at;
       awaited = [...awaited, at].slice(-AWAITED_AT_MOST);
     },
     drawn: (at) => {
       awaited = [];
+      trail = [];
+      parked = false;
       thumb = at;
       last = at;
     },
@@ -265,6 +307,9 @@ export function createSlider(setting: Setting, scale: Scale = IDENTITY): Slider 
     standsOff: () => thumb !== undefined && last !== undefined && awaited.length === 0 && thumb !== last,
     release: () => {
       down = false;
+      // A thumb let go where a report on the trail left it, off the value held: the drag moves there first, then ends.
+      if (parked && thumb !== undefined && awaited.length === 0 && thumb !== position()) move(scale.toValue(thumb));
+      parked = false;
       return end();
     },
   };

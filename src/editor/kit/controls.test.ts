@@ -673,6 +673,112 @@ describe("point 3: a widget's late echo of a position it was handed (brief 79)",
   });
 });
 
+describe("point 3: a drag's trail, Carbon's late follow of a position handed during the press (brief 88)", () => {
+  // Probe 86 and 88: on a slow page, a quick drag. Each position handed during the press is one the thumb has just
+  // reported, so none is awaited; Carbon then follows the prop it was handed before, late, after the drag has gone on.
+  // Taken for a move of the drag, the kit and Carbon answered each other until React gave up (error 185).
+  const dragged = () => {
+    const setting = handmade(0);
+    const slider = createSlider(setting);
+    slider.drawn(0);
+    slider.press();
+    for (const at of [100, 200]) {
+      expect(slider.report(at), String(at)).toEqual({ ok: true, changed: true });
+      slider.handed(at);
+    }
+    expect([setting.held, slider.awaiting(), slider.standsOff()]).toEqual([200, false, false]);
+    return { setting, slider };
+  };
+  const steps = (setting: Handmade) => setting.log.filter((l) => !l.startsWith('set '));
+
+  it('S1, the late follow during the press: the older position moves nothing, the follow of the newest is an echo, one edit', () => {
+    const { setting, slider } = dragged();
+    expect(slider.report(100)).toEqual({ ok: true, changed: false });
+    expect([setting.held, slider.thumb(), slider.awaiting()]).toEqual([200, 100, false]);
+    expect(slider.report(200)).toEqual({ ok: true, changed: false });
+    expect(setting.held).toBe(200);
+    expect(slider.release()).toEqual({ ok: true, changed: true });
+    expect([setting.held, steps(setting)]).toEqual([200, ['begin 1', 'commit 1']]);
+  });
+
+  it('S2, the late follow after the release: no nudge, no second edit', () => {
+    const { setting, slider } = dragged();
+    slider.release();
+    expect(slider.report(100)).toEqual({ ok: true, changed: false });
+    expect(slider.report(200)).toEqual({ ok: true, changed: false });
+    expect([setting.held, steps(setting)]).toEqual([200, ['begin 1', 'commit 1']]);
+  });
+
+  it('S3, the user drags back onto the place just left and lets go there: the value committed is where the thumb was let go', () => {
+    const { setting, slider } = dragged();
+    expect(slider.report(100)).toEqual({ ok: true, changed: false });
+    expect(setting.held).toBe(200);
+    expect(slider.release()).toEqual({ ok: true, changed: true });
+    expect([setting.held, steps(setting)]).toEqual([100, ['begin 1', 'commit 1']]);
+  });
+
+  it('the trail is not awaited: it changes neither awaiting() nor the readout nor standsOff() of a thumb where it should be', () => {
+    const { slider } = dragged();
+    expect([slider.awaiting(), slider.readout(200), slider.readout(100), slider.standsOff()]).toEqual([false, 200, 100, false]);
+    slider.release();
+    expect([slider.awaiting(), slider.readout(200), slider.standsOff()]).toEqual([false, 200, false]);
+  });
+
+  it('a later move of the drag onto a trail position after another is the user’s: the drag moves on', () => {
+    const { setting, slider } = dragged();
+    expect(slider.report(300)).toEqual({ ok: true, changed: true });
+    slider.handed(300);
+    expect(slider.report(200)).toEqual({ ok: true, changed: false });
+    expect(slider.report(300)).toEqual({ ok: true, changed: false });
+    expect(slider.report(400)).toEqual({ ok: true, changed: true });
+    slider.handed(400);
+    slider.release();
+    expect([setting.held, steps(setting)]).toEqual([400, ['begin 1', 'commit 1']]);
+  });
+
+  it(`the trail holds at most ${String(AWAITED_AT_MOST)} positions, the oldest let go first: an older one's report is the drag's`, () => {
+    const setting = handmade(0);
+    const slider = createSlider(setting);
+    slider.drawn(0);
+    slider.press();
+    const path = Array.from({ length: AWAITED_AT_MOST + 1 }, (_, k) => (k + 1) * 10);
+    for (const at of path) {
+      slider.report(at);
+      slider.handed(at);
+    }
+    expect(slider.report(path[1])).toEqual({ ok: true, changed: false });
+    expect(setting.held).toBe(path.at(-1));
+    expect(slider.report(path[0])).toEqual({ ok: true, changed: true });
+    expect(setting.held).toBe(path[0]);
+  });
+
+  it('the trail is let go at a new widget and at the next press: a report of an old place is then the drag’s', () => {
+    for (const clear of ['drawn', 'press'] as const) {
+      const { setting, slider } = dragged();
+      if (clear === 'drawn') slider.drawn(200);
+      else {
+        slider.release();
+        slider.press();
+      }
+      expect(slider.report(100), clear).toEqual({ ok: true, changed: true });
+      expect(setting.held, clear).toBe(100);
+      slider.release();
+    }
+  });
+
+  it('with no press, a position handed where the thumb stands goes on no trail: a key back onto it is taken', () => {
+    const setting = handmade(0);
+    const slider = createSlider(setting);
+    slider.drawn(0);
+    for (const at of [100, 200]) {
+      slider.report(at);
+      slider.handed(at);
+    }
+    expect(slider.report(100)).toEqual({ ok: true, changed: true });
+    expect(setting.held).toBe(100);
+  });
+});
+
 describe('the words', () => {
   it('a field shows plain words, none of them retired', () => {
     expect(NOT_A_NUMBER).not.toMatch(RETIRED_WORDS);
