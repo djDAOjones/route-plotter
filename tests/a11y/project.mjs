@@ -90,6 +90,18 @@ const dragBy = async (pointer, from, to, steps = 4) => {
 // The fields a person meets: those drawn (Carbon keeps a hidden number input beside its slider, never shown, D181).
 const shownFields = (page) => page.locator(FIELDS).filter({ visible: true });
 const UNDO = process.platform === 'darwin' ? 'Meta+z' : 'Control+z';
+// Open project's chord (D207), as UNDO is built: Cmd+O on a Mac, Ctrl+O elsewhere.
+const OPEN_KEY = process.platform === 'darwin' ? 'Meta+o' : 'Control+o';
+// Presses Open project's chord where focus is and gives whether the page's own file chooser opened within `ms` and
+// whether the key came out cancelled (a listener on the window, after the editor's on `document`, reads it). A
+// scripted press does not pass through Chrome's own shortcuts, so this cannot show that Chrome hands a real Cmd or
+// Ctrl+O to the page: only a real key press in Chrome shows that (D207).
+const pressOpenKey = async (page, ms = 3000) => {
+  await page.evaluate(() => { window.__oTaken = null; addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 'o') window.__oTaken = e.defaultPrevented; }); });
+  const chooser = page.waitForEvent('filechooser', { timeout: ms }).then(() => true, () => false);
+  await page.keyboard.press(OPEN_KEY);
+  return { opened: await chooser, taken: (await page.evaluate(() => window.__oTaken)) === true };
+};
 const focusOn = (page, sel) => page.evaluate((s) => !!document.activeElement?.matches(s), sel);
 // True if the status region does not say `words` within `ms`: a second action a key must not also run (a message
 // waiting behind another shows when the first's hold ends, about 2 s).
@@ -313,11 +325,12 @@ const helpOpen = (checked) => [
   '  - table "General":',
   '    - caption: General',
   '    - rowgroup:',
+  '      - row /Open project (Cmd|Ctrl)\\+O/',
   '      - row /Undo (Cmd|Ctrl)\\+Z/',
   '      - row /Redo (Cmd|Ctrl)\\+Shift\\+Z/',
   '      - row "Open help question mark"',
   `  - switch "Single-key shortcuts"${checked ? ' [checked]' : ''}`,
-  '  - paragraph: Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Undo and Redo keep working.',
+  '  - paragraph: Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Open project, Undo and Redo keep working.',
 ].join('\n');
 // The processes the shell presents (CONF03): none. A process is a series of steps toward a goal inside the app; the
 // shell has no form and no link to another of the app's pages, and its one link leaves Route Plotter for a page it does
@@ -530,6 +543,11 @@ export default {
     // off); K on it is K anywhere (on the empty scene, the refusal), focus kept. No key opens a file elsewhere.
     { name: 'open-by-enter-on-button', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => (await choose(page, await projectFile(), 'Enter')) && (await saysOpened(page)) && focusOn(page, OPEN) },
     { name: 'open-by-space-plays-nothing', state: 'shell', steps: [{ focus: OPEN }], check: async ({ page }) => (await choose(page, null, 'Space')) && (await neverSays(page, NOTHING_TO_PLAY)) && !(await said(page)) && focusOn(page, OPEN) },
+    // Cmd or Ctrl+O (D207) opens the page's own file chooser from wherever focus is, the key cancelled so the browser's
+    // own "Open File" does not open; with Help open it opens nothing and is still cancelled. A scripted press does not
+    // pass through Chrome's own shortcuts: that Chrome hands a real Cmd or Ctrl+O to the page is not shown here.
+    { name: 'open-by-command-o', state: 'shell', steps: [{ focus: TIMELINE }], check: async ({ page }) => { const { opened, taken } = await pressOpenKey(page); return opened && taken && focusOn(page, TIMELINE); } },
+    { name: 'command-o-in-help-opens-nothing', state: 'shell', steps: [{ focus: HELP }, { press: 'Enter' }], check: async ({ page }) => { const { opened, taken } = await pressOpenKey(page, 1500); return !opened && taken && helpDialog(page).isVisible(); } },
     { name: 'play-refused-by-k-on-open', state: 'shell', steps: [{ focus: OPEN }, { press: 'k' }], check: async ({ page }) => (await said(page)) === NOTHING_TO_PLAY && focusOn(page, OPEN) },
     // With the project opened, L on it plays forward and J plays back (from the start, into it), as on any button; no
     // chooser, focus kept.
