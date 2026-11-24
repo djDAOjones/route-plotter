@@ -1,8 +1,10 @@
 // CORE-05, stage 3: the editor's key table. One table, read both by dispatch (which action a key press means) and by
 // help (the rows it shows), so the two cannot differ: v3's did (its table called `,` and `.` "step", which nothing
 // did; its handler skipped with them, D175). The entries are v3's live keys (InteractionHandler.js 940 to 968 and 1034
-// to 1041; Undo and Redo, keybindings.js 295 to 308) and help's `?` (keybindings.js 316 to 322, "Open help"), and
-// nothing else yet: Escape and the canvas's keys come with the stages that give them something to do.
+// to 1041; Undo and Redo, keybindings.js 295 to 308) and help's `?` (keybindings.js 316 to 322, "Open help"), save that
+// `,` and `.` now do what v3's table said: step one frame back and forward (D205, the owner's choice of 24 Nov), while
+// Home and `<`, End and `>` still skip. Nothing else yet: Escape and the canvas's keys come with the stages that give
+// them something to do.
 //
 // A press is given by shape (a real KeyboardEvent fits; a test needs none), and whether the machine is a Mac is handed
 // in: the module names no browser global. The shell binds each action's id to a function of the same name (the
@@ -17,7 +19,8 @@
 // - Letters match whatever their case (Caps Lock, Shift), as v3's lower-casing did.
 // - A press another listener has already taken (`defaultPrevented`) means no action (DEF-13.1, the table's half).
 // - A held key repeats its press (`repeat`); the table does not decide on it, the dispatch does, by the entry's
-//   `repeats` (D189): on for Undo and Redo alone, which repeat as in every editor; off for every other entry.
+//   `repeats` (D189): on for Undo and Redo, which repeat as in every editor, and for the frame steps, so a held `,`
+//   or `.` steps at each repeat (D205); off for every other entry.
 //
 // Not ported: v3's mouse bindings, the stored custom bindings, the categories' icons and `formatBinding`'s symbols;
 // a help row spells a chord in words ("Cmd+Shift+Z", "Ctrl+Shift+Z"), which is all a row needs.
@@ -36,7 +39,7 @@ interface KeyEntry<A extends string = ActionId, G extends Group = Group> {
   /** The words help shows for it, in the glossary's words. */
   readonly words: string;
   readonly group: G;
-  /** Whether a held key runs it again at each repeat (D189): Undo and Redo only. */
+  /** Whether a held key runs it again at each repeat (D189): Undo, Redo and the frame steps (D205). */
   readonly repeats: boolean;
 }
 
@@ -71,8 +74,10 @@ export const KEYS = Object.freeze([
   entry('playPause', [' ', 'k'], 'Play/pause', 'Playback'),
   entry('reverse', ['j'], 'Play reverse', 'Playback'),
   entry('forward', ['l'], 'Play forward', 'Playback'),
-  entry('skipToStart', ['Home', ',', '<'], 'Skip to start', 'Playback'),
-  entry('skipToEnd', ['End', '.', '>'], 'Skip to end', 'Playback'),
+  entry('skipToStart', ['Home', '<'], 'Skip to start', 'Playback'),
+  entry('skipToEnd', ['End', '>'], 'Skip to end', 'Playback'),
+  entry('stepBack', [','], 'Step back one frame', 'Playback', [], true),
+  entry('stepForward', ['.'], 'Step forward one frame', 'Playback', [], true),
   entry('undo', ['z'], 'Undo', 'General', ['command'], true),
   entry('redo', ['z'], 'Redo', 'General', ['command', 'shift'], true),
   entry('help', ['?'], 'Open help', 'General'),

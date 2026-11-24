@@ -24,14 +24,16 @@ const WITH_CTRL_CMD_OR_ALT = CHORDS.filter(({ ctrlKey, metaKey, altKey }) => ctr
 const NAMED_KEYS = [...new Set(KEYS.flatMap(({ keys }) => keys.flatMap((key) => (key.length === 1 ? [key, key.toUpperCase()] : [key]))))];
 
 describe('the key table, as dispatch reads it', () => {
-  it('holds v3’s live keys: Space and K, J, L, Home , < and End . >', () => {
+  it('holds v3’s live keys: Space and K, J, L, Home < and End >; comma and full stop step a frame (D205)', () => {
     for (const mac of PLATFORMS) {
       const of = (key: string, held: Partial<Omit<KeyPress, 'key'>> = {}) => actionFor(press(key, held), mac);
       expect([' ', 'k'].map((key) => of(key))).toEqual(['playPause', 'playPause']);
       expect(of('j')).toBe('reverse');
       expect(of('l')).toBe('forward');
-      expect(['Home', ',', '<'].map((key) => of(key))).toEqual(['skipToStart', 'skipToStart', 'skipToStart']);
-      expect(['End', '.', '>'].map((key) => of(key))).toEqual(['skipToEnd', 'skipToEnd', 'skipToEnd']);
+      expect(['Home', '<'].map((key) => of(key))).toEqual(['skipToStart', 'skipToStart']);
+      expect(['End', '>'].map((key) => of(key))).toEqual(['skipToEnd', 'skipToEnd']);
+      expect([',', '.'].map((key) => of(key))).toEqual(['stepBack', 'stepForward']);
+      expect([',', '.'].map((key) => of(key, { ctrlKey: true }))).toEqual([null, null]);
       // Shift is not asked of a key with no modifier: `<` and `>` need it, and Caps Lock gives a capital.
       expect(of('<', { shiftKey: true })).toBe('skipToStart');
       expect(of('>', { shiftKey: true })).toBe('skipToEnd');
@@ -162,8 +164,10 @@ describe('the key table, as help reads it', () => {
       playPause: ['Space', 'K'],
       reverse: ['J'],
       forward: ['L'],
-      skipToStart: ['Home', ',', '<'],
-      skipToEnd: ['End', '.', '>'],
+      skipToStart: ['Home', '<'],
+      skipToEnd: ['End', '>'],
+      stepBack: [','],
+      stepForward: ['.'],
       undo: ['Cmd+Z'],
       redo: ['Cmd+Shift+Z'],
       help: ['?'],
@@ -171,14 +175,16 @@ describe('the key table, as help reads it', () => {
     expect(keysOf(false)).toMatchObject({ undo: ['Ctrl+Z'], redo: ['Ctrl+Shift+Z'] });
   });
 
-  it('says that the comma and full stop skip, as they do (D175; v3’s help said "step")', () => {
+  it('says that the comma and full stop step one frame, as they now do (D205; D175 had them skip), and repeat when held', () => {
     const rows = helpRows(true);
     const row = (action: string) => rows.find((candidate) => candidate.action === action);
-    expect(row('skipToStart')).toMatchObject({ words: 'Skip to start', keys: ['Home', ',', '<'] });
-    expect(row('skipToEnd')).toMatchObject({ words: 'Skip to end', keys: ['End', '.', '>'] });
-    expect(actionFor(press(','), true)).toBe('skipToStart');
-    expect(actionFor(press('.'), true)).toBe('skipToEnd');
-    expect(rows.map(({ words }) => words).join(' ')).not.toMatch(/\bstep\b/i);
+    expect(row('skipToStart')).toMatchObject({ words: 'Skip to start', keys: ['Home', '<'] });
+    expect(row('skipToEnd')).toMatchObject({ words: 'Skip to end', keys: ['End', '>'] });
+    expect(row('stepBack')).toMatchObject({ words: 'Step back one frame', keys: [','], group: 'Playback' });
+    expect(row('stepForward')).toMatchObject({ words: 'Step forward one frame', keys: ['.'], group: 'Playback' });
+    expect(actionFor(press(','), true)).toBe('stepBack');
+    expect(actionFor(press('.'), true)).toBe('stepForward');
+    expect(KEYS.filter(({ repeats }) => repeats).map(({ action }) => action)).toEqual(['stepBack', 'stepForward', 'undo', 'redo']);
   });
 
   it('and dispatch agree: every key help shows, pressed as shown, means that row’s action', () => {

@@ -25,8 +25,9 @@
 //    entry it matched, not from a second list of keys.
 // 5. A held key (`repeat`, D189) runs its action once: a repeated press runs nothing but is still taken wherever its
 //    entry would have run (so a held Space does not scroll the page behind), except an entry marked `repeats`, Undo
-//    and Redo, which run at each repeat as in every editor. Decided from the entry, not from a second list of keys;
-//    every check of points 1, 2 and 4 comes first, so a repeat is never taken where its first press would not be.
+//    and Redo, which run at each repeat as in every editor, and the frame steps `,` and `.` (D205), which step at
+//    each. Decided from the entry, not from a second list of keys; every check of points 1, 2 and 4 comes first, so a
+//    repeat is never taken where its first press would not be.
 // It does not claim to withstand code written to break it.
 //
 // Ported from v3's guard (InteractionHandler.js 890 to 970), and where it differs:
@@ -45,7 +46,7 @@
 // - v3 answered `,` `.` `j` `k` `l` whatever modifier was held; the table's `matches` asks for no Ctrl, Cmd or Alt
 //   (DEF-63), and lets Shift through (`<` and `>` need it).
 // - v3 had no guard on a held key: its Space, held, played and paused at the keyboard's repeat rate. Here a held key
-//   runs once, Undo and Redo excepted (point 5, D189).
+//   runs once, Undo, Redo and the frame steps excepted (point 5, D189, D205).
 import type { Store } from '../store/store';
 import type { EditorTransport } from '../transport/transport';
 import { actionFor, KEYS, type ActionIn, type KeyPress } from './keys';

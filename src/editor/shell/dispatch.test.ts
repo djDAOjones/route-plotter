@@ -57,6 +57,7 @@ function rig() {
     playback: () => store.playback(),
     announce: (words) => said.push(words),
     canPlay: () => true,
+    frameRate: () => 25,
   });
   const ran: string[] = [];
   const outcomes: ReturnType<typeof store.undo>[] = [];
@@ -70,6 +71,8 @@ function rig() {
     forward: recorded('forward'),
     skipToStart: recorded('skipToStart'),
     skipToEnd: recorded('skipToEnd'),
+    stepBack: recorded('stepBack'),
+    stepForward: recorded('stepForward'),
   };
   const bound = {
     undo: () => {
@@ -182,7 +185,7 @@ describe('the shell’s key dispatch', () => {
     expect(key(press(' '), { place })).toBe(true);
     expect(key(press(','), { place })).toBe(true);
     expect(key(press('z', { metaKey: true, shiftKey: true }), { place })).toBe(true);
-    expect(ran).toEqual(['playPause', 'skipToStart', 'redo']);
+    expect(ran).toEqual(['playPause', 'stepBack', 'redo']);
   });
 
   it('point 3: a Playback action is the editor’s transport’s function of the same name, saying its own words', () => {
@@ -199,6 +202,21 @@ describe('the shell’s key dispatch', () => {
     expect(store.playback().speed).toBe(-1);
     expect(ran).toEqual(['skipToEnd', 'skipToStart', 'playPause', 'playPause', 'forward', 'reverse']);
     expect(said).toEqual([WORDS.skippedToEnd, WORDS.skippedToStart, WORDS.playing, WORDS.paused, WORDS.playing]);
+  });
+
+  it('point 3: comma and full stop step one frame back and forward (D205): silent from a pause, a playing scene paused first', () => {
+    const { ran, said, key, store } = rig();
+    expect(key(press('.'))).toBe(true);
+    expect(key(press('.'))).toBe(true);
+    expect(store.playback().atMs).toBe(80);
+    expect(key(press(','))).toBe(true);
+    expect(store.playback().atMs).toBe(40);
+    expect(said).toEqual([]);
+    expect(key(press(' '))).toBe(true);
+    expect(key(press('.'))).toBe(true);
+    expect(store.playback()).toMatchObject({ playing: false, atMs: 80, speed: 1 });
+    expect(ran).toEqual(['stepForward', 'stepForward', 'stepBack', 'playPause', 'stepForward']);
+    expect(said).toEqual([WORDS.playing, WORDS.paused]);
   });
 
   it('point 3: Undo and Redo are the store’s; a refusal changes nothing and the key is still taken', () => {
@@ -245,13 +263,13 @@ describe('the shell’s key dispatch', () => {
   it('point 4: with single-key shortcuts on, the same keys are taken', () => {
     const { ran, key } = rig();
     for (const name of ['j', 'k', 'l', ',', '.', '<', '>', '?']) expect(key(press(name)), name).toBe(true);
-    expect(ran).toEqual(['reverse', 'playPause', 'forward', 'skipToStart', 'skipToEnd', 'skipToStart', 'skipToEnd', 'help']);
+    expect(ran).toEqual(['reverse', 'playPause', 'forward', 'stepBack', 'stepForward', 'skipToStart', 'skipToEnd', 'help']);
   });
 
-  it('point 5: a held key runs its action once and is still taken; Undo and Redo run at each repeat (D189)', () => {
+  it('point 5: a held key runs its action once and is still taken; Undo, Redo and the frame steps run at each repeat (D189, D205)', () => {
     for (const mac of PLATFORMS) {
       const { ran, said, key, store, outcomes } = rig();
-      for (const pressed of [press(' '), press('k'), press('j'), press('l'), press('Home'), press(','), press('End'), press('?')]) {
+      for (const pressed of [press(' '), press('k'), press('j'), press('l'), press('Home'), press('<'), press('End'), press('?')]) {
         expect(key({ ...pressed, repeat: true }, { mac }), `${pressed.key} held`).toBe(true);
       }
       expect(ran).toEqual([]);
@@ -271,6 +289,10 @@ describe('the shell’s key dispatch', () => {
       expect(ran).toEqual(['playPause', 'undo', 'undo', 'redo']);
       expect(outcomes.every((outcome) => outcome.ok)).toBe(true);
       expect(store.getState().project.scene.routes).toHaveLength(routes + 1);
+      const at = store.playback().atMs;
+      for (const name of ['.', '.', '.', ',']) expect(key({ ...press(name), repeat: true }, { mac }), `${name} held`).toBe(true);
+      expect(ran.slice(4)).toEqual(['stepForward', 'stepForward', 'stepForward', 'stepBack']);
+      expect(store.playback().atMs).toBe(Math.floor(at / 40) * 40 + 80);
     }
   });
 

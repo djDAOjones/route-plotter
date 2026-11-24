@@ -1,6 +1,6 @@
 // CORE-05, stage 3: the editor's own transport, over the player's transport made on the store with a frame source run
 // by hand. One function per command, called by every way of asking: Space, K and the Play button all reach
-// `playPause`, which plays from the start on the end (DEF-62); End, `.`, `>` and the button all reach `skipToEnd`,
+// `playPause`, which plays from the start on the end (DEF-62); End, `>` and the button all reach `skipToEnd`,
 // which says so (INTAKE.26). J and L as v3's live handler; a scrub that says nothing.
 import { describe, expect, it } from 'vitest';
 import type { Project } from '../../adapters/io/format';
@@ -59,7 +59,7 @@ function empty(): Project {
  * The editor's transport on a store, the player's transport made on it, and what it said: put together as the
  * session puts them (`canPlay` read from the store's scene at each ask, `ended` saying `WORDS.complete`).
  */
-function editorOf(project: Project = twoStops()) {
+function editorOf(project: Project = twoStops(), rate?: () => number) {
   const store = createStore({ project, nextId: counter('new') });
   const frames = handMade();
   const reports: unknown[] = [];
@@ -79,6 +79,7 @@ function editorOf(project: Project = twoStops()) {
     playback: () => store.playback(),
     announce,
     canPlay: () => hasSomethingToPlay(store.getState().project.scene),
+    frameRate: rate ?? (() => store.getState().project.scene.settings.export.frameRate),
   });
   return { store, frames, player, editor, said, reports };
 }
@@ -431,5 +432,88 @@ describe('the editor’s transport: “Animation complete”, said by the player
     editor.skipToStart();
     frames.run(16);
     expect(said).toEqual([WORDS.playing, WORDS.paused, WORDS.skippedToEnd, WORDS.skippedToStart]);
+  });
+});
+
+describe('the editor’s transport: a step of one frame (comma and full stop, D205)', () => {
+  it('a frame is 1000 ms over the scene’s export frame rate (25 by default: 40 ms); steps land on the frames counted from the start', () => {
+    const { store, editor, said } = editorOf();
+    expect(store.getState().project.scene.settings.export.frameRate).toBe(25);
+    editor.stepForward();
+    editor.stepForward();
+    expect(store.playback().atMs).toBe(80);
+    editor.stepBack();
+    expect(store.playback().atMs).toBe(40);
+    expect(said).toEqual([]);
+  });
+
+  it('from a position off the grid, to the nearest whole frame strictly after, or strictly before', () => {
+    const { store, editor } = editorOf();
+    editor.scrub(50);
+    editor.stepForward();
+    expect(store.playback().atMs).toBe(80);
+    editor.scrub(50);
+    editor.stepBack();
+    expect(store.playback().atMs).toBe(40);
+    editor.scrub(79.9);
+    editor.stepForward();
+    expect(store.playback().atMs).toBe(80);
+  });
+
+  it('at a frame rate whose frame is no whole number of ms, three steps on and one back land on frames, not between', () => {
+    const { store, editor } = editorOf(twoStops(), () => 30);
+    for (let i = 0; i < 3; i++) editor.stepForward();
+    expect(store.playback().atMs).toBeCloseTo(100, 9);
+    editor.stepBack();
+    expect(store.playback().atMs).toBeCloseTo(200 / 3, 9);
+  });
+
+  it('held at both ends by the player’s seek: back from the start stays at 0, on from the end stays at the end', () => {
+    const { store, player, editor } = editorOf();
+    editor.stepBack();
+    expect(store.playback().atMs).toBe(0);
+    editor.skipToEnd();
+    const length = player.length();
+    editor.stepForward();
+    expect(store.playback().atMs).toBe(length);
+    editor.stepBack();
+    expect(store.playback().atMs).toBe(Math.ceil(length / 40 - 1e-6) * 40 - 40);
+  });
+
+  it('a step pauses a playing scene first, at normal speed, saying "Animation paused"; then steps from where it paused', () => {
+    const { store, frames, editor, said } = editorOf();
+    editor.forward();
+    editor.forward();
+    expect(store.playback()).toMatchObject({ playing: true, speed: 2 });
+    frames.run(1000);
+    frames.run(1100);
+    const at = store.playback().atMs;
+    expect(at).toBeGreaterThan(0);
+    editor.stepForward();
+    expect(store.playback()).toEqual({ playing: false, atMs: (Math.floor(at / 40 + 1e-6) + 1) * 40, speed: 1 });
+    expect(said).toEqual([WORDS.playing, WORDS.paused]);
+    editor.stepBack();
+    expect(said).toEqual([WORDS.playing, WORDS.paused]);
+  });
+
+  it('reads the frame rate at each step, never kept', () => {
+    let fps = 25;
+    const { store, editor } = editorOf(twoStops(), () => fps);
+    editor.stepForward();
+    expect(store.playback().atMs).toBe(40);
+    fps = 50;
+    editor.stepForward();
+    expect(store.playback().atMs).toBe(60);
+    fps = 10;
+    editor.stepBack();
+    expect(store.playback().atMs).toBe(0);
+  });
+
+  it('is never refused: with nothing to play it still moves and says nothing', () => {
+    const { store, player, editor, said } = editorOf(empty());
+    expect(player.length()).toBeGreaterThan(40);
+    editor.stepForward();
+    expect(store.playback().atMs).toBe(40);
+    expect(said).toEqual([]);
   });
 });

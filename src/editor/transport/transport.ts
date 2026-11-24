@@ -1,7 +1,7 @@
 // CORE-05, stage 3: the editor's own transport. The editor's commands over the player's transport, one function per
 // command, each called by every way of asking for it: the shell binds a button and the key table's action of the same
 // name to the one function (the key table's ids, src/editor/shell/keys.ts; this module does not import it). So Space,
-// K and the Play button cannot differ (DEF-62), nor End, `.`, `>` and the skip button (INTAKE.26).
+// K and the Play button cannot differ (DEF-62), nor End, `>` and the skip button (INTAKE.26).
 //
 // It is handed the player's transport, where the playback is read (the store's `playback`), the announcement queue's
 // `announce` and `canPlay`, whether the scene has anything to play (the session's, `hasSomethingToPlay` on the store's
@@ -26,6 +26,14 @@
 //   the player's transport stops on any end, and that frame says "Animation complete" (below): the playing reached
 //   the end by a frame of its own (ruling 3, brief 63). Each says so in v3's words (playback.js 430 to 442), through every way
 //   of asking (INTAKE.26: v3's End, `.` and `>` said nothing).
+// - Step back and step forward one frame (`,` and `.`, D205: what v3's table called them, which its handler never did).
+//   A frame is 1000 ms over the scene's export frame rate (`frameRate`, handed in and read at each step, never kept;
+//   the export model and the player count no frames of their own, so this is the one count). Frames are counted from
+//   the scene's start: a step goes to the nearest whole frame strictly before, or strictly after, the position, held
+//   between 0 and the length by the player's `seek`. A step pauses a playing scene first (the player's `pause`, which
+//   puts the speed back to normal) and then says "Animation paused", Play or pause's words; a step from a pause says
+//   nothing, as a scrub says nothing (the timeline's own value carries it). A step is never refused: with nothing to
+//   play it still moves, as a skip does.
 // - Scrub (`ui:animation:seek`, line 166): to a position in ms through the player's `seek`; it says nothing (a slider
 //   says its own value) and leaves playing as it was. It never reads the length (DEF-42.1's other half is stage 6's).
 // - The words (wiringBus.js 410 to 438), v3's own: "Playing animation" when a command starts the playing, "Animation
@@ -38,9 +46,10 @@
 // 1. One function per command, whichever way it was asked for (DEF-62, INTAKE.26).
 // 2. Nothing to play (v3's playback.js 50 to 61): a start, by Play or pause, J or L, asks `canPlay` only when nothing
 //    is playing; if it says no, the command says `WORDS.nothingToPlay` and changes nothing (no speed written, no
-//    play). A pause, a skip and a scrub are never refused and never ask. The rule (`hasSomethingToPlay`): some route
+//    play). A pause, a skip, a step and a scrub are never refused and never ask. The rule (`hasSomethingToPlay`): some route
 //    has two or more points; crowds join it with their own item.
 // 3. It says only `WORDS`, through `announce`, and at most once a command.
+import { EXPORT_SETTINGS } from '../../core/config/settings';
 import type { Scene } from '../../core/model/scene';
 import type { Announce } from '../kit/announce';
 import type { Playback, Transport } from '../../player/transport/transport';
@@ -73,6 +82,11 @@ interface EditorTransportOptions {
   readonly announce: Announce;
   /** Whether the scene has anything to play now: asked at each start, never kept. */
   readonly canPlay: () => boolean;
+  /**
+   * The scene's export frame rate, frames a second: read at each step, never kept. The session hands the scene's own;
+   * left out (a test that steps nothing), the setting's declared default is read, never a second number.
+   */
+  readonly frameRate?: () => number;
 }
 
 /** The editor's transport commands, each named as the key table's action it answers; `scrub` has no key. */
@@ -82,11 +96,17 @@ export interface EditorTransport {
   forward(): void;
   skipToStart(): void;
   skipToEnd(): void;
+  /** To the nearest whole frame before the position, pausing a playing scene first. */
+  stepBack(): void;
+  /** To the nearest whole frame after the position, pausing a playing scene first. */
+  stepForward(): void;
   /** To `ms` (held between 0 and the length by the player's transport), saying nothing. */
   scrub(ms: number): void;
 }
 
-export function createEditorTransport({ transport, playback, announce, canPlay }: EditorTransportOptions): EditorTransport {
+export function createEditorTransport({
+  transport, playback, announce, canPlay, frameRate = () => EXPORT_SETTINGS.frameRate.default,
+}: EditorTransportOptions): EditorTransport {
   /** Runs `body`, then says so if it started the playing; from a pause with nothing to play, says why and runs nothing. */
   function starting(body: () => void): void {
     const was = playback().playing;
@@ -106,6 +126,21 @@ export function createEditorTransport({ transport, playback, announce, canPlay }
       transport.setSpeed(way * size);
       if (!playback().playing) transport.play();
     });
+  }
+
+  /** One frame back (-1) or forward (1) on the frames counted from the start; a playing scene is paused first. */
+  function step(way: 1 | -1): void {
+    if (playback().playing) {
+      transport.pause();
+      if (!playback().playing) announce(WORDS.paused);
+    }
+    const frame = 1000 / frameRate();
+    const at = playback().atMs / frame;
+    const near = Math.round(at);
+    // A position within a millionth of a frame of a whole one counts as on it: 40 ms over 40 is 1, but 3 frames' worth
+    // of ms read back may be 2.9999999999999996 frames.
+    const on = Math.abs(at - near) < 1e-6 ? near : at;
+    transport.seek((way === 1 ? Math.floor(on) + 1 : Math.ceil(on) - 1) * frame);
   }
 
   return Object.freeze({
@@ -134,6 +169,12 @@ export function createEditorTransport({ transport, playback, announce, canPlay }
     skipToEnd: () => {
       transport.seek(transport.length());
       announce(WORDS.skippedToEnd);
+    },
+    stepBack: () => {
+      step(-1);
+    },
+    stepForward: () => {
+      step(1);
     },
     scrub: (ms: number) => {
       transport.seek(ms);

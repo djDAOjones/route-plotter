@@ -103,6 +103,7 @@ function make(): PageSession {
     playback: () => store.playback(),
     announce,
     canPlay,
+    frameRate: () => store.getState().project.scene.settings.export.frameRate,
   });
   const length = createLengthReader({ store, length: () => player.length(), frames });
   const timeline = createTimeline({ store, transport, length });
