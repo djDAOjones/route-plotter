@@ -6,7 +6,8 @@
 //
 // Who owns Escape, in order: an open drag, then typed text (both the kit's controls', which stop it there), then a menu,
 // then a dialog, then the selection. On this page only the dialog exists: Carbon's `Modal` closes on Escape by its own
-// listener on `document` and focus goes back to its opener (kit/Dialog.tsx). The key table has no Escape entry and
+// listener on `document` (on its Close button the kit's dialog takes the key first, D206) and focus goes back to its
+// opener (kit/Dialog.tsx). The key table has no Escape entry and
 // this listener no Escape branch: it gains one when a menu or the selection has something for Escape to do.
 //
 // A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).

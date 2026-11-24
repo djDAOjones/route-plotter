@@ -2,13 +2,20 @@
 // element focus goes back to when it closes), its heading and its content, and whether it is open; it says when it
 // asks to close. Carbon gives the rest, and it is leaned on as Carbon 1.118 has it:
 // - focus moves in when it opens (Modal.js 262 to 275), to what carries `data-modal-primary-focus`: here the start of
-//   its content, a wrapper focusable by script only (`tabIndex` -1), not Carbon's default, the close button. That
-//   button's tooltip opens with its focus and takes the first Escape for itself (Tooltip.js 76 to 80 stops the key), so
-//   one Escape would not close a dialog just opened. From the content's start Tab goes on to its first control and
-//   Shift+Tab back to Close; a reader hears the dialog's name, then its content from the top;
+//   its content, a wrapper focusable by script only (`tabIndex` -1), not Carbon's default, the close button. From the
+//   content's start Tab goes on to its first control and Shift+Tab back to Close; a reader hears the dialog's name,
+//   then its content from the top;
 // - Tab is kept inside by Carbon's wrap without sentinels (the `enable-focus-wrap-without-sentinels` flag, Modal.js
 //   106 and 121), so no hidden "Focus sentinel" link joins the page's reading or Tab order;
-// - Escape closes it (Modal.js 211 to 219, a keydown listener on `document` while it is open, which cancels the key);
+// - Escape closes it (Modal.js 207 to 215, a keydown listener on `document` while it is open, which cancels the key),
+//   one press wherever focus is inside it (D206, the owner's choice of 24 Nov). Carbon leaves one place out: with focus
+//   on Close, that button's tooltip is open and its trigger's React `onKeyDown` stops Escape (Tooltip.js 72 to 77),
+//   which stops the native event at React's root, so Modal's listener never hears it and the first Escape would only
+//   hide the tooltip. So the dialog takes Escape first there, in the capture phase on Carbon's outer box (`TAKE_ESCAPE`,
+//   with the rest of its props, Modal.js 477): only when the key's target is inside Close, so every other control in a
+//   dialog keeps its own Escape (a kit slider's open drag, a field's typed text; keydown.ts's order). It cancels the key,
+//   stops it there (so neither the tooltip nor Modal's listener hears it as well) and closes as Close's click does. With
+//   the tooltip shown by hover and focus elsewhere, Modal's listener closes it as before;
 // - focus goes back to the opener when it closes, and the kit does that itself. Carbon's own return
 //   (`launcherButtonRef`) runs by a `setTimeout` only when a mounted modal turns from open to closed (Modal.js 239),
 //   and on unmount only when presence is enabled (Modal.js 251), which this kit does not enable. Here a closed dialog
@@ -47,9 +54,35 @@ export interface DialogProps {
 /** Carbon's fade switched off: shown and hidden at once (see the header). */
 const NO_FADE: CSSProperties = { transition: 'none' };
 
+/**
+ * Escape with focus on Close, taken before Close's tooltip stops it (see the header): the key cancelled and stopped,
+ * the dialog closed. Any other key, or Escape anywhere else in the dialog, goes on as before.
+ */
+export function takeEscape(
+  event: {
+    readonly key: string;
+    /** The key's target, if an element (only its `closest` is read). */
+    readonly target: { closest(selector: string): unknown } | null;
+    readonly defaultPrevented: boolean;
+    preventDefault(): void;
+    stopPropagation(): void;
+  },
+  close: () => void,
+): void {
+  if (event.key !== 'Escape' || event.defaultPrevented) return;
+  if (event.target === null || event.target.closest('.cds--modal-close') === null) return;
+  event.preventDefault();
+  event.stopPropagation();
+  close();
+}
+
 /** A dialog with a heading, a close button and its content; no buttons of its own beyond closing. */
 export function Dialog({ opener, heading, open, onClose, children }: DialogProps) {
   if (!open) return null;
+  const close = () => {
+    flushSync(onClose);
+    opener.current?.focus();
+  };
   return (
     <FeatureFlags enableFocusWrapWithoutSentinels>
       <Modal
@@ -58,9 +91,22 @@ export function Dialog({ opener, heading, open, onClose, children }: DialogProps
         passiveModal
         modalHeading={heading}
         launcherButtonRef={opener}
-        onRequestClose={() => {
-          flushSync(onClose);
-          opener.current?.focus();
+        onRequestClose={close}
+        onKeyDownCapture={(event) => {
+          takeEscape(
+            {
+              key: event.key,
+              target: event.target instanceof Element ? event.target : null,
+              defaultPrevented: event.defaultPrevented,
+              preventDefault: () => {
+                event.preventDefault();
+              },
+              stopPropagation: () => {
+                event.stopPropagation();
+              },
+            },
+            close,
+          );
         }}
       >
         <div tabIndex={-1} data-modal-primary-focus>

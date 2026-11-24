@@ -643,9 +643,9 @@ export default {
       // 1.3.2: the text blocks, in reading order, match the reviewed sequence and run top to bottom on screen (closed,
       // Help's content is hidden and read by no one). 2.4.3: Tab meets the reviewed controls in order, top to bottom;
       // the one control that opens content, "Help", opens its dialog with focus inside, Tab and Shift+Tab keep focus
-      // in it, and focus returns to "Help" when it closes: from where focus lands, one Escape; from "Close", whose
-      // Carbon tooltip shows while it has focus, the first Escape hides the tooltip (1.4.13's dismissal) and the second
-      // closes Help (D186). A further control that opens content needs its own check. The play bar's reason line is read
+      // in it, and focus returns to "Help" when it closes by one Escape wherever focus is: from where focus lands, from
+      // the switch, and from "Close", whose Carbon tooltip shows while it has focus and which the kit's dialog takes
+      // Escape first on (D206, superseding D186's two Escapes there). A further control that opens content needs its own check. The play bar's reason line is read
       // after the group; its disabled Play is not met by Tab (as v3), and the two skips are.
       name: 'reading-and-focus-order',
       method: 'j-order',
@@ -691,13 +691,11 @@ export default {
           await page.keyboard.press('Shift+Tab');
           const onClose = await focusIs(page, '.cds--modal-close');
           await page.keyboard.press('Escape');
-          const tipFirst = onClose && (await helpDialog(page).isVisible()) && !(await page.getByRole('tooltip', { name: 'Close' }).isVisible());
-          await page.keyboard.press('Escape');
           if (!onClose) focus.push('Shift+Tab from where focus landed did not reach "Close"');
-          else if (!tipFirst) focus.push('on "Close", the first Escape did not hide its tooltip alone');
-          if (!(await backOnHelp(page))) focus.push('focus did not return to "Help" when a second Escape on "Close" closed it');
+          else if (await helpDialog(page).isVisible()) focus.push('on "Close", one Escape left Help open (D206: one Escape closes it wherever focus is)');
+          if (!(await backOnHelp(page))) focus.push('focus did not return to "Help" when one Escape on "Close" closed it');
         }
-        record('2.4.3', !focus.length, focus.length ? focus.join('; ') : `Tab meets the ${order.length} reviewed control(s) in order, top to bottom (${order.join(', ')}); "Help" opens its dialog with focus inside, Tab and Shift+Tab keep it there, and it returns to "Help" on Escape: one from where focus lands or from the switch; on "Close", the first hides its tooltip and the second closes (D186)`);
+        record('2.4.3', !focus.length, focus.length ? focus.join('; ') : `Tab meets the ${order.length} reviewed control(s) in order, top to bottom (${order.join(', ')}); "Help" opens its dialog with focus inside, Tab and Shift+Tab keep it there, and it returns to "Help" on one Escape, from where focus lands, from the switch and from "Close" (D206)`);
       },
     },
     {
@@ -896,11 +894,12 @@ export default {
       // close button's) and the timeline's thumb (the value words, "0:00 of 0:02"). Each is shown both ways, by focus
       // and by the pointer resting on it. Shown is measured on the tooltip's content as drawn (a box, shown, its exact
       // words); hidden on the content's box alone (not drawn, whatever its words); the opposite state measured first.
-      // Dismissible: one Escape hides it with the pointer unmoved, focus where it was and nothing else changed (Help
-      // still open, D186; the timeline where it was); one case apart, Close shown by hover with focus elsewhere in Help,
-      // where Carbon's Modal and Tooltip both hear Escape on the document and one Escape closes Help (ruled with D195):
-      // that tooltip is held to 1.4.13's exception, content that obscures nothing, measured at the run's width and at
-      // 320 px: its box and caret meet no words outside it and no control or image but Close, where they show, judged
+      // Dismissible: one Escape hides it with the pointer unmoved, focus where it was and nothing else changed (the
+      // timeline where it was); one case apart, Close, where one Escape closes Help, label and all: shown by hover with
+      // focus elsewhere in Help, Carbon's Modal and Tooltip both hear Escape on the document (ruled with D195), and shown
+      // by focus the kit's dialog takes Escape first (D206, superseding D186's first Escape hiding the label alone).
+      // That tooltip is held to 1.4.13's exception, content that obscures nothing, measured shown by hover and shown by
+      // focus (the pointer away), each at the run's width and at 320 px: its box and caret meet no words outside it and no control or image but Close, where they show, judged
       // by what is painted (two pictures of each overlap with the tooltip unpainted, with and without the words' parent
       // or the control; equal pictures, nothing of it shows there; obscures() below says how it checks itself). What
       // Escape does there is pinned (Help closed, focus on "Help"), so that a change in Carbon's listeners fails here and
@@ -1024,7 +1023,7 @@ export default {
             kept: async () => String((await atNow(page)).now),
           },
         ];
-        const problems = [], done = [];
+        const problems = [], done = [], byFocusMeasured = [];
         for (const t of TIPS) {
           await t.setup();
           const words = t.words || (await atNow(page)).text;
@@ -1037,11 +1036,39 @@ export default {
           await rest(1500);
           if (!(await showing(t.trigger, words))) bad('focus held 1.5 s: no longer shown (persistent)');
           let who = await focused(), kept = await t.kept();
-          await page.keyboard.press('Escape');
-          await rest(400);
-          if (!(await hidden(t.trigger))) bad('shown by focus: still shown after one Escape (dismissible)');
-          if ((await focused()) !== who) bad(`shown by focus: Escape moved focus from ${who} to ${await focused()}`);
-          if ((await t.kept()) !== kept) bad(`shown by focus: Escape changed what it must not (${kept} to ${await t.kept()})`);
+          if (t.byException) {
+            // Close shown by focus (D206): one Escape closes Help, label and all, so the label is not dismissed alone;
+            // 1.4.13 then rests on its exception, content that obscures nothing, measured here shown by focus with the
+            // pointer away, at the run's width and at 320 px, each measure leaving the state as found (the label shown
+            // with its words, focus unmoved); then one Escape closes Help with focus back on "Help".
+            const byFocus = async (at) => {
+              const before = await showing(t.trigger, words), was = await focused();
+              const { hits, still, candidates, pictures } = await obscures(t.trigger);
+              if (!before) bad(`shown by focus${at}: not shown when measured`);
+              if (!still) bad(`shown by focus${at}: the page under the label is not still (its base pictures differ), so what it obscures is not established`);
+              if (hits.length) bad(`shown by focus${at}: it obscures ${hits.join(', ')}`);
+              if (before && !(await showing(t.trigger, words))) bad(`shown by focus${at}: after the measure no longer shown with its words (the measure changed the state)`);
+              if ((await focused()) !== was) bad(`shown by focus${at}: the measure moved focus from ${was} to ${await focused()}`);
+              byFocusMeasured.push(`${at ? at.trim() : 'the run\'s width'}: ${candidates} overlap(s), ${pictures} picture(s)`);
+            };
+            await byFocus('');
+            const width = page.viewportSize();
+            await page.setViewportSize({ width: 320, height: width.height });
+            await t.setup(); await t.focus();
+            await byFocus(' at 320 px');
+            await page.setViewportSize(width);
+            await t.setup(); await t.focus();
+            await page.keyboard.press('Escape');
+            await rest(400);
+            if (await helpDialog(page).isVisible()) bad('shown by focus: one Escape on "Close" left Help open (D206)');
+            if (!(await focusIs(page, HELP))) bad(`shown by focus: after one Escape focus is on ${await focused()}, not "Help" (D206)`);
+          } else {
+            await page.keyboard.press('Escape');
+            await rest(400);
+            if (!(await hidden(t.trigger))) bad('shown by focus: still shown after one Escape (dismissible)');
+            if ((await focused()) !== who) bad(`shown by focus: Escape moved focus from ${who} to ${await focused()}`);
+            if ((await t.kept()) !== kept) bad(`shown by focus: Escape changed what it must not (${kept} to ${await t.kept()})`);
+          }
           // Hoverable when shown by focus: the pointer, away, comes onto the content from the side away from the trigger
           // (so it never passes over the trigger, which would show it by hover) in steps, and rests there 1 s.
           await t.setup(); await t.focus();
@@ -1137,7 +1164,7 @@ export default {
           }
           done.push(t.name);
         }
-        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, and kept, shown either way, while the pointer moves onto it and rests; held past every delay; its content no longer drawn once the focus or the pointer goes; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close shown by hover, which obscures no words and no other control where they are painted (two pictures of each overlap, the tooltip unpainted, with and without the words' parent or the control, equal; the page still under it; the state left as found), at the run's width and at 320 px (the exception), one Escape there closing Help with focus back on "Help"`);
+        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, and kept, shown either way, while the pointer moves onto it and rests; held past every delay; its content no longer drawn once the focus or the pointer goes; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close, shown by focus or by hover, which obscures no words and no other control where they are painted (two pictures of each overlap, the tooltip unpainted, with and without the words' parent or the control, equal; the page still under it; the state left as found), at the run's width and at 320 px (the exception; by focus: ${byFocusMeasured.join('; ')}), one Escape there closing Help with focus back on "Help" (D206)`);
       },
     },
     {

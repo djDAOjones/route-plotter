@@ -4,7 +4,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Dialog } from './Dialog';
+import { Dialog, takeEscape } from './Dialog';
 import { Switch } from './Switch';
 
 const opener = { current: null };
@@ -18,7 +18,7 @@ describe('the kit’s dialog', () => {
     expect(html).toMatch(/role="dialog"[^>]*aria-label="Help"[^>]*aria-modal="true"/);
     expect(html).toMatch(/<h2[^>]*>Help<\/h2>/);
     expect(html).toContain('<p>Inside</p>');
-    // Focus lands on the content's start, not on Close, whose tooltip takes the first Escape (Dialog.tsx's header).
+    // Focus lands on the content's start, not on Close (Dialog.tsx's header): the reader hears the content from the top.
     expect(html).toMatch(/<div tabindex="-1" data-modal-primary-focus="true"><p>Inside<\/p>/);
     expect(html).toMatch(/<button[^>]*aria-label="Close"/);
     expect(html).toMatch(/class="[^"]*cds--modal is-visible/);
@@ -37,6 +37,41 @@ describe('the kit’s dialog', () => {
       expect(html).not.toContain('Focus sentinel');
       expect(html).not.toMatch(/<fieldset[^>]*disabled/);
     }
+  });
+});
+
+// D206: one Escape closes the dialog wherever focus is; Carbon's Modal closes it everywhere but on Close, whose open
+// tooltip stops the key, so the dialog takes Escape there first. Proved here on stand-in events; on the page by the
+// accessibility run (reading-and-focus-order, content-on-hover-or-focus).
+describe('the kit’s dialog takes Escape on Close (D206)', () => {
+  const press = (key: string, inClose: boolean | null, defaultPrevented = false) => {
+    const seen = { prevented: false, stopped: false, closed: 0 };
+    const target = inClose === null ? null : { closest: (selector: string) => (selector === '.cds--modal-close' && inClose ? {} : null) };
+    takeEscape(
+      {
+        key,
+        target,
+        defaultPrevented,
+        preventDefault: () => { seen.prevented = true; },
+        stopPropagation: () => { seen.stopped = true; },
+      },
+      () => { seen.closed++; },
+    );
+    return seen;
+  };
+
+  it('Escape on Close: closes once, the key cancelled and stopped before the tooltip hears it', () => {
+    expect(press('Escape', true)).toEqual({ prevented: true, stopped: true, closed: 1 });
+  });
+
+  it('Escape anywhere else in the dialog is left to its control and to Carbon (a drag, typed text keep theirs)', () => {
+    expect(press('Escape', false)).toEqual({ prevented: false, stopped: false, closed: 0 });
+    expect(press('Escape', null)).toEqual({ prevented: false, stopped: false, closed: 0 });
+  });
+
+  it('another key on Close, or an Escape already taken, does nothing', () => {
+    for (const key of ['Enter', ' ', 'Tab', 'Esc']) expect(press(key, true)).toEqual({ prevented: false, stopped: false, closed: 0 });
+    expect(press('Escape', true, true)).toEqual({ prevented: false, stopped: false, closed: 0 });
   });
 });
 
