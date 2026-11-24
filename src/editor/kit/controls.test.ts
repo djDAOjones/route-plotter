@@ -736,6 +736,24 @@ describe("point 3: a drag's trail, Carbon's late follow of a position handed dur
     expect([setting.held, steps(setting)]).toEqual([400, ['begin 1', 'commit 1']]);
   });
 
+  it('a drag that goes on after a late follow, as the probe saw it: no follow of the newest between, the next move is the drag’s, one edit', () => {
+    const { setting, slider } = dragged();
+    expect(slider.report(100)).toEqual({ ok: true, changed: false });
+    expect(slider.report(300)).toEqual({ ok: true, changed: true });
+    slider.handed(300);
+    expect(slider.release()).toEqual({ ok: true, changed: true });
+    expect([setting.held, steps(setting)]).toEqual([300, ['begin 1', 'commit 1']]);
+  });
+
+  it('a release after a late follow commits the older place; the value handed then puts the newest on the trail: its late report sets nothing', () => {
+    const { setting, slider } = dragged();
+    expect(slider.report(100)).toEqual({ ok: true, changed: false });
+    expect(slider.release()).toEqual({ ok: true, changed: true });
+    slider.handed(100);
+    expect(slider.report(200)).toEqual({ ok: true, changed: false });
+    expect([setting.held, steps(setting)]).toEqual([100, ['begin 1', 'commit 1']]);
+  });
+
   it(`the trail holds at most ${String(AWAITED_AT_MOST)} positions, the oldest let go first: an older one's report is the drag's`, () => {
     const setting = handmade(0);
     const slider = createSlider(setting);

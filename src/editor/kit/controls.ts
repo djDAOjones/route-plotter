@@ -50,11 +50,17 @@
 //    no step, press or no press; the thumb is noted there, and the trail positions handed before it are let go (the
 //    widget follows in the order handed). A report of the position last handed lets go of the whole trail: the widget
 //    has followed the newest. A release that finds the thumb where such a report left it, off the value held, with
-//    nothing awaited, moves the drag there first and then ends it. That is how a late follow (S1: the widget then
-//    follows the newest before the release, and the value stands) is told from a drag back onto a place just left (S3:
-//    the release comes first, and the drag ends where the thumb was let go). The trail is let go at the next press and
-//    at a new widget, and holds at most as many positions as are awaited. What it costs: a drag back exactly onto a
-//    place it just left shows the older value until the next move or the release; and until the widget follows the
+//    nothing awaited, moves the drag there first and then ends it. The release's timing does not tell a late follow
+//    from a drag back onto a place just left; it only settles which way the case goes: if the widget follows the newest
+//    before the release, the value stands (S1); if the release comes first, the drag ends where the thumb was let go
+//    (S3). Told of no hand-over after such a release, the logic alone would take a late report of the newest for a
+//    key's nudge; on the page the value's change is handed (or a new widget drawn) before any further report. Handed,
+//    the newest is then on the trail and its report sets nothing; a new widget awaits nothing and takes it as the
+//    user's. The trail is let go at the next press and at a new widget, and holds at most as many positions as are
+//    awaited. What it costs: a drag back exactly onto a place it just left shows the older value until the next move
+//    or the release; if the release comes after a late follow but before the widget follows the newest position, the
+//    drag commits the older position even though the user did not move back; a real move back, then the widget's
+//    follow of the newest before the release, has S1's calls and loses the move back; and until the widget follows the
 //    newest, a key that lands on a trail position is taken for a late follow (one press lost; the widget is drawn
 //    again from the value held). A press while one is down (a second finger) is nothing until the release, also
 //    after a give-up or a refusal, so one press begins at most one edit. What that costs: if a release is ever lost,
