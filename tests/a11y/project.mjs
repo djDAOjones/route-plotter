@@ -917,7 +917,8 @@ export default {
       // focus elsewhere in Help, Carbon's Modal and Tooltip both hear Escape on the document (ruled with D195), and shown
       // by focus the kit's dialog takes Escape first (D206, superseding D186's first Escape hiding the label alone).
       // That tooltip is held to 1.4.13's exception, content that obscures nothing, measured shown by hover and shown by
-      // focus (the pointer away), each at the run's width and at 320 px: its box and caret meet no words outside it and no control or image but Close, where they show, judged
+      // focus (the pointer away), each at the run's width and at 320 px: its box and caret meet no words outside it and
+      // no control or image but Close, and do not overlap Close itself (its icon, its box: clearOfTrigger), where they show, judged
       // by what is painted (two pictures of each overlap with the tooltip unpainted, with and without the words' parent
       // or the control; equal pictures, nothing of it shows there; obscures() below says how it checks itself). What
       // Escape does there is pinned (Help closed, focus on "Help"), so that a change in Carbon's listeners fails here and
@@ -1020,6 +1021,28 @@ export default {
           await page.evaluate(() => window.__paint.on(window.__paint.tip));
           return { hits, still, candidates: found.length, pictures };
         };
+        // What the shown tooltip covers of its own trigger (Codex's list, line 9): obscures() leaves the trigger and all
+        // inside it out, so it would pass a label drawn over the trigger itself. Here, by geometry alone (no overlap at
+        // all, so nothing painted there can be hidden): the content's box and the caret's against the trigger's icon (the
+        // svg inside it, its painted content) and against the trigger's own box. Each overlap is its area in CSS pixels.
+        const clearOfTrigger = (sel) => page.evaluate((s) => {
+          const trigger = document.querySelector(s), wrap = trigger?.closest('.cds--popover-container')?.querySelector('[role=tooltip]');
+          const box = (e) => { const r = e?.getBoundingClientRect(); return r && r.width > 0 && r.height > 0 ? { x: r.x, y: r.y, width: r.width, height: r.height } : null; };
+          const content = box(wrap?.querySelector('.cds--popover-content')), caret = box(wrap?.querySelector('.cds--popover-caret'));
+          const icon = box(trigger?.querySelector('svg')), button = box(trigger);
+          const area = (a, b) => (a && b ? Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y)) : 0);
+          return { content, caret, icon, button, overIcon: area(content, icon) + area(caret, icon), overButton: area(content, button) + area(caret, button) };
+        }, sel);
+        const triggerClear = [];
+        const clearOf = async (how, at, bad) => {
+          const c = await clearOfTrigger('[role=dialog] .cds--modal-close');
+          const where = `${how} ${at ? at.trim() : 'at the run\'s width'}`;
+          if (!c.content || !c.icon || !c.button) { bad(`${where}: no box to measure against "Close" itself (label ${!!c.content}, icon ${!!c.icon}, button ${!!c.button})`); return; }
+          if (c.overIcon > 0) bad(`${where}: the label or its caret covers ${c.overIcon.toFixed(1)} px² of Close's own icon`);
+          if (c.overButton > 0) bad(`${where}: the label or its caret covers ${c.overButton.toFixed(1)} px² of the Close button's own box`);
+          const r = (b) => `${b.x.toFixed(0)},${b.y.toFixed(0)} ${b.width.toFixed(0)}x${b.height.toFixed(0)}`;
+          triggerClear.push(`${where}: label ${r(c.content)}${c.caret ? `, caret ${r(c.caret)}` : ''}, icon ${r(c.icon)}, button ${r(c.button)}, 0 px² over either`);
+        };
         const focused = () => page.evaluate(() => document.activeElement?.id || document.activeElement?.getAttribute('aria-label') || document.activeElement?.tagName || '');
         // Where the pointer really is (its last mousemove), and whether the tooltip's drawn content is what lies under it.
         const track = () => page.evaluate(() => { window.__at = null; addEventListener('mousemove', (e) => { window.__at = { x: e.clientX, y: e.clientY }; }, true); });
@@ -1065,6 +1088,7 @@ export default {
               if (!before) bad(`shown by focus${at}: not shown when measured`);
               if (!still) bad(`shown by focus${at}: the page under the label is not still (its base pictures differ), so what it obscures is not established`);
               if (hits.length) bad(`shown by focus${at}: it obscures ${hits.join(', ')}`);
+              await clearOf('shown by focus', at, bad);
               if (before && !(await showing(t.trigger, words))) bad(`shown by focus${at}: after the measure no longer shown with its words (the measure changed the state)`);
               if ((await focused()) !== was) bad(`shown by focus${at}: the measure moved focus from ${was} to ${await focused()}`);
               byFocusMeasured.push(`${at ? at.trim() : 'the run\'s width'}: ${candidates} overlap(s), ${pictures} picture(s)`);
@@ -1149,6 +1173,7 @@ export default {
               const { hits, still } = await obscures(t.trigger);
               if (!still) bad(`shown by hover${at}: the page under the tooltip is not still (its base pictures differ), so what it obscures is not established`);
               if (hits.length) bad(`shown by hover${at}: it obscures ${hits.join(', ')}`);
+              await clearOf('shown by hover', at, bad);
               if (before && !(await showing(t.trigger, words))) bad(`shown by hover${at}: after the measure no longer shown with its words (the measure changed the state)`);
               const now = await page.evaluate(() => window.__at);
               if (!was || !now || was.x !== now.x || was.y !== now.y) bad(`shown by hover${at}: the pointer's last position is not the one before the measure`);
@@ -1182,7 +1207,7 @@ export default {
           }
           done.push(t.name);
         }
-        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, and kept, shown either way, while the pointer moves onto it and rests; held past every delay; its content no longer drawn once the focus or the pointer goes; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close, shown by focus or by hover, which obscures no words and no other control where they are painted (two pictures of each overlap, the tooltip unpainted, with and without the words' parent or the control, equal; the page still under it; the state left as found), at the run's width and at 320 px (the exception; by focus: ${byFocusMeasured.join('; ')}), one Escape there closing Help with focus back on "Help" (D206)`);
+        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, and kept, shown either way, while the pointer moves onto it and rests; held past every delay; its content no longer drawn once the focus or the pointer goes; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close, shown by focus or by hover, which obscures no words and no other control where they are painted (two pictures of each overlap, the tooltip unpainted, with and without the words' parent or the control, equal; the page still under it; the state left as found), at the run's width and at 320 px (the exception; by focus: ${byFocusMeasured.join('; ')}), and covers nothing of "Close" itself, its icon or its box (by geometry: ${triggerClear.join('; ')}), one Escape there closing Help with focus back on "Help" (D206)`);
       },
     },
     {
