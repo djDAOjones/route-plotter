@@ -724,7 +724,7 @@ describe("point 3: a drag's trail, Carbon's late follow of a position handed dur
     expect([slider.awaiting(), slider.readout(200), slider.standsOff()]).toEqual([false, 200, false]);
   });
 
-  it('a later move of the drag onto a trail position after another is the user’s: the drag moves on', () => {
+  it('a drag that goes on after a late follow: the follow moves nothing, the next move is the drag’s, one edit', () => {
     const { setting, slider } = dragged();
     expect(slider.report(300)).toEqual({ ok: true, changed: true });
     slider.handed(300);
