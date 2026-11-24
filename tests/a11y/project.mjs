@@ -94,6 +94,8 @@ const focusOn = (page, sel) => page.evaluate((s) => !!document.activeElement?.ma
 // True if the status region does not say `words` within `ms`: a second action a key must not also run (a message
 // waiting behind another shows when the first's hold ends, about 2 s).
 const neverSays = (page, words, ms = 3000) => page.waitForFunction(([s, w]) => document.querySelector(s)?.textContent === w, [STATUS, words], { timeout: ms }).then(() => false, () => true);
+// Nothing at all is said for `ms`: the status region stays empty, whatever words might come (a step from a pause).
+const saysNothing = (page, ms = 1000) => page.waitForFunction((s) => (document.querySelector(s)?.textContent ?? '') !== '', STATUS, { timeout: ms }).then(() => false, () => true);
 // The keys of one printable character the editor's key table names: live while their switch is on, as the page opens,
 // and doing nothing while it is off (D183).
 const SINGLE_KEYS = ['j', 'k', 'l', ',', '.', '<', '>', '?'];
@@ -503,9 +505,10 @@ export default {
     { name: 'skip-to-start-by-home', state: 'shell', steps: [{ press: 'Home' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_START },
     { name: 'skip-to-end-by-end', state: 'shell', steps: [{ press: 'End' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_END },
     // Comma and full stop step one frame (D205): the empty shell's scene is 2 s long and its export frame rate 25, so a
-    // frame is 40 ms, 20 thousandths on the timeline. From a pause a step says nothing; the timeline's value carries it.
-    { name: 'step-forward-by-full-stop', state: 'shell', steps: [{ press: '.' }], check: async ({ page }) => (await comesTo(page, 'n === 20')) && neverSays(page, SKIPPED_TO_END, 1000) },
-    { name: 'step-back-by-comma', state: 'shell', steps: [{ press: '.' }, { press: '.' }, { press: '.' }, { press: ',' }], check: async ({ page }) => (await comesTo(page, 'n === 40')) && neverSays(page, SKIPPED_TO_START, 1000) },
+    // frame is 40 ms, 20 thousandths on the timeline. From a pause a step says nothing (the status region stays empty a
+    // second after it, so neither a skip's words nor any other are said); the timeline's value carries it.
+    { name: 'step-forward-by-full-stop', state: 'shell', steps: [{ press: '.' }], check: async ({ page }) => (await comesTo(page, 'n === 20')) && saysNothing(page) },
+    { name: 'step-back-by-comma', state: 'shell', steps: [{ press: '.' }, { press: '.' }, { press: '.' }, { press: ',' }], check: async ({ page }) => (await comesTo(page, 'n === 40')) && saysNothing(page) },
     // Help: opened by its button and by `?` (focus moves in), closed by Escape with focus back on "Help"; its switch
     // turned off and on again by Space.
     { name: 'open-help-by-button', state: 'shell', steps: [{ focus: HELP }, { press: 'Enter' }], check: async ({ page }) => (await helpDialog(page).isVisible()) && helpDialog(page).evaluate((e) => e.contains(document.activeElement)) },
