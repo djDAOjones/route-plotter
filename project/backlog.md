@@ -40,6 +40,8 @@
 
 - [ ] CORE-05 — The editor shell — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-06 — Drawing routes on the canvas — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
+- [ ] GATE-04 — The accessibility run's port is settable — since 2026-11-24 — (from: PLAN-9, 2026-11-24)
+- [ ] CORE-14 — A label fades over half a second of the lead's moving, whatever the pauses — since 2026-11-24 — (from: PLAN-9, 2026-11-24)
 - [ ] CORE-13 — The settings the drawing already takes — since 2026-11-20 — (from: CORE-04, 2026-11-20)
 - [ ] CORE-12 — The core panels and the points list — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-07 — The scene outline — since 2026-11-18 — (from: PLAN-6, 2026-11-18)

@@ -38,7 +38,7 @@ GATE-04 is the orchestrator's D216, from the owner's suggestion 6 of 2026-11-24,
 
 What this entry changes in CORE-04's (2026-11-20): D203 the labels' fade, D204 the trail setting's top, D208 the hovered stretch's glow, each owed as above. D202 and D205 to D207 change choices of CORE-05's that are not in the record yet.
 **Supersedes:** 2026-11-20 — CORE-04 — The renderer and the core's drawing: one composer, the core modules' drawing, the editor's overlays apart, compared with v3
-**Deferred:** CORE-05, CORE-06
+**Deferred:** CORE-05, CORE-06, CORE-14, GATE-04
 
 ## 2026-11-24 — GATE-03 — The gate's own test file gets a class of its own, which runs v4's gate, not v3's suite
 **Decision:** `scripts/gate.test.mjs`, named exactly, sorts as `gate`, which runs the gate's lane, v4's gate and the record checker, not frozen v3's suite, narrowing for that one file GATE-01's and GATE-02's rule that a change to the gate or its tests runs everything. The owner gave his word to merge, the button "Yes, merge then" (2026-11-24). Because each change to the file now runs v3's 43-minute suite.
