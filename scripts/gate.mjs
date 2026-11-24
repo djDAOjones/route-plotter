@@ -127,11 +127,12 @@ export const PUBLISHING = {
 /**
  * The gate's own test file, scripts/gate.test.mjs, named exactly. Its tests
  * pin what v4's files say (the accessibility run's project file among them),
- * so a v4 item changes it along with them. A change to it cannot change how a
- * lane is sorted or run, and frozen v3 reads nothing of it, so it asks for the
- * gate's lane, which runs it, and v4's gate, whose files it reads; not frozen
- * v3's suite. scripts/gate.mjs itself stays other: a change to the sorting or
- * to a lane's commands still runs everything (GATE-03).
+ * so a v4 item changes it along with them. It defines tests only (the sorting
+ * and the lanes' commands live in scripts/gate.mjs), and frozen v3 reads
+ * nothing of it, so it asks for the gate's lane, which runs it, and v4's gate,
+ * whose files it reads; not frozen v3's suite. scripts/gate.mjs itself stays
+ * other: a change to the sorting or to a lane's commands still runs everything
+ * (GATE-03).
  */
 export const GATE_TESTS = {
   files: ['scripts/gate.test.mjs'],

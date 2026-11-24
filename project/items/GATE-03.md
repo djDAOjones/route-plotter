@@ -18,9 +18,9 @@ The gate (`scripts/gate.mjs`) sorts each change by its paths. Its own test file,
 
 Updated: 2026-11-24
 
-Next step: The owner rules on the reversal and, if he takes it, merges the pull request; then a close strikes this line and adds its trajectory line, and CORE-05's branch brings `main` in.
+Next step: None.
 
-Open question: Owner: may a change to the gate's own test file alone run v4's gate and the record checker without frozen v3's suite, narrowing the two older tests that pinned it to running everything?
+Open question: None.
 
 ## Context and sources
 
@@ -33,3 +33,4 @@ Open question: Owner: may a change to the gate's own test file alone run v4's ga
 
 - 2026-11-24 — Filed and built by GATE-03's pull request, from a draft another chat wrote for the owner. His words, verbatim, typed or picked by him on 2026-11-24: "investigate to what extent development can run in parralel on this project, and to what extent quality and efficiency may suffer"; to the question "Draft the gate change that stops the 43-minute v3 run on CORE-05 pushes?", "Draft it"; to "Who should land this draft?", "The orchestrator". A reading, not his words: he wants the draft taken through as an item with his own word on the merge, and he has not ruled that the change is right; he was told it reverses a deliberate choice. So the pull request stays open for him, and the choice is put to him in the night's decisions list.
 - 2026-11-24 — Built as drafted, with the ID added to the class's comment, the comment in `plan`, the import's comment and the two new tests' titles. `scripts/gate.mjs` and `.github/workflows/ci.yml` stay other, so a change to the sorting or to a lane's commands still runs everything, and the profile's Gate line ("anything unclear runs everything") stands as written. `scripts/publish.mjs` counts every class but record, v3 and the site as changing v4, so the new class publishes as other did. Nothing under `src/`, `tests/`, `tools/`, `v3/`, `docs/` or `version.json` changed.
+- 2026-11-24 — Closed by GATE-03's pull request, on the owner's word. Asked in another chat, about 15:36 UTC, by a question with two buttons, "Is "execute all" your word to merge GATE-03 (#188) once Codex approves?", offered as "No, ask me first" or "Yes, merge then" (the question and both labels written by that chat), he chose the label "Yes, merge then" and typed nothing beside it. A reading, not his words: the choice put to him was to merge or to leave the rule as it is, so his word to merge is also his ruling that the two older tests may be narrowed by that one path; it covers this pull request only, on the head Codex approves, with Verify green on that head. Codex (gpt-6-astra) reviewed `06fb930` and asked for two changes, both made here: the decision entry names GATE-01's entry as superseded for this one path, and the class's comment says only what holds (the file defines tests only; the sorting and the lanes' commands live in `scripts/gate.mjs`). No code line changed. CORE-05's branch brings `main` in after the merge (not this item).
