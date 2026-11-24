@@ -73,6 +73,19 @@ export interface SettingSliderProps {
   readonly scale?: Scale;
 }
 
+/**
+ * The words Carbon is handed when no `readout` is given: each end of the range is labelled with its own value there,
+ * never through the thumb's rule (so a handed position still awaited does not change them), and the thumb reads out
+ * through the logic's `readout`; a label Carbon hands back is given back unchanged.
+ */
+export function plainWords(readoutAt: (at: number) => number, scale: Scale, min: number, max: number, unit: string) {
+  return {
+    formatLabel: (at: number, label: string | undefined) => label ?? formatUIValue(readoutAt(at), unit),
+    minLabel: formatUIValue(scale.toValue(min), unit),
+    maxLabel: formatUIValue(scale.toValue(max), unit),
+  };
+}
+
 /** A slider for one setting that holds a number; nothing is drawn while the setting holds none. */
 export function SettingSlider({
   id,
@@ -182,10 +195,11 @@ export function SettingSlider({
 
   if (held === undefined || position === undefined) return null;
   // Carbon draws `formatLabel(min, minLabel)` and `formatLabel(max, maxLabel)` at the range's ends and
-  // `formatLabel(value, undefined)` on the thumb: given words, the ends are handed theirs as Carbon's own labels.
+  // `formatLabel(value, undefined)` on the thumb: the ends are handed their own words as Carbon's labels, given words
+  // or not, so they never go through the thumb's rule (Codex's B, brief 89).
   const words =
     readout === undefined
-      ? { formatLabel: (at: number) => formatUIValue(slider.readout(at), unit) }
+      ? plainWords((at) => slider.readout(at), scale, min, max, unit)
       : {
           formatLabel: (at: number, label: string | undefined) => label ?? readout(slider.readout(at)),
           minLabel: readout(held, 'start'),

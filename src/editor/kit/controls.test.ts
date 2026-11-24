@@ -6,6 +6,7 @@ import {
   AWAITED_AT_MOST,
   createNumberField,
   createSlider,
+  IDENTITY,
   NOT_A_NUMBER,
   parseNumber,
   sliderKeyMove,
@@ -13,6 +14,8 @@ import {
   type Setting,
   type SliderKey,
 } from './controls';
+import { plainWords } from './SettingSlider';
+import { formatUIValue } from './sliderScales';
 
 interface Handmade extends Setting {
   held: number | undefined;
@@ -795,6 +798,22 @@ describe("point 3: a drag's trail, Carbon's late follow of a position handed dur
     }
     expect(slider.report(100)).toEqual({ ok: true, changed: true });
     expect(setting.held).toBe(100);
+  });
+});
+
+describe("a slider's plain words: the range's ends are their own values, never the thumb's rule (Codex's B)", () => {
+  it('while a handed position is awaited, the ends still read the values at the ends, the thumb the value held', () => {
+    const setting = handmade(0);
+    const slider = createSlider(setting);
+    slider.drawn(0);
+    slider.nudge(1);
+    slider.handed(1);
+    expect(slider.awaiting()).toBe(true);
+    const words = plainWords((at) => slider.readout(at), IDENTITY, 0, 10, '');
+    // As Carbon calls them: formatLabel(min, minLabel), formatLabel(max, maxLabel), formatLabel(value, undefined).
+    const ends = [words.formatLabel(0, words.minLabel), words.formatLabel(10, words.maxLabel)];
+    expect(ends).toEqual([formatUIValue(0), formatUIValue(10)]);
+    expect(words.formatLabel(1, undefined)).toBe(formatUIValue(1));
   });
 });
 
