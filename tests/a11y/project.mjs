@@ -138,8 +138,10 @@ const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damage
 // a picture's shape changes how long it measures (a distance is in image widths: widthsBetween, units.ts).
 // With `long`, the golden's clock is made a fixed twenty minutes (one replacement in its text, which throws if the
 // golden's words have moved; the route unchanged).
+// With `video` ({ width, height }), the golden's export size, 1920 by 1080, is made that one (one replacement in its
+// text, which throws if the golden's words have moved): the video's shape, which the preview takes (D202).
 const LONG_MS = 1200000;
-const projectFile = async (png, upright, long = false) => {
+const projectFile = async (png, upright, long = false, video = null) => {
   const root = process.env.A11Y_ROOT || process.cwd();
   const zip = new (process.getBuiltinModule('node:module').createRequire(`${root}/package.json`)('jszip'))();
   const read = process.getBuiltinModule('node:fs').readFileSync(`${root}/src/editor/shell/goldens/two-stops.project.json`, 'utf8');
@@ -149,6 +151,11 @@ const projectFile = async (png, upright, long = false) => {
     const from = '"clock":{"length":"from content","fixedLengthMs":10000,';
     if (golden.split(from).length !== 2) throw new Error('the golden\'s clock no longer reads "from content" with fixedLengthMs 10000, once');
     golden = golden.replace(from, `"clock":{"length":"fixed","fixedLengthMs":${LONG_MS},`);
+  }
+  if (video) {
+    const from = '"export":{"width":1920,"height":1080,';
+    if (golden.split(from).length !== 2) throw new Error('the golden\'s export no longer reads 1920 by 1080, once');
+    golden = golden.replace(from, `"export":{"width":${video.width},"height":${video.height},`);
   }
   if (!png) zip.file('project.json', golden);
   else {
@@ -1501,39 +1508,70 @@ export default {
       },
     },
     {
-      // The preview (brief 84, c): a project whose picture is 200 by 100 of #3366cc, its second stop at (0.25, 1) so the
-      // line runs down it. The picture is loaded by the page (loadPicture.ts) and drawn: its colour read in two corners;
-      // the box takes its shape (2 to 1); and the length is the picture's measure: 0.5 heights down a 2:1 picture is
-      // 0.25 widths, 1.25 s at the golden's speed (0.2 widths a second), with a stop's 1.5 s and the 2 s hold 4.75 s,
-      // "0:04"; the same project with no picture measures as a square, 0.5 widths, 2.5 s, 6 s, "0:06".
+      // The preview (brief 84, c; D202, the owner's choice): a project whose picture is 200 by 100 of #3366cc, its second
+      // stop at (0.25, 1) so the line runs down x = 0.25 of it. The box takes the video's shape, not the picture's, and
+      // the composer fits the picture inside (imageBounds, "fit", centred). (a) The golden's video, 1920 by 1080: the
+      // picture (2 to 1) is wider than the frame (16 to 9), so it fills the width and its height is the width / 2, that
+      // is 16/9 / 2 = 8/9 of the frame's; the bands are the top and bottom 1/18 each (0.0556). Picture (0.75, 0.25) and
+      // (0.75, 0.75) fall at frame (0.75, 0.0556 + 0.25 x 8/9 = 0.2778) and (0.75, 0.7222): blue; (0.75, 0.02) and
+      // (0.75, 0.98) are in the bands, where the background draws its white margin over the whole frame before the
+      // picture, as the export does (background.ts, v3's): opaque white, not the picture. (b) The same with a video of
+      // 1080 by 1920: the box is 9 to 16 and the picture's height is 9/16 / 2 = 9/32 of the frame's (0.2813), from 0.3594
+      // to 0.6406: blue at (0.75, 0.40) and (0.75, 0.60), the white margin at (0.75, 0.2) and (0.75, 0.8). (c) The golden
+      // opened again brings the box
+      // back to 16 to 9: the shape follows the scene held. Each time the canvas is its box times the pixel ratio. (d)
+      // The length is the picture's measure: 0.5 heights down a 2:1 picture is 0.25 widths, 1.25 s at the golden's speed
+      // (0.2 widths a second), with a stop's 1.5 s and the 2 s hold 4.75 s, "0:04"; the same project with no picture
+      // measures as a square, 0.5 widths, 2.5 s, 6 s, "0:06".
       name: 'the-preview-shows-the-picture',
       method: 'j-timing',
       rows: ['2.2.2'],
       run: async ({ page, open, record }) => {
         await open('shell');
         const wrong = [];
+        // Waits until the canvas has the shape asked (within 0.02) and the blue at (fx, fy): the frame drawn.
+        const drawnAs = (shape, fx, fy) => page.waitForFunction(([sel, rgb, shape, x, y]) => {
+          const c = document.querySelector(sel);
+          if (Math.abs(c.width / c.height - shape) > 0.02) return false;
+          const [r, g, b, a] = c.getContext('2d').getImageData(Math.floor(x * c.width), Math.floor(y * c.height), 1, 1).data;
+          return a > 200 && Math.abs(r - rgb[0]) <= 24 && Math.abs(g - rgb[1]) <= 24 && Math.abs(b - rgb[2]) <= 24;
+        }, [CANVAS, BLUE, shape, fx, fy], { timeout: 3000 }).then(() => true, () => false);
+        // The box's shape, the canvas as its box times the ratio (to a pixel), blue at `inside`, the white margin at `bands`.
+        const frameAs = async (label, shape, inside, bands) => {
+          const box = await boxOf(page);
+          const { width, height } = await pixels(page);
+          if (Math.abs(box.width / box.height - shape) > 0.02) wrong.push(`${label}: the box is ${box.width} by ${box.height}, not ${shape.toFixed(4)} wide to 1 high`);
+          const scale = Math.min(box.ratio, 3);
+          if (Math.abs(width - box.width * scale) > 1 || Math.abs(height - box.height * scale) > 1) wrong.push(`${label}: the canvas is ${width} by ${height}, not its box ${box.width} by ${box.height} times ${scale}`);
+          for (const [x, y] of inside) { const p = await pixelAt(page, x, y); if (!near(p, BLUE)) wrong.push(`${label}: not the picture's #3366cc at (${x}, ${y}) (${p.join(', ')})`); }
+          for (const [x, y] of bands) { const p = await pixelAt(page, x, y); if (!near(p, [255, 255, 255])) wrong.push(`${label}: not the white margin in a band at (${x}, ${y}) (${p.join(', ')})`); }
+          return `${box.width} by ${box.height}`;
+        };
         if (!(await choose(page, await projectFile(null, true))) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the project with no picture did not open');
         const square = (await atNow(page)).text?.split(' of ')[1];
         const png = await plainPng(page, 200, 100, '#3366cc');
+        // (a) the golden's video, 1920 by 1080.
         if (!(await choose(page, await projectFile(png, true))) || !(await saysOpened(page))) wrong.push('the project with the picture did not open');
-        const shown = await page.waitForFunction(([sel, rgb]) => {
-          const c = document.querySelector(sel);
-          const [r, g, b, a] = c.getContext('2d').getImageData(Math.floor(0.05 * c.width), Math.floor(0.05 * c.height), 1, 1).data;
-          return a > 200 && Math.abs(r - rgb[0]) <= 24 && Math.abs(g - rgb[1]) <= 24 && Math.abs(b - rgb[2]) <= 24;
-        }, [CANVAS, BLUE], { timeout: 3000 }).then(() => true, () => false);
-        const corner = await pixelAt(page, 0.95, 0.95);
-        const box = await boxOf(page);
+        if (!(await drawnAs(16 / 9, 0.75, 0.2778))) wrong.push('with the picture and a 1920 by 1080 video, no 16 to 9 frame with the blue at (0.75, 0.2778) came');
+        const wide = await frameAs('1920 by 1080', 16 / 9, [[0.75, 0.2778], [0.75, 0.7222]], [[0.75, 0.02], [0.75, 0.98]]);
         const pictured = (await atNow(page)).text?.split(' of ')[1];
         // A picture that arrives late draws once, and then nothing moves: the same pixels half a second on (2.2.2).
         await twoFrames(page);
         const drawn = await pixels(page);
         await page.waitForTimeout(500);
         if ((await pixels(page)).hash !== drawn.hash) wrong.push('with the picture drawn and nothing playing, the canvas changed over half a second');
-        if (!shown || !near(corner, BLUE)) wrong.push(`the picture's #3366cc is not on the canvas at (0.05, 0.05) and (0.95, 0.95) (${corner.join(', ')} at the second)`);
-        if (Math.abs(box.width / box.height - 2) > 0.02) wrong.push(`the box is ${box.width} by ${box.height}, not the picture's 2 to 1`);
+        // (b) the same project with a video of 1080 by 1920.
+        if (!(await quiet(page)) || !(await choose(page, await projectFile(png, true, false, { width: 1080, height: 1920 }))) || !(await saysOpened(page))) wrong.push('the project with an upright video did not open');
+        if (!(await drawnAs(9 / 16, 0.75, 0.4))) wrong.push('with the picture and a 1080 by 1920 video, no 9 to 16 frame with the blue at (0.75, 0.4) came');
+        const upright = await frameAs('1080 by 1920', 9 / 16, [[0.75, 0.4], [0.75, 0.6]], [[0.75, 0.2], [0.75, 0.8]]);
+        // (c) the golden again.
+        if (!(await quiet(page)) || !(await choose(page, await projectFile(png, true))) || !(await saysOpened(page))) wrong.push('the project with the picture did not open again');
+        if (!(await drawnAs(16 / 9, 0.75, 0.2778))) wrong.push('the golden opened again did not bring back a 16 to 9 frame with the blue at (0.75, 0.2778)');
+        const again = await frameAs('1920 by 1080 again', 16 / 9, [[0.75, 0.2778], [0.75, 0.7222]], [[0.75, 0.02], [0.75, 0.98]]);
+        // (d) the length's two readings.
         if (pictured !== '0:04') wrong.push(`with the picture the length reads "${pictured}", not the picture's measure, "0:04"`);
         if (square !== '0:06') wrong.push(`with no picture the length reads "${square}", not the square's "0:06"`);
-        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `the picture's #3366cc read at (0.05, 0.05) and (0.95, 0.95); the box ${box.width} by ${box.height}, 2 to 1; the length "${pictured}" (0.25 widths, 4.75 s), not the square's "${square}" (6 s); still half a second on with nothing playing`);
+        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `the box takes the video's shape, not the picture's: ${wide} (16 to 9) with a 1920 by 1080 video, the 2:1 picture's #3366cc at (0.75, 0.2778) and (0.75, 0.7222) and the white margin in the bands at (0.75, 0.02) and (0.75, 0.98); ${upright} (9 to 16) with 1080 by 1920, blue at (0.75, 0.4) and (0.75, 0.6), the white margin at (0.75, 0.2) and (0.75, 0.8); ${again} again with the golden; the canvas its box times the ratio each time; the length "${pictured}" (0.25 widths, 4.75 s), not the square's "${square}" (6 s); still half a second on with nothing playing`);
       },
     },
     {

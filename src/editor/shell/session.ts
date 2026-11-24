@@ -49,7 +49,8 @@ export interface PageSession {
   readonly singleKeys: Held<boolean>;
   /** Open's opener: a project file's bytes into the store (stage 6). */
   readonly opener: Opener;
-  /** What the preview's canvas needs: the one inputs (its size and shape) and the one drawer (brief 84). */
+  /** What the preview's canvas needs: the one inputs (its size, and the scene whose export gives its shape) and the one
+   *  drawer (brief 84). */
   readonly preview: { readonly inputs: FrameInputs; readonly drawer: Drawer };
 }
 

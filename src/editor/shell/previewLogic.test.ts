@@ -11,7 +11,7 @@ import { createTransport, type FrameSource } from '../../player/transport/transp
 import { setSceneSetting } from '../store/command';
 import { createStore, type Store } from '../store/store';
 import {
-  backgroundOf, canvasSize, createDrawer, createFrameInputs, createPictures, SEED, START_SIZE,
+  backgroundOf, canvasSize, createDrawer, createFrameInputs, createPictures, frameShape, SEED, START_SIZE,
   type LoadPicture, type Picture, type Target,
 } from './previewLogic';
 
@@ -653,6 +653,32 @@ describe('the canvas’s size (ruling 5)', () => {
       expect(canvasSize({ width: bad, height: 100 }, 1)).toEqual({ width: 1, height: 1 });
       expect(canvasSize({ width: 100, height: bad }, 1)).toEqual({ width: 1, height: 1 });
       expect(canvasSize({ width: 100, height: 100 }, bad)).toEqual({ width: 1, height: 1 });
+    }
+  });
+});
+
+describe('the frame’s shape, the video’s (ruling 6, D202)', () => {
+  const scene = newScene(() => 'id');
+  const sized = (width: number, height: number) => ({ ...scene, settings: { ...scene.settings, export: { ...scene.settings.export, width, height } } });
+  it('is the scene’s export width and height: 1920 by 1080 by default, 1080 by 1920 when the video is upright', () => {
+    expect(frameShape(scene)).toEqual({ width: 1920, height: 1080 });
+    expect(frameShape(sized(1080, 1920))).toEqual({ width: 1080, height: 1920 });
+    expect(frameShape(sized(1000, 1000))).toEqual({ width: 1000, height: 1000 });
+  });
+  it('takes no part from the picture: with a 200 by 100 picture held it is the video’s, and follows the scene held', () => {
+    const store = storeOf(upTheMiddle([wide]));
+    const holder = createFrameInputs({ store });
+    expect(holder.inputs().image).toEqual({ width: 200, height: 100 });
+    expect(frameShape(holder.inputs().scene)).toEqual({ width: 1920, height: 1080 });
+    store.dispatch(setSceneSetting('export', 'width', 1080));
+    store.dispatch(setSceneSetting('export', 'height', 1920));
+    expect(holder.inputs().image).toEqual({ width: 200, height: 100 });
+    expect(frameShape(holder.inputs().scene)).toEqual({ width: 1080, height: 1920 });
+  });
+  it('gives START_SIZE’s for a width or height that is not a finite number above 0', () => {
+    for (const bad of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(frameShape(sized(bad, 1080))).toEqual(START_SIZE);
+      expect(frameShape(sized(1920, bad))).toEqual(START_SIZE);
     }
   });
 });

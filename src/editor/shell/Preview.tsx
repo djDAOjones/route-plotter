@@ -16,20 +16,23 @@
 // 4. The size drawn is the canvas's box in CSS pixels times the device's pixel ratio (`canvasSize`, held to 3), handed
 //    to the session's inputs (`resize`): a ResizeObserver hears the box, and a `matchMedia` on the resolution now hears
 //    a change of the pixel ratio alone (a browser zoom, a move to another screen), armed again at each change.
-// 5. The box (frameLook.css): the background's shape (the inputs' image, its height over its width), 16 to 9 with no
-//    picture (START_SIZE's); as wide as its slot, and never taller than two fifths of the window's height, its width then
-//    following the shape, so the play bar under it stays in sight. Where the frame's shape and the picture's differ the
-//    composer fits the picture inside it; the box's own background shows round it.
+// 5. The box (frameLook.css): the video's shape (D202, the owner's choice): the scene's export width to its height
+//    (`frameShape`, previewLogic.ts's point 6), with a picture or without one, so the preview draws the frame the video
+//    draws; as wide as its slot, and never taller than two fifths of the window's height, its width then following the
+//    shape, so the play bar under it stays in sight. The composer fits the picture (or, with none, the square the scene
+//    measures as) inside the frame. The bands about a picture are the background's white margin, drawn over the whole
+//    frame before the picture as the export draws it (background.ts); with no picture shown the canvas holds nothing
+//    there and the box's own background shows.
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { compose, type Surface } from '../../player/compose';
-import { canvasSize, START_SIZE, type Drawer, type FrameInputs } from './previewLogic';
+import { canvasSize, frameShape, type Drawer, type FrameInputs } from './previewLogic';
 
 export interface PreviewProps {
   /** The session's one drawer. */
   readonly drawer: Pick<Drawer, 'attach' | 'detach'>;
   /** The session's one inputs: the size is handed to it, and the box's shape read from it. */
   readonly inputs: Pick<FrameInputs, 'inputs' | 'resize'>;
-  /** The store's telling of a change: an opened project may bring a picture of another shape. */
+  /** The store's telling of a change: an opened project, or a change of the export's size, may bring another shape. */
   readonly subscribe: (listener: () => void) => () => void;
 }
 
@@ -48,10 +51,10 @@ const surface = (size: { width: number; height: number }): Surface => {
 
 export function Preview({ drawer, inputs, subscribe }: PreviewProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
-  // The box's shape: the background's size, or START_SIZE's with none (point 5), as one string so a telling that leaves
+  // The box's shape: the video's, the scene's export width and height (point 5), as one string so a telling that leaves
   // it as it was draws nothing again.
   const shape = () => {
-    const { width, height } = inputs.inputs().image ?? START_SIZE;
+    const { width, height } = frameShape(inputs.inputs().scene);
     return `${String(width)} / ${String(height)}`;
   };
   const aspect = useSyncExternalStore(subscribe, shape, shape);

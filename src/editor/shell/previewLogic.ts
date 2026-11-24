@@ -41,7 +41,11 @@
 // 5. `canvasSize(box, ratio)`: the box in CSS pixels times the device's pixel ratio, held to at most 3 (v3's cap,
 //    v3/src/main.js:1455), each side rounded to a whole number and at least 1; a box or a ratio that is not a finite
 //    number above 0 gives 1 by 1.
-// 6. It does not claim to withstand code written to break it.
+// 6. `frameShape(scene)`: the frame the preview draws has the video's shape (D202, the owner's choice): the scene's
+//    export width and height (settings.ts, EXPORT_SETTINGS), with a picture or without one; the picture's size plays
+//    no part, the composer fitting it inside that frame. A width or height that is not a finite number above 0 gives
+//    START_SIZE's.
+// 7. It does not claim to withstand code written to break it.
 import type { ImageType, Project } from '../../adapters/io/format';
 import { sizeOf } from '../../adapters/io/images';
 import type { Size } from '../../core/geometry/transform';
@@ -346,4 +350,11 @@ export function canvasSize(box: Size, ratio: number): Size {
   const scale = Math.min(ratio, MOST_RATIO);
   const side = (n: number) => Math.max(1, Math.round(n * scale));
   return { width: side(box.width), height: side(box.height) };
+}
+
+/** The shape of the frame the preview draws: the video's, the scene's export width and height (point 6, D202). */
+export function frameShape(scene: Scene): Size {
+  const { width, height } = scene.settings.export;
+  const sound = (n: number) => Number.isFinite(n) && n > 0;
+  return sound(width) && sound(height) ? { width, height } : START_SIZE;
 }
