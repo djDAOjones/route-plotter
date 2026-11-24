@@ -746,10 +746,11 @@ describe("point 3: a drag's trail, Carbon's late follow of a position handed dur
       slider.report(at);
       slider.handed(at);
     }
-    expect(slider.report(path[1])).toEqual({ ok: true, changed: false });
+    // The oldest, 10, is let go; the next, 20, is still on the trail.
+    expect(slider.report(20)).toEqual({ ok: true, changed: false });
     expect(setting.held).toBe(path.at(-1));
-    expect(slider.report(path[0])).toEqual({ ok: true, changed: true });
-    expect(setting.held).toBe(path[0]);
+    expect(slider.report(10)).toEqual({ ok: true, changed: true });
+    expect(setting.held).toBe(10);
   });
 
   it('the trail is let go at a new widget and at the next press: a report of an old place is then the drag’s', () => {
