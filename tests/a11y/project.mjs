@@ -1840,6 +1840,56 @@ export default {
       },
     },
     {
+      // 2.5.2 (brief 88, finding 86): a quick drag on a slow page. React's scheduler slowed as in the-late-echo, the
+      // twenty-minute scene opened and still, the pointer down on the timeline's thumb, moved right in five quick steps
+      // of a twentieth of the track each, then let go: the timeline stays, no page error is heard, and the position held
+      // is where the thumb was let go (a quarter of the track on from where it was pressed, within a hundredth of the
+      // range), and still there a second later. Before the mend the kit took Carbon's late follow of a position it had
+      // handed before for a move of the drag; the two answered each other until React gave up (error 185) and the
+      // timeline was gone (claim point 3, the trail).
+      name: 'the-quick-drag',
+      method: 'j-pointer',
+      rows: ['2.5.2'],
+      run: async ({ page, open, record }) => {
+        await page.addInitScript(() => {
+          const Real = window.MessageChannel;
+          window.MessageChannel = function () {
+            const ch = new Real();
+            const send = ch.port2.postMessage.bind(ch.port2);
+            ch.port2.postMessage = (m) => setTimeout(() => send(m), 60);
+            return ch;
+          };
+        });
+        const errors = [];
+        page.on('pageerror', (e) => errors.push(String(e).slice(0, 120)));
+        const wrong = [];
+        await open('shell');
+        if (!(await choose(page, await projectFile(undefined, false, true))) || !(await saysOpened(page))) wrong.push('the long scene was not opened');
+        const thumb = await page.locator(TIMELINE).boundingBox();
+        const track = await page.locator(TRACK).boundingBox();
+        const max = Number(await page.locator(TIMELINE).getAttribute('aria-valuemax'));
+        const from = { x: thumb.x + thumb.width / 2, y: thumb.y + thumb.height / 2 };
+        const to = from.x + track.width / 4;
+        await page.mouse.move(from.x, from.y);
+        await page.mouse.down();
+        for (let s = 1; s <= 5; s++) await page.mouse.move(from.x + (s * track.width) / 20, from.y, { steps: 2 });
+        await page.mouse.up();
+        await page.waitForTimeout(1500);
+        const expected = Math.round(((to - track.x) / track.width) * max);
+        let held = null;
+        if ((await page.locator(TIMELINE).count()) !== 1) wrong.push('the timeline is gone');
+        else {
+          held = (await atNow(page)).now;
+          if (Math.abs(held - expected) > max / 100) wrong.push(`let go at ${expected} of ${max}, the position held is ${held}`);
+          await page.waitForTimeout(1000);
+          const later = (await page.locator(TIMELINE).count()) === 1 ? (await atNow(page)).now : null;
+          if (later !== held) wrong.push(`a second later the position is ${later}, not ${held}`);
+        }
+        if (errors.length) wrong.push(`page error: ${errors[0]}`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `with React's scheduler slowed 60 ms a task, the twenty-minute scene still: the thumb pressed and moved right in five quick steps, let go at ${expected} of ${max}: the position held is ${held}, a second later too; the timeline stays, no page error`);
+      },
+    },
+    {
       // 4.1.3 (stage 6, the browser's decoder): the golden with one image, a real PNG the page's canvas made, opens:
       // "Project opened" said, no alert, Play offered.
       name: 'an-image-that-decodes',
