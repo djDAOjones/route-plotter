@@ -26,8 +26,11 @@ import {
 import { A11Y, PUBLISHING, siteIntroducer } from './gate.mjs';
 // GATE-03: the gate's own test file's class.
 import { GATE_TESTS } from './gate.mjs';
+// GATE-05: frozen v3 is locked; v4's gate stands in place of its suite.
+import { V3_LOCK } from './gate.mjs';
 
-const EVERYTHING = ['gate', 'v3', 'v4', 'record'];
+// GATE-05: frozen v3's suite is in no lane a change is sorted into, everything included.
+const EVERYTHING = ['gate', 'v4', 'record'];
 const NO_V4 = { files: [], dirs: [] };
 const SHA_A = 'a'.repeat(40);
 const SHA_B = 'b'.repeat(40);
@@ -173,14 +176,24 @@ describe('plan', () => {
     assert.deepEqual(plan(['AGENTS.md', 'reviews/x.md', 'tools/check.mjs', 'verbs/close.md']).lanes, ['record']);
   });
 
-  test("a v3 change runs v3's whole suite, with the gate's tests and the record checker", () => {
-    assert.deepEqual(plan(['v3/src/app/main.js']).lanes, ['gate', 'v3', 'record']);
-    assert.deepEqual(plan(['v3/tests/governance.test.js', 'v3/LICENSE']).lanes, ['gate', 'v3', 'record']);
-    assert.deepEqual(plan(['.github/SECURITY.md']).lanes, ['gate', 'v3', 'record']);
+  test("a v3 change asks for no lane of v3's and is named as locked, as frozen v3 is (GATE-05)", () => {
+    assert.deepEqual(plan(['v3/src/app/main.js']).lanes, ['gate', 'record']);
+    assert.deepEqual(plan(['v3/src/app/main.js']).locked, ['v3/src/app/main.js']);
+    assert.deepEqual(plan(['v3/tests/governance.test.js', 'v3/LICENSE']).locked,
+      ['v3/tests/governance.test.js', 'v3/LICENSE']);
+    assert.deepEqual(plan(['.github/SECURITY.md']).locked, ['.github/SECURITY.md']);
+    // Beside a path on no list, everything runs, v3's suite not included, and the v3 path is still named.
+    assert.deepEqual(plan(['v3/build.js', '.nvmrc']).lanes, EVERYTHING);
+    assert.deepEqual(plan(['v3/build.js', '.nvmrc']).locked, ['v3/build.js']);
+    for (const paths of [['project/backlog.md'], ['src/main.tsx'], ['.nvmrc'], [], null]) {
+      assert.deepEqual(plan(paths).locked, [], String(paths));
+    }
+    // Its suite still runs by hand, from v3/, as before.
+    assert.equal(LANES.v3.cwd, 'v3');
   });
 
   test('mixed pushes run every lane any of their paths asks for', () => {
-    assert.deepEqual(plan(['project/backlog.md', 'v3/src/app/main.js']).lanes, ['gate', 'v3', 'record']);
+    assert.deepEqual(plan(['project/backlog.md', 'v3/src/app/main.js']).lanes, ['gate', 'record']);
     assert.deepEqual(plan(['project/backlog.md', '.nvmrc']).lanes, EVERYTHING);
     assert.deepEqual(plan(['v3/src/app/main.js', '.github/workflows/ci.yml']).lanes, EVERYTHING);
     assert.deepEqual(plan(['v3/src/app/main.js', 'scripts/gate.mjs']).lanes, EVERYTHING);
@@ -197,8 +210,8 @@ describe('plan', () => {
     assert.deepEqual(plan(['src/core/model.ts', 'tests/bundle/player.test.mjs', 'package-lock.json']).lanes,
       ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['src/main.tsx', 'project/backlog.md']).lanes, ['gate', 'v4', 'record']);
-    assert.deepEqual(plan(['src/main.tsx', 'v3/src/app/main.js']).lanes, ['gate', 'v3', 'v4', 'record']);
-    assert.deepEqual(plan(['v3/src/app/main.js']).lanes, ['gate', 'v3', 'record']);
+    assert.deepEqual(plan(['src/main.tsx', 'v3/src/app/main.js']).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['v3/src/app/main.js']).lanes, ['gate', 'record']);
     for (const path of ['.github/workflows/ci.yml', 'scripts/gate.mjs']) {
       assert.deepEqual(plan([path]).lanes, EVERYTHING, path);
     }
@@ -207,12 +220,12 @@ describe('plan', () => {
   test("v4's lane runs only once v4 has paths", () => {
     const v4 = SOME_V4;
     assert.ok(!plan(['package.json'], { v4: NO_V4 }).lanes.includes('v4'));
-    assert.deepEqual(plan(null, { v4: NO_V4 }).lanes, ['gate', 'v3', 'record']);
+    assert.deepEqual(plan(null, { v4: NO_V4 }).lanes, ['gate', 'record']);
     assert.deepEqual(plan(['app/main.tsx'], { v4 }).lanes, ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['app/main.tsx', 'project/backlog.md'], { v4 }).lanes, ['gate', 'v4', 'record']);
-    assert.deepEqual(plan(['app/main.tsx', 'v3/src/app/main.js'], { v4 }).lanes, ['gate', 'v3', 'v4', 'record']);
-    assert.deepEqual(plan(['app/main.tsx', 'package.json'], { v4 }).lanes, ['gate', 'v3', 'v4', 'record']);
-    assert.deepEqual(plan(null, { v4 }).lanes, ['gate', 'v3', 'v4', 'record']);
+    assert.deepEqual(plan(['app/main.tsx', 'v3/src/app/main.js'], { v4 }).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(['app/main.tsx', 'package.json'], { v4 }).lanes, ['gate', 'v4', 'record']);
+    assert.deepEqual(plan(null, { v4 }).lanes, ['gate', 'v4', 'record']);
   });
 
   test("the publishing step's own files run the gate's lane and v4's gate, never v3's suite (GATE-02)", () => {
@@ -229,7 +242,7 @@ describe('plan', () => {
     assert.deepEqual(plan(['scripts/publish.mjs', 'docs/index.html'], { pages: 'step' }).lanes,
       ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['scripts/publish.mjs', 'src/main.tsx']).lanes, ['gate', 'v4', 'record']);
-    assert.deepEqual(plan(['scripts/publish.mjs', 'v3/build.js']).lanes, ['gate', 'v3', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/publish.mjs', 'v3/build.js']).lanes, ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['scripts/publish.mjs'], { v4: NO_V4 }).lanes, ['gate', 'record']);
     // Beside a path on no list, or a hand change to the live site, everything runs, as before.
     assert.deepEqual(plan(['scripts/publish.mjs', 'scripts/gate.mjs']).lanes, EVERYTHING);
@@ -255,7 +268,7 @@ describe('plan', () => {
     assert.deepEqual(plan(['scripts/gate.test.mjs', 'scripts/publish.mjs']).lanes, ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['scripts/gate.test.mjs', 'docs/index.html'], { pages: 'step' }).lanes,
       ['gate', 'v4', 'record']);
-    assert.deepEqual(plan(['scripts/gate.test.mjs', 'v3/build.js']).lanes, ['gate', 'v3', 'v4', 'record']);
+    assert.deepEqual(plan(['scripts/gate.test.mjs', 'v3/build.js']).lanes, ['gate', 'v4', 'record']);
     assert.deepEqual(plan(['scripts/gate.test.mjs'], { v4: NO_V4 }).lanes, ['gate', 'record']);
     // Beside the sorting itself, a path on no list, or a hand change to the live site, everything runs, as before.
     assert.deepEqual(plan(['scripts/gate.test.mjs', 'scripts/gate.mjs']).lanes, EVERYTHING);
@@ -394,7 +407,7 @@ describe('reading a change from git', () => {
       repo.run('commit', '-q', '-m', 'move');
       const paths = pathsOfRange(['origin/main...HEAD'], repo.dir);
       assert.deepEqual(paths.sort(), ['project/a.js', 'v3/src/a.js']);
-      assert.deepEqual(plan(paths).lanes, ['gate', 'v3', 'record']);
+      assert.deepEqual(plan(paths).lanes, ['gate', 'record']);
     } finally {
       repo.done();
     }
@@ -450,7 +463,7 @@ describe('reading a change from git', () => {
       repo.run('commit', '-q', '-am', 'C: record');
       const c = repo.run('rev-parse', 'HEAD');
       const range = ciRange({ eventName: 'push', event: { before: b }, ref: 'refs/heads/main', sha: c, lastGreen: passed });
-      assert.deepEqual(plan(pathsOfRange(range, repo.dir)).lanes, ['gate', 'v3', 'record']);
+      assert.deepEqual(plan(pathsOfRange(range, repo.dir)).lanes, ['gate', 'record']);
       // Read from the commit before it, C alone would have looked record-only.
       assert.deepEqual(plan(pathsOfRange([b, c], repo.dir)).lanes, ['record']);
     } finally {
@@ -691,18 +704,19 @@ describe('the gate as wired in this repository', () => {
     assert.equal(sort.length, 1);
     assert.match(sort[0], /GITHUB_TOKEN: \$\{\{ github\.token \}\}/);
     const installs = stepRunning('npm ci');
-    assert.equal(installs.length, 2);
-    // v3's package and lockfile live in v3/ (STACK-01), v4's at the root (STACK-02); each installs for its own lane.
-    const [v3Install] = installs.filter(step => /working-directory: v3\n/.test(step));
-    assert.match(v3Install, /if: steps\.sort\.outputs\.v3 == 'true'/);
-    assert.match(v3Install, /run: npm ci\n/);
+    assert.equal(installs.length, 1);
+    // GATE-05: frozen v3 is locked, so CI installs nothing of v3's and runs no step of its suite; v4's package and
+    // lockfile live at the root (STACK-02).
+    assert.ok(!installs.some(step => /working-directory: v3\n/.test(step)), 'CI installs nothing of v3\'s');
+    assert.deepEqual(stepRunning('node scripts/gate.mjs --lane v3'), [], 'CI runs no step of v3\'s suite');
+    assert.ok(!/outputs\.v3\b/.test(workflow), 'no step reads a v3 lane');
     const [v4Install] = installs.filter(step => !/working-directory/.test(step));
     assert.match(v4Install, /if: steps\.sort\.outputs\.v4 == 'true'/);
     // Install scripts off: Carbon's and IBM Plex's run IBM's telemetry in CI.
     assert.match(v4Install, /run: npm ci --ignore-scripts\n/);
     assert.match(v4Install, /IBM_TELEMETRY_DISABLED: 'true'/);
-    assert.match(workflow, /cache-dependency-path: \|\n\s+v3\/package-lock\.json\n\s+package-lock\.json\n/);
-    for (const lane of ['gate', 'v3', 'v4']) {
+    assert.match(workflow, /cache-dependency-path: package-lock\.json\n/);
+    for (const lane of ['gate', 'v4']) {
       const [step] = stepRunning(`node scripts/gate.mjs --lane ${lane}`);
       assert.ok(step, lane);
       assert.match(step, new RegExp(`if: steps\\.sort\\.outputs\\.${lane} == 'true'`), lane);
@@ -796,7 +810,7 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
     assert.deepEqual(plan(['docs/index.html', 'version.json'], { pages: 'step' }).lanes, ['record']);
     assert.deepEqual(plan(['docs/index.html', 'project/backlog.md'], { pages: 'step' }).lanes, ['record']);
     assert.deepEqual(plan(['docs/index.html', 'src/main.tsx'], { pages: 'step' }).lanes, ['gate', 'v4', 'record']);
-    assert.deepEqual(plan(['docs/index.html', 'v3/build.js'], { pages: 'step' }).lanes, ['gate', 'v3', 'record']);
+    assert.deepEqual(plan(['docs/index.html', 'v3/build.js'], { pages: 'step' }).lanes, ['gate', 'record']);
     assert.deepEqual(plan(['docs/index.html', '.nvmrc'], { pages: 'step' }).lanes, EVERYTHING);
     const words = describePlan(plan(['version.json'], { pages: 'step' }), 'a test');
     assert.match(words, /pages\s+version\.json/);
@@ -1276,6 +1290,162 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
       assert.match(sorted.said, /record\s+project\/backlog\.md/);
     } finally {
       repo.done();
+    }
+  });
+
+  test("the gate in a checkout refuses any change to frozen v3, staged, committed or untracked (GATE-05)", async () => {
+    const repo = site();
+    const local = async (argv = ['--plan']) => {
+      const said = [];
+      const status = await gate(argv, {}, { cwd: repo.dir, log: line => said.push(line) });
+      return { status, said: said.join('\n') };
+    };
+    try {
+      repo.run(['switch', '-q', '-c', 'work']);
+      assert.equal((await local()).status, 0);
+      repo.write('v3/src/new.js', 'untracked');
+      let result = await local();
+      assert.equal(result.status, 1, result.said);
+      assert.match(result.said, /gate: refused: frozen v3 is locked .*v3\/src\/new\.js\. Undoing the lock is the owner's call/);
+      repo.run(['add', 'v3/src/new.js']);
+      assert.equal((await local()).status, 1);
+      repo.run(['commit', '-q', '-m', 'a v3 change']);
+      assert.equal((await local()).status, 1);
+      // A range's plan refuses it too, so CI's sort step fails on it.
+      result = await local(['--plan', '--range', `${repo.start}..work`]);
+      assert.equal(result.status, 1, result.said);
+      // Asking for everything runs no v3 lane and refuses nothing.
+      assert.doesNotMatch((await local(['--all', '--plan'])).said, /frozen v3's whole suite/);
+    } finally {
+      repo.done();
+    }
+  });
+
+  test("the checkout's lock holds under --all and where the base cannot be read, uncommitted files included (GATE-05)",
+    async () => {
+      const repo = site();
+      const local = async argv => {
+        const said = [];
+        const status = await gate(argv, {}, { cwd: repo.dir, log: line => said.push(line) });
+        return { status, said: said.join('\n') };
+      };
+      try {
+        repo.run(['switch', '-q', '-c', 'work']);
+        assert.equal((await local(['--all', '--plan'])).status, 0);
+        repo.write('v3/new.txt', 'untracked');
+        // --all still asks for every lane, and refuses the locked path.
+        let result = await local(['--all', '--plan']);
+        assert.equal(result.status, 1, result.said);
+        assert.match(result.said, /gate: runs .*v4's gate.*the record checker/);
+        assert.match(result.said, /gate: refused: frozen v3 is locked .*v3\/new\.txt/);
+        // With no base to read against, the change runs everything and is still refused.
+        repo.run(['update-ref', '-d', 'refs/remotes/origin/main']);
+        result = await local(['--plan']);
+        assert.equal(result.status, 1, result.said);
+        assert.match(result.said, /the change could not be read/);
+        assert.match(result.said, /gate: refused: frozen v3 is locked .*v3\/new\.txt/);
+      } finally {
+        repo.done();
+      }
+    });
+
+  test("a staged change to frozen v3 is refused though its working copy is put back (GATE-05)", async () => {
+    const repo = site();
+    const local = async () => {
+      const said = [];
+      const status = await gate(['--plan'], {}, { cwd: repo.dir, log: line => said.push(line) });
+      return { status, said: said.join('\n') };
+    };
+    try {
+      repo.write('.github/SUPPORT.md', 'help\n');
+      const base = repo.commit('support');
+      repo.run(['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+      repo.run(['switch', '-q', '-c', 'work']);
+      assert.equal((await local()).status, 0);
+      const refused = async () => {
+        const result = await local();
+        assert.equal(result.status, 1, result.said);
+        assert.match(result.said, /gate: refused: frozen v3 is locked .*\.github\/SUPPORT\.md/);
+      };
+      // Staged, its working copy put back to the base's.
+      repo.write('.github/SUPPORT.md', 'changed\n');
+      repo.run(['add', '.github/SUPPORT.md']);
+      repo.write('.github/SUPPORT.md', 'help\n');
+      await refused();
+      // Committed, its revert staged and the working copy matching: only the index against HEAD shows it.
+      repo.write('.github/SUPPORT.md', 'changed\n');
+      repo.commit('a v3 change');
+      repo.run(['checkout', '-q', base, '--', '.github/SUPPORT.md']);
+      await refused();
+      // Committed, the working copy alone put back: only the working tree against the index shows it.
+      repo.run(['reset', '-q', '--hard']);
+      repo.write('.github/SUPPORT.md', 'help\n');
+      await refused();
+    } finally {
+      repo.done();
+    }
+  });
+
+  test("a checkout whose required reads fail is refused, so frozen v3 cannot pass unread (GATE-05)", async () => {
+    // Each required read failed in turn by a stub reader; the others, and the base's optional diff, read for real.
+    const reads = {
+      'the index against HEAD': args => args[0] === 'diff' && args.includes('--cached'),
+      'the working tree against the index': args => args[0] === 'diff' && !args.includes('--cached') && args.at(-2) === '-z',
+      'untracked files': args => args[0] === 'ls-files' && args.includes('--others')
+    };
+    for (const [name, fails] of Object.entries(reads)) {
+      const repo = site();
+      try {
+        repo.run(['switch', '-q', '-c', 'work']);
+        // An untracked v3 file that only the failed read could show, where it is the untracked read that fails.
+        if (name === 'untracked files') repo.write('v3/new.txt', 'untracked');
+        const said = [];
+        const read = (args, cwd) => (fails(args) ? null : git(args, cwd));
+        const status = await gate(['--plan'], {}, { cwd: repo.dir, log: line => said.push(line), read });
+        assert.equal(status, 1, `${name}: ${said.join('\n')}`);
+        assert.match(said.join('\n'),
+          new RegExp(`gate: refused: the checkout could not be read \\(${name}\\); frozen v3 cannot be shown untouched`));
+      } finally {
+        repo.done();
+      }
+    }
+  });
+
+  test("a checkout with no HEAD is refused when it stages frozen v3 (GATE-05)", async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gate-05-no-head-'));
+    try {
+      const run = args => assert.equal(spawnSync('git', args, { cwd: dir, encoding: 'utf8' }).status, 0, args.join(' '));
+      run(['init', '-q', '-b', 'main']);
+      mkdirSync(join(dir, 'v3'));
+      writeFileSync(join(dir, 'v3/new.txt'), 'staged\n');
+      // Staged, its working copy matching: not untracked, and no diff against the index.
+      run(['add', 'v3/new.txt']);
+      const said = [];
+      const status = await gate(['--plan'], {}, { cwd: dir, log: line => said.push(line) });
+      assert.equal(status, 1, said.join('\n'));
+      assert.match(said.join('\n'), /gate: refused: the checkout could not be read \(the index against HEAD\)/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("frozen v3's code is the tag's, byte for byte (GATE-05)", () => {
+    const tagged = git(['rev-parse', '--verify', '--quiet', `refs/tags/${V3_LOCK.tag}^{commit}`]);
+    assert.ok(tagged, `the tag ${V3_LOCK.tag} is in this checkout (CI fetches every tag)`);
+    for (const path of V3_LOCK.unchanged) {
+      const was = git(['rev-parse', `${V3_LOCK.tag}:${path}`])?.trim();
+      const now = git(['rev-parse', `HEAD:v3/${path}`])?.trim();
+      assert.ok(was && now, path);
+      assert.equal(now, was, `v3/${path} is the tag's ${path}`);
+    }
+  });
+
+  test("every frozen v3 path is as locked, byte for byte, even where a change cannot be read (GATE-05)", () => {
+    // A change whose paths cannot be read names nothing as locked and runs every lane, this one included, so this
+    // test is what refuses a v3 change there. The ids cover the whole of V3, so no v3 path can change unrefused.
+    assert.deepEqual(Object.keys(V3_LOCK.ids).sort(), [...V3.files, ...V3.dirs.map(dir => dir.slice(0, -1))].sort());
+    for (const [path, id] of Object.entries(V3_LOCK.ids)) {
+      assert.equal(git(['rev-parse', `HEAD:${path}`])?.trim(), id, `${path} is as locked`);
     }
   });
 

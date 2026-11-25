@@ -1,14 +1,14 @@
 {
- "asOf": "2026-11-25T18:06:46Z",
- "commit": "e3d180b",
+ "asOf": "2026-11-25T21:33:46Z",
+ "commit": "9b5a0f1",
  "summary": {
-  "v4Items": 41,
+  "v4Items": 42,
   "v4Done": 17,
-  "v4InProgress": 1,
+  "v4InProgress": 2,
   "v4SignOff": 3,
   "v4ToDo": 20,
   "shipped": 74,
-  "open": 28
+  "open": 29
  },
  "phases": [
   {
@@ -166,6 +166,13 @@
      "status": "To do",
      "done": null,
      "since": "2026-11-24"
+    },
+    {
+     "id": "GATE-05",
+     "name": "v4's gate in place of v3's; frozen v3 locked",
+     "status": "In progress",
+     "done": null,
+     "since": "2026-11-25"
     },
     {
      "id": "CORE-14",
@@ -550,7 +557,7 @@
   },
   {
    "date": "2026-11-25",
-   "open": 28,
+   "open": 29,
    "shipped": 74
   }
  ]

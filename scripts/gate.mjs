@@ -12,6 +12,10 @@
  * everything. So a wrong or missing list entry fails towards running more,
  * never less.
  *
+ * Frozen v3 is locked (GATE-05, V3_LOCK): v4's gate stands in place of v3's,
+ * its suite is in no lane and runs only by hand (--lane v3), and a change to a
+ * v3 path is refused.
+ *
  *   node scripts/gate.mjs                  sort this checkout's change against
  *                                          origin/main and run what it needs
  *                                          (at the root, npm run check; from
@@ -80,6 +84,29 @@ export const A11Y = {
 export const V3 = {
   files: ['.github/SECURITY.md', '.github/SUPPORT.md'],
   dirs: ['v3/']
+};
+
+/**
+ * Frozen v3 is locked (GATE-05, D243), on the owner's word of 25 Nov 2026: "we
+ * need to advance using the v4 gate universally from now on in place of v3",
+ * and his pick of the label "Retire it: lock v3/". Its suite is in no lane CI
+ * runs (`everything` included), so v4's gate stands in its place; a change to
+ * any v3 path is refused, here and in CI. scripts/gate.test.mjs holds its code
+ * to the tag's and every v3 path to the ids below, so the lock holds even
+ * where a change cannot be read and every lane runs. Its suite still runs by
+ * hand: `node scripts/gate.mjs --lane v3`. Lifting the lock is a change to
+ * this file, which runs everything.
+ */
+export const V3_LOCK = {
+  tag: 'v3.3.726',
+  /** The tag's paths, at its root, that v3/ holds unchanged since STACK-01. */
+  unchanged: ['src', 'styles', 'scripts', 'index.html', 'build.js', 'package-lock.json'],
+  /** Git's ids of every v3 path (V3) as locked: the v3/ folder's tree and the two .github documents' blobs. */
+  ids: {
+    'v3': '33e9c5a069e8b275592cd778b6c2afc2d89e9407',
+    '.github/SECURITY.md': '299f7afe7f7d00e932c1e3c06224c4640546b78f',
+    '.github/SUPPORT.md': '07aeccaf52a8e895c2afb35298e0f3b675fb5a61'
+  }
 };
 
 /**
@@ -188,7 +215,8 @@ export const LANES = {
     commands: [[process.execPath, ['tools/check.mjs']]]
   }
 };
-const ORDER = ['gate', 'v3', 'v4', 'record'];
+// GATE-05 (V3_LOCK): frozen v3's lane is run only by hand, so it is in no order a change is sorted into.
+const ORDER = ['gate', 'v4', 'record'];
 
 /** Whether a path is on a list: one of its files, under one of its folders, or matched by one of its patterns. */
 const inList = (path, list) => list.files.includes(path) || list.dirs.some(dir => path.startsWith(dir)) ||
@@ -220,7 +248,8 @@ export function classify(path, { v4 = V4 } = {}) {
  * @param {{ v4?: { files: string[], dirs: string[] }, pages?: 'step'|'hand' }} [lists] pages: who left
  *   docs/ and version.json as the change leaves them. The step's output runs nothing of its own; a hand
  *   change is other, so it runs everything (and outside main the gate refuses it before this).
- * @returns {{ lanes: string[], reason: string, classes: Map<string, string> }}
+ * @returns {{ lanes: string[], reason: string, classes: Map<string, string>, locked: string[] }} locked: the
+ *   change's frozen v3 paths, which the gate refuses (GATE-05)
  */
 export function plan(paths, { v4 = V4, pages = 'hand' } = {}) {
   const v4Exists = v4.files.length > 0 || v4.dirs.length > 0;
@@ -230,30 +259,32 @@ export function plan(paths, { v4 = V4, pages = 'hand' } = {}) {
     return kind === 'pages' && pages !== 'step' ? 'other' : kind;
   };
   const classes = new Map((paths ?? []).map(path => [path, kindOf(path)]));
-  if (paths === null) return { lanes: everything, reason: 'the change could not be read', classes };
-  if (paths.length === 0) return { lanes: everything, reason: 'the change names no path', classes };
+  const locked = [...classes].filter(([, kind]) => kind === 'v3').map(([path]) => path);
+  if (paths === null) return { lanes: everything, reason: 'the change could not be read', classes, locked };
+  if (paths.length === 0) return { lanes: everything, reason: 'the change names no path', classes, locked };
 
   const found = new Set(classes.values());
   if (found.size === 1 && found.has('record')) {
-    return { lanes: ['record'], reason: 'every path is record-only', classes };
+    return { lanes: ['record'], reason: 'every path is record-only', classes, locked };
   }
   // PUB-01: the publishing step's own output asks for no lane; the record checker still runs on every push.
   found.delete('pages');
   if (found.size === 0 || (found.size === 1 && found.has('record'))) {
-    return { lanes: ['record'], reason: "every path is record-only or the publishing step's own output", classes };
+    return { lanes: ['record'], reason: "every path is record-only or the publishing step's own output", classes, locked };
   }
   if (found.has('other')) {
-    return { lanes: everything, reason: 'a path is outside the record, v3 and v4 lists', classes };
+    return { lanes: everything, reason: 'a path is outside the record, v3 and v4 lists', classes, locked };
   }
   // GATE-02: the publishing step's own files ask for the gate's lane, which holds the step's tests, and v4's, whose
   // dead-code check reads the scripts the workflows run. GATE-03: the gate's own test file asks for the same two: the
   // gate's lane runs it, and it pins what v4's files say.
   const ownFiles = found.has('step') || found.has('gate');
   const wants = lane => found.has(lane) || (lane === 'v4' && ownFiles && v4Exists);
-  const lanes = ['gate', ...['v3', 'v4'].filter(wants), 'record'];
+  // GATE-05 (V3_LOCK): a v3 path asks for no lane; the gate refuses it (main, below).
+  const lanes = ['gate', ...['v4'].filter(wants), 'record'];
   const touched = [...['v3', 'v4'].filter(l => found.has(l)), ...(found.has('step') ? ['the publishing step'] : []),
     ...(found.has('gate') ? ["the gate's own tests"] : [])];
-  return { lanes, reason: `the change touches ${touched.join(' and ')}`, classes };
+  return { lanes, reason: `the change touches ${touched.join(' and ')}`, classes, locked };
 }
 
 /**
@@ -554,6 +585,30 @@ export function localPaths(cwd) {
   return [...new Set([...tracked, ...splitZ(untracked)])].sort();
 }
 
+/**
+ * GATE-05: a checkout's frozen v3 paths, read apart from which lanes run. Three reads are required: the index against
+ * HEAD, the working tree against the index and untracked files; the base's diff to the working tree is added where a
+ * base can be read. A required read that fails is named in `failed`, and the checkout is refused for it (main), so a
+ * v3 change cannot pass unread; a repository with no HEAD fails the first. A committed change with no base to read
+ * against is the id test's (scripts/gate.test.mjs), after planning.
+ * @param {string} cwd
+ * @param {(args: string[], cwd: string) => string|null} read git, or a stub in the tests
+ * @returns {{ paths: string[], failed: string[] }}
+ */
+export function checkoutLocked(cwd, read = git) {
+  const reads = [
+    ['the index against HEAD', ['diff', '--cached', '--name-only', '--no-renames', '-z', 'HEAD', '--']],
+    ['the working tree against the index', ['diff', '--name-only', '--no-renames', '-z', '--']],
+    ['untracked files', ['ls-files', '--others', '--exclude-standard', '-z']]
+  ];
+  const outputs = reads.map(([name, args]) => [name, read(args, cwd)]);
+  const failed = outputs.filter(([, output]) => output === null).map(([name]) => name);
+  const base = read(['merge-base', 'origin/main', 'HEAD'], cwd)?.trim();
+  const optional = base ? read(['diff', '--name-only', '--no-renames', '-z', base, '--'], cwd) ?? '' : '';
+  const paths = [...outputs.map(([, output]) => output ?? ''), optional].flatMap(splitZ);
+  return { paths: [...new Set(paths)].filter(path => classify(path) === 'v3'), failed };
+}
+
 /** A plan in words, one line per path, for the log and the step summary. */
 export function describe({ lanes, reason, classes }, source) {
   const lines = [`gate: ${classes.size} changed path(s) (${source})`];
@@ -594,7 +649,7 @@ export function runLane(name, { env = process.env, log = console.log, lanes = LA
  * can run it in a scratch repository: cwd is the repository, log the output.
  * @returns {Promise<number>} the exit status
  */
-export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl = globalThis.fetch } = {}) {
+export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl = globalThis.fetch, read = git } = {}) {
   const has = flag => argv.includes(flag);
   const valueOf = flag => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined);
 
@@ -674,13 +729,31 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `\n**${refuse ? 'Refused' : 'Warning'}:** ${said}\n`);
   }
 
+  // GATE-05 (V3_LOCK): frozen v3 is locked, so a change to it is refused wherever the gate sorts one, a range's plan included.
+  // In a checkout the lock is read apart from which lanes run (checkoutLocked), so --all and a base that cannot be read
+  // still refuse a v3 path, and so does a staged change its working copy hides; a checkout whose required reads fail
+  // is refused, since it cannot show frozen v3 untouched.
+  const inCheckout = !has('--ci') && !has('--range');
+  const checkout = inCheckout ? checkoutLocked(cwd, read) : { paths: [], failed: [] };
+  if (checkout.failed.length) {
+    log(`gate: refused: the checkout could not be read (${checkout.failed.join(', ')}); frozen v3 cannot be shown untouched`);
+  }
+  const locked = [...new Set([...(decided.locked ?? []), ...checkout.paths])];
+  if (locked.length) {
+    const said = `frozen v3 is locked (GATE-05, the owner's word of 25 Nov 2026): v4's gate stands in place of v3's, ` +
+      `and v3's paths take no change. This change edits: ${locked.slice(0, 5).join(', ')}` +
+      (locked.length > 5 ? `, and ${locked.length - 5} more` : '') + ". Undoing the lock is the owner's call";
+    log(env.GITHUB_ACTIONS ? `::error title=Frozen v3 is locked::${said}` : `gate: refused: ${said}`);
+    if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `\n**Refused:** ${said}\n`);
+  }
+
   if (has('--ci')) {
     // Each lane's step, and each package's install, reads its own lane's output (STACK-02).
     const outputs = [`lanes=${decided.lanes.join(' ')}`, ...ORDER.map(lane => `${lane}=${decided.lanes.includes(lane)}`)];
     if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, `${outputs.join('\n')}\n`);
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `## Gate by what changed\n\n\`\`\`\n${words}\n\`\`\`\n`);
   }
-  if (refuse) return 1;
+  if (refuse || locked.length || checkout.failed.length) return 1;
   if (has('--plan')) return 0;
 
   for (const lane of decided.lanes) {

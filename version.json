@@ -1,17 +1,15 @@
 {
   "app": "Route Plotter",
-  "version": "4.0.0-preview.5",
-  "preview": 5,
-  "source": "e3d180b3d96c30fb00645754ed9cc71d508d0b03",
-  "published": "2026-11-25T19:04:13Z",
+  "version": "4.0.0-preview.6",
+  "preview": 6,
+  "source": "9b5a0f1524bd1124ff81e4ead6810d09394891d9",
+  "published": "2026-11-25T21:43:05Z",
   "address": "https://djdaojones.github.io/route-plotter/",
   "whatIsNew": [
-    "PROG-01 — the publishing step writes a client progress page from the record into each publish, at `progress/` on the site: v4 by phase, every v4 item, the record's history and the rest; plain names in `progress/names.json`; loads nothing from another site, by pull request (2026-11-25)"
+    "No item has shipped since the last publish."
   ],
   "whatToTry": [
-    "After the merge and the next publish, open https://djdaojones.github.io/route-plotter/progress/",
-    "Check the phase bars and the item table against the backlog.",
-    "Focus the chart and use the arrow keys, or open \"Show the chart's numbers\".",
-    "Run Actions → Publish → Run workflow (mode publish) twice in a row: the second run should find nothing new."
+    "Nothing visible changes in the app: this only changes which of CI's checks run, and refuses changes to frozen v3.",
+    "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
   ]
 }
