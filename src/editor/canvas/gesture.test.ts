@@ -186,13 +186,22 @@ describe('a drag through the store', () => {
   it('after a hundred moves of a third of a pixel the places are exactly those of one move by the total', () => {
     const many = scene();
     const one = scene();
-    const grab = (s: ReturnType<typeof scene>) => down(200, 160, { kind: 'point', route: s.route, id: s.a }, { route: null, points: [] });
-    const steps = Array.from({ length: 100 }, (_, i) => move(200 + (i + 1) / 3, 160 - (i + 1) / 3));
-    bound(many.store).send(grab(many), ...steps, up(200 + 100 / 3, 160 - 100 / 3));
-    bound(one.store).send(grab(one), move(200 + 100 / 3, 160 - 100 / 3), up(200 + 100 / 3, 160 - 100 / 3));
-    expect(placeOf(many.store, many.a)).toEqual(placeOf(one.store, one.a));
-    expect(placeOf(many.store, many.a)).not.toEqual({ x: 0.2, y: 0.2 });
-    expect(many.store.getState().undo).toBe('Move point');
+    const grab = (s: ReturnType<typeof scene>) => {
+      expect(s.store.select({ route: s.route, points: [s.a, s.b] }).ok).toBe(true);
+      return down(200, 160, { kind: 'point', route: s.route, id: s.a }, s.store.getState().selection);
+    };
+    // The pixels as a device adds them up: each a third of a pixel on from the last.
+    const pixels: [number, number][] = [];
+    for (let i = 0, [x, y] = [200, 160]; i < 100; i += 1) {
+      [x, y] = [x + 1 / 3, y - 1 / 3];
+      pixels.push([x, y]);
+    }
+    const [lastX, lastY] = pixels.at(-1) ?? [200, 160];
+    bound(many.store).send(grab(many), ...pixels.map(([x, y]) => move(x, y)), up(lastX, lastY));
+    bound(one.store).send(grab(one), move(lastX, lastY), up(lastX, lastY));
+    for (const id of [many.a, many.b]) expect(placeOf(many.store, id)).toEqual(placeOf(one.store, id));
+    expect(placeOf(many.store, many.b)).not.toEqual({ x: 0.6, y: 0.6 });
+    expect(many.store.getState().undo).toBe('Move points');
     expect(many.store.undo().ok).toBe(true);
     expect(many.store.getState().undo).toBeNull();
   });
