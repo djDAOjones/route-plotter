@@ -8,6 +8,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## The client progress page — the owner's word of 2026-11-25
+
+- PROG-01 — the publishing step writes a client progress page from the record into each publish, at `progress/` on the site: v4 by phase, every v4 item, the record's history and the rest; plain names in `progress/names.json`; loads nothing from another site, by pull request (2026-11-25) — see decisions
+
 ## Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
 
 - GATE-02 — the gate sorts the accessibility pack's files as v4, runs the publishing step's own files through the gate's tests and v4's gate, not v3's suite, places the measures script with v4, and fails on `main` a site change its run's record cannot vouch for; PUB-01's live trial is in its Notes, by pull request (2026-11-19) — see decisions
