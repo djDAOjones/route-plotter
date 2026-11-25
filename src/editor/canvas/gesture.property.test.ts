@@ -60,14 +60,18 @@ function counted(store: Store) {
 }
 /**
  * How many steps Undo can take back, read from the store itself: every step undone, then redone, and the selection
- * put back as it was (Redo restores each step's own), so that the run goes on from the state it was in.
+ * put back as it was (Redo restores each step's own), so that the run goes on from the state it was in. The round trip
+ * must leave the project and the selection exactly as it found them: Redo puts back the last committed project, so a
+ * project that differs from it (a cancel that left a move behind) is not repaired here unseen (Codex's list, line 12).
  */
 function depth(store: Store): number {
-  const { selection } = store.getState();
+  const { project, selection } = store.getState();
   let steps = 0;
   while (store.undo().ok) steps += 1;
   for (let each = 0; each < steps; each += 1) expect(store.redo().ok).toBe(true);
   store.select(selection);
+  expect(store.getState().project).toEqual(project);
+  expect(store.getState().selection).toEqual(selection);
   return steps;
 }
 
@@ -118,6 +122,8 @@ describe('the pointer’s binding over random event sequences', () => {
         let stepsAtDown = 0;
         for (const input of [...inputs, { kind: 'blur' } as const]) {
           const owner = binding.state();
+          const ownerEnded = owner.phase !== 'idle' && (input.kind === 'blur' || ('pointerId' in input && input.pointerId === owner.pointerId));
+          const cancelled = ownerEnded && (input.kind === 'blur' || input.kind === 'cancel' || input.kind === 'lost-capture');
           const effects = binding.send(input);
           for (const effect of effects) {
             if (effect.kind === 'capture') {
@@ -130,19 +136,21 @@ describe('the pointer’s binding over random event sequences', () => {
             // Counted at each gesture's end: an up makes at most one step (a drag's commit or a tap's command), a
             // cancel none.
             if (effect.kind === 'finish') expect(depth(store) - stepsAtDown).toBeLessThanOrEqual(1);
-            if (effect.kind === 'cancel') expect(depth(store)).toBe(stepsAtDown);
+            if (effect.kind === 'cancel') {
+              // The restore is checked first, before `depth` probes the history (Codex's list, line 12).
+              if (cancelled) {
+                const { project, selection } = store.getState();
+                expect({ project, selection }).toEqual(before);
+              }
+              expect(depth(store)).toBe(stepsAtDown);
+            }
             if (effect.kind === 'tap') reach.taps += 1;
             if (store.getState().gesture === null && owner.phase === 'dragging') {
               if (effect.kind === 'finish') reach.committed += 1;
               if (effect.kind === 'cancel') reach.cancelled += 1;
             }
           }
-          const ownerEnded = owner.phase !== 'idle' && (input.kind === 'blur' || ('pointerId' in input && input.pointerId === owner.pointerId));
-          if (ownerEnded && (input.kind === 'blur' || input.kind === 'cancel' || input.kind === 'lost-capture')) {
-            expect(effects.filter((each) => each.kind === 'cancel')).toHaveLength(1);
-            const { project, selection } = store.getState();
-            expect({ project, selection }).toEqual(before);
-          }
+          if (cancelled) expect(effects.filter((each) => each.kind === 'cancel')).toHaveLength(1);
           expect(store.getState().gesture !== null).toBe(binding.state().phase === 'dragging');
           expect(terminal).toBe(binding.state().phase === 'idle' ? taken : taken - 1);
         }
