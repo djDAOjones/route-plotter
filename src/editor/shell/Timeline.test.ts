@@ -36,7 +36,7 @@ function drawn(atMs: number, holdMs?: number) {
   });
   const editor = createEditorTransport({ transport: player, playback: () => store.playback(), announce: () => undefined, canPlay: () => false });
   const length = createLengthReader({ store, length: () => player.length(), frames: noFrames });
-  const timeline = createTimeline({ store, transport: editor, length });
+  const timeline = createTimeline({ store, transport: editor, length, opened: () => 0 });
   editor.scrub(atMs);
   return renderToStaticMarkup(createElement(Timeline, { timeline }));
 }

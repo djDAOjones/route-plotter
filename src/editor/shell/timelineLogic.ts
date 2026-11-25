@@ -14,10 +14,10 @@
 //   and never stops or starts a playing: a drag while playing moves the position and the playing goes on from there.
 // - An edit begun before a project is opened changes nothing after the open (PRS2, brief 94): its `set` and its `cancel`
 //   scrub nothing and answer "nothing changed"; its `commit` answers as before. The timeline is told of an open through
-//   `opened`, the opener's count of projects put in the store, which an edit remembers at `begin`; it never guesses one
-//   from what the store holds, so Undo or Redo in the middle of an edit leaves it alive (its cancel still scrubs back).
-//   An Open so closes the timeline's edit as it closes a store gesture. What it costs: a drag in hand when a project
-//   opens moves nothing more until the pointer is let go and pressed again.
+//   `opened`, an option that must be given: the opener's count of projects put in the store, which an edit remembers
+//   at `begin`; it never guesses one from what the store holds, so Undo or Redo in the middle of an edit leaves it alive
+//   (its cancel still scrubs back). An Open so closes the timeline's edit as it closes a store gesture. What it costs:
+//   a drag in hand when a project opens moves nothing more until the pointer is let go and pressed again.
 // - Its words are v3's: the time now and the whole time, in whole seconds as m:ss, rounded down ("0:01 of 0:02").
 import type { Scene } from '../../core/model/scene';
 import type { Begun, Result, Setting } from '../kit/controls';
@@ -106,16 +106,15 @@ export interface TimelineOptions {
   readonly length: LengthReader;
   /**
    * How many projects have been opened into the store (the opener's `opened`): an edit begun before the count changes
-   * changes nothing after. The session gives it; left out (a test of the timeline alone), no open is ever counted.
-   * Brief 94 leaned to making it required, so the typecheck refuses a session that forgets it; `Timeline.test.ts`,
-   * not on that brief's paths, makes a timeline without it (FINDING-94-timeline-test).
+   * changes nothing after. It must be given, so the typecheck refuses a session that forgets it; a test of the
+   * timeline alone, with no opener, gives `() => 0` (no open is ever counted).
    */
-  readonly opened?: () => number;
+  readonly opened: () => number;
 }
 
 const NOTHING: Result = { ok: true, changed: false };
 
-export function createTimeline({ store, transport, length, opened = () => 0 }: TimelineOptions): Timeline {
+export function createTimeline({ store, transport, length, opened }: TimelineOptions): Timeline {
   const atMs = () => store.playback().atMs;
   const read = (): number => {
     const whole = length.held();
