@@ -98,6 +98,12 @@ main {
   outline-offset: 2px !important;
 }
 
+// D224, for 2.4.12: an icon button's label stands 2 px further out than Carbon's 0.5rem, so its caret's tip (0.25rem
+// tall) stops 6 px from the button, clear of the outline above (2 px offset + 3 px) at any root font size.
+.cds--icon-tooltip {
+  --cds-popover-offset: calc(0.25rem + 6px);
+}
+
 @media (forced-colors: active) {
   :is(a, button, input, select, textarea, [tabindex]):focus-visible {
     outline-color: Highlight !important;

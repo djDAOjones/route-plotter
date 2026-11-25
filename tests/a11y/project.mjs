@@ -1119,8 +1119,31 @@ export default {
           const content = box(wrap?.querySelector('.cds--popover-content')), caret = box(wrap?.querySelector('.cds--popover-caret'));
           const icon = box(trigger?.querySelector('svg')), button = box(trigger);
           const area = (a, b) => (a && b ? Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y)) : 0);
-          return { content, caret, icon, button, overIcon: area(content, icon) + area(caret, icon), overButton: area(content, button) + area(caret, button) };
+          // Close's focus outline (Codex's list, line 10): the border box grown by the computed outline-offset plus
+          // outline-width, read from the page; null while no outline is drawn. Where the label's or the caret's box
+          // overlaps it, the overlap's rectangle, settled below by what is painted there.
+          const cs = trigger ? getComputedStyle(trigger) : null;
+          const ow = cs ? parseFloat(cs.outlineWidth) || 0 : 0, oo = cs ? parseFloat(cs.outlineOffset) || 0 : 0;
+          const grow = cs && cs.outlineStyle !== 'none' && ow > 0 ? oo + ow : null;
+          const outline = button && grow !== null ? { x: button.x - grow, y: button.y - grow, width: button.width + 2 * grow, height: button.height + 2 * grow } : null;
+          const overlap = (a, b) => { if (!a || !b) return null; const x = Math.max(a.x, b.x), y = Math.max(a.y, b.y), w = Math.min(a.x + a.width, b.x + b.width) - x, h = Math.min(a.y + a.height, b.y + b.height) - y; return w > 0 && h > 0 ? { x, y, width: w, height: h } : null; };
+          const overOutline = [overlap(content, outline), overlap(caret, outline)].filter(Boolean);
+          return { content, caret, icon, button, outline, grow, overOutline, overIcon: area(content, icon) + area(caret, icon), overButton: area(content, button) + area(caret, button) };
         }, sel);
+        // Whether the shown label paints anything inside `r`: two pictures of it, the label and its caret shown and then
+        // unpainted (inline opacity 0, no transition, each style attribute put back), equal when it paints nothing there.
+        const tipPaints = async (r) => {
+          const clip = { x: Math.floor(r.x), y: Math.floor(r.y) };
+          clip.width = Math.ceil(r.x + r.width) - clip.x; clip.height = Math.ceil(r.y + r.height) - clip.y;
+          const shown = await page.screenshot({ clip });
+          await page.evaluate(() => {
+            window.__tipKept = [...document.querySelectorAll('[role=dialog] .cds--popover-container [role=tooltip] .cds--popover-content, [role=dialog] .cds--popover-container [role=tooltip] .cds--popover-caret')].map((e) => [e, e.getAttribute('style')]);
+            for (const [e] of window.__tipKept) { e.style.setProperty('transition', 'none', 'important'); e.style.setProperty('opacity', '0', 'important'); }
+          });
+          const hidden = await page.screenshot({ clip });
+          await page.evaluate(() => { for (const [e, was] of window.__tipKept) { e.style.removeProperty('opacity'); void getComputedStyle(e).opacity; if (was === null) e.removeAttribute('style'); else e.setAttribute('style', was); } window.__tipKept = null; });
+          return { clip, paints: !shown.equals(hidden) };
+        };
         const triggerClear = [];
         const clearOf = async (how, at, bad) => {
           const c = await clearOfTrigger('[role=dialog] .cds--modal-close');
@@ -1129,7 +1152,18 @@ export default {
           if (c.overIcon > 0) bad(`${where}: the label or its caret covers ${c.overIcon.toFixed(1)} px² of Close's own icon`);
           if (c.overButton > 0) bad(`${where}: the label or its caret covers ${c.overButton.toFixed(1)} px² of the Close button's own box`);
           const r = (b) => `${b.x.toFixed(0)},${b.y.toFixed(0)} ${b.width.toFixed(0)}x${b.height.toFixed(0)}`;
-          triggerClear.push(`${where}: label ${r(c.content)}${c.caret ? `, caret ${r(c.caret)}` : ''}, icon ${r(c.icon)}, button ${r(c.button)}, 0 px² over either`);
+          let ring = '';
+          if (how === 'shown by focus') {
+            if (!c.outline) { bad(`${where}: no focus outline drawn on "Close" to measure against`); return; }
+            const settled = [];
+            for (const o of c.overOutline) {
+              const { clip, paints } = await tipPaints(o);
+              if (paints) bad(`${where}: the label or its caret paints over Close's focus outline (overlap ${r(o)}, ${(o.width * o.height).toFixed(1)} px², pixels ${r(clip)} differ with it unpainted)`);
+              settled.push(`${r(o)} overlaps it, ${(o.width * o.height).toFixed(1)} px², painted nothing there`);
+            }
+            ring = `, focus outline ${r(c.outline)} (box grown ${c.grow.toFixed(0)} px: offset plus width, read from the page)${settled.length ? `: ${settled.join(', ')}` : ', no box over it'}`;
+          }
+          triggerClear.push(`${where}: label ${r(c.content)}${c.caret ? `, caret ${r(c.caret)}` : ''}, icon ${r(c.icon)}, button ${r(c.button)}, 0 px² over either${ring}`);
         };
         const focused = () => page.evaluate(() => document.activeElement?.id || document.activeElement?.getAttribute('aria-label') || document.activeElement?.tagName || '');
         // Where the pointer really is (its last mousemove), and whether the tooltip's drawn content is what lies under it.
@@ -1295,7 +1329,7 @@ export default {
           }
           done.push(t.name);
         }
-        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, and kept, shown either way, while the pointer moves onto it and rests; held past every delay; its content no longer drawn once the focus or the pointer goes; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close, shown by focus or by hover, which obscures no words and no other control where they are painted (two pictures of each overlap, the tooltip unpainted, with and without the words' parent or the control, equal; the page still under it; the state left as found), at the run's width and at 320 px (the exception; by focus: ${byFocusMeasured.join('; ')}), and covers nothing of "Close" itself, its icon or its box (by geometry: ${triggerClear.join('; ')}), one Escape there closing Help with focus back on "Help" (D206)`);
+        record('1.4.13', !problems.length, problems.length ? problems.join('; ') : `${done.join(' and ')}: each shown by focus and by hover, and kept, shown either way, while the pointer moves onto it and rests; held past every delay; its content no longer drawn once the focus or the pointer goes; each hidden by one Escape with the pointer unmoved, focus kept and nothing else changed, except Close, shown by focus or by hover, which obscures no words and no other control where they are painted (two pictures of each overlap, the tooltip unpainted, with and without the words' parent or the control, equal; the page still under it; the state left as found), at the run's width and at 320 px (the exception; by focus: ${byFocusMeasured.join('; ')}), and covers nothing of "Close" itself, its icon or its box (by geometry), nor paints over its focus outline where the label's or caret's box overlaps it (by pixels, label shown and unpainted) (${triggerClear.join('; ')}), one Escape there closing Help with focus back on "Help" (D206)`);
       },
     },
     {
