@@ -26,7 +26,8 @@ export type EditRefusal =
 
 export const isRefusal = <T extends object>(result: T | EditRefusal): result is EditRefusal => 'refused' in result;
 
-const holds = (route: Route, pointId: string): boolean => route.points.some((point) => point.id === pointId);
+/** Whether the route holds a point with this id. */
+export const holds = (route: Route, pointId: string): boolean => route.points.some((point) => point.id === pointId);
 
 /** A new point at `place`, after the route's others; the route's first point becomes the lead's start. */
 export function addPoint(route: Route, nextId: IdSource, place: Place): { route: Route; point: string } {
@@ -37,7 +38,7 @@ export function addPoint(route: Route, nextId: IdSource, place: Place): { route:
 }
 
 /** The line joining `a` and `b`, either way, if there is one. */
-function lineBetween(route: Route, a: string, b: string): Route['lines'][number] | undefined {
+export function lineBetween(route: Route, a: string, b: string): Route['lines'][number] | undefined {
   return route.lines.find((line) => (line.from === a && line.to === b) || (line.from === b && line.to === a));
 }
 

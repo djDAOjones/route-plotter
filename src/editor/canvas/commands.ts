@@ -4,6 +4,7 @@
 // selection's last point; every other edit keeps the selection. An edit the route cannot take is the store's
 // `refused-edit`, carrying the core's refusal; a route the project does not hold is `missing`. An edit that changes
 // nothing gives back what it found, so the store makes no step; the limits are the store's check, never these.
+import * as editing from '../../core/model/commands/editing';
 import * as graph from '../../core/model/commands/graph';
 import type { EditRefusal, PenTarget, Place } from '../../core/model/commands/graph';
 import type { Route } from '../../core/model/scene';
@@ -119,5 +120,27 @@ export function setKind(routeId: string, pointId: string, kind: Point['kind']): 
   return {
     label: kind === 'stop' ? 'Make stop' : 'Make bend',
     apply: (current) => onRoute(current, routeId, (route) => keeping(graph.setKind(route, pointId, kind))),
+  };
+}
+
+/** "Delete point" or "Delete points", by how many are named. */
+const byCount = (ids: readonly string[], one: string, many: string) => (new Set(ids).size === 1 ? one : many);
+
+/**
+ * Points deleted one at a time, in the order given: a point between one line in and one line out closes up, otherwise
+ * its lines go with it. The selection is kept; the store drops what went.
+ */
+export function deletePoints(routeId: string, ids: readonly string[]): Command {
+  return {
+    label: byCount(ids, 'Delete point', 'Delete points'),
+    apply: (current) => onRoute(current, routeId, (route) => keeping(editing.deletePoints(route, ids))),
+  };
+}
+
+/** A line deleted; its points stay. */
+export function deleteLine(routeId: string, lineId: string): Command {
+  return {
+    label: 'Delete line',
+    apply: (current) => onRoute(current, routeId, (route) => keeping(editing.deleteLine(route, lineId))),
   };
 }

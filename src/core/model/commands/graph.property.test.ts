@@ -1,5 +1,5 @@
-// CORE-06: the graph's edits as a property (the pattern of scene.property.test.ts). Any sequence of stage 1's and
-// stage 2's edits from a new scene's route, with targets drawn from what the route holds and now and then from what it
+// CORE-06: the graph's edits as a property (the pattern of scene.property.test.ts). Any sequence of graph.ts's and
+// editing.ts's edits from a new scene's route, with targets drawn from what the route holds and now and then from what it
 // does not, and places anywhere in the coordinate range, its edges included, gives after every step either a refusal
 // that changed nothing (the route is frozen, so a change would throw) or a route that `checkScene` accepts. The draws
 // are counted, and the test proves at its end they reached every refusal, both coordinate edges, every edit changing
@@ -10,6 +10,7 @@ import { LIMITS } from '../../config/limits';
 import { checkScene, newRoute, newScene, type IdSource, type Route } from '../scene';
 import {
   addPoint,
+  holds,
   isRefusal,
   joinPoints,
   markPoint,
@@ -22,6 +23,7 @@ import {
   type EditRefusal,
   type Place,
 } from './graph';
+import { deleteLine, deletePoints } from './editing';
 
 const RUNS = 300;
 const MISSING = 'missing';
@@ -77,6 +79,11 @@ const editOf = fc.oneof(
     weight: 2,
   },
   { arbitrary: fc.record({ edit: fc.constant('reverse' as const), line: targetOf }), weight: 2 },
+  {
+    arbitrary: fc.record({ edit: fc.constant('delete' as const), points: fc.array(targetOf, { maxLength: 3 }) }),
+    weight: 2,
+  },
+  { arbitrary: fc.record({ edit: fc.constant('deleteLine' as const), line: targetOf }), weight: 1 },
   { arbitrary: fc.record({ edit: fc.constant('leadStart' as const), point: targetOf }), weight: 2 },
   { arbitrary: fc.record({ edit: fc.constant('mark' as const), point: targetOf, end: endOf }), weight: 2 },
   { arbitrary: fc.record({ edit: fc.constant('unmark' as const), point: targetOf, end: endOf }), weight: 2 },
@@ -115,6 +122,13 @@ function apply(route: Route, pen: string | null, edit: Edit, nextId: IdSource) {
       return wrap(setDirection(route, idOf(route.lines, edit.line), edit.to), pen);
     case 'reverse':
       return wrap(reverseLine(route, idOf(route.lines, edit.line)), pen);
+    case 'delete': {
+      const deleted = deletePoints(route, edit.points.map(point));
+      // The pen is the store's selection: a deleted pen point drops out of it, as `repairSelection` drops it.
+      return isRefusal(deleted) ? deleted : { route: deleted, pen: pen !== null && holds(deleted, pen) ? pen : null };
+    }
+    case 'deleteLine':
+      return wrap(deleteLine(route, idOf(route.lines, edit.line)), pen);
     case 'leadStart':
       return wrap(setLeadStart(route, point(edit.point)), pen);
     case 'mark':
@@ -137,7 +151,7 @@ describe('the graph’s edits, as a property', () => {
     const changedBy = new Set<Edit['edit']>();
     fc.assert(
       // Lengths drawn across the whole range (`size: 'max'`): fast-check's default favours short sequences, and with
-      // them the reach checks below failed 7 runs in 80 once the reversal joined the draws (PROBE-103/flake-*.log).
+      // them the reach checks below failed 7 runs in 80 once the reversal joined the draws (sub-chat 103).
       fc.property(fc.array(editOf, { minLength: 1, maxLength: 40, size: 'max' }), (edits) => {
         const nextId = counter('id');
         const scene = newScene(counter('s'));
@@ -168,6 +182,18 @@ describe('the graph’s edits, as a property', () => {
     expect([...reached.edges].sort((a, b) => a - b)).toEqual([LIMITS.coordinateMin, LIMITS.coordinateMax]);
     expect(reached.unchanged).toBeGreaterThan(0);
     expect(reached.changed).toBeGreaterThan(0);
-    expect([...changedBy].sort()).toEqual(['add', 'direction', 'join', 'kind', 'leadStart', 'mark', 'pen', 'reverse', 'unmark']);
+    expect([...changedBy].sort()).toEqual([
+      'add',
+      'delete',
+      'deleteLine',
+      'direction',
+      'join',
+      'kind',
+      'leadStart',
+      'mark',
+      'pen',
+      'reverse',
+      'unmark',
+    ]);
   });
 });

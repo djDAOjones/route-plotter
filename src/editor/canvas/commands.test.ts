@@ -11,6 +11,8 @@ import type { Command } from '../store/command';
 import { createStore, type Store } from '../store/store';
 import {
   addPoint,
+  deleteLine,
+  deletePoints,
   joinPoints,
   markPoint,
   penStep,
@@ -66,6 +68,9 @@ describe('the drawing commands, each one undo step', () => {
     ['penStep to a point', ({ route, c, a }) => penStep(route, c, { point: a }), 'Join points'],
     ['setDirection', ({ route, ab }) => setDirection(route, ab, 'both ways'), 'Make line two-way'],
     ['reverseLine', ({ route, ab }) => reverseLine(route, ab), 'Reverse line'],
+    ['deletePoints, one point', ({ route, b }) => deletePoints(route, [b]), 'Delete point'],
+    ['deletePoints, two points', ({ route, b, c }) => deletePoints(route, [b, c]), 'Delete points'],
+    ['deleteLine', ({ route, bc }) => deleteLine(route, bc), 'Delete line'],
     ['setLeadStart', ({ route, c }) => setLeadStart(route, c), 'Set lead start'],
     ['markPoint', ({ route, c }) => markPoint(route, c, 'end'), 'Mark as end'],
     ['unmarkPoint', ({ route, a }) => unmarkPoint(route, a, 'start'), 'Remove start mark'],
@@ -142,6 +147,34 @@ describe('the selection after a drawing command', () => {
   });
 });
 
+describe('the selection after a delete', () => {
+  it('is kept, less what went; the closed-up chain a → c; Undo gives back both', () => {
+    const { store, route, a, b, c, ab } = chain();
+    expect(store.select({ route, points: [a, b] }).ok).toBe(true);
+    const before = store.getState();
+    expect(store.dispatch(deletePoints(route, [b]))).toEqual({ ok: true, changed: true });
+    expect(store.getState().selection).toEqual({ route, points: [a] });
+    expect(routeIn(store).lines).toEqual([{ ...before.project.scene.routes[0]?.lines[0], to: c }]);
+    expect(routeIn(store).lines[0]?.id).toBe(ab);
+    expect(store.undo()).toEqual({ ok: true, changed: true });
+    expect(store.getState().project).toEqual(before.project);
+    expect(store.getState().selection).toEqual(before.selection);
+  });
+
+  it('a deleted node drops out of the selection (v3 :600), and the route stays selected', () => {
+    const { store, route, b } = chain();
+    expect(store.dispatch(deletePoints(route, [b]))).toEqual({ ok: true, changed: true });
+    expect(store.getState().selection).toEqual({ route, points: [] });
+  });
+
+  it('no points named makes no step', () => {
+    const { store, route } = chain();
+    const before = store.getState();
+    expect(store.dispatch(deletePoints(route, []))).toEqual({ ok: true, changed: false });
+    expect(store.getState()).toBe(before);
+  });
+});
+
 describe('refusals and edits that change nothing make no step', () => {
   it('a refused edit makes no step and changes nothing, carrying the core’s refusal', () => {
     const { store, route, a, b, ab } = chain();
@@ -152,6 +185,8 @@ describe('refusals and edits that change nothing make no step', () => {
       [penStep(route, 'nope', { point: a }), { refused: 'no-such-point', id: 'nope' }],
       [setDirection(route, 'nope', 'both ways'), { refused: 'no-such-line', id: 'nope' }],
       [reverseLine(route, 'nope'), { refused: 'no-such-line', id: 'nope' }],
+      [deletePoints(route, [a, 'nope']), { refused: 'no-such-point', id: 'nope' }],
+      [deleteLine(route, 'nope'), { refused: 'no-such-line', id: 'nope' }],
       [setLeadStart(route, 'nope'), { refused: 'no-such-point', id: 'nope' }],
       [markPoint(route, 'nope', 'end'), { refused: 'no-such-point', id: 'nope' }],
       [setKind(route, 'nope', 'bend'), { refused: 'no-such-point', id: 'nope' }],
