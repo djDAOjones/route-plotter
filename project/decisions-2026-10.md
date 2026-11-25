@@ -1034,37 +1034,3 @@ part advance; CROWD-08 remains open for E–G.
 **Supersedes:** none
 
 **Deferred:** none
-
-## 2026-10-15 — CROWD-08 — Sol High implements D–G with consolidated publication
-
-**Decision:** On the owner's word, GPT-6.1 Sol High implements the remaining
-CROWD-08 parts, and their releases are consolidated while tests and independent
-Astra Extra High reviews remain required.
-
-**Rationale:** The owner, verbatim: “at a timely point, switch the route plotter
-CRM task to Sol High and consolidate the releases to speed it up, while keeping
-the tests and independent reviews.” This instruction was verified in his human
-message in the coordinating chat and relayed with the implementing task's
-model/effort override. The running Part D gate was preserved through its
-successful exit: 158 files, 3770 passing tests and two existing todos, with
-shell/build/check passing. The switch takes its checkpoint there.
-
-The lead's concrete plan is independently reviewed source parts D, E, F and G,
-merged in that order, followed by one combined deployment and one release-record
-PR where feasible. This replaces GATELESS-1 condition 7's release after every
-shipping merge for these remaining parts only. Earlier release evidence and
-owner checks stand: v3.3.719's promise is not completion, v3.3.720 alone was
-waived, and v3.3.721's saved-file question is still pending. No feature or
-required verification is dropped. Fresh read-only reviewers remain
-`gpt-6-astra` at `xhigh`, round after round until approval; the implementing
-session never approves itself. Source tests, regression and browser/export
-checks, exact-head CI and final integration verification remain required.
-Focused checks run early; evidence is reused only while the code it checked
-is unchanged. The final combined runtime receives the full gate and release
-verification. The deadline and A–E priority remain PLAN-4's; changing F/G scope
-still requires the owner's word. House conventions: record the authority and
-its narrow replacement without rewriting historical decisions.
-
-**Supersedes:** 2026-10-05 — GATELESS-1 — The run goes gateless: each merge lands and ships as it goes, with Codex reviewing
-
-**Deferred:** none
