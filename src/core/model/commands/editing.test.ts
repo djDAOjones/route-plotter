@@ -257,22 +257,43 @@ describe('moving points (v3’s nudge, its sizes and clamp the page’s)', () =>
     expect(movePoints(route, [], 0.1, 0.1)).toBe(route);
     expect(movePoints(route, ['A', 'nope'], 0.1, 0)).toEqual({ refused: 'no-such-point', id: 'nope' });
   });
+
+  it('a move too small to change a coordinate gives back the same route, and the same point (Codex: 0.5 by 1e-20)', () => {
+    const route = drawn('A B', ['A>B']);
+    expect(route.points[1]).toMatchObject({ x: 0.1, y: 0.5 });
+    expect(movePoints(route, ['B'], 1e-20, 1e-20)).toBe(route);
+    const one = done(movePoints(route, ['A', 'B'], 1e-20, 0));
+    expect(one.points[0]?.x).toBe(1e-20);
+    expect(one.points[1]).toBe(route.points[1]);
+  });
 });
 
 describe('duplicating points (D238, built as written, awaiting the owner)', () => {
-  const marked = () =>
-    frozen({
-      ...drawn('A B C', ['A>B', 'B=C', 'C>A']),
+  // B a stop pausing 500 ms, C a bend, and B = C at 2.5 times: none of them a default, so a copy reset to the defaults
+  // (a stop, no pause, 1 times) fails the assertions below.
+  const marked = () => {
+    const route = drawn('A B C', ['A>B', 'B=C', 'C>A']);
+    return frozen({
+      ...route,
+      points: route.points.map((point) =>
+        point.id === 'B' ? { ...point, pauseMs: 500 } : point.id === 'C' ? { ...point, kind: 'bend' as const } : point,
+      ),
+      lines: route.lines.map((line) => (line.id === 'l2' ? { ...line, speedFactor: 2.5 } : line)),
       marks: [{ point: 'B', end: 'start' as const }],
     });
+  };
 
   it('copies each named point in the order given, 0.02 right and down, with its kind, label and pause', () => {
     const route = marked();
+    expect(route.points.slice(1).map((p) => [p.kind, p.label, p.pauseMs])).toEqual([
+      ['stop', 'B', 500],
+      ['bend', 'C', 0],
+    ]);
     const { route: after, points } = done(duplicatePoints(route, counter('d'), ['C', 'B']));
     expect(points).toEqual(['d1', 'd2']);
     expect(after.points.slice(3)).toEqual([
-      { ...route.points[2], id: 'd1', x: 0.2 + DUPLICATE_OFFSET, y: 0.5 + DUPLICATE_OFFSET },
-      { ...route.points[1], id: 'd2', x: 0.1 + DUPLICATE_OFFSET, y: 0.5 + DUPLICATE_OFFSET },
+      { id: 'd1', x: 0.2 + DUPLICATE_OFFSET, y: 0.5 + DUPLICATE_OFFSET, kind: 'bend', label: 'C', pauseMs: 0 },
+      { id: 'd2', x: 0.1 + DUPLICATE_OFFSET, y: 0.5 + DUPLICATE_OFFSET, kind: 'stop', label: 'B', pauseMs: 500 },
     ]);
     expect(after.points.slice(0, 3)).toEqual(route.points);
     expect(after.marks).toBe(route.marks);
@@ -285,6 +306,8 @@ describe('duplicating points (D238, built as written, awaiting the owner)', () =
     const { route: after } = done(duplicatePoints(route, counter('d'), ['C', 'B']));
     expect(shape(after)).toEqual(['l1:A>B', 'l2:B=C', 'l3:C>A', 'd3:d2=d1']);
     expect(after.lines.slice(0, 3)).toEqual(route.lines);
+    expect(route.lines[1]).toMatchObject({ direction: 'both ways', speedFactor: 2.5 });
+    expect(after.lines[3]).toEqual({ id: 'd3', from: 'd2', to: 'd1', direction: 'both ways', speedFactor: 2.5 });
   });
 
   it('one point gives an unjoined copy; an unknown point refuses; nothing named gives back the same route', () => {

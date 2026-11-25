@@ -3,9 +3,10 @@
 // does not, and places anywhere in the coordinate range, its edges included, gives after every step either a refusal
 // that changed nothing (the route is frozen, so a change would throw) or a route that `checkScene` accepts exactly when
 // its points stay in the coordinates' range (a move or a copy may leave it; the store then keeps the route). The draws
-// are counted, and the test proves at its end they reached every refusal, both coordinate edges, every edit changing
-// a route at least once, edits that change nothing and edits that leave the range, so the property cannot pass by never
-// refusing.
+// are counted, and the test proves at its end they reached, keyed by edit, every refusal each edit can give (each edit
+// that can refuse refused at least once, by each of its refusals, and by no other), both coordinate edges, every edit
+// changing a route at least once, edits that change nothing and edits that leave the range, so the property cannot pass
+// by never refusing.
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { LIMITS } from '../../config/limits';
@@ -29,6 +30,29 @@ import { deleteLine, deletePoints, duplicatePoints, movePoints, splitLine } from
 
 const RUNS = 300;
 const MISSING = 'missing';
+
+/**
+ * The refusals each edit can give, as `edit:refusal`: every target the edits name is drawn missing now and then
+ * (`targetOf`), and a pen step's join swallows `already-joined` and never meets `same-point`. Adding a point never
+ * refuses.
+ */
+const CAN_REFUSE = [
+  'delete:no-such-point',
+  'deleteLine:no-such-line',
+  'direction:no-such-line',
+  'duplicate:no-such-point',
+  'join:already-joined',
+  'join:no-such-point',
+  'join:same-point',
+  'kind:no-such-point',
+  'leadStart:no-such-point',
+  'mark:no-such-point',
+  'move:no-such-point',
+  'pen:no-such-point',
+  'reverse:no-such-line',
+  'split:no-such-line',
+  'unmark:no-such-point',
+];
 
 function counter(prefix: string): IdSource {
   let n = 0;
@@ -176,7 +200,7 @@ describe('the graph’s edits, as a property', () => {
   it('any sequence of edits gives, at every step, a refusal that changed nothing or a scene checkScene accepts', () => {
     // What the draws reached, over every run: proved at the end, so the property cannot pass by never refusing.
     const reached = {
-      refusals: new Set<EditRefusal['refused']>(),
+      refusals: new Set<`${Edit['edit']}:${EditRefusal['refused']}`>(),
       edges: new Set<number>(),
       unchanged: 0,
       changed: 0,
@@ -194,7 +218,7 @@ describe('the graph’s edits, as a property', () => {
         for (const edit of edits) {
           const result = apply(route, pen, edit, nextId);
           if (isRefusal(result)) {
-            reached.refusals.add(result.refused);
+            reached.refusals.add(`${edit.edit}:${result.refused}`);
             continue;
           }
           // A move or a copy may leave the coordinates' range, which no edit checks: checkScene refuses exactly that
@@ -221,7 +245,8 @@ describe('the graph’s edits, as a property', () => {
       }),
       { numRuns: RUNS },
     );
-    expect([...reached.refusals].sort()).toEqual(['already-joined', 'no-such-line', 'no-such-point', 'same-point']);
+    // Keyed by edit: one edit's `no-such-line` cannot stand in for another that never refused (Codex, CORE-06 list 5).
+    expect([...reached.refusals].sort()).toEqual(CAN_REFUSE);
     expect([...reached.edges].sort((a, b) => a - b)).toEqual([LIMITS.coordinateMin, LIMITS.coordinateMax]);
     expect(reached.unchanged).toBeGreaterThan(0);
     expect(reached.changed).toBeGreaterThan(0);

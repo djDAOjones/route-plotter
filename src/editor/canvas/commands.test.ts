@@ -132,7 +132,7 @@ describe('the selection after a drawing command', () => {
     expect(store.getState().undo).toBeNull();
   });
 
-  it('a point added is selected alone; every other edit keeps the selection', () => {
+  it('a point added is selected alone; the seven edits listed here keep the selection (insert and duplicate select what they make: below)', () => {
     const { store, route, a, b, c, ab } = chain();
     expect(store.dispatch(addPoint(route, stop(0.2, 0.8))).ok).toBe(true);
     const added = routeIn(store).points.at(-1)?.id;

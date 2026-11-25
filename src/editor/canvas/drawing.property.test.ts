@@ -1,9 +1,13 @@
 // CORE-06: what the drawing commands make, Save keeps and Open gives back (v3's authorable-is-loadable,
 // `authorableLoadable.test.js`). Any sequence of the store's drawing commands, from a route whose stops carry labels
 // and pauses, gives after every step a project that `saveProject` saves and `openProject` opens to the same project.
+// Its targets are drawn from what the route holds and now and then missing, and it proves at its end that every
+// command made a step and, keyed by command, gave every refusal it can give, so it cannot pass by refusing them all or
+// by never refusing.
 // v3's two boundary cases, ported by their meaning: a point authored outside the image loads again
-// (`authorableLoadable.test.js` :232: here the coordinates' own edges), and what the editor takes at the limit reopens
-// (`networkBudget.test.js` :132: a path at its limit takes one more by the pen, and the project reopens with it). The
+// (`authorableLoadable.test.js` :232: here the coordinates' own edges), and, from `networkBudget.test.js` :132, that a
+// large route takes one more point by the pen and the project reopens with it: a route of 5,000 points with 10,000
+// lines, which proves that much and not v3's exact boundary (255 points taking a 256th). The
 // limit (the stage plan's ruling 6): the binding one is Open's 100,000 values, measured by
 // src/adapters/io/project.property.test.ts — 5,000 points with 10,000 lines save, 5,500 with 11,000 do not — so a
 // scene at the model's own limits (10,000 points, 20,000 lines) is one the store accepts and Save refuses, in words.
@@ -20,6 +24,30 @@ import { createStore, type Store } from '../store/store';
 import * as commands from './commands';
 
 const RUNS = 100;
+const MISSING = 'missing';
+
+/**
+ * The refusals each command can give, as `command:refusal`: every target is drawn missing now and then (`at`). The
+ * pen stands on the selection's last point, which the store keeps on the route, and its join swallows
+ * `already-joined`; adding a point never refuses.
+ */
+const CAN_REFUSE = [
+  'delete:no-such-point',
+  'deleteLine:no-such-line',
+  'direction:no-such-line',
+  'duplicate:no-such-point',
+  'join:already-joined',
+  'join:no-such-point',
+  'join:same-point',
+  'kind:no-such-point',
+  'leadStart:no-such-point',
+  'mark:no-such-point',
+  'move:no-such-point',
+  'pen:no-such-point',
+  'reverse:no-such-line',
+  'split:no-such-line',
+  'unmark:no-such-point',
+];
 
 function counter(prefix: string): IdSource {
   let n = 0;
@@ -59,7 +87,11 @@ async function reopened(project: Project) {
   return openProject(saved.bytes, decodeHeader);
 }
 
-const at = fc.nat(30);
+/** Something the route holds, by its place in the list (wrapped), or, now and then, an id it does not hold. */
+const at = fc.oneof(
+  { arbitrary: fc.nat(30), weight: 8 },
+  { arbitrary: fc.constant(MISSING), weight: 2 },
+);
 const ats = fc.array(at, { maxLength: 3 });
 const coordinateOf = fc.oneof(
   fc.constantFrom(LIMITS.coordinateMin, LIMITS.coordinateMax),
@@ -87,13 +119,14 @@ const intentOf = fc.oneof(
 );
 type Intent = typeof intentOf extends fc.Arbitrary<infer T> ? T : never;
 
-const idAt = (items: readonly { readonly id: string }[], i: number) => items[i % Math.max(1, items.length)]?.id ?? 'none';
+const idAt = (items: readonly { readonly id: string }[], i: number | typeof MISSING) =>
+  i === MISSING ? MISSING : (items[i % Math.max(1, items.length)]?.id ?? MISSING);
 
 /** The store's command for `intent`, its targets taken from what the route holds now. */
 function commandFor(store: Store, intent: Intent): Command {
   const route = routeIn(store);
-  const point = (i: number) => idAt(route.points, i);
-  const line = (i: number) => idAt(route.lines, i);
+  const point = (i: number | typeof MISSING) => idAt(route.points, i);
+  const line = (i: number | typeof MISSING) => idAt(route.lines, i);
   const r = route.id;
   switch (intent.c) {
     case 'add':
@@ -133,12 +166,14 @@ function commandFor(store: Store, intent: Intent): Command {
 describe('what the drawing commands make, Save keeps and Open gives back', () => {
   it('any sequence of drawing commands gives, after every step, a project that saves and opens the same', async () => {
     const stepped = new Set<Intent['c']>();
+    const refused = new Set<string>();
     await fc.assert(
       fc.asyncProperty(fc.array(intentOf, { minLength: 1, maxLength: 20, size: 'max' }), async (intents) => {
         const store = storeOf(4);
         for (const intent of intents) {
           const outcome = store.dispatch(commandFor(store, intent));
           if (outcome.ok && outcome.changed) stepped.add(intent.c);
+          if (!outcome.ok && outcome.refusal.why === 'refused-edit') refused.add(`${intent.c}:${outcome.refusal.refusal.refused}`);
           const { project } = store.getState();
           expect(await reopened(project)).toEqual({ ok: true, project });
         }
@@ -147,6 +182,8 @@ describe('what the drawing commands make, Save keeps and Open gives back', () =>
     );
     // Every command made a step at least once, so the property cannot pass by refusing them all.
     expect(stepped.size).toBe(14);
+    // Keyed by command: one command's `no-such-line` cannot stand in for another that never refused (Codex, CORE-06 list 5).
+    expect([...refused].sort()).toEqual(CAN_REFUSE);
   });
 
   it('a point at the coordinates’ edges, outside the image, saves and opens again (v3 authorableLoadable :232)', async () => {
@@ -164,7 +201,9 @@ describe('what the drawing commands make, Save keeps and Open gives back', () =>
     expect(await reopened(project)).toEqual({ ok: true, project });
   });
 
-  it('a route of 5,000 points with 10,000 lines takes one more by the pen, and reopens with it (v3 networkBudget :132)', async () => {
+  // Ported from v3's networkBudget :132 by its meaning only: a large route takes one more point and reopens. It does not
+  // test v3's exact boundary (255 points taking a 256th): v4's limits differ (the header above).
+  it('a large route, 5,000 points with 10,000 lines, takes one more by the pen, and reopens with it (not v3’s 255 to 256 boundary)', async () => {
     const store = storeOf(5_000, 10_000);
     const last = routeIn(store).points.at(-1)?.id ?? null;
     expect(store.dispatch(commands.penStep(routeIn(store).id, last, { place: { x: 0.5, y: 0.9, kind: 'stop' } }))).toEqual({

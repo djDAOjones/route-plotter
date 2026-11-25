@@ -94,17 +94,23 @@ export function splitLine(
 
 /**
  * Points moved by the same amount, in image fractions. Nothing is clamped here: v3's nudge sizes and its clamp to the
- * image at a zoom of 1 or more are the page's, which works out the amounts; `checkScene` holds the range.
+ * image at a zoom of 1 or more are the page's, which works out the amounts; `checkScene` holds the range. A point whose
+ * coordinates the move leaves as they were (by 0, or by an amount too small to change them) stays the same object, and
+ * when none changes the route given is given back.
  */
 export function movePoints(route: Route, ids: readonly string[], dx: number, dy: number): Route | EditRefusal {
   const refusal = unheld(route, ids);
   if (refusal !== undefined) return refusal;
-  if ((dx === 0 && dy === 0) || ids.length === 0) return route;
   const moving = new Set(ids);
-  const points = route.points.map((point) =>
-    moving.has(point.id) ? { ...point, x: point.x + dx, y: point.y + dy } : point,
-  );
-  return { ...route, points };
+  let moved = false;
+  const points = route.points.map((point) => {
+    if (!moving.has(point.id)) return point;
+    const [x, y] = [point.x + dx, point.y + dy];
+    if (x === point.x && y === point.y) return point;
+    moved = true;
+    return { ...point, x, y };
+  });
+  return moved ? { ...route, points } : route;
 }
 
 /** How far right and down a copy stands from what it copies (v3's Duplicate: 2% of the image each way). */
