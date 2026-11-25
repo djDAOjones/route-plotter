@@ -211,6 +211,13 @@ const strokeAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y]) => 
   return best;
 }, [fx, fy]);
 const near = (p, rgb) => p[3] > 200 && rgb.every((v, i) => Math.abs(p[i] - v) <= 24);
+// True once the canvas is its box times the ratio (to a pixel), within 3 s. CORE-06 (brief 111): Open's busy notice
+// takes room from the box while a project opens and gives it back when it goes, so a frame drawn just after an open
+// may be at the smaller size; two captures compared by their pixels are taken at the box's settled size.
+const sizeSettled = (page) => page.waitForFunction((sel) => {
+  const c = document.querySelector(sel), box = c.parentElement.getBoundingClientRect(), s = Math.min(devicePixelRatio, 3);
+  return Math.abs(c.width - box.width * s) <= 1 && Math.abs(c.height - box.height * s) <= 1;
+}, CANVAS, { timeout: 3000 }).then(() => true, () => false);
 const boxOf = (page) => page.locator(PREVIEW).evaluate((e) => { const r = e.getBoundingClientRect(); return { width: r.width, height: r.height, ratio: devicePixelRatio }; });
 // Two frames on, so a frame booked by what just happened has been drawn.
 const twoFrames = (page) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
@@ -1643,12 +1650,14 @@ export default {
         await page.locator(PLAY).click();
         const done = await page.waitForFunction(([st, w]) => document.querySelector(st)?.textContent === w, [STATUS, COMPLETE], { timeout: 12000 }).then(() => true, () => false);
         if (!done) wrong.push(`"${COMPLETE}" was not said`);
+        if (!(await sizeSettled(page))) wrong.push('at "Animation complete" the canvas was not its box times the ratio');
         await twoFrames(page);
         const ended = await pixels(page);
         const middle = await strokeAt(page, 0.5, 0.5);
         await open('shell');
-        if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) wrong.push('the second open failed');
+        if (!(await choose(page, await projectFile())) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the second open failed');
         await page.keyboard.press('End');
+        if (!(await sizeSettled(page))) wrong.push('after End the canvas was not its box times the ratio');
         await twoFrames(page);
         const byEnd = await pixels(page);
         if (ended.hash !== byEnd.hash) wrong.push('at "Animation complete" the canvas is not what End draws from a fresh open');
