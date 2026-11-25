@@ -42,6 +42,11 @@
     outline-color: Highlight !important;
   }
 }
+/* CORE-06 (Codex's line 14, brief 111): the centre column stands at the top of its row, its height its own content's,
+   not stretched to a taller side column's, so the preview's room (Preview.tsx's point 5) is the room it leaves. */
+.frame__column--centre {
+  align-self: start;
+}
 .frame__region + .frame__region {
   margin-block-start: 2rem;
 }

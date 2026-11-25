@@ -27,9 +27,12 @@
 //    slot and no taller than the room the rest of its column leaves (`previewRoom`), so the play bar and timeline under
 //    it stay in sight; its width then follows the shape. Its column is the frame's column holding the preview's region
 //    (the box's parent's parent, Frame.tsx). The room is measured from the column (the box's height and
-//    where the column ends), again whenever the column or the window changes size, and handed to the box's style as
-//    `--preview-room`; where the window is too short for that, the box keeps its former least, two fifths of the
-//    window's height. The composer fits the picture (or, with none, the square the scene measures as) inside the frame. The bands about a picture are the background's white margin, drawn over the whole
+//    where the column's own content ends, never a taller side column's end), again whenever the column, the frame
+//    holding it (the notice above the columns shown or dismissed) or the window changes size (`watchRoom`), and handed
+//    to the box's style as `--preview-room`; where the window is too short for that, the box keeps a least of three
+//    tenths of the window's height (brief 111: two fifths, 288 px at 720, pushed the play bar out of sight under Open's
+//    notice; three tenths leaves it in sight). The composer fits the picture (or, with none, the square the scene
+//    measures as) inside the frame. The bands about a picture are the background's white margin, drawn over the whole
 //    frame before the picture as the export draws it (background.ts); with no picture shown the canvas holds nothing
 //    there and the box's own background shows.
 import { useEffect, useRef, useSyncExternalStore } from 'react';
@@ -49,7 +52,7 @@ export interface PreviewProps {
 export const PREVIEW_NAME = 'Route animation preview';
 
 /** The least height the box takes, in `vh`, when the room left is smaller (point 5). */
-export const PREVIEW_LEAST_VH = 40;
+export const PREVIEW_LEAST_VH = 30;
 
 /**
  * The height the box may take (point 5), in CSS pixels: the window's height less everything else in its column, from
@@ -58,6 +61,62 @@ export const PREVIEW_LEAST_VH = 40;
  */
 export function previewRoom(windowHeight: number, columnEnd: number, box: number): number {
   return Math.max(0, Math.floor(windowHeight - (columnEnd - box)));
+}
+
+/** What `watchRoom` reads of an element: its box on the page now. */
+export interface RoomElement {
+  getBoundingClientRect(): { readonly bottom: number; readonly height: number };
+}
+/** The preview's box, whose style takes the room. */
+export interface RoomBox extends RoomElement {
+  readonly style: { getPropertyValue(name: string): string; setProperty(name: string, value: string): void };
+}
+/** The box's column: what stands in it, and the frame holding it. */
+export interface RoomColumn extends RoomElement {
+  readonly children: ArrayLike<RoomElement>;
+  readonly parentElement: RoomElement | null;
+}
+/** What `watchRoom` takes of the window (the page's own `window`, or a stand-in in Node). */
+export interface RoomWindow {
+  readonly innerHeight: number;
+  readonly scrollY: number;
+  addEventListener(type: 'resize', listener: () => void): void;
+  removeEventListener(type: 'resize', listener: () => void): void;
+  setTimeout(handler: () => void, timeout: number): number;
+  clearTimeout(id: number): void;
+  readonly ResizeObserver: new (callback: () => void) => { observe(target: RoomElement): void; disconnect(): void };
+}
+
+/**
+ * Keeps the box's `--preview-room` (point 5) up to date: measured in a task of its own after the column, the frame
+ * holding it or the window changes size, so setting it never resizes what is being observed within the observer's own
+ * call. The frame is watched for the notice above the columns (Frame.tsx): shown or dismissed, it moves the column
+ * without resizing it, and grows or shrinks the frame. The column ends where its own content ends (its last child's
+ * bottom, or its own with nothing in it), never at a bottom stretched to a taller side column. Gives back what stops it.
+ */
+export function watchRoom(box: RoomBox, column: RoomColumn, win: RoomWindow): () => void {
+  let pending: number | null = null;
+  const measure = () => {
+    pending = null;
+    let end = column.children.length ? -Infinity : column.getBoundingClientRect().bottom;
+    for (let i = 0; i < column.children.length; i += 1) end = Math.max(end, column.children[i]?.getBoundingClientRect().bottom ?? end);
+    const room = previewRoom(win.innerHeight, end + win.scrollY, box.getBoundingClientRect().height);
+    const value = `${String(room)}px`;
+    if (box.style.getPropertyValue('--preview-room') !== value) box.style.setProperty('--preview-room', value);
+  };
+  const soon = () => {
+    pending ??= win.setTimeout(measure, 0);
+  };
+  const observer = new win.ResizeObserver(soon);
+  observer.observe(column);
+  if (column.parentElement) observer.observe(column.parentElement);
+  win.addEventListener('resize', soon);
+  soon();
+  return () => {
+    if (pending !== null) win.clearTimeout(pending);
+    win.removeEventListener('resize', soon);
+    observer.disconnect();
+  };
 }
 
 const surface = (size: { width: number; height: number }): Surface => {
@@ -122,31 +181,12 @@ export function Preview({ drawer, inputs, subscribe }: PreviewProps) {
     };
   }, [drawer, inputs]);
 
-  // The room left (point 5): measured in a task of its own after the column or the window changes size, so setting it
-  // never resizes what is being observed within the observer's own call.
+  // The room left (point 5).
   useEffect(() => {
     const element = boxRef.current;
     const column = element?.parentElement?.parentElement;
     if (!element || !column) return undefined;
-    let pending: ReturnType<typeof setTimeout> | null = null;
-    const measure = () => {
-      pending = null;
-      const room = previewRoom(innerHeight, column.getBoundingClientRect().bottom + scrollY, element.getBoundingClientRect().height);
-      const value = `${String(room)}px`;
-      if (element.style.getPropertyValue('--preview-room') !== value) element.style.setProperty('--preview-room', value);
-    };
-    const soon = () => {
-      pending ??= setTimeout(measure, 0);
-    };
-    const observer = new ResizeObserver(soon);
-    observer.observe(column);
-    addEventListener('resize', soon);
-    soon();
-    return () => {
-      if (pending !== null) clearTimeout(pending);
-      removeEventListener('resize', soon);
-      observer.disconnect();
-    };
+    return watchRoom(element, column, window);
   }, []);
 
   // As wide as the slot, and no wider than the room left (or the least, if more) times the shape (point 5).

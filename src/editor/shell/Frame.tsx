@@ -6,7 +6,7 @@
 // covers a focused control (2.4.12). Then the page's `main`: the named slots, each a node or nothing. A slot not filled
 // draws nothing at all: no empty landmark, heading or column. A filled one stands in a region named by its visible
 // heading. Where each stands (brief 69's ruling 6, to be confirmed by the owner when the first is filled): a left
-// column, the outline over the points list; the centre, today's paragraph and the preview over the play bar; a right
+// column, the outline over the points list; the centre, the preview over the play bar; a right
 // column, the panels over the export panel. Reading and focus order: header, outline, points list, preview, play bar,
 // panels, export panel; at a narrow width one column in that same order (frameLook.css). With only the centre filled,
 // the centre takes the page.
@@ -14,6 +14,8 @@
 // before Help (Help stays last, at the header's end, as v3's was), and `notice`, first in `main`, before the columns and
 // across their whole width, in a plain `div` (no landmark, no heading: an alert names itself). Reading order: header,
 // name, Open, Help; then the notice, then the columns.
+// CORE-06 (D209): the centre's paragraph is gone, and with it the slot that held it. The centre column stands at the
+// top of its row (frameLook.css), its height its own content's, never a taller neighbour's.
 import { Content, Header } from '@carbon/react';
 import type { ReactNode } from 'react';
 import './frameLook.css';
@@ -25,8 +27,6 @@ export interface FrameProps {
   readonly open?: ReactNode;
   /** Open's notice: first in `main`, across the columns. */
   readonly notice?: ReactNode;
-  /** Today's paragraph, in the centre above the preview (stage 6 replaces it). */
-  readonly intro?: ReactNode;
   readonly outline?: ReactNode;
   readonly pointsList?: ReactNode;
   readonly preview?: ReactNode;
@@ -75,7 +75,7 @@ function column(place: string, regions: readonly ReactNode[]): ReactNode {
   return shown.length ? <div className={`frame__column frame__column--${place}`}>{shown}</div> : null;
 }
 
-export function Frame({ help, open, notice, intro, outline, pointsList, preview, transport, panels, exportPanel, children }: FrameProps) {
+export function Frame({ help, open, notice, outline, pointsList, preview, transport, panels, exportPanel, children }: FrameProps) {
   const left = column('left', [region('outline', outline), region('pointsList', pointsList)]);
   const right = column('right', [region('panels', panels), region('exportPanel', exportPanel)]);
   const sides = [left !== null && 'frame--left', right !== null && 'frame--right'].filter(Boolean).join(' ');
@@ -94,7 +94,6 @@ export function Frame({ help, open, notice, intro, outline, pointsList, preview,
         {filled(notice) && <div className="frame__notice">{notice}</div>}
         {left}
         <div className="frame__column frame__column--centre">
-          {intro}
           {region('preview', preview)}
           {filled(transport) && transport}
         </div>

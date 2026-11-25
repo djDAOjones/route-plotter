@@ -189,11 +189,12 @@ const BLUE = [51, 102, 204]; // #3366cc, the plain picture's
 // 1.4.11 (finding 85, ruled; D200): the preview is set aside from the contrast check on every state that shows it. Its
 // pixels are the user's own picture and routes in their own colours, as the export draws them (1.4.11's essential
 // presentation). CORE-06 (brief 109) draws the editor's own marks on the same canvas (its points, its lines and the
-// selection's rings), never in an SVG or the DOM over it, so they stand inside this set-aside; the pixel journey that
-// measures them is the next chat's (E2). The count is reviewed: the graphics standing in the preview on every state
+// selection's rings), never in an SVG or the DOM over it. They are left out of the probe only because they share the
+// canvas with the user's picture, and sharing it establishes nothing of their contrast: that is still to be measured,
+// by the next chat's (E2) pixel journey, not built yet. The count is reviewed: the graphics standing in the preview on every state
 // that declares it, now the canvas alone (the box is a toolbar, no longer an image). A different number found fails
 // 1.4.11, so a change to what stands there changes it.
-const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 1, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); the editor's own marks (points, lines, the selection's rings) are drawn on the same canvas, and a pixel journey measures them" }];
+const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 1, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); the editor's own marks (points, lines, the selection's rings) are left out only because they are drawn on the same canvas; their contrast is not measured yet, and is still to be measured by a pixel journey (E2)" }];
 const pixels = (page) => page.locator(CANVAS).evaluate((c) => {
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   let hash = 0, drawn = 0;
