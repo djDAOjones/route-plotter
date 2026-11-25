@@ -585,6 +585,26 @@ export function localPaths(cwd) {
   return [...new Set([...tracked, ...splitZ(untracked)])].sort();
 }
 
+/**
+ * GATE-05: a checkout's frozen v3 paths, read apart from which lanes run: the index against HEAD, the working tree
+ * against the index, untracked files, and the base's diff to the working tree where a base can be read. So `--all`, a
+ * base that cannot be read and a staged change hidden by its working copy are refused as any other v3 change is; a
+ * committed change with no base to read against is the id test's (scripts/gate.test.mjs).
+ * @param {string} cwd
+ * @returns {string[]}
+ */
+export function checkoutLocked(cwd) {
+  const reads = [
+    ['diff', '--cached', '--name-only', '--no-renames', '-z', 'HEAD', '--'],
+    ['diff', '--name-only', '--no-renames', '-z', '--'],
+    ['ls-files', '--others', '--exclude-standard', '-z']
+  ];
+  const base = git(['merge-base', 'origin/main', 'HEAD'], cwd)?.trim();
+  if (base) reads.push(['diff', '--name-only', '--no-renames', '-z', base, '--']);
+  const paths = reads.flatMap(args => splitZ(git(args, cwd) ?? ''));
+  return [...new Set(paths)].filter(path => classify(path) === 'v3');
+}
+
 /** A plan in words, one line per path, for the log and the step summary. */
 export function describe({ lanes, reason, classes }, source) {
   const lines = [`gate: ${classes.size} changed path(s) (${source})`];
@@ -706,7 +726,10 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
   }
 
   // GATE-05 (V3_LOCK): frozen v3 is locked, so a change to it is refused wherever the gate sorts one, a range's plan included.
-  const locked = decided.locked ?? [];
+  // In a checkout the lock is read apart from which lanes run (checkoutLocked), so --all and a base that cannot be read
+  // still refuse a v3 path, and so does a staged change its working copy hides.
+  const inCheckout = !has('--ci') && !has('--range');
+  const locked = [...new Set([...(decided.locked ?? []), ...(inCheckout ? checkoutLocked(cwd) : [])])];
   if (locked.length) {
     const said = `frozen v3 is locked (GATE-05, the owner's word of 25 Nov 2026): v4's gate stands in place of v3's, ` +
       `and v3's paths take no change. This change edits: ${locked.slice(0, 5).join(', ')}` +

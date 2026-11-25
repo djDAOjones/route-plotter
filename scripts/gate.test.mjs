@@ -1321,6 +1321,71 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
     }
   });
 
+  test("the checkout's lock holds under --all and where the base cannot be read, uncommitted files included (GATE-05)",
+    async () => {
+      const repo = site();
+      const local = async argv => {
+        const said = [];
+        const status = await gate(argv, {}, { cwd: repo.dir, log: line => said.push(line) });
+        return { status, said: said.join('\n') };
+      };
+      try {
+        repo.run(['switch', '-q', '-c', 'work']);
+        assert.equal((await local(['--all', '--plan'])).status, 0);
+        repo.write('v3/new.txt', 'untracked');
+        // --all still asks for every lane, and refuses the locked path.
+        let result = await local(['--all', '--plan']);
+        assert.equal(result.status, 1, result.said);
+        assert.match(result.said, /gate: runs .*v4's gate.*the record checker/);
+        assert.match(result.said, /gate: refused: frozen v3 is locked .*v3\/new\.txt/);
+        // With no base to read against, the change runs everything and is still refused.
+        repo.run(['update-ref', '-d', 'refs/remotes/origin/main']);
+        result = await local(['--plan']);
+        assert.equal(result.status, 1, result.said);
+        assert.match(result.said, /the change could not be read/);
+        assert.match(result.said, /gate: refused: frozen v3 is locked .*v3\/new\.txt/);
+      } finally {
+        repo.done();
+      }
+    });
+
+  test("a staged change to frozen v3 is refused though its working copy is put back (GATE-05)", async () => {
+    const repo = site();
+    const local = async () => {
+      const said = [];
+      const status = await gate(['--plan'], {}, { cwd: repo.dir, log: line => said.push(line) });
+      return { status, said: said.join('\n') };
+    };
+    try {
+      repo.write('.github/SUPPORT.md', 'help\n');
+      const base = repo.commit('support');
+      repo.run(['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+      repo.run(['switch', '-q', '-c', 'work']);
+      assert.equal((await local()).status, 0);
+      const refused = async () => {
+        const result = await local();
+        assert.equal(result.status, 1, result.said);
+        assert.match(result.said, /gate: refused: frozen v3 is locked .*\.github\/SUPPORT\.md/);
+      };
+      // Staged, its working copy put back to the base's.
+      repo.write('.github/SUPPORT.md', 'changed\n');
+      repo.run(['add', '.github/SUPPORT.md']);
+      repo.write('.github/SUPPORT.md', 'help\n');
+      await refused();
+      // Committed, its revert staged and the working copy matching: only the index against HEAD shows it.
+      repo.write('.github/SUPPORT.md', 'changed\n');
+      repo.commit('a v3 change');
+      repo.run(['checkout', '-q', base, '--', '.github/SUPPORT.md']);
+      await refused();
+      // Committed, the working copy alone put back: only the working tree against the index shows it.
+      repo.run(['reset', '-q', '--hard']);
+      repo.write('.github/SUPPORT.md', 'help\n');
+      await refused();
+    } finally {
+      repo.done();
+    }
+  });
+
   test("frozen v3's code is the tag's, byte for byte (GATE-05)", () => {
     const tagged = git(['rev-parse', '--verify', '--quiet', `refs/tags/${V3_LOCK.tag}^{commit}`]);
     assert.ok(tagged, `the tag ${V3_LOCK.tag} is in this checkout (CI fetches every tag)`);
