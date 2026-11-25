@@ -278,7 +278,17 @@ describe('a drag through the store', () => {
       const { send, binding } = bound(store);
       send(down(200, 160, { kind: 'point', route, id: a }, before.selection), move(260, 200), move(320, 260));
       expect(store.getState().selection.points).toEqual([c, b, a]);
-      expect(placeOf(store, b)).not.toEqual({ x: 0.6, y: 0.6 });
+      // All three at their moved places before the ending (120 by 100 pixels: 0.12 by 0.125 of the image), so the
+      // restore below is proved for each of them, not only for the one the drag happened to move.
+      const moved = [
+        [a, 0.32, 0.325],
+        [b, 0.72, 0.725],
+        [c, 0.62, 0.225],
+      ] as const;
+      for (const [id, x, y] of moved) {
+        expect(placeOf(store, id)?.x).toBeCloseTo(x, 12);
+        expect(placeOf(store, id)?.y).toBeCloseTo(y, 12);
+      }
       send(ender(kind));
       expect(snapshot(store)).toEqual(before);
       expect([placeOf(store, a), placeOf(store, b), placeOf(store, c)]).toEqual([

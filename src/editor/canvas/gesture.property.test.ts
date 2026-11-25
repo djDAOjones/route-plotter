@@ -2,7 +2,8 @@
 // a small route. After every event: the store's gesture is open exactly while the machine drags; every down the machine
 // took ends in exactly one `finish` or one `cancel`, and every store gesture it opened in exactly one commit or one
 // cancel, never both and never two; a cancel, a lost capture or a blur of the owning pointer leaves the project and the
-// selection as they were before its down; and the undo history grows by at most one step a gesture.
+// selection as they were before its down; and the undo history grows, from a gesture's down to its end, by at most one
+// step for a gesture ended by its up and by none for one ended by a cancel, a lost capture or a blur.
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import type { Project } from '../../adapters/io/format';
@@ -57,6 +58,18 @@ function counted(store: Store) {
   };
   return { wrapped, tally };
 }
+/**
+ * How many steps Undo can take back, read from the store itself: every step undone, then redone, and the selection
+ * put back as it was (Redo restores each step's own), so that the run goes on from the state it was in.
+ */
+function depth(store: Store): number {
+  const { selection } = store.getState();
+  let steps = 0;
+  while (store.undo().ok) steps += 1;
+  for (let each = 0; each < steps; each += 1) expect(store.redo().ok).toBe(true);
+  store.select(selection);
+  return steps;
+}
 
 /** One random event, from pointer 1 or 2, of any kind; a down names a point, a line or nothing under it. */
 const anInput = (route: string, ids: readonly string[]) => {
@@ -102,6 +115,7 @@ describe('the pointer’s binding over random event sequences', () => {
         let taken = 0;
         let terminal = 0;
         let before: { project: unknown; selection: unknown } | null = null;
+        let stepsAtDown = 0;
         for (const input of [...inputs, { kind: 'blur' } as const]) {
           const owner = binding.state();
           const effects = binding.send(input);
@@ -110,8 +124,13 @@ describe('the pointer’s binding over random event sequences', () => {
               taken += 1;
               const { project, selection } = store.getState();
               before = { project, selection };
+              stepsAtDown = depth(store);
             }
             if (effect.kind === 'finish' || effect.kind === 'cancel') terminal += 1;
+            // Counted at each gesture's end: an up makes at most one step (a drag's commit or a tap's command), a
+            // cancel none.
+            if (effect.kind === 'finish') expect(depth(store) - stepsAtDown).toBeLessThanOrEqual(1);
+            if (effect.kind === 'cancel') expect(depth(store)).toBe(stepsAtDown);
             if (effect.kind === 'tap') reach.taps += 1;
             if (store.getState().gesture === null && owner.phase === 'dragging') {
               if (effect.kind === 'finish') reach.committed += 1;
@@ -128,9 +147,6 @@ describe('the pointer’s binding over random event sequences', () => {
           expect(terminal).toBe(binding.state().phase === 'idle' ? taken : taken - 1);
         }
         expect(tally.ends.every((count) => count === 1)).toBe(true);
-        let steps = 0;
-        while (store.undo().ok) steps += 1;
-        expect(steps).toBeLessThanOrEqual(taken);
       }),
       { numRuns: 300 },
     );
