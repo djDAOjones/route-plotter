@@ -69,6 +69,16 @@ describe('every change is a command, checked by the declarations', () => {
     expect(store.dispatch(removeRoute('nope'))).toEqual(missing('route nope'));
   });
 
+  it('a drawing edit the route cannot take is refused as refused-edit, carrying the core’s refusal (CORE-06)', () => {
+    const { project } = oneStop();
+    const store = storeOf(project);
+    const before = store.getState();
+    const refusal = { refused: 'no-such-point', id: 'nope' } as const;
+    const command: Command = { label: 'Join points', apply: () => ({ why: 'refused-edit', refusal }) };
+    expect(store.dispatch(command)).toEqual({ ok: false, refusal: { why: 'refused-edit', refusal } });
+    expect(store.getState()).toBe(before);
+  });
+
   it('a new route takes its id from the injected source, and an id already used is refused', () => {
     const { project } = oneStop();
     const store = storeOf(project, counter('fresh'));
