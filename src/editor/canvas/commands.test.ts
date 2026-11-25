@@ -13,13 +13,16 @@ import {
   addPoint,
   deleteLine,
   deletePoints,
+  duplicatePoints,
   joinPoints,
   markPoint,
+  movePoints,
   penStep,
   reverseLine,
   setDirection,
   setKind,
   setLeadStart,
+  splitLine,
   unmarkPoint,
 } from './commands';
 
@@ -71,6 +74,10 @@ describe('the drawing commands, each one undo step', () => {
     ['deletePoints, one point', ({ route, b }) => deletePoints(route, [b]), 'Delete point'],
     ['deletePoints, two points', ({ route, b, c }) => deletePoints(route, [b, c]), 'Delete points'],
     ['deleteLine', ({ route, bc }) => deleteLine(route, bc), 'Delete line'],
+    ['splitLine', ({ route, ab }) => splitLine(route, ab, { x: 0.3, y: 0.2, kind: 'bend' }), 'Insert point'],
+    ['movePoints, one point', ({ route, a }) => movePoints(route, [a], 0.005, 0), 'Move point'],
+    ['movePoints, two points', ({ route, a, b }) => movePoints(route, [a, b], 0, -0.02), 'Move points'],
+    ['duplicatePoints', ({ route, a, b }) => duplicatePoints(route, [a, b]), 'Duplicate'],
     ['setLeadStart', ({ route, c }) => setLeadStart(route, c), 'Set lead start'],
     ['markPoint', ({ route, c }) => markPoint(route, c, 'end'), 'Mark as end'],
     ['unmarkPoint', ({ route, a }) => unmarkPoint(route, a, 'start'), 'Remove start mark'],
@@ -175,6 +182,44 @@ describe('the selection after a delete', () => {
   });
 });
 
+describe('the selection after an insert, a move or a duplicate', () => {
+  it('a point inserted on a line is selected alone; a move keeps the selection', () => {
+    const { store, route, a, b, ab } = chain();
+    expect(store.dispatch(splitLine(route, ab, { x: 0.3, y: 0.2, kind: 'bend' })).ok).toBe(true);
+    const inserted = routeIn(store).points.at(-1)?.id;
+    expect(store.getState().selection).toEqual({ route, points: [inserted] });
+    expect(routeIn(store).lines.slice(0, 2)).toMatchObject([
+      { id: ab, from: a, to: inserted },
+      { from: inserted, to: b },
+    ]);
+    expect(store.select({ route, points: [a, b] }).ok).toBe(true);
+    const kept = store.getState().selection;
+    expect(store.dispatch(movePoints(route, [a, b], 0.01, 0.01))).toEqual({ ok: true, changed: true });
+    expect(store.getState().selection).toBe(kept);
+  });
+
+  it('the copies are selected, the last copy last, with the line between them copied', () => {
+    const { store, route, a, b } = chain();
+    expect(store.dispatch(duplicatePoints(route, [b, a])).ok).toBe(true);
+    const [copyB, copyA] = routeIn(store).points.slice(3).map((point) => point.id);
+    expect(store.getState().selection).toEqual({ route, points: [copyB, copyA] });
+    expect(routeIn(store).lines.at(-1)).toMatchObject({ from: copyA, to: copyB });
+  });
+
+  it('a drag of three moves inside one gesture is one step, which Undo takes back whole', () => {
+    const { store, route, b } = chain();
+    const before = store.getState();
+    const begun = store.begin('Move point');
+    if (!begun.ok) throw new Error('no gesture');
+    for (let i = 0; i < 3; i += 1) expect(begun.gesture.apply(movePoints(route, [b], 0.01, 0))).toEqual({ ok: true, changed: true });
+    expect(begun.gesture.commit()).toEqual({ ok: true, changed: true });
+    expect(routeIn(store).points[1]?.x).toBeCloseTo(0.53, 10);
+    expect(store.undo()).toEqual({ ok: true, changed: true });
+    expect(store.getState().project).toEqual(before.project);
+    expect(store.getState().undo).toBeNull();
+  });
+});
+
 describe('refusals and edits that change nothing make no step', () => {
   it('a refused edit makes no step and changes nothing, carrying the core’s refusal', () => {
     const { store, route, a, b, ab } = chain();
@@ -187,6 +232,9 @@ describe('refusals and edits that change nothing make no step', () => {
       [reverseLine(route, 'nope'), { refused: 'no-such-line', id: 'nope' }],
       [deletePoints(route, [a, 'nope']), { refused: 'no-such-point', id: 'nope' }],
       [deleteLine(route, 'nope'), { refused: 'no-such-line', id: 'nope' }],
+      [splitLine(route, 'nope', stop(0.5, 0.5)), { refused: 'no-such-line', id: 'nope' }],
+      [movePoints(route, ['nope'], 0.1, 0), { refused: 'no-such-point', id: 'nope' }],
+      [duplicatePoints(route, [a, 'nope']), { refused: 'no-such-point', id: 'nope' }],
       [setLeadStart(route, 'nope'), { refused: 'no-such-point', id: 'nope' }],
       [markPoint(route, 'nope', 'end'), { refused: 'no-such-point', id: 'nope' }],
       [setKind(route, 'nope', 'bend'), { refused: 'no-such-point', id: 'nope' }],
@@ -211,6 +259,8 @@ describe('refusals and edits that change nothing make no step', () => {
       markPoint(route, a, 'start'),
       unmarkPoint(route, a, 'end'),
       setKind(route, a, 'stop'),
+      movePoints(route, [a], 0, 0),
+      duplicatePoints(route, []),
     ]) {
       expect(store.dispatch(command)).toEqual({ ok: true, changed: false });
       expect(store.getState()).toBe(before);

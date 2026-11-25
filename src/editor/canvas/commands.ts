@@ -23,14 +23,14 @@ const refusedEdit = (refusal: EditRefusal): Refusal => ({ why: 'refused-edit', r
 function onRoute(
   current: Current,
   routeId: string,
-  edit: (route: Route) => { route: Route; select: string | null } | EditRefusal,
+  edit: (route: Route) => { route: Route; select: readonly string[] | null } | EditRefusal,
 ): Current | Refusal {
   const scene = current.project.scene;
   const route = scene.routes.find((each) => each.id === routeId);
   if (route === undefined) return { why: 'missing', what: `route ${routeId}` };
   const result = edit(route);
   if (graph.isRefusal(result)) return refusedEdit(result);
-  const selection = result.select === null ? current.selection : { route: routeId, points: [result.select] };
+  const selection = result.select === null ? current.selection : { route: routeId, points: result.select };
   if (result.route === route && selection === current.selection) return current;
   const routes = result.route === route ? scene.routes : scene.routes.map((each) => (each === route ? result.route : each));
   const project = routes === scene.routes ? current.project : { ...current.project, scene: { ...scene, routes } };
@@ -47,7 +47,7 @@ export function addPoint(routeId: string, place: Place): Command {
     apply: (current, { nextId }) =>
       onRoute(current, routeId, (route) => {
         const added = graph.addPoint(route, nextId, place);
-        return { route: added.route, select: added.point };
+        return { route: added.route, select: [added.point] };
       }),
   };
 }
@@ -70,7 +70,7 @@ export function penStep(routeId: string, pen: string | null, target: PenTarget):
     apply: (current, { nextId }) =>
       onRoute(current, routeId, (route) => {
         const step = graph.penStep(route, nextId, pen, target);
-        return graph.isRefusal(step) ? step : { route: step.route, select: step.pen };
+        return graph.isRefusal(step) ? step : { route: step.route, select: [step.pen] };
       }),
   };
 }
@@ -142,5 +142,41 @@ export function deleteLine(routeId: string, lineId: string): Command {
   return {
     label: 'Delete line',
     apply: (current) => onRoute(current, routeId, (route) => keeping(editing.deleteLine(route, lineId))),
+  };
+}
+
+/** A point inserted on a line at `place`, and selected alone; the line's second half goes straight after it. */
+export function splitLine(routeId: string, lineId: string, place: Place): Command {
+  return {
+    label: 'Insert point',
+    apply: (current, { nextId }) =>
+      onRoute(current, routeId, (route) => {
+        const split = editing.splitLine(route, nextId, lineId, place);
+        return graph.isRefusal(split) ? split : { route: split.route, select: [split.point] };
+      }),
+  };
+}
+
+/**
+ * Points moved by `dx` and `dy` in image fractions, unclamped: the page works out the amounts (v3's nudge sizes and
+ * its clamp). The selection is kept. A drag moves through `store.begin`, one undo step a gesture.
+ */
+export function movePoints(routeId: string, ids: readonly string[], dx: number, dy: number): Command {
+  return {
+    label: byCount(ids, 'Move point', 'Move points'),
+    apply: (current) => onRoute(current, routeId, (route) => keeping(editing.movePoints(route, ids, dx, dy))),
+  };
+}
+
+/** The named points copied, with the lines between them; the copies become the selection, the last copy last. */
+export function duplicatePoints(routeId: string, ids: readonly string[]): Command {
+  return {
+    label: 'Duplicate',
+    apply: (current, { nextId }) =>
+      onRoute(current, routeId, (route) => {
+        const copied = editing.duplicatePoints(route, nextId, ids);
+        if (graph.isRefusal(copied)) return copied;
+        return { route: copied.route, select: copied.points.length === 0 ? null : copied.points };
+      }),
   };
 }

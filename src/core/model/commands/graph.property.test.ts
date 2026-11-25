@@ -1,9 +1,11 @@
 // CORE-06: the graph's edits as a property (the pattern of scene.property.test.ts). Any sequence of graph.ts's and
 // editing.ts's edits from a new scene's route, with targets drawn from what the route holds and now and then from what it
 // does not, and places anywhere in the coordinate range, its edges included, gives after every step either a refusal
-// that changed nothing (the route is frozen, so a change would throw) or a route that `checkScene` accepts. The draws
+// that changed nothing (the route is frozen, so a change would throw) or a route that `checkScene` accepts exactly when
+// its points stay in the coordinates' range (a move or a copy may leave it; the store then keeps the route). The draws
 // are counted, and the test proves at its end they reached every refusal, both coordinate edges, every edit changing
-// a route at least once, and edits that change nothing, so the property cannot pass by never refusing.
+// a route at least once, edits that change nothing and edits that leave the range, so the property cannot pass by never
+// refusing.
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { LIMITS } from '../../config/limits';
@@ -23,7 +25,7 @@ import {
   type EditRefusal,
   type Place,
 } from './graph';
-import { deleteLine, deletePoints } from './editing';
+import { deleteLine, deletePoints, duplicatePoints, movePoints, splitLine } from './editing';
 
 const RUNS = 300;
 const MISSING = 'missing';
@@ -57,6 +59,8 @@ const placeOf: fc.Arbitrary<Place> = fc.record({
   y: coordinateOf,
   kind: fc.constantFrom('stop' as const, 'bend' as const),
 });
+/** A move: none, or anything up to the coordinates' whole span, so moves past an edge are drawn too. */
+const shiftOf = fc.oneof(fc.constant(0), fc.double({ min: -2, max: 2, noNaN: true }));
 const endOf = fc.constantFrom('start' as const, 'end' as const);
 
 const editOf = fc.oneof(
@@ -84,6 +88,20 @@ const editOf = fc.oneof(
     weight: 2,
   },
   { arbitrary: fc.record({ edit: fc.constant('deleteLine' as const), line: targetOf }), weight: 1 },
+  { arbitrary: fc.record({ edit: fc.constant('split' as const), line: targetOf, place: placeOf }), weight: 2 },
+  {
+    arbitrary: fc.record({
+      edit: fc.constant('move' as const),
+      points: fc.array(targetOf, { maxLength: 3 }),
+      dx: shiftOf,
+      dy: shiftOf,
+    }),
+    weight: 2,
+  },
+  {
+    arbitrary: fc.record({ edit: fc.constant('duplicate' as const), points: fc.array(targetOf, { maxLength: 3 }) }),
+    weight: 2,
+  },
   { arbitrary: fc.record({ edit: fc.constant('leadStart' as const), point: targetOf }), weight: 2 },
   { arbitrary: fc.record({ edit: fc.constant('mark' as const), point: targetOf, end: endOf }), weight: 2 },
   { arbitrary: fc.record({ edit: fc.constant('unmark' as const), point: targetOf, end: endOf }), weight: 2 },
@@ -127,6 +145,16 @@ function apply(route: Route, pen: string | null, edit: Edit, nextId: IdSource) {
       // The pen is the store's selection: a deleted pen point drops out of it, as `repairSelection` drops it.
       return isRefusal(deleted) ? deleted : { route: deleted, pen: pen !== null && holds(deleted, pen) ? pen : null };
     }
+    case 'split': {
+      const split = splitLine(route, nextId, idOf(route.lines, edit.line), edit.place);
+      return isRefusal(split) ? split : { route: split.route, pen: split.point };
+    }
+    case 'move':
+      return wrap(movePoints(route, edit.points.map(point), edit.dx, edit.dy), pen);
+    case 'duplicate': {
+      const copied = duplicatePoints(route, nextId, edit.points.map(point));
+      return isRefusal(copied) ? copied : { route: copied.route, pen: copied.points.at(-1) ?? pen };
+    }
     case 'deleteLine':
       return wrap(deleteLine(route, idOf(route.lines, edit.line)), pen);
     case 'leadStart':
@@ -147,7 +175,13 @@ function wrap(result: Route | EditRefusal, pen: string | null) {
 describe('the graph’s edits, as a property', () => {
   it('any sequence of edits gives, at every step, a refusal that changed nothing or a scene checkScene accepts', () => {
     // What the draws reached, over every run: proved at the end, so the property cannot pass by never refusing.
-    const reached = { refusals: new Set<EditRefusal['refused']>(), edges: new Set<number>(), unchanged: 0, changed: 0 };
+    const reached = {
+      refusals: new Set<EditRefusal['refused']>(),
+      edges: new Set<number>(),
+      unchanged: 0,
+      changed: 0,
+      outOfRange: 0,
+    };
     const changedBy = new Set<Edit['edit']>();
     fc.assert(
       // Lengths drawn across the whole range (`size: 'max'`): fast-check's default favours short sequences, and with
@@ -163,12 +197,21 @@ describe('the graph’s edits, as a property', () => {
             reached.refusals.add(result.refused);
             continue;
           }
+          // A move or a copy may leave the coordinates' range, which no edit checks: checkScene refuses exactly that
+          // scene, and the store would keep the route as it was.
+          const inRange = result.route.points.every((each) =>
+            [each.x, each.y].every((value) => value >= LIMITS.coordinateMin && value <= LIMITS.coordinateMax),
+          );
+          expect(checkScene({ ...scene, routes: [result.route] }).ok).toBe(inRange);
+          if (!inRange) {
+            reached.outOfRange += 1;
+            continue;
+          }
           if (result.route === route) reached.unchanged += 1;
           else {
             reached.changed += 1;
             changedBy.add(edit.edit);
           }
-          expect(checkScene({ ...scene, routes: [result.route] }).ok).toBe(true);
           for (const each of result.route.points)
             for (const value of [each.x, each.y])
               if (value === LIMITS.coordinateMin || value === LIMITS.coordinateMax) reached.edges.add(value);
@@ -182,17 +225,21 @@ describe('the graph’s edits, as a property', () => {
     expect([...reached.edges].sort((a, b) => a - b)).toEqual([LIMITS.coordinateMin, LIMITS.coordinateMax]);
     expect(reached.unchanged).toBeGreaterThan(0);
     expect(reached.changed).toBeGreaterThan(0);
+    expect(reached.outOfRange).toBeGreaterThan(0);
     expect([...changedBy].sort()).toEqual([
       'add',
       'delete',
       'deleteLine',
       'direction',
+      'duplicate',
       'join',
       'kind',
       'leadStart',
       'mark',
+      'move',
       'pen',
       'reverse',
+      'split',
       'unmark',
     ]);
   });

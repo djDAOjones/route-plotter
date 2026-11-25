@@ -1,10 +1,13 @@
 // CORE-06: the route's editing half. Deleting a point is tested shape by shape (D229, the owner's "Depends on shape"):
 // a point between one line in and one line out closes up, keeping the line that reached it; every other shape takes
 // the point's lines with it. v3's `networkEdit.test.js` :600 (a deleted node cascades its edges) is ported; its pen
-// and selection are the store's (commands.test.ts). Every result is checked inside a scene by `checkScene`.
+// and selection are the store's (commands.test.ts). Inserting on a line ports v3's DEF-22 pin
+// (`branchAuthoring.test.js` :455 to :490) as the walk; moving and duplicating port v3's nudge and Duplicate in
+// behaviour, the page keeping their sizes and clamps. Every result is checked inside a scene by `checkScene`.
 import { describe, expect, it } from 'vitest';
 import { checkScene, newRoute, newScene, type IdSource, type Route } from '../scene';
-import { deleteLine, deletePoints } from './editing';
+import { leadWalk } from '../../timing/walk';
+import { DUPLICATE_OFFSET, deleteLine, deletePoints, duplicatePoints, movePoints, splitLine } from './editing';
 import { isRefusal, type EditRefusal } from './graph';
 
 function counter(prefix: string): IdSource {
@@ -175,5 +178,121 @@ describe('deleting a line', () => {
     const route = drawn('A B', ['A>B']);
     expect(deleteLine(route, 'nope')).toEqual({ refused: 'no-such-line', id: 'nope' });
     expect(deleteLine(route, 'A')).toEqual({ refused: 'no-such-line', id: 'A' });
+  });
+});
+
+const walked = (route: Route) => leadWalk(route).walked.map((line) => `${line.from}>${line.to}`);
+
+describe('inserting a point on a line (v3’s + handle; DEF-22’s pin as the walk)', () => {
+  const bend = { x: 0.45, y: 0.3, kind: 'bend' as const };
+
+  it('the line ends at the new point; its second half, same direction and speed, goes straight after it', () => {
+    const before = drawn('A B C', ['A=B', 'B>C']);
+    const fast = frozen({ ...before, lines: before.lines.map((l) => (l.id === 'l1' ? { ...l, speedFactor: 3 } : l)) });
+    const fresh = ['N', 'l9'];
+    const { route, point } = done(splitLine(fast, () => fresh.shift() ?? '', 'l1', bend));
+    expect(point).toBe('N');
+    expect(shape(route)).toEqual(['l1:A=N', 'l9:N=B', 'l2:B>C']);
+    expect(route.lines[0]).toEqual({ ...fast.lines[0], to: 'N' });
+    expect(route.lines[1]).toMatchObject({ direction: 'both ways', speedFactor: 3 });
+    expect(route.lines[2]).toBe(fast.lines[1]);
+    expect(route.points.at(-1)).toMatchObject({ id: 'N', x: 0.45, y: 0.3, kind: 'bend' });
+    expect(route.points.slice(0, 3)).toEqual(fast.points);
+    for (const key of ['marks', 'leadStart', 'settings', 'id'] as const) expect(route[key]).toBe(fast[key]);
+    expect(checked(route)).toBe(true);
+  });
+
+  // v3's DEF-22: a fork f → b1 → b2 → z beside the trunk f → z. A point put on a branch's line is walked between that
+  // line's ends, in the branch's one run; v4 has no runs to split, so the walk is the pin.
+  const branch = () => drawn('a f b1 b2 z', ['a>f', 'f>b1', 'b1>b2', 'b2>z', 'f>z']);
+  it('on a branch’s first line, the new point is walked between b1 and b2, and the branch is still one run', () => {
+    expect(walked(branch())).toEqual(['a>f', 'f>b1', 'b1>b2', 'b2>z', 'f>z']);
+    const { route } = done(splitLine(branch(), counter('n'), 'l3', bend));
+    expect(walked(route)).toEqual(['a>f', 'f>b1', 'b1>n1', 'n1>b2', 'b2>z', 'f>z']);
+    expect([...leadWalk(route).joins]).toEqual(['z']);
+    expect(leadWalk(route).leftOut).toEqual([]);
+  });
+
+  it('on a branch’s last line, the new point is walked between b2 and the rejoin', () => {
+    const { route } = done(splitLine(branch(), counter('n'), 'l4', bend));
+    expect(walked(route)).toEqual(['a>f', 'f>b1', 'b1>b2', 'b2>n1', 'n1>z', 'f>z']);
+    expect([...leadWalk(route).joins]).toEqual(['z']);
+  });
+
+  it('a line the route does not hold is refused, and no id is drawn', () => {
+    const ids: string[] = [];
+    const nextId = () => {
+      ids.push('x');
+      return 'x';
+    };
+    expect(splitLine(drawn('A B', ['A>B']), nextId, 'nope', bend)).toEqual({ refused: 'no-such-line', id: 'nope' });
+    expect(ids).toEqual([]);
+  });
+});
+
+describe('moving points (v3’s nudge, its sizes and clamp the page’s)', () => {
+  it('each named point moves by the same amount; every other point is the same object', () => {
+    const route = drawn('A B C', ['A>B', 'B>C']);
+    const after = done(movePoints(route, ['A', 'C'], 0.005, -0.02));
+    expect(after.points.map((p) => [p.id, p.x, p.y])).toEqual([
+      ['A', 0.005, 0.48],
+      ['B', 0.1, 0.5],
+      ['C', 0.2 + 0.005, 0.48],
+    ]);
+    expect(after.points[1]).toBe(route.points[1]);
+    for (const key of ['lines', 'marks', 'leadStart', 'settings', 'id'] as const) expect(after[key]).toBe(route[key]);
+  });
+
+  it('nothing is clamped: a point moved past the coordinates’ edge is refused by checkScene, not by the edit', () => {
+    const route = drawn('A B', ['A>B']);
+    const after = done(movePoints(route, ['A'], -10, 0));
+    expect(after.points[0]?.x).toBe(-10);
+    expect(checked(after)).toBe(true);
+    expect(checked(done(movePoints(after, ['A'], -0.001, 0)))).toBe(false);
+  });
+
+  it('a move of nothing, or by 0 and 0, gives back the same route; an unknown point refuses the move', () => {
+    const route = drawn('A B', ['A>B']);
+    expect(movePoints(route, ['A'], 0, 0)).toBe(route);
+    expect(movePoints(route, [], 0.1, 0.1)).toBe(route);
+    expect(movePoints(route, ['A', 'nope'], 0.1, 0)).toEqual({ refused: 'no-such-point', id: 'nope' });
+  });
+});
+
+describe('duplicating points (D238, built as written, awaiting the owner)', () => {
+  const marked = () =>
+    frozen({
+      ...drawn('A B C', ['A>B', 'B=C', 'C>A']),
+      marks: [{ point: 'B', end: 'start' as const }],
+    });
+
+  it('copies each named point in the order given, 0.02 right and down, with its kind, label and pause', () => {
+    const route = marked();
+    const { route: after, points } = done(duplicatePoints(route, counter('d'), ['C', 'B']));
+    expect(points).toEqual(['d1', 'd2']);
+    expect(after.points.slice(3)).toEqual([
+      { ...route.points[2], id: 'd1', x: 0.2 + DUPLICATE_OFFSET, y: 0.5 + DUPLICATE_OFFSET },
+      { ...route.points[1], id: 'd2', x: 0.1 + DUPLICATE_OFFSET, y: 0.5 + DUPLICATE_OFFSET },
+    ]);
+    expect(after.points.slice(0, 3)).toEqual(route.points);
+    expect(after.marks).toBe(route.marks);
+    expect(after.leadStart).toBe(route.leadStart);
+    expect(checked(after)).toBe(true);
+  });
+
+  it('copies each line between two named points, with its direction and speed, and no line with an end outside', () => {
+    const route = marked();
+    const { route: after } = done(duplicatePoints(route, counter('d'), ['C', 'B']));
+    expect(shape(after)).toEqual(['l1:A>B', 'l2:B=C', 'l3:C>A', 'd3:d2=d1']);
+    expect(after.lines.slice(0, 3)).toEqual(route.lines);
+  });
+
+  it('one point gives an unjoined copy; an unknown point refuses; nothing named gives back the same route', () => {
+    const route = marked();
+    const { route: one, points } = done(duplicatePoints(route, counter('d'), ['A']));
+    expect(points).toEqual(['d1']);
+    expect(one.lines).toEqual(route.lines);
+    expect(duplicatePoints(route, counter('d'), ['A', 'nope'])).toEqual({ refused: 'no-such-point', id: 'nope' });
+    expect(done(duplicatePoints(route, counter('d'), [])).route).toBe(route);
   });
 });
