@@ -586,23 +586,27 @@ export function localPaths(cwd) {
 }
 
 /**
- * GATE-05: a checkout's frozen v3 paths, read apart from which lanes run: the index against HEAD, the working tree
- * against the index, untracked files, and the base's diff to the working tree where a base can be read. So `--all`, a
- * base that cannot be read and a staged change hidden by its working copy are refused as any other v3 change is; a
- * committed change with no base to read against is the id test's (scripts/gate.test.mjs).
+ * GATE-05: a checkout's frozen v3 paths, read apart from which lanes run. Three reads are required: the index against
+ * HEAD, the working tree against the index and untracked files; the base's diff to the working tree is added where a
+ * base can be read. A required read that fails is named in `failed`, and the checkout is refused for it (main), so a
+ * v3 change cannot pass unread; a repository with no HEAD fails the first. A committed change with no base to read
+ * against is the id test's (scripts/gate.test.mjs), after planning.
  * @param {string} cwd
- * @returns {string[]}
+ * @param {(args: string[], cwd: string) => string|null} read git, or a stub in the tests
+ * @returns {{ paths: string[], failed: string[] }}
  */
-export function checkoutLocked(cwd) {
+export function checkoutLocked(cwd, read = git) {
   const reads = [
-    ['diff', '--cached', '--name-only', '--no-renames', '-z', 'HEAD', '--'],
-    ['diff', '--name-only', '--no-renames', '-z', '--'],
-    ['ls-files', '--others', '--exclude-standard', '-z']
+    ['the index against HEAD', ['diff', '--cached', '--name-only', '--no-renames', '-z', 'HEAD', '--']],
+    ['the working tree against the index', ['diff', '--name-only', '--no-renames', '-z', '--']],
+    ['untracked files', ['ls-files', '--others', '--exclude-standard', '-z']]
   ];
-  const base = git(['merge-base', 'origin/main', 'HEAD'], cwd)?.trim();
-  if (base) reads.push(['diff', '--name-only', '--no-renames', '-z', base, '--']);
-  const paths = reads.flatMap(args => splitZ(git(args, cwd) ?? ''));
-  return [...new Set(paths)].filter(path => classify(path) === 'v3');
+  const outputs = reads.map(([name, args]) => [name, read(args, cwd)]);
+  const failed = outputs.filter(([, output]) => output === null).map(([name]) => name);
+  const base = read(['merge-base', 'origin/main', 'HEAD'], cwd)?.trim();
+  const optional = base ? read(['diff', '--name-only', '--no-renames', '-z', base, '--'], cwd) ?? '' : '';
+  const paths = [...outputs.map(([, output]) => output ?? ''), optional].flatMap(splitZ);
+  return { paths: [...new Set(paths)].filter(path => classify(path) === 'v3'), failed };
 }
 
 /** A plan in words, one line per path, for the log and the step summary. */
@@ -645,7 +649,7 @@ export function runLane(name, { env = process.env, log = console.log, lanes = LA
  * can run it in a scratch repository: cwd is the repository, log the output.
  * @returns {Promise<number>} the exit status
  */
-export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl = globalThis.fetch } = {}) {
+export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl = globalThis.fetch, read = git } = {}) {
   const has = flag => argv.includes(flag);
   const valueOf = flag => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : undefined);
 
@@ -727,9 +731,14 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
 
   // GATE-05 (V3_LOCK): frozen v3 is locked, so a change to it is refused wherever the gate sorts one, a range's plan included.
   // In a checkout the lock is read apart from which lanes run (checkoutLocked), so --all and a base that cannot be read
-  // still refuse a v3 path, and so does a staged change its working copy hides.
+  // still refuse a v3 path, and so does a staged change its working copy hides; a checkout whose required reads fail
+  // is refused, since it cannot show frozen v3 untouched.
   const inCheckout = !has('--ci') && !has('--range');
-  const locked = [...new Set([...(decided.locked ?? []), ...(inCheckout ? checkoutLocked(cwd) : [])])];
+  const checkout = inCheckout ? checkoutLocked(cwd, read) : { paths: [], failed: [] };
+  if (checkout.failed.length) {
+    log(`gate: refused: the checkout could not be read (${checkout.failed.join(', ')}); frozen v3 cannot be shown untouched`);
+  }
+  const locked = [...new Set([...(decided.locked ?? []), ...checkout.paths])];
   if (locked.length) {
     const said = `frozen v3 is locked (GATE-05, the owner's word of 25 Nov 2026): v4's gate stands in place of v3's, ` +
       `and v3's paths take no change. This change edits: ${locked.slice(0, 5).join(', ')}` +
@@ -744,7 +753,7 @@ export async function main(argv, env, { cwd = ROOT, log = console.log, fetchImpl
     if (env.GITHUB_OUTPUT) appendFileSync(env.GITHUB_OUTPUT, `${outputs.join('\n')}\n`);
     if (env.GITHUB_STEP_SUMMARY) appendFileSync(env.GITHUB_STEP_SUMMARY, `## Gate by what changed\n\n\`\`\`\n${words}\n\`\`\`\n`);
   }
-  if (refuse || locked.length) return 1;
+  if (refuse || locked.length || checkout.failed.length) return 1;
   if (has('--plan')) return 0;
 
   for (const lane of decided.lanes) {

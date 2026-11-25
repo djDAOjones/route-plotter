@@ -74,8 +74,9 @@ close.
   checker alone; any other also runs the gate's tests and, where asked, v4's
   gate (`npm run check:v4`). Frozen v3 is locked (GATE-05): its suite runs only
   by hand (`node scripts/gate.mjs --lane v3`), and a change to a v3 path is
-  refused. CI then fails if `docs/`, `version.json` or `v3/version.json`
-  differ from the commit.
+  refused where its paths can be read or a checkout cannot be read, and
+  otherwise fails the id test. CI then fails if `docs/`, `version.json` or
+  `v3/version.json` differ from the commit.
 - There is no linter, formatter check, type checker or Markdown link checker,
   so report only what the gate runs. The verify-line format is in
   `pm_skills/project/conventions.md` → Commit messages.

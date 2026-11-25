@@ -1386,6 +1386,49 @@ describe('the live site, which only the publishing step writes (PUB-01)', () => 
     }
   });
 
+  test("a checkout whose required reads fail is refused, so frozen v3 cannot pass unread (GATE-05)", async () => {
+    // Each required read failed in turn by a stub reader; the others, and the base's optional diff, read for real.
+    const reads = {
+      'the index against HEAD': args => args[0] === 'diff' && args.includes('--cached'),
+      'the working tree against the index': args => args[0] === 'diff' && !args.includes('--cached') && args.at(-2) === '-z',
+      'untracked files': args => args[0] === 'ls-files' && args.includes('--others')
+    };
+    for (const [name, fails] of Object.entries(reads)) {
+      const repo = site();
+      try {
+        repo.run(['switch', '-q', '-c', 'work']);
+        // An untracked v3 file that only the failed read could show, where it is the untracked read that fails.
+        if (name === 'untracked files') repo.write('v3/new.txt', 'untracked');
+        const said = [];
+        const read = (args, cwd) => (fails(args) ? null : git(args, cwd));
+        const status = await gate(['--plan'], {}, { cwd: repo.dir, log: line => said.push(line), read });
+        assert.equal(status, 1, `${name}: ${said.join('\n')}`);
+        assert.match(said.join('\n'),
+          new RegExp(`gate: refused: the checkout could not be read \\(${name}\\); frozen v3 cannot be shown untouched`));
+      } finally {
+        repo.done();
+      }
+    }
+  });
+
+  test("a checkout with no HEAD is refused when it stages frozen v3 (GATE-05)", async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'gate-05-no-head-'));
+    try {
+      const run = args => assert.equal(spawnSync('git', args, { cwd: dir, encoding: 'utf8' }).status, 0, args.join(' '));
+      run(['init', '-q', '-b', 'main']);
+      mkdirSync(join(dir, 'v3'));
+      writeFileSync(join(dir, 'v3/new.txt'), 'staged\n');
+      // Staged, its working copy matching: not untracked, and no diff against the index.
+      run(['add', 'v3/new.txt']);
+      const said = [];
+      const status = await gate(['--plan'], {}, { cwd: dir, log: line => said.push(line) });
+      assert.equal(status, 1, said.join('\n'));
+      assert.match(said.join('\n'), /gate: refused: the checkout could not be read \(the index against HEAD\)/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   test("frozen v3's code is the tag's, byte for byte (GATE-05)", () => {
     const tagged = git(['rev-parse', '--verify', '--quiet', `refs/tags/${V3_LOCK.tag}^{commit}`]);
     assert.ok(tagged, `the tag ${V3_LOCK.tag} is in this checkout (CI fetches every tag)`);
