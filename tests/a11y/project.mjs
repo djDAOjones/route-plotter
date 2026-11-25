@@ -1679,10 +1679,15 @@ export default {
       run: async ({ page, open, record }) => {
         await open('shell');
         const wrong = [];
-        // Waits until the canvas has the shape asked (within 0.02) and the blue at (fx, fy): the frame drawn.
+        // Waits until the canvas has the shape asked (within 0.02), its box's size times the ratio (to a pixel) and the
+        // blue at (fx, fy): the frame drawn at the box's settled size. CORE-06 (brief 111): Open's busy notice takes
+        // room from the box while a project opens, and gives it back when it goes, so a frame of the right shape can
+        // be drawn at the smaller size before the box grows again; `frameAs` still checks the size by itself.
         const drawnAs = (shape, fx, fy) => page.waitForFunction(([sel, rgb, shape, x, y]) => {
           const c = document.querySelector(sel);
           if (Math.abs(c.width / c.height - shape) > 0.02) return false;
+          const box = c.parentElement.getBoundingClientRect(), s = Math.min(devicePixelRatio, 3);
+          if (Math.abs(c.width - box.width * s) > 1 || Math.abs(c.height - box.height * s) > 1) return false;
           const [r, g, b, a] = c.getContext('2d').getImageData(Math.floor(x * c.width), Math.floor(y * c.height), 1, 1).data;
           return a > 200 && Math.abs(r - rgb[0]) <= 24 && Math.abs(g - rgb[1]) <= 24 && Math.abs(b - rgb[2]) <= 24;
         }, [CANVAS, BLUE, shape, fx, fy], { timeout: 3000 }).then(() => true, () => false);
