@@ -48,14 +48,22 @@
 // want of a j-forms journey crediting them (brief 77, ruling 3: owed at the close). Brief 78 tried holding 1.3.5,
 // 3.3.4 and 3.3.6 not applicable: the coverage tool refuses it (a row is not applicable only when its own trigger
 // feature, here `user-input` itself, is declared absent), so the feature stays unknown and the six rows owed.
+// CORE-06, chat E1 (2026-11-25, brief 109): the paragraph above the preview, "Version 4 is being built here", and its
+// link to GitHub are gone (D209), and the preview takes the height left. The preview's box is now operable: a toolbar
+// named "Route animation preview" with one tab stop (the strict lint refuses a tab stop on an application), met by Tab
+// after "Help" where the link was. READING, FOCUS and both snapshots follow; the journeys that stood on the link stand
+// on the page's controls: the reduced-motion focus and the kept function focus the preview, the 320 px walk meets it
+// in the link's place, Home on the focused preview speaks with focus kept (4.1.3), the single keys say nothing on it
+// with the switch off (2.1.4), and the shell's keyboard task (P06) is turning single-key shortcuts off and on in Help
+// by Tab, Enter, Space and Escape. The preview stays set aside from the contrast check, its count now what the probe
+// finds once the box is no image: the canvas alone.
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
-// (2.4.3); each route and its title (2.4.2); the one place the shell links to. A change to the shell is reviewed here.
-const READING = ['Route Plotter', 'Version 4 is being built here.', 'Preview', 'Timeline', 'Add at least two points to a route to play.'];
-const FOCUS = ['button "Open project"', 'button "Help"', 'link "GitHub"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
+// (2.4.3); each route and its title (2.4.2). A change to the shell is reviewed here.
+const READING = ['Route Plotter', 'Preview', 'Timeline', 'Add at least two points to a route to play.'];
+const FOCUS = ['button "Open project"', 'button "Help"', 'toolbar "Route animation preview"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
-const PROGRESS = 'https://github.com/djDAOjones/route-plotter';
 // The shell's one status region, and the words the editor's keys say in it (the editor's transport's own, WORDS).
 const STATUS = '[role=status]';
 const said = async (page) => (await page.locator(STATUS).textContent()) ?? '';
@@ -180,11 +188,12 @@ const ORANGE = [213, 94, 0];
 const BLUE = [51, 102, 204]; // #3366cc, the plain picture's
 // 1.4.11 (finding 85, ruled; D200): the preview is set aside from the contrast check on every state that shows it. Its
 // pixels are the user's own picture and routes in their own colours, as the export draws them (1.4.11's essential
-// presentation), and nothing of the editor's own is drawn on it yet. The item that first draws the editor's own marks
-// there (a selected route's rings, hover: CORE-06) narrows or replaces this, and measures them by their pixels.
-// The count is reviewed: the graphics standing in the preview on both states that declare it (the image wrapper and its
-// canvas). A different number found fails 1.4.11, so CORE-06 changes it with what it draws there.
-const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 2, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); nothing of the editor's own is drawn on it yet" }];
+// presentation). CORE-06 (brief 109) draws the editor's own marks on the same canvas (its points, its lines and the
+// selection's rings), never in an SVG or the DOM over it, so they stand inside this set-aside; the pixel journey that
+// measures them is the next chat's (E2). The count is reviewed: the graphics standing in the preview on every state
+// that declares it, now the canvas alone (the box is a toolbar, no longer an image). A different number found fails
+// 1.4.11, so a change to what stands there changes it.
+const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 1, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); the editor's own marks (points, lines, the selection's rings) are drawn on the same canvas, and a pixel journey measures them" }];
 const pixels = (page) => page.locator(CANVAS).evaluate((c) => {
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   let hash = 0, drawn = 0;
@@ -367,9 +376,8 @@ const helpOpen = (checked) => [
   '  - paragraph: Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Open project, Undo and Redo keep working.',
 ].join('\n');
 // The processes the shell presents (CONF03): none. A process is a series of steps toward a goal inside the app; the
-// shell has no form and no link to another of the app's pages, and its one link leaves Route Plotter for a page it does
-// not own, which is no step of a Route Plotter process and is not tested here. The item that adds a process names it
-// here and writes the journey that runs every step.
+// shell has no form and no link at all (its one link, to a page it did not own, went with D209). The item that adds a
+// process names it here and writes the journey that runs every step.
 const PROCESSES = [];
 
 // What the journeys look for: every control a pointer or Tab reaches (the pack's target selector); fields and
@@ -397,7 +405,6 @@ async function settled({ page }) {
 }
 const arrives = (page, url) => page.waitForURL(url, { timeout: 5000 }).then(() => true, () => false);
 const named = async (locator) => (await locator.ariaSnapshot()).split('\n')[0].replace(/^- /, '').replace(/:$/, '');
-const progressLink = (page) => page.getByRole('link', { name: 'GitHub' });
 // Tab from a fresh open until focus leaves the page or comes round: each control met, by role and name, and where it
 // sits; the problems against the reviewed order (2.4.3).
 async function tabOrder(page, tab) {
@@ -442,14 +449,9 @@ export default {
         '  - button "Open project"',
         '  - button "Help"',
         '- main:',
-        '  - paragraph:',
-        '    - text: Version 4 is being built here. It cannot make anything yet. Its progress is on',
-        '    - link "GitHub":',
-        `      - /url: ${PROGRESS}`,
-        '    - text: .',
         '  - region "Preview":',
         '    - heading "Preview" [level=2]',
-        '    - img "Route animation preview"',
+        '    - toolbar "Route animation preview"',
         '  - group "Playback":',
         '    - button "Skip to start"',
         '    - button "Play" [disabled]',
@@ -462,7 +464,7 @@ export default {
       ].join('\n'),
       dialogs: [{ name: 'help', opener: HELP }],
       interactions: [
-        { name: 'focus the progress link', run: async ({ page }) => { await progressLink(page).focus(); } },
+        { name: 'focus the preview', run: async ({ page }) => { await page.locator(PREVIEW).focus(); } },
         { name: 'open help', run: async ({ page }) => { await helpButton(page).click(); await helpDialog(page).waitFor(); }, snapshot: helpOpen(true) },
         {
           name: 'turn single-key shortcuts off',
@@ -478,7 +480,7 @@ export default {
       keeps: {
         content: ['h1', 'main p', PREVIEW, REASON],
         functions: [
-          { name: 'follow the progress link', run: async ({ page }) => { await progressLink(page).click(); return arrives(page, PROGRESS); } },
+          { name: 'focus the preview', run: async ({ page }) => { await page.locator(PREVIEW).focus(); return focusOn(page, PREVIEW); } },
           // Help is closed again after, so the page is left as found (the forced-colours test counts stateful controls next).
           { name: 'open help', run: async ({ page }) => { await helpButton(page).click(); const shown = await helpDialog(page).isVisible(); await page.keyboard.press('Escape'); return shown && backOnHelp(page); } },
           { name: 'skip to start by its button', run: async ({ page }) => { await page.locator(SKIP_START).click(); return (await said(page)) === SKIPPED_TO_START; } },
@@ -513,14 +515,9 @@ export default {
         '    - img "Error"',
         `    - text: Could not open ${LONG_NAME} ${NOT_A_PROJECT}`,
         '    - button "Close"',
-        '  - paragraph:',
-        '    - text: Version 4 is being built here. It cannot make anything yet. Its progress is on',
-        '    - link "GitHub":',
-        `      - /url: ${PROGRESS}`,
-        '    - text: .',
         '  - region "Preview":',
         '    - heading "Preview" [level=2]',
-        '    - img "Route animation preview"',
+        '    - toolbar "Route animation preview"',
         '  - group "Playback":',
         '    - button "Skip to start"',
         '    - button "Play" [disabled]',
@@ -555,7 +552,7 @@ export default {
               try {
                 await page.setViewportSize({ width: 320, height: size.height });
                 const key = page.context().browser()?.browserType().name() === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab'; // the pack's tabKey
-                const seven = ['Open project', 'Help', 'Close', 'GitHub', 'Skip to start', 'Skip to end', 'Timeline'];
+                const seven = ['Open project', 'Help', 'Close', 'Route animation preview', 'Skip to start', 'Skip to end', 'Timeline'];
                 const walked = [], problems = [], edges = [];
                 for (let i = 0; i < 20; i++) {
                   await page.keyboard.press(key);
@@ -600,8 +597,8 @@ export default {
   ],
   // Keyboard functions run at no delay and with long gaps between keys: steps of { focus }, { press } or { type }.
   keyboardFunctions: [
-    // Enter on the focused link follows it: the editor's keys never take a link's own activation.
-    { name: 'follow-progress-link', state: 'shell', steps: [{ focus: 'main a[href]' }, { press: 'Enter' }], check: async ({ page }) => arrives(page, PROGRESS) },
+    // The editor's keys act with the preview focused (CORE-06), and focus stays on it.
+    { name: 'skip-to-end-by-end-on-preview', state: 'shell', steps: [{ focus: PREVIEW }, { press: 'End' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_END && focusOn(page, PREVIEW) },
     // The editor's keys, each checked by the words it says in the status region.
     { name: 'skip-to-start-by-home', state: 'shell', steps: [{ press: 'Home' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_START },
     { name: 'skip-to-end-by-end', state: 'shell', steps: [{ press: 'End' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_END },
@@ -821,7 +818,7 @@ export default {
     },
     {
       // 2.5.2: each button, link and switch does nothing on the down-event, a press moved off it before release does
-      // nothing, and a whole press acts, on the up-event: the progress link (followed), "Help" (its dialog opens) and,
+      // nothing, and a whole press acts, on the up-event: "Help" (its dialog opens) and,
       // inside Help, the switch (it turns). A press on the switch is moved off to a point inside the dialog, as a press
       // outside Help closes it. The play bar: each skip says its words on a whole press and nothing before; Play,
       // disabled with nothing to play, does nothing on any press. The timeline, a slider, does move on the down-event, as
@@ -831,7 +828,8 @@ export default {
       // the thumb completed at 70 % of the track, then, on a fresh page, a whole press on the track at the same point,
       // the two positions compared. Every press goes through the pointer adapter, so a touch run can credit it. "Open project"
       // (stage 6) opens the browser's file chooser on a whole press only, none on the down-event or on a press moved
-      // off. Any other control needs its own journey.
+      // off. The preview (CORE-06): a press on it changes nothing it draws and says nothing. Any other control needs its
+      // own journey.
       name: 'pointer-cancellation',
       method: 'j-pointer',
       rows: ['2.5.2', '2.5.7'],
@@ -853,6 +851,7 @@ export default {
           const skip = await control.evaluate((e, [a, b]) => (e.matches(a) ? 'start' : e.matches(b) ? 'end' : ''), [SKIP_START, SKIP_END]);
           const offPlay = await control.evaluate((e, s) => e.matches(s) && e.disabled, PLAY);
           const isOpen = await control.evaluate((e, s) => e.matches(s), OPEN);
+          const isPreview = await control.evaluate((e, s) => e.matches(s), PREVIEW);
           if (await control.evaluate((e, s) => e.matches(s), TIMELINE)) {
             const bad = [];
             // 2.5.2: a press on the track and a drag, aborted by Escape before the release.
@@ -909,6 +908,24 @@ export default {
             if ((await atNow(page)).now !== kept.now || (await said(page)) !== '') bad.push('Undo after the press changed the position or said something: a move of it made an undo step');
             if (bad.length) problems.push(`${name}: ${bad.join('; ')}`);
             else { slider.push(`${name}`); compared = `a drag of the thumb completed at 70 % of the track held ${dragged.now} (${dragged.text}), and a whole press on the track at the same point ${kept.now} (${kept.text}), within ${tolerance} (two pixels); neither made an undo step`; }
+            continue;
+          }
+          if (isPreview) {
+            // The preview (CORE-06, chat E1's first stage): a press on it, held, moved off and whole, changes nothing
+            // drawn and says nothing.
+            const box = await control.boundingBox();
+            const x = box.x + box.width / 2, y = box.y + box.height / 2;
+            const before = await pixels(page);
+            await pointer.down(x, y);
+            await page.waitForTimeout(250);
+            await pointer.move(x + box.width / 2 + 40, y);
+            await pointer.up();
+            await pointer.down(x, y);
+            await pointer.up();
+            await page.waitForTimeout(400);
+            const after = await pixels(page);
+            if (after.hash !== before.hash || (await said(page)) !== '') problems.push(`${name}: a press on it changed what it draws or said something`);
+            else done.push(`${name} (nothing yet)`);
             continue;
           }
           if (!href && !isHelp && !skip && !offPlay && !isOpen) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
@@ -1339,8 +1356,8 @@ export default {
       // read with the switch. A further field needs its own check here. The play bar's Play, disabled with nothing to
       // play, has its reason: the line under the group, visible, tied to it by aria-describedby and not in its name
       // (UI-06 J-21). 4.1.3: the shell's one status region, role status, is empty
-      // and nothing changes in the 2 s after the shell loads; a real key (Home, with the progress link focused) raises
-      // the editor's message in it, and focus stays on the link. A further status region needs its own check here.
+      // and nothing changes in the 2 s after the shell loads; a real key (Home, with the preview focused) raises
+      // the editor's message in it, and focus stays on the preview. A further status region needs its own check here.
       name: 'fields-and-status',
       method: 'j-forms',
       rows: ['3.3.5', '4.1.3'],
@@ -1388,10 +1405,10 @@ export default {
           watch.observe(document.body, { subtree: true, childList: true, characterData: true });
           setTimeout(() => { watch.disconnect(); done(n); }, 2000);
         }));
-        await progressLink(page).focus();
+        await page.locator(PREVIEW).focus();
         await page.keyboard.press('Home');
         const words = await said(page);
-        const focusStays = await page.evaluate((href) => document.activeElement?.getAttribute('href') === href, PROGRESS);
+        const focusStays = await focusOn(page, PREVIEW);
         const byButton = [];
         for (const [sel, want] of [[SKIP_START, SKIPPED_TO_START], [SKIP_END, SKIPPED_TO_END]]) {
           await open('shell');
@@ -1406,15 +1423,15 @@ export default {
           atRest && `the status region shows ${JSON.stringify(atRest)} at rest`,
           changes && `the shell changed ${changes} time(s) in the 2 s after it loaded`,
           words !== SKIPPED_TO_START && `Home said ${JSON.stringify(words)} in the status region, not ${JSON.stringify(SKIPPED_TO_START)}`,
-          !focusStays && 'focus left the progress link when Home raised the message',
+          !focusStays && 'focus left the preview when Home raised the message',
         ].filter(Boolean);
-        record('4.1.3', !problems.length, problems.length ? problems.join('; ') : `one status region, role status, empty at rest; nothing changes in the 2 s after the shell loads; Home, pressed on the focused progress link, says "${SKIPPED_TO_START}" in it and focus stays on the link; "Skip to start" and "Skip to end", pressed, say "${SKIPPED_TO_START}" and "${SKIPPED_TO_END}" in it with focus kept on each`);
+        record('4.1.3', !problems.length, problems.length ? problems.join('; ') : `one status region, role status, empty at rest; nothing changes in the 2 s after the shell loads; Home, pressed on the focused preview, says "${SKIPPED_TO_START}" in it and focus stays on the preview; "Skip to start" and "Skip to end", pressed, say "${SKIPPED_TO_START}" and "${SKIPPED_TO_END}" in it with focus kept on each`);
       },
     },
     {
       // 2.1.4, both ways: as the page opens, single-key shortcuts are on and < says "Skipped to start". Their switch
       // in Help, turned off by the keyboard, turns them off: J, K, L, comma, full stop, <, > and ? pressed on the page
-      // and on the focused progress link and "Skip to start" then say nothing, open nothing, follow nothing and move
+      // and on the focused preview and "Skip to start" then say nothing, open nothing, follow nothing and move
       // the timeline not at all (a frame step says nothing even when on, D205), while Home still speaks (the listener
       // was live throughout), on the focused "Skip to start" too. Turned on again, full stop steps one frame, > says
       // "Skipped to end" and K the reason there is nothing to play.
@@ -1432,9 +1449,9 @@ export default {
         if (off.after !== 'false') problems.push('Space on the switch did not turn it off');
         if (!off.back) problems.push('focus did not come back to "Help" after turning the switch off');
         if (!(await quiet(page))) problems.push('the status region did not empty');
-        for (const where of ['the page', 'the focused progress link', 'the focused "Skip to start"', 'the focused timeline']) {
+        for (const where of ['the page', 'the focused preview', 'the focused "Skip to start"', 'the focused timeline']) {
           if (where === 'the page') await page.locator('header h1').click();
-          else if (where === 'the focused progress link') await progressLink(page).focus();
+          else if (where === 'the focused preview') await page.locator(PREVIEW).focus();
           else if (where === 'the focused timeline') await page.locator(TIMELINE).focus();
           else await page.locator(SKIP_START).focus();
           for (const key of SINGLE_KEYS) {
@@ -1461,16 +1478,17 @@ export default {
         if (!(await quiet(page))) problems.push('the status region did not empty');
         await page.keyboard.press('k');
         if ((await said(page)) !== NOTHING_TO_PLAY) problems.push(`with the switch on again, K said ${JSON.stringify(await said(page))}, not ${JSON.stringify(NOTHING_TO_PLAY)}`);
-        record('2.1.4', !problems.length, problems.length ? problems.join('; ') : `single-key shortcuts can be turned off (D183): on as the page opens, < says "${SKIPPED_TO_START}"; with their switch in Help turned off by the keyboard, ${SINGLE_KEYS.join(' ')} pressed on the page, on the focused progress link, on the focused "Skip to start" and on the focused timeline say, open, follow and move nothing while Home still says "${SKIPPED_TO_START}"; turned on again, full stop steps one frame (20 thousandths) and > says "${SKIPPED_TO_END}"`);
+        record('2.1.4', !problems.length, problems.length ? problems.join('; ') : `single-key shortcuts can be turned off (D183): on as the page opens, < says "${SKIPPED_TO_START}"; with their switch in Help turned off by the keyboard, ${SINGLE_KEYS.join(' ')} pressed on the page, on the focused preview, on the focused "Skip to start" and on the focused timeline say, open, follow and move nothing while Home still says "${SKIPPED_TO_START}"; turned on again, full stop steps one frame (20 thousandths) and > says "${SKIPPED_TO_END}"`);
       },
     },
     {
       // With real key events: 2.4.3, Tab meets the reviewed controls in order; 3.2.2, the shell's one setting, the switch
       // in Help, turned off and on by Space changes no context (same page, no new window, Help still open, focus still on
       // the switch); 3.2.5, left
-      // alone for 3 s nothing changes context, nothing refreshes the page and no link opens another window, so the one
-      // change comes on request; P06, the shell's one task, following the progress link, runs by Tab and Enter and Back
-      // recovers the shell (the destination stood in, not tested); CONF03, the shell presents no process (PROCESSES).
+      // alone for 3 s nothing changes context, nothing refreshes the page and no link opens another window; P06, the
+      // shell's one task by keyboard (since D209 took its link), turning single-key shortcuts off in Help, runs by Tab,
+      // Enter, Space and Escape from a fresh open, and the same keys turn them on again, recovering the shell as it
+      // opened; CONF03, the shell presents no process (PROCESSES).
       name: 'keyboard-task',
       method: 'keyboard',
       rows: ['2.4.3', '3.2.2', '3.2.5', 'P06', 'CONF03'],
@@ -1506,15 +1524,31 @@ export default {
         const idle = page.url() === start && page.context().pages().length === pages;
         const refresh = await page.locator('meta[http-equiv="refresh" i]').count();
         const windows = await page.locator('a[target]:not([target="_self"]), form[target]:not([target="_self"])').count();
+        const change = [!idle && 'the context changed while the shell was left alone', refresh && 'a meta refresh', windows && `${windows} link(s) or form(s) open another window`].filter(Boolean);
+        record('3.2.5', !change.length, change.length ? change.join('; ') : 'left alone for 3 s nothing changed context; no refresh and no link opening another window');
+        // P06: from a fresh open, Tab to "Help", Enter, Tab to the switch, Space, Escape; then the same to undo it.
+        await open('shell');
         let reached = false;
-        for (let i = 0; i < 20 && !reached; i++) { await tab(); reached = await page.evaluate((href) => document.activeElement?.getAttribute('href') === href, PROGRESS); }
-        if (reached) await page.keyboard.press('Enter');
-        const arrived = reached && await arrives(page, PROGRESS);
-        let restored = false;
-        if (arrived) { await page.goBack(); restored = page.url() === start && await page.getByRole('heading', { level: 1, name: 'Route Plotter' }).isVisible(); }
-        const change = [!idle && 'the context changed while the shell was left alone', refresh && 'a meta refresh', windows && `${windows} link(s) or form(s) open another window`, !arrived && 'Enter on the progress link did not follow it'].filter(Boolean);
-        record('3.2.5', !change.length, change.length ? change.join('; ') : 'left alone for 3 s nothing changed context; no refresh and no link opening another window; the one change came on Enter');
-        record('P06', arrived && restored, !reached ? 'Tab did not reach the progress link' : !arrived ? 'Enter on the progress link did not follow it' : !restored ? 'Back did not bring the shell back' : 'the shell\'s one task, following the progress link, runs by Tab and Enter, and Back recovers the shell (the destination, GitHub\'s page, stood in locally and not tested)');
+        for (let i = 0; i < 20 && !reached; i++) { await tab(); reached = await focusIs(page, HELP); }
+        const task = [];
+        if (!reached) task.push('Tab did not reach "Help"');
+        else {
+          await page.keyboard.press('Enter');
+          if (!(await helpDialog(page).waitFor({ timeout: 2000 }).then(() => true, () => false))) task.push('Enter on "Help" did not open it');
+          else {
+            for (let i = 0; i < 6 && !(await focusIs(page, SWITCH)); i++) await page.keyboard.press('Tab');
+            const was = await singleKeys(page).getAttribute('aria-checked');
+            await page.keyboard.press('Space');
+            const now = await singleKeys(page).getAttribute('aria-checked');
+            await page.keyboard.press('Escape');
+            if (was !== 'true' || now !== 'false') task.push(`the switch read ${String(was)} then ${String(now)}, not on then off`);
+            if (!(await backOnHelp(page))) task.push('focus did not come back to "Help" after the task');
+            const again = await flipByKeyboard(page);
+            if (again.before !== 'false' || again.after !== 'true' || !again.back) task.push(`turned on again it read ${String(again.before)} then ${String(again.after)}${again.back ? '' : ', focus not back on "Help"'}`);
+          }
+        }
+        if (page.url() !== start) task.push(`the task left the shell for ${page.url()}`);
+        record('P06', !task.length, task.length ? task.join('; ') : 'the shell\'s one task by keyboard, turning single-key shortcuts off in Help, runs from a fresh open by Tab to "Help", Enter, Tab to the switch, Space and Escape, with focus back on "Help"; the same keys turn them on again, recovering the shell as it opened');
         // CONF03: the shell's process boundary, observed. A form, or a link to another of the app's pages, means a process
         // may be presented: it is declared in PROCESSES and its journey runs every step.
         await open('shell');

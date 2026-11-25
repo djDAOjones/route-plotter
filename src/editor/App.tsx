@@ -7,16 +7,18 @@
 // calling the session's editor's transport as its key does, and the line saying why Play is off while there is nothing
 // to play (until a project is opened: the page starts on an empty scene). In the bar's group, after the buttons, the timeline (Timeline): a slider
 // over the position, reading the time now of the whole time; an empty scene is 2 s long (Hold at end's), so it moves.
-// All of it is drawn through the frame (Frame): its header holds the page's name and Help; its slots, the paragraph
-// and the play bar today. App is the wiring.
+// All of it is drawn through the frame (Frame): its header holds the page's name and Help; its slots, the preview and
+// the play bar today. App is the wiring.
 // Stage 6: "Open project" (OpenButton) in the frame's header before Help, and its notice (OpenNotice: the busy line, or
 // a refusal's alert) first in main, both drawn from the session's one opener. When the refusal's Close is pressed, focus
 // goes to "Open project" (the notice is gone, and focus must not fall to the page's body), as Help returns focus to its
 // opener.
 // Cmd or Ctrl+O (D207) presses "Open project" itself, so the key and the button open the one chooser and cannot differ.
 // Stage 6, the preview (brief 84): the canvas (Preview) in the frame's `preview` slot, on the session's one inputs and
-// drawer; the paragraph stays above it (its link is what the shell's journeys stand on; its going is a later chat's).
-import { Button, Link } from '@carbon/react';
+// drawer.
+// CORE-06 (D209, the owner's "Remove and enlarge"): the paragraph that stood above the preview ("Version 4 is being
+// built here", with its link to GitHub) is gone, nothing in its place, and the preview takes the height left.
+import { Button } from '@carbon/react';
 import { useEffect, useRef, useState } from 'react';
 import { Frame } from './shell/Frame';
 import { Help } from './shell/Help';
@@ -73,12 +75,6 @@ export function App() {
         >
           Help
         </Button>
-      }
-      intro={
-        <p>
-          Version 4 is being built here. It cannot make anything yet. Its progress is on{' '}
-          <Link inline href="https://github.com/djDAOjones/route-plotter">GitHub</Link>.
-        </p>
       }
       preview={<Preview drawer={pageSession().preview.drawer} inputs={pageSession().preview.inputs} subscribe={toldOfChange} />}
       transport={
