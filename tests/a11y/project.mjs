@@ -466,8 +466,9 @@ export default {
       // Open's refusal showing, for a text file whose name is 60 characters with no spaces (stage 6, brief 80): its
       // title and io's sentence wrap inside the page at 320 px, nothing cut and no sideways scroll (1.4.10, reflow),
       // and, at the pack's 1280 by 800 (its focus walk's size, keyboard.spec.ts), no control that takes focus is covered
-      // by it (2.4.12, focus). A focus walk at 320 px is owed (Codex on brief 81, to a later tests chat). The name breaks
-      // anywhere (frameLook.css).
+      // by it (2.4.12, focus). The name breaks anywhere (frameLook.css). The focus walk at 320 px (Codex on brief 81) is
+      // a keep below (brief 96): no journey may credit 2.4.12 (it lists only the pack's focus method, and a journey's
+      // method must be j- or keyboard, tools/a11y-run.mjs), so it is kept under each adaptation where the state's keeps are.
       name: 'refused-long-name',
       path: '/',
       setAside: PREVIEW_ASIDE,
@@ -512,6 +513,59 @@ export default {
         content: ['[role=alert] .cds--inline-notification__title', '[role=alert] .cds--inline-notification__subtitle'],
         functions: [
           { name: 'close the notice', run: async ({ page }) => { await alerts(page).getByRole('button', { name: 'Close' }).click(); return (await alerts(page).count()) === 0 && focusOn(page, OPEN); } },
+          // With the notice showing, the window 320 px wide (put back after): Tab from the document's start through every
+          // control, seven by name and in order, and at each the pack's grid of hit tests across the focused control
+          // (focusStep in helpers.ts, its 2.4.12 evidence), each finding the control, a part of it or an ancestor. Three
+          // differences from the pack's measure, ruled by orchestrator 28 (CONTINUE-83, B) for this keep only, since at
+          // 320 px a control flush with the window's edge, or a pixel or two under the fold, finds nothing there:
+          // (i) after each Tab the control's box is read against the window first, and more than 1 px of it outside the
+          // window is its own failure, "outside the window after Tab" (nothing here scrolls it in); (ii) only grid points
+          // at least 1 px inside the window on every side are sampled, and the record counts those at the edge, not
+          // sampled; (iii) a sampled point that finds nothing, or anything but the control, a part of it or an ancestor,
+          // fails, naming what covered it. The notice must still be showing at the end. Throws what it saw.
+          {
+            name: 'walk the seven controls at 320 px with the notice showing, none outside the window or covered in any part',
+            run: async ({ page }) => {
+              const size = page.viewportSize();
+              try {
+                await page.setViewportSize({ width: 320, height: size.height });
+                const key = page.context().browser()?.browserType().name() === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab'; // the pack's tabKey
+                const seven = ['Open project', 'Help', 'Close', 'GitHub', 'Skip to start', 'Skip to end', 'Timeline'];
+                const walked = [], problems = [], edges = [];
+                for (let i = 0; i < 20; i++) {
+                  await page.keyboard.press(key);
+                  const at = await page.evaluate(() => {
+                    const e = document.activeElement;
+                    if (!e || e === document.body) return null;
+                    const r = e.getBoundingClientRect(), W = document.documentElement.clientWidth, H = document.documentElement.clientHeight;
+                    const out = Math.max(0, -r.left, r.right - W, -r.top, r.bottom - H);
+                    const step = Math.max(2, Math.sqrt((r.width * r.height) / 1600));
+                    const points = [];
+                    for (let x = r.x + 0.5; x < r.x + r.width; x += step) for (let y = r.y + 0.5; y < r.y + r.height; y += step) points.push([x, y]);
+                    for (const [x, y] of [[r.x + r.width - 0.5, r.y + 0.5], [r.x + 0.5, r.y + r.height - 0.5], [r.x + r.width - 0.5, r.y + r.height - 0.5]]) points.push([x, y]);
+                    const inside = points.filter(([x, y]) => x >= 1 && x <= W - 1 && y >= 1 && y <= H - 1);
+                    const misses = inside.filter(([x, y]) => { const h = document.elementFromPoint(x, y); return !(h && (h === e || e.contains(h) || h.contains(e))); });
+                    const by = misses.map(([x, y]) => document.elementFromPoint(x, y)).map((h) => (!h ? 'nothing' : h.closest('[role=alert]') ? 'the alert' : h.tagName.toLowerCase()));
+                    return { out: Math.round(out * 100) / 100, misses: misses.length, of: inside.length, edge: points.length - inside.length, by: [...new Set(by)] };
+                  });
+                  if (!at) break;
+                  const name = /"([^"]*)"/.exec(await page.locator(':focus').ariaSnapshot())?.[1] ?? '?';
+                  if (walked.length && name === walked[0]) break;
+                  walked.push(name);
+                  if (at.out > 1) problems.push(`${name} ${at.out} px outside the window after Tab`);
+                  if (at.misses) problems.push(`${name} covered at ${at.misses}/${at.of} sampled points by ${at.by.join(', ')}`);
+                  if (at.edge) edges.push(`${name} ${at.edge}`);
+                }
+                if (JSON.stringify(walked) !== JSON.stringify(seven)) throw new Error(`walked ${walked.join(', ')}`);
+                if (problems.length) throw new Error(`${problems.join('; ')} (at the edge, not sampled: ${edges.join(', ') || 'none'})`);
+                if (!(await alerts(page).isVisible())) throw new Error('the notice was gone');
+                console.log(`focus walk at 320 px: ${walked.length} walked, none outside the window or covered; at the edge, not sampled: ${edges.join(', ') || 'none'}`);
+                return true;
+              } finally {
+                await page.setViewportSize(size);
+              }
+            },
+          },
         ],
       },
     },
