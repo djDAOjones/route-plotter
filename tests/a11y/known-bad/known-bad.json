@@ -1,5 +1,5 @@
 {
-  "note": "V31-A11Y section B's known-bad fixtures: each page, run alone through the gate (npm run a11y -- --known-bad <page>) at level AAA, must exit 1 with its named row failed by its named method. A page whose fault an interaction starts names its control in start. Each test claims the rows its check records (claims), or every row axe credits; the named rows are among them. A page may declare setAside, handed to its state as a standard state declares it.",
+  "note": "V31-A11Y section B's known-bad fixtures: each page, run alone through the gate (npm run a11y -- --known-bad <page>) at level AAA, must exit 1 with its named row failed by its named method. A page whose fault an interaction starts names its control in start. Each test claims the rows its check records (claims), or every row axe credits; the named rows are among them. A page may declare setAside, handed to its state as a standard state declares it. A row listed in unresolved must be left not run by its method, with a result recorded, and never credited.",
   "pages": [
     {
       "page": "unnamed-button",
@@ -188,6 +188,24 @@
           "count": 1,
           "reason": "known-bad: a control's own graphic inside a declared region"
         }
+      ]
+    },
+    {
+      "page": "canvas-undeclared",
+      "method": "contrast",
+      "fails": [],
+      "unresolved": [
+        "1.4.11"
+      ],
+      "passes": [
+        "1.4.3",
+        "1.4.6"
+      ],
+      "reason": "a named image that is a canvas, with no set-aside declared",
+      "claims": [
+        "1.4.3",
+        "1.4.6",
+        "1.4.11"
       ]
     }
   ]

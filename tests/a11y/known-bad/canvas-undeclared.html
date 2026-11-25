@@ -1,0 +1,4 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Known-bad: a canvas nobody declared</title><style>body{font:16px/1.5 sans-serif;color:#111;background:#fff;margin:1rem}canvas{display:block;width:160px;height:90px}</style></head><body><main>
+<h1>A canvas nobody declared</h1><p>The named image below is a canvas, and no set-aside declares it: the pack cannot measure its pixels, so 1.4.11 must be left not run, never credited.</p>
+<canvas role="img" aria-label="A route on a map" width="160" height="90"></canvas>
+</main><script>const x = document.querySelector('canvas').getContext('2d'); x.strokeStyle = '#3a6ea5'; x.lineWidth = 4; x.beginPath(); x.moveTo(10, 80); x.lineTo(80, 20); x.lineTo(150, 60); x.stroke();</script></body></html>

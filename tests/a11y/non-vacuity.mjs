@@ -14,7 +14,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 // CORE-05 (brief 96): a set-aside declaration answers for its reviewed count and never covers a control's own graphic;
 // each of its two pages runs in about 7 s on the Mac Pro, under the 30 s a page may take here.
-const PAGES = ['contrast-5', 'target-30', 'aside-miscount', 'aside-control'];
+// Brief 96, stage 3: a canvas nobody declared leaves 1.4.11 not run, never credited (its key: unresolved).
+const PAGES = ['contrast-5', 'target-30', 'aside-miscount', 'aside-control', 'canvas-undeclared'];
 const { pages } = JSON.parse(readFileSync(join(ROOT, 'tests/a11y/known-bad/known-bad.json'), 'utf8'));
 
 // One known-bad page through the gate: what it should have done, against what its report recorded.
@@ -26,6 +27,9 @@ function judge(k, status, report) {
   const by = (id) => row(id)?.methods.find((m) => m.method === k.method);
   for (const id of k.fails) if (row(id)?.status !== 'failed' || by(id)?.state !== 'fail') problems.push(`${id} reads ${row(id)?.status ?? 'missing'}, ${k.method} ${by(id)?.state ?? 'absent'}: it should fail`);
   for (const id of k.passes ?? []) if (by(id)?.state !== 'pass') problems.push(`${id} reads ${k.method} ${by(id)?.state ?? 'absent'}: it should pass`);
+  // A row the page's method must leave unresolved: not run with a result recorded (every other row of a known-bad run
+  // is not run with none, so the gate's exit alone cannot tell them apart), and never credited.
+  for (const id of k.unresolved ?? []) if (by(id)?.state !== 'not_run' || !(by(id)?.results > 0) || row(id)?.status === 'checked') problems.push(`${id} reads ${row(id)?.status ?? 'missing'}, ${k.method} ${by(id)?.state ?? 'absent'} with ${by(id)?.results ?? 0} result(s): it should be left not run by the method, never credited`);
   if (report.suite !== 'failed') problems.push(`the suite reads ${report.suite}, not failed`);
   return problems;
 }
@@ -45,8 +49,8 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       process.stdout.write(r.stdout ?? '');
       process.stderr.write(r.stderr ?? '');
     } else {
-      const why = k.fails.map((id) => `${id} (${report.rows.find((x) => x.id === id).reasons.join('; ')})`).join(', ');
-      console.log(`ok    ${name}: the gate exited 1, ${k.method} failed ${why} and passed ${(k.passes ?? []).join(', ') || 'nothing else'}; run folder ${folder}`);
+      const why = [...k.fails, ...(k.unresolved ?? [])].map((id) => `${id} (${report.rows.find((x) => x.id === id).reasons.join('; ')})`).join(', ');
+      console.log(`ok    ${name}: the gate exited 1, ${k.method} ${k.unresolved?.length ? 'left not run' : 'failed'} ${why} and passed ${(k.passes ?? []).join(', ') || 'nothing else'}; run folder ${folder}`);
     }
   }
   console.log(failed ? `a11y:known-bad: ${failed} of ${PAGES.length} page(s) did not fail the gate as recorded` : `a11y:known-bad: all ${PAGES.length} planted faults fail the gate`);
