@@ -275,10 +275,16 @@ async function playKeyOnScene(page, key, twice) {
 }
 const alerts = (page) => page.locator('[role=alert]');
 // J or L on "Open project" (brief 76's ruling 4: they do what they do on any button). The journeys' project opened by
-// a press of the button, focus put back on it and the key pressed: "Playing animation" said (it waits behind "Project
-// opened"), focus still on the button and no file chooser opened by the key; L then moves the position on, and J, from
-// the middle (a press on the timeline's track first), plays back into the start and stops there: "Animation
-// complete", the position 0. (FINDING-78's crash of J after a press, Carbon's late echo, is mended: brief 79.)
+// a press of the button (for J, a press on the timeline's track then puts the position at its middle), focus put back
+// on the button and, before the key, a reader started in the page that writes down at every frame the position
+// (aria-valuenow) and the status region's words, until "Animation complete" is said for J ("Playing animation" said
+// and the position past where it started, for L), or 10 s. Nothing is judged at the moment a message shows (brief 97):
+// "Playing animation" waits behind "Project opened" for whatever is left of its two seconds while the reverse from the
+// middle takes about three, so a reading taken when the words show can come after the position has reached 0
+// (FINDING-97). Checked from the frames: J starts at or under 510, never goes up, stands at some frame strictly between
+// 0 and where it started, and ends at 0, with "Playing animation" and then "Animation complete" said; L never goes
+// down, ends past where it started, with "Playing animation" said. Then focus is still on the button and the key opened
+// no file chooser. (FINDING-78's crash of J after a press, Carbon's late echo, is mended: brief 79.)
 const PLAYING = 'Playing animation';
 const COMPLETE = 'Animation complete';
 const comesToWords = (page, w) => page.waitForFunction(([s, words]) => document.querySelector(s)?.textContent === words, [STATUS, w], { timeout: 6000 }).then(() => true, () => false);
@@ -292,10 +298,29 @@ async function playsFromOpen(page, key) {
   let choosers = 0;
   page.on('filechooser', () => { choosers++; });
   await page.locator(OPEN).focus();
+  // The reader's first frame is read now, before the key; the rest at each frame after it.
+  await page.evaluate(([t, s, playing, complete, back]) => {
+    const frames = [], until = performance.now() + 10000;
+    window.__fromOpen = new Promise((resolve) => {
+      const tick = () => {
+        const n = Number(document.querySelector(t)?.getAttribute('aria-valuenow'));
+        const said = document.querySelector(s)?.textContent ?? '';
+        frames.push([n, said]);
+        const done = back ? said === complete : frames.some((f) => f[1] === playing) && n > frames[0][0];
+        if (done || performance.now() > until) resolve(frames); else requestAnimationFrame(tick);
+      };
+      tick();
+    });
+  }, [TIMELINE, STATUS, PLAYING, COMPLETE, key === 'j']);
   await page.keyboard.press(key);
-  if (!(await comesToWords(page, PLAYING))) return false;
-  // L moves on; J, from the middle, stands short of it and above 0 when "Playing animation" is said, and ends at 0.
-  const moved = key === 'l' ? await comesTo(page, 'n > 0') : (await atNow(page)).now > 0 && (await atNow(page)).now <= 510 && (await comesToWords(page, COMPLETE)) && (await atNow(page)).now === 0;
+  const frames = await page.evaluate(() => window.__fromOpen);
+  const at = frames.map(([n]) => n), start = at[0], end = at.at(-1);
+  const steps = at.slice(1).map((n, i) => n - at[i]);
+  const words = frames.map(([, w]) => w).filter((w, i, all) => w && w !== all[i - 1]);
+  const playedAt = words.indexOf(PLAYING);
+  const moved = key === 'j'
+    ? start <= 510 && steps.every((d) => d <= 0) && at.some((n) => n > 0 && n < start) && end === 0 && playedAt !== -1 && words.indexOf(COMPLETE, playedAt) > playedAt
+    : steps.every((d) => d >= 0) && end > start && playedAt !== -1;
   return moved && (await focusOn(page, OPEN)) && choosers === 0;
 }
 // Open Help by its button from the keyboard, Tab to its switch, press Space, close it by Escape. The switch is drawn
