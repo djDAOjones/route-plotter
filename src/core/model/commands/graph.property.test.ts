@@ -14,6 +14,7 @@ import {
   joinPoints,
   markPoint,
   penStep,
+  reverseLine,
   setDirection,
   setKind,
   setLeadStart,
@@ -75,6 +76,7 @@ const editOf = fc.oneof(
     }),
     weight: 2,
   },
+  { arbitrary: fc.record({ edit: fc.constant('reverse' as const), line: targetOf }), weight: 2 },
   { arbitrary: fc.record({ edit: fc.constant('leadStart' as const), point: targetOf }), weight: 2 },
   { arbitrary: fc.record({ edit: fc.constant('mark' as const), point: targetOf, end: endOf }), weight: 2 },
   { arbitrary: fc.record({ edit: fc.constant('unmark' as const), point: targetOf, end: endOf }), weight: 2 },
@@ -111,6 +113,8 @@ function apply(route: Route, pen: string | null, edit: Edit, nextId: IdSource) {
     }
     case 'direction':
       return wrap(setDirection(route, idOf(route.lines, edit.line), edit.to), pen);
+    case 'reverse':
+      return wrap(reverseLine(route, idOf(route.lines, edit.line)), pen);
     case 'leadStart':
       return wrap(setLeadStart(route, point(edit.point)), pen);
     case 'mark':
@@ -162,6 +166,6 @@ describe('the graph’s edits, as a property', () => {
     expect([...reached.edges].sort((a, b) => a - b)).toEqual([LIMITS.coordinateMin, LIMITS.coordinateMax]);
     expect(reached.unchanged).toBeGreaterThan(0);
     expect(reached.changed).toBeGreaterThan(0);
-    expect([...changedBy].sort()).toEqual(['add', 'direction', 'join', 'kind', 'leadStart', 'mark', 'pen', 'unmark']);
+    expect([...changedBy].sort()).toEqual(['add', 'direction', 'join', 'kind', 'leadStart', 'mark', 'pen', 'reverse', 'unmark']);
   });
 });

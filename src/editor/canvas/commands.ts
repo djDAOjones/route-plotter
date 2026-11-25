@@ -82,6 +82,14 @@ export function setDirection(routeId: string, lineId: string, direction: Line['d
   };
 }
 
+/** A line's ends swapped, one way or both ways; its id, place, direction and speed kept. */
+export function reverseLine(routeId: string, lineId: string): Command {
+  return {
+    label: 'Reverse line',
+    apply: (current) => onRoute(current, routeId, (route) => keeping(graph.reverseLine(route, lineId))),
+  };
+}
+
 /** The point the lead walks from. */
 export function setLeadStart(routeId: string, pointId: string): Command {
   return {

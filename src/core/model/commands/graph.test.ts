@@ -14,6 +14,7 @@ import {
   joinPoints,
   markPoint,
   penStep,
+  reverseLine,
   setDirection,
   setKind,
   setLeadStart,
@@ -417,5 +418,44 @@ describe('stage 2: a line’s direction, the lead’s start, marks and a point�
     expect(unmarkPoint(route, 'nope', 'end')).toEqual({ refused: 'no-such-point', id: 'nope' });
     expect(setKind(route, 'nope', 'bend')).toEqual({ refused: 'no-such-point', id: 'nope' });
     expect(route).toEqual(copy);
+  });
+});
+
+describe('a line reversed (v3 networkEdit :580; the owner’s answer to D236, “Swap ends”)', () => {
+  /** a → b → c, the line b → c at twice the route's speed. */
+  function abc() {
+    const p = pen();
+    const ids = [p.place(0.1, 0.1), p.place(0.5, 0.1), p.place(0.9, 0.1)] as const;
+    const route = p.route();
+    const fast = { ...route, lines: [nth(route.lines, 0), { ...nth(route.lines, 1), speedFactor: 2 }] };
+    return { route: frozen(fast), ids };
+  }
+
+  it('a one-way line’s ends swap; its id, place, direction and speed are kept, and nothing else changes (v3 :580)', () => {
+    const { route, ids } = abc();
+    const reversed = done(reverseLine(route, lineId(route, 1)));
+    expect(reversed.lines[1]).toEqual({ ...nth(route.lines, 1), from: ids[2], to: ids[1] });
+    expect(reversed.lines[1]).toMatchObject({ direction: 'one way', speedFactor: 2 });
+    expect(reversed.lines[0]).toBe(route.lines[0]);
+    for (const key of ['points', 'marks', 'leadStart', 'settings', 'id'] as const) expect(reversed[key]).toBe(route[key]);
+    expect(checked(reversed).ok).toBe(true);
+    expect(leadWalk(reversed).walked.map((line) => [line.from, line.to])).toEqual([[ids[0], ids[1]]]);
+    expect(leadWalk(reversed).leftOut).toEqual([lineId(route, 1)]);
+  });
+
+  it('a two-way line’s ends swap too, its direction kept (the owner’s ruling; v3 left a two-way line as it was)', () => {
+    const { route, ids } = abc();
+    const both = frozen(done(setDirection(route, lineId(route, 1), 'both ways')));
+    const reversed = done(reverseLine(both, lineId(route, 1)));
+    expect(reversed.lines[1]).toEqual({ ...nth(both.lines, 1), from: ids[2], to: ids[1] });
+    expect(reversed.lines[1]).toMatchObject({ direction: 'both ways', speedFactor: 2 });
+    expect(reversed.lines[0]).toBe(both.lines[0]);
+  });
+
+  it('reversed twice is the route as it was; an unknown line is refused and the route left as it was', () => {
+    const { route } = abc();
+    expect(done(reverseLine(frozen(done(reverseLine(route, lineId(route, 0)))), lineId(route, 0)))).toEqual(route);
+    expect(reverseLine(route, 'nope')).toEqual({ refused: 'no-such-line', id: 'nope' });
+    expect(reverseLine(route, nth(route.points, 0).id)).toEqual({ refused: 'no-such-line', id: nth(route.points, 0).id });
   });
 });

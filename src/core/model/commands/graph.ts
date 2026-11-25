@@ -96,6 +96,16 @@ export function setDirection(route: Route, lineId: string, direction: Line['dire
   return { ...route, lines: replaced(route.lines, lineId, (each) => ({ ...each, direction })) };
 }
 
+/**
+ * A line reversed: its `from` and `to` swapped, whether it runs one way or both ways (the owner's answer to D236, "Swap
+ * ends"); its id, place in `lines`, direction and speed are kept. v3's swap (networkEdit :580) left a two-way line as
+ * it was; v4 swaps it too, so its saved ends, which the walk reads in order, follow the author.
+ */
+export function reverseLine(route: Route, lineId: string): Route | EditRefusal {
+  if (!route.lines.some((each) => each.id === lineId)) return { refused: 'no-such-line', id: lineId };
+  return { ...route, lines: replaced(route.lines, lineId, (each) => ({ ...each, from: each.to, to: each.from })) };
+}
+
 /** The point the lead walks from, set to a point of the route. */
 export function setLeadStart(route: Route, pointId: string): Route | EditRefusal {
   if (!holds(route, pointId)) return { refused: 'no-such-point', id: pointId };
