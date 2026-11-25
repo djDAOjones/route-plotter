@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // STACK-03: proof, on every run of v4's gate, that the accessibility run is not vacuous. The pack's known-bad pages for
 // the two faults the item names, text at about 5:1 (under AAA's 7:1, 1.4.6) and a 30 px target (under AAA's 44 px,
-// 2.5.5), each go through the gate itself, one at a time (`npm run a11y -- --known-bad <page>`). Each run must exit 1,
+// 2.5.5), and CORE-05's two set-aside faults (1.4.11), each go through the gate itself, one at a time (`npm run a11y -- --known-bad <page>`). Each run must exit 1,
 // with every row known-bad.json says fails failed by its method, and every row it says passes passed. Anything else
 // exits 1 here. The run folders stay in the system's temporary folder, as the gate leaves them; nothing is written in
 // the checkout.
@@ -12,7 +12,9 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const PAGES = ['contrast-5', 'target-30'];
+// CORE-05 (brief 96): a set-aside declaration answers for its reviewed count and never covers a control's own graphic;
+// each of its two pages runs in about 7 s on the Mac Pro, under the 30 s a page may take here.
+const PAGES = ['contrast-5', 'target-30', 'aside-miscount', 'aside-control'];
 const { pages } = JSON.parse(readFileSync(join(ROOT, 'tests/a11y/known-bad/known-bad.json'), 'utf8'));
 
 // One known-bad page through the gate: what it should have done, against what its report recorded.

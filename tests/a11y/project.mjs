@@ -182,7 +182,9 @@ const BLUE = [51, 102, 204]; // #3366cc, the plain picture's
 // pixels are the user's own picture and routes in their own colours, as the export draws them (1.4.11's essential
 // presentation), and nothing of the editor's own is drawn on it yet. The item that first draws the editor's own marks
 // there (a selected route's rings, hover: CORE-06) narrows or replaces this, and measures them by their pixels.
-const PREVIEW_ASIDE = [{ selector: PREVIEW, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); nothing of the editor's own is drawn on it yet" }];
+// The count is reviewed: the graphics standing in the preview on both states that declare it (the image wrapper and its
+// canvas). A different number found fails 1.4.11, so CORE-06 changes it with what it draws there.
+const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 2, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); nothing of the editor's own is drawn on it yet" }];
 const pixels = (page) => page.locator(CANVAS).evaluate((c) => {
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   let hash = 0, drawn = 0;

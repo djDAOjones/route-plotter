@@ -60,7 +60,7 @@ export const test = base.extend<{ a11yBrowser: void }>({
 });
 export { expect };
 
-export type State = { name?: string; path: string; setAside?: { selector: string; reason: string }[]; setup?: (a: { page: Page }) => Promise<void>; snapshot?: string; snapshotRoot?: string; interactions?: { name: string; run: (a: { page: Page }) => Promise<void>; snapshot?: string }[]; keeps?: { content?: string[]; cues?: string[]; functions?: { name: string; run: (a: { page: Page }) => Promise<boolean> }[] } };
+export type State = { name?: string; path: string; setAside?: { selector: string; reason: string; count: number }[]; setup?: (a: { page: Page }) => Promise<void>; snapshot?: string; snapshotRoot?: string; interactions?: { name: string; run: (a: { page: Page }) => Promise<void>; snapshot?: string }[]; keeps?: { content?: string[]; cues?: string[]; functions?: { name: string; run: (a: { page: Page }) => Promise<boolean> }[] } };
 export async function open(page: Page, state: State) {
   await page.goto(state.path);
   if (state.setup) await state.setup({ page });
@@ -218,9 +218,10 @@ export async function contrastPairs(page: Page, setAside: string[] = []) {
     }
     // Meaningful graphics: any not hidden from assistive technology, and an icon that alone identifies its control. The
     // page reports each SVG's painted shapes in paint order with the page colour behind it; graphics.mjs judges them.
-    // A raster or canvas graphic in an element the state declares set aside (setAside, each with its reason) is counted
-    // there and not measured; an SVG never is.
-    const asideCount = aside.map(() => 0);
+    // A raster or canvas graphic in an element the state declares set aside (setAside, each with its reason and the
+    // count reviewed) is counted there and not measured; an SVG never is. A graphic that alone identifies its control is
+    // never set aside nor counted: standing in a declared element it is named, and contrastRows fails the declaration.
+    const asideCount = aside.map(() => 0), asideControl: string[] = [];
     const graphicsRaw: { el: string; bg: number[]; shapes: { tag: string; exact: boolean; round: boolean; box: { left: number; top: number; right: number; bottom: number }; fill: number[] | null; stroke: number[] | null }[]; open: string }[] = [];
     const controlOf = (e: Element) => e.closest('button, a[href], summary, [role=button], [role=link], [role=tab], [role=menuitem], [role=checkbox], [role=switch], [role=option]');
     for (const g of document.querySelectorAll('svg, img, canvas, [role=img], input[type=image]')) {
@@ -228,7 +229,9 @@ export async function contrastPairs(page: Page, setAside: string[] = []) {
       const ctl = controlOf(g);
       const needed = ctl ? !((ctl as HTMLElement).innerText || '').replace(/[^\p{L}\p{N}]/gu, '') : !g.closest('[aria-hidden="true"], [role=presentation], [role=none]') && !(g.tagName === 'IMG' && g.getAttribute('alt') === '');
       if (!needed) continue;
-      if (g.tagName.toLowerCase() !== 'svg') { const i = aside.findIndex((sel) => g.closest(sel)); if (i >= 0) { asideCount[i] += 1; continue; } graphicsUnresolved.push(`${name(g)}: a raster or canvas graphic, not measured`); continue; }
+      const i = aside.findIndex((sel) => g.closest(sel));
+      if (i >= 0 && ctl) asideControl.push(`set aside ${aside[i]} holds ${name(g)}, the graphic that alone identifies its control ${name(ctl)}: a control's graphic is never set aside`);
+      if (g.tagName.toLowerCase() !== 'svg') { if (i >= 0 && !ctl) { asideCount[i] += 1; continue; } graphicsUnresolved.push(`${name(g)}: a raster or canvas graphic, not measured`); continue; }
       const bg = background(g.parentElement);
       if (!bg) { graphicsUnresolved.push(`${name(g)} over an image`); continue; }
       let open = '';
@@ -255,7 +258,7 @@ export async function contrastPairs(page: Page, setAside: string[] = []) {
       }
       graphicsRaw.push({ el: name(g), bg, shapes, open });
     }
-    return { text, boundaries, native, graphicsRaw, unresolved, graphicsUnresolved, asideCount };
+    return { text, boundaries, native, graphicsRaw, unresolved, graphicsUnresolved, asideCount, asideControl };
   }, setAside);
   // The shapes are judged here, in plain Node, by the module the confined suite holds to known answers.
   const graphics: { el: string; state: 'pass' | 'fail'; low: number; shapes: number; reason: string }[] = [], graphicsUnresolved = [...raw.graphicsUnresolved];
@@ -264,7 +267,7 @@ export async function contrastPairs(page: Page, setAside: string[] = []) {
     if (v.state === 'unresolved') graphicsUnresolved.push(`${g.el}: ${v.reason}`);
     else graphics.push({ el: g.el, state: v.state, low: v.low, shapes: v.shapes, reason: v.reason });
   }
-  return { text: raw.text, boundaries: raw.boundaries, native: raw.native, graphics, unresolved: raw.unresolved, graphicsUnresolved, setAside: raw.asideCount };
+  return { text: raw.text, boundaries: raw.boundaries, native: raw.native, graphics, unresolved: raw.unresolved, graphicsUnresolved, setAside: raw.asideCount, asideControl: raw.asideControl };
 }
 
 // State cues: each toggle, unchecked radio, unselected tab or option is activated — by Space, else Enter, else a pointer
@@ -319,10 +322,11 @@ export async function stateCues(page: Page, state: State, limit = 20) {
 
 export async function contrastRows(page: Page, state: State): Promise<Rows> {
   const declared = state.setAside ?? [];
-  const { text, boundaries, native, graphics, unresolved, graphicsUnresolved, setAside } = await contrastPairs(page, declared.map((d) => d.selector));
-  // A declaration answers for what it sets aside: one with no reason, or one that sets no visible graphic aside here,
-  // fails the row, so none can linger or stand empty.
-  const misdeclared = declared.flatMap((d, i) => [...(d.reason?.trim() ? [] : [`set aside ${d.selector}: no reason given`]), ...(setAside[i] ? [] : [`set aside ${d.selector}: no visible raster or canvas graphic on state ${state.name ?? state.path} stands in it`])]);
+  const { text, boundaries, native, graphics, unresolved, graphicsUnresolved, setAside, asideControl } = await contrastPairs(page, declared.map((d) => d.selector));
+  // A declaration answers for what it sets aside: one with no reason, one whose reviewed count differs from the number
+  // of graphics standing in it here (none is this same failure), or one that holds a control's own graphic, fails the
+  // row, so none can linger, stand empty or grow unseen.
+  const misdeclared = [...declared.flatMap((d, i) => [...(d.reason?.trim() ? [] : [`set aside ${d.selector}: no reason given`]), ...(setAside[i] === d.count ? [] : [`set aside ${d.selector} on state ${state.name ?? state.path}: ${setAside[i]} raster or canvas graphic(s) found, ${d.count} declared`])]), ...asideControl];
   const asideWords = declared.length ? `; ${setAside.reduce((a, b) => a + b, 0)} raster or canvas graphic(s) set aside, not measured: ${declared.map((d, i) => `${d.selector} (${setAside[i]}), ${d.reason}`).join('; ')}` : '';
   const short = (r: number) => r.toFixed(2);
   const nativeLow: string[] = [];

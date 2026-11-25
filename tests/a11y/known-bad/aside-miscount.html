@@ -1,0 +1,4 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Known-bad: a set-aside miscounted</title><style>body{font:16px/1.5 sans-serif;color:#111;background:#fff;margin:1rem}.region canvas{display:block;width:120px;height:80px;margin:.5rem 0}</style></head><body><main>
+<h1>A set-aside miscounted</h1><p>The region below is declared set aside with a count of one, and holds two named canvases: 1.4.11 must fail on the count.</p>
+<div class="region"><canvas role="img" aria-label="The first picture" width="120" height="80"></canvas><canvas role="img" aria-label="The second picture" width="120" height="80"></canvas></div>
+</main><script>for (const c of document.querySelectorAll('canvas')) { const x = c.getContext('2d'); x.fillStyle = '#3a6ea5'; x.fillRect(10, 10, 100, 60); }</script></body></html>
