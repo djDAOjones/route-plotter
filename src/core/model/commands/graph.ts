@@ -61,9 +61,9 @@ export interface PenStep {
  * added, or the pen is put down on a point the route holds. From a pen point, a new place gets a new point and a line
  * to it (a chain); a point the route holds gets a line to it (a join, a loop's closing line or, from a point a line
  * already leaves, a fork), unless the two are joined already, when nothing is added and the pen still moves there.
+ * A pen point the route does not hold is refused by the join.
  */
 export function penStep(route: Route, nextId: IdSource, pen: string | null, target: PenTarget): PenStep | EditRefusal {
-  if (pen !== null && !holds(route, pen)) return { refused: 'no-such-point', id: pen };
   if ('place' in target) {
     const added = addPoint(route, nextId, target.place);
     if (pen === null) return { route: added.route, pen: added.point };
