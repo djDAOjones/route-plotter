@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Route Plotter Progress</title>
+  <meta name="description" content="Progress on Route Plotter version 4, read from the project's own record at each publish.">
+  <link rel="stylesheet" href="progress.css">
+  <script src="progress.js" defer></script>
+</head>
+<body>
+  <main class="rp">
+    <header class="rp-head">
+      <h1 class="rp-title">Route Plotter Progress</h1>
+      <p class="rp-meta" id="as-of">Loading the latest record…</p>
+      <p class="rp-meta"><a class="rp-link" href="../">Open Route Plotter</a></p>
+    </header>
+
+    <p class="rp-error" id="load-error" role="alert" hidden>The progress data could not load. Reload the page to try again.</p>
+
+    <section class="rp-section" aria-labelledby="phases-heading">
+      <h2 class="rp-h2" id="phases-heading">Version 4 by phase</h2>
+      <p class="rp-note">The phases run in order. Each phase starts once the one before it is finished.</p>
+      <ul class="rp-legend" aria-hidden="true">
+        <li><span class="rp-key rp-done"></span>Done</li>
+        <li><span class="rp-key rp-progress"></span>In progress</li>
+        <li><span class="rp-key rp-signoff"></span>Needs sign-off</li>
+        <li><span class="rp-key rp-todo"></span>To do</li>
+      </ul>
+      <div class="rp-phases" id="phases"></div>
+    </section>
+
+    <section class="rp-section" aria-labelledby="items-heading">
+      <h2 class="rp-h2" id="items-heading">Every v4 item</h2>
+      <div class="rp-table-wrap">
+        <table class="rp-table">
+          <thead>
+            <tr><th scope="col">Phase</th><th scope="col">Item</th><th scope="col">Status</th><th scope="col">Done</th><th scope="col">Open since</th></tr>
+          </thead>
+          <tbody id="items"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="rp-section" aria-labelledby="history-heading">
+      <h2 class="rp-h2" id="history-heading">The whole record since October</h2>
+      <p class="rp-note">Every open item on the backlog, whatever its phase, against the running total of items shipped. On 18 November the version 3 list was reviewed against the v4 plan. Most open v3 items were folded into v4's larger items or closed, so the open count fell before the v4 items were added.</p>
+      <ul class="rp-legend" aria-hidden="true">
+        <li><span class="rp-key rp-key-line rp-line-open"></span>Open on the backlog</li>
+        <li><span class="rp-key rp-key-line rp-line-shipped"></span>Shipped, running total</li>
+      </ul>
+      <div class="rp-chart" id="history-chart"></div>
+      <p class="rp-readout" id="history-readout" aria-live="polite">Point at the chart, or focus it and use the arrow keys, to read a day.</p>
+      <details class="rp-details">
+        <summary>Show the chart's numbers</summary>
+        <div class="rp-table-wrap">
+          <table class="rp-table">
+            <thead><tr><th scope="col">Day</th><th scope="col" class="rp-num">Open</th><th scope="col" class="rp-num">Shipped</th></tr></thead>
+            <tbody id="history-table"></tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+
+    <div class="rp-two">
+      <section class="rp-section" aria-labelledby="other-heading">
+        <h2 class="rp-h2" id="other-heading">Version 3 and other work</h2>
+        <div class="rp-table-wrap">
+          <table class="rp-table">
+            <thead><tr><th scope="col">Work</th><th scope="col">Finished</th><th scope="col" class="rp-num">Items</th></tr></thead>
+            <tbody id="other"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="rp-section" aria-labelledby="later-heading">
+        <h2 class="rp-h2" id="later-heading">After v4.0, and parked ideas</h2>
+        <div class="rp-table-wrap">
+          <table class="rp-table">
+            <thead><tr><th scope="col">Item</th><th scope="col">When</th></tr></thead>
+            <tbody id="later"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <details class="rp-details">
+      <summary>How these numbers are counted</summary>
+      <ul class="rp-list">
+        <li>An item is one piece of work on the project backlog, such as a feature, a fix or a review. Items differ in size: the editor shell is one item, and so is a small defect fix.</li>
+        <li>An item is done when it has been built, checked and merged into the main code.</li>
+        <li>"In progress" means the item is marked so on the backlog, or has its own branch of work open.</li>
+        <li>"Needs sign-off" means the item waits on testing on real devices, such as an Android phone or a screen reader, or on the decision to declare v4.0.</li>
+        <li>The chart counts everything on the backlog, including parked ideas.</li>
+        <li>This page is rebuilt from the project's record each time the app is published. Item names are reworded in plain English from that record.</li>
+      </ul>
+    </details>
+  </main>
+</body>
+</html>

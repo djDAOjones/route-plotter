@@ -1,26 +1,17 @@
 {
   "app": "Route Plotter",
-  "version": "4.0.0-preview.4",
-  "preview": 4,
-  "source": "dd877d98a27cf4918a58edc70059d8d283a58499",
-  "published": "2026-11-25T12:24:33Z",
+  "version": "4.0.0-preview.5",
+  "preview": 5,
+  "source": "e3d180b3d96c30fb00645754ed9cc71d508d0b03",
+  "published": "2026-11-25T19:04:13Z",
   "address": "https://djdaojones.github.io/route-plotter/",
   "whatIsNew": [
-    "CORE-03 — v4's save and open stand in `src/adapters/io`: a project saves as a ZIP of `project.json` and its images, the same bytes every time, and opens only through v3's ported file-safety guards and the core's own check, refusing in words, with nothing changed, a v3 file, another preview's format, an unknown feature or field and an image that does not decode; Save writes no file Open would refuse, by pull request (2026-11-19)",
-    "CORE-04 — v4's renderer stands: one composer draws every frame in §8's four stages on the canvas kit, the core modules' drawing (background, clock, export; line, lead, markers, labels, pauses) listed in the catalogue, the editor's overlays drawn only from a list its caller passes; v4's goldens compared with v3's frames of five scenes, every difference named and ruled, by pull request (2026-11-20)",
-    "PLAN-8 — the owner's answers to the night's decisions D1 to D180 are in the record, and his signed lines are written where the checker accepts them (2026-11-21)",
-    "GATE-03 — a change to the gate's own test file alone runs the gate's tests, v4's gate and the record checker, not frozen v3's suite; two older tests narrowed by that one path, on the owner's word, by pull request (2026-11-24)",
-    "PLAN-9 — the owner's answers on the review of decisions D1 to D200 are in the record, and GATE-04 and CORE-14 are filed (2026-11-24)",
-    "CORE-05 — v4's editor shell stands in `src/editor`: one Carbon frame with five named slots, a typed store with one undo step a gesture, the transport on the player's clock with J, K, L, the frame step and the skips, the control kit, one key table and Help, Open project and the preview in the video's shape, the owner's answers D181 to D228 in the record, built where they are the shell's and the rest placed (CORE-06, CORE-08, CORE-15 and wish lines), by pull request (2026-11-25)",
-    "STACK-04 — v4's layers and edges are enforced by dependency-cruiser and proved for good by 29 planted violations and a legal tree, the built player's closure is tested, and `npm run measures` prints M1 to M11 into every v4 run's summary; v3's architecture file lives in `v3/`, v4's record at `project/architecture.md`, by pull request (2026-11-19)",
-    "RECALL — 8/8 (2026-11-19) — scores: 2,2,2,2 — fresh",
-    "And 3 earlier item(s)."
+    "PROG-01 — the publishing step writes a client progress page from the record into each publish, at `progress/` on the site: v4 by phase, every v4 item, the record's history and the rest; plain names in `progress/names.json`; loads nothing from another site, by pull request (2026-11-25)"
   ],
   "whatToTry": [
-    "Open a project with the **Open project** button, or with Cmd+O (Ctrl+O off a Mac). Pressing that key for real in Chrome once is still yours to do (D222).",
-    "The preview is the video's shape: white bands round a picture of another shape.",
-    "Play and Pause, and the timeline, by mouse and by keys: Space or K plays and pauses, J and L play backwards and forwards, Home and End skip to the ends.",
-    "Comma steps one frame back and full stop one frame forward, pausing a playing scene.",
-    "`?` opens Help, and one Escape closes it."
+    "After the merge and the next publish, open https://djdaojones.github.io/route-plotter/progress/",
+    "Check the phase bars and the item table against the backlog.",
+    "Focus the chart and use the arrow keys, or open \"Show the chart's numbers\".",
+    "Run Actions → Publish → Run workflow (mode publish) twice in a row: the second run should find nothing new."
   ]
 }

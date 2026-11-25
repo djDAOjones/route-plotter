@@ -1,0 +1,557 @@
+{
+ "asOf": "2026-11-25T18:06:46Z",
+ "commit": "e3d180b",
+ "summary": {
+  "v4Items": 41,
+  "v4Done": 17,
+  "v4InProgress": 1,
+  "v4SignOff": 3,
+  "v4ToDo": 20,
+  "shipped": 74,
+  "open": 28
+ },
+ "phases": [
+  {
+   "number": 5,
+   "name": "Architecture plan",
+   "items": [
+    {
+     "id": "GATE-01",
+     "name": "Build checks run only what each change needs",
+     "status": "Done",
+     "done": "2026-11-18",
+     "since": null
+    },
+    {
+     "id": "MERGE-01",
+     "name": "The v4 architecture plan",
+     "status": "Done",
+     "done": "2026-11-18",
+     "since": null
+    },
+    {
+     "id": "REFACTOR-01",
+     "name": "Plan for carrying v3's engine into v4",
+     "status": "Done",
+     "done": "2026-11-18",
+     "since": null
+    }
+   ]
+  },
+  {
+   "number": 6,
+   "name": "Foundations",
+   "items": [
+    {
+     "id": "STACK-01",
+     "name": "v3 frozen in its own folder and still passing its tests",
+     "status": "Done",
+     "done": "2026-11-18",
+     "since": null
+    },
+    {
+     "id": "STACK-02",
+     "name": "The v4 skeleton on the new editor toolkit",
+     "status": "Done",
+     "done": "2026-11-19",
+     "since": null
+    },
+    {
+     "id": "PUB-01",
+     "name": "Publishing v4 to the website after tests pass",
+     "status": "Done",
+     "done": "2026-11-19",
+     "since": null
+    },
+    {
+     "id": "STACK-03",
+     "name": "Automated accessibility testing to WCAG AAA",
+     "status": "Done",
+     "done": "2026-11-19",
+     "since": null
+    },
+    {
+     "id": "STACK-04",
+     "name": "Architecture rules and performance measures checked automatically",
+     "status": "Done",
+     "done": "2026-11-19",
+     "since": null
+    }
+   ]
+  },
+  {
+   "number": 7,
+   "name": "The core",
+   "items": [
+    {
+     "id": "GATE-02",
+     "name": "Build checks set up for v4",
+     "status": "Done",
+     "done": "2026-11-19",
+     "since": null
+    },
+    {
+     "id": "CORE-01",
+     "name": "The project model and file format",
+     "status": "Done",
+     "done": "2026-11-19",
+     "since": null
+    },
+    {
+     "id": "CORE-02",
+     "name": "Route geometry, timing and the clock",
+     "status": "Done",
+     "done": "2026-11-19",
+     "since": null
+    },
+    {
+     "id": "CORE-03",
+     "name": "Save and open",
+     "status": "Done",
+     "done": "2026-11-19",
+     "since": null
+    },
+    {
+     "id": "CORE-04",
+     "name": "The renderer that draws every frame",
+     "status": "Done",
+     "done": "2026-11-20",
+     "since": null
+    },
+    {
+     "id": "PLAN-8",
+     "name": "Review decisions of 20 November recorded",
+     "status": "Done",
+     "done": "2026-11-21",
+     "since": null
+    },
+    {
+     "id": "GATE-03",
+     "name": "Faster checks when only the build checks' own tests change",
+     "status": "Done",
+     "done": "2026-11-24",
+     "since": null
+    },
+    {
+     "id": "PLAN-9",
+     "name": "Review decisions of 24 November recorded",
+     "status": "Done",
+     "done": "2026-11-24",
+     "since": null
+    },
+    {
+     "id": "CORE-05",
+     "name": "The editor shell: playback, undo, Help and opening a project",
+     "status": "Done",
+     "done": "2026-11-25",
+     "since": null
+    },
+    {
+     "id": "CORE-06",
+     "name": "Drawing routes on the map",
+     "status": "In progress",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "CORE-15",
+     "name": "Long routes play smoothly, and the route and file limits agree",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-25"
+    },
+    {
+     "id": "GATE-04",
+     "name": "The accessibility test run's port can be set",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-24"
+    },
+    {
+     "id": "CORE-14",
+     "name": "Labels fade smoothly as the route plays",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-24"
+    },
+    {
+     "id": "CORE-13",
+     "name": "Settings for how lines are drawn",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-20"
+    },
+    {
+     "id": "CORE-12",
+     "name": "The core panels and the points list",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "CORE-07",
+     "name": "The scene outline",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "CORE-08",
+     "name": "Video export, end to end",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "CORE-10",
+     "name": "HTML export and the exported player",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "CORE-09",
+     "name": "Autosave and recovery",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    }
+   ]
+  },
+  {
+   "number": 8,
+   "name": "Features",
+   "items": [
+    {
+     "id": "FEAT-01",
+     "name": "The Add feature list, with arrival effects and line glow",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "FEAT-02",
+     "name": "Highlighted areas",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "FEAT-03",
+     "name": "Reveal background",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "FEAT-04",
+     "name": "The crowd",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "CORE-11",
+     "name": "Help, diagnostics and the privacy notice",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "FEAT-05",
+     "name": "The crowd's extras, as v3 has them",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "FEAT-06",
+     "name": "The camera",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "FEAT-07",
+     "name": "Crowd areas placed freely",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    }
+   ]
+  },
+  {
+   "number": 9,
+   "name": "Presets and v4.0",
+   "items": [
+    {
+     "id": "PRESET-01",
+     "name": "The five presets",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "EX-01",
+     "name": "One built-in example scene for each preset",
+     "status": "To do",
+     "done": null,
+     "since": "2026-10-05"
+    },
+    {
+     "id": "A11Y-03",
+     "name": "Deeper accessibility checks before v4.0",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-18"
+    },
+    {
+     "id": "REV-03",
+     "name": "Pointer and touch input review",
+     "status": "Needs sign-off",
+     "done": null,
+     "since": "2026-10-01"
+    },
+    {
+     "id": "REV-05",
+     "name": "Accessibility assurance",
+     "status": "Needs sign-off",
+     "done": null,
+     "since": "2026-10-01"
+    },
+    {
+     "id": "V40-01",
+     "name": "Declare v4.0",
+     "status": "Needs sign-off",
+     "done": null,
+     "since": "2026-11-18"
+    }
+   ]
+  }
+ ],
+ "otherOpen": [],
+ "otherWork": [
+  {
+   "name": "The client progress page",
+   "items": 1,
+   "started": "2026-11-25",
+   "finished": "2026-11-25"
+  },
+  {
+   "name": "Version 3 reviewed against the v4 vision",
+   "items": 3,
+   "started": "2026-11-18",
+   "finished": "2026-11-18"
+  },
+  {
+   "name": "Project tooling updates",
+   "items": 5,
+   "started": "2026-10-21",
+   "finished": "2026-11-18"
+  },
+  {
+   "name": "Show or hide the background image",
+   "items": 1,
+   "started": "2026-10-19",
+   "finished": "2026-10-19"
+  },
+  {
+   "name": "Export framing fixes",
+   "items": 2,
+   "started": "2026-10-18",
+   "finished": "2026-10-18"
+  },
+  {
+   "name": "Built-in example projects",
+   "items": 2,
+   "started": "2026-10-17",
+   "finished": "2026-10-18"
+  },
+  {
+   "name": "Football crowds and mobs",
+   "items": 2,
+   "started": "2026-10-14",
+   "finished": "2026-10-16"
+  },
+  {
+   "name": "Follow-up items and the defects they held",
+   "items": 10,
+   "started": "2026-10-06",
+   "finished": "2026-10-13"
+  },
+  {
+   "name": "Design review fixes",
+   "items": 7,
+   "started": "2026-10-08",
+   "finished": "2026-10-12"
+  },
+  {
+   "name": "The open pull requests reviewed and landed",
+   "items": 18,
+   "started": "2026-10-05",
+   "finished": "2026-10-06"
+  },
+  {
+   "name": "Defect fixes for release 3.2.693",
+   "items": 6,
+   "started": "2026-09-30",
+   "finished": "2026-10-01"
+  }
+ ],
+ "later": [
+  {
+   "id": "AI-01",
+   "name": "Saves that an AI assistant can edit",
+   "status": "To do",
+   "done": null,
+   "since": "2026-10-15",
+   "group": "After v4.0"
+  },
+  {
+   "id": "REV-07",
+   "name": "Build and test pipeline maturity",
+   "status": "To do",
+   "done": null,
+   "since": "2026-10-01",
+   "group": "Parked"
+  },
+  {
+   "id": "ICE-01",
+   "name": "Swatch-picker pop-up for colours",
+   "status": "To do",
+   "done": null,
+   "since": "2026-10-01",
+   "group": "Parked"
+  },
+  {
+   "id": "ICE-02",
+   "name": "Converting palettes when importing",
+   "status": "To do",
+   "done": null,
+   "since": "2026-10-01",
+   "group": "Parked"
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-10-02",
+   "open": 33,
+   "shipped": 6
+  },
+  {
+   "date": "2026-10-05",
+   "open": 54,
+   "shipped": 18
+  },
+  {
+   "date": "2026-10-06",
+   "open": 44,
+   "shipped": 28
+  },
+  {
+   "date": "2026-10-07",
+   "open": 43,
+   "shipped": 30
+  },
+  {
+   "date": "2026-10-08",
+   "open": 54,
+   "shipped": 34
+  },
+  {
+   "date": "2026-10-09",
+   "open": 53,
+   "shipped": 36
+  },
+  {
+   "date": "2026-10-11",
+   "open": 53,
+   "shipped": 38
+  },
+  {
+   "date": "2026-10-12",
+   "open": 52,
+   "shipped": 40
+  },
+  {
+   "date": "2026-10-13",
+   "open": 54,
+   "shipped": 41
+  },
+  {
+   "date": "2026-10-14",
+   "open": 54,
+   "shipped": 42
+  },
+  {
+   "date": "2026-10-16",
+   "open": 54,
+   "shipped": 43
+  },
+  {
+   "date": "2026-10-17",
+   "open": 54,
+   "shipped": 44
+  },
+  {
+   "date": "2026-10-18",
+   "open": 54,
+   "shipped": 45
+  },
+  {
+   "date": "2026-10-19",
+   "open": 54,
+   "shipped": 48
+  },
+  {
+   "date": "2026-10-22",
+   "open": 54,
+   "shipped": 49
+  },
+  {
+   "date": "2026-11-05",
+   "open": 54,
+   "shipped": 50
+  },
+  {
+   "date": "2026-11-12",
+   "open": 54,
+   "shipped": 51
+  },
+  {
+   "date": "2026-11-16",
+   "open": 54,
+   "shipped": 52
+  },
+  {
+   "date": "2026-11-18",
+   "open": 34,
+   "shipped": 59
+  },
+  {
+   "date": "2026-11-19",
+   "open": 26,
+   "shipped": 68
+  },
+  {
+   "date": "2026-11-20",
+   "open": 26,
+   "shipped": 69
+  },
+  {
+   "date": "2026-11-21",
+   "open": 26,
+   "shipped": 70
+  },
+  {
+   "date": "2026-11-24",
+   "open": 28,
+   "shipped": 72
+  },
+  {
+   "date": "2026-11-25",
+   "open": 28,
+   "shipped": 74
+  }
+ ]
+}
