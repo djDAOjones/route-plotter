@@ -71,9 +71,11 @@ close.
 - `npm run check:changed` and CI (the **Verify** workflow,
   `.github/workflows/ci.yml`) sort the change (GATE-01: the lists are in
   `scripts/gate.mjs`, beside its tests): a record-only change runs the record
-  checker alone; any other also runs the gate's tests and v3's suite (v4's lane
-  waits for STACK-02). CI then fails if `docs/`, `version.json` or
-  `v3/version.json` differ from the commit.
+  checker alone; any other also runs the gate's tests and, where asked, v4's
+  gate (`npm run check:v4`). Frozen v3 is locked (GATE-05): its suite runs only
+  by hand (`node scripts/gate.mjs --lane v3`), and a change to a v3 path is
+  refused. CI then fails if `docs/`, `version.json` or `v3/version.json`
+  differ from the commit.
 - There is no linter, formatter check, type checker or Markdown link checker,
   so report only what the gate runs. The verify-line format is in
   `pm_skills/project/conventions.md` → Commit messages.
