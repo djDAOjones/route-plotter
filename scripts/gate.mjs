@@ -88,7 +88,10 @@ export const V3 = {
  * runs v4's whole gate; v4's settings exclude v3/. LICENSE and the root
  * THIRD_PARTY_NOTICES.md stay other, as STACK-01 left them. The measures
  * script (STACK-04) is v4's: CI's v4 step runs it after the lane, and
- * tests/architecture/ tests it (GATE-02).
+ * tests/architecture/ tests it (GATE-02). The client progress page's own
+ * files, progress/, are v4's too (PROG-01): static files and plain names,
+ * which the publishing step copies into the build with data it reads from the
+ * record; v4's build never reads them.
  */
 export const V4 = {
   files: [
@@ -96,7 +99,7 @@ export const V4 = {
     'tsconfig.core.json', 'vite.config.mjs', 'eslint.config.mjs', 'eslint.base.mjs', 'eslint.a11y.mjs', 'knip.json',
     '.dependency-cruiser.cjs', 'scripts/measures.mjs'
   ],
-  dirs: ['src/', 'tests/']
+  dirs: ['src/', 'tests/', 'progress/']
 };
 
 /**
@@ -116,7 +119,8 @@ export const PAGES = {
  * checker, not frozen v3's suite (GATE-02, wish PUB-01.3). v4's gate reads
  * them: knip's GitHub Actions plugin takes the scripts the workflows run as
  * its entries. A push of a branch also runs the step's dry run on v4's real
- * build (.github/workflows/publish.yml).
+ * build (.github/workflows/publish.yml). The step's progress page
+ * (scripts/publish-progress.mjs, PROG-01) is one of these files.
  */
 export const PUBLISHING = {
   files: ['.github/workflows/publish.yml'],
@@ -167,7 +171,7 @@ export const V4_BUDGET_SECONDS = 600;
 export const LANES = {
   gate: {
     title: "the gate's and the publishing step's own tests",
-    commands: [[process.execPath, ['--test', 'scripts/gate.test.mjs', 'scripts/publish.test.mjs']]]
+    commands: [[process.execPath, ['--test', 'scripts/gate.test.mjs', 'scripts/publish.test.mjs', 'scripts/publish-progress.test.mjs']]]
   },
   v3: {
     title: "frozen v3's whole suite, shell contract and build check",

@@ -93,3 +93,4 @@
 - CORE-05.14 — Codex's carried notes: file, colour and image inputs have no focus kind in `src/editor/shell/dispatch.ts`, and a tab keeps no Home or End — (from: CORE-05, 2026-11-25)
 - CORE-05.15 — GATE-04: whether the "root font at 200 %" test should run a state's keeps (`tests/a11y/adaptation.spec.ts`, lines 19 to 25, calls no `kept()`) — (from: CORE-05, 2026-11-25)
 - CORE-05.16 — UI-07's aim, the order and grouping of the editor's panels and the header (its review never ran, so it has no findings), is weighed when the panels are filled, from CORE-12 (The core panels and the points list), and the review still runs only with the owner's word to launch it (D232) — (from: CORE-05, 2026-11-25)
+- PROG-01.1 — The decisions file holds 46 live entries, one over its budget of 45: archive the oldest with tools/archive.mjs, on the owner's word — (from: PROG-01, 2026-11-25)

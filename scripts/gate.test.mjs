@@ -150,6 +150,21 @@ describe('classify', () => {
       assert.equal(classify(path), 'other', path);
     }
   });
+
+  test("PROG-01's progress page: its own files are v4's, its builder and tests the publishing step's", () => {
+    for (const path of ['progress/index.html', 'progress/progress.js', 'progress/names.json']) {
+      assert.equal(classify(path), 'v4', path);
+      assert.deepEqual(plan([path]).lanes, ['gate', 'v4', 'record'], path);
+    }
+    for (const path of ['scripts/publish-progress.mjs', 'scripts/publish-progress.test.mjs']) {
+      assert.equal(classify(path), 'step', path);
+      assert.deepEqual(plan([path]).lanes, ['gate', 'v4', 'record'], path);
+    }
+    assert.ok(LANES.gate.commands.flat(2).includes('scripts/publish-progress.test.mjs'), "the gate's lane has the page's tests");
+    for (const path of ['progress', 'Progress/index.html', 'progressx/index.html', 'scripts/progress.mjs']) {
+      assert.equal(classify(path), 'other', path);
+    }
+  });
 });
 
 describe('plan', () => {

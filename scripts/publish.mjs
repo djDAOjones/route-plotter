@@ -29,6 +29,11 @@
  * stops before anything is read or written (v3's DEF-71: an unknown flag was
  * taken to mean a release). Every file the site refers to is checked before
  * it is committed (v3's DEF-75, which also missed single-quoted references).
+ *
+ * PROG-01: before a dry run or a publish checks the build, the step writes the
+ * client progress page into it (<dist>/progress/, scripts/publish-progress.mjs)
+ * from the record the checkout holds, so the page goes live with each publish
+ * and the site check covers it. v4's own build never reads the record.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -43,6 +48,7 @@ import { fileURLToPath } from 'node:url';
 import {
   PAGES, ROOT, STEP, authenticateStep, classify, git, isAncestor, lastGreenSha, pathsOfRange, pushedLine, stepCommits
 } from './gate.mjs';
+import { progressLine, writeProgress } from './publish-progress.mjs';
 
 /** The repository the step publishes, and the address Pages serves it at. */
 export const REPOSITORY = 'djDAOjones/route-plotter';
@@ -826,6 +832,7 @@ export async function main(argv, env = process.env, { cwd = ROOT } = {}) {
   try {
     if (args.mode === 'dry-run') {
       const built = join(cwd, args.dist);
+      const progress = writeProgress({ cwd, out: join(built, 'progress') });
       const { files, references } = checkSite(built);
       const history = stepHistory(cwd);
       const notes = notesFor(cwd, 'HEAD', '');
@@ -835,7 +842,8 @@ export async function main(argv, env = process.env, { cwd = ROOT } = {}) {
         `The build checks out: ${files.length} files, ${references.length} referred to, every one present and inside the site.`,
         same ? 'A publish now would change nothing: docs/ already holds this build.'
           : `A publish now would put this build in docs/ as v4 ${VERSION_BASE}.${nextPreview(history)}.`,
-        `What is new: ${notes.whatIsNew.join(' | ')}`
+        `What is new: ${notes.whatIsNew.join(' | ')}`,
+        progressLine(progress)
       ]);
       return 0;
     }
@@ -852,8 +860,9 @@ export async function main(argv, env = process.env, { cwd = ROOT } = {}) {
     }
     if (args.mode === 'publish') {
       const tryText = args.tryFile && existsSync(args.tryFile) ? readFileSync(args.tryFile, 'utf8') : '';
+      const progress = writeProgress({ cwd, out: join(cwd, args.dist, 'progress') });
       const done = publish({ cwd, dist: args.dist, source: args.source, verified: args.verified, tryText, env });
-      report(env, [done.said], { changed: done.changed, commit: done.commit ?? '', preview: done.preview ?? '' });
+      report(env, [done.said, progressLine(progress)], { changed: done.changed, commit: done.commit ?? '', preview: done.preview ?? '' });
       return 0;
     }
     if (args.mode === 'take-back') {
