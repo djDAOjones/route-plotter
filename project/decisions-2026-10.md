@@ -995,3 +995,42 @@ The existing app-owned setter now validates the proposed saved scene with the lo
 **Supersedes:** none
 
 **Deferred:** none
+
+## 2026-10-15 — CROWD-08 — Part D: relative Entry weights preserve equal choices
+
+**Decision:** Explicit Entries gain relative weights through the Node card and
+scene outline, while equal weights keep every dot's existing seeded choice.
+
+**Rationale:** Under the approved Part D brief and the owner's easier-safe-MVP
+preference, the lead chooses a strict optional finite number from 0.01 to
+Number.MAX_VALUE, default 1 omitted from saved data. Type changes retain it;
+implicit starts and Follow route ignore it. Max-scaled normalization avoids
+overflow. Unequal choices reuse one cumulative distribution per guide and a
+binary first-greater lookup; equal values retain the exact old floor
+expression, including its floating-point boundaries. The same single hash
+draw and hop feed all lifecycles, journey measurement and first-terminal
+selection. Both journey and finish-geometry cache keys include ordered node
+id/weight tuples. Nominal shares use the existing Path percentage rounding;
+finite seeded crowds need not match those percentages, and the help says
+very small weights may never be chosen. Stranded Entries remain in the pool.
+
+One app-owned setter checks a detached canonical candidate against the whole
+loader and asset-aware archive budgets before any live mutation or undo
+flush. Both native surfaces preserve decimal precision, commit one reversible
+edit and autosave, and clear corrected no-op errors without a new edit.
+App-owned identity/state tokens preserve drafts on unrelated refreshes and
+reject stale commands after replacement, Type changes or accepted edits from
+the other surface. No component receives the app. Legacy absent/default node
+JSON stays unchanged. The source PR owns regression, mutation, golden-trace,
+committed-build browser and independent review evidence; publication belongs
+to its REL record. Standards: carbon's existing native fieldset/number/output
+pattern and tokens; nielsen 1, 3, 4 and 9 for visible shares, reversible edits,
+consistent names and specific errors; wcag-2.2-aaa 2.5.5, 2.1.3, 2.4.12 and
+3.3.6 for targets, keyboard, retained focus and checked submissions;
+house-conventions' app ownership, additive persistence and behavioral tests.
+Physical-device and screen-reader assurance remain REV-03/REV-05. This is a
+part advance; CROWD-08 remains open for E–G.
+
+**Supersedes:** none
+
+**Deferred:** none
