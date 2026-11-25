@@ -129,18 +129,25 @@ describe('the pen chains, joins, forks and closes loops (v3 networkEdit :506, :5
     p.to(c); // a and c are joined (c → a): nothing added
     p.lift();
     p.to(a);
-    const d = p.place(0.9, 0.9); // a → b and a → d: a fork
+    const d = p.place(0.9, 0.9); // a → b and a → d: a fork by a new point
+    p.lift();
+    const e = p.place(0.9, 0.1); // e alone, joined to nothing
+    p.lift();
+    p.to(a);
+    p.to(e); // a → e: a fork by an existing, unconnected point
+    expect(p.pen()).toBe(e);
     expect(pairs(p.route())).toEqual([
       [a, b],
       [b, c],
       [c, a],
       [a, d],
+      [a, e],
     ]);
   });
 });
 
 describe('the plan’s worked examples, drawn by the pen and walked by the lead (§3)', () => {
-  it('a fork that rejoins: the lead waits at E, and nothing is left out', () => {
+  it('a fork that rejoins: the walk’s order, E its one join, and nothing left out', () => {
     const p = pen();
     const [A, B, C] = [p.place(0.1, 0.5), p.place(0.3, 0.5), p.place(0.5, 0.3)];
     p.lift();
