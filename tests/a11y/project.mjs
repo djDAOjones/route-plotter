@@ -1964,11 +1964,11 @@ export default {
     {
       // 2.5.2 (brief 88, finding 86): a quick drag on a slow page. React's scheduler slowed as in the-late-echo, the
       // twenty-minute scene opened and still, the pointer down on the timeline's thumb, moved right in five quick steps
-      // of a twentieth of the track each, then let go: the timeline stays, no page error is heard, and the position held
-      // is where the thumb was let go (a quarter of the track on from where it was pressed, within a hundredth of the
-      // range), and still there a second later. Before the mend the kit took Carbon's late follow of a position it had
-      // handed before for a move of the drag; the two answered each other until React gave up (error 185) and the
-      // timeline was gone (claim point 3, the trail).
+      // of a twentieth of the track each, then rests a moment where it is and is let go: the timeline stays, no page
+      // error is heard, and the position held is where the thumb was let go (a quarter of the track on from where it was
+      // pressed, within a hundredth of the range), and still there a second later. Before the mend the kit took Carbon's
+      // late follow of a position it had handed before for a move of the drag; the two answered each other until React
+      // gave up (error 185) and the timeline was gone (claim point 3, the trail).
       name: 'the-quick-drag',
       method: 'j-pointer',
       rows: ['2.5.2'],
@@ -1995,6 +1995,16 @@ export default {
         await page.mouse.move(from.x, from.y);
         await page.mouse.down();
         for (let s = 1; s <= 5; s++) await page.mouse.move(from.x + (s * track.width) / 20, from.y, { steps: 2 });
+        // Then the pointer rests before it is let go, as a hand does (brief 95, FINDING-94-quick-drag-ci). Carbon's slider
+        // takes at most one move of a drag in each 16 ms, the first and not the last (node_modules/@carbon/react/lib/
+        // components/Slider/Slider.js, line 70, EVENT_THROTTLE = 16, and lines 325 to 333, throttle leading only), and
+        // at the release it takes no place from the pointer (lines 278 to 287). So on a slow page the tenth quick move,
+        // within 16 ms of the ninth, was dropped, and the thumb rested where the ninth put it (225, not 250): CI's pull
+        // request runner, and this Mac with the page's CPU slowed fourfold (PROBE-95). The rest is timed on the page's
+        // own clock, after the quick moves are handled, so a busy page cannot run it short; then one more move to the
+        // same place, which Carbon takes, and the release.
+        await page.evaluate(() => new Promise((rest) => setTimeout(rest, 50)));
+        await page.mouse.move(to, from.y);
         await page.mouse.up();
         await page.waitForTimeout(1500);
         const expected = Math.round(((to - track.x) / track.width) * max);
