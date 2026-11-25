@@ -43,6 +43,7 @@
 - [ ] CORE-06 — Drawing routes on the canvas — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-15 — Long routes play smoothly in the editor, and the route limit and the file limit agree — since 2026-11-25 — (from: CORE-05, 2026-11-25)
 - [ ] GATE-04 — The accessibility run's port is settable — since 2026-11-24 — (from: PLAN-9, 2026-11-24)
+- [~] GATE-05 — v4's gate in place of v3's; frozen v3 locked — since 2026-11-25
 - [ ] CORE-14 — A label fades over half a second of the lead's moving, whatever the pauses — since 2026-11-24 — (from: PLAN-9, 2026-11-24)
 - [ ] CORE-13 — The settings the drawing already takes — since 2026-11-20 — (from: CORE-04, 2026-11-20)
 - [ ] CORE-12 — The core panels and the points list — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
