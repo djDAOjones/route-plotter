@@ -31,8 +31,8 @@
       "evidence": ""
     },
     "moving-content": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "present",
+      "evidence": "CORE-05 (2026-11-23): the preview moves while a playing runs. It starts only on Play (never by itself), Pause stops it, and nothing moves while still, a picture that arrives late included (drawn once, then the same pixels): the journeys the-preview-draws, the-preview-plays, the-preview-shows-the-picture and the-preview-is-still (2.2.2)."
     },
     "authentication": {
       "state": "unknown",
@@ -59,12 +59,12 @@
       "evidence": ""
     },
     "hover-focus-content": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "present",
+      "evidence": "CORE-05 (2026-11-22): the page shows two pieces of content on hover or focus, both Carbon's tooltips: Help's \"Close\" (its close button's) and the timeline thumb's value words (\"0:00 of 0:02\"); nothing else on the page shows any (probed: Help, the link, the play bar's three buttons, the switch). The journey content-on-hover-or-focus (tests/a11y/project.mjs) shows each by focus and by hover and finds each hoverable either way (the pointer moved onto its content and rested 1 s, past Carbon's 300 ms leave delay, still shown; shown by focus, focus unmoved; the pointer leaving again while focus stays is not claimed) and persistent (held 1.5 s; its content no longer drawn once the focus or the pointer goes); each is dismissed by one Escape (its content no longer drawn, whatever its words) with the pointer unmoved, focus kept and nothing else changed, except Close's tooltip shown by hover with focus elsewhere in Help, which is credited by 1.4.13's exception: it obscures nothing (its box and caret meet no words where they show, the dialog's heading \"Help\" among them, and no control or image but Close, measured at the run's width and at 320 px; \"where they show\" is judged by what is painted: two pictures of each overlap with the tooltip unpainted, with and without the words' parent or the control; equal pictures, nothing of it shows there; the measure checks the page under the tooltip is still and leaves the tooltip shown and the pointer unmoved). There one Escape closes Help, focus back on \"Help\" (Carbon's Modal and Tooltip both hear Escape on the document; ruled with D195, provisional), and the journey pins it. The thumb's tooltip covers part of the label \"Timeline\" while the thumb has focus; one Escape hides it. Measured on Help only: a later dialog with a longer heading, or anything placed beside Close, must be measured again."
     },
     "keyboard-shortcuts": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "present",
+      "evidence": "CORE-05 (2026-11-21): the editor listens for its keys on the page (src/editor/shell/keydown.ts, dispatch.ts, keys.ts): Space plays or pauses, Home and End (and < and >) skip to start and end, comma and full stop step one frame back and forward (D205, 2026-11-24), Cmd or Ctrl with Z undoes and with Shift redoes, and the keys of one printable character the table names (J, K, L, comma, full stop, < and >, and ? for Help) are live while their switch, \"Single-key shortcuts\" in Help, is on, as the page opens, and do nothing while it is off (D183; src/editor/shell/Help.tsx, held for the visit in session.ts). Help, a button after the paragraph, opens a dialog (src/editor/kit/Dialog.tsx) listing every shortcut. The play bar after Help (src/editor/shell/PlayBar.tsx), \"Skip to start\", \"Play\" and \"Skip to end\", calls what Home, Space and End call; with nothing to play Space, K, J and L say why and start nothing, and Play is disabled and described by that reason. Journeys: character-key-shortcuts (2.1.4, both ways), fields-and-status (3.3.5, 4.1.3), reading-and-focus-order (2.4.3), pointer-cancellation (2.5.2), keyboard-task (3.2.2); keyboard functions skip-to-start-by-home, skip-to-end-by-end, open-help-by-button, open-help-by-question-mark, close-help-by-escape, single-keys-off, single-keys-on, skip-to-start-by-button, skip-to-end-by-button-space-kept, play-refused-by-space, play-refused-by-k and play-refused-by-k-, -j- and -l-on-button The timeline, a slider in the play bar (src/editor/shell/Timeline.tsx), keeps its own keys: the arrows move it, with Shift four times as far; Home and End on it go to its start and end, and Page Up and Page Down a tenth of it up and down (the kit's slider takes them, D193), saying nothing; the single keys on it say what they say elsewhere, and nothing while their switch is off."
     },
     "user-input": {
       "state": "unknown",
@@ -79,8 +79,8 @@
       "evidence": ""
     },
     "canvas": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "present",
+      "evidence": "CORE-05 (2026-11-23): the editor draws its preview on a canvas (src/editor/shell/Preview.tsx), in a box that is an image named \"Route animation preview\" (1.1.1, the reviewed snapshot); nothing in it can be operated until CORE-06. No row of the catalogue is triggered by this feature alone."
     },
     "exports": {
       "state": "unknown",
@@ -315,7 +315,7 @@
     "1.4.13": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
@@ -347,7 +347,7 @@
     "2.1.4": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
@@ -363,7 +363,7 @@
     "2.2.2": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []

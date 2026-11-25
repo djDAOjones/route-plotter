@@ -4,6 +4,12 @@
 // the lab). The text, link and primary-button tokens below are strengthened toward 7:1 on the white theme (Carbon's
 // own #0f62fe under white text measured 5:1 in the lab's throwaway app, 2026-11-11); a starting point, measured by
 // the app's own accessibility run, never certified here.
+// CORE-05 (brief 69): the colours of the editor's own surfaces come from the University's tokens as v3 names them
+// (v3/styles/tokens.css), only those the page uses now; the Okabe-Ito values are carried for map data, kept apart
+// (the house UI standards, Token systems). Each pairing's contrast is worked below by WCAG's relative luminance, L, and
+// (L1 + 0.05) / (L2 + 0.05); the accessibility run's contrast rows measure them on the page. Luminances: white 1;
+// --ui-01 #FBFBFB 0.9647; Carbon's text-primary #161616 0.0080; --uon-blue #003A65 0.0397; --uon-nottingham-blue
+// #10263B 0.0181; --active-primary #0C1C2C 0.0109; Carbon's focus #0F62FE 0.1599.
 @use '@carbon/react/scss/config' with ($css--font-face: false);
 @use 'sass:map';
 @use '@carbon/react/scss/themes';
@@ -11,8 +17,14 @@
   text-secondary: #393939,
   text-helper: #393939,
   text-placeholder: #393939,
-  link-primary: #0043ce,
-  link-primary-hover: #002d9c,
+  // --link-01, v3/styles/tokens.css:88, is --uon-nottingham-blue (tokens.css:15): on white 1.05 / 0.0681 = 15.4:1;
+  // on --ui-01 1.0147 / 0.0681 = 14.9:1. Its hover has no v3 token of its own: --active-primary (tokens.css:103), on
+  // white 1.05 / 0.0609 = 17.2:1. An inline link stays underlined in both.
+  link-primary: #10263b,
+  link-primary-hover: #0c1c2c,
+  // --interactive-01, tokens.css:101, is --uon-blue (tokens.css:14): the timeline's focused knob (timelineLook.css)
+  // is drawn in it, on white 1.05 / 0.0897 = 11.7:1 against the 3:1 a control's state needs (Carbon's #0f62fe was 5.0).
+  interactive: #003a65,
 )));
 @use '@carbon/react/scss/reset';
 @use '@carbon/react/scss/fonts/sans' as plex;
@@ -26,10 +38,28 @@
 :root {
   @include theme.theme();
 
-  // The button's colours are Carbon component tokens, not theme tokens: a theme-map entry does not reach them.
-  --cds-button-primary: #0043ce;
-  --cds-button-primary-hover: #002d9c;
-  --cds-button-primary-active: #001d6c;
+  // The button's colours are Carbon component tokens, not theme tokens: a theme-map entry does not reach them. The
+  // primary button is --uon-blue (tokens.css:14, "primary button fill"), its hover --hover-primary (tokens.css:102,
+  // --uon-nottingham-blue) and pressed --active-primary (tokens.css:103). White text on each: 1.05 / 0.0897 = 11.7:1,
+  // 1.05 / 0.0681 = 15.4:1, 1.05 / 0.0609 = 17.2:1. The fill against the page, its boundary: on white 11.7:1, on the
+  // header's --ui-01 1.0147 / 0.0897 = 11.3:1, hovered 14.9:1. The 3 px focus outline stands 2 px off it, on the
+  // surface: Carbon's #0f62fe on white 1.05 / 0.2099 = 5.0:1, on --ui-01 1.0147 / 0.2099 = 4.8:1, so it stays Carbon's.
+  --cds-button-primary: #003a65;
+  --cds-button-primary-hover: #10263b;
+  --cds-button-primary-active: #0c1c2c;
+
+  // Okabe-Ito, carried for map data only: v3's --map-series-0 to -8 (v3/styles/tokens.css:332 to 340) under the same
+  // names. No rule for the editor's own surfaces may use them (the house UI standards: the two token systems are never
+  // collapsed); the item that adds the colour control reads them.
+  --map-series-0: #ffffff; // white: outline required (light on light)
+  --map-series-1: #0072b2;
+  --map-series-2: #e69f00;
+  --map-series-3: #009e73;
+  --map-series-4: #d55e00;
+  --map-series-5: #cc79a7;
+  --map-series-6: #56b4e9;
+  --map-series-7: #f0e442; // outline required (light on light)
+  --map-series-8: #000000;
 }
 
 body {
@@ -43,11 +73,35 @@ main {
   padding: spacing.$spacing-05;
 }
 
+// The header (the frame's, src/editor/shell/Frame.tsx) is Carbon's, which Carbon fixes over the page at 48 px high and
+// gives the page a 48 px top margin to clear. Here it is in the page's flow and stays at the top of it, as v3's did:
+// fixed, it would cover a control scrolled under it, and at 2.4.12 (AAA) nothing of the author's may cover a focused
+// control. Its height follows what it holds, so the name and Help wrap at 320 px and under wider text spacing rather
+// than being clipped. Its colours are v3's header's (v3/styles/main.css:111 to 120): --ui-01, "top bar"
+// (v3/styles/tokens.css:57), #FBFBFB, with no border (v3 removed it at the owner's request); the name in Carbon's
+// text-primary on it, 1.0147 / 0.0580 = 17.5:1.
+.cds--header {
+  position: static;
+  background-color: #fbfbfb;
+  block-size: auto;
+  border-block-end: 0;
+}
+
+.cds--header ~ .cds--content {
+  margin-block-start: spacing.$spacing-07;
+}
+
 // Focus at 2.4.12 and 2.4.13: a 3 px outline outside the control. Carbon's own inset ring changed less than a 2 px
 // perimeter by 3:1 in the lab's throwaway app (2026-11-11); its selectors outrank a plain one, hence !important.
 :is(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 3px solid theme.$focus !important;
   outline-offset: 2px !important;
+}
+
+// D224, for 2.4.12: an icon button's label stands 2 px further out than Carbon's 0.5rem, so its caret's tip (0.25rem
+// tall) stops 6 px from the button, clear of the outline above (2 px offset + 3 px) at any root font size.
+.cds--icon-tooltip {
+  --cds-popover-offset: calc(0.25rem + 6px);
 }
 
 @media (forced-colors: active) {

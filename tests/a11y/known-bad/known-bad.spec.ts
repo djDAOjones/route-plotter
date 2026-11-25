@@ -14,7 +14,7 @@ const only = process.env.A11Y_KNOWN_BAD;
 const url = (page: string) => pathToFileURL(join(here, `${page}.html`)).href;
 
 for (const k of pages.filter((p: { page: string }) => p.page === only)) {
-  const state: State = { name: `known-bad-${k.page}`, path: url(k.page), ...(k.start ? { interactions: [{ name: `press ${k.start}`, run: async ({ page }) => { await page.locator(k.start).click(); } }] } : {}) };
+  const state: State = { name: `known-bad-${k.page}`, path: url(k.page), ...(k.setAside ? { setAside: k.setAside } : {}), ...(k.start ? { interactions: [{ name: `press ${k.start}`, run: async ({ page }) => { await page.locator(k.start).click(); } }] } : {}) };
   const at = { state: state.name };
   test(`known-bad ${k.page}: ${k.reason}`, details(k.method, k.method === 'axe' ? '*' : k.claims, at), async ({ page }, testInfo) => {
     await open(page, state);

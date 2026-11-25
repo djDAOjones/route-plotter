@@ -1,0 +1,79 @@
+/* CORE-05, stage 5: the frame's layout (brief 69's ruling 6). The header: the name at the start, Help at the end, on
+ * one line while there is room and wrapping (1.4.10, 1.4.12) when there is not. The page's main: one column in the
+ * reading order (left column, centre, right column) at a narrow width; from 66rem, the side columns that are filled
+ * stand beside the centre, each 20rem. With neither side filled, the centre is the page as before (the theme holds
+ * main to 48rem). Spacing from Carbon's scale: spacing-05 (1rem), spacing-07 (2rem).
+ */
+.frame__header {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0.75rem 1rem 1rem;
+}
+.frame__name {
+  margin: 0;
+}
+/* Open before Help, a gap between them, wrapping when the header has no room (stage 6). */
+.frame__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+/* Open's notice: first in main, across every column (stage 6). A file name with no spaces breaks anywhere, so a
+   long one wraps inside the page at 320 px rather than scrolling it sideways (1.4.10, brief 80). */
+.frame__notice {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+}
+/* The notice's Close keeps the theme's ring (3 px, at 2.4.13), drawn inside the button in Carbon's focus colour for an
+   inverse surface: the notice is dark (#393939), where the theme's #0f62fe outside the button is 2.3:1 on its left and
+   bottom (351 of the 368 px a 2 px perimeter asks, brief 81); --cds-focus-inverse (#fff) on #393939 is 11.7:1. */
+.frame__notice .cds--inline-notification__close-button:focus-visible {
+  outline-color: var(--cds-focus-inverse) !important;
+  outline-offset: -3px !important;
+}
+@media (forced-colors: active) {
+  .frame__notice .cds--inline-notification__close-button:focus-visible {
+    outline-color: Highlight !important;
+  }
+}
+.frame__region + .frame__region {
+  margin-block-start: 2rem;
+}
+.frame__heading {
+  margin-block-end: 1rem;
+}
+.frame {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 66rem) {
+  .frame.frame--left,
+  .frame.frame--right {
+    max-width: 90rem;
+  }
+  .frame.frame--left {
+    grid-template-columns: 20rem minmax(0, 1fr);
+  }
+  .frame.frame--right {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+  .frame.frame--left.frame--right {
+    grid-template-columns: 20rem minmax(0, 1fr) 20rem;
+  }
+}
+/* The preview's canvas (brief 84, Preview.tsx's point 5): its shape and width are set on it from the video's shape
+   (D202); here it stands on a line of its own, never wider than its slot, centred in it, on Carbon's first layer so
+   the frame's edges show where nothing is drawn (no picture shown; about a picture the background draws its white
+   margin). The canvas fills it. */
+.preview {
+  max-width: 100%;
+  margin-inline: auto;
+  background: var(--cds-layer-01, #f4f4f4);
+}
+.preview__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
