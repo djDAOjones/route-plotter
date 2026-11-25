@@ -136,7 +136,9 @@ describe('the graph’s edits, as a property', () => {
     const reached = { refusals: new Set<EditRefusal['refused']>(), edges: new Set<number>(), unchanged: 0, changed: 0 };
     const changedBy = new Set<Edit['edit']>();
     fc.assert(
-      fc.property(fc.array(editOf, { minLength: 1, maxLength: 40 }), (edits) => {
+      // Lengths drawn across the whole range (`size: 'max'`): fast-check's default favours short sequences, and with
+      // them the reach checks below failed 7 runs in 80 once the reversal joined the draws (PROBE-103/flake-*.log).
+      fc.property(fc.array(editOf, { minLength: 1, maxLength: 40, size: 'max' }), (edits) => {
         const nextId = counter('id');
         const scene = newScene(counter('s'));
         let route = frozen(newRoute(nextId));
