@@ -18,6 +18,7 @@ import {
   markPoint,
   movePoints,
   penStep,
+  placePoints,
   reverseLine,
   setDirection,
   setKind,
@@ -315,5 +316,22 @@ describe('three pen steps in one gesture', () => {
     expect(store.getState().project).toBe(before.project);
     expect(store.getState().selection).toBe(before.selection);
     expect(store.getState().undo).toBeNull();
+  });
+});
+
+describe('placePoints, the drag’s command (chat C)', () => {
+  it('places from the start places under movePoints’ words, keeps the selection, and is one step dispatched alone', () => {
+    const { store, route, a, b } = chain();
+    const before = store.getState();
+    const starts = [{ id: a, x: 0.1, y: 0.1 }, { id: b, x: 0.5, y: 0.1 }];
+    expect(placePoints(route, starts.slice(0, 1), 0, 0).label).toBe('Move point');
+    expect(store.dispatch(placePoints(route, starts, 0.25, 0.5)).ok).toBe(true);
+    expect(routeIn(store).points.slice(0, 2).map(({ x, y }) => [x, y])).toEqual([[0.1 + 0.25, 0.1 + 0.5], [0.5 + 0.25, 0.1 + 0.5]]);
+    expect(store.getState().selection).toBe(before.selection);
+    expect(store.getState().undo).toBe('Move points');
+    expect(store.dispatch(placePoints(route, [{ id: 'gone', x: 0, y: 0 }], 0.1, 0))).toEqual({
+      ok: false,
+      refusal: { why: 'refused-edit', refusal: { refused: 'no-such-point', id: 'gone' } },
+    });
   });
 });

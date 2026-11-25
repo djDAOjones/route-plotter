@@ -168,6 +168,22 @@ export function movePoints(routeId: string, ids: readonly string[], dx: number, 
   };
 }
 
+/**
+ * A drag's points placed: each at its place when the drag began plus one offset in image fractions, unclamped
+ * (editing.placePoints). The pointer's binding (gesture.ts) applies it in its gesture at every move, under movePoints'
+ * words. The selection is kept.
+ */
+export function placePoints(routeId: string, starts: readonly editing.Start[], dx: number, dy: number): Command {
+  return {
+    label: byCount(
+      starts.map((start) => start.id),
+      'Move point',
+      'Move points',
+    ),
+    apply: (current) => onRoute(current, routeId, (route) => keeping(editing.placePoints(route, starts, dx, dy))),
+  };
+}
+
 /** The named points copied, with the lines between them; the copies become the selection, the last copy last. */
 export function duplicatePoints(routeId: string, ids: readonly string[]): Command {
   return {

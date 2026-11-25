@@ -7,7 +7,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkScene, newRoute, newScene, type IdSource, type Route } from '../scene';
 import { leadWalk } from '../../timing/walk';
-import { DUPLICATE_OFFSET, deleteLine, deletePoints, duplicatePoints, movePoints, splitLine } from './editing';
+import { DUPLICATE_OFFSET, deleteLine, deletePoints, duplicatePoints, movePoints, placePoints, splitLine } from './editing';
 import { isRefusal, type EditRefusal } from './graph';
 
 function counter(prefix: string): IdSource {
@@ -317,5 +317,39 @@ describe('duplicating points (D238, built as written, awaiting the owner)', () =
     expect(one.lines).toEqual(route.lines);
     expect(duplicatePoints(route, counter('d'), ['A', 'nope'])).toEqual({ refused: 'no-such-point', id: 'nope' });
     expect(done(duplicatePoints(route, counter('d'), [])).route).toBe(route);
+  });
+});
+
+describe('placing a drag’s points (CORE-06, chat C)', () => {
+  it('sets each named point to its start place plus the offset, and changes nothing else', () => {
+    const route = drawn('A B C', ['A>B', 'B>C']);
+    const after = done(placePoints(route, [{ id: 'A', x: 0.2, y: 0.4 }, { id: 'C', x: 0.9, y: 0.9 }], 0.1, -0.3));
+    expect(after.points.map(({ id, x, y }) => [id, x, y])).toEqual([
+      ['A', 0.2 + 0.1, 0.4 - 0.3],
+      ['B', 0.1, 0.5],
+      ['C', 0.9 + 0.1, 0.9 - 0.3],
+    ]);
+    expect(after.points[1]).toBe(route.points[1]);
+    expect(after.lines).toBe(route.lines);
+    expect(after.points[0]).toEqual({ ...route.points[0], x: 0.2 + 0.1, y: 0.4 - 0.3 });
+  });
+
+  it('places from the start, never adding to where a point stands now, and is unclamped', () => {
+    const route = drawn('A B', ['A>B']);
+    const once = done(placePoints(route, [{ id: 'B', x: 0.1, y: 0.5 }], 0.05, 0));
+    const twice = done(placePoints(once, [{ id: 'B', x: 0.1, y: 0.5 }], 0.05, 0));
+    expect(twice.points[1]).toEqual(once.points[1]);
+    expect(twice).toBe(once);
+    expect(done(placePoints(route, [{ id: 'A', x: 0, y: 0 }], -2, 3)).points[0]).toMatchObject({ x: -2, y: 3 });
+  });
+
+  it('gives back the route given when no place changes, and refuses a point the route does not hold', () => {
+    const route = drawn('A B', ['A>B']);
+    expect(placePoints(route, [{ id: 'B', x: 0.1, y: 0.5 }], 0, 0)).toBe(route);
+    expect(placePoints(route, [], 0.1, 0.1)).toBe(route);
+    expect(placePoints(route, [{ id: 'A', x: 0, y: 0.5 }, { id: 'gone', x: 0, y: 0 }], 0.1, 0)).toEqual({
+      refused: 'no-such-point',
+      id: 'gone',
+    });
   });
 });

@@ -113,6 +113,35 @@ export function movePoints(route: Route, ids: readonly string[], dx: number, dy:
   return moved ? { ...route, points } : route;
 }
 
+/** A point's place when a drag began. */
+export interface Start {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * A drag's points placed (CORE-06, chat C): each named point at its place when the drag began plus one offset in image
+ * fractions, unclamped, so that after any number of moves the places are those of one move by the whole offset, never
+ * a sum of steps. A point the route no longer holds is refused; the route given comes back when no place changes.
+ */
+export function placePoints(route: Route, starts: readonly Start[], dx: number, dy: number): Route | EditRefusal {
+  const refusal = unheld(
+    route,
+    starts.map((start) => start.id),
+  );
+  if (refusal !== undefined) return refusal;
+  const placed = new Map(starts.map((start) => [start.id, { x: start.x + dx, y: start.y + dy }]));
+  let moved = false;
+  const points = route.points.map((point) => {
+    const place = placed.get(point.id);
+    if (place === undefined || (place.x === point.x && place.y === point.y)) return point;
+    moved = true;
+    return { ...point, ...place };
+  });
+  return moved ? { ...route, points } : route;
+}
+
 /** How far right and down a copy stands from what it copies (v3's Duplicate: 2% of the image each way). */
 export const DUPLICATE_OFFSET = 0.02;
 
