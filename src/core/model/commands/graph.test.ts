@@ -1,13 +1,27 @@
 // CORE-06: the pen's edits on one route's graph. v3's assertions are ported by the plan's rules (A18), assertion by
 // assertion: `v3/tests/networkEdit.test.js` :506 (successive clicks chain), :533 (an existing node closes loops but
-// never duplicates a link) and :546 (with the pen up a click picks the pen up there). The plan's three worked examples
+// never duplicates a link) and :546 (with the pen up a click picks the pen up there); stage 2's :569 (T cycles a
+// node's type: v4's start and end marks) and :580's direction (a direction set as it is changes nothing). The plan's three worked examples
 // (§3) are drawn by pen steps alone and walked by the lead's walk; every result is checked inside a scene by
 // `checkScene`, which alone holds the limits.
 import { describe, expect, it } from 'vitest';
 import { LIMITS } from '../../config/limits';
 import { leadWalk } from '../../timing/walk';
 import { checkScene, newPoint, newRoute, newScene, type IdSource, type Route } from '../scene';
-import { addPoint, isRefusal, joinPoints, penStep, type EditRefusal, type PenTarget, type Place } from './graph';
+import {
+  addPoint,
+  isRefusal,
+  joinPoints,
+  markPoint,
+  penStep,
+  setDirection,
+  setKind,
+  setLeadStart,
+  unmarkPoint,
+  type EditRefusal,
+  type PenTarget,
+  type Place,
+} from './graph';
 
 function counter(prefix: string): IdSource {
   let n = 0;
@@ -305,5 +319,103 @@ describe('the limits are checkScene’s, not the edits’', () => {
     expect(checked(done(edge).route).ok).toBe(true);
     const past = penStep(empty, counter('n'), null, { place: stop(LIMITS.coordinateMin - 0.001, 0.5) });
     expect(checked(done(past).route).ok).toBe(false);
+  });
+});
+
+describe('stage 2: a line’s direction, the lead’s start, marks and a point’s kind', () => {
+  function abc() {
+    const p = pen();
+    const ids = [p.place(0.1, 0.1), p.place(0.5, 0.1), p.place(0.9, 0.1)] as const;
+    return { route: frozen(p.route()), ids };
+  }
+
+  it('a line set both ways keeps its ends and its place, and the lead may then walk it from its far end', () => {
+    const { route, ids } = abc();
+    const fromB = done(setLeadStart(route, ids[1]));
+    expect(leadWalk(fromB).walked.map((line) => [line.from, line.to])).toEqual([[ids[1], ids[2]]]);
+    const both = done(setDirection(fromB, lineId(route, 0), 'both ways'));
+    expect(both.lines[0]).toEqual({ ...nth(route.lines, 0), direction: 'both ways' });
+    expect(both.lines[1]).toBe(route.lines[1]);
+    for (const key of ['points', 'marks', 'leadStart', 'settings', 'id'] as const) expect(both[key]).toBe(fromB[key]);
+    expect(leadWalk(both).walked.map((line) => [line.from, line.to])).toEqual([
+      [ids[1], ids[0]],
+      [ids[1], ids[2]],
+    ]);
+    expect(checked(both).ok).toBe(true);
+    const back = done(setDirection(frozen(both), lineId(route, 0), 'one way'));
+    expect(back).toEqual(fromB);
+  });
+
+  it('a direction set as it is gives back the same route (v3 :584, the direction kept)', () => {
+    const { route } = abc();
+    expect(setDirection(route, lineId(route, 0), 'one way')).toBe(route);
+  });
+
+  it('the lead’s start set to another point of the route, and to the same one, which changes nothing', () => {
+    const { route, ids } = abc();
+    const moved = done(setLeadStart(route, ids[2]));
+    expect(moved.leadStart).toBe(ids[2]);
+    for (const key of ['points', 'lines', 'marks', 'settings', 'id'] as const) expect(moved[key]).toBe(route[key]);
+    expect(setLeadStart(frozen(moved), ids[2])).toBe(moved);
+  });
+
+  it('a point marked as a start, then an end, then neither, as v3’s T cycles it (v3 :569)', () => {
+    const { route, ids } = abc();
+    const start = done(markPoint(route, ids[1], 'start'));
+    expect(start.marks).toEqual([{ point: ids[1], end: 'start' }]);
+    const end = done(markPoint(frozen(done(unmarkPoint(frozen(start), ids[1], 'start'))), ids[1], 'end'));
+    expect(end.marks).toEqual([{ point: ids[1], end: 'end' }]);
+    const none = done(unmarkPoint(frozen(end), ids[1], 'end'));
+    expect(none.marks).toEqual([]);
+    for (const each of [start, end, none]) expect(checked(each).ok).toBe(true);
+  });
+
+  it('a mark goes after the others, which stay the same objects; one point may carry both kinds', () => {
+    const { route, ids } = abc();
+    const one = done(markPoint(route, ids[0], 'end'));
+    const two = done(markPoint(frozen(one), ids[0], 'start'));
+    expect(two.marks).toEqual([
+      { point: ids[0], end: 'end' },
+      { point: ids[0], end: 'start' },
+    ]);
+    expect(two.marks[0]).toBe(one.marks[0]);
+    for (const key of ['points', 'lines', 'leadStart', 'settings', 'id'] as const) expect(two[key]).toBe(route[key]);
+    expect(checked(two).ok).toBe(true);
+  });
+
+  it('marking twice, or taking off a mark the point lacks, gives back the same route', () => {
+    const { route, ids } = abc();
+    const marked = frozen(done(markPoint(route, ids[2], 'end')));
+    expect(markPoint(marked, ids[2], 'end')).toBe(marked);
+    expect(unmarkPoint(marked, ids[2], 'start')).toBe(marked);
+    expect(unmarkPoint(marked, ids[0], 'end')).toBe(marked);
+  });
+
+  it('a point made a bend keeps its label and pause, and a stop again is as it was', () => {
+    const { route: base, ids } = abc();
+    const labelled: Route = frozen({
+      ...base,
+      points: base.points.map((each) => (each.id === ids[1] ? { ...each, label: 'Bridge', pauseMs: 4_000 } : each)),
+    });
+    const bend = done(setKind(labelled, ids[1], 'bend'));
+    expect(bend.points[1]).toEqual({ ...nth(labelled.points, 1), kind: 'bend' });
+    expect(bend.points[0]).toBe(labelled.points[0]);
+    for (const key of ['lines', 'marks', 'leadStart', 'settings', 'id'] as const) expect(bend[key]).toBe(labelled[key]);
+    expect(checked(bend).ok).toBe(true);
+    expect(setKind(frozen(bend), ids[1], 'bend')).toBe(bend);
+    expect(done(setKind(frozen(bend), ids[1], 'stop'))).toEqual(labelled);
+  });
+
+  it('each stage 2 refusal names what it refused, and leaves the route as it was', () => {
+    const { route, ids } = abc();
+    const copy = structuredClone(route);
+    expect(setDirection(route, 'nope', 'both ways')).toEqual({ refused: 'no-such-line', id: 'nope' });
+    expect(setDirection(route, ids[0], 'both ways')).toEqual({ refused: 'no-such-line', id: ids[0] });
+    expect(setLeadStart(route, 'nope')).toEqual({ refused: 'no-such-point', id: 'nope' });
+    expect(setLeadStart(route, lineId(route, 0))).toEqual({ refused: 'no-such-point', id: lineId(route, 0) });
+    expect(markPoint(route, 'nope', 'start')).toEqual({ refused: 'no-such-point', id: 'nope' });
+    expect(unmarkPoint(route, 'nope', 'end')).toEqual({ refused: 'no-such-point', id: 'nope' });
+    expect(setKind(route, 'nope', 'bend')).toEqual({ refused: 'no-such-point', id: 'nope' });
+    expect(route).toEqual(copy);
   });
 });
