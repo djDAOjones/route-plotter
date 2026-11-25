@@ -42,6 +42,11 @@
 //    bytes, no project (the store owns its own copy); what a decoder or a stand-in `openProject` handed in keeps is its
 //    own. Its state holds `opening`, `refusal` and `name` only, and is the same frozen object until one of them changes.
 //
+// 13. `opened()` counts the projects this opener has put in the store: one more each time the store takes one (an open
+//    given back as `opened`), counted before "Project opened" is said; a refusal, a superseded open and the store's own
+//    refusal or throw count nothing. The timeline reads it, so an edit of the position begun before an open changes
+//    nothing after it (PRS2, brief 94; timelineLogic.ts).
+//
 // `openFile(file)` (brief 75) is one ask, as `open` is: it counts as one, gives the same results and never rejects;
 // once the file's bytes are read it is `open`'s own path, so points 1 to 8 hold for it as they stand. `file` is anything
 // with a `name`, a `size` and `arrayBuffer()` (a browser's `File` is one; Node's tests make their own).
@@ -118,6 +123,8 @@ export interface Opener {
   /** Clears a refusal held, and its name; does nothing while an open is under way or at rest (point 12). */
   dismiss(): void;
   read(): OpenerState;
+  /** How many projects this opener has put in the store (point 13). */
+  opened(): number;
   /** Calls `listener` when the state changes; gives back the call that stops it. */
   subscribe(listener: () => void): () => void;
 }
@@ -166,6 +173,8 @@ export function createOpener({ store, announce, decode, openProject = ioOpenProj
   let state = QUIET;
   /** How many opens have been asked for: an open may act only while it is the latest. */
   let asked = 0;
+  /** How many projects the store has taken from this opener (point 13). */
+  let taken = 0;
   const listeners = new Set<() => void>();
 
   const hold = (next: OpenerState): void => {
@@ -207,6 +216,7 @@ export function createOpener({ store, announce, decode, openProject = ioOpenProj
       if (mine === asked) hold({ opening: false, refusal, name });
       return { kind: 'refused', refusal };
     }
+    taken += 1;
     // The store has taken it: it is opened whatever happens next. A throw from `announce` is dropped, not given back
     // as a refusal (nothing was refused; the page's queue does not throw; a rejected open would leave "opening" held).
     try {
@@ -240,6 +250,7 @@ export function createOpener({ store, announce, decode, openProject = ioOpenProj
       if (!state.opening && state.refusal !== null) hold(QUIET);
     },
     read: () => state,
+    opened: () => taken,
     subscribe: (listener: () => void): (() => void) => {
       listeners.add(listener);
       return () => {

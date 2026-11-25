@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Project } from '../../adapters/io/format';
 import type { Decode } from '../../adapters/io/images';
-import { openProject } from '../../adapters/io/open';
+import { openProject, type Opened } from '../../adapters/io/open';
 import { saveProject } from '../../adapters/io/save';
 import { ARCHIVE_LIMITS } from '../../adapters/io/limits';
 import { WORDS as IO_WORDS } from '../../adapters/io/words';
@@ -885,5 +885,56 @@ describe('point 11 (Codex on 0075a60): an ask made by a listener told of another
     expect(run.store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
     expect(run.said).toEqual([OPEN_WORDS.opened]);
     expect(run.opener.read()).toEqual({ opening: false, refusal: null, name: null });
+  });
+});
+
+describe('point 13 (PRS2, brief 94): the opener counts the projects the store has taken', () => {
+  it('one more for each open the store takes, counted before "Project opened" is said; io’s refusal counts nothing', async () => {
+    let next: Opened = { ok: true, project: routeOf(2, 0, 'a') };
+    const countWhenSaid: number[] = [];
+    const run = sessionOf(empty(), { openProject: () => Promise.resolve(next) }, () => {
+      countWhenSaid.push(run.opener.opened());
+    });
+    expect(run.opener.opened()).toBe(0);
+    expect(await run.opener.open(NOT_A_FILE)).toEqual({ kind: 'opened' });
+    expect(run.opener.opened()).toBe(1);
+    expect(countWhenSaid).toEqual([1]);
+    next = { ok: false, refusal: { reason: 'not-a-project', message: 'not one' } };
+    expect((await run.opener.open(NOT_A_FILE)).kind).toBe('refused');
+    expect(run.opener.opened()).toBe(1);
+    next = { ok: true, project: routeOf(3, 0, 'b') };
+    await run.opener.open(NOT_A_FILE);
+    expect(run.opener.opened()).toBe(2);
+  });
+
+  it('the store’s own refusal or throw counts nothing', async () => {
+    for (const open of [() => ({ ok: false as const, refusal: { why: 'gesture-open' as const } }), () => { throw new Error('boom'); }]) {
+      const opener = createOpener({
+        store: { open },
+        announce: () => undefined,
+        decode: atOnce,
+        openProject: () => Promise.resolve({ ok: true, project: routeOf(2, 0, 'a') }),
+      });
+      expect((await opener.open(NOT_A_FILE)).kind).toBe('refused');
+      expect(opener.opened()).toBe(0);
+    }
+  });
+
+  it('a superseded open counts nothing; the later one counts one', async () => {
+    const pending: ((opened: Opened) => void)[] = [];
+    const run = sessionOf(empty(), {
+      openProject: () =>
+        new Promise<Opened>((resolve) => {
+          pending.push(resolve);
+        }),
+    });
+    const a = run.opener.open(NOT_A_FILE);
+    const b = run.opener.open(NOT_A_FILE);
+    await Promise.resolve();
+    pending[1]?.({ ok: true, project: routeOf(3, 0, 'b') });
+    pending[0]?.({ ok: true, project: routeOf(2, 0, 'a') });
+    expect(await a).toEqual({ kind: 'superseded' });
+    expect(await b).toEqual({ kind: 'opened' });
+    expect(run.opener.opened()).toBe(1);
   });
 });

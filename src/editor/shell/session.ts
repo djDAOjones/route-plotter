@@ -107,8 +107,8 @@ function make(): PageSession {
     frameRate: () => store.getState().project.scene.settings.export.frameRate,
   });
   const length = createLengthReader({ store, length: () => player.length(), frames });
-  const timeline = createTimeline({ store, transport, length });
   const opener = createOpener({ store, announce, decode });
+  const timeline = createTimeline({ store, transport, length, opened: () => opener.opened() });
   const pictures = createPictures({ store, load: loadPicture, report: (error) => { reportError(error); } });
   const drawer = createDrawer({
     store,

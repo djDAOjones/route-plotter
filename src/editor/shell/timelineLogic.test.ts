@@ -5,6 +5,7 @@
 // logic (controls.ts) over the timeline's `Setting`: the page's events on Carbon's slider are owed to the page.
 import { describe, expect, it } from 'vitest';
 import type { Project } from '../../adapters/io/format';
+import type { Opened } from '../../adapters/io/open';
 import { newLine, newPoint, newRoute, newScene, type IdSource } from '../../core/model/scene';
 import { CATALOGUE, type Catalogue, type SceneFeature } from '../../features/catalogue';
 import { createTransport, type FrameSource } from '../../player/transport/transport';
@@ -12,6 +13,7 @@ import { createSlider } from '../kit/controls';
 import { setSceneSetting } from '../store/command';
 import { createStore } from '../store/store';
 import { createEditorTransport, hasSomethingToPlay } from '../transport/transport';
+import { createOpener } from './openLogic';
 import { createLengthReader, createTimeline, formatTime } from './timelineLogic';
 
 function counter(prefix: string): IdSource {
@@ -103,9 +105,21 @@ function timelineOf(project: Project = twoStops()) {
     },
     frames: frames.source,
   });
-  const timeline = createTimeline({ store, transport: editor, length });
-  return { store, frames, editor, length, timeline, reads, count };
+  // The opener as the session makes it, made before the timeline and handing it its count; io's Open stood in: each
+  // open gives `next.opened` (brief 94, PRS2).
+  const next: { opened: Opened } = { opened: { ok: true, project: twoStops() } };
+  const opener = createOpener({
+    store,
+    announce: () => undefined,
+    decode: () => Promise.reject(new Error('not reached')),
+    openProject: () => Promise.resolve(next.opened),
+  });
+  const timeline = createTimeline({ store, transport: editor, length, opened: () => opener.opened() });
+  return { store, frames, editor, length, timeline, reads, count, opener, next };
 }
+
+/** Bytes for the stand-in Open: never read. */
+const ANY_BYTES = Uint8Array.of(1);
 
 /** Hold at start set to `ms`: a change to the scene, one undo step, that lengthens it by that much. */
 const holdAtStart = (ms: number) => setSceneSetting('clock', 'holdAtStartMs', ms);
@@ -380,6 +394,93 @@ describe('the timeline as the kit’s slider: a drag, Escape and a key, also whi
     expect(slider.report(501)).toEqual({ ok: true, changed: false });
     expect(store.playback().atMs).toBe(1002);
     expect(timeline.setting.read()).toBe(501);
+    expect(store.getState().undo).toBeNull();
+  });
+});
+
+describe('an edit of the timeline begun before an Open changes nothing after it (PRS2, brief 94)', () => {
+  it('begin, move, open, cancel: the position is where the open put it, not where the edit began; nothing changed', async () => {
+    const { store, editor, timeline, opener } = timelineOf(empty());
+    editor.scrub(1234.5);
+    const begun = timeline.setting.begin();
+    if (!begun.ok) throw new Error('refused');
+    begun.edit.set(250);
+    expect(store.playback().atMs).toBe(500);
+    expect(await opener.open(ANY_BYTES)).toEqual({ kind: 'opened' });
+    expect(store.playback().atMs).toBe(0);
+    expect(begun.edit.cancel()).toEqual({ ok: true, changed: false });
+    expect(store.playback().atMs).toBe(0);
+  });
+
+  it('begin, open, set: nothing scrubbed, and its commit answers as before', async () => {
+    const { store, editor, timeline, opener } = timelineOf(empty());
+    editor.scrub(1000);
+    const begun = timeline.setting.begin();
+    if (!begun.ok) throw new Error('refused');
+    await opener.open(ANY_BYTES);
+    expect(begun.edit.set(500)).toEqual({ ok: true, changed: false });
+    expect(store.playback().atMs).toBe(0);
+    expect(begun.edit.commit()).toEqual({ ok: true, changed: false });
+    expect(store.playback().atMs).toBe(0);
+    expect(store.getState().undo).toBeNull();
+  });
+
+  it('a refused open kills nothing: the edit still sets, and its cancel puts the position back', async () => {
+    const { store, editor, timeline, opener, next } = timelineOf(empty());
+    editor.scrub(1234.5);
+    const begun = timeline.setting.begin();
+    if (!begun.ok) throw new Error('refused');
+    begun.edit.set(250);
+    next.opened = { ok: false, refusal: { reason: 'not-a-project', message: 'not one' } };
+    expect((await opener.open(ANY_BYTES)).kind).toBe('refused');
+    expect(begun.edit.set(750)).toEqual({ ok: true, changed: true });
+    expect(store.playback().atMs).toBe(1500);
+    expect(begun.edit.cancel()).toEqual({ ok: true, changed: true });
+    expect(store.playback().atMs).toBe(1234.5);
+  });
+
+  it('an edit begun after the open sets and cancels as before', async () => {
+    const { store, editor, timeline, opener, next } = timelineOf(twoStops());
+    next.opened = { ok: true, project: empty() };
+    await opener.open(ANY_BYTES);
+    editor.scrub(1234.5);
+    const begun = timeline.setting.begin();
+    if (!begun.ok) throw new Error('refused');
+    expect(begun.edit.set(250)).toEqual({ ok: true, changed: true });
+    expect(store.playback().atMs).toBe(500);
+    expect(begun.edit.cancel()).toEqual({ ok: true, changed: true });
+    expect(store.playback().atMs).toBe(1234.5);
+  });
+
+  it('Undo in the middle of an edit does not close it: its cancel still puts the position back', () => {
+    const { store, editor, timeline } = timelineOf(empty());
+    store.dispatch(holdAtStart(500));
+    editor.scrub(1234.5);
+    const begun = timeline.setting.begin();
+    if (!begun.ok) throw new Error('refused');
+    begun.edit.set(100);
+    expect(store.undo().ok).toBe(true);
+    expect(store.getState().undo).toBeNull();
+    expect(begun.edit.cancel()).toEqual({ ok: true, changed: true });
+    expect(store.playback().atMs).toBe(1234.5);
+  });
+
+  it('through the kit’s slider: a press, a move, an open, Escape, a move, the release: the position stays at the open’s start', async () => {
+    const { store, editor, timeline, opener } = timelineOf(empty());
+    const slider = createSlider(timeline.setting);
+    editor.scrub(1000);
+    slider.press();
+    slider.report(250);
+    expect(store.playback().atMs).toBe(500);
+    await opener.open(ANY_BYTES);
+    expect(store.playback().atMs).toBe(0);
+    expect(slider.giveUp()).toEqual({ ok: true, changed: false });
+    expect(store.playback().atMs).toBe(0);
+    slider.report(900);
+    expect(store.playback().atMs).toBe(0);
+    slider.release();
+    expect(slider.pressed()).toBe(false);
+    expect(store.playback().atMs).toBe(0);
     expect(store.getState().undo).toBeNull();
   });
 });

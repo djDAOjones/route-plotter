@@ -12,6 +12,12 @@
 //   0). An edit's `set(p)` scrubs to p / 1000 of the length; `commit` keeps nothing and makes no undo step (the playback
 //   is outside undo); `cancel` scrubs back to the position the edit began at, in ms, exactly. A scrub is never refused
 //   and never stops or starts a playing: a drag while playing moves the position and the playing goes on from there.
+// - An edit begun before a project is opened changes nothing after the open (PRS2, brief 94): its `set` and its `cancel`
+//   scrub nothing and answer "nothing changed"; its `commit` answers as before. The timeline is told of an open through
+//   `opened`, the opener's count of projects put in the store, which an edit remembers at `begin`; it never guesses one
+//   from what the store holds, so Undo or Redo in the middle of an edit leaves it alive (its cancel still scrubs back).
+//   An Open so closes the timeline's edit as it closes a store gesture. What it costs: a drag in hand when a project
+//   opens moves nothing more until the pointer is let go and pressed again.
 // - Its words are v3's: the time now and the whole time, in whole seconds as m:ss, rounded down ("0:01 of 0:02").
 import type { Scene } from '../../core/model/scene';
 import type { Begun, Result, Setting } from '../kit/controls';
@@ -98,11 +104,18 @@ export interface TimelineOptions {
   /** The editor's transport: its `scrub` holds the position between 0 and the length and says nothing. */
   readonly transport: Pick<EditorTransport, 'scrub'>;
   readonly length: LengthReader;
+  /**
+   * How many projects have been opened into the store (the opener's `opened`): an edit begun before the count changes
+   * changes nothing after. The session gives it; left out (a test of the timeline alone), no open is ever counted.
+   * Brief 94 leaned to making it required, so the typecheck refuses a session that forgets it; `Timeline.test.ts`,
+   * not on that brief's paths, makes a timeline without it (FINDING-94-timeline-test).
+   */
+  readonly opened?: () => number;
 }
 
 const NOTHING: Result = { ok: true, changed: false };
 
-export function createTimeline({ store, transport, length }: TimelineOptions): Timeline {
+export function createTimeline({ store, transport, length, opened = () => 0 }: TimelineOptions): Timeline {
   const atMs = () => store.playback().atMs;
   const read = (): number => {
     const whole = length.held();
@@ -127,17 +140,23 @@ export function createTimeline({ store, transport, length }: TimelineOptions): T
     },
     begin: (): Begun => {
       const from = atMs();
+      /** The opens counted when the edit began: a project opened since closes the edit (PRS2). */
+      const begunAt = opened();
       let open = true;
+      const live = (): boolean => open && opened() === begunAt;
       return {
         ok: true,
         edit: {
-          set: (value) => (open ? scrubTo((value / THOUSANDTHS) * length.held()) : NOTHING),
+          set: (value) => (live() ? scrubTo((value / THOUSANDTHS) * length.held()) : NOTHING),
           commit: () => {
             open = false;
             return NOTHING;
           },
           cancel: () => {
-            if (!open) return NOTHING;
+            if (!live()) {
+              open = false;
+              return NOTHING;
+            }
             open = false;
             return scrubTo(from);
           },
