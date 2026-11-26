@@ -2378,10 +2378,11 @@ export default {
     },
     {
       // 2.5.2 (brief 88, finding 86): a quick drag on a slow page. React's scheduler slowed as in the-late-echo, the
-      // twenty-minute scene opened and still, the pointer down on the timeline's thumb, moved right in five quick steps
-      // of a twentieth of the track each, then rests a moment where it is and is let go: the timeline stays, no page
-      // error is heard, and the position held is where the thumb was let go (a quarter of the track on from where it was
-      // pressed, within a hundredth of the range), and still there a second later. Before the mend the kit took Carbon's
+      // twenty-minute scene opened and still, the pointer down on the timeline's thumb, moved in five quick steps of a
+      // twentieth of the track each, then rests a moment where it is and is let go: the timeline stays, no page error is
+      // heard, and the position held is where the thumb was let go (a quarter of the track on from where it was pressed,
+      // within a hundredth of the range), and still there a second later. An open leaves the thumb at the end (D251,
+      // brief 127), so the steps go left, towards the start; before, from 0, they went right. Before the mend the kit took Carbon's
       // late follow of a position it had handed before for a move of the drag; the two answered each other until React
       // gave up (error 185) and the timeline was gone (claim point 3, the trail).
       name: 'the-quick-drag',
@@ -2406,10 +2407,10 @@ export default {
         const track = await page.locator(TRACK).boundingBox();
         const max = Number(await page.locator(TIMELINE).getAttribute('aria-valuemax'));
         const from = { x: thumb.x + thumb.width / 2, y: thumb.y + thumb.height / 2 };
-        const to = from.x + track.width / 4;
+        const to = from.x - track.width / 4;
         await page.mouse.move(from.x, from.y);
         await page.mouse.down();
-        for (let s = 1; s <= 5; s++) await page.mouse.move(from.x + (s * track.width) / 20, from.y, { steps: 2 });
+        for (let s = 1; s <= 5; s++) await page.mouse.move(from.x - (s * track.width) / 20, from.y, { steps: 2 });
         // Then the pointer rests before it is let go, as a hand does (brief 95, FINDING-94-quick-drag-ci). Carbon's slider
         // takes at most one move of a drag in each 16 ms, the first and not the last (node_modules/@carbon/react/lib/
         // components/Slider/Slider.js, line 70, EVENT_THROTTLE = 16, and lines 325 to 333, throttle leading only), and
@@ -2433,7 +2434,7 @@ export default {
           if (later !== held) wrong.push(`a second later the position is ${later}, not ${held}`);
         }
         if (errors.length) wrong.push(`page error: ${errors[0]}`);
-        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `with React's scheduler slowed 60 ms a task, the twenty-minute scene still: the thumb pressed and moved right in five quick steps, let go at ${expected} of ${max}: the position held is ${held}, a second later too; the timeline stays, no page error`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `with React's scheduler slowed 60 ms a task, the twenty-minute scene still: the thumb pressed at the end and moved left in five quick steps, let go at ${expected} of ${max}: the position held is ${held}, a second later too; the timeline stays, no page error`);
       },
     },
     {
