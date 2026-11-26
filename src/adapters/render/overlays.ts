@@ -133,6 +133,20 @@ export function greyDot(context: DrawContext, at: Place, radius: number, edge: n
   });
 }
 
+/**
+ * The editor's guide dot on a point while the preview is not playing (CORE-06, D265, brief 128, BQ): a disc filled in
+ * the route's colour at full alpha, no edge, so it reads as the route's own mark and never as a ring. The caller hands
+ * the radius (3 × unitAt(zoom)) and the colour.
+ */
+export function guideDot(context: DrawContext, at: Place, radius: number, colour: string): void {
+  if (!finite(at.x, at.y, radius) || radius <= 0) return;
+  own(context, () => {
+    context.fillStyle = colour;
+    context.arc(at.x, at.y, radius, 0, Math.PI * 2);
+    context.fill();
+  });
+}
+
 /** v3's "+" handle (:424–450): a disc of radius 9, or 11 when active, edged 1.5 wide, with a plus of round-capped arms. */
 export function plusHandle(context: DrawContext, at: Place, active: boolean, unit = 1, radius: number = (active ? 11 : 9) * unit): void {
   if (!finite(at.x, at.y, unit, radius) || unit <= 0 || radius <= 0) return;

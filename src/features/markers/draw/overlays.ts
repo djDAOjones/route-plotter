@@ -11,7 +11,13 @@
 // invisible, even for a stop whose marker is not shown at that moment. v3's gaps and widths go by unitAt(screen.zoom).
 // Each route's points are walked once, whatever the number selected, and a route named twice is drawn once; an id the
 // frame does not hold draws nothing; nothing is kept between frames (D147).
-import { greyDot, hoverRing, selectionRect, selectionRing, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
+//
+// The guide's dots while paused (CORE-06, D265; brief 128, BQ): `dotOverlay` marks every point of each route named,
+// joined to a line or not (Duplicate's copies, which the lead never reaches, included), with the kit's guide dot: a
+// disc in the route's colour (its line's), radius 3 × unitAt(screen.zoom), no white or black edge, so it stays inside
+// the 5 units a selection's ring starts at. The editor asks for it, for every route, only while the preview is not
+// playing (../../../editor/shell/previewLogic.ts, point 4d), drawn before the selection's rings and the hover.
+import { greyDot, guideDot, hoverRing, selectionRect, selectionRing, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
 import type { Frame } from '../../../adapters/render/layers';
 import type { DrawContext } from '../../../adapters/render/context';
 import type { Route } from '../../../core/model/scene';
@@ -65,6 +71,24 @@ function selectStop(context: DrawContext, at: Place, half: number, boxedLook: bo
 const BEND = { radius: 4, edge: 1 } as const;
 
 const NONE: ReadonlySet<string> = new Set();
+
+/** The guide dot's radius in screen pixels at a zoom of 1 (D265). */
+const GUIDE_DOT = 3;
+
+/** The guide's dots while paused (D265): every point of each route named, in the route's colour, in the points' order. */
+export function dotOverlay(routeIds: readonly string[]): Overlay {
+  return (context: DrawContext, _frame: Frame, screen: Screen) => {
+    const radius = GUIDE_DOT * unitAt(screen.zoom);
+    for (const id of new Set(routeIds)) {
+      const route = screen.routes.get(id);
+      if (route === undefined) continue;
+      for (const point of route.shape.points) {
+        const at = screen.place(point);
+        if (at !== null) guideDot(context, at, radius, route.settings.line.colour);
+      }
+    }
+  };
+}
 
 /**
  * The overlay that follows the chosen points of the routes handed in: every bend's grey dot (v3 drew them only while

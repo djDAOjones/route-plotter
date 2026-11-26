@@ -24,13 +24,20 @@
 //    (b) it books at attach, then only when what a frame is made from is not what the last draw used: the scene's
 //        object, the position (`playback.atMs`), the selection's object, the picture held, the hover held (`hover`,
 //        ../canvas/hover.ts, which changes its object only when its value changes), the size and the background's
-//        size. A telling that changes none of them (the speed, `playing` alone) books nothing: a still page draws nothing;
+//        size, and whether it plays (`playback.playing`: a Pause at the same position redraws, so the guide of (d)
+//        shows; brief 128, BO). A telling that changes none of them (the speed alone) books nothing: a still page draws
+//        nothing;
 //    (c) the request is made when the frame runs, from what is held then: the inputs' scene, seed, size and image (with
 //        the picture's `source` when one is held), `sceneMs` the position, the `surface`; no `viewing` (CORE-06's zoom
 //        and pan) and no `images` (nothing names one yet);
-//    (d) no overlays when no route is selected, so the frame is line for line an export's, a hover or none; with a
-//        route selected, `OVERLAY_MAKERS.lines([route], { hovered })` then `OVERLAY_MAKERS.points([route], { selected,
-//        hovered })`, each selected point as `{ routeId, pointId }`. A hovered point of that route is the points
+//    (d) while the scene plays (`playback.playing`) no overlays when no route is selected, so the frame is line for line
+//        an export's, a hover or none. While it does not play (paused, and a scrub of a paused scene, which has no
+//        state of its own), the guide comes first, over the export's frame: `OVERLAY_MAKERS.guideLines(ids)` then
+//        `OVERLAY_MAKERS.guideDots(ids)` for every route of the scene, selected or not, whatever its line's look
+//        (CORE-06, D265, Joe's D251 "End, plus a guide (d)"; brief 128, BO and BP). With a route selected, after it,
+//        `OVERLAY_MAKERS.lines([], { hovered })` (no ids: the lines' selected-only guide for a hidden line is this guide
+//        now, D157 into D265) then `OVERLAY_MAKERS.points([route], { selected, hovered })`, each selected point as
+//        `{ routeId, pointId }`. A hovered point of that route is the points
 //        overlay's `hovered`; a hovered line of that route is the lines overlay's, `{ routeId, lineId, plus }`, its
 //        "+" `'active'` while the hover is on it and `'idle'` otherwise (CORE-06, brief 120, ruling AA: a tap on the
 //        "+" inserts a point there, ../canvas/dom.ts point 2); a hover on another route draws nothing;
@@ -277,7 +284,7 @@ export interface Drawer {
 }
 
 /** What a frame is made from, by value: objects by identity, then numbers (point 4b). */
-type Key = readonly [Scene, number, Selection, CanvasImageSource | null, Hover, number, number, number | null, number | null];
+type Key = readonly [Scene, number, boolean, Selection, CanvasImageSource | null, Hover, number, number, number | null, number | null];
 
 const sameKey = (a: Key, b: Key): boolean => a.every((value, i) => Object.is(value, b[i]));
 
@@ -285,15 +292,17 @@ const sameReports = (a: readonly FrameReport[], b: readonly FrameReport[]): bool
   a.length === b.length &&
   a.every((each, i) => each.routeId === b[i]?.routeId && each.featureId === b[i].featureId && each.reason === b[i].reason);
 
-/** The editor's overlays for a selection and a hover: none with no route selected (point 4d). */
-function overlaysOf(selection: Selection, hover: Hover): FrameRequest['overlays'] {
+/** The editor's overlays (point 4d): the guide on every route while not playing, then the selected route's; none with neither. */
+function overlaysOf(scene: Scene, playing: boolean, selection: Selection, hover: Hover): FrameRequest['overlays'] {
+  const ids = scene.routes.map((each) => each.id);
+  const guide = playing ? [] : [OVERLAY_MAKERS.guideLines(ids), OVERLAY_MAKERS.guideDots(ids)];
   const { route } = selection;
-  if (route === null) return undefined;
+  if (route === null) return guide.length > 0 ? guide : undefined;
   const selected = selection.points.map((pointId) => ({ routeId: route, pointId }));
   const ours = hover !== null && hover.routeId === route ? hover : null;
   const point = ours !== null && 'pointId' in ours ? { routeId: route, pointId: ours.pointId } : null;
   const line = ours !== null && 'lineId' in ours ? { routeId: route, lineId: ours.lineId, plus: ours.onPlus ? ('active' as const) : ('idle' as const) } : null;
-  return [OVERLAY_MAKERS.lines([route], { hovered: line }), OVERLAY_MAKERS.points([route], { selected, hovered: point })];
+  return [...guide, OVERLAY_MAKERS.lines([], { hovered: line }), OVERLAY_MAKERS.points([route], { selected, hovered: point })];
 }
 
 export function createDrawer<H>({ store, inputs, pictures, hover = createHover(), frames, report, failed }: DrawerOptions<H>): Drawer {
@@ -305,7 +314,7 @@ export function createDrawer<H>({ store, inputs, pictures, hover = createHover()
   const keyNow = (): Key => {
     const { project, playback, selection } = store.getState();
     const { size, image } = inputs.inputs();
-    return [project.scene, playback.atMs, selection, pictures.held(), hover.held(), size.width, size.height, image?.width ?? null, image?.height ?? null];
+    return [project.scene, playback.atMs, playback.playing, selection, pictures.held(), hover.held(), size.width, size.height, image?.width ?? null, image?.height ?? null];
   };
 
   const requestNow = (surface: Target['surface']): FrameRequest => {
@@ -313,7 +322,7 @@ export function createDrawer<H>({ store, inputs, pictures, hover = createHover()
     const source = pictures.held();
     const { playback, selection } = store.getState();
     const picture = image === null ? null : source === null ? image : { ...image, source };
-    const overlays = overlaysOf(selection, hover.held());
+    const overlays = overlaysOf(scene, playback.playing, selection, hover.held());
     return { scene, sceneMs: playback.atMs, seed, size, image: picture, surface, ...(overlays ? { overlays } : {}) };
   };
 

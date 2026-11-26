@@ -26,6 +26,13 @@
 // plusHandle (v3 :424–450) at the stretch's middle, none where the editor offers no insert (v3 :403), active while the
 // pointer is on it (v3's leg-plus, :410). v3's middle is the middle sample by index of its evenly resampled leg
 // (segmentHitTest.js:115–128); pointAt reads a line's samples by index as v3 does (core/geometry/path.ts).
+//
+// The guide while paused (CORE-06, D265, Joe's D251 "End, plus a guide (d)"; brief 128, BP and BQ): `guideOverlay`
+// draws the same faint guide for every line of every route named, whatever the line's look (hidden, trail, shrinks or
+// whole), from the shape and timeline each module was handed this frame, with no progress and no time, so the whole
+// route shows however far the animation has reached. The editor asks for it, for every route, only while the preview
+// is not playing (../../../editor/shell/previewLogic.ts, point 4d), and no longer asks `lineOverlay` for its
+// selected-only guide, which this one replaces; `lineOverlay` keeps its guide for a caller that names routes.
 import type { DrawContext } from '../../../adapters/render/context';
 import type { Frame } from '../../../adapters/render/layers';
 import { plusHandle, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
@@ -163,6 +170,23 @@ function stretchOf(hovered: HoveredLine, frame: Frame, screen: Screen, unit: num
     : { colour, alpha: 1, width, dash: DASHES[LINE_DASH].map((length) => length * frame.scale * screen.zoom), cap: 'round' as const };
   const runs = runsOf(samples, screen);
   return runs.length > 0 && Number.isFinite(width) && width > 0 ? { runs, width, samples, look } : null;
+}
+
+/**
+ * The guide while paused (D265): every line of each route named, whatever its look, in the guide's look (D157), one
+ * stroke a route, in the routes' order. A route named twice is drawn once; an id the frame does not hold draws nothing.
+ */
+export function guideOverlay(routeIds: readonly string[]): Overlay {
+  return (context: DrawContext, _frame: Frame, screen: Screen) => {
+    const unit = unitAt(screen.zoom);
+    if (!Number.isFinite(unit) || unit <= 0) return;
+    for (const id of new Set(routeIds)) {
+      const route = screen.routes.get(id);
+      if (route === undefined) continue;
+      const runs = route.shape.lines.flatMap((line) => runsOf(route.timeline.shapes.get(line.id)?.samples ?? [], screen));
+      if (runs.length > 0) guide(context, runs, route.settings.line.colour, unit);
+    }
+  };
 }
 
 /**
