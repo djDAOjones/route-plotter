@@ -57,7 +57,7 @@ describe('the key table and the functions the shell binds it to', () => {
     expect('escape' in store).toBe(false);
     for (const action of answered) expect(typeof store[action], action).toBe('function');
     const editing = KEYS.filter(({ group }) => group === 'Editing').map(({ action }) => action);
-    expect(editing).toEqual(['deleteSelection', 'duplicate', 'selectAll']);
+    expect(editing).toEqual(['deleteSelection', 'duplicate', 'selectAll', 'nudge', 'nudgeFurther']);
     for (const action of editing) expect(action in store, action).toBe(false);
   });
 });

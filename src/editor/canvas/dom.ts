@@ -69,6 +69,19 @@
 //    a drag is (`holdOnPicture`, D237); a refusal cancels the gesture and the key is still taken. `selectAll`: the
 //    route holds a point, and every point of it is selected in the route's order, never a step. A held key's repeat
 //    acts no more and says the same. None says anything aloud (the pen's silence; D263 asks the owner).
+// 8. The nudge (brief 125, rulings AX and AY; v3's InteractionHandler.js 970 to 992, wiringControllers.js 295 to 327,
+//    app/undoRedo.js 99 to 107): `editKey` with `nudge` or `nudgeFurther` and the arrow pressed moves the selected
+//    points of the route by 0.5% of the picture (`NUDGE`), or 2% (`NUDGE_FURTHER`), along the arrow (up is minus y),
+//    divided by the zoom of the frame a bound canvas last drew (`zoomNow`: the screen's zoom, 1 with none drawn), in
+//    image fractions for `movePoints`. The group moves whole, held on the picture as a drag is (`holdOnPicture`, D237),
+//    its spacing kept; a press that would move nothing (held at the edge) changes nothing and makes no step, and the
+//    key is still taken. A burst is one undo step, as v3's 400 ms debounce made it: the first press begins a store
+//    gesture labelled Nudge, each further press within `NUDGE_QUIET_MS` of the last (a held key's repeats included)
+//    moves within it, and it is committed `NUDGE_QUIET_MS` after the last press, or at once by `endNudge`: the
+//    dispatch calls it for any other key before that key runs (so Undo or Redo meets it closed), the bound canvas for
+//    a pointer press and the window's blur, and keydown.ts for the focus leaving where it was and any pointer press on
+//    the page. A begin the store refuses (a gesture already open) leaves it alone, and the key is not taken; nothing
+//    is taken with nothing selected on the route or while a drag is open. Nothing is said aloud (D263).
 import type { ImageBounds } from '../../core/geometry/transform';
 import type { Frame } from '../../adapters/render/layers';
 import type { Screen } from '../../adapters/render/overlays';
@@ -89,6 +102,8 @@ export const MARKER_HALF = 15;
 export interface Geometry {
   readonly bounds: ImageBounds;
   readonly routes: readonly HitRoute[];
+  /** The screen's zoom the frame was drawn at (the scene's view times any further zoom; 1 with neither): the nudge's divisor. */
+  readonly zoom: number;
 }
 
 /** The geometry of the frame an overlay is handed, in canvas pixels (point 1); null when the transform gives no place. */
@@ -102,13 +117,14 @@ export function recordGeometry(frame: Pick<Frame, 'bounds' | 'scale'>, screen: S
     timeline: route.timeline,
     markerHalf: MARKER_HALF * frame.scale * screen.zoom,
   }));
-  return { bounds, routes };
+  return { bounds, routes, zoom: screen.zoom };
 }
 
 /** `geometry` in the pointer's CSS pixels: every length divided by `ratio`, the canvas's pixels per CSS pixel. */
 export function inCssPixels(geometry: Geometry, ratio: number): Geometry {
   const { bounds } = geometry;
   return {
+    zoom: geometry.zoom,
     bounds: { x: bounds.x / ratio, y: bounds.y / ratio, width: bounds.width / ratio, height: bounds.height / ratio, scale: bounds.scale / ratio },
     routes: geometry.routes.map((each) => ({ ...each, markerHalf: each.markerHalf / ratio })),
   };
@@ -181,8 +197,14 @@ export interface CanvasBindingOptions<E extends PointerFields> {
   readonly hover?: Pick<HoverHolder, 'set'>;
 }
 
-/** The bindings on the page now, each with what ends its press as a blur does, so that keydown.ts can ask whether a drag is open (point 4) and cancel it (point 5). */
-const live = new Map<PointerBinding, () => void>();
+/**
+ * The bindings on the page now, each with what ends its press as a blur does, so that keydown.ts can ask whether a drag
+ * is open (point 4) and cancel it (point 5), and with the zoom of the frame its canvas last drew (point 8).
+ */
+const live = new Map<PointerBinding, { readonly blur: () => void; readonly zoom: () => number | undefined }>();
+
+/** The zoom of the frame the first bound canvas last drew, the nudge's divisor (point 8); 1 with none drawn or bound. */
+export const zoomNow = (): number => [...live.values()][0]?.zoom() ?? 1;
 
 /** Whether a drag is open on any bound canvas now. */
 export const dragOpen = (): boolean => [...live.keys()].some((binding) => binding.state().phase === 'dragging');
@@ -190,7 +212,7 @@ export const dragOpen = (): boolean => [...live.keys()].some((binding) => bindin
 /** Cancels every drag open on a bound canvas (point 5); true when one was open, and Escape is then taken. */
 export function cancelDrag(): boolean {
   let cancelled = false;
-  for (const [binding, blur] of [...live]) {
+  for (const [binding, { blur }] of [...live]) {
     if (binding.state().phase !== 'dragging') continue;
     blur();
     cancelled = true;
@@ -267,8 +289,11 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     }
   };
 
-  live.set(binding, () => {
-    send({ kind: 'blur' });
+  live.set(binding, {
+    blur: () => {
+      send({ kind: 'blur' });
+    },
+    zoom: () => geometry()?.zoom,
   });
 
   /** An idle mouse or pen move: what lies under it in the last frame drawn, never a refresh (point 6). */
@@ -283,6 +308,8 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
   };
 
   const onPointer = (kind: Kind | 'blur', event: E): void => {
+    // A press on the preview or the window's blur ends a nudge burst at once (point 8).
+    if (kind === 'down' || kind === 'blur') endNudge();
     if (kind === 'blur') {
       hover?.set(null);
       send({ kind });
@@ -345,8 +372,8 @@ export function escapeClears(
   return true;
 }
 
-/** The Editing keys' actions (point 7), as the key table names them. */
-export type EditAction = 'deleteSelection' | 'duplicate' | 'selectAll';
+/** The Editing keys' actions (points 7 and 8), as the key table names them. */
+export type EditAction = 'deleteSelection' | 'duplicate' | 'selectAll' | 'nudge' | 'nudgeFurther';
 
 /** What the Editing keys read and change of the store. */
 type EditStore = Pick<Store, 'getState' | 'dispatch' | 'begin' | 'select'>;
@@ -403,8 +430,68 @@ export function selectAll(store: EditStore, drag: boolean, repeat = false): bool
   return true;
 }
 
-/** The Editing keys' one path (point 7), as keydown.ts hands it to the dispatch: true when the key is taken. */
-export function editKey(action: EditAction, repeat: boolean, store: EditStore, drag: boolean): boolean {
+/** A nudge's step, 0.5% of the picture, and the further nudge's, 2% (v3's; point 8), before the zoom divides them. */
+export const NUDGE = 0.005;
+export const NUDGE_FURTHER = 0.02;
+/** How long after the last nudge a burst stays open, in ms (v3's debounce; point 8). */
+export const NUDGE_QUIET_MS = 400;
+/** The label of a burst's gesture, and so of its undo step. */
+const NUDGE_LABEL = 'Nudge';
+
+/** Each arrow's direction in image fractions: up is minus y. */
+const DIRECTIONS: Readonly<Record<string, { readonly x: number; readonly y: number }>> = {
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },
+  ArrowUp: { x: 0, y: -1 },
+  ArrowDown: { x: 0, y: 1 },
+};
+
+type Begun = Extract<ReturnType<Store['begin']>, { readonly ok: true }>;
+
+/** The burst open now (point 8): its store, its gesture and the timer that closes it. */
+let burst: { readonly store: EditStore; readonly gesture: Begun['gesture']; timer: ReturnType<typeof setTimeout> } | null = null;
+
+/** Ends the open nudge burst at once, one step if it moved anything (point 8); true when one was open. */
+export function endNudge(): boolean {
+  if (burst === null) return false;
+  const { gesture, timer } = burst;
+  burst = null;
+  clearTimeout(timer);
+  gesture.commit();
+  return true;
+}
+
+/**
+ * An arrow (point 8): the selected points of the route moved by the step along it, divided by `zoom`, held on the
+ * picture as a group, within the open burst or a new one; true when there were some to move and the store let it.
+ */
+function nudgeSelected(store: EditStore, drag: boolean, key: string, further: boolean, zoom: number): boolean {
+  const direction = DIRECTIONS[key];
+  const { route, points } = selectedOnRoute(store);
+  if (direction === undefined || drag || route === undefined || points.length === 0) return false;
+  // A burst whose gesture the store no longer holds (an opened project closed it), or another store's, is over.
+  if (burst !== null && (burst.store !== store || store.getState().gesture !== NUDGE_LABEL)) {
+    clearTimeout(burst.timer);
+    burst = null;
+  }
+  const step = (further ? NUDGE_FURTHER : NUDGE) / zoom;
+  const starts = route.points.filter((point) => points.includes(point.id));
+  const held = holdOnPicture(starts, direction.x * step, direction.y * step);
+  if (held.dx === 0 && held.dy === 0) return true;
+  if (burst === null) {
+    const begun = store.begin(NUDGE_LABEL);
+    if (!begun.ok) return false;
+    burst = { store, gesture: begun.gesture, timer: setTimeout(endNudge, NUDGE_QUIET_MS) };
+  }
+  burst.gesture.apply(movePoints(route.id, points, held.dx, held.dy));
+  clearTimeout(burst.timer);
+  burst.timer = setTimeout(endNudge, NUDGE_QUIET_MS);
+  return true;
+}
+
+/** The Editing keys' one path (points 7 and 8), as keydown.ts hands it to the dispatch: true when the key is taken. */
+export function editKey(action: EditAction, repeat: boolean, store: EditStore, drag: boolean, key = '', zoom = zoomNow()): boolean {
+  if (action === 'nudge' || action === 'nudgeFurther') return nudgeSelected(store, drag, key, action === 'nudgeFurther', zoom);
   if (action === 'deleteSelection') return deleteSelected(store, drag, repeat);
   if (action === 'duplicate') return duplicateSelected(store, drag, repeat);
   return selectAll(store, drag, repeat);

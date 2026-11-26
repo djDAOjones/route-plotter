@@ -3,7 +3,7 @@
 // callback (v3's "destroy removes every Pointer Events listener with its original callback",
 // v3/tests/interactionPointer.test.js); a tap is one point though a compatibility click follows (v3's "%s tap creates
 // one waypoint even if a compatibility click follows"); nothing on the down; and Escape's branch for the selection.
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Project } from '../../adapters/io/format';
 import type { Screen } from '../../adapters/render/overlays';
 import { newLine, newPoint, newRoute, newScene, type IdSource, type Route } from '../../core/model/scene';
@@ -11,7 +11,7 @@ import { composeTimeline } from '../../core/timing/timeline';
 import { NOTHING_SELECTED } from '../store/selection';
 import { movePoints, penStep } from './commands';
 import { createStore, type Store } from '../store/store';
-import { bindCanvas, cancelDrag, deleteSelected, dragOpen, duplicateSelected, editKey, escapeClears, holdOnPicture, selectAll, inCssPixels, MARKER_HALF, penTap, recordGeometry, toggleTap, type CanvasElement, type Geometry, type PointerFields } from './dom';
+import { bindCanvas, cancelDrag, deleteSelected, dragOpen, duplicateSelected, editKey, endNudge, escapeClears, holdOnPicture, selectAll, inCssPixels, MARKER_HALF, NUDGE, NUDGE_FURTHER, NUDGE_QUIET_MS, penTap, recordGeometry, toggleTap, zoomNow, type CanvasElement, type Geometry, type PointerFields } from './dom';
 import type { Tap } from './gesture';
 import { createHover, type Hover } from './hover';
 import type { Modifiers, Under } from './pointer';
@@ -62,6 +62,8 @@ describe('the geometry the frame was drawn with', () => {
     expect(geometry?.routes[0]?.timeline).toBe(timeline);
     expect(geometry?.routes[0]?.markerHalf).toBe(MARKER_HALF * 1.5 * 2);
     expect(MARKER_HALF * 2).toBe(30);
+    // The screen's zoom is kept as it is, for the nudge (point 8): its step is divided by it.
+    expect(geometry?.zoom).toBe(2);
   });
 
   it('is nothing when the transform places no corner', () => {
@@ -75,6 +77,7 @@ describe('the geometry the frame was drawn with', () => {
     expect(css.bounds).toEqual({ x: 50, y: 25, width: 400, height: 300, scale: 0.5 });
     expect(css.routes[0]?.markerHalf).toBe(22.5);
     expect(css.routes[0]?.timeline).toBe(timeline);
+    expect(css.zoom).toBe(2);
   });
 });
 
@@ -288,6 +291,7 @@ function drawnOf(store: Store): Geometry {
   return {
     bounds: { x: 0, y: 0, width: 2000, height: 1600, scale: 2 },
     routes: [{ route, timeline: composeTimeline(route, 1000 / 800), markerHalf: 30 }],
+    zoom: 1,
   };
 }
 
@@ -916,6 +920,178 @@ describe('the Editing keys (point 7; brief 123, ruling AO)', () => {
     expect(editKey('duplicate', true, store, false)).toBe(false);
     expect(editKey('selectAll', true, store, false)).toBe(true);
     expect(store.getState().selection).toEqual(NOTHING_SELECTED);
+  });
+});
+
+describe('the nudge (point 8; brief 125, rulings AX and AY)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    endNudge();
+    vi.useRealTimers();
+  });
+  const at = (store: Store, id: string) => placeOf(store, id) ?? { x: Number.NaN, y: Number.NaN };
+  const nudge = (store: Store, key: string, { further = false, zoom = 1, drag = false, repeat = false } = {}) =>
+    editKey(further ? 'nudgeFurther' : 'nudge', repeat, store, drag, key, zoom);
+
+  it('v3’s sizes: 0.5% of the picture a press, 2% with Shift, up minus y, the selected points moved as a group', () => {
+    expect([NUDGE, NUDGE_FURTHER, NUDGE_QUIET_MS]).toEqual([0.005, 0.02, 400]);
+    const { store, route, a, b, c } = scene();
+    store.select({ route: route.id, points: [a, b] });
+    expect(nudge(store, 'ArrowRight')).toBe(true);
+    expect(at(store, a).x).toBeCloseTo(0.205, 10);
+    expect(at(store, b).x).toBeCloseTo(0.605, 10);
+    expect(nudge(store, 'ArrowUp', { further: true })).toBe(true);
+    expect(at(store, a).y).toBeCloseTo(0.18, 10);
+    expect(at(store, b).y).toBeCloseTo(0.58, 10);
+    expect(nudge(store, 'ArrowLeft', { further: true })).toBe(true);
+    expect(nudge(store, 'ArrowDown')).toBe(true);
+    expect(at(store, a).x).toBeCloseTo(0.185, 10);
+    expect(at(store, a).y).toBeCloseTo(0.185, 10);
+    expect(at(store, b).x - at(store, a).x).toBeCloseTo(0.4, 10);
+    expect(at(store, b).y - at(store, a).y).toBeCloseTo(0.4, 10);
+    expect(at(store, c)).toEqual({ x: 0.9, y: 0.1 });
+    expect(store.getState().selection).toEqual({ route: route.id, points: [a, b] });
+  });
+
+  it('divides the step by the screen’s zoom (v3’s), and reads the zoom of the frame a bound canvas last drew, 1 with none', () => {
+    const { store, route, a } = scene();
+    store.select({ route: route.id, points: [a] });
+    nudge(store, 'ArrowRight', { zoom: 2 });
+    expect(at(store, a).x).toBeCloseTo(0.2025, 10);
+    nudge(store, 'ArrowDown', { further: true, zoom: 0.5 });
+    expect(at(store, a).y).toBeCloseTo(0.24, 10);
+    expect(zoomNow()).toBe(1);
+    const zoomed = bound((each) => ({ ...drawnOf(each), zoom: 4 }));
+    expect(zoomNow()).toBe(4);
+    zoomed.unbind();
+    expect(zoomNow()).toBe(1);
+  });
+
+  it('holds the group on the picture as a drag is (D237): at the edge it stops, the spacing kept', () => {
+    const { store, route, a, c } = scene();
+    store.select({ route: route.id, points: [a, c] });
+    for (let n = 0; n < 8; n += 1) nudge(store, 'ArrowRight', { further: true });
+    expect(at(store, c).x).toBe(1);
+    expect(at(store, a).x).toBeCloseTo(0.3, 10);
+    for (let n = 0; n < 8; n += 1) nudge(store, 'ArrowUp', { further: true });
+    expect(at(store, c).y).toBe(0);
+    expect(at(store, a).y).toBeCloseTo(0.1, 10);
+  });
+
+  it('a press that would move nothing (held at the edge) changes nothing and makes no step, but is taken', () => {
+    const { store, route, c } = scene();
+    store.dispatch(movePoints(route.id, [c], 0.1, 0));
+    store.select({ route: route.id, points: [c] });
+    const before = store.getState();
+    expect(nudge(store, 'ArrowRight')).toBe(true);
+    expect(nudge(store, 'ArrowRight', { further: true })).toBe(true);
+    expect(store.getState()).toBe(before);
+    vi.advanceTimersByTime(NUDGE_QUIET_MS);
+    expect(store.getState()).toBe(before);
+    expect(store.getState().gesture).toBeNull();
+  });
+
+  it('three quick presses are one step, "Nudge", open until 400 ms after the last; one Undo puts back all three', () => {
+    const { store, route, a } = scene();
+    store.select({ route: route.id, points: [a] });
+    const before = store.getState().project;
+    const undoBefore = store.getState().undo;
+    for (let n = 0; n < 3; n += 1) {
+      expect(nudge(store, 'ArrowRight')).toBe(true);
+      vi.advanceTimersByTime(NUDGE_QUIET_MS - 1);
+    }
+    expect(store.getState().gesture).toBe('Nudge');
+    expect(store.getState().undo).toBe(undoBefore);
+    vi.advanceTimersByTime(1);
+    expect(store.getState().gesture).toBeNull();
+    expect(store.getState().undo).toBe('Nudge');
+    expect(at(store, a).x).toBeCloseTo(0.215, 10);
+    expect(store.undo().ok).toBe(true);
+    expect(store.getState().project).toEqual(before);
+    expect(store.getState().undo).toBe(undoBefore);
+  });
+
+  it('a held key’s repeats move within the burst, as presses do', () => {
+    const { store, route, a } = scene();
+    store.select({ route: route.id, points: [a] });
+    nudge(store, 'ArrowDown');
+    nudge(store, 'ArrowDown', { repeat: true });
+    nudge(store, 'ArrowDown', { repeat: true });
+    expect(at(store, a).y).toBeCloseTo(0.215, 10);
+    vi.advanceTimersByTime(NUDGE_QUIET_MS);
+    expect(store.undo().ok).toBe(true);
+    expect(at(store, a)).toEqual({ x: 0.2, y: 0.2 });
+  });
+
+  it('two presses 500 ms apart are two steps', () => {
+    const { store, route, a } = scene();
+    store.select({ route: route.id, points: [a] });
+    nudge(store, 'ArrowRight');
+    vi.advanceTimersByTime(500);
+    expect(store.getState().gesture).toBeNull();
+    nudge(store, 'ArrowRight');
+    vi.advanceTimersByTime(500);
+    expect(at(store, a).x).toBeCloseTo(0.21, 10);
+    store.undo();
+    expect(at(store, a).x).toBeCloseTo(0.205, 10);
+    store.undo();
+    expect(at(store, a).x).toBe(0.2);
+  });
+
+  it('Undo during a burst: the store refuses it while the burst is open, so the burst is closed first (`endNudge`), and Undo puts back the whole burst', () => {
+    const { store, route, a } = scene();
+    store.select({ route: route.id, points: [a] });
+    nudge(store, 'ArrowRight');
+    nudge(store, 'ArrowRight');
+    expect(store.undo().ok).toBe(false);
+    expect(endNudge()).toBe(true);
+    expect(store.getState().gesture).toBeNull();
+    expect(store.undo().ok).toBe(true);
+    expect(at(store, a)).toEqual({ x: 0.2, y: 0.2 });
+    expect(endNudge()).toBe(false);
+    // The timer of the closed burst closes nothing later.
+    nudge(store, 'ArrowLeft');
+    vi.advanceTimersByTime(NUDGE_QUIET_MS - 1);
+    expect(store.getState().gesture).toBe('Nudge');
+  });
+
+  it('a blur of the window closes the burst at once, and so does a pointer press on the preview', () => {
+    const { store, route, a, win, canvas, unbind } = bound();
+    store.select({ route: route.id, points: [a] });
+    nudge(store, 'ArrowRight');
+    expect(store.getState().gesture).toBe('Nudge');
+    win.fire('blur');
+    expect(store.getState().gesture).toBeNull();
+    expect(store.getState().undo).toBe('Nudge');
+    nudge(store, 'ArrowRight');
+    expect(store.getState().gesture).toBe('Nudge');
+    canvas.fire('pointerdown', client(0.5, 0.95));
+    expect(store.getState().gesture).toBeNull();
+    canvas.fire('pointerup', client(0.5, 0.95));
+    expect(at(store, a).x).toBeCloseTo(0.21, 10);
+    unbind();
+  });
+
+  it('is not taken, and changes nothing, with nothing selected on the route, while a drag is open, or when the store refuses to begin', () => {
+    const { store, route, other, a } = scene();
+    const before = store.getState();
+    expect(nudge(store, 'ArrowRight')).toBe(false);
+    store.select({ route: other.id, points: [other.points[0]?.id ?? ''] });
+    expect(nudge(store, 'ArrowRight')).toBe(false);
+    store.select({ route: route.id, points: [] });
+    expect(nudge(store, 'ArrowRight')).toBe(false);
+    store.select({ route: route.id, points: [a] });
+    const selected = store.getState();
+    expect(nudge(store, 'ArrowRight', { drag: true })).toBe(false);
+    expect(store.getState()).toBe(selected);
+    const begun = store.begin('Other');
+    expect(nudge(store, 'ArrowRight')).toBe(false);
+    expect(store.getState().gesture).toBe('Other');
+    expect(at(store, a)).toEqual({ x: 0.2, y: 0.2 });
+    if (begun.ok) begun.gesture.cancel();
+    expect(before.project).toBe(store.getState().project);
   });
 });
 

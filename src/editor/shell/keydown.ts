@@ -18,11 +18,17 @@
 // dispatch (which keeps typed text and a dialog's keys out first) to `editKey` (src/editor/canvas/dom.ts, point 7),
 // handed whether a drag is open; the key is taken only when there was something to act on.
 //
+// Brief 125 (rulings AW and AY): the arrows, alone or with Shift, go the same way to `editKey` with the arrow pressed
+// (the nudge, dom.ts point 8). A run of nudges is one undo step, ended at once by anything else: the dispatch ends it
+// for any other key (its point 8), the canvas's binding for a press on the preview and the window's blur, and this
+// listener for any pointer press on the page (heard first, in the capture phase, so an Undo button's press meets the
+// burst closed) and for the focus leaving where it was (`focusout`).
+//
 // A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).
 //
 // Single-key shortcuts (D183, WCAG 2.2's 2.1.4) are read at each key from the session's switch, on to begin with and
 // held for the visit; Help shows and sets it.
-import { cancelDrag, dragOpen, editKey, escapeClears } from '../canvas/dom';
+import { cancelDrag, dragOpen, editKey, endNudge, escapeClears } from '../canvas/dom';
 import { dispatchKey, type FocusKind, type KeyDispatch, type PressPlace } from './dispatch';
 import type { PageSession } from './session';
 
@@ -80,12 +86,20 @@ export function listenForKeys(
   const onKeyDown = (event: KeyboardEvent): void => {
     const place = placeOf(event.target);
     const escape = () => cancelDrag() || escapeClears(event, place, dragOpen(), store);
-    const edit: KeyDispatch['edit'] = (action, repeat) => editKey(action, repeat, store, dragOpen());
-    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject, escape, edit });
+    const edit: KeyDispatch['edit'] = (action, repeat, key) => editKey(action, repeat, store, dragOpen(), key);
+    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject, escape, edit, endNudge });
     if (taken) event.preventDefault();
   };
+  const onElse = (): void => {
+    endNudge();
+  };
   document.addEventListener('keydown', onKeyDown);
+  document.addEventListener('pointerdown', onElse, true);
+  document.addEventListener('focusout', onElse);
   return () => {
     document.removeEventListener('keydown', onKeyDown);
+    document.removeEventListener('pointerdown', onElse, true);
+    document.removeEventListener('focusout', onElse);
+    endNudge();
   };
 }
