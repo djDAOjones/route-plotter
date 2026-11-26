@@ -165,8 +165,10 @@ const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damage
 // golden's words have moved; the route unchanged).
 // With `video` ({ width, height }), the golden's export size, 1920 by 1080, is made that one (one replacement in its
 // text, which throws if the golden's words have moved): the video's shape, which the preview takes (D202).
+// With `trail`, the golden's line drawn "grows" is drawn as a trail (one replacement, which throws if the golden's words
+// have moved): the trail runs on after the lead stops, so the play length is longer than the golden's.
 const LONG_MS = 1200000;
-const projectFile = async (png, upright, long = false, video = null) => {
+const projectFile = async (png, upright, long = false, video = null, trail = false) => {
   const root = process.env.A11Y_ROOT || process.cwd();
   const zip = new (process.getBuiltinModule('node:module').createRequire(`${root}/package.json`)('jszip'))();
   const read = process.getBuiltinModule('node:fs').readFileSync(`${root}/src/editor/shell/goldens/two-stops.project.json`, 'utf8');
@@ -176,6 +178,11 @@ const projectFile = async (png, upright, long = false, video = null) => {
     const from = '"clock":{"length":"from content","fixedLengthMs":10000,';
     if (golden.split(from).length !== 2) throw new Error('the golden\'s clock no longer reads "from content" with fixedLengthMs 10000, once');
     golden = golden.replace(from, `"clock":{"length":"fixed","fixedLengthMs":${LONG_MS},`);
+  }
+  if (trail) {
+    const from = '"appearance":"grows"';
+    if (golden.split(from).length !== 2) throw new Error('the golden\'s line no longer reads "grows", once');
+    golden = golden.replace(from, '"appearance":"trail"');
   }
   if (video) {
     const from = '"export":{"width":1920,"height":1080,';
@@ -188,7 +195,7 @@ const projectFile = async (png, upright, long = false, video = null) => {
     zip.file('project.json', golden.replace(/"images":\[\]}$/, '"images":[{"id":"golden-5","type":"image/png"}]}'));
     zip.file('images/1.png', png, { createFolders: false }); // as io's Save: no `images/` folder entry, which io refuses
   }
-  return { name: png ? 'with-image.zip' : long ? 'long.zip' : 'two-stops.zip', mimeType: 'application/zip', buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }) };
+  return { name: png ? 'with-image.zip' : long ? 'long.zip' : trail ? 'trail.zip' : 'two-stops.zip', mimeType: 'application/zip', buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }) };
 };
 // A real PNG, 4 by 4, made by the page's own canvas (`toBlob`) in the run.
 const canvasPng = async (page) => Buffer.from(await page.evaluate(() => new Promise((resolve) => {
@@ -416,8 +423,10 @@ const alerts = (page) => page.locator('[role=alert]');
 // "Playing animation" waits behind "Project opened" for whatever is left of its two seconds while the reverse from the
 // middle takes about three, so a reading taken when the words show can come after the position has reached 0
 // (FINDING-97). Checked from the frames: J starts at or under 510, never goes up, stands at some frame strictly between
-// 0 and where it started, and ends at 0, with "Playing animation" and then "Animation complete" said; L never goes
-// down, ends past where it started, with "Playing animation" said. Then focus is still on the button and the key opened
+// 0 and where it started, and ends at 0, with "Playing animation" and then "Animation complete" said. L starts at 1000,
+// where an open leaves the position (its end: D251, brief 127), and so restarts from 0, as Play does at the end
+// (DEF-62): it goes down once, to 50 or under, never goes down again, and ends past its lowest, with "Playing
+// animation" said; its reader stops once the position has risen past its lowest. Then focus is still on the button and the key opened
 // no file chooser. (FINDING-78's crash of J after a press, Carbon's late echo, is mended: brief 79.)
 const PLAYING = 'Playing animation';
 const COMPLETE = 'Animation complete';
@@ -440,7 +449,7 @@ async function playsFromOpen(page, key) {
         const n = Number(document.querySelector(t)?.getAttribute('aria-valuenow'));
         const said = document.querySelector(s)?.textContent ?? '';
         frames.push([n, said]);
-        const done = back ? said === complete : frames.some((f) => f[1] === playing) && n > frames[0][0];
+        const done = back ? said === complete : frames.some((f) => f[1] === playing) && n > Math.min(...frames.map((f) => f[0]));
         if (done || performance.now() > until) resolve(frames); else requestAnimationFrame(tick);
       };
       tick();
@@ -454,7 +463,7 @@ async function playsFromOpen(page, key) {
   const playedAt = words.indexOf(PLAYING);
   const moved = key === 'j'
     ? start <= 510 && steps.every((d) => d <= 0) && at.some((n) => n > 0 && n < start) && end === 0 && playedAt !== -1 && words.indexOf(COMPLETE, playedAt) > playedAt
-    : steps.every((d) => d >= 0) && end > start && playedAt !== -1;
+    : start === 1000 && steps.filter((d) => d < 0).length === 1 && Math.min(...at) <= 50 && end > Math.min(...at) && playedAt !== -1;
   return moved && (await focusOn(page, OPEN)) && choosers === 0;
 }
 // Open Help by its button from the keyboard, Tab to its switch, press Space, close it by Escape. The switch is drawn
@@ -1773,7 +1782,8 @@ export default {
     {
       // 4.1.3 (stage 6): "Open project" pressed and the journeys' project chosen: the status region says "Project
       // opened", once, and nothing else, with no alert and focus kept on the button; the line saying why Play is off is
-      // gone; Play pressed plays from 0, the position rising. Criterion 3's open half on the page.
+      // gone; the position waits at the end (1000: D251, brief 127); Play pressed plays from 0, the position rising.
+      // Criterion 3's open half on the page.
       name: 'open-a-project',
       method: 'j-forms',
       rows: ['4.1.3'],
@@ -1793,9 +1803,44 @@ export default {
         await page.locator(PLAY).click();
         const played = await sample(page, 30);
         const last = played.at(-1)[1];
-        if (from !== 0) wrong.push(`the position before Play was ${from}, not 0`);
+        if (from !== 1000) wrong.push(`the position before Play was ${from}, not 1000 (the end)`);
         if (!(last > 0) || backwards(played).length) wrong.push(`after Play the position went ${played.map(([, v]) => v).join(', ')}, not rising from 0`);
-        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${OPENED}" said once and nothing else, no alert, focus kept on "Open project", the reason line gone; Play played from 0 to ${last} thousandths in 30 frames`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${OPENED}" said once and nothing else, no alert, focus kept on "Open project", the reason line gone, the position at 1000 (the end); Play played from 0 to ${last} thousandths in 30 frames`);
+      },
+    },
+    {
+      // D251's first half (Joe, 26 Nov: "End, plus a guide"; brief 127): a project whose route ends in a trail opened, the
+      // timeline waits at its end, its words "x of x" (the trail's run-on and Hold at end counted: longer than the empty
+      // page's 0:02), and stays there with nothing pressed; the status region says "Project opened" and nothing else
+      // (not "Skipped to end", not "Animation complete"); Play then plays from 0, the position rising.
+      name: 'opens-at-the-end',
+      method: 'j-forms',
+      rows: ['4.1.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const empty = await atNow(page);
+        const heard = await hear(page);
+        const wrong = [];
+        if (!(await choose(page, await projectFile(null, false, false, null, true)))) wrong.push('a press on "Open project" opened no file chooser');
+        if (!(await saysOpened(page))) wrong.push(`the status region never said "${OPENED}"`);
+        const at = await atNow(page);
+        const halves = /^(\d+:\d\d) of (\d+:\d\d)$/.exec(at.text ?? '');
+        if (at.now !== 1000) wrong.push(`after the open the position was ${at.now}, not 1000 (the end)`);
+        if (!halves || halves[1] !== halves[2]) wrong.push(`after the open the time read "${at.text}", not "x of x"`);
+        if (at.text === empty.text) wrong.push(`the time read "${at.text}", as the empty page did: the opened length was not taken`);
+        const still = await sample(page, 20);
+        await page.waitForTimeout(500);
+        const later = await atNow(page);
+        if (still.some(([, v]) => v !== 1000) || later.now !== 1000 || later.text !== at.text) wrong.push(`left alone the position went ${still.map(([, v]) => v).join(', ')}, then ${later.now} ("${later.text}"), not held at the end`);
+        if ((await playLabel(page)) !== 'Play') wrong.push(`the play button reads "${await playLabel(page)}", not "Play"`);
+        await quiet(page);
+        const texts = await heard();
+        if (JSON.stringify(texts) !== JSON.stringify([OPENED])) wrong.push(`the status region said ${JSON.stringify(texts)}, not "${OPENED}" once and nothing else`);
+        await page.locator(PLAY).click();
+        const played = await sample(page, 30);
+        const last = played.at(-1)[1];
+        if (!(played[0][1] <= 50) || !(last > played[0][1]) || backwards(played).length) wrong.push(`after Play the position went ${played.map(([, v]) => v).join(', ')}, not rising from 0`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `a trail's project opened: the time "${at.text}" (the empty page's "${empty.text}"), the position 1000 and held 20 frames and half a second with Play offered; "${OPENED}" said once and nothing else; Play played from ${played[0][1]} to ${last} thousandths in 30 frames`);
       },
     },
     {
@@ -2112,7 +2157,8 @@ export default {
     },
     {
       // 4.1.3 and DEF-67 (stage 6): a project opened while another plays: the status region never says "Animation
-      // paused", says "Project opened", and the position is back at 0 with nothing playing.
+      // paused", says "Project opened", and the position waits at the opened project's end (1000: D251, brief 127) with
+      // nothing playing.
       name: 'open-over-a-playing',
       method: 'j-forms',
       rows: ['4.1.3'],
@@ -2131,9 +2177,9 @@ export default {
         const texts = await heard();
         if (texts.includes(PAUSED)) wrong.push(`"${PAUSED}" was among what the region said: ${JSON.stringify(texts)}`);
         const still = await sample(page, 20);
-        if (still.some(([, v]) => v !== 0)) wrong.push(`the position went ${still.map(([, v]) => v).join(', ')}, not held at 0`);
+        if (still.some(([, v]) => v !== 1000)) wrong.push(`the position went ${still.map(([, v]) => v).join(', ')}, not held at 1000 (the end)`);
         if ((await playLabel(page)) !== 'Play') wrong.push(`the play button reads "${await playLabel(page)}", not "Play"`);
-        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `opened over a playing: "${OPENED}" said, "${PAUSED}" never (the region said ${JSON.stringify(texts)}), the position at 0 for 20 frames, Play offered`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `opened over a playing: "${OPENED}" said, "${PAUSED}" never (the region said ${JSON.stringify(texts)}), the position at 1000 (the end) for 20 frames, Play offered`);
       },
     },
     {
