@@ -342,7 +342,7 @@ describe('Escape’s one path (point 6; CORE-06, brief 115, ruling U)', () => {
     expect(ran).toEqual(['escape', 'escape', 'escape']);
   });
 
-  it('is never called in typed text, in a dialog, for a press already taken, or with a modifier held', () => {
+  it('is never called in typed text, in a dialog, for a press already taken, or with Ctrl, Cmd or Alt held', () => {
     const { ran, key } = rig();
     expect(key(press('Escape'), { place: { ...OPEN, typing: true } })).toBe(false);
     expect(key(press('Escape'), { place: { ...OPEN, dialogOpen: true } })).toBe(false);
