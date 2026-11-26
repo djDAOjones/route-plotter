@@ -198,6 +198,58 @@ const BLUE = [51, 102, 204]; // #3366cc, the plain picture's
 // that declares it, now the canvas alone (the box is an application, no longer an image). A different number found fails
 // 1.4.11, so a change to what stands there changes it.
 const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 1, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); the editor's own marks (points, lines, the selection's rings) are left out only because they are drawn on the same canvas; their contrast is not measured yet, and is still to be measured by a pixel journey (E2)" }];
+// 1.4.11 (CORE-06, brief 117, ruling N; D252): pen-drawn's set-aside carries a measure, which contrastRows runs after
+// every other reading of the state's contrast check (helpers.ts). pen-drawn alone draws a route; the two states above
+// keep PREVIEW_ASIDE. In pen-drawn (the plain background, no picture, the default settings: two points and their line,
+// the second point selected) the route is drawn whole only once the animation reaches its end, so the measure presses
+// Skip to end and waits two frames. Where nothing is drawn the canvas is transparent and the box's own background
+// shows: the nearest box under the canvas with an opaque background of its own. Each pixel read is composited over that
+// background and its ratio taken against it. The line: its most opaque pixel of the seven in the column at the middle
+// of the two taps. Each point: its marker, on the two rays from its tap square to the line; out from the tap the pixels
+// are fully opaque up to the marker's outer edge (its white rim's antialiased fringe), and the pixel halfway to that
+// edge is the marker's fill alone, clear of the line (half its width), of the rim and of the lead's head, which at the
+// route's end is drawn over the second point and reaches a third of its size to each side; the lower of the two sides.
+// The selected point's ring: the best of the pixels drawn (alpha over 60) and not the route's hue on the ray from the
+// second point away from the first, from beyond the marker's outer edge on that ray out to 30 CSS px. Probed (brief
+// 117, PROBE-117/probe): at 1280 by 800 the canvas is 704 px wide, the marker's edge 3 px out, the arrow covers the
+// second point's centre and 1 px round it, and the ring's dash on that ray is black.
+const PEN_DRAWN_ASIDE = [{
+  selector: PREVIEW,
+  count: 1,
+  reason: "the user's own picture and routes in their own colours, as the export will draw them, are still set aside (1.4.11, essential); measured are only the editor's own marks at the default settings (the line, both points, the selected point's ring) on the plain background with no picture, each against the box's own background",
+  measure: async ({ page }) => {
+    await page.getByRole('button', { name: 'Skip to end' }).click();
+    await twoFrames(page);
+    const read = await page.locator(CANVAS).evaluate((c, [first, second]) => {
+      let bg = null;
+      for (let e = c.parentElement; e && !bg; e = e.parentElement) {
+        const v = (getComputedStyle(e).backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+        if (v.length === 3 || (v.length === 4 && v[3] === 1)) bg = v.slice(0, 3);
+      }
+      if (!bg) return null;
+      const ctx = c.getContext('2d');
+      const at = (fx, fy) => [...ctx.getImageData(Math.floor(fx), Math.floor(fy), 1, 1).data];
+      const over = ([r, g, b, a]) => [r, g, b].map((v, i) => (v * a + bg[i] * (255 - a)) / 255);
+      const lum = (rgb) => rgb.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+      const ratio = (p) => { const [x, y] = [lum(over(p)), lum(bg)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+      const routeHue = ([r, g, b, a]) => a > 60 && r > 120 && r > g && g >= b;
+      let line = [0, 0, 0, 0];
+      for (let dy = -3; dy <= 3; dy += 1) { const p = at(0.5 * c.width, 0.5 * c.height + dy); if (p[3] > line[3]) line = p; }
+      const [px, py, qx, qy] = [second[0] * c.width, second[1] * c.height, first[0] * c.width, first[1] * c.height];
+      const len = Math.hypot(px - qx, py - qy), [ux, uy] = [(px - qx) / len, (py - qy) / len], out = 30 * (c.width / c.getBoundingClientRect().width);
+      // The first distance out from (x, y) along (dx, dy) whose pixel is not fully opaque; past `out`, none.
+      const edge = (x, y, dx, dy) => { let e = 1; while (e <= out && at(x + dx * e, y + dy * e)[3] === 255) e += 1; return e > out ? NaN : e; };
+      const point = (x, y) => Math.min(...[[-uy, ux], [uy, -ux]].map(([dx, dy]) => { const h = Math.round(edge(x, y, dx, dy) / 2); return Number.isFinite(h) ? ratio(at(x + dx * h, y + dy * h)) : NaN; }));
+      let ring = 0;
+      const rim = edge(px, py, ux, uy);
+      for (let d = rim + 1; d <= out; d += 1) { const p = at(px + ux * d, py + uy * d); if (p[3] > 60 && !routeHue(p)) ring = Math.max(ring, ratio(p)); }
+      return { bg: `rgb(${bg.join(', ')})`, line: ratio(line), first: point(qx, qy), second: point(px, py), ring: Number.isFinite(rim) ? ring : NaN };
+    }, TAPS);
+    if (!read) throw new Error('no box with an opaque background stands under the canvas');
+    const against = `against the box's background ${read.bg}, in pen-drawn`;
+    return [['the line', read.line], ['the first point', read.first], ['the second point', read.second], ["the selected point's ring", read.ring]].map(([mark, ratio]) => ({ mark: `${mark} ${against}`, ratio }));
+  },
+}];
 const pixels = (page) => page.locator(CANVAS).evaluate((c) => {
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   let hash = 0, drawn = 0;
@@ -643,7 +695,7 @@ export default {
       // setup throws if Play's transition names its background again, so the frames before the wait are held to 7:1.
       name: 'pen-drawn',
       path: '/',
-      setAside: PREVIEW_ASIDE,
+      setAside: PEN_DRAWN_ASIDE,
       setup: async ({ page }) => {
         await settled({ page });
         if (!(await sizeSettled(page))) throw new Error('the canvas was not its box times the ratio');
