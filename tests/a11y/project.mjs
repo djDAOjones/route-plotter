@@ -103,6 +103,8 @@ const shownFields = (page) => page.locator(FIELDS).filter({ visible: true });
 const UNDO = process.platform === 'darwin' ? 'Meta+z' : 'Control+z';
 // Redo's chord (CORE-06, brief 121): Cmd+Shift+Z on a Mac, Ctrl+Shift+Z elsewhere, as the editor's key list says.
 const REDO = process.platform === 'darwin' ? 'Meta+Shift+z' : 'Control+Shift+z';
+// The platform's command key alone (CORE-06, brief 122): held round a click for the toggle, Cmd on a Mac, Ctrl elsewhere.
+const COMMAND = process.platform === 'darwin' ? 'Meta' : 'Control';
 // Open project's chord (D207), as UNDO is built: Cmd+O on a Mac, Ctrl+O elsewhere.
 const OPEN_KEY = process.platform === 'darwin' ? 'Meta+o' : 'Control+o';
 // Presses Open project's chord where focus is and gives whether the page's own file chooser opened within `ms` and
@@ -2409,6 +2411,115 @@ export default {
         await pointer.up();
         if ((await now()) !== before) wrong.push('the release after Escape changed what is drawn');
         record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : 'in pen-drawn, the second point pressed and dragged to a new place, drawn there while held; Escape before the release drew the whole canvas as before the press, and the release after it changed nothing drawn');
+      },
+    },
+    {
+      // 2.5.2 (CORE-06, brief 122, ruling AJ): a group's drag, reached on the page by Cmd+click (Ctrl+click elsewhere,
+      // ruling AH's toggle), is done on the up, aborted by Escape before it, and undone in one step. In pen-drawn's set-up,
+      // skipped to the route's end, Escape clears the selection (a plain tap on a point with the pen on another would
+      // join them, so the points are picked with the command key only). The mouse is off the preview at every reading
+      // where it can be (a resting mouse draws the hover, HANDOVER-121).
+      // (1) The selection's ring, read where only it draws: round each tap, the pixels drawn (alpha over 60) and not the
+      // route's hue (orange, as markBeyond tells it) 5 to 9 units from the tap. Probed (brief 122, PROBE-122/probe-ring):
+      // at 1280 by 800 the canvas is 704 px at 704 CSS px; a selected point's ring gives 140 such pixels there, an
+      // unselected point none (the lead's arrow at the second point draws within 2 px of it, inside the ring). Ringed is
+      // over 50; not ringed is under 10. After Escape neither is ringed; a command-click on the first rings it alone; one
+      // on the second rings both. (1b) A second command-click on the first takes it out (the second alone ringed) and a
+      // third puts it back (both ringed): the toggle's "taken out" branch, brief 122's (w).
+      // (2) The abort: the whole canvas read (pixels' hash) as the baseline; a press on the second point moved in four
+      // steps to DRAG_TO and, while held, Escape: the canvas reads as the baseline, both markers at their taps; the mouse
+      // then leaves the preview and is let go: still the baseline.
+      // (3) The drag: a press on the second point moved in four steps to DRAG_TO and let go; skipped to the end again,
+      // both markers read at their new places (markBeyond, as point-drag-moves reads one): the second at DRAG_TO, the
+      // first moved by the same offset; neither at its tap.
+      // (4) One Undo (focus off the Skip button): the whole canvas reads as the hash before (3), the baseline.
+      // The 2.5.2 credit rests on (2) to (4) alone. Faults that fail it (brief 122): (u) the toggle's call removed from
+      // bindCanvas fails (1); (v) groupOf giving the grabbed point alone fails (3); (w) the "taken out" branch made "add
+      // again" fails (1b). Nothing is claimed for 2.5.7: a group's drag is a second dragging movement on the preview under
+      // the same debt as a point's (D250: the owner's answer is the point's menu "Move", chat G). Nothing for 2.5.8,
+      // 1.4.11 (the rings stay under the preview's set-aside) or 1.4.13.
+      name: 'group-drag',
+      method: 'j-pointer',
+      rows: ['2.5.2'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const shift = [DRAG_TO[0] - second[0], DRAG_TO[1] - second[1]];
+        const firstTo = [first[0] + shift[0], first[1] + shift[1]];
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const atEnd = async () => { await page.getByRole('button', { name: 'Skip to end' }).click(); await settle(); };
+        const hash = async () => (await pixels(page)).hash;
+        const box = await page.locator(PREVIEW).boundingBox();
+        const on = ([fx, fy]) => ({ x: box.x + box.width * fx, y: box.y + box.height * fy });
+        const off = async () => { await page.mouse.move(1, 1); await settle(); };
+        const commandClick = async (place) => {
+          const { x, y } = on(place);
+          await page.keyboard.down(COMMAND);
+          await page.mouse.click(x, y);
+          await page.keyboard.up(COMMAND);
+          await off();
+        };
+        const rings = () => page.locator(CANVAS).evaluate((c, taps) => {
+          const unit = c.width / c.getBoundingClientRect().width;
+          const ctx = c.getContext('2d');
+          return taps.map(([fx, fy]) => {
+            const [cx, cy, reach] = [fx * c.width, fy * c.height, Math.ceil(9 * unit) + 1];
+            const d = ctx.getImageData(Math.floor(cx) - reach, Math.floor(cy) - reach, 2 * reach + 1, 2 * reach + 1).data;
+            let n = 0;
+            for (let y = 0; y <= 2 * reach; y += 1) for (let x = 0; x <= 2 * reach; x += 1) {
+              const dist = Math.round(Math.hypot(x - reach, y - reach) / unit);
+              const i = (y * (2 * reach + 1) + x) * 4;
+              const [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+              if (dist >= 5 && dist <= 9 && a > 60 && !(r > 120 && r > g && g >= b)) n += 1;
+            }
+            return n;
+          });
+        }, [first, second]);
+        const ringed = async (want, when) => {
+          const counts = await rings();
+          const read = counts.map((n) => (n > 50 ? true : n < 10 ? false : null));
+          if (read.some((each, i) => each !== want[i])) wrong.push(`${when} the rings read ${JSON.stringify(counts)} pixels at the first and second taps, where the first should read ${want[0] ? 'ringed' : 'not ringed'} and the second ${want[1] ? 'ringed' : 'not ringed'}`);
+        };
+        const marks = async (at) => ({ first: await markBeyond(page, at[0], at[1]), second: await markBeyond(page, at[1], at[0]) });
+        const wrong = [];
+        await atEnd();
+        await page.keyboard.press('Escape');
+        await settle();
+        // (1) and (1b): no credit; the page's way to a multi-selection.
+        await ringed([false, false], 'after Escape');
+        await commandClick(first);
+        await ringed([true, false], 'after a command-click on the first point');
+        await commandClick(second);
+        await ringed([true, true], 'after a command-click on the second point');
+        await commandClick(first);
+        await ringed([false, true], 'after a second command-click on the first point');
+        await commandClick(first);
+        await ringed([true, true], 'after a third command-click on the first point');
+        // (2) The abort.
+        const baseline = await hash();
+        await dragBy(pointer, on(second), on(DRAG_TO));
+        await page.keyboard.press('Escape');
+        await settle();
+        const aborted = { hash: await hash(), ...(await marks([first, second])) };
+        if (aborted.hash !== baseline || !aborted.first || !aborted.second) wrong.push(`Escape mid-drag left the canvas ${aborted.hash === baseline ? 'as' : 'not as'} before the press, the first marker ${aborted.first ? '' : 'not '}at its tap and the second ${aborted.second ? '' : 'not '}at its tap`);
+        await page.mouse.move(1, 1);
+        await pointer.up();
+        await settle();
+        if ((await hash()) !== baseline) wrong.push('the release after Escape changed what is drawn');
+        // (3) The drag.
+        const beforeDrag = await hash();
+        await dragBy(pointer, on(second), on(DRAG_TO));
+        await pointer.up();
+        await atEnd();
+        const moved = await marks([firstTo, DRAG_TO]);
+        const left = await marks([first, second]);
+        if (!moved.first || !moved.second || left.first || left.second) wrong.push(`after the drag the first marker read ${moved.first ? '' : 'not '}at its new place and ${left.first ? '' : 'not '}at its tap, the second ${moved.second ? '' : 'not '}at DRAG_TO and ${left.second ? '' : 'not '}at its tap`);
+        // (4) One Undo.
+        await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+        await page.keyboard.press(UNDO);
+        await atEnd();
+        if ((await hash()) !== beforeDrag) wrong.push('after one Undo the canvas was not as before the drag');
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : 'in pen-drawn, both points picked by command-clicks (each ringed, one taken out and put back): a press on the second moved past the threshold and aborted by Escape left the whole canvas as before the press, and the release after changed nothing; pressed, dragged and released, both markers are drawn at their new places and neither at its tap; one Undo draws the whole canvas as before the drag');
       },
     },
     {
