@@ -1844,10 +1844,12 @@ export default {
       },
     },
     {
-      // The preview (brief 84, a): before any open the canvas is sized to its box times the pixel ratio (a paint ran)
-      // and holds an empty scene's frame, nothing drawn; the golden opened, its pixels differ, the line's colour stands
-      // at the start's place by arithmetic (a square fitted to the frame's height, centred: squareX) and not yet at the
-      // middle (the line grows from the start); left alone a second, nothing changes (no motion until Play: 2.2.2).
+      // The preview (brief 84, a; brief 128, BN): before any open the canvas is sized to its box times the pixel ratio
+      // (a paint ran) and holds an empty scene's frame, nothing drawn; the golden opened, its pixels differ and the
+      // position waits at the end (1000, as opens-at-the-end reads it: D251), the line's colour stands at the start's
+      // place by arithmetic (a square fitted to the frame's height, centred: squareX) and at the middle the end's faded
+      // line, read as the-preview-plays reads it (the line's colour at alpha 64 or more: near()'s 200 would pass with the
+      // line gone); left alone a second, nothing changes (no motion until Play: 2.2.2).
       name: 'the-preview-draws',
       method: 'j-timing',
       rows: ['2.2.2'],
@@ -1862,16 +1864,18 @@ export default {
         if (empty.drawn) wrong.push(`before any open ${empty.drawn} pixels are drawn, not an empty scene's none`);
         if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) wrong.push('the project did not open');
         await twoFrames(page);
+        const at = await atNow(page);
         const opened = await pixels(page);
         const x = squareX(opened, 0.25);
         const start = await strokeAt(page, x, 0.5);
         const middle = await strokeAt(page, 0.5, 0.5);
+        if (at.now !== 1000) wrong.push(`after the open the position was ${at.now}, not 1000 (the end)`);
         if (opened.hash === empty.hash) wrong.push('the canvas did not change when the project opened');
         if (!near(start, ORANGE)) wrong.push(`at the start's place (${x.toFixed(4)}, 0.5) the canvas holds ${start.join(', ')}, not the line's #d55e00`);
-        if (near(middle, ORANGE)) wrong.push('at 0:00 the line already stands at the middle');
+        if (!(middle[3] >= 64 && ORANGE.every((v, i) => Math.abs(middle[i] - v) <= 24))) wrong.push(`at the end the middle holds ${middle.join(', ')}, not the line's colour`);
         await page.waitForTimeout(1000);
         if ((await pixels(page)).hash !== opened.hash) wrong.push('left alone a second, the canvas changed');
-        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `the canvas ${sized.join(' by ')}, its box times the ratio, empty before an open; the golden opened: changed, #d55e00 at (${x.toFixed(4)}, 0.5), the start's place ((${opened.width} - ${opened.height}) / 2 + 0.25 x ${opened.height}, over ${opened.width}), none at the middle; still over a second with nothing playing`);
+        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `the canvas ${sized.join(' by ')}, its box times the ratio, empty before an open; the golden opened: changed, the position 1000 (the end), #d55e00 at (${x.toFixed(4)}, 0.5), the start's place ((${opened.width} - ${opened.height}) / 2 + 0.25 x ${opened.height}, over ${opened.width}), the line's colour at the middle (${middle.join(', ')}); still over a second with nothing playing`);
       },
     },
     {
