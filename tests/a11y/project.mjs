@@ -471,7 +471,7 @@ async function flipByKeyboard(page) {
   return { before, after, back: await backOnHelp(page) };
 }
 // What Help shows, as reviewed: its close button, heading, the three groups of the key table (Editing added by brief
-// 123) and the switch. With the third table its content no longer fits a 1280 by 800 window, so the kit's dialog
+// 123, its two nudge rows by brief 125) and the switch. With the third table its content no longer fits a 1280 by 800 window, so the kit's dialog
 // (Carbon) makes it a scrollable region named Help, which holds the tables and the switch. The chords
 // read Cmd on a Mac and Ctrl elsewhere; a punctuation key is read by its name (comma, full stop, less than, greater
 // than, question mark). Carbon's "Close" tooltip, shown while Close has focus, is not listed. Behind
@@ -506,6 +506,8 @@ const helpOpen = (checked) => [
   '        - row "Delete the selected points Delete Backspace"',
   '        - row /Duplicate the selected points (Cmd|Ctrl)\\+D/',
   '        - row /Select all points (Cmd|Ctrl)\\+A/',
+  '        - row "Nudge the selected points Left arrow Right arrow Up arrow Down arrow"',
+  '        - row "Nudge them further Shift+Left arrow Shift+Right arrow Shift+Up arrow Shift+Down arrow"',
   `    - switch "Single-key shortcuts"${checked ? ' [checked]' : ''}`,
   '    - paragraph: Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Delete, Backspace, Open project, Undo, Redo, Duplicate and Select all keep working.',
 ].join('\n');
