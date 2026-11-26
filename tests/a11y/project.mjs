@@ -302,6 +302,25 @@ const markBeyond = (page, [fx, fy], [ox, oy]) => page.locator(CANVAS).evaluate((
   }
   return false;
 }, [fx, fy, ox, oy]);
+// CORE-06 (brief 122; shared by brief 124): the selection's ring round each place, read where only it draws: the pixels
+// drawn (alpha over 60) and not the route's hue (orange, as markBeyond tells it) 5 to 9 units from the place. Probed
+// (PROBE-122/probe-ring): a selected point's ring gives about 140 such pixels at 1280 by 800, an unselected point none.
+const ringsAt = (page, places) => page.locator(CANVAS).evaluate((c, taps) => {
+  const unit = c.width / c.getBoundingClientRect().width;
+  const ctx = c.getContext('2d');
+  return taps.map(([fx, fy]) => {
+    const [cx, cy, reach] = [fx * c.width, fy * c.height, Math.ceil(9 * unit) + 1];
+    const d = ctx.getImageData(Math.floor(cx) - reach, Math.floor(cy) - reach, 2 * reach + 1, 2 * reach + 1).data;
+    let n = 0;
+    for (let y = 0; y <= 2 * reach; y += 1) for (let x = 0; x <= 2 * reach; x += 1) {
+      const dist = Math.round(Math.hypot(x - reach, y - reach) / unit);
+      const i = (y * (2 * reach + 1) + x) * 4;
+      const [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+      if (dist >= 5 && dist <= 9 && a > 60 && !(r > 120 && r > g && g >= b)) n += 1;
+    }
+    return n;
+  });
+}, places);
 const orange = ([r, g, b, a], least) => a > least && r > 120 && r > g && g >= b;
 const marksDrawn = async (page) => {
   await page.getByRole('button', { name: 'Skip to end' }).click();
@@ -2479,22 +2498,7 @@ export default {
           await page.keyboard.up(COMMAND);
           await off();
         };
-        const rings = () => page.locator(CANVAS).evaluate((c, taps) => {
-          const unit = c.width / c.getBoundingClientRect().width;
-          const ctx = c.getContext('2d');
-          return taps.map(([fx, fy]) => {
-            const [cx, cy, reach] = [fx * c.width, fy * c.height, Math.ceil(9 * unit) + 1];
-            const d = ctx.getImageData(Math.floor(cx) - reach, Math.floor(cy) - reach, 2 * reach + 1, 2 * reach + 1).data;
-            let n = 0;
-            for (let y = 0; y <= 2 * reach; y += 1) for (let x = 0; x <= 2 * reach; x += 1) {
-              const dist = Math.round(Math.hypot(x - reach, y - reach) / unit);
-              const i = (y * (2 * reach + 1) + x) * 4;
-              const [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
-              if (dist >= 5 && dist <= 9 && a > 60 && !(r > 120 && r > g && g >= b)) n += 1;
-            }
-            return n;
-          });
-        }, [first, second]);
+        const rings = () => ringsAt(page, [first, second]);
         const ringed = async (want, when) => {
           const counts = await rings();
           const read = counts.map((n) => (n > 50 ? true : n < 10 ? false : null));
@@ -2540,6 +2544,75 @@ export default {
         await atEnd();
         if ((await hash()) !== beforeDrag) wrong.push('after one Undo the canvas was not as before the drag');
         record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : 'in pen-drawn, both points picked by command-clicks (each ringed, one taken out and put back): a press on the second moved past the threshold and aborted by Escape left the whole canvas as before the press, and the release after changed nothing; pressed, dragged and released, both markers are drawn at their new places and neither at its tap; one Undo draws the whole canvas as before the drag');
+      },
+    },
+    {
+      // 2.1.1 (CORE-06, brief 123 ruling AR, built by brief 124): the three Editing keys (Delete, Cmd+D and Cmd+A; Ctrl
+      // elsewhere) do their edits from the keyboard alone. In pen-drawn (two points joined by a line; the mouse rests at
+      // the banner's corner, off the preview, since the setup's last press), Tab reaches the preview box (at most eight
+      // presses), End skips the route to its end there and Escape clears the selection: no ring at either tap. Every key
+      // after that is pressed with focus on the box, and it is still there at the end.
+      // (1) Cmd+A: both taps ringed (ringsAt, group-drag's reading: over 50 ringed, under 10 not; probed, PROBE-124: 147
+      // and 146 after, 0 before).
+      // (2) Cmd+D: each copy stands 2% of the picture right and down of its point (no picture: the scene is a square
+      // fitted to the box's height, so 2% of it across is 0.02 times height over width of the box, squareX's ratio, and
+      // 2% down is 0.02 of the box). The copies are not reached by the lead's walk (D238: no lead's start is copied), so
+      // the animation draws no marker or line for them, at the end or anywhere (probed: after Escape the canvas is as
+      // before Cmd+D; FINDING-124). What does draw is their ring, as the copies are the selection: each copy's place
+      // reads ringed (probed 145 and 144; 39 and 40 there before, from the originals' rings 11 px away), the originals'
+      // places fall under 50 (probed 38: only the copies' rings reach their band) and both original markers are still
+      // drawn (markBeyond, each on its far side from the other).
+      // (3) Undo: the whole canvas (pixels' hash) as before (2).
+      // (4) Cmd+A, then Delete: no marker at either tap (markBeyond) and no line at their middle (strokeAt, as
+      // marksDrawn reads it).
+      // (5) Undo: the whole canvas as before (4).
+      // Faults that fail it (brief 124, PROBE-124/mut): (x) Delete's call removed from editKey fails (4); (y) Duplicate's
+      // call removed fails (2); (z) Select all picking the first point only fails (1) and (4). It claims nothing for
+      // drawing points (still a pointer's: the pen's tap), nothing for 2.5.7, and nothing spoken (D263).
+      name: 'edit-keys',
+      method: 'keyboard',
+      rows: ['2.1.1'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const hash = async () => (await pixels(page)).hash;
+        const press = async (key) => { await page.keyboard.press(key); await settle(); };
+        const box = await boxOf(page);
+        const across = (0.02 * box.height) / box.width;
+        const copies = [first, second].map(([fx, fy]) => [fx + across, fy + 0.02]);
+        const wrong = [];
+        let tabs = 0;
+        while (!(await focusOn(page, PREVIEW)) && tabs < 8) { await page.keyboard.press('Tab'); tabs += 1; }
+        if (!(await focusOn(page, PREVIEW))) wrong.push('eight presses of Tab did not reach the preview box');
+        await press('End');
+        await press('Escape');
+        const none = await ringsAt(page, TAPS);
+        if (none.some((n) => n >= 10)) wrong.push(`after Escape the taps' rings read ${JSON.stringify(none)} pixels, not under 10`);
+        // (1) Select all.
+        await press(`${COMMAND}+a`);
+        const all = await ringsAt(page, TAPS);
+        if (all.some((n) => n <= 50)) wrong.push(`after Cmd+A the taps' rings read ${JSON.stringify(all)} pixels, not both over 50`);
+        // (2) Duplicate.
+        const beforeCopy = await hash();
+        await press(`${COMMAND}+d`);
+        const [atCopies, atOriginals] = [await ringsAt(page, copies), await ringsAt(page, TAPS)];
+        const kept = { first: await markBeyond(page, first, second), second: await markBeyond(page, second, first) };
+        if (atCopies.some((n) => n <= 50) || atOriginals.some((n) => n >= 50) || !kept.first || !kept.second) wrong.push(`after Cmd+D the rings read ${JSON.stringify(atCopies)} pixels 2% right and down of the taps (both should be over 50) and ${JSON.stringify(atOriginals)} at the taps (both under 50), and the markers ${kept.first ? '' : 'not '}at the first tap and ${kept.second ? '' : 'not '}at the second`);
+        // (3) Undo.
+        await press(UNDO);
+        if ((await hash()) !== beforeCopy) wrong.push('after one Undo the canvas was not as before Cmd+D');
+        // (4) Select all, then Delete.
+        await press(`${COMMAND}+a`);
+        const beforeDelete = await hash();
+        await press('Delete');
+        const gone = { first: await markBeyond(page, first, second), second: await markBeyond(page, second, first), line: orange(await strokeAt(page, 0.5, 0.5), 40) };
+        if (gone.first || gone.second || gone.line) wrong.push(`after Cmd+A and Delete a marker read ${gone.first ? '' : 'not '}at the first tap and ${gone.second ? '' : 'not '}at the second, and the line ${gone.line ? '' : 'not '}at their middle`);
+        // (5) Undo.
+        await press(UNDO);
+        if ((await hash()) !== beforeDelete) wrong.push('after one Undo the canvas was not as before Delete');
+        if (!(await focusOn(page, PREVIEW))) wrong.push('focus was not on the preview box at the end');
+        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, with focus moved to the preview box by Tab (${tabs} presses), the route skipped to its end by End and the selection cleared by Escape, keys alone: Cmd+A rings both points; Cmd+D rings a copy 2% of the picture right and down of each (the copies the selection; the copies draw no marker of their own), the originals still drawn; one Undo draws the whole canvas as before it; Cmd+A then Delete leaves neither marker nor the line; one Undo draws the whole canvas as before it; focus stays on the box`);
       },
     },
     {
