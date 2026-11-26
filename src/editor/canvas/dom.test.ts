@@ -12,6 +12,7 @@ import { NOTHING_SELECTED } from '../store/selection';
 import { createStore, type Store } from '../store/store';
 import { bindCanvas, cancelDrag, dragOpen, escapeClears, holdOnPicture, inCssPixels, MARKER_HALF, penTap, recordGeometry, type CanvasElement, type Geometry, type PointerFields } from './dom';
 import type { Tap } from './gesture';
+import { createHover, type Hover } from './hover';
 import type { Modifiers, Under } from './pointer';
 
 function counter(prefix: string): IdSource {
@@ -562,5 +563,97 @@ describe('Escape', () => {
     canvas.fire('pointerup', { clientX: 10 + 600 + 20, clientY: 20 + 480 });
     expect(dragOpen()).toBe(false);
     unbind();
+  });
+});
+
+/** Bound with a hover holder (point 6): what it is told, and how often the page was asked to paint. */
+function hovering(geometry: (store: Store) => Geometry | null = drawnOf) {
+  const made = scene();
+  const canvas = canvasStandIn();
+  const win = target();
+  const hover = createHover();
+  const told: Hover[] = [];
+  hover.subscribe(() => told.push(hover.held()));
+  let paints = 0;
+  const refresh = () => ((paints += 1), true);
+  const unbind = bindCanvas({ canvas, win, store: made.store, geometry: () => geometry(made.store), refresh, mac: true, hover });
+  return { ...made, canvas, win, hover, told, unbind, paints: () => paints };
+}
+
+const mouse = (x: number, y: number) => ({ ...client(x, y), pointerType: 'mouse' });
+
+describe('the hover (point 6; brief 118, ruling S)', () => {
+  it('an idle mouse or pen move holds the point, the line or nothing under it, and asks for no paint and no step', () => {
+    const { canvas, store, hover, route, a, paints, unbind } = hovering();
+    const before = store.getState();
+    canvas.fire('pointermove', mouse(0.2, 0.2));
+    expect(hover.held()).toEqual({ routeId: route.id, pointId: a });
+    canvas.fire('pointermove', mouse(0.4, 0.4));
+    expect(hover.held()).toEqual({ routeId: route.id, lineId: route.lines[0]?.id });
+    canvas.fire('pointermove', mouse(0.8, 0.3));
+    expect(hover.held()).toBeNull();
+    canvas.fire('pointermove', { ...client(0.2, 0.2), pointerType: 'pen' });
+    expect(hover.held()).toEqual({ routeId: route.id, pointId: a });
+    expect(paints()).toBe(0);
+    expect(store.getState()).toBe(before);
+    unbind();
+  });
+
+  it('the same point or line under a moving pointer tells the subscribers once', () => {
+    const { canvas, told, route, unbind } = hovering();
+    canvas.fire('pointermove', mouse(0.4, 0.4));
+    canvas.fire('pointermove', mouse(0.41, 0.41));
+    canvas.fire('pointermove', mouse(0.42, 0.42));
+    expect(told).toEqual([{ routeId: route.id, lineId: route.lines[0]?.id }]);
+    canvas.fire('pointermove', mouse(0.8, 0.3));
+    canvas.fire('pointermove', mouse(0.85, 0.3));
+    expect(told).toHaveLength(2);
+    unbind();
+  });
+
+  it('a pointerleave on the canvas, a blur and the binding\'s removal each clear it', () => {
+    const { canvas, win, hover, told, unbind } = hovering();
+    expect(canvas.added.map(([type]) => type)).toContain('pointerleave');
+    canvas.fire('pointermove', mouse(0.4, 0.4));
+    canvas.fire('pointerleave', mouse(1.2, 0.4));
+    expect(hover.held()).toBeNull();
+    canvas.fire('pointermove', mouse(0.4, 0.4));
+    win.fire('blur');
+    expect(hover.held()).toBeNull();
+    canvas.fire('pointermove', mouse(0.4, 0.4));
+    unbind();
+    expect(hover.held()).toBeNull();
+    expect(told.filter((each) => each === null)).toHaveLength(3);
+    expect(canvas.count()).toBe(0);
+  });
+
+  it('nothing is hovered while a press or a drag is open; after the up, an idle move hovers again', () => {
+    const { canvas, hover, route, a, c, unbind } = hovering();
+    canvas.fire('pointermove', mouse(0.2, 0.2));
+    expect(hover.held()).toEqual({ routeId: route.id, pointId: a });
+    canvas.fire('pointerdown', mouse(0.2, 0.2));
+    expect(hover.held()).toBeNull();
+    // Over the line, then far enough to drag the point: still nothing hovered.
+    canvas.fire('pointermove', mouse(0.4, 0.4));
+    expect(hover.held()).toBeNull();
+    canvas.fire('pointermove', mouse(0.3, 0.25));
+    expect(hover.held()).toBeNull();
+    canvas.fire('pointerup', mouse(0.3, 0.25));
+    canvas.fire('pointermove', mouse(0.9, 0.1));
+    expect(hover.held()).toEqual({ routeId: route.id, pointId: c });
+    unbind();
+  });
+
+  it('a touch never hovers, and before a frame is drawn nothing is hovered', () => {
+    const touched = hovering();
+    touched.canvas.fire('pointermove', { ...client(0.2, 0.2), pointerType: 'touch' });
+    expect(touched.hover.held()).toBeNull();
+    expect(touched.told).toEqual([]);
+    touched.unbind();
+    const early = hovering(() => null);
+    early.canvas.fire('pointermove', mouse(0.2, 0.2));
+    expect(early.hover.held()).toBeNull();
+    expect(early.told).toEqual([]);
+    early.unbind();
   });
 });

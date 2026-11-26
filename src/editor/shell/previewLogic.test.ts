@@ -11,6 +11,8 @@ import { createTransport, type FrameSource } from '../../player/transport/transp
 import { setSceneSetting } from '../store/command';
 import { createStore, type Store } from '../store/store';
 import { bindCanvas, type PointerFields } from '../canvas/dom';
+import { createHover } from '../canvas/hover';
+import { OVERLAY_MAKERS } from '../../features/catalogue.editor';
 import {
   backgroundOf, canvasSize, createDrawer, createFrameInputs, createPictures, frameShape, recordingPaint, SEED, START_SIZE,
   type LoadPicture, type Picture, type Target,
@@ -376,8 +378,9 @@ function drawerOf(project: Project = upTheMiddle([wide]), paint?: (request: Fram
   const requests: FrameRequest[] = [];
   const reports: unknown[] = [];
   const failures: (readonly FrameReport[])[] = [];
+  const hover = createHover();
   const drawer = createDrawer({
-    store, inputs, pictures, frames: frames.source,
+    store, inputs, pictures, hover, frames: frames.source,
     report: (error) => reports.push(error),
     failed: (each) => failures.push(each),
   });
@@ -388,7 +391,7 @@ function drawerOf(project: Project = upTheMiddle([wide]), paint?: (request: Fram
     },
     surface: blank,
   };
-  return { store, inputs, frames, drawer, target, requests, reports, failures, hold, pictureListeners };
+  return { store, inputs, frames, drawer, target, requests, reports, failures, hold, pictureListeners, hover };
 }
 
 const at = (store: Store, atMs: number, speed = 1, playing = false) => store.setPlayback({ playing, atMs, speed });
@@ -529,13 +532,86 @@ describe('when a frame is drawn (ruling 4)', () => {
     store.select({ route: route?.id ?? null, points: [pointId] });
     frames.run();
     const selected = recorder.take();
-    expect(requests[1]?.overlays).toHaveLength(1);
+    expect(requests[1]?.overlays).toHaveLength(2); // the lines' (no hover: nothing for a line that shows), the points'
     expect(selected.length).toBeGreaterThan(none.length);
     expect(selected.slice(0, none.length)).toEqual(none);
     expect(selected.slice(none.length).some((line) => line.startsWith('arc') || line.startsWith('rect'))).toBe(true);
     store.select({ route: null, points: [] });
     frames.run();
     expect(recorder.take()).toEqual(none);
+  });
+
+  it('(b) a hover change books a frame; the same hover, as another object, books none; the drawer gives back the holder it reads', () => {
+    const { store, drawer, target, frames, requests, hover } = drawerOf();
+    expect(drawer.hover).toBe(hover);
+    drawer.attach(target);
+    frames.run();
+    const route = store.getState().project.scene.routes[0];
+    const lineId = route?.lines[0]?.id ?? '';
+    hover.set({ routeId: route?.id ?? '', lineId });
+    expect(frames.booked()).toBe(1);
+    frames.run();
+    hover.set({ routeId: route?.id ?? '', lineId });
+    expect(frames.booked()).toBe(0);
+    hover.set(null);
+    expect(frames.booked()).toBe(1);
+    frames.run();
+    expect(requests).toHaveLength(3);
+    drawer.detach();
+    hover.set({ routeId: route?.id ?? '', lineId });
+    expect(frames.booked()).toBe(0);
+  });
+
+  it('(d) a hover with no route selected draws nothing; with the route selected, its line with plus none, or its point; another route\'s, nothing (brief 118, ruling T)', () => {
+    const recorder = new Recorder();
+    const { store, drawer, target, frames, requests, hover } = drawerOf(upTheMiddle([wide]), (request) => compose(recorder, request));
+    drawer.attach(target);
+    frames.run();
+    const none = recorder.take();
+    const route = store.getState().project.scene.routes[0];
+    const routeId = route?.id ?? '';
+    const lineId = route?.lines[0]?.id ?? '';
+    const pointId = route?.points[1]?.id ?? '';
+    /** The frame the last request would give with these overlays in place of the drawer's. */
+    const asked = (overlays: NonNullable<FrameRequest['overlays']>) => {
+      const last = requests[requests.length - 1];
+      if (last === undefined) throw new Error('no request');
+      const own = new Recorder();
+      compose(own, { ...last, overlays });
+      return own.take();
+    };
+    // No route selected: a hover on a line or a point draws the export's frame, line for line (point 4d).
+    for (const each of [{ routeId, lineId }, { routeId, pointId }]) {
+      hover.set(each);
+      frames.run();
+      expect(requests[requests.length - 1]?.overlays).toBeUndefined();
+      expect(recorder.take()).toEqual(none);
+    }
+    store.select({ route: routeId, points: [] });
+    hover.set(null);
+    frames.run();
+    const plain = recorder.take();
+    expect(plain).toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    // Its line: the lines' overlay hovers it with no "+"; the glow is drawn, and no "+" is.
+    hover.set({ routeId, lineId });
+    frames.run();
+    const onLine = recorder.take();
+    expect(onLine).toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: { routeId, lineId, plus: 'none' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(onLine).not.toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: { routeId, lineId, plus: 'idle' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(onLine.some((line) => line.includes('rgba(15, 98, 254, 0.45)'))).toBe(true);
+    expect(plain.some((line) => line.includes('rgba(15, 98, 254, 0.45)'))).toBe(false);
+    // Its point: the points' overlay hovers it.
+    hover.set({ routeId, pointId });
+    frames.run();
+    const onPoint = recorder.take();
+    expect(onPoint).toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: { routeId, pointId } })]));
+    expect(onPoint).not.toEqual(plain);
+    // Another route's line or point: nothing more than the selected route's frame.
+    for (const each of [{ routeId: 'elsewhere', lineId }, { routeId: 'elsewhere', pointId }]) {
+      hover.set(each);
+      frames.run();
+      expect(recorder.take()).toEqual(plain);
+    }
   });
 
   it('(d) draws the rings of the selected point only, at its place; the point not selected keeps its own mark (Codex, 6)', () => {

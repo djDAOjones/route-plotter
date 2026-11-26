@@ -22,13 +22,18 @@
 // 4. When a frame is drawn (`createDrawer`; the page hands `paint` and `surface` to `attach`):
 //    (a) a frame is drawn only at a frame it booked, one booked at a time, one draw a frame however many changes came;
 //    (b) it books at attach, then only when what a frame is made from is not what the last draw used: the scene's
-//        object, the position (`playback.atMs`), the selection's object, the picture held, the size and the background's
+//        object, the position (`playback.atMs`), the selection's object, the picture held, the hover held (`hover`,
+//        ../canvas/hover.ts, which changes its object only when its value changes), the size and the background's
 //        size. A telling that changes none of them (the speed, `playing` alone) books nothing: a still page draws nothing;
 //    (c) the request is made when the frame runs, from what is held then: the inputs' scene, seed, size and image (with
 //        the picture's `source` when one is held), `sceneMs` the position, the `surface`; no `viewing` (CORE-06's zoom
 //        and pan) and no `images` (nothing names one yet);
-//    (d) no overlays when no route is selected, so the frame is line for line an export's; with a route selected,
-//        `OVERLAY_MAKERS.points([route], { selected })`, each selected point as `{ routeId, pointId }` (hover is CORE-06's);
+//    (d) no overlays when no route is selected, so the frame is line for line an export's, a hover or none; with a
+//        route selected, `OVERLAY_MAKERS.lines([route], { hovered })` then `OVERLAY_MAKERS.points([route], { selected,
+//        hovered })`, each selected point as `{ routeId, pointId }`. A hovered point of that route is the points
+//        overlay's `hovered`; a hovered line of that route is the lines overlay's, `{ routeId, lineId, plus: 'none' }`
+//        (CORE-06, brief 118, ruling T: no "+" is offered until insert is built); a hover on another route draws
+//        nothing;
 //    (e) a `paint` that throws is reported and draws nothing more that frame; the next change books as before. The
 //        reports a frame gives back go to `failed` only when they differ from the last frame's, so a module failing
 //        through a whole playing is told once;
@@ -61,6 +66,7 @@ import { OVERLAY_MAKERS } from '../../features/catalogue.editor';
 import type { ContentRequest, FrameReport, FrameRequest, Surface } from '../../player/compose';
 import type { FrameSource } from '../../player/transport/transport';
 import { recordGeometry, type Geometry } from '../canvas/dom';
+import { createHover, type Hover, type HoverHolder } from '../canvas/hover';
 import type { Store } from '../store/store';
 import type { Selection } from '../store/selection';
 
@@ -242,6 +248,11 @@ export interface DrawerOptions<H> {
   readonly store: Pick<Store, 'getState' | 'subscribe'>;
   readonly inputs: FrameInputs;
   readonly pictures: Pick<Pictures, 'held' | 'subscribe'>;
+  /**
+   * The point or line under a resting pointer (point 4d), read with `held()` and subscribed to as `pictures` is; a
+   * holder of its own when none is handed. The drawer gives it back as `hover`, for the page's canvas binding to set.
+   */
+  readonly hover?: HoverHolder;
   readonly frames: FrameSource<H>;
   /** Where a `paint` that throws is told. */
   readonly report: (error: unknown) => void;
@@ -261,10 +272,12 @@ export interface Drawer {
    * booked to try again) or nothing is attached, so the down is not taken (brief 114, ruling P, Codex line 22).
    */
   drawNow(): boolean;
+  /** The hover the drawer reads (point 4d): the page's canvas binding sets it (../canvas/dom.ts, point 6). */
+  readonly hover: HoverHolder;
 }
 
 /** What a frame is made from, by value: objects by identity, then numbers (point 4b). */
-type Key = readonly [Scene, number, Selection, CanvasImageSource | null, number, number, number | null, number | null];
+type Key = readonly [Scene, number, Selection, CanvasImageSource | null, Hover, number, number, number | null, number | null];
 
 const sameKey = (a: Key, b: Key): boolean => a.every((value, i) => Object.is(value, b[i]));
 
@@ -272,15 +285,18 @@ const sameReports = (a: readonly FrameReport[], b: readonly FrameReport[]): bool
   a.length === b.length &&
   a.every((each, i) => each.routeId === b[i]?.routeId && each.featureId === b[i].featureId && each.reason === b[i].reason);
 
-/** The editor's overlays for a selection: none with no route selected (point 4d). */
-function overlaysOf(selection: Selection): FrameRequest['overlays'] {
+/** The editor's overlays for a selection and a hover: none with no route selected (point 4d). */
+function overlaysOf(selection: Selection, hover: Hover): FrameRequest['overlays'] {
   const { route } = selection;
   if (route === null) return undefined;
   const selected = selection.points.map((pointId) => ({ routeId: route, pointId }));
-  return [OVERLAY_MAKERS.points([route], { selected })];
+  const ours = hover !== null && hover.routeId === route ? hover : null;
+  const point = ours !== null && 'pointId' in ours ? { routeId: route, pointId: ours.pointId } : null;
+  const line = ours !== null && 'lineId' in ours ? { routeId: route, lineId: ours.lineId, plus: 'none' as const } : null;
+  return [OVERLAY_MAKERS.lines([route], { hovered: line }), OVERLAY_MAKERS.points([route], { selected, hovered: point })];
 }
 
-export function createDrawer<H>({ store, inputs, pictures, frames, report, failed }: DrawerOptions<H>): Drawer {
+export function createDrawer<H>({ store, inputs, pictures, hover = createHover(), frames, report, failed }: DrawerOptions<H>): Drawer {
   let attached: { readonly target: Target; readonly stops: readonly (() => void)[] } | null = null;
   let booked: { readonly handle: H; readonly ticket: object } | null = null;
   let drawn: Key | null = null;
@@ -289,7 +305,7 @@ export function createDrawer<H>({ store, inputs, pictures, frames, report, faile
   const keyNow = (): Key => {
     const { project, playback, selection } = store.getState();
     const { size, image } = inputs.inputs();
-    return [project.scene, playback.atMs, selection, pictures.held(), size.width, size.height, image?.width ?? null, image?.height ?? null];
+    return [project.scene, playback.atMs, selection, pictures.held(), hover.held(), size.width, size.height, image?.width ?? null, image?.height ?? null];
   };
 
   const requestNow = (surface: Target['surface']): FrameRequest => {
@@ -297,7 +313,7 @@ export function createDrawer<H>({ store, inputs, pictures, frames, report, faile
     const source = pictures.held();
     const { playback, selection } = store.getState();
     const picture = image === null ? null : source === null ? image : { ...image, source };
-    const overlays = overlaysOf(selection);
+    const overlays = overlaysOf(selection, hover.held());
     return { scene, sceneMs: playback.atMs, seed, size, image: picture, surface, ...(overlays ? { overlays } : {}) };
   };
 
@@ -350,12 +366,13 @@ export function createDrawer<H>({ store, inputs, pictures, frames, report, faile
   return {
     attach: (target) => {
       detach();
-      attached = { target, stops: [store.subscribe(changed), pictures.subscribe(changed), inputs.subscribe(changed)] };
+      attached = { target, stops: [store.subscribe(changed), pictures.subscribe(changed), hover.subscribe(changed), inputs.subscribe(changed)] };
       drawn = null;
       lastReports = [];
       book();
     },
     detach,
+    hover,
     // Its cost: while the animation plays, the position moves every frame, so nearly every down paints a whole frame
     // here, synchronously, before the hit test: on a long route with many marks that is one frame's composition added
     // to the press's latency (Codex line 25). A still page pays nothing: the key matches and nothing is drawn.

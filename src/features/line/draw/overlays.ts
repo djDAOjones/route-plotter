@@ -17,8 +17,12 @@
 // v3's accent glow at + 4, round caps and joins. The line's width on screen is what its layer draws, thickness ×
 // frame.scale × screen.zoom (./line.ts), from the frame's settings; a hidden line's is the guide's, 2 × unit. v3's 9
 // and 4 went by its zoom clamp times its Graphics scale (:331); here by unitAt(screen.zoom) alone, as every editor
-// helper's (D153). v3 drew the glow beneath the path (:1319–1328); every overlay is drawn last, so this one lies over
-// the line (a decision for the owner). The glow is drawn after the guides, and the "+" after the glow: the kit's
+// helper's (D153). v3 drew the glow beneath the path (:1319–1328); every overlay is drawn last, so over the glow the
+// stretch is redrawn as its own line (D208, the owner's: "Line with a halo"): the route's colour at full alpha, the
+// width above, the line's own dash (./line.ts's DASHES, each length × frame.scale × screen.zoom, in step with the
+// width; the model holds no dash yet, so solid), round caps and joins; a hidden line's in the guide's look, caps too. The whole
+// stretch is redrawn, every sample the glow follows (D253 asks the owner whether only its shown share should be). The
+// glow is drawn after the guides, the redraw after the glow, and the "+" after the redraw: the kit's
 // plusHandle (v3 :424–450) at the stretch's middle, none where the editor offers no insert (v3 :403), active while the
 // pointer is on it (v3's leg-plus, :410). v3's middle is the middle sample by index of its evenly resampled leg
 // (segmentHitTest.js:115–128); pointAt reads a line's samples by index as v3 does (core/geometry/path.ts).
@@ -27,6 +31,8 @@ import type { Frame } from '../../../adapters/render/layers';
 import { plusHandle, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
 import { pointAt } from '../../../core/geometry/path';
 import type { ImagePoint } from '../../../core/geometry/units';
+import type { Dash } from '../model/line';
+import { DASHES } from './line';
 
 /** The guide's look (D157): alpha, width and dash in screen pixels at a zoom of 1. */
 const GUIDE = { alpha: 0.5, width: 2, dash: [6, 4] } as const;
@@ -120,20 +126,48 @@ function glow(context: DrawContext, runs: readonly Place[][], width: number, uni
   }
 }
 
+/** The line's dash: the model holds none yet, so every line is solid as its layer draws it (../model/line.ts, D135). */
+const LINE_DASH: Dash = 'solid';
+
+/** The stretch redrawn over its glow as its own line (D208), with every style it uses set here and put back after. */
+function redraw(context: DrawContext, runs: readonly Place[][], look: { colour: string; alpha: number; width: number; dash: readonly number[]; cap: 'round' | 'butt' }): void {
+  context.save();
+  try {
+    context.globalAlpha = look.alpha;
+    context.globalCompositeOperation = 'source-over';
+    context.setLineDash([...look.dash]);
+    context.lineDashOffset = 0;
+    context.lineCap = look.cap;
+    context.lineJoin = 'round';
+    context.lineWidth = look.width;
+    context.strokeStyle = look.colour;
+    context.beginPath();
+    trace(context, runs);
+    context.stroke();
+  } finally {
+    context.beginPath();
+    context.restore();
+  }
+}
+
 /** The hovered stretch as the frame holds it: its runs on screen and the line's width there; null where it draws nothing. */
 function stretchOf(hovered: HoveredLine, frame: Frame, screen: Screen, unit: number) {
   const route = screen.routes.get(hovered.routeId);
   const samples = route?.timeline.shapes.get(hovered.lineId)?.samples;
   if (route === undefined || samples === undefined) return null;
-  const { appearance, thickness } = route.settings.line;
-  const width = appearance === 'hidden' ? GUIDE.width * unit : thickness * frame.scale * screen.zoom;
+  const { appearance, thickness, colour } = route.settings.line;
+  const hidden = appearance === 'hidden';
+  const width = hidden ? GUIDE.width * unit : thickness * frame.scale * screen.zoom;
+  const look = hidden
+    ? { colour, alpha: GUIDE.alpha, width, dash: GUIDE.dash.map((length) => length * unit), cap: 'butt' as const }
+    : { colour, alpha: 1, width, dash: DASHES[LINE_DASH].map((length) => length * frame.scale * screen.zoom), cap: 'round' as const };
   const runs = runsOf(samples, screen);
-  return runs.length > 0 && Number.isFinite(width) && width > 0 ? { runs, width, samples } : null;
+  return runs.length > 0 && Number.isFinite(width) && width > 0 ? { runs, width, samples, look } : null;
 }
 
 /**
  * The overlay that follows the lines of the routes named, as the frame holds each: a hidden line's faint guide, then
- * the hovered stretch's glow and its "+". Called with ids alone it draws the guides and nothing more.
+ * the hovered stretch's glow, the stretch redrawn over it as its own line (D208), and its "+". Called with ids alone it draws the guides and nothing more.
  */
 export function lineOverlay(routeIds: readonly string[], { hovered = null }: LineChoices = {}): Overlay {
   return (context: DrawContext, frame: Frame, screen: Screen) => {
@@ -148,6 +182,7 @@ export function lineOverlay(routeIds: readonly string[], { hovered = null }: Lin
     const stretch = hovered === null ? null : stretchOf(hovered, frame, screen, unit);
     if (stretch === null || hovered === null) return;
     glow(context, stretch.runs, stretch.width, unit);
+    redraw(context, stretch.runs, stretch.look);
     if (hovered.plus === 'none') return;
     const middle = pointAt(stretch.samples, 0.5);
     const at = middle === null ? null : screen.place(middle);

@@ -185,7 +185,7 @@ test('the hovered stretch glows as v3’s: white at the line’s width + 9, then
   for (const [name, viewing] of Object.entries(VIEWINGS)) {
     const scene = sceneOf(['whole']);
     const { plain, added } = both(scene, viewing, scene.routes, { hovered: hover(scene) });
-    const [white, accent, ...more] = strokes(added);
+    const [white, accent, , ...more] = strokes(added); // the third is the redraw (D208), its own test below
     expect(more, name).toEqual([]);
     // The line's width on screen is its layer's: thickness 3 × frame.scale (1 at 1080p) × the zoom; 9 and 4 by unitAt (D153).
     const line = 3 * viewing.zoom;
@@ -196,7 +196,7 @@ test('the hovered stretch glows as v3’s: white at the line’s width + 9, then
     expect(widthOf(accent), name).toBeCloseTo(line + 4 * unit, 6);
     expect(white, name).toContain('lineCap=round');
     // Along the line where its own layer draws it (within 0.1 px), and the hovered line alone, not the route's other two.
-    const glow = places(added);
+    const glow = places(added.slice(0, added.indexOf(white ?? '')));
     const drawn = places(plain.lines);
     expect(glow.filter(({ x, y }) => !drawn.some((at) => Math.hypot(at.x - x, at.y - y) <= 0.1)), name).toEqual([]);
     expect(glow.length, name).toBeGreaterThan(5);
@@ -211,7 +211,7 @@ test('the hovered stretch glows as v3’s: white at the line’s width + 9, then
 test('a hidden line hovered glows round its guide; no glow for none hovered, ids that match nothing, or another route’s line', () => {
   const viewing = VIEWINGS['a zoom of 1'];
   const hidden = sceneOf(['hidden']);
-  const [guide, white, accent, ...more] = strokes(both(hidden, viewing, hidden.routes, { hovered: hover(hidden) }).added);
+  const [guide, white, accent, , ...more] = strokes(both(hidden, viewing, hidden.routes, { hovered: hover(hidden) }).added); // then the redraw (D208)
   expect(guide).toContain('lineDash=');
   expect(more).toEqual([]);
   // The guide's 2 wide, not the hidden line's thickness, under v3's 9 and 4.
@@ -224,13 +224,54 @@ test('a hidden line hovered glows round its guide; no glow for none hovered, ids
   expect(glows({ routeId: first?.id ?? '', lineId: 'no-such-line', plus: 'idle' })).toEqual([]);
   expect(glows({ routeId: first?.id ?? '', lineId: second?.lines[0]?.id ?? '', plus: 'idle' })).toEqual([]);
   // The stretch names its own route: it glows whether or not its route is among those whose guides are asked for.
-  expect(glows(hover(two, 'none', 0, 1), [])).toHaveLength(2);
+  expect(glows(hover(two, 'none', 0, 1), [])).toHaveLength(3); // the glow's two and the redraw (D208)
   // A thickness not a number gives no width: nothing drawn, nothing thrown.
   const odd = { ...two, routes: two.routes.map((route) => ({ ...route, settings: { ...route.settings, line: { ...route.settings.line, thickness: Number.NaN } } })) };
   const plain = draw(request(odd), viewing.catalogue);
   const edited = draw(request(odd, { overlays: [OVERLAY_MAKERS.lines([], { hovered: hover(odd) })] }), viewing.catalogue);
   expect(strokes(edited.lines.slice(plain.lines.length))).toEqual([]);
   expect(edited.reports).toEqual(plain.reports);
+});
+
+test('D208: over its glow the hovered stretch is redrawn whole as its own line: the route’s colour, full alpha, its width and dash on screen, round', () => {
+  for (const [name, viewing] of Object.entries(VIEWINGS)) {
+    const scene = sceneOf(['whole']);
+    const colour = scene.routes[0]?.settings.line.colour ?? 'none';
+    const { plain, added } = both(scene, viewing, scene.routes, { hovered: hover(scene, 'idle') });
+    const [white, accent, line, ...more] = strokes(added);
+    expect([white?.includes('rgba(255, 255, 255, 0.85)'), accent?.includes('rgba(15, 98, 254, 0.45)')], name).toEqual([true, true]);
+    // The redraw comes after the glow and before the "+" (its edge and arms the two strokes left).
+    expect(more, name).toHaveLength(2);
+    expect(added.indexOf(line ?? ''), name).toBeLessThan(added.findIndex((call) => call.startsWith('arc ')));
+    // The line's own look: its colour at full alpha, its layer's width on screen (thickness 3 × frame.scale 1 × the zoom),
+    // solid as its layer draws it (the model holds no dash yet: no lineDash), round caps and joins.
+    const own = strokes(plain.lines)[0] ?? '';
+    expect(line, name).toContain(colour);
+    expect(line, name).not.toContain('globalAlpha=');
+    expect(widthOf(line), name).toBeCloseTo(3 * viewing.zoom, 6);
+    expect([own.includes('lineDash='), line?.includes('lineDash=')], name).toEqual([false, false]);
+    expect(line, name).toContain('lineCap=round');
+    expect(line, name).toContain('lineJoin=round');
+    // The whole stretch (D253): the redraw's course is the glow's, place by place.
+    const glowed = places(added.slice(0, added.indexOf(white ?? '')));
+    const redrawn = places(added.slice(added.indexOf(accent ?? '') + 1, added.indexOf(line ?? '')));
+    expect(glowed.length, name).toBeGreaterThan(5);
+    alongside(redrawn, glowed, name);
+  }
+  // A hidden line's stretch is redrawn in the guide's look, over its halo: 2 wide, dashed 6 on and 4 off, half alpha.
+  const viewing = VIEWINGS['a zoom of 1'];
+  const hidden = sceneOf(['hidden']);
+  const [, , , again, ...rest] = strokes(both(hidden, viewing, hidden.routes, { hovered: hover(hidden) }).added);
+  expect(rest).toEqual([]);
+  expect(widthOf(again)).toBe(2);
+  expect(again).toContain('lineDash=6,4');
+  expect(again).toContain('globalAlpha=0.5');
+  expect(again).not.toContain('lineCap=round');
+  expect(again).toContain(hidden.routes[0]?.settings.line.colour ?? 'none');
+  // Nothing hovered: no redraw, as no glow.
+  const scene = sceneOf(['whole']);
+  expect(strokes(both(scene, viewing, scene.routes, { hovered: null }).added)).toEqual([]);
+  expect(strokes(both(scene, viewing).added)).toEqual([]);
 });
 
 test('the "+" sits at the hovered stretch’s middle, after the glow: radius 9, 11 with the pointer on it, none with no insert (:401–450)', () => {
@@ -245,11 +286,11 @@ test('the "+" sits at the hovered stretch’s middle, after the glow: radius 9, 
       const [arc, ...others] = arcs(added);
       expect(others, name).toEqual([]);
       const first = added.indexOf(arc ?? '');
-      // The glow's two strokes come first; the "+" is its disc, then its arms.
-      expect(strokes(added.slice(0, first)), name).toHaveLength(2);
+      // The glow's two strokes come first, then the redraw (D208); the "+" is its disc, then its arms.
+      expect(strokes(added.slice(0, first)), name).toHaveLength(3);
       expect(Number(arc?.split(' ')[3]), name).toBeCloseTo(radius * unit, 6);
       // The middle by index of the stretch's samples, as placed on screen (the glow's own places).
-      const glow = places(added.slice(0, first));
+      const glow = places(added.slice(0, added.indexOf(strokes(added)[0] ?? '')));
       const [a, b] = [glow[Math.floor((glow.length - 1) / 2)], glow[Math.ceil((glow.length - 1) / 2)]];
       const [centre] = places([(arc ?? '').replace(/^arc /, 'moveTo ')]);
       expect(Math.hypot(((a?.x ?? 0) + (b?.x ?? 0)) / 2 - (centre?.x ?? 0), ((a?.y ?? 0) + (b?.y ?? 0)) / 2 - (centre?.y ?? 0)), name).toBeLessThan(0.1);
@@ -318,7 +359,7 @@ test('drawn straight onto a dirtied canvas, the lines’ overlay sets every styl
   const before = context.state();
   expect(before.path.length).toBeGreaterThan(0);
   const clean = onto(new Recorder());
-  expect(strokes(clean)).toHaveLength(5); // the guide, the glow's two, the "+"'s edge and arms
+  expect(strokes(clean)).toHaveLength(6); // the guide, the glow's two, the redraw (D208), the "+"'s edge and arms
   expect(onto(context)).toEqual(clean);
   expect(context.state()).toEqual({ ...before, path: [] });
   // A hovered line of no sample or one: neither glow nor "+" (no guide is asked for).
@@ -334,8 +375,8 @@ test('drawn straight onto a dirtied canvas, the lines’ overlay sets every styl
   }
 });
 
-test('the glow alone, onto a canvas with a path left open, strokes the stretch and nothing else, twice, and leaves no path', () => {
-  // No guide clears the open path before the glow and no "+" clears it after: the glow's own two beginPath() calls alone.
+test('the glow alone, onto a canvas with a path left open, strokes the stretch and nothing else, twice, then the redraw, and leaves no path', () => {
+  // No guide clears the open path before the glow and no "+" clears it after: the glow's and the redraw's own beginPath() calls alone.
   const scene = sceneOf(['hidden', 'whole'], { branch: true });
   for (const open of [false, true]) {
     const context = new Watching();
@@ -345,7 +386,7 @@ test('the glow alone, onto a canvas with a path left open, strokes the stretch a
     }
     const { stroked, left, course } = glowOnto(context, scene, 3, 1);
     expect(course.length, String(open)).toBeGreaterThan(1);
-    expect(stroked, String(open)).toHaveLength(2);
+    expect(stroked, String(open)).toHaveLength(3); // the glow's two, the redraw (D208)
     for (const [i, path] of stroked.entries()) strokesAlong(path, course, `${open ? 'a path open' : 'clean'}, stroke ${i}`);
     expect(left, String(open)).toEqual([]);
   }
@@ -355,7 +396,7 @@ test('a branch hovered glows along the branch alone; the line’s width is its l
   const viewing = VIEWINGS['a zoom of 1'];
   const scene = sceneOf(['whole'], { branch: true });
   const { plain, added } = both(scene, viewing, scene.routes, { hovered: hover(scene, 'none', 3) });
-  const glow = places(added);
+  const glow = places(added.slice(0, added.indexOf(strokes(added)[0] ?? '')));
   const drawn = places(plain.lines);
   expect(glow.filter(({ x, y }) => !drawn.some((at) => Math.hypot(at.x - x, at.y - y) <= 0.1))).toEqual([]);
   // Its whole course is the branch's own line (index 3), place by place: nothing of the trunk, between the ends or beyond.
@@ -365,7 +406,7 @@ test('a branch hovered glows along the branch alone; the line’s width is its l
   const [white, blue] = strokes(added);
   expect([white, blue].map(widthOf)).toEqual([12, 7]);
   expect([white?.includes('rgba(255, 255, 255, 0.85)'), blue?.includes('rgba(15, 98, 254, 0.45)')]).toEqual([true, true]);
-  expect(stroked).toHaveLength(2);
+  expect(stroked).toHaveLength(3); // the glow's two, the redraw (D208), each along that course
   for (const [i, path] of stroked.entries()) strokesAlong(path, course, `stroke ${i}`);
   // From the third point (0.6, 0.55) to the fifth (0.7, 0.8), on the picture drawn 1,440 wide from x = 240.
   const ends = [glow[0], glow[glow.length - 1]].map((at) => [Math.round(at?.x ?? 0), Math.round(at?.y ?? 0)]);
@@ -376,5 +417,5 @@ test('a branch hovered glows along the branch alone; the line’s width is its l
   const edited = draw(request(scene, { size, overlays: [OVERLAY_MAKERS.lines([], { hovered: hover(scene) })] }), viewing.catalogue);
   const line = widthOf(strokes(big.lines)[0]);
   expect(line).toBe(6);
-  expect(strokes(edited.lines.slice(big.lines.length)).map(widthOf)).toEqual([line + 9, line + 4]);
+  expect(strokes(edited.lines.slice(big.lines.length)).map(widthOf)).toEqual([line + 9, line + 4, line]); // the redraw at the line's own
 });

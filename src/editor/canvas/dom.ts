@@ -38,6 +38,11 @@
 //    picture, as the tap's place is (`holdOnPicture`, D237: the clamp is the page's). `cancelDrag` ends every drag open
 //    on a bound canvas as a blur does: the places and the selection put back, nothing to undo, capture released, and the
 //    pointer's later moves and up do nothing. keydown.ts hands it to the dispatch's Escape, before `escapeClears`.
+// 6. The hover (brief 118, ruling S). With a holder handed (`hover`, ./hover.ts), a pointermove on the canvas while the
+//    machine is idle (no press open), from a mouse or a pen (never touch), hit-tests the last frame drawn as a down
+//    does, but without `refresh()` (a move never books a frame by itself), and hands the holder the point or line
+//    under it, or null. A pointerleave on the canvas, every pointerdown, a blur and the removal of the binding clear
+//    it; while a press or a drag is open nothing is hovered.
 import type { ImageBounds } from '../../core/geometry/transform';
 import type { Frame } from '../../adapters/render/layers';
 import type { Screen } from '../../adapters/render/overlays';
@@ -48,6 +53,7 @@ import { penStep } from './commands';
 import type { Start } from '../../core/model/commands/editing';
 import { bindPointer, type PointerBinding, type Tap } from './gesture';
 import { hitTest, type HitRoute } from './hit';
+import { hoverOf, type HoverHolder } from './hover';
 import type { Modifiers, Pixel, PointerInput } from './pointer';
 
 /** A point's half-size at scale 1, in reference pixels: 30 px across (D241). */
@@ -98,7 +104,8 @@ export function penTap({ project, selection }: Pick<ReturnType<Store['getState']
 }
 
 /** What `bindCanvas` reads of a pointer event: a real PointerEvent on the page, a plain object in Node. */
-export type PointerFields = Pick<PointerEvent, 'pointerId' | 'isPrimary' | 'button' | 'clientX' | 'clientY' | 'altKey' | 'shiftKey' | 'metaKey' | 'ctrlKey'>;
+export type PointerFields = Pick<PointerEvent, 'pointerId' | 'isPrimary' | 'button' | 'clientX' | 'clientY' | 'altKey' | 'shiftKey' | 'metaKey' | 'ctrlKey'> &
+  Partial<Pick<PointerEvent, 'pointerType'>>;
 
 /** What `bindCanvas` takes of a target it listens on, its events of type `E`. */
 interface Listened<E extends PointerFields> {
@@ -129,6 +136,8 @@ export interface CanvasBindingOptions<E extends PointerFields> {
   readonly refresh: () => boolean;
   /** Whether this machine is a Mac: the platform's command key is Cmd there, Ctrl elsewhere. */
   readonly mac: boolean;
+  /** Where the point or line under a resting mouse or pen is held (point 6); none, no hover. */
+  readonly hover?: Pick<HoverHolder, 'set'>;
 }
 
 /** The bindings on the page now, each with what ends its press as a blur does, so that keydown.ts can ask whether a drag is open (point 4) and cancel it (point 5). */
@@ -175,7 +184,7 @@ const ON_WINDOW: readonly (readonly [string, Kind | 'blur'])[] = [
 ];
 
 /** Binds the pen to `canvas` (point 3); gives back what removes every listener it added. */
-export function bindCanvas<E extends PointerFields>({ canvas, win, store, geometry, refresh, mac }: CanvasBindingOptions<E>): () => void {
+export function bindCanvas<E extends PointerFields>({ canvas, win, store, geometry, refresh, mac, hover }: CanvasBindingOptions<E>): () => void {
   /** The last frame's geometry in the pointer's CSS pixels, or null before the first. */
   const inCss = (): Geometry | null => {
     const drawn = geometry();
@@ -216,8 +225,20 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     send({ kind: 'blur' });
   });
 
+  /** An idle mouse or pen move: what lies under it in the last frame drawn, never a refresh (point 6). */
+  const rest = (place: Pixel, event: E): void => {
+    if (hover === undefined) return;
+    if (event.pointerType === 'touch' || binding.state().phase !== 'idle') {
+      hover.set(null);
+      return;
+    }
+    const now = inCss();
+    hover.set(now === null ? null : hoverOf(hitTest(place, now.bounds, now.routes)));
+  };
+
   const onPointer = (kind: Kind | 'blur', event: E): void => {
     if (kind === 'blur') {
+      hover?.set(null);
       send({ kind });
       return;
     }
@@ -225,8 +246,10 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     held = event.altKey || event.shiftKey || event.metaKey || event.ctrlKey;
     if (kind !== 'down') {
       send({ ...contact, kind });
+      if (kind === 'move') rest(contact.at, event);
       return;
     }
+    hover?.set(null);
     if (!refresh()) return;
     const now = inCss();
     if (now === null) return;
@@ -236,12 +259,17 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
 
   const listeners = (pairs: readonly (readonly [string, Kind | 'blur'])[]) =>
     pairs.map(([type, kind]) => [type, (event: E) => { onPointer(kind, event); }] as const);
-  const onCanvas = listeners(ON_CANVAS);
+  const onLeave = (): void => {
+    hover?.set(null);
+  };
+  // The leave is listened for only with a holder to clear (point 6).
+  const onCanvas = hover === undefined ? listeners(ON_CANVAS) : [...listeners(ON_CANVAS), ['pointerleave', onLeave] as const];
   const onWindow = listeners(ON_WINDOW);
   for (const [type, listener] of onCanvas) canvas.addEventListener(type, listener);
   for (const [type, listener] of onWindow) win.addEventListener(type, listener);
   return () => {
     send({ kind: 'blur' });
+    hover?.set(null);
     for (const [type, listener] of onCanvas) canvas.removeEventListener(type, listener);
     for (const [type, listener] of onWindow) win.removeEventListener(type, listener);
     live.delete(binding);

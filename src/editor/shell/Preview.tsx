@@ -41,7 +41,9 @@
 //    the pointer is hit-tested against that, in its CSS pixels. The pen's tap (on the up, never the down, 2.5.2) places
 //    a point, joined from the selected one; each down first has the drawer draw now if the store has moved on since the
 //    last frame (`drawNow`), so a quick second tap meets the point the first placed. The canvas takes no touch
-//    scrolling (`touch-action: none`), so a finger draws as a mouse does.
+//    scrolling (`touch-action: none`), so a finger draws as a mouse does. The drawer's hover (previewLogic.ts, point 4d)
+//    is handed to the binding (brief 118, ruling T): a resting mouse or pen sets it, and the drawer draws the hovered
+//    point's ring or the hovered stretch over its halo (D208) when that point or line is the selected route's.
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { compose, type Surface } from '../../player/compose';
 import { bindCanvas } from '../canvas/dom';
@@ -51,7 +53,7 @@ import { canvasSize, frameShape, recordingPaint, type Drawer, type FrameInputs }
 
 export interface PreviewProps {
   /** The session's one drawer. */
-  readonly drawer: Pick<Drawer, 'attach' | 'detach' | 'drawNow'>;
+  readonly drawer: Pick<Drawer, 'attach' | 'detach' | 'drawNow'> & Partial<Pick<Drawer, 'hover'>>;
   /** The session's one inputs: the size is handed to it, and the box's shape read from it. */
   readonly inputs: Pick<FrameInputs, 'inputs' | 'resize'>;
   /** The store's telling of a change: an opened project, or a change of the export's size, may bring another shape. */
@@ -157,7 +159,7 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
     // geometry is unknown until a paint's record overlay runs (brief 115, ruling V).
     const painting = recordingPaint(element, (request) => compose(context, request));
     drawer.attach({ paint: painting.paint, surface });
-    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: MAC });
+    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: MAC, hover: drawer.hover });
 
     let box = { width: 0, height: 0 };
     const measure = () => {
