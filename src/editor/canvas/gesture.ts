@@ -4,7 +4,8 @@
 // effects back so that the page asks for capture and releases it. A drag is one store gesture: opened at the drag's
 // start under movePoints' words, with the group selected and the grabbed point last; at every move each point is set
 // to its place at the drag's start plus the whole movement since the down (pixels made image fractions on the image's
-// bounds, which the caller gives), never a sum of steps, and unclamped (D237: the clamp is the page's); the up commits,
+// bounds, which the caller gives), never a sum of steps, and unclamped unless the caller hands in its `limit` (D237: the
+// clamp is the page's; dom.ts hands one in, brief 115); the up commits,
 // and a cancel, a lost capture or a blur puts back the project and the selection the gesture found. A tap is handed to
 // the caller's `onTap`, which gives at most one command, dispatched as one step. Dropping a point onto another does not
 // join them (v3's rejoin, wiringBus.js :54–60, is the page's to weigh: chat F).
@@ -30,6 +31,11 @@ export interface PointerBindingOptions {
   readonly bounds: () => ImageBounds;
   /** What a tap means for the tool in hand: at most one command, or null for none (chat E's). */
   readonly onTap: (tap: Tap) => Command | null;
+  /**
+   * The page's clamp (D237), if any: the whole movement since the down, in image fractions, as it may be applied to
+   * points that started at `starts`. Without it a drag is unclamped.
+   */
+  readonly limit?: (starts: readonly Start[], dx: number, dy: number) => { readonly dx: number; readonly dy: number };
 }
 
 export interface PointerBinding {
@@ -47,7 +53,7 @@ interface Drag {
   readonly starts: readonly Start[];
 }
 
-export function bindPointer({ store, bounds, onTap }: PointerBindingOptions): PointerBinding {
+export function bindPointer({ store, bounds, onTap, limit }: PointerBindingOptions): PointerBinding {
   let state: PointerState = IDLE;
   let drag: Drag | null = null;
 
@@ -70,7 +76,9 @@ export function bindPointer({ store, bounds, onTap }: PointerBindingOptions): Po
     const on = bounds();
     const from = canvasToImage(on, effect.from);
     const to = canvasToImage(on, effect.to);
-    drag.gesture.apply(placePoints(drag.route, drag.starts, to.x - from.x, to.y - from.y));
+    const moved = { dx: to.x - from.x, dy: to.y - from.y };
+    const { dx, dy } = limit?.(drag.starts, moved.dx, moved.dy) ?? moved;
+    drag.gesture.apply(placePoints(drag.route, drag.starts, dx, dy));
   }
 
   function end(how: 'commit' | 'cancel'): void {

@@ -19,7 +19,8 @@
 //    `PointerInput` (the place in the canvas's CSS pixels; a down carries what the hit test finds under it in the last
 //    frame drawn and the selection now); capture is asked for and released as the effects say. Listened for on the
 //    canvas: pointerdown, pointermove, pointerup, pointercancel and lostpointercapture; on the window: pointerup and
-//    pointercancel (an up or cancel outside once capture is gone: v3's fallback) and blur. No `click` is listened
+//    pointercancel (an up or cancel outside once capture is gone: v3's fallback) and blur. A drag's movement is held to
+//    the picture (point 5). No `click` is listened
 //    for, so the compatibility click after a tap does nothing and a tap is one point. Before a frame is drawn, a down
 //    is not taken. Every down first asks the page to paint now if the store has moved on since the last frame (`refresh`),
 //    so a tap never hit-tests geometry older than the store: two quick taps on one empty place make one point, not two
@@ -29,9 +30,14 @@
 //    the machine, as a blur does (a drag's places and selection put back, no step, capture released: ruling J), then
 //    removes every listener with its original callback (React's strict mode mounts twice: no second binding is left).
 // 4. `escapeClears`: Escape's branch for the selection (ruling 8), last in keydown.ts's order (a drag, typed text, a
-//    menu, a dialog, then the selection). While a drag is open on a bound canvas, Escape does nothing here (E2 gives it
-//    the cancel); otherwise, with something selected, it clears the selection (never a step), so the next tap on
+//    menu, a dialog, then the selection). While a drag is open on a bound canvas, Escape does nothing here (`cancelDrag`,
+//    point 5, has it first); otherwise, with something selected, it clears the selection (never a step), so the next tap on
 //    nothing starts a new point joined to nothing.
+// 5. A point's drag (brief 115, ruling T). A press on a point that moves more than the machine's threshold drags it
+//    (pointer.ts, gesture.ts): one step on the up. Its movement is held so that every point it moves stays on the
+//    picture, as the tap's place is (`holdOnPicture`, D237: the clamp is the page's). `cancelDrag` ends every drag open
+//    on a bound canvas as a blur does: the places and the selection put back, nothing to undo, capture released, and the
+//    pointer's later moves and up do nothing. keydown.ts hands it to the dispatch's Escape, before `escapeClears`.
 import type { ImageBounds } from '../../core/geometry/transform';
 import type { Frame } from '../../adapters/render/layers';
 import type { Screen } from '../../adapters/render/overlays';
@@ -39,6 +45,7 @@ import type { Command } from '../store/command';
 import { NOTHING_SELECTED } from '../store/selection';
 import type { Store } from '../store/store';
 import { penStep } from './commands';
+import type { Start } from '../../core/model/commands/editing';
 import { bindPointer, type PointerBinding, type Tap } from './gesture';
 import { hitTest, type HitRoute } from './hit';
 import type { Modifiers, Pixel, PointerInput } from './pointer';
@@ -124,11 +131,33 @@ export interface CanvasBindingOptions<E extends PointerFields> {
   readonly mac: boolean;
 }
 
-/** The bindings on the page now, so that keydown.ts can ask whether a drag is open (point 4). */
-const live = new Set<PointerBinding>();
+/** The bindings on the page now, each with what ends its press as a blur does, so that keydown.ts can ask whether a drag is open (point 4) and cancel it (point 5). */
+const live = new Map<PointerBinding, () => void>();
 
 /** Whether a drag is open on any bound canvas now. */
-export const dragOpen = (): boolean => [...live].some((binding) => binding.state().phase === 'dragging');
+export const dragOpen = (): boolean => [...live.keys()].some((binding) => binding.state().phase === 'dragging');
+
+/** Cancels every drag open on a bound canvas (point 5); true when one was open, and Escape is then taken. */
+export function cancelDrag(): boolean {
+  let cancelled = false;
+  for (const [binding, blur] of [...live]) {
+    if (binding.state().phase !== 'dragging') continue;
+    blur();
+    cancelled = true;
+  }
+  return cancelled;
+}
+
+/**
+ * A drag's whole movement `dx`, `dy` (image fractions) held so that every point it moves, from `starts`, stays on the
+ * picture, each axis on its own, as the tap's place is held to its edge (point 5, D237); the group keeps its shape.
+ */
+export function holdOnPicture(starts: readonly Start[], dx: number, dy: number): { readonly dx: number; readonly dy: number } {
+  if (starts.length === 0) return { dx, dy };
+  const held = (move: number, places: readonly number[]): number =>
+    Math.min(Math.max(move, -Math.min(...places)), 1 - Math.max(...places));
+  return { dx: held(dx, starts.map((start) => start.x)), dy: held(dy, starts.map((start) => start.y)) };
+}
 
 type Kind = Exclude<PointerInput['kind'], 'blur'>;
 
@@ -160,8 +189,8 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     store,
     bounds: () => inCss()?.bounds ?? { x: 0, y: 0, width: 1, height: 1, scale: 1 },
     onTap: (tap) => (held ? null : penTap(store.getState(), tap)),
+    limit: holdOnPicture,
   });
-  live.add(binding);
 
   const modifiers = (event: E): Modifiers => ({ alt: event.altKey, shift: event.shiftKey, meta: mac ? event.metaKey : event.ctrlKey });
   const at = (event: E): Pixel => {
@@ -182,6 +211,10 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
       }
     }
   };
+
+  live.set(binding, () => {
+    send({ kind: 'blur' });
+  });
 
   const onPointer = (kind: Kind | 'blur', event: E): void => {
     if (kind === 'blur') {

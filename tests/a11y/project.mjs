@@ -923,9 +923,11 @@ export default {
       // disabled with nothing to play, does nothing on any press. The timeline, a slider, does move on the down-event, as
       // a provisional scrub: Escape before the release aborts it (the position back where the press found it, focus
       // kept, and the moves and release after it change nothing), and the release completes it with no undo step.
-      // 2.5.7: its one drag, the thumb along the track, has a single-pointer alternative with the same result: a drag of
-      // the thumb completed at 70 % of the track, then, on a fresh page, a whole press on the track at the same point,
-      // the two positions compared. Every press goes through the pointer adapter, so a touch run can credit it. "Open project"
+      // 2.5.7: the page has two dragging movements (CORE-06, brief 115). The timeline's, the thumb along the track, has a
+      // single-pointer alternative with the same result: a drag of the thumb completed at 70 % of the track, then, on a
+      // fresh page, a whole press on the track at the same point, the two positions compared. A point's drag on the
+      // preview has none yet: it does not meet 2.5.7, its single-pointer way is owed (D250, the owner's), and this row
+      // checks the timeline's drag only; no keyboard way is credited to 2.5.7. Every press goes through the pointer adapter, so a touch run can credit it. "Open project"
       // (stage 6) opens the browser's file chooser on a whole press only, none on the down-event or on a press moved
       // off. The preview (CORE-06, brief 112): the pen's tap, read while held, after a press moved off and after a whole
       // press: a point on the up only, in one undo step. Any other control needs its
@@ -1117,7 +1119,7 @@ export default {
           else done.push(name);
         }
         const slid = slider.length > 0;
-        record('2.5.7', slid && !problems.some((p) => p.startsWith('slider')), slid ? `the one drag, the timeline's thumb along its track, has a single-pointer alternative with the same result: ${compared}` : problems.find((p) => p.startsWith('slider')) ?? 'the timeline was not met');
+        record('2.5.7', slid && !problems.some((p) => p.startsWith('slider')), slid ? `of the page's two dragging movements, this row checks the timeline's only: its thumb along the track has a single-pointer alternative with the same result: ${compared}; a point's drag on the preview has no single-pointer alternative yet and does not meet 2.5.7 (owed, D250)` : problems.find((p) => p.startsWith('slider')) ?? 'the timeline was not met');
         record('2.5.2', !problems.length && done.length > 0 && slid, problems.length ? problems.join('; ') : done.length && slid ? `${done.length} button(s), link(s) and switch(es) do nothing on the down-event or on a press moved off before release, and, where enabled, act on a whole press, on the up-event: ${done.join(', ')}; the slider, ${slider.join(', ')}, moves on the down-event as a provisional scrub, which Escape aborts before the release (abort before completion) and the release completes, with no undo step` : 'no control to press, or the timeline not met');
       },
     },

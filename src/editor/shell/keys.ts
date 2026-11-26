@@ -84,6 +84,7 @@ export const KEYS = Object.freeze([
   entry('undo', ['z'], 'Undo', 'General', ['command'], true),
   entry('redo', ['z'], 'Redo', 'General', ['command', 'shift'], true),
   entry('help', ['?'], 'Open help', 'General'),
+  entry('escape', ['Escape'], 'Cancel a point drag, or clear the selection', 'General'),
 ]);
 
 /** Every action a key may ask for, read from the table: the shell binds each to a function of the same name. */

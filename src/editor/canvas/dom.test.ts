@@ -10,7 +10,7 @@ import { newLine, newPoint, newRoute, newScene, type IdSource, type Route } from
 import { composeTimeline } from '../../core/timing/timeline';
 import { NOTHING_SELECTED } from '../store/selection';
 import { createStore, type Store } from '../store/store';
-import { bindCanvas, dragOpen, escapeClears, inCssPixels, MARKER_HALF, penTap, recordGeometry, type CanvasElement, type Geometry, type PointerFields } from './dom';
+import { bindCanvas, cancelDrag, dragOpen, escapeClears, holdOnPicture, inCssPixels, MARKER_HALF, penTap, recordGeometry, type CanvasElement, type Geometry, type PointerFields } from './dom';
 import type { Tap } from './gesture';
 import type { Modifiers, Under } from './pointer';
 
@@ -440,6 +440,81 @@ describe('the canvas\'s binding', () => {
       unbind();
     });
   }
+});
+
+/** Where a point of the first route is now. */
+const placeOf = (store: Store, id: string) => {
+  const point = routeOf(store).points.find((each) => each.id === id);
+  return point === undefined ? undefined : { x: point.x, y: point.y };
+};
+
+describe('a point\'s drag (point 5; brief 115, ruling T)', () => {
+  it('a press on a point moved and released moves it there, selected, as one step; no point placed, nothing joined', () => {
+    const { canvas, store, unbind, route, b } = bound();
+    store.select(NOTHING_SELECTED);
+    canvas.fire('pointerdown', client(0.6, 0.6));
+    canvas.fire('pointermove', client(0.62, 0.58));
+    canvas.fire('pointermove', client(0.7, 0.45));
+    canvas.fire('pointerup', client(0.7, 0.45));
+    const after = placeOf(store, b);
+    expect(after?.x).toBeCloseTo(0.7, 9);
+    expect(after?.y).toBeCloseTo(0.45, 9);
+    expect(routeOf(store).points).toHaveLength(3);
+    expect(routeOf(store).lines).toHaveLength(1);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [b] });
+    expect(store.getState().gesture).toBeNull();
+    expect(canvas.captured.size).toBe(0);
+    expect(store.getState().undo).toBe('Move point');
+    expect(store.undo().ok).toBe(true);
+    expect(placeOf(store, b)).toEqual({ x: 0.6, y: 0.6 });
+    unbind();
+  });
+
+  it('Escape mid-drag (`cancelDrag`): the place and the selection put back, nothing to undo, capture released, and the later move and up do nothing', () => {
+    const { canvas, store, unbind, route, a, b } = bound();
+    const picked = { route: route.id, points: [a] };
+    store.select(picked);
+    const before = store.getState().project;
+    expect(cancelDrag()).toBe(false);
+    canvas.fire('pointerdown', client(0.6, 0.6));
+    canvas.fire('pointermove', client(0.7, 0.45));
+    expect(dragOpen()).toBe(true);
+    expect(placeOf(store, b)?.x).toBeCloseTo(0.7, 9);
+    expect(canvas.captured.size).toBe(1);
+    expect(cancelDrag()).toBe(true);
+    expect(dragOpen()).toBe(false);
+    expect(store.getState().project).toEqual(before);
+    expect(store.getState().selection).toEqual(picked);
+    expect(store.getState().gesture).toBeNull();
+    expect(canvas.captured.size).toBe(0);
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+    canvas.fire('pointermove', client(0.8, 0.3));
+    canvas.fire('pointerup', client(0.8, 0.3));
+    expect(store.getState().project).toEqual(before);
+    expect(store.getState().selection).toEqual(picked);
+    expect(cancelDrag()).toBe(false);
+    unbind();
+  });
+
+  it('is held to the picture as the tap\'s place is (D237): a point dragged beyond an edge stops at it', () => {
+    const { canvas, store, unbind, b } = bound();
+    store.select(NOTHING_SELECTED);
+    canvas.fire('pointerdown', client(0.6, 0.6));
+    canvas.fire('pointermove', client(1.3, -0.2));
+    canvas.fire('pointerup', client(1.3, -0.2));
+    expect(placeOf(store, b)).toEqual({ x: 1, y: 0 });
+    unbind();
+  });
+
+  it('holds a group\'s whole movement so every point stays on the picture, each axis on its own, the group keeping its shape', () => {
+    const starts = [{ id: 'p', x: 0.2, y: 0.5 }, { id: 'q', x: 0.9, y: 0.4 }];
+    const right = holdOnPicture(starts, 0.3, 0.1);
+    expect(right.dx).toBeCloseTo(0.1, 12);
+    expect(right.dy).toBe(0.1);
+    expect(holdOnPicture(starts, -0.5, -0.6)).toEqual({ dx: -0.2, dy: -0.4 });
+    expect(holdOnPicture(starts, 0.05, 0.7)).toEqual({ dx: 0.05, dy: 0.5 });
+    expect(holdOnPicture([], 3, -3)).toEqual({ dx: 3, dy: -3 });
+  });
 });
 
 describe('Escape', () => {

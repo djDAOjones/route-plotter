@@ -65,10 +65,18 @@ describe('the key table, as dispatch reads it', () => {
     }
   });
 
+  it('means Escape’s one path for Escape (CORE-06, brief 115), and nothing with Ctrl, Cmd or Alt held', () => {
+    for (const mac of PLATFORMS) {
+      expect(actionFor(press('Escape'), mac)).toBe('escape');
+      for (const held of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }]) expect(actionFor(press('Escape', held), mac)).toBeNull();
+    }
+  });
+
   it('means nothing for a key the table does not name', () => {
     for (const mac of PLATFORMS) {
       // `?` is Help's key now (CORE-05, stage 5), so it left this list.
-      for (const key of ['a', 'Escape', 'Enter', 'Tab', 'ArrowLeft', 'Delete', 'Unidentified', '']) {
+      // Escape left this list when it became Escape's one path (CORE-06, brief 115); its own test is below.
+      for (const key of ['a', 'Enter', 'Tab', 'ArrowLeft', 'Delete', 'Unidentified', '']) {
         expect(actionFor(press(key), mac), key).toBeNull();
       }
     }
@@ -188,6 +196,7 @@ describe('the key table, as help reads it', () => {
       undo: ['Cmd+Z'],
       redo: ['Cmd+Shift+Z'],
       help: ['?'],
+      escape: ['Escape'],
     });
     expect(keysOf(false)).toMatchObject({ openProject: ['Ctrl+O'], undo: ['Ctrl+Z'], redo: ['Ctrl+Shift+Z'] });
   });

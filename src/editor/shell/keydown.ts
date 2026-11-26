@@ -4,20 +4,21 @@
 // The listener sits on `document` in the bubble phase, never capture: the kit's slider and number field stop Escape
 // with React's `stopPropagation`, which stops the native event at React's root, so they win over the editor.
 //
-// Who owns Escape, in order: an open drag, then typed text (both the kit's controls', which stop it there), then a menu,
-// then a dialog, then the selection. On this page only the dialog exists: Carbon's `Modal` closes on Escape by its own
+// Who owns Escape, in order: the kit's controls' typed text (they stop it there), then a menu, then a dialog, then an
+// open drag, then the selection. On this page only the dialog exists: Carbon's `Modal` closes on Escape by its own
 // listener on `document` (on its Close button the kit's dialog takes the key first, D206) and focus goes back to its
 // opener (kit/Dialog.tsx). CORE-06 (brief 112): the selection's branch, last, is this listener's (`escapeClears`,
 // src/editor/canvas/dom.ts): Escape with something selected, and no drag open, no typed text and no dialog, clears the
-// selection, so the pen's next tap starts afresh. While a drag is open it does nothing yet (E2 gives it the cancel).
-// The key table has no Escape entry: its actions run through the dispatch, whose functions are the transport's and the
-// store's, and none of them clears a selection.
+// selection, so the pen's next tap starts afresh. Brief 115 (ruling U): Escape has one path, the key table's entry,
+// through the dispatch (which keeps typed text and a dialog's Escape out first): this listener hands it
+// `cancelDrag() || escapeClears(…)`, so an open drag is cancelled (its places and selection put back, nothing to undo)
+// and otherwise the selection cleared; the key is taken only when one of them did something.
 //
 // A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).
 //
 // Single-key shortcuts (D183, WCAG 2.2's 2.1.4) are read at each key from the session's switch, on to begin with and
 // held for the visit; Help shows and sets it.
-import { dragOpen, escapeClears } from '../canvas/dom';
+import { cancelDrag, dragOpen, escapeClears } from '../canvas/dom';
 import { dispatchKey, type FocusKind, type PressPlace } from './dispatch';
 import type { PageSession } from './session';
 
@@ -74,11 +75,8 @@ export function listenForKeys(
 ): () => void {
   const onKeyDown = (event: KeyboardEvent): void => {
     const place = placeOf(event.target);
-    if (escapeClears(event, place, dragOpen(), store)) {
-      event.preventDefault();
-      return;
-    }
-    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject });
+    const escape = () => cancelDrag() || escapeClears(event, place, dragOpen(), store);
+    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject, escape });
     if (taken) event.preventDefault();
   };
   document.addEventListener('keydown', onKeyDown);

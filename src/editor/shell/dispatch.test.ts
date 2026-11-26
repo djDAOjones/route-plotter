@@ -38,7 +38,7 @@ function tablePresses(mac: boolean): { readonly action: string; readonly press: 
 }
 
 /** A real store on an empty project, the real editor's transport over a player's transport kept in it. */
-function rig() {
+function rig({ escapeDoes = true } = {}) {
   let n = 0;
   const project: Project = { scene: newScene(() => `id-${String((n += 1))}`), images: [] };
   const store = createStore({ project, nextId: () => `new-${String((n += 1))}` });
@@ -94,8 +94,13 @@ function rig() {
   const openProject = () => {
     ran.push('openProject');
   };
+  // The page's Escape (keydown.ts): true when it cancelled a drag or cleared the selection.
+  const escape = () => {
+    ran.push('escape');
+    return escapeDoes;
+  };
   const key = (pressed: KeyPress, { mac = true, place = OPEN, singleKeys = true } = {}) =>
-    dispatchKey({ press: pressed, mac, place, singleKeys, store: bound, transport, openHelp, openProject });
+    dispatchKey({ press: pressed, mac, place, singleKeys, store: bound, transport, openHelp, openProject, escape });
   return { store, said, ran, outcomes, key };
 }
 
@@ -114,7 +119,7 @@ describe('the shell’s key dispatch', () => {
     const { ran, said, key } = rig();
     const others = [
       // `?` left this list when it became Help's key (stage 5); point 4's tests press it.
-      press('a'), press('Escape'), press('Tab'), press('Enter'), press('ArrowLeft'),
+      press('a'), press('Tab'), press('Enter'), press('ArrowLeft'),
       press('l', { ctrlKey: true }), press('l', { metaKey: true }), press('k', { altKey: true }), press('z'),
       press(' ', { defaultPrevented: true }), press('Home', { defaultPrevented: true }),
       press('z', { metaKey: true, defaultPrevented: true }),
@@ -320,6 +325,39 @@ describe('the shell’s key dispatch', () => {
 // D207: Cmd or Ctrl+O is the editor's wherever it is pressed and is always taken, so the browser's own "Open File" never
 // opens over the editor; it opens the chooser from every kind of place, a typing field included, but not while a dialog
 // is open. What a test here cannot show: whether Chrome hands a real Cmd or Ctrl+O to the page at all.
+describe('Escape’s one path (point 6; CORE-06, brief 115, ruling U)', () => {
+  it('calls the page’s Escape once and is taken when it did something (a drag cancelled or the selection cleared)', () => {
+    for (const mac of PLATFORMS) {
+      const { ran, key } = rig();
+      expect(key(press('Escape'), { mac })).toBe(true);
+      expect(ran).toEqual(['escape']);
+    }
+  });
+
+  it('with nothing to do is not taken, its first press or a held one, with single-key shortcuts on or off', () => {
+    const { ran, key } = rig({ escapeDoes: false });
+    expect(key(press('Escape'))).toBe(false);
+    expect(key(press('Escape', { repeat: true }))).toBe(false);
+    expect(key(press('Escape'), { singleKeys: false })).toBe(false);
+    expect(ran).toEqual(['escape', 'escape', 'escape']);
+  });
+
+  it('is never called in typed text, in a dialog, for a press already taken, or with a modifier held', () => {
+    const { ran, key } = rig();
+    expect(key(press('Escape'), { place: { ...OPEN, typing: true } })).toBe(false);
+    expect(key(press('Escape'), { place: { ...OPEN, dialogOpen: true } })).toBe(false);
+    expect(key(press('Escape', { defaultPrevented: true }))).toBe(false);
+    for (const held of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }]) expect(key(press('Escape', held)), JSON.stringify(held)).toBe(false);
+    expect(ran).toEqual([]);
+  });
+
+  it('works with single-key shortcuts off: Escape is not one printable character', () => {
+    const { ran, key } = rig();
+    expect(key(press('Escape'), { singleKeys: false })).toBe(true);
+    expect(ran).toEqual(['escape']);
+  });
+});
+
 describe('Open project’s chord (D207)', () => {
   const kinds: readonly FocusKind[] = ['button', 'link', 'menuitem', 'slider', 'other'];
   const chord = (mac: boolean, held: Partial<Omit<KeyPress, 'key'>> = {}) => press('o', { ...command(mac), ...held });
