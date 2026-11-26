@@ -1185,6 +1185,9 @@ export default {
             done.push(name);
             // Inside Help, the switch: a point in the dialog clear of its controls to move the press off to.
             const sw = singleKeys(page), was = await sw.getAttribute('aria-checked');
+            // Help scrolls at 1280 by 800 (FINDING-123, D264): with the nudge's two rows (brief 125) the switch sits below
+            // the region's visible part, and a press at its unscrolled place lands outside Help and closes it.
+            await sw.scrollIntoViewIfNeeded();
             const sbox = await sw.boundingBox();
             const sx = sbox.x + sbox.width / 2, sy = sbox.y + sbox.height / 2;
             const inner = await page.evaluate(({ sel, ctl }) => {
