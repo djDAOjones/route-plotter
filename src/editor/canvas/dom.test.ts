@@ -9,8 +9,9 @@ import type { Screen } from '../../adapters/render/overlays';
 import { newLine, newPoint, newRoute, newScene, type IdSource, type Route } from '../../core/model/scene';
 import { composeTimeline } from '../../core/timing/timeline';
 import { NOTHING_SELECTED } from '../store/selection';
+import { movePoints, penStep } from './commands';
 import { createStore, type Store } from '../store/store';
-import { bindCanvas, cancelDrag, dragOpen, escapeClears, holdOnPicture, inCssPixels, MARKER_HALF, penTap, recordGeometry, toggleTap, type CanvasElement, type Geometry, type PointerFields } from './dom';
+import { bindCanvas, cancelDrag, deleteSelected, dragOpen, duplicateSelected, editKey, escapeClears, holdOnPicture, selectAll, inCssPixels, MARKER_HALF, penTap, recordGeometry, toggleTap, type CanvasElement, type Geometry, type PointerFields } from './dom';
 import type { Tap } from './gesture';
 import { createHover, type Hover } from './hover';
 import type { Modifiers, Under } from './pointer';
@@ -741,6 +742,180 @@ describe('Escape', () => {
     canvas.fire('pointerup', { clientX: 10 + 600 + 20, clientY: 20 + 480 });
     expect(dragOpen()).toBe(false);
     unbind();
+  });
+});
+
+describe('the Editing keys (point 7; brief 123, ruling AO)', () => {
+  /** A store whose project's scene holds `routes` (none, or one empty route). */
+  const bare = (routes: 'none' | 'empty') => {
+    const nextId = counter('bare');
+    const made = newScene(nextId);
+    const project: Project = { scene: { ...made, routes: routes === 'none' ? [] : made.routes }, images: [] };
+    return createStore({ project, nextId: counter('new') });
+  };
+  const at = (store: Store, id: string) => placeOf(store, id) ?? { x: Number.NaN, y: Number.NaN };
+
+  it('Delete: the selected points of the route deleted as one step, the route kept selected; one Undo puts them back with their lines', () => {
+    const { store, route, a, b, c } = scene();
+    store.select({ route: route.id, points: [a] });
+    const before = store.getState().project;
+    expect(editKey('deleteSelection', false, store, false)).toBe(true);
+    expect(routeOf(store).points.map(({ id }) => id)).toEqual([b, c]);
+    expect(routeOf(store).lines).toHaveLength(0);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [] });
+    expect(store.getState().undo).toBe('Delete point');
+    expect(store.undo().ok).toBe(true);
+    expect(store.getState().project).toEqual(before);
+  });
+
+  it('Delete of a point between two lines closes them up (the command’s own rule)', () => {
+    const { store, route, a, b, c } = scene();
+    expect(store.dispatch(penStep(route.id, b, { point: c })).ok).toBe(true);
+    store.select({ route: route.id, points: [b] });
+    expect(editKey('deleteSelection', false, store, false)).toBe(true);
+    expect(routeOf(store).lines.map(({ from, to }) => [from, to])).toEqual([[a, c]]);
+  });
+
+  it('Delete of several: one step, "Delete points"', () => {
+    const { store, route, a, b } = scene();
+    store.select({ route: route.id, points: [a, b] });
+    expect(editKey('deleteSelection', false, store, false)).toBe(true);
+    expect(routeOf(store).points).toHaveLength(1);
+    expect(store.getState().undo).toBe('Delete points');
+    expect(store.undo().ok).toBe(true);
+    expect(routeOf(store).points).toHaveLength(3);
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+  });
+
+  it('Duplicate: copies 2% right and down, with the lines between them, become the selection; one gesture, one step, one Undo', () => {
+    const { store, route, a, b } = scene();
+    store.select({ route: route.id, points: [a, b] });
+    const before = store.getState().project;
+    expect(editKey('duplicate', false, store, false)).toBe(true);
+    const copies = store.getState().selection.points;
+    expect(store.getState().selection.route).toBe(route.id);
+    expect(copies).toHaveLength(2);
+    expect(routeOf(store).points).toHaveLength(5);
+    expect(routeOf(store).lines.map(({ from, to }) => [from, to])).toContainEqual([copies[0], copies[1]]);
+    expect(at(store, copies[0] ?? '').x).toBeCloseTo(0.22, 9);
+    expect(at(store, copies[0] ?? '').y).toBeCloseTo(0.22, 9);
+    expect(at(store, copies[1] ?? '').x).toBeCloseTo(0.62, 9);
+    expect(store.getState().gesture).toBeNull();
+    expect(store.getState().undo).toBe('Duplicate');
+    expect(store.undo().ok).toBe(true);
+    expect(store.getState().project).toEqual(before);
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+  });
+
+  it('Duplicate at the picture’s edge: a copy of a point at x 0.99 is held at 1, not 1.01; still one step, one Undo', () => {
+    const { store, route, c } = scene();
+    expect(store.dispatch(movePoints(route.id, [c], 0.09, 0)).ok).toBe(true);
+    store.select({ route: route.id, points: [c] });
+    const before = store.getState().project;
+    expect(editKey('duplicate', false, store, false)).toBe(true);
+    const [copy] = store.getState().selection.points;
+    expect(at(store, copy ?? '').x).toBeCloseTo(1, 9);
+    expect(at(store, copy ?? '').y).toBeCloseTo(0.12, 9);
+    expect(store.getState().undo).toBe('Duplicate');
+    expect(store.undo().ok).toBe(true);
+    expect(store.getState().project).toEqual(before);
+    expect(store.getState().undo).toBe('Move point');
+  });
+
+  it('Duplicate of a group of two at the right edge keeps their spacing (held as a group, D237)', () => {
+    const { store, route, b, c } = scene();
+    expect(store.dispatch(movePoints(route.id, [c], 0.09, 0)).ok).toBe(true);
+    store.select({ route: route.id, points: [b, c] });
+    expect(editKey('duplicate', false, store, false)).toBe(true);
+    const [copyB, copyC] = store.getState().selection.points;
+    expect(at(store, copyC ?? '').x).toBeCloseTo(1, 9);
+    expect(at(store, copyB ?? '').x).toBeCloseTo(0.61, 9);
+    expect(at(store, copyB ?? '').y).toBeCloseTo(0.62, 9);
+    expect(at(store, copyC ?? '').y).toBeCloseTo(0.12, 9);
+  });
+
+  it('Duplicate while a gesture is open: begin is refused, nothing changes, and the key is still taken', () => {
+    const { store, route, a } = scene();
+    store.select({ route: route.id, points: [a] });
+    const begun = store.begin('Other');
+    const before = store.getState().project;
+    expect(editKey('duplicate', false, store, false)).toBe(true);
+    expect(store.getState().project).toBe(before);
+    expect(store.getState().gesture).toBe('Other');
+    if (begun.ok) begun.gesture.cancel();
+  });
+
+  it('Select all: every point of the route selected in its order, never a step; taken again when all are selected', () => {
+    const { store, route, a, b, c } = scene();
+    store.select(NOTHING_SELECTED);
+    expect(editKey('selectAll', false, store, false)).toBe(true);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [a, b, c] });
+    expect(editKey('selectAll', false, store, false)).toBe(true);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [a, b, c] });
+    expect(store.getState().undo).toBeNull();
+  });
+
+  it('Select all from a selection on another route moves it to the first route', () => {
+    const { store, route, other, a, b, c } = scene();
+    store.select({ route: other.id, points: [other.points[0]?.id ?? ''] });
+    expect(selectAll(store, false)).toBe(true);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [a, b, c] });
+  });
+
+  it('with nothing selected, or only another route’s point, Delete and Duplicate are not taken and nothing changes', () => {
+    const { store, other } = scene();
+    for (const selection of [NOTHING_SELECTED, { route: other.id, points: [other.points[0]?.id ?? ''] }]) {
+      store.select(selection);
+      const before = store.getState();
+      expect(editKey('deleteSelection', false, store, false)).toBe(false);
+      expect(editKey('duplicate', false, store, false)).toBe(false);
+      expect(store.getState()).toBe(before);
+    }
+  });
+
+  it('the route selected with none of its points: Delete and Duplicate are not taken', () => {
+    const { store, route } = scene();
+    store.select({ route: route.id, points: [] });
+    expect(deleteSelected(store, false)).toBe(false);
+    expect(duplicateSelected(store, false)).toBe(false);
+    expect(store.getState().undo).toBeNull();
+  });
+
+  it('Select all is not taken when the scene has no route or its route no point', () => {
+    for (const routes of ['none', 'empty'] as const) {
+      const store = bare(routes);
+      const before = store.getState();
+      expect(editKey('selectAll', false, store, false)).toBe(false);
+      expect(store.getState()).toBe(before);
+    }
+  });
+
+  it('none acts while a drag is open, and none is taken then', () => {
+    const { canvas, store, unbind, route, a, b } = bound();
+    store.select({ route: route.id, points: [a, b] });
+    canvas.fire('pointerdown', client(0.6, 0.6));
+    canvas.fire('pointermove', client(0.7, 0.45));
+    expect(dragOpen()).toBe(true);
+    const during = store.getState();
+    for (const action of ['deleteSelection', 'duplicate', 'selectAll'] as const) {
+      expect(editKey(action, false, store, dragOpen()), action).toBe(false);
+    }
+    expect(store.getState()).toBe(during);
+    canvas.fire('pointerup', client(0.7, 0.45));
+    unbind();
+  });
+
+  it('a held key’s repeat acts no more, and is taken exactly when its first press would be', () => {
+    const { store, route, a } = scene();
+    store.select({ route: route.id, points: [a] });
+    const before = store.getState();
+    for (const action of ['deleteSelection', 'duplicate', 'selectAll'] as const) expect(editKey(action, true, store, false), action).toBe(true);
+    expect(store.getState()).toBe(before);
+    store.select(NOTHING_SELECTED);
+    expect(editKey('deleteSelection', true, store, false)).toBe(false);
+    expect(editKey('duplicate', true, store, false)).toBe(false);
+    expect(editKey('selectAll', true, store, false)).toBe(true);
+    expect(store.getState().selection).toEqual(NOTHING_SELECTED);
   });
 });
 

@@ -37,7 +37,7 @@ export function singleKeysShown(mac: boolean): readonly string[] {
 export function switchHelp(mac: boolean): string {
   const named = singleKeysShown(mac).map((key) => SPOKEN[key] ?? key);
   const list = `${named.slice(0, -1).join(', ')} and ${named[named.length - 1] ?? ''}`;
-  return `Turned off, ${list} do nothing. Space, Home, End, Open project, Undo and Redo keep working.`;
+  return `Turned off, ${list} do nothing. Space, Home, End, Delete, Backspace, Open project, Undo, Redo, Duplicate and Select all keep working.`;
 }
 
 /** Help: the shortcuts, grouped as the key table groups them, and the switch for single-key shortcuts. */

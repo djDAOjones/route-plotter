@@ -4,8 +4,9 @@
 // to 1041; Undo and Redo, keybindings.js 295 to 308) and help's `?` (keybindings.js 316 to 322, "Open help"), save that
 // `,` and `.` now do what v3's table said: step one frame back and forward (D205, the owner's choice of 24 Nov), while
 // Home and `<`, End and `>` still skip; and Cmd or Ctrl+O, "Open project" (D207, the owner's choice of 24 Nov; v3 had
-// no key for it), which opens the Open button's own file chooser. Nothing else yet: Escape and the canvas's keys come with the stages that give
-// them something to do.
+// no key for it), which opens the Open button's own file chooser. CORE-06 added Escape (brief 115) and a third group,
+// Editing (brief 123, ruling AM; v3's InteractionHandler.js 995 to 998 and 1055 to 1059, keybindings.js 134 to 140):
+// Delete or Backspace deletes the selected points, Cmd or Ctrl+D duplicates them, Cmd or Ctrl+A selects all points.
 //
 // A press is given by shape (a real KeyboardEvent fits; a test needs none), and whether the machine is a Mac is handed
 // in: the module names no browser global. The shell binds each action's id to a function of the same name (the
@@ -31,7 +32,7 @@
 type Modifier = 'command' | 'shift';
 
 /** Where help lists an action. */
-type Group = 'Playback' | 'General';
+type Group = 'Playback' | 'General' | 'Editing';
 
 interface KeyEntry<A extends string = ActionId, G extends Group = Group> {
   readonly action: A;
@@ -85,6 +86,9 @@ export const KEYS = Object.freeze([
   entry('redo', ['z'], 'Redo', 'General', ['command', 'shift'], true),
   entry('help', ['?'], 'Open help', 'General'),
   entry('escape', ['Escape'], 'Cancel a point drag, or clear the selection', 'General'),
+  entry('deleteSelection', ['Delete', 'Backspace'], 'Delete the selected points', 'Editing'),
+  entry('duplicate', ['d'], 'Duplicate the selected points', 'Editing', ['command']),
+  entry('selectAll', ['a'], 'Select all points', 'Editing', ['command']),
 ]);
 
 /** Every action a key may ask for, read from the table: the shell binds each to a function of the same name. */

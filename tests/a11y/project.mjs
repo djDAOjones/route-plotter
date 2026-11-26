@@ -133,6 +133,16 @@ const helpButton = (page) => page.locator(HELP);
 const helpDialog = (page) => page.getByRole('dialog', { name: 'Help' });
 const singleKeys = (page) => page.locator(SWITCH);
 const focusIs = (page, sel) => page.evaluate((s) => !!document.activeElement?.matches(s), sel);
+// Help's content as a scrollable region (brief 123): once its three tables no longer fit the window, the kit's dialog
+// (Carbon) makes the content a region named Help, in the Tab order, so the keyboard can scroll it. Shift+Tab from where
+// focus lands (the content's start, inside it) meets that region first, and Close one press later.
+const HELP_REGION = '[role=dialog] [role=region]';
+const shiftTabToClose = async (page) => {
+  await page.keyboard.press('Shift+Tab');
+  const region = await focusIs(page, HELP_REGION);
+  if (region) await page.keyboard.press('Shift+Tab');
+  return region;
+};
 // Focus goes back to "Help" when Help closes (the kit's own call, kit/Dialog.tsx; Carbon's timer does not run on unmount): wait for it all the same.
 const backOnHelp = (page) => page.waitForFunction((s) => !!document.activeElement?.matches(s), HELP, { timeout: 2000 }).then(() => true, () => false);
 // The status region holds a message about 2 s: wait for it to empty before a check that it says nothing.
@@ -441,7 +451,9 @@ async function flipByKeyboard(page) {
   await page.keyboard.press('Escape');
   return { before, after, back: await backOnHelp(page) };
 }
-// What Help shows, as reviewed: its close button, heading, the two groups of the key table and the switch. The chords
+// What Help shows, as reviewed: its close button, heading, the three groups of the key table (Editing added by brief
+// 123) and the switch. With the third table its content no longer fits a 1280 by 800 window, so the kit's dialog
+// (Carbon) makes it a scrollable region named Help, which holds the tables and the switch. The chords
 // read Cmd on a Mac and Ctrl elsewhere; a punctuation key is read by its name (comma, full stop, less than, greater
 // than, question mark). Carbon's "Close" tooltip, shown while Close has focus, is not listed. Behind
 // it, the play bar's Play stays disabled (a stated node, so listed).
@@ -451,25 +463,32 @@ const helpOpen = (checked) => [
   '- dialog "Help":',
   '  - button "Close"',
   '  - heading "Help" [level=2]',
-  '  - table "Playback":',
-  '    - caption: Playback',
-  '    - rowgroup:',
-  '      - row "Play/pause Space K"',
-  '      - row "Play reverse J"',
-  '      - row "Play forward L"',
-  '      - row "Skip to start Home less than"',
-  '      - row "Skip to end End greater than"',
-  '      - row "Step back one frame comma"',
-  '      - row "Step forward one frame full stop"',
-  '  - table "General":',
-  '    - caption: General',
-  '    - rowgroup:',
-  '      - row /Open project (Cmd|Ctrl)\\+O/',
-  '      - row /Undo (Cmd|Ctrl)\\+Z/',
-  '      - row /Redo (Cmd|Ctrl)\\+Shift\\+Z/',
-  '      - row "Open help question mark"',
-  `  - switch "Single-key shortcuts"${checked ? ' [checked]' : ''}`,
-  '  - paragraph: Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Open project, Undo and Redo keep working.',
+  '  - region "Help":',
+  '    - table "Playback":',
+  '      - caption: Playback',
+  '      - rowgroup:',
+  '        - row "Play/pause Space K"',
+  '        - row "Play reverse J"',
+  '        - row "Play forward L"',
+  '        - row "Skip to start Home less than"',
+  '        - row "Skip to end End greater than"',
+  '        - row "Step back one frame comma"',
+  '        - row "Step forward one frame full stop"',
+  '    - table "General":',
+  '      - caption: General',
+  '      - rowgroup:',
+  '        - row /Open project (Cmd|Ctrl)\\+O/',
+  '        - row /Undo (Cmd|Ctrl)\\+Z/',
+  '        - row /Redo (Cmd|Ctrl)\\+Shift\\+Z/',
+  '        - row "Open help question mark"',
+  '    - table "Editing":',
+  '      - caption: Editing',
+  '      - rowgroup:',
+  '        - row "Delete the selected points Delete Backspace"',
+  '        - row /Duplicate the selected points (Cmd|Ctrl)\\+D/',
+  '        - row /Select all points (Cmd|Ctrl)\\+A/',
+  `    - switch "Single-key shortcuts"${checked ? ' [checked]' : ''}`,
+  '    - paragraph: Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Delete, Backspace, Open project, Undo, Redo, Duplicate and Select all keep working.',
 ].join('\n');
 // The processes the shell presents (CONF03): none. A process is a series of steps toward a goal inside the app; the
 // shell has no form and no link at all (its one link, to a page it did not own, went with D209). The item that adds a
@@ -948,10 +967,10 @@ export default {
           await helpButton(page).focus();
           await page.keyboard.press('Enter');
           await helpDialog(page).waitFor();
-          await page.keyboard.press('Shift+Tab');
+          const viaRegion = await shiftTabToClose(page);
           const onClose = await focusIs(page, '.cds--modal-close');
           await page.keyboard.press('Escape');
-          if (!onClose) focus.push('Shift+Tab from where focus landed did not reach "Close"');
+          if (!onClose) focus.push(`Shift+Tab from where focus landed${viaRegion ? ', then from Help\'s scrollable region,' : ''} did not reach "Close"`);
           else if (await helpDialog(page).isVisible()) focus.push('on "Close", one Escape left Help open (D206: one Escape closes it wherever focus is)');
           if (!(await backOnHelp(page))) focus.push('focus did not return to "Help" when one Escape on "Close" closed it');
         }
@@ -1361,8 +1380,9 @@ export default {
             name: 'Close', trigger: '[role=dialog] .cds--modal-close', words: 'Close', byException: true,
             // Help opened from the keyboard, the pointer away; focus lands at the content's start, not on Close.
             setup: async () => { await open('shell'); await page.mouse.move(OFF.x, OFF.y); await helpButton(page).focus(); await page.keyboard.press('Enter'); await helpDialog(page).waitFor(); },
-            // Shift+Tab from the content's start reaches Close (the kit's Dialog).
-            focus: async () => { await page.keyboard.press('Shift+Tab'); },
+            // Shift+Tab from the content's start reaches Close (the kit's Dialog), past Help's scrollable region when its
+            // content scrolls (brief 123).
+            focus: async () => { await shiftTabToClose(page); },
             kept: async () => String(await helpDialog(page).isVisible()),
           },
           {

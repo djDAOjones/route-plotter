@@ -72,11 +72,38 @@ describe('the key table, as dispatch reads it', () => {
     }
   });
 
+  it('means the Editing keys (brief 123, ruling AM): Delete or Backspace, Cmd or Ctrl+D, Cmd or Ctrl+A, and nothing else', () => {
+    for (const mac of PLATFORMS) {
+      const [own, other] = mac ? ['metaKey', 'ctrlKey'] : ['ctrlKey', 'metaKey'];
+      for (const key of ['Delete', 'Backspace']) {
+        expect(actionFor(press(key), mac), key).toBe('deleteSelection');
+        expect(actionFor(press(key, { shiftKey: true }), mac), key).toBe('deleteSelection');
+        for (const held of WITH_CTRL_CMD_OR_ALT) expect(actionFor(press(key, held), mac), `${key} ${JSON.stringify(held)}`).toBeNull();
+      }
+      for (const [letter, action] of [['d', 'duplicate'], ['a', 'selectAll']] as const) {
+        for (const key of [letter, letter.toUpperCase()]) expect(actionFor(press(key, { [own]: true }), mac), key).toBe(action);
+        expect(actionFor(press(letter), mac)).toBeNull();
+        expect(actionFor(press(letter, { [other]: true }), mac)).toBeNull();
+        expect(actionFor(press(letter, { metaKey: true, ctrlKey: true }), mac)).toBeNull();
+        expect(actionFor(press(letter, { [own]: true, shiftKey: true }), mac)).toBeNull();
+        expect(actionFor(press(letter, { [own]: true, altKey: true }), mac)).toBeNull();
+      }
+    }
+    const editing = KEYS.filter(({ group }) => group === 'Editing');
+    expect(editing.map(({ action, words, repeats }) => ({ action, words, repeats }))).toEqual([
+      { action: 'deleteSelection', words: 'Delete the selected points', repeats: false },
+      { action: 'duplicate', words: 'Duplicate the selected points', repeats: false },
+      { action: 'selectAll', words: 'Select all points', repeats: false },
+    ]);
+    expect(KEYS.slice(-4).map(({ action }) => action)).toEqual(['escape', 'deleteSelection', 'duplicate', 'selectAll']);
+  });
+
   it('means nothing for a key the table does not name', () => {
     for (const mac of PLATFORMS) {
       // `?` is Help's key now (CORE-05, stage 5), so it left this list.
       // Escape left this list when it became Escape's one path (CORE-06, brief 115); its own test is below.
-      for (const key of ['a', 'Enter', 'Tab', 'ArrowLeft', 'Delete', 'Unidentified', '']) {
+      // Delete left it when it became an Editing key (brief 123); `a` stays: Select all is Cmd or Ctrl+A, never `a` alone.
+      for (const key of ['a', 'd', 'Enter', 'Tab', 'ArrowLeft', 'Unidentified', '']) {
         expect(actionFor(press(key), mac), key).toBeNull();
       }
     }
@@ -112,8 +139,8 @@ describe('DEF-63: no shortcut takes a browser chord such as Ctrl or Cmd with L',
     }
   });
 
-  it('Open project’s, Undo’s and Redo’s chords are the only ones the table declares', () => {
-    expect(KEYS.filter(({ modifiers }) => modifiers.length > 0).map(({ action }) => action)).toEqual(['openProject', 'undo', 'redo']);
+  it('Open project’s, Undo’s, Redo’s, Duplicate’s and Select all’s chords are the only ones the table declares', () => {
+    expect(KEYS.filter(({ modifiers }) => modifiers.length > 0).map(({ action }) => action)).toEqual(['openProject', 'undo', 'redo', 'duplicate', 'selectAll']);
   });
 
   // D207: Cmd+O on a Mac, Ctrl+O elsewhere, either case of the letter; the other command key, Shift or Alt held, no match.
@@ -197,8 +224,13 @@ describe('the key table, as help reads it', () => {
       redo: ['Cmd+Shift+Z'],
       help: ['?'],
       escape: ['Escape'],
+      deleteSelection: ['Delete', 'Backspace'],
+      duplicate: ['Cmd+D'],
+      selectAll: ['Cmd+A'],
     });
-    expect(keysOf(false)).toMatchObject({ openProject: ['Ctrl+O'], undo: ['Ctrl+Z'], redo: ['Ctrl+Shift+Z'] });
+    expect(keysOf(false)).toMatchObject({
+      openProject: ['Ctrl+O'], undo: ['Ctrl+Z'], redo: ['Ctrl+Shift+Z'], duplicate: ['Ctrl+D'], selectAll: ['Ctrl+A'],
+    });
   });
 
   it('says that the comma and full stop step one frame, as they now do (D205; D175 had them skip), and repeat when held', () => {

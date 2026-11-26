@@ -268,7 +268,7 @@ describe('moving points (v3’s nudge, its sizes and clamp the page’s)', () =>
   });
 });
 
-describe('duplicating points (D238, built as written, awaiting the owner)', () => {
+describe('duplicating points (D238, answered 25 Nov: copies, as built)', () => {
   // B a stop pausing 500 ms, C a bend, and B = C at 2.5 times: none of them a default, so a copy reset to the defaults
   // (a stop, no pause, 1 times) fails the assertions below.
   const marked = () => {

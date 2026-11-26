@@ -2,7 +2,8 @@
 // action the table lists is a function of the editor's transport, and the transport has none the table lacks but
 // `scrub`, which the play bar's slider calls and no key does; Undo and Redo are the store's; Help (`?`), Open
 // project (Cmd or Ctrl+O, D207) and Escape (CORE-06, brief 115: a point's drag cancelled, or the selection cleared)
-// are the page's, handed to the dispatch, and are the three General actions the store does not answer. So neither side can gain
+// are the page's, handed to the dispatch, and are the three General actions the store does not answer; the Editing
+// actions (brief 123: Delete, Duplicate, Select all) are the page's too, one path handed to the dispatch. So neither side can gain
 // one the other lacks without failing here: at run time, and in the type check, which reads the table's own rows.
 import { describe, expect, it } from 'vitest';
 import type { Project } from '../../adapters/io/format';
@@ -47,7 +48,7 @@ describe('the key table and the functions the shell binds it to', () => {
     let n = 0;
     const project: Project = { scene: newScene(() => `id-${String((n += 1))}`), images: [] };
     const store = createStore({ project, nextId: () => `new-${String((n += 1))}` });
-    const others = KEYS.filter(({ group }) => group !== 'Playback').map(({ action }) => action);
+    const others = KEYS.filter(({ group }) => group === 'General').map(({ action }) => action);
     const answered: readonly StoreAction[] = ['undo', 'redo'];
     expect(pageAlone).toBe(true);
     expect(others).toEqual(['openProject', ...answered, 'help', 'escape']);
@@ -55,5 +56,8 @@ describe('the key table and the functions the shell binds it to', () => {
     expect('openProject' in store).toBe(false);
     expect('escape' in store).toBe(false);
     for (const action of answered) expect(typeof store[action], action).toBe('function');
+    const editing = KEYS.filter(({ group }) => group === 'Editing').map(({ action }) => action);
+    expect(editing).toEqual(['deleteSelection', 'duplicate', 'selectAll']);
+    for (const action of editing) expect(action in store, action).toBe(false);
   });
 });

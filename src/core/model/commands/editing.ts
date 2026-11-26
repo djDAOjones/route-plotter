@@ -146,7 +146,7 @@ export function placePoints(route: Route, starts: readonly Start[], dx: number, 
 export const DUPLICATE_OFFSET = 0.02;
 
 /**
- * Points copied (D238, awaiting the owner's answer): a copy of each named point, in the order given, after the route's
+ * Points copied (D238, answered 25 Nov: copies, as built): a copy of each named point, in the order given, after the route's
  * others, DUPLICATE_OFFSET right and down, unclamped, with its kind, label and pause; a copy of each line between two
  * named points, after the route's other lines in their saved order, with its direction and speed. No mark and no
  * lead's start is copied. Gives the copies' ids in the order made.

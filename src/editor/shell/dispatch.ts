@@ -36,6 +36,14 @@
 // 6. Escape (brief 115, ruling U) has one path: its entry calls what the page hands in (`escape`: a point's drag
 //    cancelled, else the selection cleared), after points 1 and 2's checks (a press already taken, a dialog, typed
 //    text), and is taken only when that did something, its repeats too; with nothing to do it is not taken.
+// 7. The Editing entries, Delete or Backspace, Cmd or Ctrl+D and Cmd or Ctrl+A (brief 123, ruling AN), call what the
+//    page hands in (`edit`, with the action and whether the press is a held key's repeat), after points 1, 2 and 4's
+//    checks (a press already taken, a dialog, typed text: Backspace and Cmd or Ctrl+A in a text field stay the
+//    field's; none of the three is one printable character without a command key, so the switch leaves all three on).
+//    The key is taken exactly when the page says there was something to act on; with nothing, it is left to the
+//    browser (Cmd or Ctrl+D with nothing selected still bookmarks the page, Cmd or Ctrl+A still selects its text). A
+//    held key's repeat acts no more (the page's rule for an entry that does not repeat, as point 5's) and is taken
+//    under the same condition.
 // It does not claim to withstand code written to break it.
 //
 // Ported from v3's guard (InteractionHandler.js 890 to 970), and where it differs:
@@ -85,6 +93,11 @@ export interface KeyDispatch {
   readonly openProject: () => void;
   /** Escape's one path, the page's, handed in (brief 115, ruling U): true when it cancelled a drag or cleared the selection. */
   readonly escape: () => boolean;
+  /**
+   * The Editing entries' one path, the page's, handed in (brief 123, ruling AN): true when there was something to act
+   * on; a held key's repeat (`repeat`) acts no more but says the same.
+   */
+  readonly edit: (action: ActionIn<'Editing'>, repeat: boolean) => boolean;
 }
 
 const ACTIVATION: readonly string[] = [' ', 'Enter'];
@@ -100,7 +113,7 @@ const KEPT: Readonly<Record<FocusKind, readonly string[]>> = Object.freeze({
 });
 
 /** Runs the action `press` means here, if any; true when one ran or a held repeat was passed over (point 5), and the listener then cancels the key. */
-export function dispatchKey({ press, mac, place, singleKeys, store, transport, openHelp, openProject, escape }: KeyDispatch): boolean {
+export function dispatchKey({ press, mac, place, singleKeys, store, transport, openHelp, openProject, escape, edit }: KeyDispatch): boolean {
   const action = actionFor(press, mac);
   // Open project's chord is the editor's everywhere (point 2): taken in a dialog, where it runs nothing.
   const everywhere = action === 'openProject';
@@ -112,6 +125,8 @@ export function dispatchKey({ press, mac, place, singleKeys, store, transport, o
   if (singleKey && !singleKeys) return false;
   // Escape is taken only when it did something, held or not: with nothing to do it is left to the page (point 6).
   if (entry.action === 'escape') return escape();
+  // The Editing entries are taken only when there was something to act on, held or not (point 7).
+  if (entry.group === 'Editing') return edit(entry.action, press.repeat);
   if (press.repeat && !entry.repeats) return true;
   if (entry.action === 'help') openHelp();
   else if (entry.action === 'openProject') openProject();

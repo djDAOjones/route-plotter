@@ -58,14 +58,25 @@
 //    does, but without `refresh()` (a move never books a frame by itself), and hands the holder the point or line
 //    under it, or null. A pointerleave on the canvas, every pointerdown, a blur and the removal of the binding clear
 //    it; while a press or a drag is open nothing is hovered.
+// 7. The Editing keys (brief 123, ruling AO; v3's Delete or Backspace, Cmd or Ctrl+D and Cmd or Ctrl+A): `editKey` is
+//    what keydown.ts hands the dispatch, each action a function of the store and whether a drag is open, true exactly
+//    when there was something to act on (the key is then taken), and never while a drag is open. "The route" is the
+//    scene's first route, as the pen's. `deleteSelected`: the selection on that route holds a point, and they are
+//    deleted as one step (a point between one line in and one line out closes up; the store keeps the route
+//    selected and drops the deleted points). `duplicateSelected`: the selection on that route holds a point, and they
+//    are copied in one gesture labelled Duplicate, one step: the copies stand 2% right and down and become the
+//    selection (D238, answered 25 Nov: "Copies, then carry on"), held on the picture as a group keeping its shape, as
+//    a drag is (`holdOnPicture`, D237); a refusal cancels the gesture and the key is still taken. `selectAll`: the
+//    route holds a point, and every point of it is selected in the route's order, never a step. A held key's repeat
+//    acts no more and says the same. None says anything aloud (the pen's silence; D263 asks the owner).
 import type { ImageBounds } from '../../core/geometry/transform';
 import type { Frame } from '../../adapters/render/layers';
 import type { Screen } from '../../adapters/render/overlays';
 import type { Command } from '../store/command';
 import { NOTHING_SELECTED, type Selection } from '../store/selection';
 import type { Store } from '../store/store';
-import { penStep, splitLine } from './commands';
-import type { Start } from '../../core/model/commands/editing';
+import { deletePoints, duplicatePoints, movePoints, penStep, splitLine } from './commands';
+import { DUPLICATE_OFFSET, type Start } from '../../core/model/commands/editing';
 import { bindPointer, type PointerBinding, type Tap } from './gesture';
 import { hitTest, type HitRoute } from './hit';
 import { hoverOf, type HoverHolder } from './hover';
@@ -332,4 +343,69 @@ export function escapeClears(
   if (selection.route === null && selection.points.length === 0) return false;
   store.select(NOTHING_SELECTED);
   return true;
+}
+
+/** The Editing keys' actions (point 7), as the key table names them. */
+export type EditAction = 'deleteSelection' | 'duplicate' | 'selectAll';
+
+/** What the Editing keys read and change of the store. */
+type EditStore = Pick<Store, 'getState' | 'dispatch' | 'begin' | 'select'>;
+
+/** The scene's first route and the points of it selected now (none when another route, or nothing, is selected). */
+function selectedOnRoute(store: EditStore) {
+  const { project, selection } = store.getState();
+  const route = project.scene.routes[0];
+  const points = route !== undefined && selection.route === route.id ? selection.points : [];
+  return { route, points };
+}
+
+/** Delete or Backspace (point 7): the selected points of the route deleted as one step; true when there were some. */
+export function deleteSelected(store: EditStore, drag: boolean, repeat = false): boolean {
+  const { route, points } = selectedOnRoute(store);
+  if (drag || route === undefined || points.length === 0) return false;
+  if (!repeat) store.dispatch(deletePoints(route.id, points));
+  return true;
+}
+
+/**
+ * Cmd or Ctrl+D (point 7): the selected points of the route copied, held on the picture as a group, in one gesture,
+ * one step; true when there were some, a refusal included.
+ */
+export function duplicateSelected(store: EditStore, drag: boolean, repeat = false): boolean {
+  const { route, points } = selectedOnRoute(store);
+  if (drag || route === undefined || points.length === 0) return false;
+  if (repeat) return true;
+  const begun = store.begin('Duplicate');
+  if (!begun.ok) return true;
+  const { gesture } = begun;
+  if (!gesture.apply(duplicatePoints(route.id, points)).ok) {
+    gesture.cancel();
+    return true;
+  }
+  const originals = route.points.filter((point) => points.includes(point.id));
+  const held = holdOnPicture(originals, DUPLICATE_OFFSET, DUPLICATE_OFFSET);
+  if (held.dx !== DUPLICATE_OFFSET || held.dy !== DUPLICATE_OFFSET) {
+    const copies = store.getState().selection.points;
+    if (!gesture.apply(movePoints(route.id, copies, held.dx - DUPLICATE_OFFSET, held.dy - DUPLICATE_OFFSET)).ok) {
+      gesture.cancel();
+      return true;
+    }
+  }
+  gesture.commit();
+  return true;
+}
+
+/** Cmd or Ctrl+A (point 7): every point of the route selected, in the route's order, never a step; true when it has one. */
+export function selectAll(store: EditStore, drag: boolean, repeat = false): boolean {
+  const route = store.getState().project.scene.routes[0];
+  if (drag || route === undefined || route.points.length === 0) return false;
+  if (!repeat) store.select({ route: route.id, points: route.points.map((point) => point.id) });
+  return true;
+}
+
+/** The Editing keys' one path (point 7), as keydown.ts hands it to the dispatch: true when the key is taken. */
+export function editKey(action: EditAction, repeat: boolean, store: EditStore, drag: boolean): boolean {
+  if (action === 'deleteSelection') return deleteSelected(store, drag, repeat);
+  if (action === 'duplicate') return duplicateSelected(store, drag, repeat);
+  return selectAll(store, drag, repeat);
 }

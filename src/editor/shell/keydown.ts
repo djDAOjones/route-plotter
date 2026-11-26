@@ -14,12 +14,16 @@
 // `cancelDrag() || escapeClears(…)`, so an open drag is cancelled (its places and selection put back, nothing to undo)
 // and otherwise the selection cleared; the key is taken only when one of them did something.
 //
+// Brief 123 (ruling AN): the Editing keys, Delete or Backspace, Cmd or Ctrl+D and Cmd or Ctrl+A, go through the
+// dispatch (which keeps typed text and a dialog's keys out first) to `editKey` (src/editor/canvas/dom.ts, point 7),
+// handed whether a drag is open; the key is taken only when there was something to act on.
+//
 // A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).
 //
 // Single-key shortcuts (D183, WCAG 2.2's 2.1.4) are read at each key from the session's switch, on to begin with and
 // held for the visit; Help shows and sets it.
-import { cancelDrag, dragOpen, escapeClears } from '../canvas/dom';
-import { dispatchKey, type FocusKind, type PressPlace } from './dispatch';
+import { cancelDrag, dragOpen, editKey, escapeClears } from '../canvas/dom';
+import { dispatchKey, type FocusKind, type KeyDispatch, type PressPlace } from './dispatch';
 import type { PageSession } from './session';
 
 /** Whether this machine is a Mac: Undo is Cmd+Z here, and Help spells the chords so. */
@@ -76,7 +80,8 @@ export function listenForKeys(
   const onKeyDown = (event: KeyboardEvent): void => {
     const place = placeOf(event.target);
     const escape = () => cancelDrag() || escapeClears(event, place, dragOpen(), store);
-    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject, escape });
+    const edit: KeyDispatch['edit'] = (action, repeat) => editKey(action, repeat, store, dragOpen());
+    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject, escape, edit });
     if (taken) event.preventDefault();
   };
   document.addEventListener('keydown', onKeyDown);
