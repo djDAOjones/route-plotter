@@ -75,13 +75,14 @@
 //    divided by the zoom of the frame a bound canvas last drew (`zoomNow`: the screen's zoom, 1 with none drawn), in
 //    image fractions for `movePoints`. The group moves whole, held on the picture as a drag is (`holdOnPicture`, D237),
 //    its spacing kept; a press that would move nothing (held at the edge) changes nothing and makes no step, and the
-//    key is still taken. A burst is one undo step, as v3's 400 ms debounce made it: the first press begins a store
-//    gesture labelled Nudge, each further press within `NUDGE_QUIET_MS` of the last (a held key's repeats included)
-//    moves within it, and it is committed `NUDGE_QUIET_MS` after the last press, or at once by `endNudge`: the
-//    dispatch calls it for any other key before that key runs (so Undo or Redo meets it closed), the bound canvas for
-//    a pointer press and the window's blur, and keydown.ts for the focus leaving where it was and any pointer press on
-//    the page. A begin the store refuses (a gesture already open) leaves it alone, and the key is not taken; nothing
-//    is taken with nothing selected on the route or while a drag is open. Nothing is said aloud (D263).
+//    key is still taken, an open burst kept open as by any press. A burst is one undo step, as v3's 400 ms debounce
+//    made it: the first press begins a store gesture labelled Nudge, each further press within `NUDGE_QUIET_MS` of the
+//    last (a held key's repeats included) moves within it, and it is committed `NUDGE_QUIET_MS` after the last press,
+//    or at once by `endNudge`: the dispatch calls it for any other key before that key runs (so Undo or Redo meets it
+//    closed), the bound canvas for a pointer press and the window's blur, and keydown.ts for the focus leaving where it
+//    was and any pointer press on the page; a press on another store commits the old store's burst there first.
+//    Another gesture owning the store (a begin it would refuse) is left alone, and the key is not taken, at the edge
+//    too; nothing is taken with nothing selected on the route or while a drag is open. Nothing is said aloud (D263).
 import type { ImageBounds } from '../../core/geometry/transform';
 import type { Frame } from '../../adapters/render/layers';
 import type { Screen } from '../../adapters/render/overlays';
@@ -469,24 +470,34 @@ function nudgeSelected(store: EditStore, drag: boolean, key: string, further: bo
   const direction = DIRECTIONS[key];
   const { route, points } = selectedOnRoute(store);
   if (direction === undefined || drag || route === undefined || points.length === 0) return false;
-  // A burst whose gesture the store no longer holds (an opened project closed it), or another store's, is over.
-  if (burst !== null && (burst.store !== store || store.getState().gesture !== NUDGE_LABEL)) {
-    clearTimeout(burst.timer);
-    burst = null;
-  }
+  // A burst whose gesture the store no longer holds (an opened project closed it), or another store's, is over: it
+  // is committed, and the gesture's own commit tells a live one (one step there) from one already closed (refused,
+  // so the other store's gesture open now is left alone).
+  if (burst !== null && (burst.store !== store || store.getState().gesture !== NUDGE_LABEL)) endNudge();
+  // With no burst of ours open, another gesture owning the store leaves the key untaken, at the edge too.
+  if (burst === null && store.getState().gesture !== null) return false;
   const step = (further ? NUDGE_FURTHER : NUDGE) / zoom;
   const starts = route.points.filter((point) => points.includes(point.id));
   const held = holdOnPicture(starts, direction.x * step, direction.y * step);
-  if (held.dx === 0 && held.dy === 0) return true;
+  if (held.dx === 0 && held.dy === 0) {
+    // Held at the edge: nothing applied, no gesture begun, but an open burst stays open 400 ms more.
+    if (burst !== null) quietFromNow(burst);
+    return true;
+  }
   if (burst === null) {
     const begun = store.begin(NUDGE_LABEL);
     if (!begun.ok) return false;
     burst = { store, gesture: begun.gesture, timer: setTimeout(endNudge, NUDGE_QUIET_MS) };
   }
   burst.gesture.apply(movePoints(route.id, points, held.dx, held.dy));
-  clearTimeout(burst.timer);
-  burst.timer = setTimeout(endNudge, NUDGE_QUIET_MS);
+  quietFromNow(burst);
   return true;
+}
+
+/** Restarts a burst's timer: it closes `NUDGE_QUIET_MS` from now. */
+function quietFromNow(open: NonNullable<typeof burst>): void {
+  clearTimeout(open.timer);
+  open.timer = setTimeout(endNudge, NUDGE_QUIET_MS);
 }
 
 /** The Editing keys' one path (points 7 and 8), as keydown.ts hands it to the dispatch: true when the key is taken. */

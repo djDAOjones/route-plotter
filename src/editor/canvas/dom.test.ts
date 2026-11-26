@@ -1093,6 +1093,76 @@ describe('the nudge (point 8; brief 125, rulings AX and AY)', () => {
     if (begun.ok) begun.gesture.cancel();
     expect(before.project).toBe(store.getState().project);
   });
+
+  it('a press held at the edge still keeps an open burst open 400 ms more, applying nothing (Codex on c3ce190, 1)', () => {
+    const { store, route, c } = scene();
+    store.dispatch(movePoints(route.id, [c], 0.095, 0));
+    store.select({ route: route.id, points: [c] });
+    const undoBefore = store.getState().undo;
+    expect(nudge(store, 'ArrowRight')).toBe(true);
+    expect(at(store, c).x).toBe(1);
+    vi.advanceTimersByTime(300);
+    const held = store.getState();
+    expect(nudge(store, 'ArrowRight')).toBe(true);
+    expect(store.getState()).toBe(held);
+    vi.advanceTimersByTime(200);
+    expect(store.getState().gesture).toBe('Nudge');
+    expect(nudge(store, 'ArrowLeft', { further: true })).toBe(true);
+    expect(at(store, c).x).toBeCloseTo(0.98, 10);
+    vi.advanceTimersByTime(NUDGE_QUIET_MS);
+    expect(store.getState().gesture).toBeNull();
+    expect(store.getState().undo).toBe('Nudge');
+    expect(store.undo().ok).toBe(true);
+    expect(at(store, c).x).toBeCloseTo(0.995, 10);
+    expect(store.getState().undo).toBe(undoBefore);
+  });
+
+  it('at the edge, with another gesture open, the arrow is not taken; with none open it is taken and makes no step (Codex on c3ce190, 2)', () => {
+    const { store, route, c } = scene();
+    store.dispatch(movePoints(route.id, [c], 0.1, 0));
+    store.select({ route: route.id, points: [c] });
+    const begun = store.begin('Other');
+    const before = store.getState();
+    expect(nudge(store, 'ArrowRight')).toBe(false);
+    expect(store.getState()).toBe(before);
+    if (begun.ok) begun.gesture.cancel();
+    expect(nudge(store, 'ArrowRight')).toBe(true);
+    expect(store.getState().gesture).toBeNull();
+  });
+
+  it('a nudge on another store first commits the old store’s live burst there, one step (Codex on c3ce190, 3)', () => {
+    const one = scene();
+    const two = scene();
+    one.store.select({ route: one.route.id, points: [one.a] });
+    two.store.select({ route: two.route.id, points: [two.a] });
+    nudge(one.store, 'ArrowRight');
+    nudge(two.store, 'ArrowDown');
+    expect(one.store.getState().gesture).toBeNull();
+    expect(one.store.getState().undo).toBe('Nudge');
+    expect(two.store.getState().gesture).toBe('Nudge');
+    vi.advanceTimersByTime(NUDGE_QUIET_MS);
+    expect(two.store.getState().gesture).toBeNull();
+    expect(one.store.undo().ok).toBe(true);
+    expect(at(one.store, one.a)).toEqual({ x: 0.2, y: 0.2 });
+    expect(two.store.undo().ok).toBe(true);
+    expect(at(two.store, two.a)).toEqual({ x: 0.2, y: 0.2 });
+  });
+
+  it('a nudge on another store leaves alone that store’s gesture when its burst was already closed there (Codex on c3ce190, 3)', () => {
+    const one = scene();
+    const two = scene();
+    one.store.select({ route: one.route.id, points: [one.a] });
+    two.store.select({ route: two.route.id, points: [two.a] });
+    nudge(one.store, 'ArrowRight');
+    one.store.open(one.store.getState().project);
+    const begun = one.store.begin('Other');
+    const held = one.store.getState();
+    expect(nudge(two.store, 'ArrowDown')).toBe(true);
+    expect(one.store.getState()).toBe(held);
+    expect(one.store.getState().gesture).toBe('Other');
+    expect(two.store.getState().gesture).toBe('Nudge');
+    if (begun.ok) begun.gesture.cancel();
+  });
 });
 
 /** Bound with a hover holder (point 6): what it is told, and how often the page was asked to paint. */
