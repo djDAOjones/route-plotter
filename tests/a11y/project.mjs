@@ -2412,14 +2412,15 @@ export default {
     {
       // 2.5.2 (CORE-06, brief 119, ruling U; D208): the hovered stretch, by the mouse alone. In pen-drawn's set-up (two
       // taps, the second point selected, so the route is selected), skipped to the route's end, two pixels are read
-      // where only one mark draws, at the middle of the two taps, well away from both points (no "+" is offered yet):
+      // where only one mark draws, three tenths of the way along the line from the first tap (about 32 px from it and 21
+      // px from the line's middle, so clear of both points and of the "+" drawn at the middle, brief 120):
       // the line's centre pixel (fully drawn by the line, alpha over 200, the route's hue), and a pixel beside it on the
       // ray square to the line. That pixel is picked from the widths: the line is thickness × the frame's scale wide on
       // the canvas (here about 1 px; its anti-aliased fringe ends 1 px out), and the halo's two strokes are the line's
       // width + 9 and + 4 units (overlays.ts, GLOW), so the halo reaches at least 4.5 units out on each side and its blue
       // at least 2. The pixel is the first one out from the centre that is fully transparent before the hover, clear of
       // the line and its fringe (2 px at 1280 by 800), and it is used only within 3 px, inside the halo whatever the
-      // line's width (probed, brief 119, PROBE-119/probe). The mouse then moves, with no press, onto the line's middle:
+      // line's width (probed, brief 119, PROBE-119/probe). The mouse then moves, with no press, onto that place on the line:
       // (1) the centre pixel reads in the line's own colour, as before the hover (within 24 a channel), not the halo's
       // white and blue blended over it; (2) the pixel beside reads the halo (alpha over 200, blue at least green at
       // least red, blue over 200: white or white under blue, never the route's hue). The mouse then leaves the
@@ -2436,15 +2437,23 @@ export default {
         await page.getByRole('button', { name: 'Skip to end' }).click();
         await now();
         // Where the two pixels are, in canvas pixels, from the taps and the canvas before the hover.
-        const spot = await page.locator(CANVAS).evaluate((c, [[ax, ay], [bx, by]]) => {
+        // Three tenths along from the first tap: off the "+" at the middle (its hit 12 px, its disc 9 to 11) and the points.
+        const ALONG = 0.3;
+        const spot = await page.locator(CANVAS).evaluate((c, [[ax, ay], [bx, by], ALONG]) => {
           const ctx = c.getContext('2d');
           const [px, py, qx, qy] = [ax * c.width, ay * c.height, bx * c.width, by * c.height];
           const len = Math.hypot(qx - px, qy - py), [ux, uy] = [(qx - px) / len, (qy - py) / len];
-          const [mx, my] = [Math.floor((px + qx) / 2), Math.floor((py + qy) / 2)];
+          // The line is about 1 px wide here: of the pixels within 1 px of the place, the most opaque is its centre pixel.
+          const [fx, fy] = [Math.floor(px + (qx - px) * ALONG), Math.floor(py + (qy - py) * ALONG)];
+          let [mx, my, top] = [fx, fy, -1];
+          for (let dy = -1; dy <= 1; dy += 1) for (let dx = -1; dx <= 1; dx += 1) {
+            const alpha = ctx.getImageData(fx + dx, fy + dy, 1, 1).data[3];
+            if (alpha > top) [mx, my, top] = [fx + dx, fy + dy, alpha];
+          }
           let d = 1;
           while (d <= 3 && ctx.getImageData(Math.floor(mx - uy * d), Math.floor(my + ux * d), 1, 1).data[3] !== 0) d += 1;
           return { line: [mx, my], beside: [Math.floor(mx - uy * d), Math.floor(my + ux * d)], d };
-        }, TAPS);
+        }, [...TAPS, ALONG]);
         const read = () => page.locator(CANVAS).evaluate((c, at) => at.map(([x, y]) => [...c.getContext('2d').getImageData(x, y, 1, 1).data]), [spot.line, spot.beside]);
         const same = (p, q, by) => p.every((v, i) => Math.abs(v - q[i]) <= by);
         const halo = ([r, g, b, a]) => a > 200 && b > 200 && b >= g && g >= r;
@@ -2452,8 +2461,9 @@ export default {
         const [line, beside] = await read();
         if (spot.d > 3) wrong.push('no pixel within 3 px of the line\'s centre, square to it, was clear of the line before the hover');
         if (!orange(line, 200)) wrong.push(`before the hover the line's centre pixel read rgba(${line}), not the line`);
-        const box = await page.locator(PREVIEW).boundingBox();
-        await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5, { steps: 4 });
+        const box = await page.locator(CANVAS).boundingBox();
+        const [[ax, ay], [bx, by]] = TAPS;
+        await page.mouse.move(box.x + box.width * (ax + (bx - ax) * ALONG), box.y + box.height * (ay + (by - ay) * ALONG), { steps: 4 });
         await now();
         const [lineOn, besideOn] = await read();
         if (!same(lineOn, line, 24) || !orange(lineOn, 200)) wrong.push(`with the mouse on the line its centre pixel read rgba(${lineOn}), not the line's own rgba(${line})`);
@@ -2464,7 +2474,7 @@ export default {
         await now();
         const [lineOff, besideOff] = await read();
         if (!same(lineOff, line, 8) || !same(besideOff, beside, 8)) wrong.push(`after the mouse left the preview the two pixels read rgba(${lineOff}) and rgba(${besideOff}), not as before the hover, rgba(${line}) and rgba(${beside})`);
-        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, skipped to the end, the mouse moved with no press onto the middle of the line, away from both points: the line's centre pixel read in the line's own colour (rgba(${lineOn}), as before the hover rgba(${line})), and a pixel ${spot.d} px beside it, outside the line, read the halo (rgba(${besideOn})); after the mouse left the preview both read as before the hover`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, skipped to the end, the mouse moved with no press onto the line three tenths along from its first point, away from both points and the "+" at its middle: the line's centre pixel read in the line's own colour (rgba(${lineOn}), as before the hover rgba(${line})), and a pixel ${spot.d} px beside it, outside the line, read the halo (rgba(${besideOn})); after the mouse left the preview both read as before the hover`);
       },
     },
     {
