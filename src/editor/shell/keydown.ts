@@ -7,13 +7,17 @@
 // Who owns Escape, in order: an open drag, then typed text (both the kit's controls', which stop it there), then a menu,
 // then a dialog, then the selection. On this page only the dialog exists: Carbon's `Modal` closes on Escape by its own
 // listener on `document` (on its Close button the kit's dialog takes the key first, D206) and focus goes back to its
-// opener (kit/Dialog.tsx). The key table has no Escape entry and
-// this listener no Escape branch: it gains one when a menu or the selection has something for Escape to do.
+// opener (kit/Dialog.tsx). CORE-06 (brief 112): the selection's branch, last, is this listener's (`escapeClears`,
+// src/editor/canvas/dom.ts): Escape with something selected, and no drag open, no typed text and no dialog, clears the
+// selection, so the pen's next tap starts afresh. While a drag is open it does nothing yet (E2 gives it the cancel).
+// The key table has no Escape entry: its actions run through the dispatch, whose functions are the transport's and the
+// store's, and none of them clears a selection.
 //
 // A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).
 //
 // Single-key shortcuts (D183, WCAG 2.2's 2.1.4) are read at each key from the session's switch, on to begin with and
 // held for the visit; Help shows and sets it.
+import { dragOpen, escapeClears } from '../canvas/dom';
 import { dispatchKey, type FocusKind, type PressPlace } from './dispatch';
 import type { PageSession } from './session';
 
@@ -70,6 +74,10 @@ export function listenForKeys(
 ): () => void {
   const onKeyDown = (event: KeyboardEvent): void => {
     const place = placeOf(event.target);
+    if (escapeClears(event, place, dragOpen(), store)) {
+      event.preventDefault();
+      return;
+    }
     const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject });
     if (taken) event.preventDefault();
   };

@@ -57,6 +57,9 @@
 // with the switch off (2.1.4), and the shell's keyboard task (P06) is turning single-key shortcuts off and on in Help
 // by Tab, Enter, Space and Escape. The preview stays set aside from the contrast check, its count now what the probe
 // finds once the box is no image: the canvas alone.
+// CORE-06, chat E1c (2026-11-25, brief 112): the canvas takes the pointer; the pen's tap places a point on the up and
+// joins it from the selected one, and Escape clears the selection. pointer-cancellation reads the preview while a press
+// is held, after a press moved off and after a whole press (2.5.2).
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
@@ -836,7 +839,8 @@ export default {
       // the thumb completed at 70 % of the track, then, on a fresh page, a whole press on the track at the same point,
       // the two positions compared. Every press goes through the pointer adapter, so a touch run can credit it. "Open project"
       // (stage 6) opens the browser's file chooser on a whole press only, none on the down-event or on a press moved
-      // off. The preview (CORE-06): a press on it changes nothing it draws and says nothing. Any other control needs its
+      // off. The preview (CORE-06, brief 112): the pen's tap, read while held, after a press moved off and after a whole
+      // press: a point on the up only, in one undo step. Any other control needs its
       // own journey.
       name: 'pointer-cancellation',
       method: 'j-pointer',
@@ -919,21 +923,30 @@ export default {
             continue;
           }
           if (isPreview) {
-            // The preview (CORE-06, chat E1's first stage): a press on it, held, moved off and whole, changes nothing
-            // drawn and says nothing.
+            // The preview (CORE-06, brief 112): the pen's tap acts on the up only (2.5.2). On the shell's empty route a
+            // press on an empty place is read while held, after it is moved off the box and released (abandoned), and
+            // after a whole press: nothing drawn changes on the down or by the abandoned press; the whole press places
+            // one point (what is drawn changes) in one undo step (one Undo draws the frame found again), saying nothing.
             const box = await control.boundingBox();
-            const x = box.x + box.width / 2, y = box.y + box.height / 2;
-            const before = await pixels(page);
+            const x = box.x + box.width * 0.3, y = box.y + box.height * 0.5;
+            const bad = [];
+            const now = async () => { await page.waitForTimeout(250); await twoFrames(page); return (await pixels(page)).hash; };
+            const before = await now();
             await pointer.down(x, y);
-            await page.waitForTimeout(250);
-            await pointer.move(x + box.width / 2 + 40, y);
+            if ((await now()) !== before) bad.push('a press held on an empty place changed what it draws');
+            await pointer.move(x + box.width + 40, y);
             await pointer.up();
+            if ((await now()) !== before) bad.push('a press moved off it and released changed what it draws');
             await pointer.down(x, y);
+            if ((await now()) !== before) bad.push('the down of a whole press changed what it draws');
             await pointer.up();
-            await page.waitForTimeout(400);
-            const after = await pixels(page);
-            if (after.hash !== before.hash || (await said(page)) !== '') problems.push(`${name}: a press on it changed what it draws or said something`);
-            else done.push(`${name} (nothing yet)`);
+            if ((await now()) === before) bad.push('a whole press drew no point');
+            if ((await said(page)) !== '') bad.push(`a press said ${JSON.stringify(await said(page))}`);
+            await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+            await page.keyboard.press(UNDO);
+            if ((await now()) !== before) bad.push('one Undo did not take the point away: the press was not one step');
+            if (bad.length) problems.push(`${name}: ${bad.join('; ')}`);
+            else done.push(`${name} (the pen's tap: nothing on the down, nothing left by a press moved off, one point and one undo step on the up)`);
             continue;
           }
           if (!href && !isHelp && !skip && !offPlay && !isOpen) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }

@@ -6,6 +6,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { newScene } from '../../core/model/scene';
+import { createStore } from '../store/store';
 import { Preview, PREVIEW_LEAST_VH, PREVIEW_NAME, previewRoom, watchRoom, type RoomElement } from './Preview';
 import { SEED, START_SIZE } from './previewLogic';
 
@@ -19,6 +20,7 @@ const drawn = (image: { width: number; height: number } | null, video = scene.se
         resize: () => undefined,
       },
       subscribe: () => () => undefined,
+      store: createStore({ project: { scene, images: [] }, nextId: () => 'id' }),
     }),
   );
 

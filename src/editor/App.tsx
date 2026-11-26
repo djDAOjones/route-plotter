@@ -76,7 +76,7 @@ export function App() {
           Help
         </Button>
       }
-      preview={<Preview drawer={pageSession().preview.drawer} inputs={pageSession().preview.inputs} subscribe={toldOfChange} />}
+      preview={<Preview drawer={pageSession().preview.drawer} inputs={pageSession().preview.inputs} subscribe={toldOfChange} store={pageSession().store} />}
       transport={
         <PlayBar
           transport={pageSession().transport}

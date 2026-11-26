@@ -35,8 +35,18 @@
 //    measures as) inside the frame. The bands about a picture are the background's white margin, drawn over the whole
 //    frame before the picture as the export draws it (background.ts); with no picture shown the canvas holds nothing
 //    there and the box's own background shows.
+// 6. CORE-06 (brief 112): the canvas takes the pointer (src/editor/canvas/dom.ts, `bindCanvas`), bound at mount and
+//    unbound at unmount with the drawer. `paint` adds one overlay to each request, which draws nothing and keeps what the
+//    frame was drawn with (the image's bounds as the frame's transform places them, each route's shape and timeline);
+//    the pointer is hit-tested against that, in its CSS pixels. The pen's tap (on the up, never the down, 2.5.2) places
+//    a point, joined from the selected one. The canvas takes no touch scrolling (`touch-action: none`), so a finger
+//    draws as a mouse does.
 import { useEffect, useRef, useSyncExternalStore } from 'react';
+import type { Overlay } from '../../adapters/render/overlays';
 import { compose, type Surface } from '../../player/compose';
+import { bindCanvas, recordGeometry, type Geometry } from '../canvas/dom';
+import type { Store } from '../store/store';
+import { MAC } from './keydown';
 import { canvasSize, frameShape, type Drawer, type FrameInputs } from './previewLogic';
 
 export interface PreviewProps {
@@ -46,6 +56,8 @@ export interface PreviewProps {
   readonly inputs: Pick<FrameInputs, 'inputs' | 'resize'>;
   /** The store's telling of a change: an opened project, or a change of the export's size, may bring another shape. */
   readonly subscribe: (listener: () => void) => () => void;
+  /** The session's store, which the pen's taps change (point 6). */
+  readonly store: Store;
 }
 
 /** The canvas's spoken name (1.1.1). */
@@ -126,7 +138,7 @@ const surface = (size: { width: number; height: number }): Surface => {
   return { context, image };
 };
 
-export function Preview({ drawer, inputs, subscribe }: PreviewProps) {
+export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   // The box's shape: the video's, the scene's export width and height (point 5), as one string so a telling that leaves
@@ -141,15 +153,21 @@ export function Preview({ drawer, inputs, subscribe }: PreviewProps) {
     const element = canvas.current;
     const context = element?.getContext('2d');
     if (!element || !context) return undefined;
+    // What the last frame was drawn with (point 6), kept by an overlay that draws nothing.
+    let drawn: Geometry | null = null;
+    const record: Overlay = (_context, frame, screen) => {
+      drawn = recordGeometry(frame, screen);
+    };
     drawer.attach({
       paint: (request) => {
         const { width, height } = request.size;
         if (element.width !== width) element.width = width;
         if (element.height !== height) element.height = height;
-        return compose(context, request);
+        return compose(context, { ...request, overlays: [...(request.overlays ?? []), record] });
       },
       surface,
     });
+    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: () => drawn, mac: MAC });
 
     let box = { width: 0, height: 0 };
     const measure = () => {
@@ -175,11 +193,12 @@ export function Preview({ drawer, inputs, subscribe }: PreviewProps) {
     hearRatio();
 
     return () => {
+      unbind();
       ratio?.removeEventListener('change', onRatio);
       observer.disconnect();
       drawer.detach();
     };
-  }, [drawer, inputs]);
+  }, [drawer, inputs, store]);
 
   // The room left (point 5).
   useEffect(() => {
@@ -193,7 +212,7 @@ export function Preview({ drawer, inputs, subscribe }: PreviewProps) {
   const width = `min(100%, calc(max(var(--preview-room, 0px), ${String(PREVIEW_LEAST_VH)}vh) * ${aspect}))`;
   return (
     <div ref={boxRef} className="preview" role="toolbar" aria-label={PREVIEW_NAME} tabIndex={0} style={{ aspectRatio: aspect, width }}>
-      <canvas ref={canvas} className="preview__canvas" />
+      <canvas ref={canvas} className="preview__canvas" style={{ touchAction: 'none' }} />
     </div>
   );
 }

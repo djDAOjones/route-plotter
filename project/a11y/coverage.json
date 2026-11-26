@@ -80,7 +80,7 @@
     },
     "canvas": {
       "state": "present",
-      "evidence": "CORE-05 (2026-11-23): the editor draws its preview on a canvas (src/editor/shell/Preview.tsx), in a box that is an image named \"Route animation preview\" (1.1.1, the reviewed snapshot); nothing in it can be operated until CORE-06. No row of the catalogue is triggered by this feature alone."
+      "evidence": "CORE-05 (2026-11-23): the editor draws its preview on a canvas (src/editor/shell/Preview.tsx), in a box that is an image named \"Route animation preview\" (1.1.1, the reviewed snapshot); nothing in it could be operated until CORE-06. CORE-06 (2026-11-25, brief 112): the box is a toolbar with one tab stop, and its canvas takes the pointer: the pen's tap places a point on the up-event, joined from the selected one, and Escape clears the selection; pointer-cancellation reads it while a press is held, after a press moved off and after a whole press (2.5.2). No row of the catalogue is triggered by this feature alone."
     },
     "exports": {
       "state": "unknown",
