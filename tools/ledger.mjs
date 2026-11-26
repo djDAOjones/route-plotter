@@ -67,11 +67,12 @@ const blank = (m) => m.replace(/[^\n]/g, '');
 export const active = (s) => s.replace(/\r\n/g, '\n').replace(/<!--[\s\S]*?-->/g, blank)
   .replace(/^([ \t]*)(`{3,})[^\n]*\n[\s\S]*?^\1\2`*[ \t]*$/gm, blank).replace(/^([ \t]*)(~{3,})[^\n]*\n[\s\S]*?^\1\2~*[ \t]*$/gm, blank);
 // The backlog as rule 1 reads it and the estimate counts it: a closed phase's heading with nothing under it is left out
-// (5.0.1, the efficiency review's F3); a closed phase that holds any text is kept whole.
+// (5.0.1, the efficiency review's F3), any "### … — CLOSED date" heading, the shape the checker reads as closed (5.0.2);
+// a closed phase that holds any text is kept whole.
 export const backlogRead = (s) => {
   const lines = active(s).split('\n'), out = [];
   for (let i = 0; i < lines.length; i++) {
-    if (/^### Phase \d+ — .+ — CLOSED \d{4}-\d{2}-\d{2}[ \t]*$/.test(lines[i])) {
+    if (/^### .+ — CLOSED \d{4}-\d{2}-\d{2}[ \t]*$/.test(lines[i])) {
       let j = i + 1; while (j < lines.length && !lines[j].trim()) j++;
       if (j === lines.length || /^#{1,3} /.test(lines[j])) { i = j - 1; continue; } // only a heading of its level or above ends it
     }
@@ -524,8 +525,11 @@ export function inspect(root, { auditProse = false, checkDate = '' } = {}) {
     }
   }
   for (const h of ['Current', 'Next', 'Icebox']) if (!milestones.some((s) => s.name === h)) fail(`project/backlog.md: missing ## ${h}`);
-  /** @param {string} text */
-  const placeholder = (text) => /(?<![$@\w{])\{[A-Za-z][^}\n]*\}/.test(text.replace(/(?<!`)(`+)(?!`)[^\n]*?(?<!`)\1(?!`)/g, '')); // a {word …} the template leaves, not a stash@{0}, a ${HOME}, a {0} or a code span of any backtick length (final-QC ease 8)
+  /** @param {string} text @param {boolean} [quoted] */
+  const placeholder = (text, quoted = false) => { // a {word …} the template leaves, not a stash@{0}, a ${HOME}, a {0} or a code span of any backtick length (final-QC ease 8)
+    const plain = text.replace(/(?<!`)(`+)(?!`)[^\n]*?(?<!`)\1(?!`)/g, '');
+    return /(?<![$@\w{])\{[A-Za-z][^}\n]*\}/.test(quoted ? plain.replace(/"[^"\n]*"|“[^”\n]*”/g, ' ') : plain); // an item line's double-quoted text, straight or curly, is the product's own words (5.0.2); a space keeps a {word} after it a word
+  };
   const shipped = new Map(), tphases = [], recalls = [], late = []; let tp, last;
   for (const line of active(trajectory).split('\n')) {
     let m;
@@ -533,7 +537,7 @@ export function inspect(root, { auditProse = false, checkDate = '' } = {}) {
     else if (/^\s*[-*+] /.test(line)) {
       if (!tp) fail('project/trajectory.md: line outside a phase');
       tp?.lines.push(line.slice(2));
-      if (placeholder(line)) fail(`project/trajectory.md: unresolved template placeholder in an item line: ${line.trim().slice(0, 80)}`);
+      if (placeholder(line, true)) fail(`project/trajectory.md: unresolved template placeholder in an item line: ${line.trim().slice(0, 80)}`);
       if (line.startsWith('- RECALL — ')) {
         m = line.match(new RegExp(`^- RECALL — ([0-8])/8 \\((${DATE})\\) — scores: ([012]),([012]),([012]),([012]) — (fresh|local) — see decisions$`));
         if (!m || !validDate(m[2]) || Number(m[1]) !== m.slice(3, 7).reduce((n, s) => n + Number(s), 0)) fail('project/trajectory.md: invalid recall date, component scores, total or mode');

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // pm-skills 5 migrate tool (specification 3.10, 8): the snapshot, the preservation inventory, the census skeleton, the
 // checks after the migration and after a rollback, and the printed rollback. It never performs the migration's edits (but the pm-skills 5 wish stamp, below) and
-// never performs the rollback: a session does both, following the migration note in CHANGELOG.md. Self-contained on
+// never performs the rollback: a session does both, following the migration note in pm-skills' CHANGELOG-pm-next.md. Self-contained on
 // purpose — after `git revert <migration>` the tree is v2's again, so a copy of this file taken from the migration commit
 // with `git show` must run alone. The snapshot is the commit: Git holds the bytes, the inventory holds their hashes and
 // the record's substance. What it checks is that the record was kept, in the forms a tool can compare; whether an
@@ -138,7 +138,7 @@ function record(files, at = null) { // at: reads one file of the installation at
 // ---- the census skeleton (8): one row per obligation-shaped unit — a list item with its continuation lines, a numbered
 // rule, a table body row, a prose paragraph, a heading, a fenced block — of the installed contract, profile and brief and
 // of every named rules home; the session fills the rest and closes the source list.
-const plain = (s) => s.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*]/g, '').replace(/</g, '‹').replace(/>/g, '›'); // an excerpt carries no link, code span or tag: the census is read where it is, not followed
+const plain = (s) => s.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*]/g, '').replace(/(\\+)\|/g, (_, run) => (run.length % 2 ? run.slice(1) : run) + '|').replace(/</g, '‹').replace(/>/g, '›'); // an excerpt carries no link, code span, tag or pipe-escaping backslash, one of an odd run (5.0.2): the census is read where it is, not followed, and escapes each pipe once
 function censusRows(sources) {
   const rows = [];
   for (const file of sources) {
@@ -164,7 +164,7 @@ function censusRows(sources) {
   return rows;
 }
 const censusTable = (rows, sources) => `# Migration census\n\nEvery obligation-shaped unit of the pre-migration rulebooks (${sources.join(', ')}), one row each (specification 8): a list item with its continuation lines, a numbered rule, a table body row, a prose paragraph, a heading, a fenced block. A row holding more than one obligation names every destination. Fill Destination — where v3 holds it: rules Always; rules By task → path; profile; Direction; a digest; a decision; an item; or retired by a decision — and Applicability: always; by task: type; migration-only until: date or event; or n/a: why (descriptive, not an obligation). The verify step fails on any row left empty, deleted or altered in its first three cells. The table shows where each obligation of these sources went; closing the source list and reading each destination in context are the session's, stated in the MIGRATE decision.\n\n| Row | Source | Obligation | Destination | Applicability |\n| --- | --- | --- | --- | --- |\n${rows.map((r, i) => `| C${i + 1} | ${r.source} | ${r.text.replace(/\|/g, '\\|')} | | |`).join('\n')}\n`;
-const censusParse = (text) => [...active(text).matchAll(/^\| (C\d+) \|([^|]*)\|((?:[^|\\]|\\\|)*)\|([^|]*)\|([^|]*)\|$/gm)].map((m) => ({ row: m[1], source: m[2].trim(), text: m[3].replace(/^ /, '').trimEnd().replace(/\\\|/g, '|'), destination: m[4].trim(), applicability: m[5].trim() }));
+const censusParse = (text) => [...active(text).matchAll(/^\| (C\d+) \|([^|]*)\|((?:\\\||[^|])*)\|([^|]*)\|([^|]*)\|$/gm)].map((m) => ({ row: m[1], source: m[2].trim(), text: m[3].replace(/^ /, '').trimEnd().replace(/\\\|/g, '|'), destination: m[4].trim(), applicability: m[5].trim() })); // any backslash in the excerpt, as the 4.x route's parser admits (5.0.2)
 
 // ---- the refresh route (V31-UPGRADE-ROUTE, 3.10 amended): a later pm-skills 5 build over an installed pm-skills 5, no snapshot and no inventory.
 // Both builds are read from the source checkout's Git objects, never its working tree. A file of the installation is pm-skills's own
@@ -259,7 +259,7 @@ function refreshRoute() {
     if (!b) { refusals.push(`${p}: a local edit on a file the build retires; record the edit's retirement, or carry it under a path of the project's own`); continue; }
     const m = merge3(buf, cat(a.blob), cat(b.blob)); // BUGS-1: from the installed build, whose changes the stamp or --installed names; the nearest version's merge once kept an edit that held part of the build's change and dropped the rest
     if (m.conflicts !== 0 && onlyAdds(buf, a.blob, b.blob)) kept.push(`${p} (a local edit over the build's own copy, kept as it is)`); // lines added to the build's text, so it holds the whole of the build's change
-    else if (m.conflicts !== 0) refusals.push(`${p}: the local edit and the build's change conflict${m.conflicts > 0 ? ` (${m.conflicts} hunk${m.conflicts > 1 ? 's' : ''})` : ''}, merged from the installed build's version at ${a.blob.slice(0, 7)}; merge them by hand in a reviewed commit first`);
+    else if (m.conflicts !== 0) refusals.push(`${p}: the local edit and the build's change conflict${m.conflicts > 0 ? ` (${m.conflicts} hunk${m.conflicts > 1 ? 's' : ''})` : ''}, merged from the installed build's version at ${a.blob.slice(0, 7)}; merge them by hand in a reviewed commit first: the merged file passes only when it is the new build's text with lines added and none taken out; otherwise restore the pm-skills copy and re-apply the edit as added lines, none of them a line the build took out`);
     else if (m.out.equals(buf)) kept.push(`${p} (a local edit already holding the build's change)`);
     else plan.push({ p, op: 'merge', bytes: m.out });
   }
@@ -303,13 +303,13 @@ if (args.snapshot) {
       if (dirty.length) { console.error(`migrate: the repository root's ${dirty.join(' and ')} ${dirty.length > 1 ? 'have' : 'has'} uncommitted changes; the upgrade commit carries the hook merge, so commit or discard them before the snapshot`); process.exit(1); }
     }
   } else {
-    if (existsSync(join(root, 'project/rules.md'))) warns.push('project/rules.md already exists; is this a v2 installation?');
+    if (existsSync(join(root, 'project/rules.md'))) warns.push('project/rules.md already exists; is this a v2 installation? It is kept byte for byte, but pm-skills 5\'s checker reads this path as its rules file, with Always, By task and Signed; moving it aside before the snapshot is a departure from the route the owner rules');
     if (existsSync(join(root, INVENTORY))) { console.error(`migrate: ${INVENTORY} exists; a second snapshot would hide the first — before migrating, move aside only that file and ${CENSUS}, never the rest of project/migration/, and run the snapshot again; after migrating, there is no second snapshot`); process.exit(1); }
   }
   if (self.startsWith('..')) { console.error(`migrate: this copy of the tool (${self}) lies outside the repository, so the rollback could not recover it with git show; copy v3's tools/migrate.mjs into the installation's tools/ and commit it alone first, or run v3's copy from inside the repository`); process.exit(1); }
   const files = tracked().map((p) => {
     if (lstatSync(join(root, p)).isSymbolicLink()) { fails.push(`${p}: a tracked symbolic link; the snapshot hashes files only — resolve it before migrating`); return { path: p, sha256: '', bytes: 0 }; }
-    if (/^project\/archive\/decisions-[^/]*\.md$/.test(p)) fails.push(`${p}: archived decisions in the old archive folder; v3 keeps them beside project/decisions.md and this tool does not move them, so its record would miss them — stop and ask before migrating`);
+    if (/^project\/archive\/decisions-[^/]*\.md$/.test(p)) fails.push(`${p}: archived decisions in the old archive folder; v3 keeps them beside project/decisions.md and this tool does not move them, so its record would miss them — stop and ask before migrating: this is v2's own archive layout, and moving the chunks before the snapshot is a departure from the route the owner rules`);
     const buf = readFileSync(join(root, p));
     if (/\.(md|json|toml|mjs|txt)$/.test(p)) { try { utf8.decode(buf); } catch { fails.push(`${p}: not UTF-8 text; a text file of the installation must be, since the record is compared as text — fix its encoding before migrating`); } }
     return { path: p, sha256: sha(buf), bytes: buf.length };

@@ -3,13 +3,14 @@
 An add-on no rule reads (specification 3.20), run only when the owner
 asks for a review of a product with a user interface. Its stage
 documents and templates sit in the source distribution's
-`design-review/` folder, which installation does not copy.
+`<source>/design-review/` folder, which installation does not copy.
 
 1. **Start.** Name the item, its approved timebox and an evidence lane
    the project's evidence rule allows. Find the local pm-skills 5 source;
    if it is not on this machine, ask the owner where it is, never
    fetch it or write the stages from memory. Copy its
-   `design-review/` folder into the lane as `<run>/method/`, record the
+   `<source>/design-review/` folder into the lane as `<run>/method/`,
+   record the
    source commit and each file's SHA-256, and read
    `<run>/method/README.md`.
 2. **Roles.** One model writes everything. A second model reviews at
