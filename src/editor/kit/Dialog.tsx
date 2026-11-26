@@ -2,9 +2,11 @@
 // element focus goes back to when it closes), its heading and its content, and whether it is open; it says when it
 // asks to close. Carbon gives the rest, and it is leaned on as Carbon 1.118 has it:
 // - focus moves in when it opens (Modal.js 262 to 275), to what carries `data-modal-primary-focus`: here the start of
-//   its content, a wrapper focusable by script only (`tabIndex` -1), not Carbon's default, the close button. From the
-//   content's start Tab goes on to its first control and Shift+Tab back to Close; a reader hears the dialog's name,
-//   then its content from the top;
+//   its content, a wrapper focusable by script only (`tabIndex` -1), not Carbon's default, the close button. While the
+//   content fits, from its start Tab goes on to its first control and Shift+Tab back to Close. When it does not fit
+//   (Help with three tables at 1280 by 800), Carbon makes the content a scrollable `region`, named by the heading and
+//   in the Tab order, which comes between: Shift+Tab from the start reaches that region first, and Close on a second
+//   press (FINDING-123). A reader hears the dialog's name, then its content from the top;
 // - Tab is kept inside by Carbon's wrap without sentinels (the `enable-focus-wrap-without-sentinels` flag, Modal.js
 //   106 and 121), so no hidden "Focus sentinel" link joins the page's reading or Tab order;
 // - Escape closes it (Modal.js 207 to 215, a keydown listener on `document` while it is open, which cancels the key),
