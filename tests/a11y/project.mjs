@@ -101,6 +101,8 @@ const dragBy = async (pointer, from, to, steps = 4) => {
 // The fields a person meets: those drawn (Carbon keeps a hidden number input beside its slider, never shown, D181).
 const shownFields = (page) => page.locator(FIELDS).filter({ visible: true });
 const UNDO = process.platform === 'darwin' ? 'Meta+z' : 'Control+z';
+// Redo's chord (CORE-06, brief 121): Cmd+Shift+Z on a Mac, Ctrl+Shift+Z elsewhere, as the editor's key list says.
+const REDO = process.platform === 'darwin' ? 'Meta+Shift+z' : 'Control+Shift+z';
 // Open project's chord (D207), as UNDO is built: Cmd+O on a Mac, Ctrl+O elsewhere.
 const OPEN_KEY = process.platform === 'darwin' ? 'Meta+o' : 'Control+o';
 // Presses Open project's chord where focus is and gives whether the page's own file chooser opened within `ms` and
@@ -2410,32 +2412,56 @@ export default {
       },
     },
     {
-      // 2.5.2 (CORE-06, brief 119, ruling U; D208): the hovered stretch, by the mouse alone. In pen-drawn's set-up (two
-      // taps, the second point selected, so the route is selected), skipped to the route's end, two pixels are read
-      // where only one mark draws, three tenths of the way along the line from the first tap (about 32 px from it and 21
-      // px from the line's middle, so clear of both points and of the "+" drawn at the middle, brief 120):
-      // the line's centre pixel (fully drawn by the line, alpha over 200, the route's hue), and a pixel beside it on the
-      // ray square to the line. That pixel is picked from the widths: the line is thickness × the frame's scale wide on
-      // the canvas (here about 1 px; its anti-aliased fringe ends 1 px out), and the halo's two strokes are the line's
-      // width + 9 and + 4 units (overlays.ts, GLOW), so the halo reaches at least 4.5 units out on each side and its blue
-      // at least 2. The pixel is the first one out from the centre that is fully transparent before the hover, clear of
-      // the line and its fringe (2 px at 1280 by 800), and it is used only within 3 px, inside the halo whatever the
-      // line's width (probed, brief 119, PROBE-119/probe). The mouse then moves, with no press, onto that place on the line:
-      // (1) the centre pixel reads in the line's own colour, as before the hover (within 24 a channel), not the halo's
-      // white and blue blended over it; (2) the pixel beside reads the halo (alpha over 200, blue at least green at
-      // least red, blue over 200: white or white under blue, never the route's hue). The mouse then leaves the
-      // preview in one move: (3) both read as before the hover (within 8 a channel). It claims nothing for 1.4.11 (the halo stays
-      // under the preview's set-aside), 1.4.13 or 2.5.7 (still owed, D250). Each reading fails with its fault put back
-      // (brief 119): (1) with the redraw over the glow removed, (2) with the idle move ignored, (3) with pointerleave
-      // not clearing the hover. Hovering has no touch form: under touch emulation it makes no touch input.
-      name: 'line-hover-halo',
+      // 2.5.2 (CORE-06, brief 121, ruling AD; brief 120's "+", D208's hover): a bend inserted by the "+" at a line's
+      // middle, completed on the up, undone in one step, and aborted by moving off before the up. It takes the place of
+      // brief 119's line-hover-halo, whose three hover readings it carries in as regression checks: the 2.5.2 credit
+      // rests on readings (5) to (8) alone (the press, the up, Undo and the abort; gpt-6-astra's condition on brief 120's
+      // range, its "added question"); (1) to (4) are hovers with no press and earn nothing by themselves.
+      // In pen-drawn's set-up (two taps, the second point selected, so the route is selected), skipped to the route's
+      // end, with the mouse off the preview, the whole canvas is read (pixels' hash) as the baseline.
+      // (1) to (3), as line-hover-halo read them: two pixels where only one mark draws, three tenths of the way along the
+      // line from the first tap (about 32 px from it and 21 px from the middle, clear of both points and of the "+"):
+      // the line's centre pixel (the most opaque within 1 px of the place, the route's hue, alpha over 200), and a pixel
+      // beside it on the ray square to the line, the first fully transparent one out from the centre, used only within
+      // 3 px (the halo's two strokes are the line's width + 9 and + 4 units, overlays.ts GLOW, so it reaches at least
+      // 4.5 units out; probed, brief 119). The mouse moves there with no press: (1) the centre pixel reads in the line's
+      // own colour, as before (within 24 a channel), not the halo blended over it; (2) the pixel beside reads the halo
+      // (alpha over 200, blue at least green at least red, blue over 200). The mouse leaves the preview in one move: (3)
+      // both read as before (within 8 a channel). Each fails with its fault put back (brief 119's (k), (l), (m)).
+      // (4) The mouse moves back onto the line's middle, the "+"'s place (the middle of the two taps: the line is
+      // straight, and the overlay draws the "+" at its middle sample, brief 120). plusHandle draws it active, the mouse on
+      // it, as a disc of radius 11 units filled in the accent #0f62fe with a white cross 2 units wide, arms 5.5 long; idle,
+      // radius 9, filled white with an accent cross. Probed (brief 121, PROBE-121/probe-plus.txt): at 1280 by 800 the
+      // canvas is 704 by 396 at 704 CSS px (ratio 1, unit 1). The "+" reads active when its centre pixel is the cross's
+      // white (alpha over 200, every channel over 230) and the four pixels 4 px out on its diagonals (5.7 px from the
+      // centre: inside the disc, off the cross) read the accent fill (alpha over 200, blue over 200, red under 60);
+      // idle, both would read the other way round. Offsets scale by the canvas's ratio.
+      // (5) A press on the "+" (through the pointer adapter) adds nothing before the up: while it is held the whole
+      // canvas reads as the baseline, so no mark is added anywhere, and no pixel within 2 px of the middle reads dark (a
+      // bend's mark is v3's grey dot, black at half alpha edged white: alpha over 100, every channel under 140; the line's
+      // own pixels there read red over 200). A down clears the hover, as every down does (dom.ts, point 6), so the "+"
+      // is not drawn while held: "as before the press" is read as the canvas before the mouse came onto the preview.
+      // (6) The up adds the point there: skipped to the end again (the mouse leaves for the button), at least three
+      // pixels within 2 px of the middle read dark, the new bend's grey dot (the reading point-drag-moves makes of a
+      // marker, where only that mark draws, by a bend's own mark), and the canvas is no longer the baseline.
+      // (7) One Undo (focus off the Skip button) and the whole canvas reads as the baseline again.
+      // (8) The abort: the mouse back on the "+" (it reads active again: the route is still selected, so the "+" is
+      // live), a press there moved in four steps to 32 px right and 32 px up (45 px from the "+", well beyond
+      // DRAG_THRESHOLD's 3 px and the "+"'s 12 px, and square to the line, beyond its 8 px), and released there: the
+      // whole canvas reads as the baseline (no point added), and one Redo then draws the grey dot at the middle again
+      // (the insert undone at (7) is still the step to redo, so the abort made no step).
+      // Faults that fail it (brief 121): (r) penTap's insert branch removed fails (6); (s) the insert done on the down
+      // fails (5); (t) a moved press giving a tap fails (8). Nothing is claimed for 2.5.8 (the "+"'s target size, D255),
+      // 1.4.11 (the "+" and the halo stay under the preview's set-aside), 1.4.13, or 2.5.7 (still owed, D250).
+      name: 'line-insert-plus',
       method: 'j-pointer',
       rows: ['2.5.2'],
-      run: async ({ page, open, record }) => {
+      run: async ({ page, open, record, pointer }) => {
         await open('pen-drawn');
         const now = async () => { await page.waitForTimeout(250); await twoFrames(page); };
-        await page.getByRole('button', { name: 'Skip to end' }).click();
-        await now();
+        const atEnd = async () => { await page.getByRole('button', { name: 'Skip to end' }).click(); await now(); };
+        const blur = () => page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+        await atEnd();
         // Where the two pixels are, in canvas pixels, from the taps and the canvas before the hover.
         // Three tenths along from the first tap: off the "+" at the middle (its hit 12 px, its disc 9 to 11) and the points.
         const ALONG = 0.3;
@@ -2457,7 +2483,25 @@ export default {
         const read = () => page.locator(CANVAS).evaluate((c, at) => at.map(([x, y]) => [...c.getContext('2d').getImageData(x, y, 1, 1).data]), [spot.line, spot.beside]);
         const same = (p, q, by) => p.every((v, i) => Math.abs(v - q[i]) <= by);
         const halo = ([r, g, b, a]) => a > 200 && b > 200 && b >= g && g >= r;
+        // The middle: the "+"'s centre pixel, its four diagonal pixels, and the dark pixels within 2 px (a bend's grey dot).
+        const MIDDLE = [(TAPS[0][0] + TAPS[1][0]) / 2, (TAPS[0][1] + TAPS[1][1]) / 2];
+        const middle = async () => ({ hash: (await pixels(page)).hash, ...(await page.locator(CANVAS).evaluate((c, [fx, fy]) => {
+          const ctx = c.getContext('2d');
+          const ratio = c.width / c.getBoundingClientRect().width;
+          const [cx, cy] = [Math.floor(fx * c.width), Math.floor(fy * c.height)];
+          const at = (dx, dy) => [...ctx.getImageData(cx + Math.round(dx * ratio), cy + Math.round(dy * ratio), 1, 1).data];
+          const reach = Math.max(2, Math.round(2 * ratio));
+          let dark = 0;
+          for (let dy = -reach; dy <= reach; dy += 1) for (let dx = -reach; dx <= reach; dx += 1) {
+            const [r, g, b, a] = ctx.getImageData(cx + dx, cy + dy, 1, 1).data;
+            if (a > 100 && r < 140 && g < 140 && b < 140) dark += 1;
+          }
+          return { centre: at(0, 0), diagonals: [at(4, 4), at(-4, 4), at(4, -4), at(-4, -4)], dark };
+        }, MIDDLE)) });
+        const active = ({ centre: [r, g, b, a], diagonals }) => a > 200 && r > 230 && g > 230 && b > 230 && diagonals.every(([dr, , db, da]) => da > 200 && db > 200 && dr < 60);
         const wrong = [];
+        const base = await middle();
+        if (base.dark !== 0) wrong.push(`before the hover ${base.dark} pixel(s) within 2 px of the middle read dark, with no point there`);
         const [line, beside] = await read();
         if (spot.d > 3) wrong.push('no pixel within 3 px of the line\'s centre, square to it, was clear of the line before the hover');
         if (!orange(line, 200)) wrong.push(`before the hover the line's centre pixel read rgba(${line}), not the line`);
@@ -2466,15 +2510,49 @@ export default {
         await page.mouse.move(box.x + box.width * (ax + (bx - ax) * ALONG), box.y + box.height * (ay + (by - ay) * ALONG), { steps: 4 });
         await now();
         const [lineOn, besideOn] = await read();
-        if (!same(lineOn, line, 24) || !orange(lineOn, 200)) wrong.push(`with the mouse on the line its centre pixel read rgba(${lineOn}), not the line's own rgba(${line})`);
-        if (!halo(besideOn)) wrong.push(`with the mouse on the line the pixel ${spot.d} px beside it read rgba(${besideOn}), not the halo`);
+        if (!same(lineOn, line, 24) || !orange(lineOn, 200)) wrong.push(`(1) with the mouse on the line its centre pixel read rgba(${lineOn}), not the line's own rgba(${line})`);
+        if (!halo(besideOn)) wrong.push(`(2) with the mouse on the line the pixel ${spot.d} px beside it read rgba(${besideOn}), not the halo`);
         // Off the preview in one move: the canvas hears pointer moves only over itself, so its pointerleave alone can
         // clear the hover (a move in steps would cross empty canvas first, and a move over nothing clears it too).
         await page.mouse.move(1, 1);
         await now();
         const [lineOff, besideOff] = await read();
-        if (!same(lineOff, line, 8) || !same(besideOff, beside, 8)) wrong.push(`after the mouse left the preview the two pixels read rgba(${lineOff}) and rgba(${besideOff}), not as before the hover, rgba(${line}) and rgba(${beside})`);
-        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, skipped to the end, the mouse moved with no press onto the line three tenths along from its first point, away from both points and the "+" at its middle: the line's centre pixel read in the line's own colour (rgba(${lineOn}), as before the hover rgba(${line})), and a pixel ${spot.d} px beside it, outside the line, read the halo (rgba(${besideOn})); after the mouse left the preview both read as before the hover`);
+        if (!same(lineOff, line, 8) || !same(besideOff, beside, 8)) wrong.push(`(3) after the mouse left the preview the two pixels read rgba(${lineOff}) and rgba(${besideOff}), not as before the hover, rgba(${line}) and rgba(${beside})`);
+        const plus = { x: box.x + box.width * MIDDLE[0], y: box.y + box.height * MIDDLE[1] };
+        await page.mouse.move(plus.x, plus.y, { steps: 4 });
+        await now();
+        const on = await middle();
+        if (!active(on)) wrong.push(`(4) with the mouse on the line's middle the "+" did not read active: its centre rgba(${on.centre}), its diagonals ${on.diagonals.map((p) => `rgba(${p})`).join(', ')}`);
+        await pointer.down(plus.x, plus.y);
+        await now();
+        const held = await middle();
+        if (held.hash !== base.hash || held.dark !== 0) wrong.push(`(5) while the press on the "+" was held the canvas was ${held.hash === base.hash ? '' : 'not '}as before, and ${held.dark} pixel(s) at the middle read dark`);
+        await pointer.up();
+        await atEnd();
+        const added = await middle();
+        if (added.dark < 3 || added.hash === base.hash) wrong.push(`(6) after the up ${added.dark} pixel(s) within 2 px of the middle read dark (a bend's grey dot reads at least 3)${added.hash === base.hash ? ', and the canvas was as before' : ''}`);
+        await blur();
+        await page.keyboard.press(UNDO);
+        await atEnd();
+        const undone = await middle();
+        if (undone.hash !== base.hash) wrong.push(`(7) after one Undo the canvas was not as before the insert (${undone.dark} pixel(s) at the middle read dark)`);
+        await page.mouse.move(plus.x, plus.y, { steps: 4 });
+        await now();
+        const again = await middle();
+        if (!active(again)) wrong.push(`(8) back on the line's middle after the Undo the "+" did not read active: its centre rgba(${again.centre})`);
+        await pointer.down(plus.x, plus.y);
+        for (let i = 1; i <= 4; i += 1) await pointer.move(plus.x + 8 * i, plus.y - 8 * i);
+        await pointer.up();
+        await page.mouse.move(1, 1);
+        await atEnd();
+        const aborted = await middle();
+        if (aborted.hash !== base.hash) wrong.push(`(8) after a press on the "+" moved 45 px off it and released there the canvas was not as before (${aborted.dark} pixel(s) at the middle read dark)`);
+        await blur();
+        await page.keyboard.press(REDO);
+        await atEnd();
+        const redone = await middle();
+        if (redone.dark < 3) wrong.push(`(8) after the abort one Redo did not draw the undone bend again (${redone.dark} pixel(s) at the middle read dark): the abort made a step`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, skipped to the end: (1) to (3), with no press, the mouse on the line three tenths along read its centre pixel in the line's own colour (rgba(${lineOn}), before rgba(${line})) and a pixel ${spot.d} px beside it in the halo (rgba(${besideOn})), both as before once the mouse left; (4) on the line's middle the "+" read active (centre rgba(${on.centre}), diagonals rgba(${on.diagonals[0]})); for 2.5.2: (5) a press on the "+", held, left the whole canvas as before the hover, nothing dark at the middle; (6) the up drew a bend's grey dot there (${added.dark} dark pixels within 2 px); (7) one Undo drew the whole canvas as before; (8) a press on the "+" moved 45 px off and released there left the canvas as before, and one Redo then drew the undone bend again (${redone.dark} dark pixels), so the abort made no step`);
       },
     },
     {
