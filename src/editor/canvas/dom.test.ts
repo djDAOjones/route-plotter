@@ -175,6 +175,35 @@ describe('the pen\'s tap', () => {
     expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
   });
 
+  // Brief 121, ruling AE (CODEX-LIST-CORE-06 line 33): the "+" inserts only where it is drawn, on the selected route
+  // (point 4d draws it for a hovered line of the selected route only): any points of it selected, or none.
+  it('on a line\'s "+" inserts while its route is selected, with several of its points selected or none', () => {
+    for (const picked of ['several', 'none'] as const) {
+      const { store, route, a, b, c } = scene();
+      store.select({ route: route.id, points: picked === 'several' ? [a, c] : [] });
+      const line = route.lines[0]?.id ?? '';
+      const command = penTap(store.getState(), tap({ kind: 'line', route: route.id, id: line, plus: { x: 0.4, y: 0.4 } }, { x: 0.4, y: 0.4 }));
+      expect(command, picked).not.toBeNull();
+      if (command) expect(store.dispatch(command).ok).toBe(true);
+      const added = routeOf(store).points.find((point) => ![a, b, c].includes(point.id));
+      expect(added, picked).toMatchObject({ x: 0.4, y: 0.4, kind: 'bend' });
+      expect(store.getState().selection).toEqual({ route: route.id, points: [added?.id] });
+    }
+  });
+
+  it('on a line\'s "+" means nothing with nothing selected, or with another route selected', () => {
+    const { store, route, other } = scene();
+    const line = route.lines[0]?.id ?? '';
+    const plus = { x: 0.4, y: 0.4 };
+    const onPlus = tap({ kind: 'line', route: route.id, id: line, plus }, plus);
+    store.select(NOTHING_SELECTED);
+    expect(penTap(store.getState(), onPlus)).toBeNull();
+    store.select({ route: other.id, points: [other.points[0]?.id ?? ''] });
+    expect(penTap(store.getState(), onPlus)).toBeNull();
+    store.select({ route: other.id, points: [] });
+    expect(penTap(store.getState(), onPlus)).toBeNull();
+  });
+
   it('on a line\'s "+" with a modifier held, or on another route\'s line, means nothing', () => {
     const { store, route, other } = scene();
     const line = route.lines[0]?.id ?? '';
@@ -187,6 +216,7 @@ describe('the pen\'s tap', () => {
 
   it('holds a "+" place beyond the picture to its edge (D237)', () => {
     const { store, route } = scene();
+    store.select({ route: route.id, points: [] });
     const line = route.lines[0]?.id ?? '';
     const command = penTap(store.getState(), tap({ kind: 'line', route: route.id, id: line, plus: { x: -0.1, y: 1.2 } }, { x: 0.5, y: 0.5 }));
     if (command) store.dispatch(command);

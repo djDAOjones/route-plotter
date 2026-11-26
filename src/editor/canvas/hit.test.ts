@@ -219,6 +219,17 @@ describe('a point under the pointer', () => {
   });
 });
 
+/** A line named by `lineAt` alone: it carries no `plus` (a "+" hit always does). */
+function lineOnly(under: ReturnType<typeof hitTest>): ReturnType<typeof hitTest> {
+  expect(under).not.toBeNull();
+  expect(under).not.toHaveProperty('plus');
+  return under;
+}
+
+function lineOf(made: ReturnType<typeof routeOf>, key: string) {
+  return { kind: 'line', route: made.route.id, id: made.id(key) };
+}
+
 describe('a line under the pointer', () => {
   // a at (100, 400), b at (900, 400): a straight line.
   const straight = () => routeOf({ a: [0.1, 0.5], b: [0.9, 0.5] }, ['a>b'], 'a');
@@ -246,11 +257,20 @@ describe('a line under the pointer', () => {
     });
   });
 
-  it('the nearest of two lines within 8 px is named', () => {
+  // The "+" case: at x 500 both lines' "+" are within 12 px, so the nearer "+" names its line (`plusAt`).
+  it('the nearest of two lines within 8 px is named (at the middle, by its "+")', () => {
     // Two parallel lines 10 px apart, at y 400 and 410; the second is a line the lead does not walk.
     const made = routeOf({ a: [0.1, 0.5], b: [0.9, 0.5], c: [0.1, 0.5125], d: [0.9, 0.5125] }, ['a>b', 'c>d'], 'a');
     expect(hitTest({ x: 500, y: 404 }, BOUNDS, [edited(made)])).toMatchObject({ id: made.id('a>b') });
     expect(hitTest({ x: 500, y: 406 }, BOUNDS, [edited(made)])).toMatchObject({ id: made.id('c>d') });
+  });
+
+  // CODEX-LIST-CORE-06 line 32: the same cases off every "+" (x 300, 200 px from each "+" at x 500, within 8 px of
+  // both lines), so the answer comes from `lineAt` alone, with no `plus`.
+  it('the nearest of two lines within 8 px is named (off every "+", by the line alone)', () => {
+    const made = routeOf({ a: [0.1, 0.5], b: [0.9, 0.5], c: [0.1, 0.5125], d: [0.9, 0.5125] }, ['a>b', 'c>d'], 'a');
+    expect(lineOnly(hitTest({ x: 300, y: 404 }, BOUNDS, [edited(made)]))).toEqual(lineOf(made, 'a>b'));
+    expect(lineOnly(hitTest({ x: 300, y: 406 }, BOUNDS, [edited(made)]))).toEqual(lineOf(made, 'c>d'));
   });
 
   // v3: "where the trunk and a branch are the same distance away, the trunk, drawn over it, is named". In v4 a route's
@@ -260,6 +280,8 @@ describe('a line under the pointer', () => {
     // Two lines over the same pixels: a to b, and c to d with c on a and d on b.
     const twin = { a: [0.1, 0.5], b: [0.9, 0.5], c: [0.1, 0.5], d: [0.9, 0.5] } as const;
 
+    // Each tie below is pressed twice: at x 500, on both lines' "+" (`plusAt`'s tie), and at x 300, off every "+"
+    // (`lineAt`'s tie, with no `plus`; CODEX-LIST-CORE-06 line 32).
     it('a line the lead leaves out is drawn after the walked lines, so it keeps the tie', () => {
       const fromA = routeOf(twin, ['a>b', 'c>d'], 'a');
       expect(fromA.timeline.walk.leftOut).toEqual([fromA.id('c>d')]);
@@ -267,6 +289,8 @@ describe('a line under the pointer', () => {
       const fromC = routeOf(twin, ['a>b', 'c>d'], 'c');
       expect(fromC.timeline.walk.leftOut).toEqual([fromC.id('a>b')]);
       expect(hitTest({ x: 500, y: 403 }, BOUNDS, [edited(fromC)])).toMatchObject({ id: fromC.id('a>b') });
+      expect(lineOnly(hitTest({ x: 300, y: 403 }, BOUNDS, [edited(fromA)]))).toEqual(lineOf(fromA, 'c>d'));
+      expect(lineOnly(hitTest({ x: 300, y: 403 }, BOUNDS, [edited(fromC)]))).toEqual(lineOf(fromC, 'a>b'));
     });
 
     it('of two walked lines, the later in the walk keeps the tie', () => {
@@ -277,6 +301,8 @@ describe('a line under the pointer', () => {
       expect(hitTest({ x: 500, y: 403 }, BOUNDS, [edited(bFirst)])).toMatchObject({ id: bFirst.id('a>d') });
       const dFirst = routeOf(spec, ['a>d', 'a>b'], 'a');
       expect(hitTest({ x: 500, y: 403 }, BOUNDS, [edited(dFirst)])).toMatchObject({ id: dFirst.id('a>b') });
+      expect(lineOnly(hitTest({ x: 300, y: 403 }, BOUNDS, [edited(bFirst)]))).toEqual(lineOf(bFirst, 'a>d'));
+      expect(lineOnly(hitTest({ x: 300, y: 403 }, BOUNDS, [edited(dFirst)]))).toEqual(lineOf(dFirst, 'a>b'));
     });
 
     it('of two routes, the later given keeps the tie', () => {
@@ -288,6 +314,8 @@ describe('a line under the pointer', () => {
         id: second.id('a>b'),
       });
       expect(hitTest({ x: 500, y: 403 }, BOUNDS, [edited(second), edited(first)])).toMatchObject({ route: first.route.id });
+      expect(lineOnly(hitTest({ x: 300, y: 403 }, BOUNDS, [edited(first), edited(second)]))).toEqual(lineOf(second, 'a>b'));
+      expect(lineOnly(hitTest({ x: 300, y: 403 }, BOUNDS, [edited(second), edited(first)]))).toEqual(lineOf(first, 'a>b'));
     });
   });
 });
