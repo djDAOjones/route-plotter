@@ -10,7 +10,7 @@ import { newLine, newPoint, newRoute, newScene, type IdSource, type Route } from
 import { composeTimeline } from '../../core/timing/timeline';
 import { NOTHING_SELECTED } from '../store/selection';
 import { createStore, type Store } from '../store/store';
-import { bindCanvas, cancelDrag, dragOpen, escapeClears, holdOnPicture, inCssPixels, MARKER_HALF, penTap, recordGeometry, type CanvasElement, type Geometry, type PointerFields } from './dom';
+import { bindCanvas, cancelDrag, dragOpen, escapeClears, holdOnPicture, inCssPixels, MARKER_HALF, penTap, recordGeometry, toggleTap, type CanvasElement, type Geometry, type PointerFields } from './dom';
 import type { Tap } from './gesture';
 import { createHover, type Hover } from './hover';
 import type { Modifiers, Under } from './pointer';
@@ -583,6 +583,116 @@ describe('a point\'s drag (point 5; brief 115, ruling T)', () => {
     expect(holdOnPicture(starts, -0.5, -0.6)).toEqual({ dx: -0.2, dy: -0.4 });
     expect(holdOnPicture(starts, 0.05, 0.7)).toEqual({ dx: 0.05, dy: 0.5 });
     expect(holdOnPicture([], 3, -3)).toEqual({ dx: 3, dy: -3 });
+  });
+});
+
+// Brief 122, ruling AH: a tap on a point of the first route with the platform's command key held, and no Alt and no
+// Shift, toggles it in or out of the selection (v3's Cmd/Ctrl+click, InteractionHandler.js:668-672); never a step.
+describe('the command key\'s toggle (point 2; brief 122, ruling AH)', () => {
+  const COMMAND: Modifiers = { ...NONE, meta: true };
+  const on = (route: string, id: string, modifiers = COMMAND) => tap({ kind: 'point', route, id }, { x: 0.5, y: 0.5 }, modifiers);
+
+  it('adds a point of the selected route at the end', () => {
+    const { store, route, a, b } = scene();
+    store.select({ route: route.id, points: [a] });
+    expect(toggleTap(store.getState(), on(route.id, b))).toEqual({ route: route.id, points: [a, b] });
+    store.select({ route: route.id, points: [] });
+    expect(toggleTap(store.getState(), on(route.id, b))).toEqual({ route: route.id, points: [b] });
+  });
+
+  it('takes a selected point out, the others\' order kept', () => {
+    const { store, route, a, b, c } = scene();
+    store.select({ route: route.id, points: [c, b, a] });
+    expect(toggleTap(store.getState(), on(route.id, b))).toEqual({ route: route.id, points: [c, a] });
+  });
+
+  it('takes out the last selected point: nothing selected, as Escape leaves it', () => {
+    const { store, route, b } = scene();
+    store.select({ route: route.id, points: [b] });
+    expect(toggleTap(store.getState(), on(route.id, b))).toEqual(NOTHING_SELECTED);
+  });
+
+  it('with nothing selected, or another route selected, selects that point alone', () => {
+    const { store, route, other, b } = scene();
+    store.select(NOTHING_SELECTED);
+    expect(toggleTap(store.getState(), on(route.id, b))).toEqual({ route: route.id, points: [b] });
+    store.select({ route: other.id, points: [other.points[0]?.id ?? ''] });
+    expect(toggleTap(store.getState(), on(route.id, b))).toEqual({ route: route.id, points: [b] });
+  });
+
+  it('means nothing with Shift or Alt held beside the command key, or with no command key', () => {
+    const { store, route, a, b } = scene();
+    store.select({ route: route.id, points: [a] });
+    for (const held of [{ ...COMMAND, shift: true }, { ...COMMAND, alt: true }, { ...NONE, shift: true }, { ...NONE, alt: true }, NONE]) {
+      expect(toggleTap(store.getState(), on(route.id, b, held)), JSON.stringify(held)).toBeNull();
+    }
+  });
+
+  it('means nothing on nothing, on a line, on its "+", or on another route\'s point', () => {
+    const { store, route, other, a } = scene();
+    store.select({ route: route.id, points: [a] });
+    const line = route.lines[0]?.id ?? '';
+    const plus = { x: 0.4, y: 0.4 };
+    expect(toggleTap(store.getState(), tap(null, plus, COMMAND))).toBeNull();
+    expect(toggleTap(store.getState(), tap({ kind: 'line', route: route.id, id: line }, plus, COMMAND))).toBeNull();
+    expect(toggleTap(store.getState(), tap({ kind: 'line', route: route.id, id: line, plus }, plus, COMMAND))).toBeNull();
+    expect(toggleTap(store.getState(), on(other.id, other.points[0]?.id ?? ''))).toBeNull();
+  });
+
+  for (const mac of [true, false]) {
+    const command = mac ? { metaKey: true } : { ctrlKey: true };
+    const notCommand = mac ? { ctrlKey: true } : { metaKey: true };
+    it(`on the page ${mac ? 'on a Mac, Cmd' : 'elsewhere, Ctrl'} toggles a point with no step; ${mac ? 'Ctrl' : 'Meta'}, Shift and Alt beside it, and taps off a point, do nothing`, () => {
+      const { canvas, store, unbind, route, a, b } = bound(drawnOf, mac);
+      store.select({ route: route.id, points: [a] });
+      const project = store.getState().project;
+      const tapAt = (x: number, y: number, held: Partial<PointerFields>) => {
+        canvas.fire('pointerdown', { ...client(x, y), ...held });
+        canvas.fire('pointerup', { ...client(x, y), ...held });
+      };
+      for (const held of [notCommand, { ...command, shiftKey: true }, { ...command, altKey: true }]) {
+        tapAt(0.6, 0.6, held);
+        expect(store.getState().selection, JSON.stringify(held)).toEqual({ route: route.id, points: [a] });
+      }
+      tapAt(0.3, 0.7, command);
+      tapAt(0.4, 0.4, command);
+      expect(store.getState().selection).toEqual({ route: route.id, points: [a] });
+      tapAt(0.6, 0.6, command);
+      expect(store.getState().selection).toEqual({ route: route.id, points: [a, b] });
+      tapAt(0.2, 0.2, command);
+      expect(store.getState().selection).toEqual({ route: route.id, points: [b] });
+      tapAt(0.6, 0.6, command);
+      expect(store.getState().selection).toEqual(NOTHING_SELECTED);
+      expect(store.getState().project).toBe(project);
+      expect(store.getState().undo).toBeNull();
+      unbind();
+    });
+  }
+
+  it('two points picked by the command key move together under a plain drag of one, as one step that one Undo puts back', () => {
+    const { canvas, store, unbind, route, a, b } = bound();
+    store.select(NOTHING_SELECTED);
+    for (const [x, y] of [[0.2, 0.2], [0.6, 0.6]] as const) {
+      canvas.fire('pointerdown', { ...client(x, y), metaKey: true });
+      canvas.fire('pointerup', { ...client(x, y), metaKey: true });
+    }
+    expect(store.getState().selection).toEqual({ route: route.id, points: [a, b] });
+    expect(store.getState().undo).toBeNull();
+    canvas.fire('pointerdown', client(0.6, 0.6));
+    canvas.fire('pointermove', client(0.65, 0.55));
+    canvas.fire('pointermove', client(0.7, 0.5));
+    canvas.fire('pointerup', client(0.7, 0.5));
+    expect(placeOf(store, b)?.x).toBeCloseTo(0.7, 9);
+    expect(placeOf(store, b)?.y).toBeCloseTo(0.5, 9);
+    expect(placeOf(store, a)?.x).toBeCloseTo(0.3, 9);
+    expect(placeOf(store, a)?.y).toBeCloseTo(0.1, 9);
+    expect(routeOf(store).points).toHaveLength(3);
+    expect(store.getState().undo).toBe('Move points');
+    expect(store.undo().ok).toBe(true);
+    expect(placeOf(store, a)).toEqual({ x: 0.2, y: 0.2 });
+    expect(placeOf(store, b)).toEqual({ x: 0.6, y: 0.6 });
+    expect(store.getState().undo).toBeNull();
+    unbind();
   });
 });
 

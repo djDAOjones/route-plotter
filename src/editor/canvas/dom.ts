@@ -18,9 +18,17 @@
 //    only where the "+" is drawn (point 4d of ../shell/previewLogic.ts: a hovered line of the selected route): while that route
 //    is the selected route, whatever points of it are selected, or none (brief 121, ruling AE, narrowing ruling Z's
 //    "whatever the pen stood on"); with nothing selected or another route selected, a tap on the "+"'s place means
-//    nothing. A tap on a line off its "+" (D254 asks the owner), on another route's point or line, and every tap with a
-//    modifier held, means nothing yet (the modifier taps F's and G's). A place beyond the picture, the tap's or the
-//    "+"'s, is held to its edge (D237: the clamp is the page's).
+//    nothing. A tap on a line off its "+" (D254 asks the owner), or on another route's point or line, means nothing yet.
+//    A place beyond the picture, the tap's or the "+"'s, is held to its edge (D237: the clamp is the page's).
+//    A tap with a modifier held is never the pen's. `toggleTap` (brief 122, ruling AH; v3's Cmd/Ctrl+click,
+//    InteractionHandler.js:668-672): a tap on a point of the first route with the platform's command key held (Cmd on a
+//    Mac, Ctrl elsewhere) and no Alt and no Shift changes the selection, never a step, never the project. That route
+//    selected, the point in the selection: taken out, the others' order kept, and with none left nothing is selected (as
+//    Escape leaves it); that route selected, the point not in it: added at the end; nothing selected, or another route:
+//    that point alone. It says nothing aloud (the pen's silence, A6). Every other tap with a modifier held means nothing:
+//    the command key on nothing, on a line or its "+", or on another route's point; any tap with Alt or Shift held (D257
+//    asks the owner whether v3's Shift+click delete comes back; Alt is G's branch); Ctrl on a Mac. A press with a
+//    modifier held never drags (pointer.ts, `pressed`), so a selection made this way is dragged by a plain press.
 // 3. `bindCanvas`: one `bindPointer` (gesture.ts) on one canvas. Each DOM pointer event is reduced to the machine's
 //    `PointerInput` (the place in the canvas's CSS pixels; a down carries what the hit test finds under it in the last
 //    frame drawn and the selection now); capture is asked for and released as the effects say. Listened for on the
@@ -32,7 +40,8 @@
 //    so a tap never hit-tests geometry older than the store: two quick taps on one empty place make one point, not two
 //    (brief 113, ruling K). When that paint did not record (it threw), the geometry is unknown and the down is not taken:
 //    nothing placed, nothing joined, never a point on top of one the frame has not drawn yet (brief 114, ruling P). A tap with any modifier held (Shift, Alt, Ctrl or Meta, on every platform) means nothing to
-//    the pen, whichever key is the platform's command key (ruling L). What it gives back first ends any press through
+//    the pen, whichever key is the platform's command key (ruling L); it goes to `toggleTap` (point 2), whose selection,
+//    if any, is selected with no command, so nothing is added to the history. What it gives back first ends any press through
 //    the machine, as a blur does (a drag's places and selection put back, no step, capture released: ruling J), then
 //    removes every listener with its original callback (React's strict mode mounts twice: no second binding is left).
 // 4. `escapeClears`: Escape's branch for the selection (ruling 8), last in keydown.ts's order (a drag, typed text, a
@@ -53,7 +62,7 @@ import type { ImageBounds } from '../../core/geometry/transform';
 import type { Frame } from '../../adapters/render/layers';
 import type { Screen } from '../../adapters/render/overlays';
 import type { Command } from '../store/command';
-import { NOTHING_SELECTED } from '../store/selection';
+import { NOTHING_SELECTED, type Selection } from '../store/selection';
 import type { Store } from '../store/store';
 import { penStep, splitLine } from './commands';
 import type { Start } from '../../core/model/commands/editing';
@@ -110,6 +119,18 @@ export function penTap({ project, selection }: Pick<ReturnType<Store['getState']
     return splitLine(route.id, under.id, { x: clamp(under.plus.x), y: clamp(under.plus.y), kind: 'bend' });
   }
   return null;
+}
+
+/** The selection a tap with the platform's command key held leaves (point 2), or null where it means nothing. */
+export function toggleTap({ project, selection }: Pick<ReturnType<Store['getState']>, 'project' | 'selection'>, tap: Tap): Selection | null {
+  const route = project.scene.routes[0];
+  const { alt, shift, meta } = tap.modifiers;
+  const { under } = tap;
+  if (route === undefined || !meta || alt || shift || under?.kind !== 'point' || under.route !== route.id) return null;
+  if (selection.route !== route.id) return { route: route.id, points: [under.id] };
+  if (!selection.points.includes(under.id)) return { route: route.id, points: [...selection.points, under.id] };
+  const points = selection.points.filter((id) => id !== under.id);
+  return points.length === 0 ? NOTHING_SELECTED : { route: route.id, points };
 }
 
 /** What `bindCanvas` reads of a pointer event: a real PointerEvent on the page, a plain object in Node. */
@@ -201,12 +222,17 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     if (drawn === null || cssWidth <= 0 || canvas.width <= 0) return null;
     return inCssPixels(drawn, canvas.width / cssWidth);
   };
-  /** Whether the event being sent had any modifier held, whichever is the platform's command key (ruling L). */
+  /** Whether the event being sent had any modifier held, whichever is the platform's command key (ruling L): the toggle's tap, not the pen's. */
   let held = false;
   const binding = bindPointer({
     store,
     bounds: () => inCss()?.bounds ?? { x: 0, y: 0, width: 1, height: 1, scale: 1 },
-    onTap: (tap) => (held ? null : penTap(store.getState(), tap)),
+    onTap: (tap) => {
+      if (!held) return penTap(store.getState(), tap);
+      const picked = toggleTap(store.getState(), tap);
+      if (picked !== null) store.select(picked);
+      return null;
+    },
     limit: holdOnPicture,
   });
 
