@@ -38,6 +38,8 @@
 
 ### The client progress page — the owner's word of 2026-11-25 — CLOSED 2026-11-25
 
+### pm-skills 5.0.3 — the owner's word of 2026-11-26 — CLOSED 2026-11-26
+
 ### Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
 
 - [ ] CORE-06 — Drawing routes on the canvas — since 2026-11-18 — (from: PLAN-6, 2026-11-18)

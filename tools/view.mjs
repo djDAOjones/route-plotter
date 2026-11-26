@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { join, dirname, basename, resolve, relative, isAbsolute, sep } from 'node:path';
 import { inspect, options, active, datesMentioned, sessionEndLines, sessionEnd, a11yPack, supersededBy } from './ledger.mjs';
-export const RENDERER = 'pm-skills 5 status site 1';
+export const RENDERER = 'pm-skills 5 status site 2';
 export const ARCHITECTURE_RENDERER = 'pm-skills 5 architecture page 1'; // in the fingerprint only with the record, so a site without it is unchanged; its number moves with any change to the page's markup or style, as RENDERER's does
 const GENERATOR = 'pm-skills 5 status site'; // the mark a folder carries before a build may replace it
 const args = options(['out', 'date', 'open', 'quiet']);
@@ -49,12 +49,12 @@ const dirty = inGit ? must('status', 'status', '--porcelain=v1', '--untracked-fi
 const SEARCH = 1000;
 let lastEnd = null;
 if (head) {
-  const log = must('history', 'log', '--first-parent', '-n', String(SEARCH), '--format=%H%x00%B%x1e', 'HEAD');
+  const log = must('history', 'log', '--first-parent', '-n', String(SEARCH), '--format=%H%x00%cs%x00%B%x1e', 'HEAD');
   for (const rec of log.split('\x1e')) {
-    const [hash, message = ''] = rec.replace(/^\n/, '').split('\x00');
+    const [hash, day = '', message = ''] = rec.replace(/^\n/, '').split('\x00');
     if (!hash || !sessionEndLines(message).length) continue;
     const { lines, end } = sessionEnd(message);
-    lastEnd = { hash, lines, end }; break; // the nearest one only; a malformed line never falls back to an older one
+    lastEnd = { hash, day, lines, end }; break; // the nearest one only; a malformed line never falls back to an older one
   }
 }
 const hash = createHash('sha256');
@@ -225,18 +225,30 @@ const shippedAll = tphases.flatMap((p) => p.lines.map((l) => ({ phase: p.name, l
 const latest = tphases.flatMap((p) => [...p.lines].reverse()).map((l, n) => ({ ...shippedAll.find((y) => y.line === l), n })).filter((x) => x.s).sort((a, b) => b.s.date.localeCompare(a.s.date) || a.n - b.n).slice(0, 4);
 const shippedLine = (x, up = '') => `${inline(x.line, up, SRC.trajectory)}${x.s && !state.items.has(x.s.id) ? ` ${noFile(x.s.id, up)}` : ''}`;
 const dates = datesMentioned(state.open);
+// A commit is named by its date first; the full commit and the ledger fingerprint, which an agent or a comparison needs
+// and a morning look does not, stand apart on their own line after it, unfolded so a page search finds them (VIEW-MONITOR, 6).
+const commitDate = head ? must('commit date', 'log', '-1', '--format=%cs', head).trim() : '';
+const short = (h) => `<span class="stamp">${h.slice(0, 12)}</span>`;
 const stamp = inGit && !head ? 'A Git checkout with no commit yet.' : head
-  ? `Commit <span class="stamp">${head}</span>; ${dirty.length ? `<strong>the ledger had ${dirty.length} uncommitted change(s) when this was built</strong> (${dirty.map((l) => esc(l.slice(3))).join(', ')})` : 'the ledger had no uncommitted changes when this was built'}.`
+  ? `Built from the commit of ${commitDate}; ${dirty.length ? `<strong>the ledger had ${dirty.length} uncommitted change(s) when this was built</strong> (${dirty.map((l) => esc(l.slice(3))).join(', ')})` : 'the ledger had no uncommitted changes when this was built'}.`
   : 'Not built in a Git checkout: no commit can be named.';
 const KEEP_HOURS = 24; // how long a generation outlives its last publication, so a page left open survives refreshes
 // The site bar's and the contents' links are each a 44 × 44 px target with a gap between (V31-DESIGN-REVIEW FX-4, V-03);
-// links inside sentences and tables keep their size.
+// links inside sentences keep their size.
+// An ID link standing alone, in a table cell, the owner card or the glance, and a note link beside it (its decision, its
+// acceptance criteria) is a 44 × 44 px target too: outside a sentence, neither 2.5.5's nor 2.5.8's in-text exception
+// covers it (VIEW-MONITOR, 7).
 // Every text colour (ink, muted, accent, warn) is at least 7:1 on every surface (surface, ground, warn-soft, ok-soft) in
 // both schemes (FX-8, V-02).
 // Body text is 0.9375rem, 15 px at the default size, so a larger default font reaches it too (FX-7, V-07).
 // A focused link scrolls in with its 6 px ring inside the viewport: browsers scroll to the box, leaving the ring past the
 // edge (V31-SITE-FIX, V-14, measured).
 // Inline code has no side padding in a sentence: a wrapped token's padding stood 2–3 px past its box in WebKit (V-17, measured).
+// A folded section's summary line is a 44 px target too (VIEW-MONITOR, 3).
+// The contents run as one wrapping row of 44 px targets, not a column a link a line, so they no longer fill the first
+// screen before the owner's card (VIEW-MONITOR, 5).
+// Below 40em the open-work table stacks: each line a block, ID, then the item at the full width, then its state and since
+// date on one line, so a phone keeps the text readable and no date breaks mid-word (VIEW-MONITOR, 4).
 // Paragraph and list text keeps a measure of about 65–70 characters; tables, and a point holding one, keep the page's width
 // (FX-9, V-06).
 const CSS = `:root{--ink:#14181F;--muted:#48505C;--rule:#D9E0E9;--surface:#fff;--ground:#F6F8FA;--accent:#1F4E8C;--warn:#754308;--warn-soft:#FBF0DE;--ok:#1F6B4A;--ok-soft:#E4F3EB}
@@ -245,28 +257,33 @@ body{margin:0;background:var(--ground);color:var(--ink);font:0.9375rem/1.5 syste
 h1{font-size:1.5rem;margin:0 0 .25rem}h2{font-size:1.1rem;margin:1.6rem 0 .5rem;border-bottom:1px solid var(--rule);padding-bottom:.25rem}h3,h4{font-size:.95rem;margin:1rem 0 .3rem;color:var(--muted)}
 .meta{color:var(--muted);font-size:.85rem}.card{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;margin:.5rem 0}
 .owner{border-left:3px solid var(--warn);background:var(--warn-soft)}.warns{border-left:3px solid var(--muted)}.ok{border-left:3px solid var(--ok);background:var(--ok-soft)}
+.glance{border-left:3px solid var(--accent)}.glance h2{margin:0 0 .3rem;border:0;padding:0}.glance ul{margin-left:0;padding-left:0;list-style:none}
+summary{cursor:pointer;min-height:44px;box-sizing:border-box;padding:.6rem 0}
+@media(max-width:40em){table.work,table.work tr,table.work td{display:block}table.work th{display:none}table.work tr{border-bottom:1px solid var(--rule);padding:.4rem 0}table.work td{border:0;padding:.15rem 0}table.work td:nth-child(3),table.work td.since{display:inline-block;margin-right:.6rem}table.work td.since::before{content:"since "}}
 table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{text-align:left;padding:.4rem .5rem;border-bottom:1px solid var(--rule);vertical-align:top}th{color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.06em}
 code{background:var(--ground);border:1px solid var(--rule);border-radius:3px;padding:.05em .3em;font-size:.9em}.id{font-family:ui-monospace,monospace;font-weight:600;white-space:nowrap}
 .tag{display:inline-block;font-size:.72rem;padding:.05rem .45rem;border-radius:3px;border:1px solid var(--rule);color:var(--muted)}.tag.owner{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
-:focus-visible{outline:3px solid var(--accent);outline-offset:3px}nav ul{columns:2 12rem;margin:.3rem 0 0 1.2rem}a{color:var(--accent)}td,li,p{overflow-wrap:anywhere}.stamp{font-family:ui-monospace,monospace;font-size:.8rem;overflow-wrap:anywhere}ul,ol{margin:.3rem 0 .3rem 1.2rem}.tw{overflow-x:auto}
-.site{margin:0 0 .6rem;font-size:.9rem;display:flex;flex-wrap:wrap;gap:.25rem 1rem}nav li{margin:.25rem 0;break-inside:avoid}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}nav ul{display:flex;flex-wrap:wrap;gap:.25rem .75rem;list-style:none;margin:.3rem 0 0;padding:0}a{color:var(--accent)}td,li,p{overflow-wrap:anywhere}.stamp{font-family:ui-monospace,monospace;font-size:.8rem;overflow-wrap:anywhere}ul,ol{margin:.3rem 0 .3rem 1.2rem}.tw{overflow-x:auto}
+.site{margin:0 0 .6rem;font-size:.9rem;display:flex;flex-wrap:wrap;gap:.25rem 1rem}nav li{margin:0}
 .site a,nav li a{display:inline-flex;align-items:center;box-sizing:border-box;min-height:44px;min-width:44px;padding:0 .25rem}
+a.id,a.meta{display:inline-flex;align-items:center;box-sizing:border-box;min-height:44px;min-width:44px}
 p,li,.lead{max-width:58ch}li.wide{max-width:none}.lead{display:block}a,[tabindex]{scroll-margin:.75rem}li code,p code{padding-inline:0}pre.file{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:.8rem 1rem;font:.85rem/1.45 ui-monospace,monospace}`;
 // What the page is and how fresh: after the heading, or where a page's body places it: the dashboard's after the owner's
 // card, so what waits on the owner comes first (V31-DESIGN-REVIEW FX-10, V-04).
-const about = (links) => `<p class="meta">A snapshot as of its last refresh, never live: refresh it after the ledger changes. ${stamp} Ledger fingerprint <span class="stamp">${fingerprint}</span>, over ${sourcePaths.length} files the checker read. Check date ${date}. ${esc(RENDERER)}. Agents read the source files.</p>${links.latest ? `\n<p class="meta">This page is one refresh's copy: This refresh opens the dashboard of the same refresh, Dashboard the newest one. A copy is kept for at least ${KEEP_HOURS} hours after it was last refreshed, and always while it is the newest or the one before; after that a refresh may remove it, and this page then fails to reload: open ${esc(basename(out))} again.</p>` : ''}`;
+const exact = `<p class="meta exact">The exact build: ${head ? `Commit <span class="stamp">${head}</span>. ` : ''}Ledger fingerprint <span class="stamp">${fingerprint}</span>, over ${sourcePaths.length} files the checker read.</p>`;
+const about = (links) => `<p class="meta">A snapshot as of its last refresh, never live: refresh it after the ledger changes. ${stamp} Check date ${date}. ${esc(RENDERER)}. Agents read the source files.</p>${links.latest ? `\n<p class="meta">This page is one refresh's copy: This refresh opens the dashboard of the same refresh, Dashboard the newest one. A copy is kept for at least ${KEEP_HOURS} hours after it was last refreshed, and always while it is the newest or the one before; after that a refresh may remove it, and this page then fails to reload: open ${esc(basename(out))} again.</p>` : ''}\n${exact}`;
 // One main landmark holds the page; the site bar is a navigation landmark named Site, the contents another named Contents
 // (V31-DESIGN-REVIEW FX-6, V-12).
 // links: home, the dashboard of the same build; latest, the refreshed dashboard, only on a generation's pages; gen, the
 // generation a top dashboard names, so the next build knows which one to keep beside its own.
-const shell = (heading, up, links, nav, body, css = '') => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="${esc(RENDERER)}">${links.gen ? `<meta name="pm-next-generation" content="${links.gen}">` : ''}<title>${esc(heading.startsWith(title) ? heading : `${heading} — ${title}`)}</title>
+const shell = (heading, up, links, nav, body, css = '', top = '') => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="${esc(RENDERER)}">${links.gen ? `<meta name="pm-next-generation" content="${links.gen}">` : ''}<title>${esc(heading.startsWith(title) ? heading : `${heading} — ${title}`)}</title>
 <style>
 ${CSS}${css}
 </style></head><body><div class="wrap">
 <nav class="site" aria-label="Site"><a href="${links.home}">${links.latest ? 'This refresh' : 'Dashboard'}</a><a href="${up}record.html">Record</a><a href="${up}record.html#items">Item pages</a>${arch ? `<a href="${up}architecture.html">Architecture</a>` : ''}${links.latest ? `<a href="${links.latest}">Dashboard</a>` : ''}</nav>
 <main>
 <h1>${esc(heading)}</h1>
-${typeof body === 'function' ? '' : `${about(links)}\n`}${nav.length ? `<nav aria-label="Contents" id="contents-nav"><ul>${nav.map(([id, name]) => `<li><a href="#${id}">${esc(name)}</a></li>`).join('')}</ul></nav>\n` : ''}${typeof body === 'function' ? body(about(links)) : body}
+${top}${typeof body === 'function' ? '' : `${about(links)}\n`}${nav.length ? `<nav aria-label="Contents" id="contents-nav"><ul>${nav.map(([id, name]) => `<li><a href="#${id}">${esc(name)}</a></li>`).join('')}</ul></nav>\n` : ''}${typeof body === 'function' ? body(about(links)) : body}
 </main>
 </div></body></html>
 `;
@@ -277,27 +294,61 @@ ${typeof body === 'function' ? '' : `${about(links)}\n`}${nav.length ? `<nav ari
 const shut = (p) => !p.items.length && / — CLOSED /.test(p.name);
 const dashNav = [['owner', 'Needs the owner'], ['session', 'Last session end'], ['open', 'Open work'], ['latest', 'Latest outcomes'], ['dates', 'Dates mentioned']];
 // An owner card entry: the ID, its blocker and next step, its title only where it has neither; open work has the rest (V-16).
+// Each line says how long it has waited, in days from its since date to the check date, the build's only date input, and
+// one waiting more than STALL_DAYS is marked stalled, so the oldest stops show on a morning look (VIEW-MONITOR, 1).
+const STALL_DAYS = 30;
+const DAY_MS = 864e5, waited = (since) => Math.round((Date.parse(`${date}T00:00:00Z`) - Date.parse(`${since}T00:00:00Z`)) / DAY_MS);
+const stalled = (i) => waited(i.since) > STALL_DAYS;
+// A since date after the check date is said so, never as a negative count (review 1.4).
+const age = (i) => { const d = waited(i.since); return Number.isFinite(d) ? `<span class="meta">since ${i.since}, ${d < 0 ? 'dated after the check' : `${d} day${d === 1 ? '' : 's'}`}</span>${d > STALL_DAYS ? ' <span class="tag owner">stalled</span>' : ''}` : ''; };
 const ownerEntry = (i, up) => {
   const next = (state.items.get(i.id)?.now || '').match(/^Next step:\s*(\S[\s\S]*?)\s*(?:\n\s*\n|$(?![\s\S]))/m)?.[1].replace(/\s*\n\s*/g, ' '), parts = [i.blocked && `<strong>blocked:</strong> ${inline(i.blocked, up, SRC.backlog)}`, next && `<strong>next:</strong> ${inline(next, up, itemSrc(i.id))}`].filter(Boolean);
-  return `${idCell(i.id, up)} — ${parts.join(' — ') || inline(i.title, up, SRC.backlog)}`;
+  return `${idCell(i.id, up)} ${age(i)} — ${parts.join(' — ') || inline(i.title, up, SRC.backlog)}`;
+};
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const waiting = needsOwner.length + delegated.length; // the backlog's [!] lines and the delegated signatures the card lists alike (VIEW-MONITOR, 2)
+const ownerSummary = () => { const n = needsOwner.filter(stalled).length; return waiting ? `<p><strong>${plural(waiting, 'line')} wait${waiting === 1 ? 's' : ''} on the owner</strong>${delegated.length ? ` (${plural(needsOwner.length, 'backlog line')}, ${plural(delegated.length, 'delegated signature')})` : ''}${n ? `; ${n} for more than ${STALL_DAYS} days, marked stalled` : ''}.</p>` : ''; };
+// At a glance (VIEW-MONITOR, 2): above the contents, the four answers a morning look wants: what waits on the owner, what
+// is in progress, what shipped last, and the commit with its date. In progress is the [~] mark alone; with none, it says so.
+// It names the first GLANCE_MAX in backlog order and counts the rest, so a long list keeps the box short on a phone; open
+// work lists them all.
+const GLANCE_MAX = 5;
+const glance = (up) => {
+  const going = openItems.filter((i) => i.mark === '~'), last = latest[0]?.s, link = (id) => state.items.has(id) ? `<a class="id" href="${page(id, up)}">${id}</a>` : `<span class="id">${id}</span>`;
+  const stalledN = needsOwner.filter(stalled).length;
+  return `<div class="card glance"><h2 id="glance">At a glance</h2><ul>
+<li><strong>Waiting on the owner:</strong> ${waiting ? `${waiting}${delegated.length ? ` (${plural(needsOwner.length, 'backlog line')}, ${plural(delegated.length, 'delegated signature')})` : ''}${stalledN ? `, ${stalledN} stalled` : ''} — <a href="#owner">the list</a>` : 'nothing'}.</li>
+<li><strong>In progress:</strong> ${going.length ? `${going.slice(0, GLANCE_MAX).map((i) => link(i.id)).join(', ')}${going.length > GLANCE_MAX ? ` and ${going.length - GLANCE_MAX} more` : ''} — <a href="#open">open work</a>` : 'nothing is marked in progress ([~]) in the backlog'}.</li>
+<li><strong>Last shipped:</strong> ${last ? `${link(last.id)}, ${last.date} — <a href="#latest">latest outcomes</a>` : 'nothing yet'}.</li>
+<li><strong>Built from:</strong> ${head ? `commit ${head.slice(0, 12)} of ${commitDate}` : 'no commit'}${dirty.length ? ', with uncommitted ledger changes' : ''}; checked ${date}.</li>
+</ul></div>
+`;
+};
+// The maintenance warnings fold into one line with their count, each distinct line once with how often it came, so they
+// never stand between the owner and the open work; no script, the element folds by itself (VIEW-MONITOR, 3).
+const warnCard = () => {
+  const all = [...state.warns, ...(arch?.problems.length ? [`${ARCH_SRC}: ${arch.problems.length} problem(s) in its envelope, which the checker fails; the architecture page lists them`] : [])];
+  if (!all.length) return '';
+  const seen = new Map(); for (const w of all) seen.set(w, (seen.get(w) || 0) + 1);
+  return `<details class="card warns"><summary><strong>Maintenance warnings: ${all.length}</strong>${seen.size < all.length ? `, ${seen.size} distinct` : ''} <span class="meta">— the record's upkeep, folded; open to read</span></summary><ul>${[...seen].map(([w, k]) => `<li>${esc(w)}${k > 1 ? ` <span class="meta">(${k} times)</span>` : ''}</li>`).join('')}</ul></details>`;
 };
 const dashboardAt = (up, links) => shell(`${title} — status`, up, links, dashNav, (about) => `<h2 id="owner">Needs the owner</h2>
-${needsOwner.length || delegated.length ? `<div class="card owner"><ul>${needsOwner.map((i) => `<li>${ownerEntry(i, up)}</li>`).join('')}${delegated.map((s) => `<li>${esc(s.file)} — signed by delegation by ${esc(s.name)} on ${esc(s.date)}, authority: ${esc(s.authority)} — needs the owner's reviewed signature</li>`).join('')}</ul></div>` : `<div class="card ok"><strong>Nothing waits on the owner.</strong></div>`}
+${waiting ? `<div class="card owner">${ownerSummary()}<ul>${needsOwner.map((i) => `<li>${ownerEntry(i, up)}</li>`).join('')}${delegated.map((s) => `<li>${esc(s.file)} — signed by delegation by ${esc(s.name)} on ${esc(s.date)}, authority: ${esc(s.authority)} — needs the owner's reviewed signature</li>`).join('')}</ul></div>` : `<div class="card ok"><strong>Nothing waits on the owner.</strong></div>`}
 ${about}
 <h2 id="session">Last session end</h2>
-${!head ? '<p class="meta">No Git history to read.</p>' : !lastEnd ? '<p class="meta">No commit among the latest ' + SEARCH + ' on the first-parent history carries a Session-end line.</p>' : `<div class="card">${lastEnd.end ? `<p>${ids(esc(`Session-end: ${lastEnd.end.status} — next ${lastEnd.end.next} — ${lastEnd.end.reason}`), up)}</p><p class="meta">Commit <span class="stamp">${lastEnd.hash}</span>; next item ${lastEnd.end.next === 'none' ? 'none' : idCell(lastEnd.end.next, up)}. History, not an instruction: a session continues only as the record says.</p>` : `<p><strong>The nearest Session-end lines are malformed</strong> in commit <span class="stamp">${lastEnd.hash}</span>:</p><ul>${lastEnd.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`}</div>`}
+${!head ? '<p class="meta">No Git history to read.</p>' : !lastEnd ? '<p class="meta">No commit among the latest ' + SEARCH + ' on the first-parent history carries a Session-end line.</p>' : `<div class="card">${lastEnd.end ? `<p>${ids(esc(`Session-end: ${lastEnd.end.status} — next ${lastEnd.end.next} — ${lastEnd.end.reason}`), up)}</p><p class="meta">The commit of ${lastEnd.day}, ${short(lastEnd.hash)}; next item ${lastEnd.end.next === 'none' ? 'none' : idCell(lastEnd.end.next, up)}. History, not an instruction: a session continues only as the record says.</p>` : `<p><strong>The nearest Session-end lines are malformed</strong> in the commit of ${lastEnd.day}, ${short(lastEnd.hash)}:</p><ul>${lastEnd.lines.map((l) => `<li>${esc(l)}</li>`).join('')}</ul>`}</div>`}
 ${recall ? `<div class="card ${recall.score === '8' ? 'ok' : 'owner'}"><strong>Last recall check:</strong> ${recall.score}/8 on ${recall.date} (${recall.mode})</div>` : ''}
-${state.warns.length || arch?.problems.length ? `<div class="card warns"><strong>Maintenance warnings</strong><ul>${[...state.warns, ...(arch?.problems.length ? [`${ARCH_SRC}: ${arch.problems.length} problem(s) in its envelope, which the checker fails; the architecture page lists them`] : [])].map((w) => `<li>${esc(w)}</li>`).join('')}</ul></div>` : ''}
+${warnCard()}
 <h2 id="open">Open work</h2>
 <p class="meta">State is the line's mark alone; a blocker is shown apart and does not make a line the owner's. An ID with an item file opens its page: its acceptance criteria, its notes.</p>
-${milestones.map((m) => { const closed = m.phases.filter(shut); return `<h3>${m.name}</h3>${m.phases.filter((p) => !shut(p)).map((p) => `${p.name ? `<div class="meta">${esc(p.name)}</div>` : ''}${tw(esc(`Open work: ${m.name}${p.name ? `, ${p.name}` : ''}`), `<table><tr><th>ID</th><th>Item</th><th>State</th><th>Since</th></tr>${p.items.map((i) => { const it = state.items.get(i.id); return `<tr id="item-${i.id}"><td>${idCell(i.id, up)}</td><td>${inline(i.title, up, SRC.backlog)}${meta(i, up)}${it?.now ? `<div class="now"><strong>Now:</strong>${paras(it.now, up, itemSrc(i.id))}</div>` : ''}${it ? `<br><a class="meta" href="${page(i.id, up)}#acceptance-criteria">${i.id}: acceptance criteria (${it.criteria.length})</a>` : ''}</td><td><span class="tag${i.mark === '!' ? ' owner' : ''}">${markLabel[i.mark]}</span></td><td>${i.since}</td></tr>`; }).join('') || '<tr><td colspan="4" class="meta">none</td></tr>'}</table>`)}`).join('')}${closed.length ? `<p class="meta">Closed, nothing open: ${closed.map((p) => esc(p.name)).join('; ')}.</p>` : ''}`; }).join('')}
+${milestones.map((m) => { const closed = m.phases.filter(shut); return `<h3>${m.name}</h3>${m.phases.filter((p) => !shut(p)).map((p) => `${p.name ? `<div class="meta">${esc(p.name)}</div>` : ''}${tw(esc(`Open work: ${m.name}${p.name ? `, ${p.name}` : ''}`), `<table class="work"><tr><th>ID</th><th>Item</th><th>State</th><th>Since</th></tr>${p.items.map((i) => { const it = state.items.get(i.id); return `<tr id="item-${i.id}"><td>${idCell(i.id, up)}</td><td>${inline(i.title, up, SRC.backlog)}${meta(i, up)}${it?.now ? `<div class="now"><strong>Now:</strong>${paras(it.now, up, itemSrc(i.id))}</div>` : ''}${it ? `<br><a class="meta" href="${page(i.id, up)}#acceptance-criteria">${i.id}: acceptance criteria (${it.criteria.length})</a>` : ''}</td><td><span class="tag${i.mark === '!' ? ' owner' : ''}">${markLabel[i.mark]}</span></td><td class="since">${i.since}</td></tr>`; }).join('') || '<tr><td colspan="4" class="meta">none</td></tr>'}</table>`)}`).join('')}${closed.length ? `<p class="meta">Closed, nothing open: ${closed.map((p) => esc(p.name)).join('; ')}.</p>` : ''}`; }).join('')}
 <h2 id="latest">Latest outcomes</h2>
 <p class="meta">The newest trajectory lines, word for word: each says its own outcome.</p>
 <ul>${latest.map((x) => `<li>${shippedLine(x, up)}</li>`).join('') || '<li class="meta">nothing yet</li>'}</ul>
 <h2 id="dates">Dates mentioned</h2>
 <p class="meta">Every date in an open line's title or blocker, oldest first; since dates left out. None of them is called a deadline here.</p>
 ${tw('Dates mentioned', `<table><tr><th>Date</th><th>ID</th><th>Where</th><th>Clause</th></tr>${dates.map((d) => `<tr><td>${d.date}</td><td>${idCell(d.id, up)}</td><td>${d.part}</td><td>${inline(d.clause, up, SRC.backlog)}</td></tr>`).join('') || '<tr><td colspan="4" class="meta">none</td></tr>'}</table>`)}
-<p class="meta">The decisions, archives, trajectory, wish-list, standards, profile and <a href="${up}record.html#terms">the site's terms</a> are on <a href="${up}record.html">the record page</a>.</p>`);
+<p class="meta">The decisions, archives, trajectory, wish-list, standards, profile and <a href="${up}record.html#terms">the site's terms</a> are on <a href="${up}record.html">the record page</a>.</p>`, '', glance(up));
 
 // ---- the record page: everything else the single page showed, item criteria now on the item pages
 const itemIds = [...state.items.keys()].sort();
