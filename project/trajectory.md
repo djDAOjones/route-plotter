@@ -8,6 +8,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## pm-skills 5.0.3 — the owner's word of 2026-11-26
+
+- REFRESH-503 — the project runs pm-skills 5.0.3: the version stamp, three tools and three verbs replaced as a set, the accessibility pack's three tools kept by decision, no pack, no signed file touched, no local edit lost, by pull request (2026-11-26) — see decisions
+
 ## The client progress page — the owner's word of 2026-11-25
 
 - PROG-01 — the publishing step writes a client progress page from the record into each publish, at `progress/` on the site: v4 by phase, every v4 item, the record's history and the rest; plain names in `progress/names.json`; loads nothing from another site, by pull request (2026-11-25) — see decisions

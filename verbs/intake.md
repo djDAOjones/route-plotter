@@ -40,7 +40,9 @@ old contents are merged into the installed file by hand.
    tasks naming the project. Before step 5 each is landed, carried into
    the record, or set aside on the owner's word, recorded.
 2. **Ask only what you cannot infer**, in one short list: the gate
-   command if none exists (for an existing project, its own gate
+   command if none exists (while the project has no tests, offer
+   `node tools/check.mjs` as the default, changed by a decision when
+   tests come; for an existing project, its own gate
    command also runs `node tools/check.mjs`, so a fault in the ledger
    fails the gate wherever it runs; say so in the adoption decision),
    hosting, the harness and its surface, the
@@ -62,7 +64,15 @@ old contents are merged into the installed file by hand.
    milestones; empty decisions, trajectory and wish-list. For an
    existing project: the brief from what is known, the open work you
    can find as backlog lines with IDs, and one decision recording the
-   adoption and what was carried over. For both: the rules file from the
+   adoption and what was carried over. For a 4.x project, by the 4.x
+   route: name every rulebook the contract routes, `PROCESS.md` say,
+   with `--rules` at the snapshot; a carried wish line ends
+   `— (from: ORIGIN, YYYY-MM-DD)`, its origin and date from the 4.x
+   line; one with no origin takes this intake's ID and date, never a
+   guessed one; the snapshot sees a ticket only when its backlog line
+   links it as a `[detail]` link, and reads no backlog line below a
+   generated block: carry those by hand and say so in the INTAKE
+   decision. For both: the rules file from the
    existing rulebooks, every guess marked and any migration-only
    constraint carrying `until:`; the profile's Push line (the harness
    pushes to origin after every close unless the owner records
@@ -160,7 +170,7 @@ read or check.
   if a file differs, and prints the rest.
 - **By hand:** the profile's line and the rules file's By-task row,
   as the templates' comments give them; the depth's entries from
-  `a11y/package.fragment.json` merged into package.json, nothing
+  `<source>/a11y/package.fragment.json` merged into package.json, nothing
   overwritten; `eslint.a11y.mjs` imported; `npm run a11y` in the gate;
   each new dev dependency on the owner's approval; then
   `node tools/check.mjs`.
@@ -185,16 +195,17 @@ gains no file, read or check.
   and the ratchet type check? (yes)". A yes authorises no dependency:
   ask the owner next for TypeScript 5.6 or later as the project's own
   dev dependency.
-- **TypeScript declined:** copy `jsdoc/project/digests/jsdoc.md` alone,
+- **TypeScript declined:** copy `<source>/jsdoc/project/digests/jsdoc.md` alone,
   overwriting no file that differs, adopt it in Standards with its
   By-task row, and write no line: no ratchet, configuration or compiler check.
 - **TypeScript approved:** copy from the source distribution, never a
   download, overwriting no file that differs,
-  `jsdoc/project/digests/jsdoc.md`, `jsdoc/tools/jsdoc-ratchet.mjs` and
-  `jsdoc/tsconfig.jsdoc.json`, each to its path without the `jsdoc/`
-  prefix. By hand: the
+  `<source>/jsdoc/project/digests/jsdoc.md`,
+  `<source>/jsdoc/tools/jsdoc-ratchet.mjs` and
+  `<source>/jsdoc/tsconfig.jsdoc.json`, each to its path without the
+  `<source>/jsdoc/` prefix. By hand: the
   configuration's include and lib fitted to the source; the
-  `typecheck` script from `jsdoc/package.fragment.json`
+  `typecheck` script from `<source>/jsdoc/package.fragment.json`
   merged, nothing overwritten; the profile's line, the Standards block
   and the By-task row as the templates' comments give them; `npm run
   typecheck` in the Gate line; the ratchet's `--init` once, the count
@@ -212,16 +223,17 @@ nothing gains no file, read or check.
   "This app sends prompts to a model. Adopt the promptfoo evaluation
   pack? (yes)". A yes authorises no dependency: ask the owner next for
   promptfoo as the project's own dev dependency.
-- **promptfoo declined:** copy `promptfoo/docs/evals.md` alone to
+- **promptfoo declined:** copy `<source>/promptfoo/docs/evals.md` alone to
   docs/evals.md, overwriting no file that differs, add its By-task
   row, and write no line: no configuration, replay or check.
 - **promptfoo approved:** copy from the source distribution, never a
-  download, overwriting no file that differs, `promptfoo/docs/evals.md`
-  and everything under `promptfoo/evals/`, each to its path without
-  the `promptfoo/` prefix. By hand: the example prompt, cases and
+  download, overwriting no file that differs,
+  `<source>/promptfoo/docs/evals.md` and everything under
+  `<source>/promptfoo/evals/`, each to its path without the
+  `<source>/promptfoo/` prefix. By hand: the example prompt, cases and
   recordings replaced by the app's own, outputs recorded live only on
   the owner's word, the provider, host and cost named in a decision;
-  the two scripts from `promptfoo/package.fragment.json` merged,
+  the two scripts from `<source>/promptfoo/package.fragment.json` merged,
   nothing overwritten; the profile's line and the By-task row as the
   templates' comments give them; `node evals/check.mjs` and `npm run
   evals` in the Gate line; then `node tools/check.mjs`.
@@ -243,8 +255,8 @@ moving its document first, by its own decision.
   system the project talks to, never inferred from directories alone:
   "Record the system's context and containers as diagrams in
   project/architecture.md? (no)". Declined, nothing is written.
-- **Accepted:** copy `architecture/template.md` from the source
-  distribution to project/architecture.md, overwriting no file that
+- **Accepted:** copy `<source>/architecture/template.md` from the
+  source distribution to project/architecture.md, overwriting no file that
   differs. Fill it from what step 1 read the project running: the
   system context, the containers only for more than one, each text
   alternative in sentences with every guess marked [guess], then the
