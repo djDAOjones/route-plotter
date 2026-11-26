@@ -2423,7 +2423,7 @@ export default {
       // (1) the centre pixel reads in the line's own colour, as before the hover (within 24 a channel), not the halo's
       // white and blue blended over it; (2) the pixel beside reads the halo (alpha over 200, blue at least green at
       // least red, blue over 200: white or white under blue, never the route's hue). The mouse then leaves the
-      // preview: (3) both read as before the hover (within 8 a channel). It claims nothing for 1.4.11 (the halo stays
+      // preview in one move: (3) both read as before the hover (within 8 a channel). It claims nothing for 1.4.11 (the halo stays
       // under the preview's set-aside), 1.4.13 or 2.5.7 (still owed, D250). Each reading fails with its fault put back
       // (brief 119): (1) with the redraw over the glow removed, (2) with the idle move ignored, (3) with pointerleave
       // not clearing the hover. Hovering has no touch form: under touch emulation it makes no touch input.
@@ -2458,7 +2458,9 @@ export default {
         const [lineOn, besideOn] = await read();
         if (!same(lineOn, line, 24) || !orange(lineOn, 200)) wrong.push(`with the mouse on the line its centre pixel read rgba(${lineOn}), not the line's own rgba(${line})`);
         if (!halo(besideOn)) wrong.push(`with the mouse on the line the pixel ${spot.d} px beside it read rgba(${besideOn}), not the halo`);
-        await page.mouse.move(1, 1, { steps: 4 });
+        // Off the preview in one move: the canvas hears pointer moves only over itself, so its pointerleave alone can
+        // clear the hover (a move in steps would cross empty canvas first, and a move over nothing clears it too).
+        await page.mouse.move(1, 1);
         await now();
         const [lineOff, besideOff] = await read();
         if (!same(lineOff, line, 8) || !same(besideOff, beside, 8)) wrong.push(`after the mouse left the preview the two pixels read rgba(${lineOff}) and rgba(${besideOff}), not as before the hover, rgba(${line}) and rgba(${beside})`);
