@@ -246,6 +246,12 @@ export interface Drawer {
   attach(target: Target): void;
   /** Draws nothing more: a frame booked is cancelled and no telling is heard. */
   detach(): void;
+  /**
+   * Draws now, in place of a frame booked, when what a frame is made from differs from what was last drawn; otherwise
+   * nothing (CORE-06, brief 113, ruling K: the canvas's binding asks at each down, so a tap never hit-tests a frame older
+   * than the store).
+   */
+  drawNow(): void;
 }
 
 /** What a frame is made from, by value: objects by identity, then numbers (point 4b). */
@@ -337,6 +343,15 @@ export function createDrawer<H>({ store, inputs, pictures, frames, report, faile
       book();
     },
     detach,
+    drawNow: () => {
+      if (attached === null || (drawn !== null && sameKey(drawn, keyNow()))) return;
+      if (booked !== null) {
+        const { handle } = booked;
+        booked = null;
+        frames.cancel(handle);
+      }
+      frame();
+    },
   };
 }
 

@@ -21,8 +21,12 @@
 //    canvas: pointerdown, pointermove, pointerup, pointercancel and lostpointercapture; on the window: pointerup and
 //    pointercancel (an up or cancel outside once capture is gone: v3's fallback) and blur. No `click` is listened
 //    for, so the compatibility click after a tap does nothing and a tap is one point. Before a frame is drawn, a down
-//    is not taken. What it gives back removes every listener with its original callback (React's strict mode mounts
-//    twice: no second binding is left).
+//    is not taken. Every down first asks the page to paint now if the store has moved on since the last frame (`refresh`),
+//    so a tap never hit-tests geometry older than the store: two quick taps on one empty place make one point, not two
+//    (brief 113, ruling K). A tap with any modifier held (Shift, Alt, Ctrl or Meta, on every platform) means nothing to
+//    the pen, whichever key is the platform's command key (ruling L). What it gives back first ends any press through
+//    the machine, as a blur does (a drag's places and selection put back, no step, capture released: ruling J), then
+//    removes every listener with its original callback (React's strict mode mounts twice: no second binding is left).
 // 4. `escapeClears`: Escape's branch for the selection (ruling 8), last in keydown.ts's order (a drag, typed text, a
 //    menu, a dialog, then the selection). While a drag is open on a bound canvas, Escape does nothing here (E2 gives it
 //    the cancel); otherwise, with something selected, it clears the selection (never a step), so the next tap on
@@ -110,6 +114,8 @@ export interface CanvasBindingOptions<E extends PointerFields> {
   readonly store: Store;
   /** The geometry of the last frame drawn on the canvas, in canvas pixels, or null before the first. */
   readonly geometry: () => Geometry | null;
+  /** Paints the canvas now if what it shows is older than the store, so that `geometry` is the store's (ruling K). */
+  readonly refresh: () => void;
   /** Whether this machine is a Mac: the platform's command key is Cmd there, Ctrl elsewhere. */
   readonly mac: boolean;
 }
@@ -136,7 +142,7 @@ const ON_WINDOW: readonly (readonly [string, Kind | 'blur'])[] = [
 ];
 
 /** Binds the pen to `canvas` (point 3); gives back what removes every listener it added. */
-export function bindCanvas<E extends PointerFields>({ canvas, win, store, geometry, mac }: CanvasBindingOptions<E>): () => void {
+export function bindCanvas<E extends PointerFields>({ canvas, win, store, geometry, refresh, mac }: CanvasBindingOptions<E>): () => void {
   /** The last frame's geometry in the pointer's CSS pixels, or null before the first. */
   const inCss = (): Geometry | null => {
     const drawn = geometry();
@@ -144,10 +150,12 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     if (drawn === null || cssWidth <= 0 || canvas.width <= 0) return null;
     return inCssPixels(drawn, canvas.width / cssWidth);
   };
+  /** Whether the event being sent had any modifier held, whichever is the platform's command key (ruling L). */
+  let held = false;
   const binding = bindPointer({
     store,
     bounds: () => inCss()?.bounds ?? { x: 0, y: 0, width: 1, height: 1, scale: 1 },
-    onTap: (tap) => penTap(store.getState(), tap),
+    onTap: (tap) => (held ? null : penTap(store.getState(), tap)),
   });
   live.add(binding);
 
@@ -177,10 +185,12 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
       return;
     }
     const contact = { pointerId: event.pointerId, primary: event.isPrimary, button: event.button, at: at(event), modifiers: modifiers(event) };
+    held = event.altKey || event.shiftKey || event.metaKey || event.ctrlKey;
     if (kind !== 'down') {
       send({ ...contact, kind });
       return;
     }
+    refresh();
     const now = inCss();
     if (now === null) return;
     const { selection } = store.getState();
@@ -194,6 +204,7 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
   for (const [type, listener] of onCanvas) canvas.addEventListener(type, listener);
   for (const [type, listener] of onWindow) win.addEventListener(type, listener);
   return () => {
+    send({ kind: 'blur' });
     for (const [type, listener] of onCanvas) canvas.removeEventListener(type, listener);
     for (const [type, listener] of onWindow) win.removeEventListener(type, listener);
     live.delete(binding);

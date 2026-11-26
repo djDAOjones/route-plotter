@@ -596,6 +596,29 @@ describe('when a frame is drawn (ruling 4)', () => {
     expect(failures).toEqual([[broken], []]);
   });
 
+  it('(g) `drawNow` draws at once, in place of the frame booked, only when the store has moved on since the last frame (CORE-06, brief 113)', () => {
+    const { store, drawer, target, frames, requests } = drawerOf(upTheMiddle([wide]));
+    drawer.drawNow();
+    expect(requests).toHaveLength(0);
+    drawer.attach(target);
+    frames.run();
+    expect(requests).toHaveLength(1);
+    drawer.drawNow();
+    expect(requests).toHaveLength(1);
+    at(store, 100);
+    expect(frames.booked()).toBe(1);
+    drawer.drawNow();
+    expect(requests).toHaveLength(2);
+    expect(requests[1]?.sceneMs).toBe(100);
+    expect(frames.booked()).toBe(0);
+    frames.run();
+    expect(requests).toHaveLength(2);
+    drawer.detach();
+    at(store, 200);
+    drawer.drawNow();
+    expect(requests).toHaveLength(2);
+  });
+
   it('(f) after detach a booked frame draws nothing and no telling is heard', () => {
     const { store, inputs, drawer, target, frames, requests, hold, pictureListeners } = drawerOf();
     drawer.attach(target);

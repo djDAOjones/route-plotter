@@ -39,8 +39,9 @@
 //    unbound at unmount with the drawer. `paint` adds one overlay to each request, which draws nothing and keeps what the
 //    frame was drawn with (the image's bounds as the frame's transform places them, each route's shape and timeline);
 //    the pointer is hit-tested against that, in its CSS pixels. The pen's tap (on the up, never the down, 2.5.2) places
-//    a point, joined from the selected one. The canvas takes no touch scrolling (`touch-action: none`), so a finger
-//    draws as a mouse does.
+//    a point, joined from the selected one; each down first has the drawer draw now if the store has moved on since the
+//    last frame (`drawNow`), so a quick second tap meets the point the first placed. The canvas takes no touch
+//    scrolling (`touch-action: none`), so a finger draws as a mouse does.
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import type { Overlay } from '../../adapters/render/overlays';
 import { compose, type Surface } from '../../player/compose';
@@ -51,7 +52,7 @@ import { canvasSize, frameShape, type Drawer, type FrameInputs } from './preview
 
 export interface PreviewProps {
   /** The session's one drawer. */
-  readonly drawer: Pick<Drawer, 'attach' | 'detach'>;
+  readonly drawer: Pick<Drawer, 'attach' | 'detach' | 'drawNow'>;
   /** The session's one inputs: the size is handed to it, and the box's shape read from it. */
   readonly inputs: Pick<FrameInputs, 'inputs' | 'resize'>;
   /** The store's telling of a change: an opened project, or a change of the export's size, may bring another shape. */
@@ -167,7 +168,7 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
       },
       surface,
     });
-    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: () => drawn, mac: MAC });
+    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: () => drawn, refresh: () => { drawer.drawNow(); }, mac: MAC });
 
     let box = { width: 0, height: 0 };
     const measure = () => {

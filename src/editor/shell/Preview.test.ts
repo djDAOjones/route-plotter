@@ -14,7 +14,7 @@ const scene = newScene(() => 'id');
 const drawn = (image: { width: number; height: number } | null, video = scene.settings.export) =>
   renderToStaticMarkup(
     createElement(Preview, {
-      drawer: { attach: () => undefined, detach: () => undefined },
+      drawer: { attach: () => undefined, detach: () => undefined, drawNow: () => undefined },
       inputs: {
         inputs: () => ({ scene: { ...scene, settings: { ...scene.settings, export: video } }, seed: SEED, size: START_SIZE, image }),
         resize: () => undefined,

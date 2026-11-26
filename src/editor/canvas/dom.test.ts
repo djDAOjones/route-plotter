@@ -221,12 +221,30 @@ function drawnOf(store: Store): Geometry {
   };
 }
 
-function bound(geometry: (store: Store) => Geometry | null = drawnOf) {
+function bound(geometry: (store: Store) => Geometry | null = drawnOf, mac = true) {
   const made = scene();
   const canvas = canvasStandIn();
   const win = target();
-  const unbind = bindCanvas({ canvas, win, store: made.store, geometry: () => geometry(made.store), mac: true });
+  const unbind = bindCanvas({ canvas, win, store: made.store, geometry: () => geometry(made.store), refresh: () => undefined, mac });
   return { ...made, canvas, win, unbind };
+}
+
+/**
+ * Bound to a frame held as it was painted (Codex line 18): the geometry is what the last paint recorded, and only
+ * `refresh` (the page's paint now) records it again, so a tap before the next frame sees the frame, not the store.
+ */
+function boundHeld() {
+  const made = scene();
+  const canvas = canvasStandIn();
+  const win = target();
+  let painted = drawnOf(made.store);
+  let paints = 0;
+  const refresh = () => {
+    paints += 1;
+    painted = drawnOf(made.store);
+  };
+  const unbind = bindCanvas({ canvas, win, store: made.store, geometry: () => painted, refresh, mac: true });
+  return { ...made, canvas, win, unbind, paints: () => paints };
 }
 
 /** The page's place of an image point: CSS pixels plus the canvas's offset. */
@@ -248,7 +266,7 @@ describe('the canvas\'s binding', () => {
       expect(each.removed).toEqual(each.added);
       expect(each.count()).toBe(0);
     }
-    const again = bindCanvas({ canvas, win, store, geometry: () => drawnOf(store), mac: true });
+    const again = bindCanvas({ canvas, win, store, geometry: () => drawnOf(store), refresh: () => undefined, mac: true });
     expect(canvas.count()).toBe(5);
     expect(win.count()).toBe(3);
     again();
@@ -280,14 +298,21 @@ describe('the canvas\'s binding', () => {
     unbind();
   });
 
-  it('a press moved past the threshold and released places nothing; an up outside, heard by the window, still ends a tap', () => {
+  it('a press moved past the threshold and released places nothing; an up beyond the canvas\'s box, heard only by the window, ends the press', () => {
     const { canvas, win, store, unbind } = bound();
     canvas.fire('pointerdown', client(0.3, 0.7));
     canvas.fire('pointermove', { clientX: 10 + 300 + 40, clientY: 20 + 560 });
     canvas.fire('pointerup', { clientX: 10 + 300 + 40, clientY: 20 + 560 });
     expect(routeOf(store).points).toHaveLength(3);
+    // The canvas's box is (10, 20) to (1010, 820) on the page: this up is beyond its right edge and below it.
     canvas.fire('pointerdown', client(0.3, 0.7));
-    win.fire('pointerup', client(0.3, 0.7));
+    win.fire('pointerup', { clientX: 1010 + 50, clientY: 820 + 50 });
+    expect(routeOf(store).points).toHaveLength(3);
+    expect(canvas.captured.size).toBe(0);
+    expect(store.getState().gesture).toBeNull();
+    // The press is over: the next tap is heard as a tap.
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointerup', client(0.3, 0.7));
     expect(routeOf(store).points).toHaveLength(4);
     unbind();
   });
@@ -299,6 +324,16 @@ describe('the canvas\'s binding', () => {
     canvas.fire('pointerup', client(0.9, 0.1));
     expect(routeOf(store).points).toHaveLength(3);
     expect(store.getState().selection).toEqual({ route: route.id, points: [c] });
+    // c is drawn at (900, 80) CSS pixels, its marker 15 CSS pixels from its centre: 40 to its right is beside it.
+    canvas.fire('pointerdown', { clientX: 10 + 940, clientY: 20 + 80 });
+    canvas.fire('pointerup', { clientX: 10 + 940, clientY: 20 + 80 });
+    const after = routeOf(store);
+    expect(after.points).toHaveLength(4);
+    const added = after.points[3];
+    expect(added?.x).toBeCloseTo(0.94);
+    expect(added?.y).toBeCloseTo(0.1);
+    expect(after.lines.some((line) => line.from === c && line.to === added?.id)).toBe(true);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [added?.id] });
     unbind();
   });
 
@@ -322,6 +357,59 @@ describe('the canvas\'s binding', () => {
     expect(routeOf(store).points).toHaveLength(3);
     unbind();
   });
+
+  it('unbound mid-drag, cancels the drag first: nothing moved, no gesture open, no step, capture released; bound again, an edit is taken (Codex line 17)', () => {
+    const { canvas, win, store, unbind } = bound();
+    store.select(NOTHING_SELECTED);
+    const before = store.getState().project;
+    canvas.fire('pointerdown', client(0.6, 0.6));
+    canvas.fire('pointermove', { clientX: 10 + 600 + 20, clientY: 20 + 480 });
+    expect(dragOpen()).toBe(true);
+    expect(store.getState().gesture).toBe('Move point');
+    unbind();
+    expect(dragOpen()).toBe(false);
+    expect(store.getState().gesture).toBeNull();
+    expect(store.getState().project).toEqual(before);
+    expect(canvas.captured.size).toBe(0);
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+    const again = bindCanvas({ canvas, win, store, geometry: () => drawnOf(store), refresh: () => undefined, mac: true });
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointerup', client(0.3, 0.7));
+    expect(routeOf(store).points).toHaveLength(4);
+    again();
+  });
+
+  it('two taps on the same empty place before the next frame: one point, the second tap on it (Codex line 18)', () => {
+    const { canvas, store, unbind, paints } = boundHeld();
+    store.select(NOTHING_SELECTED);
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointerup', client(0.3, 0.7));
+    expect(routeOf(store).points).toHaveLength(4);
+    // No frame between the taps: only the binding's own refresh may record the store's point.
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointerup', client(0.3, 0.7));
+    const after = routeOf(store);
+    expect(after.points).toHaveLength(4);
+    expect(after.lines).toHaveLength(1);
+    expect(paints()).toBeGreaterThan(0);
+    unbind();
+  });
+
+  for (const mac of [true, false]) {
+    it(`a tap with any modifier held places nothing, ${mac ? 'on a Mac' : 'elsewhere'}: Ctrl, Meta, Alt or Shift (Codex line 19)`, () => {
+      const { canvas, store, unbind } = bound(drawnOf, mac);
+      store.select(NOTHING_SELECTED);
+      for (const held of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }, { shiftKey: true }]) {
+        canvas.fire('pointerdown', { ...client(0.3, 0.7), ...held });
+        canvas.fire('pointerup', { ...client(0.3, 0.7), ...held });
+        expect(routeOf(store).points, JSON.stringify(held)).toHaveLength(3);
+      }
+      canvas.fire('pointerdown', client(0.3, 0.7));
+      canvas.fire('pointerup', client(0.3, 0.7));
+      expect(routeOf(store).points).toHaveLength(4);
+      unbind();
+    });
+  }
 });
 
 describe('Escape', () => {
