@@ -2621,6 +2621,101 @@ export default {
       },
     },
     {
+      // 2.1.1 (CORE-06, brief 126, rulings BB and BC; brief 125's BA): the arrow keys nudge the selected points, from
+      // the keyboard alone. In pen-drawn, as edit-keys begins (Tab to the preview box, End, Escape), then Cmd/Ctrl+A,
+      // with the rings both read by ringsAt (over 120 pixels each at the taps). The step is 0.5% of the picture over the
+      // zoom (dom.ts NUDGE, NUDGE_FURTHER 2%), in image fractions; the zoom in pen-drawn was read by a probe, not assumed
+      // (PROBE-126/mut/probe-1.txt: three presses moved the rings' peak 6 px on a 396 px picture, 3 × 0.005 × 396: zoom
+      // 1), and image fractions across are converted by the ratio the copies' reading uses (edit-keys: height over width).
+      // (1) ArrowRight three times at once: each tap's ring reads 1.5% of the picture right (over 120 pixels) and the old
+      // place under half that. (2) One Undo (by keyboard: the dispatch closes the burst before Undo runs, so no wait):
+      // the whole canvas (pixels' hash) reads as before (1): three presses, one step. (3) Shift+ArrowDown: each ring
+      // reads 2% lower, the old place under half. (4) A wait past NUDGE_QUIET_MS (400 ms), ArrowLeft once, one Undo: the
+      // canvas reads as after (3): a press after the quiet is a step of its own. (5) The page's listener (keydown.ts's
+      // `onElse`, registered for pointerdown and focusout): first a reference, ArrowRight once, a wait past 400 ms, the
+      // canvas read (one step from (3)), Undo. Then ArrowRight once; a pointer press on the page where nothing else
+      // is (no control, off the preview: the first such place on a 40 by 20 px grid, the page's header; probed, a press
+      // there moves focus to the body, so both of onElse's events fire, and it reaches neither the dispatch nor the
+      // canvas's binding); ArrowRight once, all three inside 400 ms (timed: the run fails if not); one Undo: the canvas
+      // reads as the reference (where the first press left the points: the press closed the burst, so the second press
+      // was its own step), and a second Undo as after (3). The hash, not the rings, judges (5): a 2 px step is under the
+      // rings' reach (probe-1: 147, 147 and 131 pixels at 0, 1 and 2 px from a ring). Faults that fail it (brief 126,
+      // PROBE-126/mut): (x) Shift's size equal to the plain one fails (3); (y) every press its own step fails (2); (z)
+      // the nudge's call removed fails (1); (w) onElse's endNudge removed fails (5). It claims nothing for 2.5.7 (D250:
+      // the point's menu "Move", G), nothing for drawing points, nothing spoken (D263).
+      name: 'nudge-keys',
+      method: 'keyboard',
+      rows: ['2.1.1'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const hash = async () => (await pixels(page)).hash;
+        const press = async (key) => { await page.keyboard.press(key); await settle(); };
+        const box = await boxOf(page);
+        const across = box.height / box.width;
+        const moved = (dx, dy) => TAPS.map(([fx, fy]) => [fx + dx * across, fy + dy]);
+        const ringsMoved = async (to, what) => {
+          const [there, before] = [await ringsAt(page, to), await ringsAt(page, TAPS)];
+          return there.some((n) => n <= 120) || before.some((n, i) => n >= (there[i] ?? 0) / 2) ? [`${what}: the rings read ${JSON.stringify(there)} pixels at the new places (both should be over 120) and ${JSON.stringify(before)} at the taps (each under half)`] : [];
+        };
+        const wrong = [];
+        let tabs = 0;
+        while (!(await focusOn(page, PREVIEW)) && tabs < 8) { await page.keyboard.press('Tab'); tabs += 1; }
+        if (!(await focusOn(page, PREVIEW))) wrong.push('eight presses of Tab did not reach the preview box');
+        await press('End');
+        await press('Escape');
+        await press(`${COMMAND}+a`);
+        const all = await ringsAt(page, TAPS);
+        if (all.some((n) => n <= 120)) wrong.push(`after Cmd+A the taps' rings read ${JSON.stringify(all)} pixels, not both over 120`);
+        const start = await hash();
+        // (1) Three quick presses.
+        for (let n = 0; n < 3; n += 1) await page.keyboard.press('ArrowRight');
+        await settle();
+        wrong.push(...(await ringsMoved(moved(0.015, 0), 'after ArrowRight three times')));
+        // (2) One Undo.
+        await press(UNDO);
+        if ((await hash()) !== start) wrong.push('after one Undo the canvas was not as before the three presses');
+        // (3) Shift+ArrowDown.
+        await press('Shift+ArrowDown');
+        wrong.push(...(await ringsMoved(moved(0, 0.02), 'after Shift+ArrowDown')));
+        const lower = await hash();
+        // (4) After the quiet, a press of its own.
+        await page.waitForTimeout(450);
+        await press('ArrowLeft');
+        await press(UNDO);
+        if ((await hash()) !== lower) wrong.push('after a wait past 400 ms, ArrowLeft and one Undo, the canvas was not as after Shift+ArrowDown');
+        if (!(await focusOn(page, PREVIEW))) wrong.push('focus was not on the preview box after (4)');
+        // (5) The page's listener: a reference step, then a press between two arrows.
+        await press('ArrowRight');
+        await page.waitForTimeout(450);
+        const oneStep = await hash();
+        await press(UNDO);
+        if ((await hash()) !== lower) wrong.push('the reference ArrowRight was not undone by one Undo');
+        const spot = await page.evaluate((sel) => {
+          for (let y = 5; y < innerHeight; y += 20) for (let x = 5; x < innerWidth; x += 40) {
+            const el = document.elementFromPoint(x, y);
+            if (el && !el.closest(sel) && !el.closest('button,a,input,select,textarea,[tabindex],[role],summary,label,dialog,canvas,[contenteditable]')) return { x, y, tag: el.tagName.toLowerCase() };
+          }
+          return null;
+        }, PREVIEW);
+        if (spot === null) wrong.push('no place on the page off the preview and every control was found');
+        else {
+          const t0 = Date.now();
+          await page.keyboard.press('ArrowRight');
+          await page.mouse.click(spot.x, spot.y);
+          await page.keyboard.press('ArrowRight');
+          const took = Date.now() - t0;
+          await settle();
+          if (took >= 400) wrong.push(`ArrowRight, the press and ArrowRight took ${took} ms, not under 400`);
+          await press(UNDO);
+          if ((await hash()) !== oneStep) wrong.push(`after ArrowRight, a press on the page's ${spot.tag} at (${spot.x}, ${spot.y}), ArrowRight and one Undo, the canvas was not as after one ArrowRight`);
+          await press(UNDO);
+          if ((await hash()) !== lower) wrong.push('a second Undo did not draw the canvas as after Shift+ArrowDown');
+        }
+        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, with focus moved to the preview box by Tab (${tabs} presses), End, Escape and Cmd+A, keys alone: ArrowRight three times moves both points' rings 1.5% of the picture right; one Undo draws the whole canvas as before them; Shift+ArrowDown moves the rings 2% lower; after a wait past 400 ms, ArrowLeft and one Undo draw the canvas as after Shift+ArrowDown; ArrowRight, a pointer press on the page's ${spot?.tag} at (${spot?.x}, ${spot?.y}) and ArrowRight, inside 400 ms, then one Undo draws the canvas as after one ArrowRight, and a second Undo as before it`);
+      },
+    },
+    {
       // 2.5.2 (CORE-06, brief 121, ruling AD; brief 120's "+", D208's hover): a bend inserted by the "+" at a line's
       // middle, completed on the up, undone in one step, and aborted by moving off before the up. It takes the place of
       // brief 119's line-hover-halo, whose three hover readings it carries in as regression checks: the 2.5.2 credit
