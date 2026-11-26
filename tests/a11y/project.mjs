@@ -223,6 +223,8 @@ const near = (p, rgb) => p[3] > 200 && rgb.every((v, i) => Math.abs(p[i] - v) <=
 // pixel), 1 to a marker's radius away along that ray, at alpha over 60. Each is false when its mark is cleared, at 1280
 // and at 320 CSS px wide (probed, brief 114).
 const TAPS = [[0.45, 0.4], [0.55, 0.6]];
+// CORE-06 (brief 116): where the drag journeys take the second point, inside the picture and well clear of the line.
+const DRAG_TO = [0.6, 0.42];
 const markBeyond = (page, [fx, fy], [ox, oy]) => page.locator(CANVAS).evaluate((c, [x, y, ax, ay]) => {
   const ctx = c.getContext('2d');
   const [px, py, qx, qy] = [x * c.width, y * c.height, ax * c.width, ay * c.height];
@@ -2286,6 +2288,73 @@ export default {
         }
         if (errors.length) wrong.push(`page error: ${errors[0]}`);
         record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `with React's scheduler slowed 60 ms a task, the twenty-minute scene still: the thumb pressed and moved right in five quick steps, let go at ${expected} of ${max}: the position held is ${held}, a second later too; the timeline stays, no page error`);
+      },
+    },
+    {
+      // 2.5.2 (CORE-06, brief 116, ruling Y (1)): a point dragged to a new place, then undone. In pen-drawn's set-up (two
+      // taps, the second point selected), the route skipped to its end, the second point's marker is read where only it
+      // draws (markBeyond: on the ray from it away from the first point) at its tap and at DRAG_TO, a place inside the
+      // picture well clear of the line. The pointer then presses on the second point, moves to DRAG_TO in four steps and
+      // is let go. Skipped to the end again (the route's length changed), the marker is read at DRAG_TO and not at the
+      // tap; then one Undo (focus off the Skip button) and the marker is back at the tap and not at DRAG_TO. It reads the
+      // second point's marker only: no other mark is claimed. It fails with the drag's commit dropped (brief 116, (f)).
+      name: 'point-drag-moves',
+      method: 'j-pointer',
+      rows: ['2.5.2'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const atEnd = async () => { await page.getByRole('button', { name: 'Skip to end' }).click(); await page.waitForTimeout(250); await twoFrames(page); };
+        const read = async () => ({ tap: await markBeyond(page, second, first), moved: await markBeyond(page, DRAG_TO, first) });
+        const wrong = [];
+        await atEnd();
+        const before = await read();
+        if (!before.tap || before.moved) wrong.push(`before the drag the marker read ${before.tap ? '' : 'not '}at the tap and ${before.moved ? '' : 'not '}at the new place`);
+        const box = await page.locator(PREVIEW).boundingBox();
+        const from = { x: box.x + box.width * second[0], y: box.y + box.height * second[1] };
+        await dragBy(pointer, from, { x: box.x + box.width * DRAG_TO[0], y: box.y + box.height * DRAG_TO[1] });
+        await pointer.up();
+        await atEnd();
+        const after = await read();
+        if (!after.moved || after.tap) wrong.push(`after the drag the marker read ${after.moved ? '' : 'not '}at the new place and ${after.tap ? '' : 'not '}at the tap`);
+        await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+        await page.keyboard.press(UNDO);
+        await atEnd();
+        const undone = await read();
+        if (!undone.tap || undone.moved) wrong.push(`after one Undo the marker read ${undone.tap ? '' : 'not '}at the tap and ${undone.moved ? '' : 'not '}at the new place`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : 'in pen-drawn, the second point pressed and dragged to a new place in the picture: after the release its marker is drawn there and not at its tap; one Undo draws it at its tap again and not at the new place');
+      },
+    },
+    {
+      // 2.5.2 (CORE-06, brief 116, ruling Y (2)): Escape aborts a point's drag before the release. In pen-drawn's set-up,
+      // skipped to the route's end, the whole canvas is read (pixels' hash). The pointer presses on the second point and
+      // moves to DRAG_TO in four steps: read while held, the canvas has changed and the marker is drawn at DRAG_TO (the
+      // drag is live). Escape: the canvas is as before the press. The pointer then moves on and is let go: the canvas is
+      // still as before the press, so the later release places nothing. It fails with cancelDrag doing nothing (brief
+      // 116, (g)).
+      name: 'point-drag-escape',
+      method: 'j-pointer',
+      rows: ['2.5.2'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const now = async () => { await page.waitForTimeout(250); await twoFrames(page); return (await pixels(page)).hash; };
+        const wrong = [];
+        await page.getByRole('button', { name: 'Skip to end' }).click();
+        const before = await now();
+        const box = await page.locator(PREVIEW).boundingBox();
+        const from = { x: box.x + box.width * second[0], y: box.y + box.height * second[1] };
+        const to = { x: box.x + box.width * DRAG_TO[0], y: box.y + box.height * DRAG_TO[1] };
+        await dragBy(pointer, from, to);
+        const held = await now();
+        const live = held !== before && (await markBeyond(page, DRAG_TO, first));
+        if (!live) wrong.push('the press and moves on the second point did not draw it at the new place while held');
+        await page.keyboard.press('Escape');
+        if ((await now()) !== before) wrong.push('Escape mid-drag did not draw the canvas as before the press');
+        await pointer.move(to.x + 20, to.y + 20);
+        await pointer.up();
+        if ((await now()) !== before) wrong.push('the release after Escape changed what is drawn');
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : 'in pen-drawn, the second point pressed and dragged to a new place, drawn there while held; Escape before the release drew the whole canvas as before the press, and the release after it changed nothing drawn');
       },
     },
     {
