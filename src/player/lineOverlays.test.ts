@@ -257,6 +257,24 @@ test('D208: over its glow the hovered stretch is redrawn whole as its own line: 
     const redrawn = places(added.slice(added.indexOf(accent ?? '') + 1, added.indexOf(line ?? '')));
     expect(glowed.length, name).toBeGreaterThan(5);
     alongside(redrawn, glowed, name);
+    // A line shown only in part (it grows, and the lead is part way along the stretch at this moment) is still redrawn
+    // whole (Codex list line 30): its redraw goes through every place of the same stretch redrawn where the line shows whole.
+    const growing = sceneOf(['grows']);
+    const shownWhole = { ...growing, routes: growing.routes.map((route) => ({ ...route, settings: { ...route.settings, line: { ...route.settings.line, appearance: 'whole' as const } } })) };
+    const redrawOf = (made: Scene) => {
+      const ask = (extra: Partial<FrameRequest>) => draw(request(made, { sceneMs: 5_000, viewing: viewing.viewing, ...extra }), viewing.catalogue);
+      const bare = ask({});
+      const lines = ask({ overlays: [OVERLAY_MAKERS.lines([], { hovered: hover(made) })] }).lines.slice(bare.lines.length);
+      const [, glowTop, own] = strokes(lines);
+      return { bare: places(bare.lines), redrawn: places(lines.slice(lines.indexOf(glowTop ?? '') + 1, lines.indexOf(own ?? ''))) };
+    };
+    const whole = redrawOf(shownWhole).redrawn;
+    const part = redrawOf(growing);
+    const shown = whole.filter(({ x, y }) => part.bare.some((at) => Math.hypot(at.x - x, at.y - y) <= 0.1));
+    // The frame draws the stretch only in part: some of its places, not all.
+    expect([shown.length > 0, shown.length < whole.length], name).toEqual([true, true]);
+    expect(whole.length, name).toBeGreaterThan(5);
+    alongside(part.redrawn, whole, name);
   }
   // A hidden line's stretch is redrawn in the guide's look, over its halo: 2 wide, dashed 6 on and 4 off, half alpha.
   const viewing = VIEWINGS['a zoom of 1'];

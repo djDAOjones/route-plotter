@@ -656,4 +656,14 @@ describe('the hover (point 6; brief 118, ruling S)', () => {
     expect(early.told).toEqual([]);
     early.unbind();
   });
+
+  it('only a mouse or a pen hovers: an empty, a missing or any other pointer type never does (Codex list line 29)', () => {
+    for (const event of [{ ...client(0.2, 0.2), pointerType: '' }, client(0.2, 0.2), { ...client(0.2, 0.2), pointerType: 'stylus' }]) {
+      const made = hovering();
+      made.canvas.fire('pointermove', event);
+      expect(made.hover.held()).toBeNull();
+      expect(made.told).toEqual([]);
+      made.unbind();
+    }
+  });
 });

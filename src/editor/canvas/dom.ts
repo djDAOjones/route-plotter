@@ -39,7 +39,7 @@
 //    on a bound canvas as a blur does: the places and the selection put back, nothing to undo, capture released, and the
 //    pointer's later moves and up do nothing. keydown.ts hands it to the dispatch's Escape, before `escapeClears`.
 // 6. The hover (brief 118, ruling S). With a holder handed (`hover`, ./hover.ts), a pointermove on the canvas while the
-//    machine is idle (no press open), from a mouse or a pen (never touch), hit-tests the last frame drawn as a down
+//    machine is idle (no press open), from a mouse or a pen only (any other pointer type, or none, never hovers), hit-tests the last frame drawn as a down
 //    does, but without `refresh()` (a move never books a frame by itself), and hands the holder the point or line
 //    under it, or null. A pointerleave on the canvas, every pointerdown, a blur and the removal of the binding clear
 //    it; while a press or a drag is open nothing is hovered.
@@ -228,7 +228,7 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
   /** An idle mouse or pen move: what lies under it in the last frame drawn, never a refresh (point 6). */
   const rest = (place: Pixel, event: E): void => {
     if (hover === undefined) return;
-    if (event.pointerType === 'touch' || binding.state().phase !== 'idle') {
+    if ((event.pointerType !== 'mouse' && event.pointerType !== 'pen') || binding.state().phase !== 'idle') {
       hover.set(null);
       return;
     }
