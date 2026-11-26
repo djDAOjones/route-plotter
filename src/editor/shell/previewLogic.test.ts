@@ -10,8 +10,9 @@ import { compose, contentEnd, type FrameReport, type FrameRequest, type Surface 
 import { createTransport, type FrameSource } from '../../player/transport/transport';
 import { setSceneSetting } from '../store/command';
 import { createStore, type Store } from '../store/store';
+import { bindCanvas, type PointerFields } from '../canvas/dom';
 import {
-  backgroundOf, canvasSize, createDrawer, createFrameInputs, createPictures, frameShape, SEED, START_SIZE,
+  backgroundOf, canvasSize, createDrawer, createFrameInputs, createPictures, frameShape, recordingPaint, SEED, START_SIZE,
   type LoadPicture, type Picture, type Target,
 } from './previewLogic';
 
@@ -619,7 +620,7 @@ describe('when a frame is drawn (ruling 4)', () => {
     expect(requests).toHaveLength(2);
   });
 
-  it('(g) a good frame, a store edit, then a refresh whose paint throws: `drawNow` says the canvas is not the store\'s, books a frame, and tries again at the next (Codex line 22)', () => {
+  it('(g) a good frame, a store edit, then a refresh whose paint throws: `drawNow` says the canvas is not the store\'s and books a frame; that booked frame draws it, and `drawNow` then says true without painting again (Codex lines 22 and 27)', () => {
     let throwing = false;
     const { store, drawer, target, frames, requests, reports } = drawerOf(upTheMiddle([wide]), () => {
       if (throwing) throw new Error('paint');
@@ -638,9 +639,12 @@ describe('when a frame is drawn (ruling 4)', () => {
     // The key of the failed paint is not taken as drawn: the next down paints again, and says so again.
     expect(drawer.drawNow()).toBe(false);
     expect(requests).toHaveLength(3);
+    expect(frames.booked()).toBe(1);
+    // Recovery by the booked frame itself, not by another `drawNow` (Codex line 27).
     throwing = false;
-    expect(drawer.drawNow()).toBe(true);
+    frames.run();
     expect(requests).toHaveLength(4);
+    expect(requests[3]?.sceneMs).toBe(100);
     expect(frames.booked()).toBe(0);
     expect(drawer.drawNow()).toBe(true);
     expect(requests).toHaveLength(4);
@@ -732,5 +736,74 @@ describe('the frame’s shape, the video’s (ruling 6, D202)', () => {
       expect(frameShape(sized(bad, 1080))).toEqual(START_SIZE);
       expect(frameShape(sized(1920, bad))).toEqual(START_SIZE);
     }
+  });
+});
+
+/** A canvas 1000 CSS pixels wide at (0, 0) on the page, its pointer listeners and capture held by hand. */
+function canvasStandIn() {
+  const live = new Map<string, Set<(event: PointerFields) => void>>();
+  const captured = new Set<number>();
+  const listened = {
+    addEventListener: (type: string, listener: (event: PointerFields) => void) => {
+      live.set(type, (live.get(type) ?? new Set()).add(listener));
+    },
+    removeEventListener: (type: string, listener: (event: PointerFields) => void) => {
+      live.get(type)?.delete(listener);
+    },
+  };
+  const canvas = {
+    ...listened,
+    width: 0,
+    height: 0,
+    captured,
+    getBoundingClientRect: () => ({ left: 0, top: 0, width: 1000 }),
+    setPointerCapture: (id: number) => captured.add(id),
+    releasePointerCapture: (id: number) => captured.delete(id),
+    hasPointerCapture: (id: number) => captured.has(id),
+    fire: (type: string, clientX: number, clientY: number) => {
+      const event: PointerFields = { pointerId: 1, isPrimary: true, button: 0, clientX, clientY, altKey: false, shiftKey: false, metaKey: false, ctrlKey: false };
+      for (const listener of [...(live.get(type) ?? [])]) listener(event);
+    },
+  };
+  return { canvas, win: { ...listened } };
+}
+
+describe('the preview\'s paint (point 7)', () => {
+  it('a good frame records, the store changes, the next paint returns without running its overlays: a down on the place tapped places nothing, joins nothing and takes no capture (brief 115, ruling V; Codex line 26)', () => {
+    const { canvas, win } = canvasStandIn();
+    const recorder = new Recorder();
+    let overlaysRun = true;
+    const painting = recordingPaint(canvas, (request) => {
+      if (overlaysRun) return compose(recorder, request);
+      return [];
+    });
+    const { store, drawer, target, frames } = drawerOf(upTheMiddle([wide]), painting.paint);
+    drawer.attach(target);
+    frames.run();
+    const recorded = painting.geometry();
+    if (recorded === null) throw new Error('the good frame recorded nothing');
+    expect(canvas.width).toBe(START_SIZE.width);
+    const unbind = bindCanvas({ canvas, win, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: true });
+    // An empty place a fifth of the way across the picture, half-way down, in the pointer's CSS pixels.
+    const ratio = canvas.width / 1000;
+    const { bounds } = recorded;
+    const x = (bounds.x + 0.2 * bounds.width) / ratio;
+    const y = (bounds.y + 0.5 * bounds.height) / ratio;
+    canvas.fire('pointerdown', x, y);
+    canvas.fire('pointerup', x, y);
+    const placed = store.getState().project.scene.routes[0];
+    expect(placed?.points).toHaveLength(3);
+    expect(placed?.points[2]).toMatchObject({ x: 0.2, y: 0.5 });
+    // The store has moved on; the next paint (the down's own) returns without running the recording overlay.
+    overlaysRun = false;
+    canvas.fire('pointerdown', x, y);
+    expect(canvas.captured.size).toBe(0);
+    canvas.fire('pointerup', x, y);
+    expect(store.getState().project.scene.routes[0]).toBe(placed);
+    expect(canvas.captured.size).toBe(0);
+    expect(store.getState().gesture).toBeNull();
+    expect(painting.geometry()).toBeNull();
+    unbind();
+    drawer.detach();
   });
 });

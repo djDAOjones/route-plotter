@@ -45,14 +45,22 @@
 //    export width and height (settings.ts, EXPORT_SETTINGS), with a picture or without one; the picture's size plays
 //    no part, the composer fitting it inside that frame. A width or height that is not a finite number above 0 gives
 //    START_SIZE's.
-// 7. It does not claim to withstand code written to break it.
+// 7. `recordingPaint(element, draw)`: the preview's paint (Preview.tsx's points 3 and 6), here so Node proves it (brief
+//    115, ruling V): it sets the canvas's width and height to the request's size when they differ, and draws the
+//    request with one overlay more, last, which draws nothing and records the frame's geometry (`recordGeometry`). The
+//    geometry it gives back is null from the start of each paint until that overlay runs: a paint that throws, or
+//    returns without running its overlays, leaves no old geometry for a down to hit (brief 114, ruling P; Codex
+//    line 26).
+// 8. It does not claim to withstand code written to break it.
 import type { ImageType, Project } from '../../adapters/io/format';
 import { sizeOf } from '../../adapters/io/images';
+import type { Overlay } from '../../adapters/render/overlays';
 import type { Size } from '../../core/geometry/transform';
 import type { Scene } from '../../core/model/scene';
 import { OVERLAY_MAKERS } from '../../features/catalogue.editor';
 import type { ContentRequest, FrameReport, FrameRequest, Surface } from '../../player/compose';
 import type { FrameSource } from '../../player/transport/transport';
+import { recordGeometry, type Geometry } from '../canvas/dom';
 import type { Store } from '../store/store';
 import type { Selection } from '../store/selection';
 
@@ -363,6 +371,34 @@ export function createDrawer<H>({ store, inputs, pictures, frames, report, faile
       book();
       return false;
     },
+  };
+}
+
+/** The preview's paint and the geometry its last paint recorded (point 7). */
+export interface RecordingPaint {
+  readonly paint: (request: FrameRequest) => readonly FrameReport[];
+  /** What the last paint's overlay recorded, or null before one, or while a paint has not reached its overlay. */
+  readonly geometry: () => Geometry | null;
+}
+
+/** Point 7: `draw` is the page's composer on the canvas's context; `element` is the canvas, its size set here. */
+export function recordingPaint(
+  element: { width: number; height: number },
+  draw: (request: FrameRequest) => readonly FrameReport[],
+): RecordingPaint {
+  let drawn: Geometry | null = null;
+  const record: Overlay = (_context, frame, screen) => {
+    drawn = recordGeometry(frame, screen);
+  };
+  return {
+    paint: (request) => {
+      drawn = null;
+      const { width, height } = request.size;
+      if (element.width !== width) element.width = width;
+      if (element.height !== height) element.height = height;
+      return draw({ ...request, overlays: [...(request.overlays ?? []), record] });
+    },
+    geometry: () => drawn,
   };
 }
 

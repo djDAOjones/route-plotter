@@ -14,9 +14,9 @@
 //    with a tab stop.
 // 2. At mount it attaches the session's drawer to the canvas (`attach({ paint, surface })`); at unmount it detaches.
 //    React's strict mode mounts twice: `attach` lets an earlier target go.
-// 3. `paint` sets the canvas's `width` and `height` to the request's size when they differ, then composes the request
-//    on the canvas's context in the same call, so a resize never shows a blank frame; it gives back the composer's
-//    reports. It sets no transform and no style of its own (the composer resets and clears first, CORE-04.6).
+// 3. `paint` (previewLogic.ts's `recordingPaint`, its point 7, since brief 115) sets the canvas's `width` and
+//    `height` to the request's size when they differ, then composes the request on the canvas's context in the same
+//    call, so a resize never shows a blank frame; it gives back the composer's reports. It sets no transform and no style of its own (the composer resets and clears first, CORE-04.6).
 //    `surface` is an OffscreenCanvas the size asked, its context and itself, as the composer's `Surface`.
 // 4. The size drawn is the canvas's box in CSS pixels times the device's pixel ratio (`canvasSize`, held to 3), handed
 //    to the session's inputs (`resize`): a ResizeObserver hears the box, and a `matchMedia` on the resolution now hears
@@ -43,12 +43,11 @@
 //    last frame (`drawNow`), so a quick second tap meets the point the first placed. The canvas takes no touch
 //    scrolling (`touch-action: none`), so a finger draws as a mouse does.
 import { useEffect, useRef, useSyncExternalStore } from 'react';
-import type { Overlay } from '../../adapters/render/overlays';
 import { compose, type Surface } from '../../player/compose';
-import { bindCanvas, recordGeometry, type Geometry } from '../canvas/dom';
+import { bindCanvas } from '../canvas/dom';
 import type { Store } from '../store/store';
 import { MAC } from './keydown';
-import { canvasSize, frameShape, type Drawer, type FrameInputs } from './previewLogic';
+import { canvasSize, frameShape, recordingPaint, type Drawer, type FrameInputs } from './previewLogic';
 
 export interface PreviewProps {
   /** The session's one drawer. */
@@ -154,23 +153,11 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
     const element = canvas.current;
     const context = element?.getContext('2d');
     if (!element || !context) return undefined;
-    // What the last frame was drawn with (point 6), kept by an overlay that draws nothing.
-    let drawn: Geometry | null = null;
-    const record: Overlay = (_context, frame, screen) => {
-      drawn = recordGeometry(frame, screen);
-    };
-    drawer.attach({
-      paint: (request) => {
-        // Unknown until this paint's record overlay runs: a paint that throws first leaves no old geometry to hit (P).
-        drawn = null;
-        const { width, height } = request.size;
-        if (element.width !== width) element.width = width;
-        if (element.height !== height) element.height = height;
-        return compose(context, { ...request, overlays: [...(request.overlays ?? []), record] });
-      },
-      surface,
-    });
-    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: () => drawn, refresh: () => drawer.drawNow(), mac: MAC });
+    // The paint (point 3) and what the last frame was drawn with (point 6): previewLogic.ts's `recordingPaint`, whose
+    // geometry is unknown until a paint's record overlay runs (brief 115, ruling V).
+    const painting = recordingPaint(element, (request) => compose(context, request));
+    drawer.attach({ paint: painting.paint, surface });
+    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: MAC });
 
     let box = { width: 0, height: 0 };
     const measure = () => {

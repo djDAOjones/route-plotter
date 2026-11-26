@@ -398,7 +398,7 @@ describe('the canvas\'s binding', () => {
     unbind();
   });
 
-  it('a good frame, a store edit, then a refresh that does not record: the down places nothing and joins nothing; once a paint records, the tap is taken (Codex line 22)', () => {
+  it('a good frame, a store edit, then a refresh that does not record: the down places nothing and joins nothing; once a paint records, a tap on another empty place adds its point and line (Codex lines 22 and 27)', () => {
     const { canvas, store, unbind, fail } = boundHeld();
     store.select(NOTHING_SELECTED);
     canvas.fire('pointerdown', client(0.3, 0.7));
@@ -410,12 +410,18 @@ describe('the canvas\'s binding', () => {
     expect(routeOf(store).points).toHaveLength(4);
     expect(routeOf(store).lines).toHaveLength(1);
     expect(canvas.captured.size).toBe(0);
+    const placed = routeOf(store).points[3];
+    expect(placed).toMatchObject({ x: 0.3, y: 0.7 });
     fail(false);
-    canvas.fire('pointerdown', client(0.3, 0.7));
-    canvas.fire('pointerup', client(0.3, 0.7));
+    canvas.fire('pointerdown', client(0.5, 0.3));
+    canvas.fire('pointerup', client(0.5, 0.3));
     const after = routeOf(store);
-    expect(after.points).toHaveLength(4);
-    expect(after.lines).toHaveLength(1);
+    expect(after.points).toHaveLength(5);
+    const added = after.points[4];
+    expect(added).toMatchObject({ x: 0.5, y: 0.3 });
+    expect(after.lines).toHaveLength(2);
+    expect(after.lines[1]).toMatchObject({ from: placed?.id, to: added?.id });
+    expect(store.getState().selection.points).toEqual([added?.id]);
     unbind();
   });
 
