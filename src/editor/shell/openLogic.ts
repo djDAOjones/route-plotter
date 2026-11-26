@@ -20,13 +20,21 @@
 //    as io's own catch-all is (`WORDS.openedUnsafe`, "it is damaged").
 // 4. DEF-67: when a project opens, `announce` is handed `OPEN_WORDS.opened`, once, after the store has taken it; the
 //    opener says nothing else, ever. A throw from `announce` is caught and dropped: the open has happened and stays
-//    opened (point 6). It neither pauses nor touches either transport: the store's Open writes "paused"
-//    at the start (AT_START), which the player's transport's frame already booked meets, saying nothing and booking no
-//    more (its claim's point 2). So nothing says "Animation paused", whether or not something was playing.
-// 5. Criterion 3's open half: the store's Open puts the playback at the start, at normal speed, not playing; so once
-//    the open's promise settles, the editor's transport's `play()` plays at once from 0 at normal speed, the length
-//    built from the opened scene (the player's transport builds it when its inputs, the store's scene, are not those
-//    it last built from). Opening never starts a playing by itself.
+//    opened (point 6). It never pauses through either transport and never skips through the editor's (whose
+//    `skipToEnd` says "Skipped to end"): the store's Open writes "paused" at the start (AT_START), which the player's
+//    transport's frame already booked meets, saying nothing and booking no more (its claim's point 2), and point 5's
+//    seek is the player's own, which says nothing. So nothing says "Animation paused", whether or not something was
+//    playing, and nothing is said for the move to the end.
+// 5. Criterion 3's open half, and D251's first half (Joe, 26 Nov: "End, plus a guide"; brief 127, BG to BJ): once the
+//    store has taken a project, and before "Project opened" is said, the opener seeks the player's transport handed in
+//    to its play length, `player.seek(player.length())`, the place End reaches (Hold at start, the content's end with a
+//    trail's run-on, Hold at end), as v3 opened at its end. So an opened project waits paused at its end, at normal
+//    speed: what was drawn is in view. The length is read after the store has the opened project, so it is built from
+//    the opened scene and its picture's size (the inputs read the picture's header as soon as the store holds it:
+//    previewLogic.ts's point 2), never a length from before the open. Only an open the store has taken seeks (point
+//    6): a refusal, a superseded open and the store's own refusal or throw move nothing. A throw from the seek is
+//    caught and dropped, as `announce`'s is. Play after an open plays from 0 at normal speed, the length built from the
+//    opened scene: the player's Play at its end restarts from 0 (DEF-62). Opening never starts a playing by itself.
 // 6. Only the latest open asked for may reach the store. One for which a later open was asked before it was read (before
 //    its project could reach the store) changes nothing, holds nothing and says nothing when it settles, whichever
 //    settles first: its caller is given `{ kind: 'superseded' }`. Otherwise its caller is given `{ kind: 'opened' }` or
@@ -70,6 +78,7 @@ import { ARCHIVE_LIMITS } from '../../adapters/io/limits';
 import { WORDS as IO_WORDS, type Problem, type Refusal } from '../../adapters/io/words';
 import type { Announce } from '../kit/announce';
 import type { Store } from '../store/store';
+import type { Transport } from '../../player/transport/transport';
 
 /** Every word of Open: the opener says only `opened`; the rest are Open's control and notice's (Open.tsx). A refusal's
  *  own words are io's. */
@@ -132,6 +141,8 @@ export interface Opener {
 export interface OpenerOptions {
   readonly store: Pick<Store, 'open'>;
   readonly announce: Announce;
+  /** The player's transport: an opened project is sought to its play length through it, silently (point 5). */
+  readonly player: Pick<Transport, 'seek' | 'length'>;
   /** The page's decoder: the browser's (`createImageBitmap`); a test's own in Node. */
   readonly decode: Decode;
   /** io's Open; handed in only by a test that stands in for it. */
@@ -169,7 +180,7 @@ function intoStore(store: Pick<Store, 'open'>, project: Project): Refusal | null
   }
 }
 
-export function createOpener({ store, announce, decode, openProject = ioOpenProject }: OpenerOptions): Opener {
+export function createOpener({ store, announce, player, decode, openProject = ioOpenProject }: OpenerOptions): Opener {
   let state = QUIET;
   /** How many opens have been asked for: an open may act only while it is the latest. */
   let asked = 0;
@@ -215,6 +226,13 @@ export function createOpener({ store, announce, decode, openProject = ioOpenProj
     if (refusal !== null) {
       if (mine === asked) hold({ opening: false, refusal, name });
       return { kind: 'refused', refusal };
+    }
+    // The store holds the opened project, so its length, picture and all, is the one built now (point 5). Dropped if it
+    // throws: the open has happened and stays opened.
+    try {
+      player.seek(player.length());
+    } catch {
+      // dropped
     }
     taken += 1;
     // The store has taken it: it is opened whatever happens next. A throw from `announce` is dropped, not given back

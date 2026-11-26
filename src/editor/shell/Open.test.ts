@@ -23,7 +23,9 @@ const NOT_A_FILE = Uint8Array.of(1, 2, 3, 4);
 /** A real opener on an empty store; its decoder is never reached (no file here is a project). */
 function openerOf() {
   const store = createStore({ project: { scene: newScene(counter('s')), images: [] }, nextId: counter('n') });
-  return createOpener({ store, announce: () => undefined, decode: () => Promise.reject(new Error('not reached')) });
+  // No file here is a project, so nothing reaches the store and the player is never sought: its length is never read.
+  const player = { seek: () => undefined, length: () => 0 };
+  return createOpener({ store, announce: () => undefined, player, decode: () => Promise.reject(new Error('not reached')) });
 }
 
 /** A file whose read never settles: the opener stays opening. */
