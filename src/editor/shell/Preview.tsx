@@ -4,11 +4,11 @@
 // Its claim:
 // 1. One `<canvas>`, in a box named "Route animation preview" (v3's name, index.html 1468, with "preview" for
 //    "canvas"; provisional). CORE-06 (brief 109): the box is operable, no longer an image: one tab stop, and the
-//    editor's pointer acts on it. Its role is `toolbar`: the lint's strict set (4.1.2) refuses a tab stop and pointer
-//    handlers on `application` (not an interactive role to it), as on an image, a group or a region; of the roles it
-//    takes, toolbar needs no state and no owned items, asks for no typed text (as a textbox would) and is none a
-//    control's graphic stands in (a button, a link, a tab, a menu item, a checkbox, a switch, an option), so the
-//    preview stays set aside from the contrast check as the user's own picture. The role, name and tab stop stand on
+//    editor's pointer acts on it. Its role is `application` (D245, the owner's ruling of 26 Nov: a toolbar is a row of
+//    buttons, which this is not). The lint's strict set (4.1.2) counts `application` as no interactive role and so
+//    refuses its tab stop: one disable on this element alone allows it (`no-noninteractive-tabindex`, the only rule it
+//    trips; the pointer is bound by listeners, not JSX handlers). The preview stays set aside from the contrast check
+//    as the user's own picture. The role, name and tab stop stand on
 //    the box, not the canvas, so the canvas never takes Tab itself (2.1.2). Nothing in it is live: Play, Pause and
 //    "Animation complete" are said by the status region already. The theme's focus ring rings it, as it rings anything
 //    with a tab stop.
@@ -161,6 +161,8 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
     };
     drawer.attach({
       paint: (request) => {
+        // Unknown until this paint's record overlay runs: a paint that throws first leaves no old geometry to hit (P).
+        drawn = null;
         const { width, height } = request.size;
         if (element.width !== width) element.width = width;
         if (element.height !== height) element.height = height;
@@ -168,7 +170,7 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
       },
       surface,
     });
-    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: () => drawn, refresh: () => { drawer.drawNow(); }, mac: MAC });
+    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: () => drawn, refresh: () => drawer.drawNow(), mac: MAC });
 
     let box = { width: 0, height: 0 };
     const measure = () => {
@@ -212,7 +214,8 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
   // As wide as the slot, and no wider than the room left (or the least, if more) times the shape (point 5).
   const width = `min(100%, calc(max(var(--preview-room, 0px), ${String(PREVIEW_LEAST_VH)}vh) * ${aspect}))`;
   return (
-    <div ref={boxRef} className="preview" role="toolbar" aria-label={PREVIEW_NAME} tabIndex={0} style={{ aspectRatio: aspect, width }}>
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- D245: the owner chose `application` for this one box, a canvas the pointer draws on with one tab stop; the strict set counts that role as not interactive.
+    <div ref={boxRef} className="preview" role="application" aria-label={PREVIEW_NAME} tabIndex={0} style={{ aspectRatio: aspect, width }}>
       <canvas ref={canvas} className="preview__canvas" style={{ touchAction: 'none' }} />
     </div>
   );

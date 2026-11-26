@@ -225,7 +225,7 @@ function bound(geometry: (store: Store) => Geometry | null = drawnOf, mac = true
   const made = scene();
   const canvas = canvasStandIn();
   const win = target();
-  const unbind = bindCanvas({ canvas, win, store: made.store, geometry: () => geometry(made.store), refresh: () => undefined, mac });
+  const unbind = bindCanvas({ canvas, win, store: made.store, geometry: () => geometry(made.store), refresh: () => true, mac });
   return { ...made, canvas, win, unbind };
 }
 
@@ -239,12 +239,15 @@ function boundHeld() {
   const win = target();
   let painted = drawnOf(made.store);
   let paints = 0;
+  let failing = false;
   const refresh = () => {
     paints += 1;
+    if (failing) return false;
     painted = drawnOf(made.store);
+    return true;
   };
   const unbind = bindCanvas({ canvas, win, store: made.store, geometry: () => painted, refresh, mac: true });
-  return { ...made, canvas, win, unbind, paints: () => paints };
+  return { ...made, canvas, win, unbind, paints: () => paints, fail: (now: boolean) => { failing = now; } };
 }
 
 /** The page's place of an image point: CSS pixels plus the canvas's offset. */
@@ -266,7 +269,7 @@ describe('the canvas\'s binding', () => {
       expect(each.removed).toEqual(each.added);
       expect(each.count()).toBe(0);
     }
-    const again = bindCanvas({ canvas, win, store, geometry: () => drawnOf(store), refresh: () => undefined, mac: true });
+    const again = bindCanvas({ canvas, win, store, geometry: () => drawnOf(store), refresh: () => true, mac: true });
     expect(canvas.count()).toBe(5);
     expect(win.count()).toBe(3);
     again();
@@ -372,7 +375,7 @@ describe('the canvas\'s binding', () => {
     expect(store.getState().project).toEqual(before);
     expect(canvas.captured.size).toBe(0);
     expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
-    const again = bindCanvas({ canvas, win, store, geometry: () => drawnOf(store), refresh: () => undefined, mac: true });
+    const again = bindCanvas({ canvas, win, store, geometry: () => drawnOf(store), refresh: () => true, mac: true });
     canvas.fire('pointerdown', client(0.3, 0.7));
     canvas.fire('pointerup', client(0.3, 0.7));
     expect(routeOf(store).points).toHaveLength(4);
@@ -392,6 +395,27 @@ describe('the canvas\'s binding', () => {
     expect(after.points).toHaveLength(4);
     expect(after.lines).toHaveLength(1);
     expect(paints()).toBeGreaterThan(0);
+    unbind();
+  });
+
+  it('a good frame, a store edit, then a refresh that does not record: the down places nothing and joins nothing; once a paint records, the tap is taken (Codex line 22)', () => {
+    const { canvas, store, unbind, fail } = boundHeld();
+    store.select(NOTHING_SELECTED);
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointerup', client(0.3, 0.7));
+    expect(routeOf(store).points).toHaveLength(4);
+    fail(true);
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointerup', client(0.3, 0.7));
+    expect(routeOf(store).points).toHaveLength(4);
+    expect(routeOf(store).lines).toHaveLength(1);
+    expect(canvas.captured.size).toBe(0);
+    fail(false);
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointerup', client(0.3, 0.7));
+    const after = routeOf(store);
+    expect(after.points).toHaveLength(4);
+    expect(after.lines).toHaveLength(1);
     unbind();
   });
 

@@ -23,7 +23,8 @@
 //    for, so the compatibility click after a tap does nothing and a tap is one point. Before a frame is drawn, a down
 //    is not taken. Every down first asks the page to paint now if the store has moved on since the last frame (`refresh`),
 //    so a tap never hit-tests geometry older than the store: two quick taps on one empty place make one point, not two
-//    (brief 113, ruling K). A tap with any modifier held (Shift, Alt, Ctrl or Meta, on every platform) means nothing to
+//    (brief 113, ruling K). When that paint did not record (it threw), the geometry is unknown and the down is not taken:
+//    nothing placed, nothing joined, never a point on top of one the frame has not drawn yet (brief 114, ruling P). A tap with any modifier held (Shift, Alt, Ctrl or Meta, on every platform) means nothing to
 //    the pen, whichever key is the platform's command key (ruling L). What it gives back first ends any press through
 //    the machine, as a blur does (a drag's places and selection put back, no step, capture released: ruling J), then
 //    removes every listener with its original callback (React's strict mode mounts twice: no second binding is left).
@@ -114,8 +115,11 @@ export interface CanvasBindingOptions<E extends PointerFields> {
   readonly store: Store;
   /** The geometry of the last frame drawn on the canvas, in canvas pixels, or null before the first. */
   readonly geometry: () => Geometry | null;
-  /** Paints the canvas now if what it shows is older than the store, so that `geometry` is the store's (ruling K). */
-  readonly refresh: () => void;
+  /**
+   * Paints the canvas now if what it shows is older than the store, so that `geometry` is the store's (ruling K); false
+   * when the canvas could not be brought to the store (the paint threw), and the down is then not taken (ruling P).
+   */
+  readonly refresh: () => boolean;
   /** Whether this machine is a Mac: the platform's command key is Cmd there, Ctrl elsewhere. */
   readonly mac: boolean;
 }
@@ -190,7 +194,7 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
       send({ ...contact, kind });
       return;
     }
-    refresh();
+    if (!refresh()) return;
     const now = inCss();
     if (now === null) return;
     const { selection } = store.getState();

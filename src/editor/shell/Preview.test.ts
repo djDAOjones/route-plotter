@@ -1,6 +1,6 @@
 // CORE-05, stage 6 (brief 84): what the preview draws (react-dom/server, no page): one canvas, in a box named "Route
-// animation preview", its shape the video's (D202), with a picture or none. CORE-06 (brief 109): the box is a
-// toolbar with one tab stop, and takes the room its column leaves (D209). The drawing, the size and the picture
+// animation preview", its shape the video's (D202), with a picture or none. CORE-06 (brief 109): the box is an
+// application (D245, brief 114) with one tab stop, and takes the room its column leaves (D209). The drawing, the size and the picture
 // are the page's (tests/a11y/project.mjs, the-preview-draws and after).
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -14,7 +14,7 @@ const scene = newScene(() => 'id');
 const drawn = (image: { width: number; height: number } | null, video = scene.settings.export) =>
   renderToStaticMarkup(
     createElement(Preview, {
-      drawer: { attach: () => undefined, detach: () => undefined, drawNow: () => undefined },
+      drawer: { attach: () => undefined, detach: () => undefined, drawNow: () => true },
       inputs: {
         inputs: () => ({ scene: { ...scene, settings: { ...scene.settings, export: video } }, seed: SEED, size: START_SIZE, image }),
         resize: () => undefined,
@@ -25,11 +25,11 @@ const drawn = (image: { width: number; height: number } | null, video = scene.se
   );
 
 describe('the preview', () => {
-  it('is one canvas in a box that is a toolbar named "Route animation preview", with one tab stop, on the box', () => {
+  it('is one canvas in a box that is an application named "Route animation preview", with one tab stop, on the box', () => {
     const html = drawn(null);
     expect(PREVIEW_NAME).toBe('Route animation preview');
     expect(html.match(/<canvas/g)).toHaveLength(1);
-    expect(html).toMatch(/^<div class="preview" role="toolbar" aria-label="Route animation preview" tabindex="0"/);
+    expect(html).toMatch(/^<div class="preview" role="application" aria-label="Route animation preview" tabindex="0"/);
     expect(html.match(/tabindex/g)).toHaveLength(1);
     expect(html.match(/role=/g)).toHaveLength(1);
     expect(html).not.toMatch(/aria-live|aria-describedby|role="img"/);

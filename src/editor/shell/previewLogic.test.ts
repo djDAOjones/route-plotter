@@ -619,6 +619,35 @@ describe('when a frame is drawn (ruling 4)', () => {
     expect(requests).toHaveLength(2);
   });
 
+  it('(g) a good frame, a store edit, then a refresh whose paint throws: `drawNow` says the canvas is not the store\'s, books a frame, and tries again at the next (Codex line 22)', () => {
+    let throwing = false;
+    const { store, drawer, target, frames, requests, reports } = drawerOf(upTheMiddle([wide]), () => {
+      if (throwing) throw new Error('paint');
+      return [];
+    });
+    drawer.attach(target);
+    frames.run();
+    expect(drawer.drawNow()).toBe(true);
+    expect(requests).toHaveLength(1);
+    throwing = true;
+    at(store, 100);
+    expect(drawer.drawNow()).toBe(false);
+    expect(requests).toHaveLength(2);
+    expect(reports).toHaveLength(1);
+    expect(frames.booked()).toBe(1);
+    // The key of the failed paint is not taken as drawn: the next down paints again, and says so again.
+    expect(drawer.drawNow()).toBe(false);
+    expect(requests).toHaveLength(3);
+    throwing = false;
+    expect(drawer.drawNow()).toBe(true);
+    expect(requests).toHaveLength(4);
+    expect(frames.booked()).toBe(0);
+    expect(drawer.drawNow()).toBe(true);
+    expect(requests).toHaveLength(4);
+    drawer.detach();
+    expect(drawer.drawNow()).toBe(false);
+  });
+
   it('(f) after detach a booked frame draws nothing and no telling is heard', () => {
     const { store, inputs, drawer, target, frames, requests, hold, pictureListeners } = drawerOf();
     drawer.attach(target);

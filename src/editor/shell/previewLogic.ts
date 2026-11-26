@@ -249,9 +249,10 @@ export interface Drawer {
   /**
    * Draws now, in place of a frame booked, when what a frame is made from differs from what was last drawn; otherwise
    * nothing (CORE-06, brief 113, ruling K: the canvas's binding asks at each down, so a tap never hit-tests a frame older
-   * than the store).
+   * than the store). True when the canvas then shows what the store holds; false when the paint threw (a frame is
+   * booked to try again) or nothing is attached, so the down is not taken (brief 114, ruling P, Codex line 22).
    */
-  drawNow(): void;
+  drawNow(): boolean;
 }
 
 /** What a frame is made from, by value: objects by identity, then numbers (point 4b). */
@@ -292,19 +293,23 @@ export function createDrawer<H>({ store, inputs, pictures, frames, report, faile
     return { scene, sceneMs: playback.atMs, seed, size, image: picture, surface, ...(overlays ? { overlays } : {}) };
   };
 
-  const frame = (): void => {
-    if (attached === null) return;
-    drawn = keyNow();
+  /** Draws a frame; true when the paint returned. Only then is its key taken as drawn (Codex line 22). */
+  const frame = (): boolean => {
+    if (attached === null) return false;
+    const key = keyNow();
     let reports: readonly FrameReport[];
     try {
       reports = attached.target.paint(requestNow(attached.target.surface));
     } catch (error) {
       report(error);
-      return;
+      return false;
     }
-    if (sameReports(reports, lastReports)) return;
-    lastReports = reports;
-    failed(reports);
+    drawn = key;
+    if (!sameReports(reports, lastReports)) {
+      lastReports = reports;
+      failed(reports);
+    }
+    return true;
   };
 
   const book = (): void => {
@@ -343,14 +348,20 @@ export function createDrawer<H>({ store, inputs, pictures, frames, report, faile
       book();
     },
     detach,
+    // Its cost: while the animation plays, the position moves every frame, so nearly every down paints a whole frame
+    // here, synchronously, before the hit test: on a long route with many marks that is one frame's composition added
+    // to the press's latency (Codex line 25). A still page pays nothing: the key matches and nothing is drawn.
     drawNow: () => {
-      if (attached === null || (drawn !== null && sameKey(drawn, keyNow()))) return;
+      if (attached === null) return false;
+      if (drawn !== null && sameKey(drawn, keyNow())) return true;
       if (booked !== null) {
         const { handle } = booked;
         booked = null;
         frames.cancel(handle);
       }
-      frame();
+      if (frame()) return true;
+      book();
+      return false;
     },
   };
 }

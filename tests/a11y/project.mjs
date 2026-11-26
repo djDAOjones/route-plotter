@@ -49,8 +49,8 @@
 // 3.3.4 and 3.3.6 not applicable: the coverage tool refuses it (a row is not applicable only when its own trigger
 // feature, here `user-input` itself, is declared absent), so the feature stays unknown and the six rows owed.
 // CORE-06, chat E1 (2026-11-25, brief 109): the paragraph above the preview, "Version 4 is being built here", and its
-// link to GitHub are gone (D209), and the preview takes the height left. The preview's box is now operable: a toolbar
-// named "Route animation preview" with one tab stop (the strict lint refuses a tab stop on an application), met by Tab
+// link to GitHub are gone (D209), and the preview takes the height left. The preview's box is now operable: an
+// application named "Route animation preview" (D245; brief 114: it was a toolbar) with one tab stop, met by Tab
 // after "Help" where the link was. READING, FOCUS and both snapshots follow; the journeys that stood on the link stand
 // on the page's controls: the reduced-motion focus and the kept function focus the preview, the 320 px walk meets it
 // in the link's place, Home on the focused preview speaks with focus kept (4.1.3), the single keys say nothing on it
@@ -65,7 +65,7 @@ const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
 // (2.4.3); each route and its title (2.4.2). A change to the shell is reviewed here.
 const READING = ['Route Plotter', 'Preview', 'Timeline', 'Add at least two points to a route to play.'];
-const FOCUS = ['button "Open project"', 'button "Help"', 'toolbar "Route animation preview"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
+const FOCUS = ['button "Open project"', 'button "Help"', 'application "Route animation preview"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
 // The shell's one status region, and the words the editor's keys say in it (the editor's transport's own, WORDS).
 const STATUS = '[role=status]';
@@ -195,7 +195,7 @@ const BLUE = [51, 102, 204]; // #3366cc, the plain picture's
 // selection's rings), never in an SVG or the DOM over it. They are left out of the probe only because they share the
 // canvas with the user's picture, and sharing it establishes nothing of their contrast: that is still to be measured,
 // by the next chat's (E2) pixel journey, not built yet. The count is reviewed: the graphics standing in the preview on every state
-// that declares it, now the canvas alone (the box is a toolbar, no longer an image). A different number found fails
+// that declares it, now the canvas alone (the box is an application, no longer an image). A different number found fails
 // 1.4.11, so a change to what stands there changes it.
 const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 1, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); the editor's own marks (points, lines, the selection's rings) are left out only because they are drawn on the same canvas; their contrast is not measured yet, and is still to be measured by a pixel journey (E2)" }];
 const pixels = (page) => page.locator(CANVAS).evaluate((c) => {
@@ -214,6 +214,33 @@ const strokeAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y]) => 
   return best;
 }, [fx, fy]);
 const near = (p, rgb) => p[3] > 200 && rgb.every((v, i) => Math.abs(p[i] - v) <= 24);
+// CORE-06 (brief 114, Codex line 24): the pen's marks in the pen-drawn state, each read where only it draws. At 0:00 the
+// animation has drawn the first point alone (its line and the second point appear as the animation reaches them), so it
+// skips to the end first. Orange is told by hue (red over green over blue; the selection's ring is white and black) and
+// a least opacity, since at 320 CSS px wide the canvas is 256 px and its line's pixels are faint (alpha under 90). The
+// line: the most opaque pixel of the column at the middle of the two taps, at alpha over 40. Each point: its marker on
+// the far side from the other point, where the line does not reach (its round cap stands out half its width, under a
+// pixel), 1 to a marker's radius away along that ray, at alpha over 60. Each is false when its mark is cleared, at 1280
+// and at 320 CSS px wide (probed, brief 114).
+const TAPS = [[0.45, 0.4], [0.55, 0.6]];
+const markBeyond = (page, [fx, fy], [ox, oy]) => page.locator(CANVAS).evaluate((c, [x, y, ax, ay]) => {
+  const ctx = c.getContext('2d');
+  const [px, py, qx, qy] = [x * c.width, y * c.height, ax * c.width, ay * c.height];
+  const len = Math.hypot(px - qx, py - qy);
+  const reach = Math.max(2, Math.ceil(c.width * 0.006));
+  for (let d = 1; d <= reach; d += 1) {
+    const [r, g, b, a] = ctx.getImageData(Math.floor(px + ((px - qx) / len) * d), Math.floor(py + ((py - qy) / len) * d), 1, 1).data;
+    if (a > 60 && r > 120 && r > g && g >= b) return true;
+  }
+  return false;
+}, [fx, fy, ox, oy]);
+const orange = ([r, g, b, a], least) => a > least && r > 120 && r > g && g >= b;
+const marksDrawn = async (page) => {
+  await page.getByRole('button', { name: 'Skip to end' }).click();
+  await twoFrames(page);
+  const [first, second] = TAPS;
+  return { first: await markBeyond(page, first, second), second: await markBeyond(page, second, first), line: orange(await strokeAt(page, 0.5, 0.5), 40) };
+};
 // True once the canvas is its box times the ratio (to a pixel), within 3 s. CORE-06 (brief 111): Open's busy notice
 // takes room from the box while a project opens and gives it back when it goes, so a frame drawn just after an open
 // may be at the smaller size; two captures compared by their pixels are taken at the box's settled size.
@@ -462,7 +489,7 @@ export default {
         '- main:',
         '  - region "Preview":',
         '    - heading "Preview" [level=2]',
-        '    - toolbar "Route animation preview"',
+        '    - application "Route animation preview"',
         '  - group "Playback":',
         '    - button "Skip to start"',
         '    - button "Play" [disabled]',
@@ -528,7 +555,7 @@ export default {
         '    - button "Close"',
         '  - region "Preview":',
         '    - heading "Preview" [level=2]',
-        '    - toolbar "Route animation preview"',
+        '    - application "Route animation preview"',
         '  - group "Playback":',
         '    - button "Skip to start"',
         '    - button "Play" [disabled]',
@@ -608,7 +635,10 @@ export default {
       // on the page having settled alone: the canvas at its box's size, two frames drawn after each tap, and the canvas
       // then holding what it did not hold before the taps (it throws if not). A press on the banner's blank corner then
       // puts the Tab starting point at the document's start, as refused-long-name's does; it is not on the canvas. Last,
-      // it waits until no transition runs on the page (Play's colours change as it is enabled).
+      // it waits until no transition runs on the page, for the final state only. Brief 114 (Codex line 23) measured
+      // Play during its enabling transition: Carbon faded its background over 70 ms under text already white, 1.71:1 at
+      // worst (the 6.10:1 brief 113 met was one frame of it); the theme no longer fades Play's background, and the
+      // setup throws if Play's transition names its background again, so the frames before the wait are held to 7:1.
       name: 'pen-drawn',
       path: '/',
       setAside: PREVIEW_ASIDE,
@@ -618,13 +648,15 @@ export default {
         await twoFrames(page);
         const empty = await pixels(page);
         const box = await page.locator(PREVIEW).boundingBox();
-        for (const [fx, fy] of [[0.45, 0.4], [0.55, 0.6]]) {
+        for (const [fx, fy] of TAPS) {
           await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy);
           await twoFrames(page);
         }
         if ((await pixels(page)).hash === empty.hash) throw new Error('two taps on the preview drew nothing');
+        const fades = await page.locator('#play-pause').evaluate((el) => getComputedStyle(el).transitionProperty);
+        if (/\b(all|background(-color)?)\b/.test(fades)) throw new Error(`Play's background fades as it is enabled (${fades})`);
         await page.mouse.click(1, 1);
-        // Play has just been enabled: its colours are measured once the page's transitions have ended.
+        // Play has just been enabled: the final state is measured once the page's transitions have ended.
         await page.waitForFunction(() => document.getAnimations().length === 0, undefined, { timeout: 3000 });
       },
       // Reviewed (brief 113): as the shell's, but two points joined by a line make a route that plays, so Play is
@@ -637,7 +669,7 @@ export default {
         '- main:',
         '  - region "Preview":',
         '    - heading "Preview" [level=2]',
-        '    - toolbar "Route animation preview"',
+        '    - application "Route animation preview"',
         '  - group "Playback":',
         '    - button "Skip to start"',
         '    - button "Play"',
@@ -653,7 +685,8 @@ export default {
       keeps: {
         content: [PREVIEW],
         functions: [
-          { name: 'the two points and their line are still drawn', run: async ({ page }) => { await twoFrames(page); return (await pixels(page)).drawn > 0; } },
+          // Brief 114 (Codex line 24): each mark read where only it draws, at the route's end (marksDrawn).
+          { name: 'at the route\'s end, both points and their line are drawn where tapped', run: async ({ page }) => { const m = await marksDrawn(page); return m.first && m.second && m.line; } },
         ],
       },
     },
