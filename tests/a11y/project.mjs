@@ -602,6 +602,61 @@ export default {
         ],
       },
     },
+    {
+      // CORE-06 (brief 109, ruling 11; built by brief 113): the pen has drawn. On the plain background (no picture), two
+      // taps on nothing: two points and one line, the second point selected. The setup waits for the frame itself, never
+      // on the page having settled alone: the canvas at its box's size, two frames drawn after each tap, and the canvas
+      // then holding what it did not hold before the taps (it throws if not). A press on the banner's blank corner then
+      // puts the Tab starting point at the document's start, as refused-long-name's does; it is not on the canvas. Last,
+      // it waits until no transition runs on the page (Play's colours change as it is enabled).
+      name: 'pen-drawn',
+      path: '/',
+      setAside: PREVIEW_ASIDE,
+      setup: async ({ page }) => {
+        await settled({ page });
+        if (!(await sizeSettled(page))) throw new Error('the canvas was not its box times the ratio');
+        await twoFrames(page);
+        const empty = await pixels(page);
+        const box = await page.locator(PREVIEW).boundingBox();
+        for (const [fx, fy] of [[0.45, 0.4], [0.55, 0.6]]) {
+          await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy);
+          await twoFrames(page);
+        }
+        if ((await pixels(page)).hash === empty.hash) throw new Error('two taps on the preview drew nothing');
+        await page.mouse.click(1, 1);
+        // Play has just been enabled: its colours are measured once the page's transitions have ended.
+        await page.waitForFunction(() => document.getAnimations().length === 0, undefined, { timeout: 3000 });
+      },
+      // Reviewed (brief 113): as the shell's, but two points joined by a line make a route that plays, so Play is
+      // enabled, the reason it was not is gone, and the timeline runs to the route's length (0:04).
+      snapshot: [
+        '- banner "Route Plotter":',
+        '  - heading "Route Plotter" [level=1]',
+        '  - button "Open project"',
+        '  - button "Help"',
+        '- main:',
+        '  - region "Preview":',
+        '    - heading "Preview" [level=2]',
+        '    - toolbar "Route animation preview"',
+        '  - group "Playback":',
+        '    - button "Skip to start"',
+        '    - button "Play"',
+        '    - button "Skip to end"',
+        '    - text: Timeline 0:00',
+        '    - slider "Timeline"',
+        '    - text: 0:04',
+        '  - status',
+      ].join('\n'),
+      dialogs: [],
+      // Nothing here draws motion: the points stand until they are edited.
+      interactions: [],
+      keeps: {
+        content: [PREVIEW],
+        functions: [
+          { name: 'the two points and their line are still drawn', run: async ({ page }) => { await twoFrames(page); return (await pixels(page)).drawn > 0; } },
+        ],
+      },
+    },
     // { name: 'home', path: '/', snapshot: '- main:\n  - heading "Home" [level=1]', dialogs: [{ name: 'help', opener: '#help' }],
     //   interactions: [{ name: 'open menu', run: async ({ page }) => page.getByRole('button', { name: 'Menu' }).click(), snapshot: '- button "Menu" [expanded]' }],
     //   keeps: { content: ['h1', '#total'], cues: ['#saved-icon'], functions: [{ name: 'save', run: async ({ page }) => { await page.getByRole('button', { name: 'Save' }).click(); return page.getByRole('status').isVisible(); } }] } },
