@@ -145,7 +145,7 @@ describe('the pen\'s tap', () => {
     expect(store.getState().selection).toEqual({ route: route.id, points: [a] });
   });
 
-  it('means nothing on a line, on another route\'s point, or with a modifier held', () => {
+  it('means nothing on a line off its "+", on another route\'s point, or with a modifier held', () => {
     const { store, route, other } = scene();
     const line = route.lines[0]?.id ?? '';
     expect(penTap(store.getState(), tap({ kind: 'line', route: route.id, id: line }))).toBeNull();
@@ -153,6 +153,44 @@ describe('the pen\'s tap', () => {
     for (const held of [{ ...NONE, alt: true }, { ...NONE, shift: true }, { ...NONE, meta: true }]) {
       expect(penTap(store.getState(), tap(null, { x: 0.5, y: 0.5 }, held))).toBeNull();
     }
+  });
+
+  // Brief 120, ruling Z: a tap on the "+" of the first route's line inserts a bend there (v3's minor waypoint), selected
+  // alone, one step; a, b and their line a → b, its "+" at (0.4, 0.4) by the hit test.
+  it('on a line\'s "+" inserts a bend at the "+"\'s place, not the tap\'s, selected alone, one undo step, whatever the pen stood on', () => {
+    const { store, route, a, b, c } = scene();
+    store.select({ route: route.id, points: [c] });
+    const line = route.lines[0]?.id ?? '';
+    const command = penTap(store.getState(), tap({ kind: 'line', route: route.id, id: line, plus: { x: 0.4, y: 0.4 } }, { x: 0.41, y: 0.42 }));
+    expect(command).not.toBeNull();
+    if (command) expect(store.dispatch(command).ok).toBe(true);
+    const after = routeOf(store);
+    expect(after.points).toHaveLength(4);
+    const added = after.points.find((point) => ![a, b, c].includes(point.id));
+    expect(added).toMatchObject({ x: 0.4, y: 0.4, kind: 'bend' });
+    expect(after.lines.map(({ from, to }) => [from, to])).toEqual([[a, added?.id], [added?.id, b]]);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [added?.id] });
+    expect(store.undo().ok).toBe(true);
+    expect(routeOf(store)).toEqual(route);
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+  });
+
+  it('on a line\'s "+" with a modifier held, or on another route\'s line, means nothing', () => {
+    const { store, route, other } = scene();
+    const line = route.lines[0]?.id ?? '';
+    const plus = { x: 0.4, y: 0.4 };
+    for (const held of [{ ...NONE, alt: true }, { ...NONE, shift: true }, { ...NONE, meta: true }]) {
+      expect(penTap(store.getState(), tap({ kind: 'line', route: route.id, id: line, plus }, plus, held))).toBeNull();
+    }
+    expect(penTap(store.getState(), tap({ kind: 'line', route: other.id, id: line, plus }, plus))).toBeNull();
+  });
+
+  it('holds a "+" place beyond the picture to its edge (D237)', () => {
+    const { store, route } = scene();
+    const line = route.lines[0]?.id ?? '';
+    const command = penTap(store.getState(), tap({ kind: 'line', route: route.id, id: line, plus: { x: -0.1, y: 1.2 } }, { x: 0.5, y: 0.5 }));
+    if (command) store.dispatch(command);
+    expect(routeOf(store).points[3]).toMatchObject({ x: 0, y: 1, kind: 'bend' });
   });
 
   it('holds a place beyond the picture to its edge (D237)', () => {
@@ -589,7 +627,8 @@ describe('the hover (point 6; brief 118, ruling S)', () => {
     canvas.fire('pointermove', mouse(0.2, 0.2));
     expect(hover.held()).toEqual({ routeId: route.id, pointId: a });
     canvas.fire('pointermove', mouse(0.4, 0.4));
-    expect(hover.held()).toEqual({ routeId: route.id, lineId: route.lines[0]?.id });
+    // (0.4, 0.4) is the line's middle, where its "+" stands (brief 120).
+    expect(hover.held()).toEqual({ routeId: route.id, lineId: route.lines[0]?.id, onPlus: true });
     canvas.fire('pointermove', mouse(0.8, 0.3));
     expect(hover.held()).toBeNull();
     canvas.fire('pointermove', { ...client(0.2, 0.2), pointerType: 'pen' });
@@ -601,10 +640,11 @@ describe('the hover (point 6; brief 118, ruling S)', () => {
 
   it('the same point or line under a moving pointer tells the subscribers once', () => {
     const { canvas, told, route, unbind } = hovering();
-    canvas.fire('pointermove', mouse(0.4, 0.4));
-    canvas.fire('pointermove', mouse(0.41, 0.41));
-    canvas.fire('pointermove', mouse(0.42, 0.42));
-    expect(told).toEqual([{ routeId: route.id, lineId: route.lines[0]?.id }]);
+    // Along the line, off its "+" at (0.4, 0.4).
+    canvas.fire('pointermove', mouse(0.3, 0.3));
+    canvas.fire('pointermove', mouse(0.31, 0.31));
+    canvas.fire('pointermove', mouse(0.32, 0.32));
+    expect(told).toEqual([{ routeId: route.id, lineId: route.lines[0]?.id, onPlus: false }]);
     canvas.fire('pointermove', mouse(0.8, 0.3));
     canvas.fire('pointermove', mouse(0.85, 0.3));
     expect(told).toHaveLength(2);

@@ -8,6 +8,7 @@
 // under the pointer and the selection; it then performs the effects (gesture.ts for the store, the page for capture).
 // v3's behaviour, not its code: InteractionHandler.js :210–300 (down), :335–380 (the threshold), :440–545 (up, cancel,
 // lost capture), and interactionPointer.test.js, ported in pointer.test.ts.
+import type { ImagePoint } from '../../core/geometry/units';
 
 /** v3's INTERACTION.DRAG_THRESHOLD (constants.js:115): a press is a drag only beyond this many CSS pixels. */
 export const DRAG_THRESHOLD = 3;
@@ -28,7 +29,13 @@ export interface Modifiers {
 /** What lay under the pointer when it went down, as the caller's hit test found it. */
 export type Under =
   | { readonly kind: 'point'; readonly route: string; readonly id: string }
-  | { readonly kind: 'line'; readonly route: string; readonly id: string }
+  | {
+      readonly kind: 'line';
+      readonly route: string;
+      readonly id: string;
+      /** The line's "+" place in image fractions, when the pointer was on it (./hit.ts); absent off the "+". */
+      readonly plus?: ImagePoint;
+    }
   | null;
 
 /** The selection when the pointer went down: a route and some of its points, the last picked last. */

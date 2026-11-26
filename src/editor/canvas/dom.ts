@@ -12,9 +12,12 @@
 //    route) and stands on that route's single selected point, or on none (D235). A tap on nothing places a stop there
 //    (a point's default kind),
 //    joined from the pen if it stands on one; a tap on a point of that route joins it from the pen (two points already
-//    joined are not joined again), or selects it when the pen stands on nothing. A tap on a line, on another route's
-//    point, and every tap with a modifier held, means nothing yet (insert is chat F's; the modifier taps F's and G's).
-//    A place beyond the picture is held to its edge (D237: the clamp is the page's).
+//    joined are not joined again), or selects it when the pen stands on nothing. A tap on the "+" of that route's line
+//    (the hit test's `plus`, ./hit.ts) inserts a bend at the "+"'s place, never the tap's (`splitLine`; brief 120,
+//    ruling Z: v3 inserted a minor waypoint), which the command selects alone, so the pen then stands on it, whatever
+//    it stood on before. A tap on a line off its "+" (D254 asks the owner), on another route's point or line, and every
+//    tap with a modifier held, means nothing yet (the modifier taps F's and G's). A place beyond the picture, the
+//    tap's or the "+"'s, is held to its edge (D237: the clamp is the page's).
 // 3. `bindCanvas`: one `bindPointer` (gesture.ts) on one canvas. Each DOM pointer event is reduced to the machine's
 //    `PointerInput` (the place in the canvas's CSS pixels; a down carries what the hit test finds under it in the last
 //    frame drawn and the selection now); capture is asked for and released as the effects say. Listened for on the
@@ -49,7 +52,7 @@ import type { Screen } from '../../adapters/render/overlays';
 import type { Command } from '../store/command';
 import { NOTHING_SELECTED } from '../store/selection';
 import type { Store } from '../store/store';
-import { penStep } from './commands';
+import { penStep, splitLine } from './commands';
 import type { Start } from '../../core/model/commands/editing';
 import { bindPointer, type PointerBinding, type Tap } from './gesture';
 import { hitTest, type HitRoute } from './hit';
@@ -100,6 +103,9 @@ export function penTap({ project, selection }: Pick<ReturnType<Store['getState']
   const { under } = tap;
   if (under === null) return penStep(route.id, pen, { place: { x: clamp(tap.place.x), y: clamp(tap.place.y), kind: 'stop' } });
   if (under.kind === 'point' && under.route === route.id) return penStep(route.id, pen, { point: under.id });
+  if (under.kind === 'line' && under.route === route.id && under.plus !== undefined) {
+    return splitLine(route.id, under.id, { x: clamp(under.plus.x), y: clamp(under.plus.y), kind: 'bend' });
+  }
   return null;
 }
 

@@ -548,21 +548,21 @@ describe('when a frame is drawn (ruling 4)', () => {
     frames.run();
     const route = store.getState().project.scene.routes[0];
     const lineId = route?.lines[0]?.id ?? '';
-    hover.set({ routeId: route?.id ?? '', lineId });
+    hover.set({ routeId: route?.id ?? '', lineId, onPlus: false });
     expect(frames.booked()).toBe(1);
     frames.run();
-    hover.set({ routeId: route?.id ?? '', lineId });
+    hover.set({ routeId: route?.id ?? '', lineId, onPlus: false });
     expect(frames.booked()).toBe(0);
     hover.set(null);
     expect(frames.booked()).toBe(1);
     frames.run();
     expect(requests).toHaveLength(3);
     drawer.detach();
-    hover.set({ routeId: route?.id ?? '', lineId });
+    hover.set({ routeId: route?.id ?? '', lineId, onPlus: false });
     expect(frames.booked()).toBe(0);
   });
 
-  it('(d) a hover with no route selected draws nothing; with the route selected, its line with plus none, or its point; another route\'s, nothing (brief 118, ruling T)', () => {
+  it('(d) a hover with no route selected draws nothing; with the route selected, its line with its "+" idle or active, or its point; another route\'s, nothing (briefs 118 and 120)', () => {
     const recorder = new Recorder();
     const { store, drawer, target, frames, requests, hover } = drawerOf(upTheMiddle([wide]), (request) => compose(recorder, request));
     drawer.attach(target);
@@ -581,7 +581,7 @@ describe('when a frame is drawn (ruling 4)', () => {
       return own.take();
     };
     // No route selected: a hover on a line or a point draws the export's frame, line for line (point 4d).
-    for (const each of [{ routeId, lineId }, { routeId, pointId }]) {
+    for (const each of [{ routeId, lineId, onPlus: true }, { routeId, pointId }]) {
       hover.set(each);
       frames.run();
       expect(requests[requests.length - 1]?.overlays).toBeUndefined();
@@ -592,12 +592,18 @@ describe('when a frame is drawn (ruling 4)', () => {
     frames.run();
     const plain = recorder.take();
     expect(plain).toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
-    // Its line: the lines' overlay hovers it with no "+"; the glow is drawn, and no "+" is.
-    hover.set({ routeId, lineId });
+    // Its line: the lines' overlay hovers it with its "+" idle (brief 120, ruling AA); the glow is drawn, and the "+".
+    hover.set({ routeId, lineId, onPlus: false });
     frames.run();
     const onLine = recorder.take();
-    expect(onLine).toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: { routeId, lineId, plus: 'none' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
-    expect(onLine).not.toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: { routeId, lineId, plus: 'idle' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(onLine).toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: { routeId, lineId, plus: 'idle' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(onLine).not.toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: { routeId, lineId, plus: 'none' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    // On its "+": active.
+    hover.set({ routeId, lineId, onPlus: true });
+    frames.run();
+    const onPlus = recorder.take();
+    expect(onPlus).toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: { routeId, lineId, plus: 'active' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(onPlus).not.toEqual(onLine);
     expect(onLine.some((line) => line.includes('rgba(15, 98, 254, 0.45)'))).toBe(true);
     expect(plain.some((line) => line.includes('rgba(15, 98, 254, 0.45)'))).toBe(false);
     // Its point: the points' overlay hovers it.
@@ -607,7 +613,7 @@ describe('when a frame is drawn (ruling 4)', () => {
     expect(onPoint).toEqual(asked([OVERLAY_MAKERS.lines([routeId], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: { routeId, pointId } })]));
     expect(onPoint).not.toEqual(plain);
     // Another route's line or point: nothing more than the selected route's frame.
-    for (const each of [{ routeId: 'elsewhere', lineId }, { routeId: 'elsewhere', pointId }]) {
+    for (const each of [{ routeId: 'elsewhere', lineId, onPlus: true }, { routeId: 'elsewhere', pointId }]) {
       hover.set(each);
       frames.run();
       expect(recorder.take()).toEqual(plain);

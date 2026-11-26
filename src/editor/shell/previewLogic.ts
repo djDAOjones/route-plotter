@@ -31,9 +31,9 @@
 //    (d) no overlays when no route is selected, so the frame is line for line an export's, a hover or none; with a
 //        route selected, `OVERLAY_MAKERS.lines([route], { hovered })` then `OVERLAY_MAKERS.points([route], { selected,
 //        hovered })`, each selected point as `{ routeId, pointId }`. A hovered point of that route is the points
-//        overlay's `hovered`; a hovered line of that route is the lines overlay's, `{ routeId, lineId, plus: 'none' }`
-//        (CORE-06, brief 118, ruling T: no "+" is offered until insert is built); a hover on another route draws
-//        nothing;
+//        overlay's `hovered`; a hovered line of that route is the lines overlay's, `{ routeId, lineId, plus }`, its
+//        "+" `'active'` while the hover is on it and `'idle'` otherwise (CORE-06, brief 120, ruling AA: a tap on the
+//        "+" inserts a point there, ../canvas/dom.ts point 2); a hover on another route draws nothing;
 //    (e) a `paint` that throws is reported and draws nothing more that frame; the next change books as before. The
 //        reports a frame gives back go to `failed` only when they differ from the last frame's, so a module failing
 //        through a whole playing is told once;
@@ -292,7 +292,7 @@ function overlaysOf(selection: Selection, hover: Hover): FrameRequest['overlays'
   const selected = selection.points.map((pointId) => ({ routeId: route, pointId }));
   const ours = hover !== null && hover.routeId === route ? hover : null;
   const point = ours !== null && 'pointId' in ours ? { routeId: route, pointId: ours.pointId } : null;
-  const line = ours !== null && 'lineId' in ours ? { routeId: route, lineId: ours.lineId, plus: 'none' as const } : null;
+  const line = ours !== null && 'lineId' in ours ? { routeId: route, lineId: ours.lineId, plus: ours.onPlus ? ('active' as const) : ('idle' as const) } : null;
   return [OVERLAY_MAKERS.lines([route], { hovered: line }), OVERLAY_MAKERS.points([route], { selected, hovered: point })];
 }
 

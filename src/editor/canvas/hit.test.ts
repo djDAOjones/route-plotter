@@ -9,8 +9,10 @@
 // Not ported, and why:
 // - waypointPointIndices (2 tests) and legIndexForPointIndex (4): v3 mapped a run's polyline back to its legs; v4's
 //   `routeShape` gives each line its own samples, both authored ends exact, so there is nothing to map.
-// - legMidpointIndex (2 tests), the "+" handle (12 px, onPlus, canInsert, midImg) and hovering: chat F's, with the
-//   insert and the hovered stretch (D208). DEF-22's "a branch leg offers no '+'" does not carry: v4 splits any line.
+// - legMidpointIndex (2 tests), canInsert and hovering: v4's "+" stands at `pointAt(samples, 0.5)` of the line's own
+//   samples, the place the overlay draws it (src/features/line/draw/overlays.ts), so there is no index to find; every
+//   line offers it. DEF-22's "a branch leg offers no '+'" does not carry: v4 splits any line. The "+" itself (v3's
+//   12 px, onPlus, midImg) is ported below (CORE-06, brief 120, ruling Y).
 // - findWaypointAt's `exclude` (ROUTE-01c, a drop's hit test skipping the dragged point): a drop joins nothing (D239).
 // - "legs are not hit in preview" and the clicks, hovers, flashes and drawing of branchLegHit.test.js: the page's.
 import { describe, expect, it } from 'vitest';
@@ -19,7 +21,8 @@ import { imageToCanvas } from '../../core/geometry/transform';
 import { newLine, newPoint, newRoute, type IdSource, type Route } from '../../core/model/scene';
 import { routeShape } from '../../core/timing/shape';
 import { composeTimeline } from '../../core/timing/timeline';
-import { hitTest, LINE_HIT_RADIUS, nearestOnPolyline, POINT_HIT_RADIUS, type HitRoute } from './hit';
+import { pointAt } from '../../core/geometry/path';
+import { hitTest, LINE_HIT_RADIUS, nearestOnPolyline, PLUS_HIT_RADIUS, POINT_HIT_RADIUS, type HitRoute } from './hit';
 import type { Pixel } from './pointer';
 
 /** The image drawn at 1000 by 800 CSS pixels. */
@@ -223,9 +226,10 @@ describe('a line under the pointer', () => {
   it('the nearest line within 8 px is named; beyond 8 px, nothing', () => {
     const made = straight();
     const line = { kind: 'line', route: made.route.id, id: made.id('a>b') };
-    expect(hitTest({ x: 500, y: 400 }, BOUNDS, [edited(made)])).toEqual(line);
-    expect(hitTest({ x: 500, y: 400 + LINE_HIT_RADIUS }, BOUNDS, [edited(made)])).toEqual(line);
-    expect(hitTest({ x: 500, y: 400 - LINE_HIT_RADIUS - 0.5 }, BOUNDS, [edited(made)])).toBeNull();
+    // At x 300, well off the "+" at the middle (x 500): a line alone, with no `plus`.
+    expect(hitTest({ x: 300, y: 400 }, BOUNDS, [edited(made)])).toEqual(line);
+    expect(hitTest({ x: 300, y: 400 + LINE_HIT_RADIUS }, BOUNDS, [edited(made)])).toEqual(line);
+    expect(hitTest({ x: 300, y: 400 - LINE_HIT_RADIUS - 0.5 }, BOUNDS, [edited(made)])).toBeNull();
     // Beyond its end, measured to the end itself (clamped), not to the line carried on.
     expect(hitTest({ x: 906, y: 400 + 14 }, BOUNDS, [edited(made)])).toBeNull();
   });
@@ -235,7 +239,7 @@ describe('a line under the pointer', () => {
     const made = straight();
     const sparse = { ...made.timeline, shapes: routeShape(made.route, made.timeline.walk, ASPECT, 2) };
     expect(sparse.shapes.get(made.id('a>b'))?.samples).toHaveLength(2);
-    expect(hitTest({ x: 500, y: 405 }, BOUNDS, [{ ...edited(made), timeline: sparse }])).toEqual({
+    expect(hitTest({ x: 300, y: 405 }, BOUNDS, [{ ...edited(made), timeline: sparse }])).toEqual({
       kind: 'line',
       route: made.route.id,
       id: made.id('a>b'),
@@ -278,7 +282,7 @@ describe('a line under the pointer', () => {
     it('of two routes, the later given keeps the tie', () => {
       const first = routeOf({ a: [0.1, 0.5], b: [0.9, 0.5] }, ['a>b'], 'a', 'f');
       const second = routeOf({ a: [0.1, 0.5], b: [0.9, 0.5] }, ['a>b'], 'a', 's');
-      expect(hitTest({ x: 500, y: 403 }, BOUNDS, [edited(first), edited(second)])).toEqual({
+      expect(hitTest({ x: 500, y: 403 }, BOUNDS, [edited(first), edited(second)])).toMatchObject({
         kind: 'line',
         route: second.route.id,
         id: second.id('a>b'),
@@ -321,13 +325,64 @@ const SHAPES = [
   ],
 ] as const;
 
+// CORE-06, brief 120, ruling Y: v3's leg "+" (app/pointer.js:293–294, a 12 px radius) at the place the overlay draws it,
+// `pointAt(samples, 0.5)` of the line's own samples. A point is still hit first; then the nearest "+" within 12 px; then a
+// line within 8 px, with no `plus`.
+describe('the "+" at a line’s middle', () => {
+  // a at (100, 400), b at (900, 400): the "+" at (500, 400).
+  const straight = () => routeOf({ a: [0.1, 0.5], b: [0.9, 0.5] }, ['a>b'], 'a');
+  const middle = (made: ReturnType<typeof routeOf>, line: string) => {
+    const samples = made.timeline.shapes.get(made.id(line))?.samples ?? [];
+    const place = pointAt(samples, 0.5);
+    if (place === null) throw new Error(`no middle for ${line}`);
+    return place;
+  };
+
+  it('within 12 px of the "+" the line is named with `plus`, the "+"’s place in image fractions; beyond, not', () => {
+    const made = straight();
+    const plus = middle(made, 'a>b');
+    const at = imageToCanvas(BOUNDS, plus);
+    expect(PLUS_HIT_RADIUS).toBe(12);
+    expect(at.x).toBeCloseTo(500, 6);
+    expect(at.y).toBeCloseTo(400, 6);
+    const named = { kind: 'line', route: made.route.id, id: made.id('a>b'), plus };
+    expect(hitTest(at, BOUNDS, [edited(made)])).toEqual(named);
+    // 11 and 12 px below it: beyond the line's 8 px, so the "+" alone names the line.
+    expect(hitTest({ x: at.x, y: at.y + 11 }, BOUNDS, [edited(made)])).toEqual(named);
+    expect(hitTest({ x: at.x, y: at.y + PLUS_HIT_RADIUS }, BOUNDS, [edited(made)])).toEqual(named);
+    expect(hitTest({ x: at.x, y: at.y + PLUS_HIT_RADIUS + 0.5 }, BOUNDS, [edited(made)])).toBeNull();
+  });
+
+  it('13 px along the line from the "+", within 8 px of the line, the line is named without `plus`', () => {
+    const made = straight();
+    const at = imageToCanvas(BOUNDS, middle(made, 'a>b'));
+    expect(hitTest({ x: at.x + 13, y: at.y + 2 }, BOUNDS, [edited(made)])).toEqual({ kind: 'line', route: made.route.id, id: made.id('a>b') });
+  });
+
+  it('a point within its radius over a "+" is named first', () => {
+    // c, joined to nothing, 16 px below the "+": a press 5 px below the "+" is 11 px from c.
+    const made = routeOf({ a: [0.1, 0.5], b: [0.9, 0.5], c: [0.5, 0.52] }, ['a>b'], 'a');
+    const at = imageToCanvas(BOUNDS, middle(made, 'a>b'));
+    expect(hitTest({ x: at.x, y: at.y + 5 }, BOUNDS, [edited(made)])).toEqual({ kind: 'point', route: made.route.id, id: made.id('c') });
+  });
+
+  it('of two lines’ "+" within 12 px, the nearer is named, though neither line is within 8 px', () => {
+    // Two parallel lines 20 px apart, at y 400 and 420, their "+" at (500, 400) and (500, 420).
+    const made = routeOf({ a: [0.1, 0.5], b: [0.9, 0.5], c: [0.1, 0.525], d: [0.9, 0.525] }, ['a>b', 'c>d'], 'a');
+    expect(hitTest({ x: 500, y: 409 }, BOUNDS, [edited(made)])).toEqual({ kind: 'line', route: made.route.id, id: made.id('a>b'), plus: middle(made, 'a>b') });
+    expect(hitTest({ x: 500, y: 411 }, BOUNDS, [edited(made)])).toEqual({ kind: 'line', route: made.route.id, id: made.id('c>d'), plus: middle(made, 'c>d') });
+  });
+});
+
 describe('DEF-64: every line is hit, whatever its run’s shape', () => {
   it.each(SHAPES)('%s: each line is named at the middle of its drawn shape, and 5 px off it', (_, spec, lines) => {
     const made = routeOf(spec, lines, 't1');
     if ((lines as readonly string[]).includes('x>t1')) expect(made.timeline.walk.leftOut).toEqual([made.id('x>t1')]);
     for (const line of lines) {
       const middle = middleOf(drawn(made, line));
-      const named = { kind: 'line', route: made.route.id, id: made.id(line) };
+      // At its middle a line's "+" is within 12 px too (brief 120): the line is named with its "+"'s place.
+      const plus = pointAt(made.timeline.shapes.get(made.id(line))?.samples ?? [], 0.5);
+      const named = { kind: 'line', route: made.route.id, id: made.id(line), plus };
       expect(hitTest(middle, BOUNDS, [edited(made)]), line).toEqual(named);
       expect(hitTest({ x: middle.x, y: middle.y + 5 }, BOUNDS, [edited(made)]), `5 px below ${line}`).toEqual(named);
     }
@@ -354,7 +409,7 @@ describe('DEF-64: every line is hit, whatever its run’s shape', () => {
   it('DEF-64.1: a fork with a terminal branch of one line (the fork and one point beyond it) is hit near its middle', () => {
     const made = routeOf({ ...TRUNK, b1: [0.55, 0.7] }, ['t1>t2', 't2>t3', 't2>b1'], 't1');
     const middle = middleOf(drawn(made, 't2>b1'));
-    expect(hitTest({ x: middle.x + 4, y: middle.y }, BOUNDS, [edited(made)])).toEqual({
+    expect(hitTest({ x: middle.x + 4, y: middle.y }, BOUNDS, [edited(made)])).toMatchObject({
       kind: 'line',
       route: made.route.id,
       id: made.id('t2>b1'),

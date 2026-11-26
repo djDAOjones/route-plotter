@@ -6,9 +6,10 @@
 //      drawn at the same place);
 //   2. a named point is within its own radius, max(15, markerHalf), and no other point is strictly nearer while within
 //      its own radius;
-//   3. a line is named only when no point is within its radius, and the line named is within 8 px of the press by
-//      `nearestOnPolyline` over its drawn samples;
-//   4. nothing is named only when no point is within its radius and no line within 8 px;
+//   3. a line is named only when no point is within its radius; named with `plus`, its "+" (`pointAt(samples, 0.5)`,
+//      brief 120) is within 12 px of the press and `plus` is that place; named without, no line's "+" is within 12 px
+//      and the line named is within 8 px of the press by `nearestOnPolyline` over its drawn samples;
+//   4. nothing is named only when no point is within its radius, no line within 8 px and no "+" within 12 px;
 //   5. every id named is one its route holds.
 // The presses are drawn as four kinds, so that every result is reached: exactly on a point's place; on a point's ring,
 // its radius away along an axis (so that a distance equal to the radius is reached: within means `<=`); near a line's
@@ -20,7 +21,8 @@ import { describe, expect, it } from 'vitest';
 import { imageToCanvas, type ImageBounds } from '../../core/geometry/transform';
 import { newLine, newPoint, newRoute, type IdSource, type Route } from '../../core/model/scene';
 import { composeTimeline } from '../../core/timing/timeline';
-import { hitTest, LINE_HIT_RADIUS, nearestOnPolyline, POINT_HIT_RADIUS, type HitRoute } from './hit';
+import { pointAt } from '../../core/geometry/path';
+import { hitTest, LINE_HIT_RADIUS, nearestOnPolyline, PLUS_HIT_RADIUS, POINT_HIT_RADIUS, type HitRoute } from './hit';
 import type { Pixel } from './pointer';
 
 function counter(prefix: string): IdSource {
@@ -127,7 +129,7 @@ function placeOf(press: Press, bounds: ImageBounds, routes: readonly HitRoute[])
 }
 
 describe('hit testing over random routes, bounds and presses', () => {
-  it('a press on a point names a point; a named point is the nearest within its radius; a line only when no point is, within 8 px; nothing only when neither; every id held', () => {
+  it('a press on a point names a point; a named point is the nearest within its radius; a line only when no point is, by its "+" within 12 px or within 8 px; nothing only when none; every id held', () => {
     const reach = { point: 0, line: 0, none: 0, onRadius: 0 };
     fc.assert(
       fc.property(
@@ -156,6 +158,15 @@ describe('hit testing over random routes, bounds and presses', () => {
             const linesNear = routes.flatMap((edited) =>
               edited.route.lines.filter((line) => lineDist(edited, line.id) <= LINE_HIT_RADIUS).map((line) => line.id),
             );
+            const plusOf = (edited: HitRoute, lineId: string) => {
+              const middle = pointAt(edited.timeline.shapes.get(lineId)?.samples ?? [], 0.5);
+              if (middle === null) return null;
+              const place = imageToCanvas(bounds, middle);
+              return { middle, dist: Math.hypot(place.x - at.x, place.y - at.y) };
+            };
+            const plusesNear = routes.flatMap((edited) =>
+              edited.route.lines.filter((line) => (plusOf(edited, line.id)?.dist ?? Infinity) <= PLUS_HIT_RADIUS).map((line) => line.id),
+            );
 
             const under = hitTest(at, bounds, routes);
 
@@ -176,6 +187,7 @@ describe('hit testing over random routes, bounds and presses', () => {
               reach.none += 1;
               expect(within).toEqual([]);
               expect(linesNear).toEqual([]);
+              expect(plusesNear).toEqual([]);
             } else if (under.kind === 'point') {
               // 2: the named point is within its radius, and no point within its own is strictly nearer.
               reach.point += 1;
@@ -189,7 +201,14 @@ describe('hit testing over random routes, bounds and presses', () => {
               reach.line += 1;
               expect(within).toEqual([]);
               const holder = routes.find((each) => each.route.id === under.route);
-              expect(holder === undefined ? Infinity : lineDist(holder, under.id)).toBeLessThanOrEqual(LINE_HIT_RADIUS);
+              if (under.plus === undefined) {
+                expect(plusesNear).toEqual([]);
+                expect(holder === undefined ? Infinity : lineDist(holder, under.id)).toBeLessThanOrEqual(LINE_HIT_RADIUS);
+              } else {
+                const plus = holder === undefined ? null : plusOf(holder, under.id);
+                expect(plus?.dist ?? Infinity).toBeLessThanOrEqual(PLUS_HIT_RADIUS);
+                expect(under.plus).toEqual(plus?.middle);
+              }
             }
           }
         },
