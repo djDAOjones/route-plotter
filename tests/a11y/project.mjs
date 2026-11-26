@@ -286,6 +286,17 @@ const strokeAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y]) => 
   for (let i = 0; i < d.length; i += 4) if (d[i + 3] > best[3]) best = [d[i], d[i + 1], d[i + 2], d[i + 3]];
   return best;
 }, [fx, fy]);
+// CORE-06 (brief 128, BN): the most opaque pixel of each column (7 rows, as strokeAt) along 25 columns centred on a
+// place: the editor's guide while paused (D265) is dashed 6 on and 4 off in canvas pixels (unitAt(1) whatever the
+// pixel ratio), so in any 25 columns it leaves some bare, and only the frame's own line fills every one.
+const rowAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y]) => {
+  const d = c.getContext('2d').getImageData(Math.floor(x * c.width) - 12, Math.floor(y * c.height) - 3, 25, 7).data;
+  return Array.from({ length: 25 }, (_, col) => {
+    let best = [0, 0, 0, 0];
+    for (let row = 0; row < 7; row += 1) { const i = (row * 25 + col) * 4; if (d[i + 3] > best[3]) best = [d[i], d[i + 1], d[i + 2], d[i + 3]]; }
+    return best;
+  });
+}, [fx, fy]);
 const near = (p, rgb) => p[3] > 200 && rgb.every((v, i) => Math.abs(p[i] - v) <= 24);
 // CORE-06 (brief 114, Codex line 24): the pen's marks in the pen-drawn state, each read where only it draws. At 0:00 the
 // animation has drawn the first point alone (its line and the second point appear as the animation reaches them), so it
@@ -1844,12 +1855,103 @@ export default {
       },
     },
     {
+      // D251's second half (Joe, 26 Nov: "End, plus a guide (d)"; D265; brief 128, BT): while the preview is not playing,
+      // the editor's guide traces every line of every route and marks every point, whatever the line's look; while
+      // playing it is gone. (1) A trail's project opened (opens-at-the-end's), paused at the end, where a trail draws
+      // nothing: along 25 columns at 0.65 of the way from the first stop's x (0.25 of the square) to the second's
+      // (0.75), the guide's dashes, some columns the line's colour (alpha 64 or more) and some bare (rowAt: dashed 6 on
+      // and 4 off); at each stop, the line's colour opaque (strokeAt, near(); the stops' own markers read so with the
+      // guide off too, probed: the guide's dot is proved at the copies, (4)). (2) Play: the position rises, and at that
+      // place every column is bare (the trail's comet starts behind the head at the first stop and is nowhere near). (3)
+      // Pause: "Animation paused", and the dashes are back; played through to "Animation complete", back again. (4) CARRY-F6: pen-drawn,
+      // End, Escape, Cmd+A, Cmd+D, Escape: at each copy (2% right and down of its tap, joined to no line, so the
+      // animation draws nothing for it: FINDING-124), 2 canvas px further from the line (the line passes 2.5 px from
+      // it), a pixel bare before Cmd+D reads the line's colour opaque after Escape: its guide dot; the canvas is not as
+      // before Cmd+D. Faults that fail it (PROBE-128/mut): (u) the guide drawn while playing fails (2); (w) the guide for
+      // the selected route only fails (1), (3) and (4). (v) `playing` out of the drawer's Key does not fail it: in the page
+      // a Pause, or the end, always brings a position not yet drawn (point 4g's frame late), so a frame is drawn anyway;
+      // the Node test of point 4b holds it (previewLogic.test.ts, a Pause at the same position books). It claims nothing for
+      // an export (the import rules keep the guide out of one: catalogue.editor.ts) and nothing spoken.
+      name: 'the-guide',
+      method: 'j-timing',
+      rows: ['2.2.2'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const wrong = [];
+        if (!(await choose(page, await projectFile(null, false, false, null, true))) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the trail\'s project did not open');
+        if (!(await sizeSettled(page))) wrong.push('after the open the canvas was not its box times the ratio');
+        await twoFrames(page);
+        const opened = await pixels(page);
+        const [x0, x1] = [squareX(opened, 0.25), squareX(opened, 0.75)];
+        const along = x0 + 0.65 * (x1 - x0);
+        const lit = (p) => p[3] >= 64 && ORANGE.every((v, i) => Math.abs(p[i] - v) <= 24);
+        const dashes = async () => { const row = await rowAt(page, along, 0.5); return { lit: row.filter(lit).length, alphas: row.map((p) => p[3]).join(', ') }; };
+        const atEnd = await dashes();
+        if (!(atEnd.lit >= 5 && atEnd.lit <= 20)) wrong.push(`paused at the end, ${atEnd.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${atEnd.alphas}), not the guide's dashes`);
+        const stops = [await strokeAt(page, x0, 0.5), await strokeAt(page, x1, 0.5)];
+        if (!stops.every((p) => near(p, ORANGE))) wrong.push(`paused at the end the stops read ${stops.map((p) => p.join(', ')).join(' and ')}, not the line's colour`);
+        await page.locator(PLAY).click();
+        await page.waitForTimeout(250);
+        const playing = await dashes();
+        const moving = await sample(page, 3);
+        if (!(moving.at(-1)[1] > 0)) wrong.push(`after Play the position read ${moving.map(([, v]) => v).join(', ')}, not rising`);
+        if (playing.lit !== 0) wrong.push(`playing, ${playing.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${playing.alphas}): the guide is drawn while playing`);
+        await page.locator(PLAY).click();
+        if (!(await comesToWords(page, PAUSED))) wrong.push(`Pause: "${PAUSED}" was not said`);
+        await twoFrames(page);
+        const paused = await dashes();
+        if (!(paused.lit >= 5 && paused.lit <= 20)) wrong.push(`paused again, ${paused.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${paused.alphas}), not the guide's dashes`);
+        // (3b) Played through: at "Animation complete" the playing stops at the end, and the guide is back.
+        await page.locator(PLAY).click();
+        const done = await page.waitForFunction(([st, w]) => document.querySelector(st)?.textContent === w, [STATUS, COMPLETE], { timeout: 15000 }).then(() => true, () => false);
+        if (!done) wrong.push(`"${COMPLETE}" was not said`);
+        await twoFrames(page);
+        const ended = await dashes();
+        if (!(ended.lit >= 5 && ended.lit <= 20)) wrong.push(`at "${COMPLETE}" ${ended.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${ended.alphas}), not the guide's dashes`);
+        // (4) Duplicate's copies.
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const press = async (key) => { await page.keyboard.press(key); await settle(); };
+        const box = await boxOf(page);
+        const across = (0.02 * box.height) / box.width;
+        const copies = [first, second].map(([fx, fy]) => [fx + across, fy + 0.02]);
+        const dotsAt = () => page.locator(CANVAS).evaluate((c, [places, [a, b]]) => {
+          const [dx, dy] = [(b[0] - a[0]) * c.width, (b[1] - a[1]) * c.height];
+          const len = Math.hypot(dx, dy);
+          const [nx, ny] = [dy / len, -dx / len];
+          return places.map(([fx, fy]) => {
+            const [x, y] = [fx * c.width, fy * c.height];
+            const side = Math.sign((x - a[0] * c.width) * nx + (y - a[1] * c.height) * ny) || 1;
+            return [...c.getContext('2d').getImageData(Math.floor(x + 2 * side * nx), Math.floor(y + 2 * side * ny), 1, 1).data];
+          });
+        }, [copies, [first, second]]);
+        let tabs = 0;
+        while (!(await focusOn(page, PREVIEW)) && tabs < 8) { await page.keyboard.press('Tab'); tabs += 1; }
+        if (!(await focusOn(page, PREVIEW))) wrong.push('eight presses of Tab did not reach the preview box');
+        await press('End');
+        await press('Escape');
+        const before = await dotsAt();
+        const beforeCopy = (await pixels(page)).hash;
+        await press(`${COMMAND}+a`);
+        await press(`${COMMAND}+d`);
+        await press('Escape');
+        const after = await dotsAt();
+        if (before.some((p) => near(p, ORANGE))) wrong.push(`before Cmd+D the copies' places already read ${before.map((p) => p.join(', ')).join(' and ')}`);
+        if (!after.every((p) => near(p, ORANGE))) wrong.push(`after Cmd+D and Escape the copies' places read ${after.map((p) => p.join(', ')).join(' and ')}, not their guide dots in the line's colour`);
+        if ((await pixels(page)).hash === beforeCopy) wrong.push('after Cmd+D and Escape the canvas is as before Cmd+D: the copies show nothing');
+        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `a trail's project paused at its end: at ${along.toFixed(4)} ${atEnd.lit} of 25 columns the guide's dashes (alphas ${atEnd.alphas}), both stops the line's colour; playing, none (alphas ${playing.alphas}); paused again, ${paused.lit} (the guide back); pen-drawn, after Cmd+A, Cmd+D and Escape, each copy's guide dot (${after.map((p) => p.join(', ')).join(' and ')}) where before Cmd+D there was ${before.map((p) => p.join(', ')).join(' and ')}`);
+      },
+    },
+    {
       // The preview (brief 84, a; brief 128, BN): before any open the canvas is sized to its box times the pixel ratio
       // (a paint ran) and holds an empty scene's frame, nothing drawn; the golden opened, its pixels differ and the
       // position waits at the end (1000, as opens-at-the-end reads it: D251), the line's colour stands at the start's
       // place by arithmetic (a square fitted to the frame's height, centred: squareX) and at the middle the end's faded
       // line, read as the-preview-plays reads it (the line's colour at alpha 64 or more: near()'s 200 would pass with the
-      // line gone); left alone a second, nothing changes (no motion until Play: 2.2.2).
+      // line gone) in every one of 25 columns there (rowAt: the guide drawn while paused, dashed, leaves some bare, so
+      // only the frame's line passes; probed, PROBE-128/s3probe-run.txt); left alone a second, nothing changes (no
+      // motion until Play: 2.2.2).
       name: 'the-preview-draws',
       method: 'j-timing',
       rows: ['2.2.2'],
@@ -1868,14 +1970,16 @@ export default {
         const opened = await pixels(page);
         const x = squareX(opened, 0.25);
         const start = await strokeAt(page, x, 0.5);
-        const middle = await strokeAt(page, 0.5, 0.5);
+        const row = await rowAt(page, 0.5, 0.5);
+        const middle = row[12];
         if (at.now !== 1000) wrong.push(`after the open the position was ${at.now}, not 1000 (the end)`);
         if (opened.hash === empty.hash) wrong.push('the canvas did not change when the project opened');
         if (!near(start, ORANGE)) wrong.push(`at the start's place (${x.toFixed(4)}, 0.5) the canvas holds ${start.join(', ')}, not the line's #d55e00`);
-        if (!(middle[3] >= 64 && ORANGE.every((v, i) => Math.abs(middle[i] - v) <= 24))) wrong.push(`at the end the middle holds ${middle.join(', ')}, not the line's colour`);
+        const bare = row.filter((p) => !(p[3] >= 64 && ORANGE.every((v, i) => Math.abs(p[i] - v) <= 24)));
+        if (bare.length) wrong.push(`at the end ${bare.length} of 25 columns at the middle are not the line's colour (alphas ${row.map((p) => p[3]).join(', ')})`);
         await page.waitForTimeout(1000);
         if ((await pixels(page)).hash !== opened.hash) wrong.push('left alone a second, the canvas changed');
-        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `the canvas ${sized.join(' by ')}, its box times the ratio, empty before an open; the golden opened: changed, the position 1000 (the end), #d55e00 at (${x.toFixed(4)}, 0.5), the start's place ((${opened.width} - ${opened.height}) / 2 + 0.25 x ${opened.height}, over ${opened.width}), the line's colour at the middle (${middle.join(', ')}); still over a second with nothing playing`);
+        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `the canvas ${sized.join(' by ')}, its box times the ratio, empty before an open; the golden opened: changed, the position 1000 (the end), #d55e00 at (${x.toFixed(4)}, 0.5), the start's place ((${opened.width} - ${opened.height}) / 2 + 0.25 x ${opened.height}, over ${opened.width}), the line's colour in all 25 columns at the middle (${middle.join(', ')} at its centre); still over a second with nothing playing`);
       },
     },
     {
