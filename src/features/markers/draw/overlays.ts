@@ -21,8 +21,10 @@
 // The marks while paused (CORE-06, D274 part 1; brief 142, GC): after a route's dots, each point the author marked as
 // a start or an end (`route.shape.marks`; only the marks the author set, never a worked-out first point) gets v3's
 // glyph (v3/src/services/NetworkEditService.js:1236–1259): a start the kit's `startMark` triangle, an end its `endMark`
-// square, in the route's colour edged white, radius 7 and edge 1.5 by frame.scale and unitAt(screen.zoom) (v3's
-// scaleSizeClamped, :940), so a mark is never covered by a later point's dot. A route's end marks are drawn before its
+// square, in the route's colour edged white, v3's radius 7 and edge 1.5 (:940, :1258), sized as the guide dot is, by
+// unitAt(screen.zoom) alone (brief 142 asked for frame.scale too, as v3's scaleSizeClamped; on the editor's canvas,
+// about 400 pixels on its short side in the journeys, that made the mark 2.6 pixels, inside the guide dot's 3, so it
+// could not be seen). Drawn after all the route's dots, a mark is never covered by a later point's dot. A route's end marks are drawn before its
 // start marks, so a point that holds both shows the square with the triangle over it. A mark whose point the frame does
 // not place draws nothing. Being part of the guide's dots, the marks are drawn only while paused, never in an export.
 import { endMark, greyDot, guideDot, hoverRing, selectionRect, selectionRing, startMark, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
@@ -83,16 +85,16 @@ const NONE: ReadonlySet<string> = new Set();
 /** The guide dot's radius in screen pixels at a zoom of 1 (D265). */
 const GUIDE_DOT = 3;
 
-/** v3's glyph for a marked point (NetworkEditService.js:940, :1236–1259): radius 7, white edge 1.5, at a zoom of 1 (D274). */
+/** v3's glyph for a marked point (NetworkEditService.js:940, :1236–1259): radius 7, white edge 1.5, screen pixels at a zoom of 1 (D274). */
 const MARK = { radius: 7, edge: 1.5 } as const;
 
 /** The guide's dots while paused (D265): every point of each route named, in the route's colour, in the points' order; then its marks (D274). */
 export function dotOverlay(routeIds: readonly string[]): Overlay {
-  return (context: DrawContext, frame: Frame, screen: Screen) => {
+  return (context: DrawContext, _frame: Frame, screen: Screen) => {
     const unit = unitAt(screen.zoom);
     const radius = GUIDE_DOT * unit;
-    const mark = MARK.radius * frame.scale * unit;
-    const edge = MARK.edge * frame.scale * unit;
+    const mark = MARK.radius * unit;
+    const edge = MARK.edge * unit;
     for (const id of new Set(routeIds)) {
       const route = screen.routes.get(id);
       if (route === undefined) continue;

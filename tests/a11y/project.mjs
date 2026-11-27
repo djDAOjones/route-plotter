@@ -3004,6 +3004,20 @@ export default {
         const MENU = '[role=menu]';
         const shown = () => page.locator(MENU).count().then((n) => n === 1);
         const focusedItem = () => page.evaluate(() => { const e = document.activeElement; return e?.getAttribute('role') === 'menuitem' ? e.getAttribute('aria-label') : null; });
+        // D274's marks (brief 142, GD): how many pixels round a point, beyond the guide dot's radius 3 and up to 8 canvas
+        // pixels from its centre (a mark reaches 7 at the default zoom), read the route's hue (penMarksRead's test). A mark
+        // adds such pixels where only it draws; the line through the point, the selection's ring and anything else drawn
+        // there count the same marked or not.
+        const markRead = ([fx, fy]) => page.locator(CANVAS).evaluate((c, [fx, fy]) => {
+          const ctx = c.getContext('2d'); const [cx, cy] = [fx * c.width, fy * c.height]; const [x0, y0] = [Math.floor(cx) - 8, Math.floor(cy) - 8];
+          const d = ctx.getImageData(x0, y0, 17, 17).data; let n = 0;
+          for (let i = 0; i < d.length; i += 4) {
+            const far = Math.hypot(x0 + ((i / 4) % 17) + 0.5 - cx, y0 + Math.floor(i / 68) + 0.5 - cy);
+            const [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+            if (far > 3 && far <= 8 && a > 60 && r > 120 && r > g && g >= b) n += 1;
+          }
+          return n;
+        }, [fx, fy]);
         const dark = () => page.locator(CANVAS).evaluate((c, [fx, fy]) => {
           const ctx = c.getContext('2d'); const [cx, cy] = [Math.floor(fx * c.width), Math.floor(fy * c.height)];
           const reach = Math.max(2, Math.round(2 * (c.width / c.getBoundingClientRect().width))); let n = 0;
@@ -3077,9 +3091,13 @@ export default {
         await press('Shift+F10');
         await press('Enter');
         await heard('Start marked', '"Mark as start"');
+        // D274 part 1: the start's triangle drawn while paused round the point, beyond the guide dot, and gone after the Undo.
+        const apex = await markRead(first);
         const marked = await firstItem();
         await press(UNDO);
         await heard('Undo', 'the Undo of "Mark as start"');
+        const apexAfter = await markRead(first);
+        if (apex - apexAfter < 3) keys.wrong.push(`after "Mark as start" ${apex} pixel(s) 3 to 8 canvas pixels round the point read the route's hue, and ${apexAfter} after the Undo (D274's triangle adds at least 3)`);
         const unmarked = await firstItem();
         if (marked !== 'Remove start mark' || unmarked !== 'Mark as start') keys.wrong.push(`after "Mark as start" the menu's first item read ${JSON.stringify(marked)}, and after one Undo ${JSON.stringify(unmarked)}`);
         // (5) The item that is off.
@@ -3104,6 +3122,21 @@ export default {
         await press(UNDO);
         await heard('Undo', 'the Undo of "Delete"');
         if ((await hash()) !== kept) keys.wrong.push('after one Undo the canvas was not as before "Delete"');
+        // (6b) "Mark as end" on the second point from its menu (a right-click), D274 part 1: the end's square drawn while
+        // paused round the point, beyond the guide dot, and gone after the Undo.
+        if (!(await page.waitForFunction((s) => (document.querySelector(s)?.textContent ?? '') === '', STATUS, { timeout: 12000 }).then(() => true, () => false))) keys.wrong.push('the status did not come back to empty before "Mark as end"');
+        { const b = await page.locator(CANVAS).boundingBox(); await page.mouse.click(b.x + b.width * second[0], b.y + b.height * second[1], { button: 'right' }); }
+        await settle();
+        const endAsked = (await shown()) && (await focusedItem());
+        if (endAsked === 'Mark as start') await page.keyboard.press('ArrowDown');
+        const endItem = await focusedItem();
+        await press('Enter');
+        await heard('End marked', '"Mark as end"');
+        const corner = await markRead(second);
+        await press(UNDO);
+        await heard('Undo', 'the Undo of "Mark as end"');
+        const cornerAfter = await markRead(second);
+        if (endItem !== 'Mark as end' || corner - cornerAfter < 3) keys.wrong.push(`"Mark as end" on the second point (focus read ${JSON.stringify(endItem)}): ${corner} pixel(s) 3 to 8 canvas pixels round the point read the route's hue, and ${cornerAfter} after the Undo (D274's square adds at least 3)`);
         // (7) A short window (Codex finding 1 on brief 136's range): 200 px high at the usual width, set before the menu
         // opens (a resize closes it), the page scrolled to put the first point mid-window, then a right-click on it.
         const view = page.viewportSize();
@@ -3159,7 +3192,7 @@ export default {
         if (!(await focusOn(page, PREVIEW))) order.wrong.push('focus was not on the preview box at the end');
         if (!(await page.waitForFunction((st) => (document.querySelector(st)?.textContent ?? '') === '', STATUS, { timeout: 12000 }).then(() => true, () => false))) names.wrong.push('the status did not come back to empty at the end');
         const said = (await page.evaluate(() => window.__said)).filter(Boolean);
-        const SAID = ['Point made a bend', 'Undo', 'Start marked', 'Undo', 'Point deleted', 'Undo'];
+        const SAID = ['Point made a bend', 'Undo', 'Start marked', 'Undo', 'Point deleted', 'Undo', 'End marked', 'Undo'];
         if (JSON.stringify(said) !== JSON.stringify(SAID)) names.wrong.push(`the status said ${JSON.stringify(said)} in turn; ${JSON.stringify(SAID)} were expected, each once (D269; the disabled item says nothing)`);
         const how = `in pen-drawn, focus moved to the preview box by Tab (${tabs} presses), End, Escape`;
         const wrong = [...names.wrong, ...keys.wrong];

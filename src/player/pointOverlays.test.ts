@@ -351,8 +351,9 @@ test('a frame asked for without overlays holds none: with every point overlay, i
 });
 
 // CORE-06, D274 part 1 (brief 142, GC): the guide's dots draw, after a route's dots, v3's glyph on each point the author
-// marked (NetworkEditService.js:1236–1259): a start's triangle, an end's square, radius 7 and edge 1.5 by frame.scale
-// and unitAt(zoom) (v3's scaleSizeClamped, :940), in the route's colour edged white. Never a worked-out first point.
+// marked (NetworkEditService.js:1236–1259): a start's triangle, an end's square, v3's radius 7 and edge 1.5 (:940) in
+// screen pixels by unitAt(zoom), as the guide dot is sized, whatever the frame's size, so a mark is always larger than
+// its dot; in the route's colour edged white. Never a worked-out first point.
 
 type Mark = Route['marks'][number];
 
@@ -397,9 +398,8 @@ test('a marked start draws v3’s triangle and a marked end its square at the po
   for (const [name, viewing] of Object.entries(VIEWINGS)) {
     for (const [sized, size] of Object.entries(sizes)) {
       const label = `${name}, ${sized}`;
-      const scale = size.height / 1080;
       const unit = unitAt(viewing.zoom);
-      const r = 7 * scale * unit;
+      const r = 7 * unit;
       const lines = dotted(withMarks, viewing, size);
       // Four dots first, one for each point, marked or not; then the two marks and nothing else.
       const dots = circles(lines);
@@ -416,7 +416,7 @@ test('a marked start draws v3’s triangle and a marked end its square at the po
       near([right?.x, right?.y], [start.x + 0.87 * r, start.y + 0.5 * r], label);
       near([left?.x, left?.y], [start.x - 0.87 * r, start.y + 0.5 * r], label);
       expect(lines.filter((line) => line.startsWith('closePath')), label).toHaveLength(1);
-      // Each dot a fill in the route's colour; each mark a fill in it, then a white stroke 1.5 × scale × unit wide.
+      // Each dot a fill in the route's colour; each mark a fill in it, then a white stroke 1.5 × unit wide.
       const marks = paints(lines).slice(4);
       expect(marks.map((paint) => paint.replace(/ lineWidth=[\d.]+/, '')), label).toEqual([
         `fillStyle=${colour}`,
@@ -425,7 +425,7 @@ test('a marked start draws v3’s triangle and a marked end its square at the po
         'strokeStyle=#ffffff',
       ]);
       expect(widths(lines), label).toHaveLength(2);
-      for (const width of widths(lines)) expect(width, label).toBeCloseTo(1.5 * scale * unit, 2);
+      for (const width of widths(lines)) expect(width, label).toBeCloseTo(1.5 * unit, 2);
     }
   }
 });
