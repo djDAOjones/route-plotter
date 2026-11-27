@@ -3394,12 +3394,19 @@ export default {
       // took back the Reverse alone, which the editor does not draw); Escape. (5) A second Undo: a right-click shows
       // "Make line two-way"; Escape. (6) The mouse rests on the line's middle, as line-insert-plus hovers the "+", then a
       // right-click there opens the same menu; Escape closes it with focus on the box. (7) A right-click on empty picture
-      // opens no menu and leaves the browser's menu alone. Over the run the status said, in turn and each once, "Line
-      // made two-way", "Line reversed", "Undo", "Undo" (words read as point-move reads them). The menu opens by pointer
+      // opens no menu and leaves the browser's menu alone. (8) It shows D273 part 1's look and words (brief 143; nothing
+      // new is claimed, so no new row): the line's middle stretch read whole (the line drawn at the end, the guide over
+      // it); "Reverse line", from the menu opened as in (5), leaves the one-way line pointing back at the lead start:
+      // "Line reversed. 1 line the lead does not walk" heard, and the middle stretch reads dotted (the guide's round dots
+      // alone: "grows" draws a line the lead never reaches nowhere); one Undo: "Undo. The lead walks every line" heard,
+      // and the stretch reads whole again. Over the run the status said, in turn and each once, "Line made two-way",
+      // "Line reversed", "Undo", "Undo" and (8)'s two (words read as point-move reads them). The menu opens by pointer
       // only: nothing is claimed for 2.1.1 (no key picks out a line yet, D271 part (1)), nor for 1.4.11 or 2.5.x. The
       // row is 2.4.3 under the j-order method (the catalogue takes 2.4.3 from keyboard or j-order journeys; this one has
       // no keyboard way). Faults that fail it (brief 140, PROBE-140/mut-*.txt): (ao) the opener ignoring line hits;
-      // (ap) the direction item always "Make line one way"; (aq) the line's words dropped.
+      // (ap) the direction item always "Make line one way"; (aq) the line's words dropped. Step (8) was red on brief 143's
+      // stage 2 build with the guide's dotted branch removed: "(8) after "Reverse line" the line's middle read 72% of 43
+      // samples in the route's hue, longest run 7, not dotted" (the lane's PROBE-143/red-line-menu.txt).
       name: 'line-menu',
       method: 'j-order',
       rows: ['2.4.3'],
@@ -3457,13 +3464,32 @@ export default {
         };
         // The queue merges the same words written while the region still shows them (announce.ts): each Undo waits for
         // the region to come back to empty, so the second "Undo" is written again.
-        const undo = async (when) => {
+        const undo = async (when, words = 'Undo') => {
           await drained();
           const from = (await said()).length;
           await page.keyboard.press(UNDO);
           await settle();
-          if (!(await heardSince(from, 'Undo'))) wrong.push(`${when}: "Undo" was not heard`);
+          if (!(await heardSince(from, words))) wrong.push(`${when}: "${words}" was not heard`);
         };
+        // The line's middle stretch (three tenths to seven tenths along), read every canvas pixel: at each, the strongest
+        // pixel within 2 across the line. `share` is the part of them in the route's hue (penMarksRead's test), `run` the
+        // longest stretch of them in a row.
+        const stretchRead = () => page.locator(CANVAS).evaluate((c, [a, b]) => {
+          const ctx = c.getContext('2d');
+          const at = (x, y) => [...ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data];
+          const routeHue = ([r, g, bl, al]) => al > 60 && r > 120 && r > g && g >= bl;
+          const [qx, qy, px, py] = [a[0] * c.width, a[1] * c.height, b[0] * c.width, b[1] * c.height];
+          const len = Math.hypot(px - qx, py - qy), [ux, uy] = [(px - qx) / len, (py - qy) / len];
+          const hued = [];
+          for (let d = 0.3 * len; d <= 0.7 * len; d += 1) {
+            let best = [0, 0, 0, 0];
+            for (let e = -2; e <= 2; e += 1) { const p = at(qx + ux * d - uy * e, qy + uy * d + ux * e); if (p[3] > best[3]) best = p; }
+            hued.push(routeHue(best));
+          }
+          let run = 0, longest = 0;
+          for (const h of hued) { run = h ? run + 1 : 0; longest = Math.max(longest, run); }
+          return { n: hued.length, share: hued.filter(Boolean).length / hued.length, run: longest };
+        }, [first, second]);
         await page.getByRole('button', { name: 'Skip to end' }).click();
         await settle();
         await page.evaluate(() => { window.__menuPrevented = null; document.addEventListener('contextmenu', (e) => { window.__menuPrevented = e.defaultPrevented; }); });
@@ -3497,9 +3523,29 @@ export default {
         if ((await readMenu()) !== null) wrong.push('(7) a right-click on empty picture opened a menu');
         if ((await prevented()) !== false) wrong.push('(7) a right-click on empty picture cancelled the browser\'s menu');
         await off();
+        // (8) D273 part 1: the line one way again, "Reverse line" leaves it pointing back at the lead start, so the lead
+        // cannot walk it: the words say so, and paused the line shows dotted (the guide's round dots alone, as the line's
+        // own "grows" layer draws a line the lead never reaches nowhere) where it showed whole under the guide's dashes;
+        // the Undo says the lead walks every line again, and the line reads as before.
+        await drained();
+        const walkedRead = await stretchRead();
+        if (await opens(LINE, TWO, '(8)')) await choose(REVERSE, 'Line reversed. 1 line the lead does not walk', '(8)');
+        await off();
+        const leftRead = await stretchRead();
+        await undo('(8) the Undo of "Reverse line"', 'Undo. The lead walks every line');
+        await off();
+        const backRead = await stretchRead();
+        // Probed (the lane's PROBE-143/probe-figures.md, 43 samples): walked 1.00 (longest run 43), dotted 0.42 (4), and
+        // the guide's dashes alone, fault (ba), 0.72 (7): dotted is a share from 0.20 to 0.57, walked 0.90 or more.
+        const reads = (r) => `${Math.round(r.share * 100)}% of ${String(r.n)} samples in the route's hue, longest run ${String(r.run)}`;
+        const whole = (r) => r.share >= 0.9;
+        const dotted = (r) => r.share >= 0.2 && r.share <= 0.57;
+        if (!whole(walkedRead)) wrong.push(`(8) before "Reverse line" the line's middle read ${reads(walkedRead)}, not whole`);
+        if (!dotted(leftRead)) wrong.push(`(8) after "Reverse line" the line's middle read ${reads(leftRead)}, not dotted`);
+        if (!whole(backRead)) wrong.push(`(8) after its Undo the line's middle read ${reads(backRead)}, not whole`);
         await drained();
         const all = (await said()).filter(Boolean);
-        const SAID = ['Line made two-way', 'Line reversed', 'Undo', 'Undo'];
+        const SAID = ['Line made two-way', 'Line reversed', 'Undo', 'Undo', 'Line reversed. 1 line the lead does not walk', 'Undo. The lead walks every line'];
         if (JSON.stringify(all) !== JSON.stringify(SAID)) wrong.push(`the status said ${JSON.stringify(all)} in turn; ${JSON.stringify(SAID)} were expected, each once (D271)`);
         const ok = !wrong.length;
         record('2.4.3', ok, ok ? `in pen-drawn, by the pointer: a right-click three tenths along the line, and one on its "+" with the mouse resting there, each opened a menu named "${NAME}" in document.body, outside .preview, focus on its first item, the browser's menu cancelled; its items read "${TWO}" then "${REVERSE}" while the line ran one way and "${ONE}" first after "${TWO}" was chosen; after Escape and after each item chosen the menu closed and focus was on the preview box; the rings at the taps read as before the menu (the selection unchanged); over the run the status said, in turn and each once, ${JSON.stringify(all)} (D271's words, then one Undo that left "${ONE}" first and a second that brought back "${TWO}"); a right-click on empty picture opened no menu and left the browser's own. The menu opens by pointer only (no 2.1.1 claim)` : wrong.join('; '));
