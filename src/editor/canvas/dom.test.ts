@@ -13,6 +13,8 @@ import { movePoints, penStep } from './commands';
 import { createStore, type Store } from '../store/store';
 import { bindCanvas, cancelDrag, deleteSelected, dragOpen, duplicateSelected, editKey, endNudge, escapeClears, holdOnPicture, selectAll, inCssPixels, MARKER_HALF, NUDGE, NUDGE_FURTHER, NUDGE_QUIET_MS, penTap, recordGeometry, toggleTap, zoomNow, type CanvasElement, type Geometry, type PointerFields } from './dom';
 import { isMenuKey, openMenuByKey, type MenuOpen } from './dom';
+import { cancelMove, moveWaiting, startMove, watchMove } from './dom';
+import { MOVE_WORDS } from './words';
 import type { Tap } from './gesture';
 import { createHover, type Hover } from './hover';
 import type { Modifiers, Under } from './pointer';
@@ -1424,3 +1426,272 @@ describe('the point\'s menu\'s opener (point 9, brief 130, CB and CE (e))', () =
     expect(press('Enter', { shiftKey: true })).toBe(false);
   });
 });
+
+/** Bound with a menu (so the menu's event and the leave are heard), and what the status area was told. */
+function boundMove() {
+  const made = boundMenu();
+  const said: string[] = [];
+  const say = (words: string) => said.push(words);
+  /** A primary press and release at image places: the press at `from`, the release at `to` (on the canvas). */
+  const click = (from: readonly [number, number], to: readonly [number, number] = from) => {
+    made.canvas.fire('pointerdown', client(...from));
+    if (to !== from) made.canvas.fire('pointermove', client(...to));
+    made.canvas.fire('pointerup', client(...to));
+    made.win.fire('pointerup', client(...to));
+  };
+  return { ...made, said, say, click };
+}
+
+describe('"Move" then a click (point 10; brief 138, DB; D270)', () => {
+  it('a click on empty picture moves the point there, on the release, as one step "Move point"; no point added, nothing joined, the selection kept; the wait ends', () => {
+    const { canvas, store, route, b, said, say, click, unbind } = boundMove();
+    store.select({ route: route.id, points: [b] });
+    const selected = store.getState().selection;
+    expect(startMove({ route: route.id, point: b, points: [b] }, say)).toBe(true);
+    expect(moveWaiting()).toBe(true);
+    expect(said).toEqual([MOVE_WORDS.one]);
+    expect(store.getState().project.scene.routes[0]).toEqual(route);
+    click([0.3, 0.7]);
+    expect(placeOf(store, b)?.x).toBeCloseTo(0.3, 9);
+    expect(placeOf(store, b)?.y).toBeCloseTo(0.7, 9);
+    expect(routeOf(store).points).toHaveLength(3);
+    expect(routeOf(store).lines).toHaveLength(1);
+    expect(store.getState().selection).toEqual(selected);
+    expect(store.getState().gesture).toBeNull();
+    expect(canvas.captured.size).toBe(0);
+    expect(moveWaiting()).toBe(false);
+    expect(store.getState().undo).toBe('Move point');
+    expect(store.undo()).toEqual({ ok: true, changed: true });
+    expect(placeOf(store, b)).toEqual({ x: 0.6, y: 0.6 });
+    expect(store.getState().undo).toBeNull();
+    // The wait over, a tap on nothing is the pen's again.
+    click([0.3, 0.7]);
+    expect(routeOf(store).points).toHaveLength(4);
+    unbind();
+  });
+
+  it('takes the place on the release, not the press, and no drag starts from the press however far it slides (2.5.2)', () => {
+    const { canvas, store, route, b, say, unbind } = boundMove();
+    startMove({ route: route.id, point: b, points: [b] }, say);
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointermove', client(0.4, 0.6));
+    canvas.fire('pointermove', client(0.5, 0.5));
+    expect(placeOf(store, b)).toEqual({ x: 0.6, y: 0.6 });
+    expect(dragOpen()).toBe(false);
+    expect(canvas.captured.size).toBe(0);
+    expect(moveWaiting()).toBe(true);
+    canvas.fire('pointerup', client(0.5, 0.5));
+    expect(placeOf(store, b)?.x).toBeCloseTo(0.5, 9);
+    expect(placeOf(store, b)?.y).toBeCloseTo(0.5, 9);
+    expect(store.getState().undo).toBe('Move point');
+    unbind();
+  });
+
+  it('a press that leaves the canvas, is cancelled, or is released beyond it places nothing, and the wait goes on', () => {
+    const { canvas, win, store, route, b, say, click, unbind } = boundMove();
+    startMove({ route: route.id, point: b, points: [b] }, say);
+    const before = store.getState().project;
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointerleave', client(1.2, 0.7));
+    win.fire('pointerup', client(1.2, 0.7));
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointercancel', client(0.3, 0.7));
+    canvas.fire('pointerup', client(0.3, 0.7));
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    win.fire('pointerup', client(1.2, 0.7));
+    expect(store.getState().project).toBe(before);
+    expect(moveWaiting()).toBe(true);
+    click([0.3, 0.7]);
+    expect(placeOf(store, b)?.x).toBeCloseTo(0.3, 9);
+    expect(moveWaiting()).toBe(false);
+    unbind();
+  });
+
+  it('a press with another button, or a second pointer, places nothing', () => {
+    const { canvas, store, route, b, say, unbind } = boundMove();
+    startMove({ route: route.id, point: b, points: [b] }, say);
+    const before = store.getState().project;
+    canvas.fire('pointerdown', { ...client(0.3, 0.7), button: 1 });
+    canvas.fire('pointerup', { ...client(0.3, 0.7), button: 1 });
+    canvas.fire('pointerdown', { ...client(0.3, 0.7), pointerId: 7, isPrimary: false });
+    canvas.fire('pointerup', { ...client(0.3, 0.7), pointerId: 7, isPrimary: false });
+    expect(store.getState().project).toBe(before);
+    expect(moveWaiting()).toBe(true);
+    cancelMove();
+    unbind();
+  });
+
+  it('a click on another point or on a line moves the point there and selects, joins or inserts nothing', () => {
+    const { store, route, a, b, c, say, click, unbind } = boundMove();
+    store.select({ route: route.id, points: [c] });
+    startMove({ route: route.id, point: c, points: [c] }, say);
+    click([0.2, 0.2]);
+    expect(placeOf(store, c)?.x).toBeCloseTo(0.2, 9);
+    expect(placeOf(store, c)?.y).toBeCloseTo(0.2, 9);
+    expect(routeOf(store).lines).toHaveLength(1);
+    expect(routeOf(store).points).toHaveLength(3);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [c] });
+    startMove({ route: route.id, point: c, points: [c] }, say);
+    click([0.4, 0.4]);
+    expect(placeOf(store, c)?.x).toBeCloseTo(0.4, 9);
+    expect(routeOf(store).points).toHaveLength(3);
+    expect(routeOf(store).lines).toHaveLength(1);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [c] });
+    expect(placeOf(store, a)).toEqual({ x: 0.2, y: 0.2 });
+    expect(placeOf(store, b)).toEqual({ x: 0.6, y: 0.6 });
+    unbind();
+  });
+
+  it('a selection moves whole, keeping its shape, as one step "Move points", the group\'s prompt said; held on the picture as a group drag is (D237)', () => {
+    const { store, route, a, b, said, say, click, unbind } = boundMove();
+    store.select({ route: route.id, points: [a, b] });
+    expect(startMove({ route: route.id, point: b, points: [a, b] }, say)).toBe(true);
+    expect(said).toEqual([MOVE_WORDS.group]);
+    click([0.7, 0.5]);
+    expect(placeOf(store, b)?.x).toBeCloseTo(0.7, 9);
+    expect(placeOf(store, b)?.y).toBeCloseTo(0.5, 9);
+    expect(placeOf(store, a)?.x).toBeCloseTo(0.3, 9);
+    expect(placeOf(store, a)?.y).toBeCloseTo(0.1, 9);
+    expect(store.getState().undo).toBe('Move points');
+    expect(store.getState().selection).toEqual({ route: route.id, points: [a, b] });
+    store.undo();
+    // b clicked to (0.1, 0.1) would put a at (-0.3, -0.3): the group stops with a at the edge, its spacing kept.
+    startMove({ route: route.id, point: b, points: [a, b] }, say);
+    click([0.1, 0.1]);
+    expect(placeOf(store, a)?.x).toBeCloseTo(0, 9);
+    expect(placeOf(store, a)?.y).toBeCloseTo(0, 9);
+    expect(placeOf(store, b)?.x).toBeCloseTo(0.4, 9);
+    expect(placeOf(store, b)?.y).toBeCloseTo(0.4, 9);
+    unbind();
+  });
+
+  it('Escape (`cancelMove`) cancels: "Move cancelled", nothing changed, nothing to undo, and the next click is the pen\'s', () => {
+    const { store, route, b, said, say, click, unbind } = boundMove();
+    store.select({ route: route.id, points: [b] });
+    const before = store.getState();
+    expect(cancelMove()).toBe(false);
+    startMove({ route: route.id, point: b, points: [b] }, say);
+    expect(cancelMove()).toBe(true);
+    expect(said).toEqual([MOVE_WORDS.one, MOVE_WORDS.cancelled]);
+    expect(moveWaiting()).toBe(false);
+    expect(store.getState().project).toBe(before.project);
+    expect(store.getState().selection).toEqual(before.selection);
+    expect(store.getState().gesture).toBeNull();
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+    expect(cancelMove()).toBe(false);
+    click([0.3, 0.7]);
+    expect(routeOf(store).points).toHaveLength(4);
+    expect(placeOf(store, b)).toEqual({ x: 0.6, y: 0.6 });
+    unbind();
+  });
+
+  it('a right-click on the canvas cancels with "Move cancelled", and neither the browser\'s menu nor the point\'s opens on that press', () => {
+    const { canvas, store, route, b, said, say, opened, unbind } = boundMove();
+    startMove({ route: route.id, point: b, points: [b] }, say);
+    const before = store.getState().project;
+    canvas.fire('pointerdown', { ...client(0.6, 0.6), button: 2 });
+    let prevented = false;
+    canvas.fire('contextmenu', { ...client(0.6, 0.6), button: 2, preventDefault: () => { prevented = true; } });
+    canvas.fire('pointerup', { ...client(0.6, 0.6), button: 2 });
+    expect(prevented).toBe(true);
+    expect(opened).toEqual([]);
+    expect(said).toEqual([MOVE_WORDS.one, MOVE_WORDS.cancelled]);
+    expect(moveWaiting()).toBe(false);
+    expect(store.getState().project).toBe(before);
+    expect(store.getState().gesture).toBeNull();
+    unbind();
+  });
+
+  it('a menu event alone (no press heard first) cancels too; and the next right-click opens the point\'s menu as before', () => {
+    const { store, route, b, said, say, opened, rightClick, unbind } = boundMove();
+    startMove({ route: route.id, point: b, points: [b] }, say);
+    expect(rightClick(0.6, 0.6)).toBe(true);
+    expect(opened).toEqual([]);
+    expect(said).toEqual([MOVE_WORDS.one, MOVE_WORDS.cancelled]);
+    expect(moveWaiting()).toBe(false);
+    expect(store.getState().gesture).toBeNull();
+    expect(rightClick(0.6, 0.6)).toBe(true);
+    expect(opened).toHaveLength(1);
+    unbind();
+  });
+
+  it('the window\'s blur and the binding\'s removal cancel, saying nothing; nothing changed, nothing to undo', () => {
+    const first = boundMove();
+    startMove({ route: first.route.id, point: first.b, points: [first.b] }, first.say);
+    const before = first.store.getState().project;
+    first.win.fire('blur');
+    expect(moveWaiting()).toBe(false);
+    expect(first.said).toEqual([MOVE_WORDS.one]);
+    expect(first.store.getState().project).toBe(before);
+    expect(first.store.getState().gesture).toBeNull();
+    first.unbind();
+    const second = boundMove();
+    startMove({ route: second.route.id, point: second.b, points: [second.b] }, second.say);
+    second.unbind();
+    expect(moveWaiting()).toBe(false);
+    expect(second.said).toEqual([MOVE_WORDS.one]);
+    expect(second.store.getState().gesture).toBeNull();
+    expect(second.store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+  });
+
+  it('while it waits the editing keys, Undo, the menu\'s key and a drag\'s cancel do nothing, as while a drag is open', () => {
+    const { store, route, a, b, say, unbind } = boundMove();
+    store.dispatch(movePoints(route.id, [a], 0.01, 0));
+    store.select({ route: route.id, points: [b] });
+    startMove({ route: route.id, point: b, points: [b] }, say);
+    const before = store.getState();
+    const held = moveWaiting();
+    expect(held).toBe(true);
+    for (const action of ['deleteSelection', 'duplicate', 'selectAll'] as const) expect(editKey(action, false, store, held)).toBe(false);
+    expect(editKey('nudge', false, store, held, 'ArrowLeft')).toBe(false);
+    // The wait holds the store's gesture, so a nudge or an edit is refused even if handed no guard.
+    expect(editKey('nudge', false, store, false, 'ArrowLeft')).toBe(false);
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'gesture-open' } });
+    expect(store.redo().ok).toBe(false);
+    expect(openMenuByKey()).toBe(false);
+    expect(cancelDrag()).toBe(false);
+    expect(store.getState().project).toBe(before.project);
+    expect(store.getState().selection).toEqual(before.selection);
+    expect(moveWaiting()).toBe(true);
+    cancelMove();
+    unbind();
+  });
+
+  it('starts only on a bound canvas, with no drag nor gesture open, on a point of the route; else nothing is said', () => {
+    const said: string[] = [];
+    const say = (words: string) => said.push(words);
+    const { store, canvas, route, b, unbind } = boundMove();
+    expect(startMove({ route: route.id, point: 'nowhere', points: ['nowhere'] }, say)).toBe(false);
+    expect(startMove({ route: 'nowhere', point: b, points: [b] }, say)).toBe(false);
+    const begun = store.begin('Other');
+    expect(startMove({ route: route.id, point: b, points: [b] }, say)).toBe(false);
+    if (begun.ok) begun.gesture.cancel();
+    canvas.fire('pointerdown', client(0.6, 0.6));
+    canvas.fire('pointermove', client(0.7, 0.45));
+    expect(dragOpen()).toBe(true);
+    expect(startMove({ route: route.id, point: b, points: [b] }, say)).toBe(false);
+    cancelDrag();
+    unbind();
+    expect(startMove({ route: route.id, point: b, points: [b] }, say)).toBe(false);
+    expect(said).toEqual([]);
+    expect(moveWaiting()).toBe(false);
+  });
+
+  it('a project opened under the wait ends it silently, and the watchers are told as it starts and ends', () => {
+    const { store, route, b, said, say, unbind } = boundMove();
+    const told: boolean[] = [];
+    const unwatch = watchMove((waiting) => told.push(waiting));
+    startMove({ route: route.id, point: b, points: [b] }, say);
+    store.open(store.getState().project);
+    expect(moveWaiting()).toBe(false);
+    expect(said).toEqual([MOVE_WORDS.one]);
+    startMove({ route: route.id, point: b, points: [b] }, say);
+    cancelMove();
+    unwatch();
+    startMove({ route: route.id, point: b, points: [b] }, say);
+    cancelMove();
+    expect(told).toEqual([true, false, true, false]);
+    unbind();
+  });
+});
+

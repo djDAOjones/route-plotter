@@ -8,6 +8,11 @@
 // that is off makes no step, so it says nothing. Every other step is silent: a nudge (v3 was) and the line's commands
 // (the line's menu is not on the page yet: its chat names their words). Select all is not a step, so it has its own
 // line, `allSelected`.
+//
+// "Move" from the point's menu (brief 138, ruling DC; D270, provisional until the owner objects) is not a step while it
+// waits, so it has its own lines: on choosing it, the prompt (one for a point alone, another when the selection comes
+// with it), and on a cancel by Escape, a right-click or leaving the preview, "Move cancelled". The place itself is a
+// "Move point" or "Move points" step, so the store's hook says "Point moved" or "N points moved" as above.
 import type { Current } from '../store/command';
 import type { Stepped } from '../store/store';
 
@@ -79,3 +84,16 @@ export function stepWords(step: Stepped): string | null {
 export function allSelected(n: number): string {
   return n === 1 ? 'Point selected' : `All ${String(n)} points selected`;
 }
+
+/** "Move"'s own lines (D270): the prompt for one point, the prompt when the selection comes with it, and the cancel. */
+export const MOVE_WORDS = {
+  one: 'Move: click where the point should go, or press Escape to cancel',
+  group: 'Move: click where the point should go; the other selected points come with it. Escape cancels',
+  cancelled: 'Move cancelled',
+} as const;
+
+/** "Move"'s prompt, `n` the points that will move: one point the first, two or more the second. */
+export function moveAsked(n: number): string {
+  return n > 1 ? MOVE_WORDS.group : MOVE_WORDS.one;
+}
+

@@ -61,6 +61,7 @@ describe('the point\'s menu, its items (CC, D267 (a))', () => {
       ['Mark as end', true, false],
       ['Set lead start', true, false],
       ['Make bend', true, false],
+      ['Move', true, false],
       ['Delete', true, true],
     ]);
   });
@@ -73,6 +74,7 @@ describe('the point\'s menu, its items (CC, D267 (a))', () => {
       ['Mark as end', true, false],
       ['Set lead start', false, false],
       ['Make bend', true, false],
+      ['Move', true, false],
       ['Delete', true, true],
     ]);
     expect(items[2]?.reason).toBe('This point is already where the lead starts.');
@@ -80,13 +82,16 @@ describe('the point\'s menu, its items (CC, D267 (a))', () => {
 
   it('a marked end: its mark to remove; a bend: made a stop', () => {
     const { store, route, b, c } = scene();
-    expect(menuOf(store, route, b).items.map((each) => each.label)).toEqual(['Mark as start', 'Remove end mark', 'Set lead start', 'Make bend', 'Delete']);
-    expect(menuOf(store, route, c).items.map((each) => each.label)).toEqual(['Mark as start', 'Mark as end', 'Set lead start', 'Make stop', 'Delete']);
+    expect(menuOf(store, route, b).items.map((each) => each.label)).toEqual(['Mark as start', 'Remove end mark', 'Set lead start', 'Make bend', 'Move', 'Delete']);
+    expect(menuOf(store, route, c).items.map((each) => each.label)).toEqual(['Mark as start', 'Mark as end', 'Set lead start', 'Make stop', 'Move', 'Delete']);
   });
 
-  it('every item\'s words are its command\'s undo words, Delete\'s excepted ("Delete point" or "Delete points")', () => {
+  it('every item\'s words are its command\'s undo words, Delete\'s excepted ("Delete point" or "Delete points"); Move has no command', () => {
     const { store, route, d } = scene();
-    for (const each of menuOf(store, route, d).items) expect(each.command.label).toBe(each.label === 'Delete' ? 'Delete point' : each.label);
+    for (const each of menuOf(store, route, d).items) {
+      if (each.label === 'Move') expect(each.command).toBeNull();
+      else expect(each.command?.label).toBe(each.label === 'Delete' ? 'Delete point' : each.label);
+    }
   });
 
   it('a point or route the project does not hold has no menu', () => {
@@ -100,7 +105,7 @@ describe('the point\'s menu, its items (CC, D267 (a))', () => {
     const stale = menuOf(store, route, d).items;
     // The point taken away under the open menu: each built command would now refuse it.
     store.dispatch(deletePoints(route, [d]));
-    for (const each of stale) expect(itemReason(store.getState(), each.command, 'unused')).toBe('This point is no longer on the route.');
+    for (const each of stale) if (each.command !== null) expect(itemReason(store.getState(), each.command, 'unused')).toBe('This point is no longer on the route.');
     const before = store.getState();
     for (const each of stale) expect(runItem(store, each)).toBe(false);
     expect(store.getState().project).toBe(before.project);
@@ -193,6 +198,40 @@ describe('running an item (CE (c), (d))', () => {
     expect(routeOf(store).points.map((each) => each.id)).toContain(c);
     expect(routeOf(store).points.map((each) => each.id)).not.toContain(b);
     expect(store.getState().undo).toBe('Delete point');
+  });
+});
+
+describe('"Move" (brief 138, DA; D242, D250 (a), D270)', () => {
+  it('stands after "Make stop" or "Make bend" and before Delete, not set apart; the others\' order unchanged', () => {
+    const { store, route, a, d } = scene();
+    for (const point of [a, d]) {
+      const labels = menuOf(store, route, point).items.map((each) => each.label);
+      expect(labels.indexOf('Move')).toBe(4);
+      expect(labels.at(-1)).toBe('Delete');
+      expect(labels).toHaveLength(6);
+    }
+    expect(item(store, route, d, 'Move').apart).toBe(false);
+    expect(item(store, route, d, 'Move').reason).toBeNull();
+  });
+
+  it('is no store command: `runItem` never dispatches it, and nothing changes; its move names the route, the point and its points', () => {
+    const { store, route, d } = scene();
+    const dispatch = vi.spyOn(store, 'dispatch');
+    const move = item(store, route, d, 'Move');
+    expect(move.command).toBeNull();
+    expect(move.move).toEqual({ route, point: d, points: [d] });
+    const before = store.getState();
+    expect(runItem(store, move)).toBe(false);
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(store.getState()).toBe(before);
+    for (const each of menuOf(store, route, d).items) if (each.label !== 'Move') expect(each.move).toBeNull();
+  });
+
+  it('its points: the whole selection when the point is in it, in the selection\'s order; else the point alone', () => {
+    const { store, route, b, c, d } = scene();
+    store.select({ route, points: [c, d] });
+    expect(item(store, route, d, 'Move').move).toEqual({ route, point: d, points: [c, d] });
+    expect(item(store, route, b, 'Move').move).toEqual({ route, point: b, points: [b] });
   });
 });
 

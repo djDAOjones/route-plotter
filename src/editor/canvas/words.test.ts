@@ -4,7 +4,7 @@ import { newPoint, newRoute, newScene, type IdSource, type Route } from '../../c
 import type { Current } from '../store/command';
 import { NOTHING_SELECTED } from '../store/selection';
 import type { Stepped } from '../store/store';
-import { allSelected, editWords, stepWords } from './words';
+import { allSelected, editWords, MOVE_WORDS, moveAsked, stepWords } from './words';
 
 function counter(prefix: string): IdSource {
   let n = 0;
@@ -126,5 +126,21 @@ describe('select all’s line (ruling CT)', () => {
     expect(allSelected(5)).toBe('All 5 points selected');
     expect(allSelected(2)).toBe('All 2 points selected');
     expect(allSelected(1)).toBe('Point selected');
+  });
+});
+
+describe('"Move"\'s words (brief 138, DC; D270)', () => {
+  it('the prompt for one point, the prompt for a selection, and the cancel, word for word', () => {
+    expect(MOVE_WORDS).toEqual({
+      one: 'Move: click where the point should go, or press Escape to cancel',
+      group: 'Move: click where the point should go; the other selected points come with it. Escape cancels',
+      cancelled: 'Move cancelled',
+    });
+  });
+
+  it('the prompt by the points that move: one point the first, two or more the second', () => {
+    expect(moveAsked(1)).toBe(MOVE_WORDS.one);
+    expect(moveAsked(2)).toBe(MOVE_WORDS.group);
+    expect(moveAsked(5)).toBe(MOVE_WORDS.group);
   });
 });

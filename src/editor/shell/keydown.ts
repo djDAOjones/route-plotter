@@ -31,11 +31,16 @@
 // is the "menu" in the Escape order above: its own listener takes every key pressed inside it, Escape included, and
 // stops it there (kit/ContextMenu.tsx point 3), so this listener never hears a key meant for the menu.
 //
+// Brief 138 (rulings DB (4) and (5); D270): while "Move" from the point's menu waits for its click (dom.ts point 10),
+// Escape cancels it ("Move cancelled"), after an open drag and before the selection: `cancelDrag() || cancelMove() ||
+// escapeClears(…)`; and the Editing keys are handed `dragOpen() || moveWaiting()`, so they do nothing, as while a drag
+// is open (the wait's store gesture refuses Undo and Redo, and the menu's key opens nothing).
+//
 // A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).
 //
 // Single-key shortcuts (D183, WCAG 2.2's 2.1.4) are read at each key from the session's switch, on to begin with and
 // held for the visit; Help shows and sets it.
-import { cancelDrag, dragOpen, editKey, endNudge, escapeClears, isMenuKey, openMenuByKey } from '../canvas/dom';
+import { cancelDrag, cancelMove, dragOpen, editKey, endNudge, escapeClears, isMenuKey, moveWaiting, openMenuByKey } from '../canvas/dom';
 import { dispatchKey, type FocusKind, type KeyDispatch, type PressPlace } from './dispatch';
 import type { PageSession } from './session';
 
@@ -100,8 +105,8 @@ export function listenForKeys(
         return;
       }
     }
-    const escape = () => cancelDrag() || escapeClears(event, place, dragOpen(), store);
-    const edit: KeyDispatch['edit'] = (action, repeat, key) => editKey(action, repeat, store, dragOpen(), key, undefined, announce);
+    const escape = () => cancelDrag() || cancelMove() || escapeClears(event, place, dragOpen(), store);
+    const edit: KeyDispatch['edit'] = (action, repeat, key) => editKey(action, repeat, store, dragOpen() || moveWaiting(), key, undefined, announce);
     const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject, escape, edit, endNudge });
     if (taken) event.preventDefault();
   };

@@ -97,7 +97,28 @@
 //    a drag is open or the store's gesture is (a nudge burst is ended first, by the down or by keydown.ts), as the
 //    Editing keys refuse; both open while the pen draws (the pen is always on). The `contextmenu` is listened for only
 //    with a `menu` to hand it to.
-import { imageToCanvas, type ImageBounds } from '../../core/geometry/transform';
+// 10. "Move" from the point's menu, then a click (brief 138, rulings DB and DD; D242, D250 (a), D270, provisional until
+//    the owner objects): the single-pointer way to move what a drag moves (WCAG 2.5.7). `startMove` (the page's, when
+//    the menu's "Move" is chosen: ./menu.ts `MoveRequest`) starts a wait on a bound canvas for the route, the menu's
+//    point and the points to move, unless a drag or a store gesture is open or the point is no longer on the route. The
+//    wait holds a store gesture under movePoints' words ("Move point" or "Move points"), so the store refuses Undo, Redo
+//    and every other edit while it waits, and the menu does not open, as during a drag; keydown.ts hands the Editing
+//    keys `dragOpen() || moveWaiting()`, so they are not taken. On starting, the status area is told the prompt
+//    (./words.ts `moveAsked`). While it waits, the canvas's pointer events go to the wait, never to the pointer machine,
+//    so no drag starts and the pen's tap never fires (nothing placed, selected or joined, wherever the click lands): a
+//    primary press with the main button, released on the canvas, places, taken on the release (2.5.2); a press that
+//    leaves the canvas (pointerleave), is cancelled, loses capture, or is released beyond the canvas (heard only by the
+//    window) places nothing, and the wait goes on (a touch's implicit capture is released at the press so that its
+//    leave is heard). The place: the menu's point lands at the release's place in image fractions and every other
+//    point keeps its offset from it, the whole movement held on the picture as a group drag's is (`holdOnPicture`,
+//    D237), applied in the gesture as one `movePoints` and committed: one step, which the store's hook words ("Point
+//    moved", "N points moved", D268); the selection is kept; the wait ends. A refused move (the point gone) ends it with
+//    nothing changed. `cancelMove` (keydown.ts's Escape, after `cancelDrag`; the page's, when focus leaves the preview)
+//    and a right-click on the canvas (its press, or the menu event alone: the browser's menu and the point's are both
+//    refused on that press) cancel the gesture, nothing changed and nothing to undo, saying "Move cancelled"; the
+//    window's blur, the binding's removal and a project opened under the wait (the store closes the gesture) end it
+//    saying nothing. Hover goes on while it waits. `watchMove` tells the page when a wait starts and ends (its crosshair).
+import { canvasToImage, imageToCanvas, type ImageBounds } from '../../core/geometry/transform';
 import type { Frame } from '../../adapters/render/layers';
 import type { Screen } from '../../adapters/render/overlays';
 import type { Command } from '../store/command';
@@ -108,9 +129,9 @@ import { DUPLICATE_OFFSET, type Start } from '../../core/model/commands/editing'
 import { bindPointer, type PointerBinding, type Tap } from './gesture';
 import { hitTest, type HitRoute } from './hit';
 import { hoverOf, type HoverHolder } from './hover';
-import { menuSelection } from './menu';
+import { menuSelection, type MoveRequest } from './menu';
 import type { Modifiers, Pixel, PointerInput } from './pointer';
-import { allSelected } from './words';
+import { allSelected, MOVE_WORDS, moveAsked } from './words';
 
 /** A point's half-size at scale 1, in reference pixels: 30 px across (D241). */
 export const MARKER_HALF = 15;
@@ -223,11 +244,55 @@ export interface CanvasBindingOptions<E extends PointerFields> {
   readonly menu?: (open: MenuOpen) => void;
 }
 
+/** Where a line for the page's one status area goes (points 7 and 10); by default, nowhere. */
+export type Say = (words: string) => void;
+const silent: Say = () => undefined;
+
 /**
  * The bindings on the page now, each with what ends its press as a blur does, so that keydown.ts can ask whether a drag
- * is open (point 4) and cancel it (point 5), and with the zoom of the frame its canvas last drew (point 8).
+ * is open (point 4) and cancel it (point 5), with the zoom of the frame its canvas last drew (point 8), and with its
+ * "Move" wait (point 10).
  */
-const live = new Map<PointerBinding, { readonly blur: () => void; readonly zoom: () => number | undefined; readonly menu: () => boolean }>();
+const live = new Map<
+  PointerBinding,
+  {
+    readonly blur: () => void;
+    readonly zoom: () => number | undefined;
+    readonly menu: () => boolean;
+    readonly startMove: (move: MoveRequest, say: Say) => boolean;
+    readonly endMove: (said: boolean) => boolean;
+    readonly moving: () => boolean;
+  }
+>();
+
+/** Who is told when a "Move" wait starts (true) and ends (false) (point 10): the page's crosshair. */
+const moveWatchers = new Set<(waiting: boolean) => void>();
+const tellMove = (waiting: boolean): void => {
+  for (const call of [...moveWatchers]) call(waiting);
+};
+
+/** Starts "Move"'s wait on a bound canvas (point 10), `say` told its prompt; true when one started it. */
+export function startMove(move: MoveRequest, say: Say = silent): boolean {
+  return [...live.values()].some((each) => each.startMove(move, say));
+}
+
+/** Whether a "Move" wait is open on any bound canvas now (point 10). */
+export const moveWaiting = (): boolean => [...live.values()].some((each) => each.moving());
+
+/** Cancels every "Move" wait (point 10), saying "Move cancelled"; true when one was open, and Escape is then taken. */
+export function cancelMove(): boolean {
+  let cancelled = false;
+  for (const each of [...live.values()]) if (each.endMove(true)) cancelled = true;
+  return cancelled;
+}
+
+/** Tells `call` each time a "Move" wait starts or ends (point 10); gives back what stops telling it. */
+export function watchMove(call: (waiting: boolean) => void): () => void {
+  moveWatchers.add(call);
+  return () => {
+    moveWatchers.delete(call);
+  };
+}
 
 /** The zoom of the frame the first bound canvas last drew, the nudge's divisor (point 8); 1 with none drawn or bound. */
 export const zoomNow = (): number => [...live.values()][0]?.zoom() ?? 1;
@@ -277,6 +342,16 @@ const ON_CANVAS: readonly (readonly [string, Kind])[] = [
   ['pointercancel', 'cancel'],
   ['lostpointercapture', 'lost-capture'],
 ];
+type Opened = Extract<ReturnType<Store['begin']>, { readonly ok: true }>['gesture'];
+
+/** "Move"'s wait (point 10): what it moves, the gesture it holds, where its words go, and the press it watches. */
+interface Waiting {
+  readonly move: MoveRequest;
+  readonly gesture: Opened;
+  readonly say: Say;
+  press: number | null;
+}
+
 const ON_WINDOW: readonly (readonly [string, Kind | 'blur'])[] = [
   ['pointerup', 'up'],
   ['pointercancel', 'cancel'],
@@ -336,10 +411,59 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     menu?.({ route, point, at: place });
   };
 
+  /** "Move"'s wait (point 10), or null; and whether the menu event of a right-click that cancelled it is still to come. */
+  let waiting: Waiting | null = null;
+  let swallowMenu = false;
+  /** Ends the wait with nothing changed, saying "Move cancelled" when `said`; true when one was open. */
+  const endMove = (said: boolean): boolean => {
+    const open = waiting;
+    if (open === null) return false;
+    waiting = null;
+    open.gesture.cancel();
+    if (said) open.say(MOVE_WORDS.cancelled);
+    tellMove(false);
+    return true;
+  };
+  const startWait = (move: MoveRequest, say: Say): boolean => {
+    if (waiting !== null || binding.state().phase === 'dragging') return false;
+    const route = store.getState().project.scene.routes.find((each) => each.id === move.route);
+    if (route?.points.some((each) => each.id === move.point) !== true) return false;
+    const begun = store.begin(movePoints(move.route, move.points, 0, 0).label);
+    if (!begun.ok) return false;
+    // A press still open on the machine (none is a drag) is ended first, as a blur ends it.
+    if (binding.state().phase !== 'idle') send({ kind: 'blur' });
+    waiting = { move, gesture: begun.gesture, say, press: null };
+    hover?.set(null);
+    say(moveAsked(move.points.length));
+    tellMove(true);
+    return true;
+  };
+  /** The place (point 10): the menu's point at the release's place, the others keeping their offsets, held on the picture. */
+  const place = (open: Waiting, event: E): void => {
+    const now = inCss();
+    if (now === null) return;
+    waiting = null;
+    const route = store.getState().project.scene.routes.find((each) => each.id === open.move.route);
+    const anchor = route?.points.find((each) => each.id === open.move.point);
+    const starts = route?.points.filter((each) => open.move.points.includes(each.id)) ?? [];
+    const to = canvasToImage(now.bounds, at(event));
+    const held = anchor === undefined ? null : holdOnPicture(starts, to.x - anchor.x, to.y - anchor.y);
+    if (held !== null && open.gesture.apply(movePoints(open.move.route, open.move.points, held.dx, held.dy)).ok) open.gesture.commit();
+    else open.gesture.cancel();
+    tellMove(false);
+  };
+  // The store closing the wait's gesture under it (a project opened) ends the wait, saying nothing.
+  const unsubscribe = store.subscribe(() => {
+    if (waiting !== null && store.getState().gesture === null) endMove(false);
+  });
+
   live.set(binding, {
     blur: () => {
       send({ kind: 'blur' });
     },
+    startMove: startWait,
+    endMove,
+    moving: () => waiting !== null,
     zoom: () => geometry()?.zoom,
     menu: () => {
       // As a down does, the canvas is first brought to the store, so the point is placed where it is now (ruling K).
@@ -369,9 +493,43 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     hover.set(now === null ? null : hoverOf(hitTest(place, now.bounds, now.routes)));
   };
 
-  const onPointer = (kind: Kind | 'blur', event: E): void => {
+  /** A pointer event while "Move" waits (point 10): never the machine's. */
+  const onWaiting = (open: Waiting, kind: Kind | 'blur', event: E, where: 'canvas' | 'window'): void => {
+    if (kind === 'blur') {
+      hover?.set(null);
+      endMove(false);
+      return;
+    }
+    if (kind === 'down') {
+      hover?.set(null);
+      if (event.button === 2) {
+        swallowMenu = true;
+        endMove(true);
+        return;
+      }
+      if (!event.isPrimary || event.button !== 0) return;
+      open.press = event.pointerId;
+      // A touch's implicit capture would hide its leave: released, so a press slid off the canvas is heard to leave.
+      if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      return;
+    }
+    if (kind === 'move') {
+      if (where === 'canvas') rest(at(event), event);
+      return;
+    }
+    if (open.press === null || event.pointerId !== open.press) return;
+    open.press = null;
+    if (kind === 'up' && where === 'canvas') place(open, event);
+  };
+
+  const onPointer = (kind: Kind | 'blur', event: E, where: 'canvas' | 'window'): void => {
     // A press on the preview or the window's blur ends a nudge burst at once (point 8).
     if (kind === 'down' || kind === 'blur') endNudge();
+    if (kind === 'down') swallowMenu = false;
+    if (waiting !== null) {
+      onWaiting(waiting, kind, event, where);
+      return;
+    }
     if (kind === 'blur') {
       hover?.set(null);
       send({ kind });
@@ -392,13 +550,22 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     send({ ...contact, kind, under: hitTest(contact.at, now.bounds, now.routes), selection });
   };
 
-  const listeners = (pairs: readonly (readonly [string, Kind | 'blur'])[]) =>
-    pairs.map(([type, kind]) => [type, (event: E) => { onPointer(kind, event); }] as const);
+  const listeners = (pairs: readonly (readonly [string, Kind | 'blur'])[], where: 'canvas' | 'window') =>
+    pairs.map(([type, kind]) => [type, (event: E) => { onPointer(kind, event, where); }] as const);
   const onLeave = (): void => {
     hover?.set(null);
+    // A press that leaves the canvas places nothing (point 10).
+    if (waiting !== null) waiting.press = null;
   };
   /** A right-click or the like on the canvas (point 9): the menu on a point hit, else nothing and the browser's own. */
   const onMenu = (event: E): void => {
+    // While "Move" waits, or on the press that cancelled it, neither menu opens; the wait is cancelled (point 10).
+    if (swallowMenu || waiting !== null) {
+      swallowMenu = false;
+      event.preventDefault?.();
+      endMove(true);
+      return;
+    }
     if (!menuMay() || !refresh()) return;
     const now = inCss();
     if (now === null) return;
@@ -407,13 +574,16 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     event.preventDefault?.();
     openOn(under.route, under.id, { x: event.clientX, y: event.clientY });
   };
-  // The leave is listened for only with a holder to clear (point 6), the menu's event only with a menu (point 9).
-  const withLeave = hover === undefined ? listeners(ON_CANVAS) : [...listeners(ON_CANVAS), ['pointerleave', onLeave] as const];
+  // The leave is listened for only with a holder to clear (point 6) or a menu whose "Move" may wait (point 10), the
+  // menu's event only with a menu (point 9).
+  const withLeave = hover === undefined && menu === undefined ? listeners(ON_CANVAS, 'canvas') : [...listeners(ON_CANVAS, 'canvas'), ['pointerleave', onLeave] as const];
   const onCanvas = menu === undefined ? withLeave : [...withLeave, ['contextmenu', onMenu] as const];
-  const onWindow = listeners(ON_WINDOW);
+  const onWindow = listeners(ON_WINDOW, 'window');
   for (const [type, listener] of onCanvas) canvas.addEventListener(type, listener);
   for (const [type, listener] of onWindow) win.addEventListener(type, listener);
   return () => {
+    endMove(false);
+    unsubscribe();
     send({ kind: 'blur' });
     hover?.set(null);
     for (const [type, listener] of onCanvas) canvas.removeEventListener(type, listener);
@@ -494,10 +664,6 @@ export function duplicateSelected(store: EditStore, drag: boolean, repeat = fals
   gesture.commit();
   return true;
 }
-
-/** Where a line for the page's one status area goes (point 7: select all's); by default, nowhere. */
-export type Say = (words: string) => void;
-const silent: Say = () => undefined;
 
 /**
  * Cmd or Ctrl+A (point 7): every point of the route selected, in the route's order, never a step; true when it has one.
