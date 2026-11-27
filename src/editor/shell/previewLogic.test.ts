@@ -715,9 +715,15 @@ describe('when a frame is drawn (ruling 4)', () => {
     // 9.6 times, 60 px down, so (0.2, 0.3) is (384, 348); each a fill in its route's colour, radius 3, no edge.
     const centres = added.filter((line) => line.startsWith('arc ')).map((line) => line.split(' ').slice(1, 4).join(' '));
     expect(centres).toEqual(['960 924 3', '960 156 3', '384 348 3', '576 828 3', '1344 252 3']);
-    const fills = added.filter((line) => line.startsWith('fill '));
-    expect(fills.map((line) => [whole, hidden].findIndex((colour) => line.includes(`fillStyle=${colour ?? 'none'}`)))).toEqual([0, 0, 0, 1, 1]);
-    expect(added.filter((line) => line.startsWith('stroke ') && !guides.includes(line))).toEqual([]);
+    // The guide's lines come first, then its dots: a fill among the lines is a way arrow, one on each route's one-way
+    // line, the route's colour, edged by one stroke that is not the guide's (D275); a fill among the dots is a dot.
+    const lined = of([OVERLAY_MAKERS.guideLines(ids)]).slice(exported.length);
+    const colourOf = (line: string) => [whole, hidden].findIndex((colour) => line.includes(`fillStyle=${colour ?? 'none'}`));
+    const fills = added.slice(lined.length).filter((line) => line.startsWith('fill '));
+    expect(fills.map(colourOf)).toEqual([0, 0, 0, 1, 1]);
+    expect(lined.filter((line) => line.startsWith('fill ')).map(colourOf)).toEqual([0, 1]);
+    expect(added.slice(lined.length).filter((line) => line.startsWith('stroke '))).toEqual([]);
+    expect(lined.filter((line) => line.startsWith('stroke ') && !guides.includes(line))).toHaveLength(2);
   });
 
   it('(d) playing, nothing selected or hovered: no overlays, the frame line for line an export\'s (brief 128, BS b)', () => {

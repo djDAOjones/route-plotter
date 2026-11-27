@@ -2,7 +2,7 @@
 // `v3/src/services/RenderingService.js` at the lines named, read at a zoom of 1, where v3's clamp factor is 1.
 import { expect, test } from 'vitest';
 import type { DrawContext } from './context';
-import { endMark, greyDot, guideDot, hoverRing, plusHandle, selectionRect, selectionRing, startMark, unitAt } from './overlays';
+import { endMark, greyDot, guideDot, hoverRing, plusHandle, selectionRect, selectionRing, startMark, unitAt, wayArrow } from './overlays';
 import { Recorder } from './recorder';
 
 const AT = '@ 1 0 0 1 0 0';
@@ -246,4 +246,36 @@ test("the end mark (CORE-06, D274): v3's exit glyph, a square of side 1.6 × the
     expect(drawn((each) => endMark(each, { x: 30, y: 40 }, 10, '#d55e00', odd))).toEqual([]);
   }
   expect(drawn((each) => endMark(each, { x: 30, y: Number.NaN }, 10, '#d55e00', 1.5))).toEqual([]);
+});
+
+test("the way arrow (CORE-06, D275): v3's one-way glyph, a triangle pointing toward the place handed, filled in the colour handed at full alpha, edged white; nothing for an unsound size, edge, place or way", () => {
+  // Pointing right from (30, 40): the tip a size ahead, the back 0.6 of a size behind and 0.6 to each side (v3 :1215–1233).
+  const right: Shape = (context) => wayArrow(context, { x: 30, y: 40 }, { x: 90, y: 40 }, 10, '#d55e00', 1.5);
+  expect(drawn(right)).toEqual([
+    'save',
+    'beginPath',
+    `moveTo 40 40 ${AT}`,
+    `lineTo 24 46 ${AT}`,
+    `lineTo 24 34 ${AT}`,
+    `closePath ${AT}`,
+    `fill | ${AT} | fillStyle=#d55e00`,
+    `stroke | ${AT} | strokeStyle=#ffffff lineWidth=1.5`,
+    'beginPath',
+    'restore',
+  ]);
+  // Pointing down, then up: the way is the place handed's, however far it lies.
+  expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 30, y: 41 }, 10, '#d55e00', 1.5)).slice(2, 5)).toEqual([`moveTo 30 50 ${AT}`, `lineTo 24 34 ${AT}`, `lineTo 36 34 ${AT}`]);
+  expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 30, y: 0 }, 10, '#d55e00', 1.5)).slice(2, 5)).toEqual([`moveTo 30 30 ${AT}`, `lineTo 36 46 ${AT}`, `lineTo 24 46 ${AT}`]);
+  const context = dirtied();
+  const before = context.state();
+  expect(drawn(right, context)).toEqual(drawn(right));
+  expect(context.state()).toEqual(before);
+  for (const odd of [Number.NaN, 0, -1, Number.POSITIVE_INFINITY]) {
+    expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 90, y: 40 }, odd, '#d55e00', 1.5))).toEqual([]);
+    expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 90, y: 40 }, 10, '#d55e00', odd))).toEqual([]);
+  }
+  expect(drawn((each) => wayArrow(each, { x: Number.NaN, y: 40 }, { x: 90, y: 40 }, 10, '#d55e00', 1.5))).toEqual([]);
+  expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 90, y: Number.NaN }, 10, '#d55e00', 1.5))).toEqual([]);
+  // No way to point: the place handed is the arrow's own.
+  expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 30, y: 40 }, 10, '#d55e00', 1.5))).toEqual([]);
 });
