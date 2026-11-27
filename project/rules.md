@@ -46,6 +46,7 @@
 | build, scripts, versioning, deployment, release | DEV-INFRASTRUCTURE.md | 3,300 | the owner calls releases and decides merges |
 | code change | project/architecture.md | 1,100 | |
 | a container, external system, boundary or interface change | project/architecture.md | 1,100 | none |
+| an interface, core, player, export or dependency change | project/digests/app-opinion.md | 650 | the owner signs each departure |
 | code change | project/digests/house-conventions.md | 1,000 | |
 | code change, debugging, persistence | _Joe/dev notes/needs consolidating and deleting/dev guide.md | 2,800 | until: DOC-08 retires it |
 
