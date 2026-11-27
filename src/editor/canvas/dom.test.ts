@@ -1428,8 +1428,12 @@ describe('the point\'s menu\'s opener (point 9, brief 130, CB and CE (e))', () =
 });
 
 /** Bound with a menu (so the menu's event and the leave are heard), and what the status area was told. */
+/** What each "Move" test leaves bound or watching, undone after it whether it passed or failed (Codex list line 19). */
+const moveCleanups: Array<() => void> = [];
+
 function boundMove() {
   const made = boundMenu();
+  moveCleanups.push(made.unbind);
   const said: string[] = [];
   const say = (words: string) => said.push(words);
   /** A primary press and release at image places: the press at `from`, the release at `to` (on the canvas). */
@@ -1443,6 +1447,12 @@ function boundMove() {
 }
 
 describe('"Move" then a click (point 10; brief 138, DB; D270)', () => {
+  // A failing test stops at its first failed assertion, before its own `unbind()`; its binding would stay in dom.ts's
+  // `live` map and act on later tests' clicks (same route and point ids). Unbinding twice is harmless.
+  afterEach(() => {
+    for (const undo of moveCleanups.splice(0).reverse()) undo();
+  });
+
   it('a click on empty picture moves the point there, on the release, as one step "Move point"; no point added, nothing joined, the selection kept; the wait ends', () => {
     const { canvas, store, route, b, said, say, click, unbind } = boundMove();
     store.select({ route: route.id, points: [b] });
@@ -1681,6 +1691,7 @@ describe('"Move" then a click (point 10; brief 138, DB; D270)', () => {
     const { store, route, b, said, say, unbind } = boundMove();
     const told: boolean[] = [];
     const unwatch = watchMove((waiting) => told.push(waiting));
+    moveCleanups.push(unwatch);
     startMove({ route: route.id, point: b, points: [b] }, say);
     store.open(store.getState().project);
     expect(moveWaiting()).toBe(false);
