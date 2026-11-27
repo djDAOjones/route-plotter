@@ -63,6 +63,9 @@
 //    then "Reverse line") and drawn by the same kit menu, named "Line actions". An item chosen runs as one undo step
 //    (`runItem`), the store's hook says its words ("Line made two-way", "Line made one way", "Line reversed"), and the
 //    menu closes with focus back on the box. It opens by pointer only: no key picks out a line yet.
+// 10. CORE-06, close (brief 141, FD; D272 (c), provisional until the owner answers): the binding is handed `pause`, the
+//    page's (App.tsx: Play or pause's toggle, heard "Animation paused"): a press or right-click on the picture while
+//    the route plays pauses it and does nothing else (dom.ts point 11), and the drawer draws no hover while it plays.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { compose, type Surface } from '../../player/compose';
 import { bindCanvas, cancelMove, startMove, watchMove, type LineMenuOpen, type MenuOpen, type Say } from '../canvas/dom';
@@ -83,6 +86,8 @@ export interface PreviewProps {
   readonly store: Store;
   /** The session's status area, told "Move"'s prompt (point 8); silent when not given. */
   readonly announce?: Say;
+  /** What pauses the play on a press on the picture while it plays (point 10); stable, as the binding is made once. */
+  readonly pause?: () => void;
 }
 
 /** The canvas's spoken name (1.1.1). */
@@ -167,7 +172,7 @@ const surface = (size: { width: number; height: number }): Surface => {
   return { context, image };
 };
 
-export function Preview({ drawer, inputs, subscribe, store, announce }: PreviewProps) {
+export function Preview({ drawer, inputs, subscribe, store, announce, pause }: PreviewProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   // The box's shape: the video's, the scene's export width and height (point 5), as one string so a telling that leaves
@@ -224,7 +229,7 @@ export function Preview({ drawer, inputs, subscribe, store, announce }: PreviewP
       setMenu({ built, label: LINE_MENU_NAME, at: open.at, serial: openings.current });
     };
     drawer.attach({ paint: painting.paint, surface });
-    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: MAC, hover: drawer.hover, menu: openMenu, lineMenu: openLineMenu });
+    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: MAC, hover: drawer.hover, menu: openMenu, lineMenu: openLineMenu, ...(pause === undefined ? {} : { pause }) });
 
     let box = { width: 0, height: 0 };
     const measure = () => {
@@ -255,7 +260,7 @@ export function Preview({ drawer, inputs, subscribe, store, announce }: PreviewP
       observer.disconnect();
       drawer.detach();
     };
-  }, [drawer, inputs, store]);
+  }, [drawer, inputs, store, pause]);
 
   // The room left (point 5).
   useEffect(() => {

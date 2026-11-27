@@ -530,6 +530,20 @@ async function flipByKeyboard(page) {
 // read Cmd on a Mac and Ctrl elsewhere; a punctuation key is read by its name (comma, full stop, less than, greater
 // than, question mark). Carbon's "Close" tooltip, shown while Close has focus, is not listed. Behind
 // it, the play bar's Play stays disabled (a stated node, so listed).
+// Reviewed (brief 141, FF; Codex list line 18): the point's menu open on pen-drawn's first point, read from the page
+// (PROBE-141/run-snap): "Point actions" in document.body, its items in order with their states. "Set lead start" is
+// off, its reason beside it, as the lead already starts at the first point (D267 (a)); a separator stands before
+// Delete. The rest of the page is as pen-drawn's snapshot has it, behind the menu.
+const POINT_MENU_OPEN = [
+  '- menu "Point actions":',
+  '  - menuitem "Mark as start"',
+  '  - menuitem "Mark as end"',
+  '  - menuitem "Set lead start" [disabled]',
+  '  - menuitem "Make bend"',
+  '  - menuitem "Move"',
+  '  - separator',
+  '  - menuitem "Delete"',
+].join('\n');
 const helpOpen = (checked) => [
   '- group "Playback":',
   '  - button "Play" [disabled]',
@@ -836,8 +850,23 @@ export default {
         '  - status',
       ].join('\n'),
       dialogs: [],
-      // Nothing here draws motion: the points stand until they are edited.
-      interactions: [],
+      // Nothing here draws motion: the points stand until they are edited. "open point menu" (brief 141, FF; Codex list
+      // line 18): a right-click on the first point opens "Point actions"; its reviewed snapshot is the catalogue's
+      // evidence for 4.1.2 for the menu (each item's role, name and state). No axe runs on the open menu (a menu-open
+      // state would add 14 tests a run, and the menu closes on Tab and blur inside three of them); the reduced-motion
+      // test now samples this interaction too.
+      interactions: [
+        {
+          name: 'open point menu',
+          run: async ({ page }) => {
+            const box = await page.locator(PREVIEW).boundingBox();
+            const [fx, fy] = TAPS[0];
+            await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy, { button: 'right' });
+            await page.locator('[role=menu]').waitFor();
+          },
+          snapshot: POINT_MENU_OPEN,
+        },
+      ],
       keeps: {
         content: [PREVIEW],
         functions: [
@@ -3441,6 +3470,108 @@ export default {
         if (JSON.stringify(all) !== JSON.stringify(SAID)) wrong.push(`the status said ${JSON.stringify(all)} in turn; ${JSON.stringify(SAID)} were expected, each once (D271)`);
         const ok = !wrong.length;
         record('2.4.3', ok, ok ? `in pen-drawn, by the pointer: a right-click three tenths along the line, and one on its "+" with the mouse resting there, each opened a menu named "${NAME}" in document.body, outside .preview, focus on its first item, the browser's menu cancelled; its items read "${TWO}" then "${REVERSE}" while the line ran one way and "${ONE}" first after "${TWO}" was chosen; after Escape and after each item chosen the menu closed and focus was on the preview box; the rings at the taps read as before the menu (the selection unchanged); over the run the status said, in turn and each once, ${JSON.stringify(all)} (D271's words, then one Undo that left "${ONE}" first and a second that brought back "${TWO}"); a right-click on empty picture opened no menu and left the browser's own. The menu opens by pointer only (no 2.1.1 claim)` : wrong.join('; '));
+      },
+    },
+    {
+      // 2.2.2 (CORE-06, brief 141, FE; D272 (c), provisional until the owner answers): a press on the picture while
+      // the route plays pauses the play and does nothing else (dom.ts point 11; the page hands the binding Play or
+      // pause's own toggle, which the binding calls only while playing). In pen-drawn's set-up (two taps, one line), at
+      // the route's end with the mouse off the preview, the whole canvas is read (pixels' hash) as the baseline. Then
+      // Skip to start and Play: (1) while the button reads "Pause", a tap on empty picture: "Animation paused" is heard,
+      // the button reads "Play", and no "Point added" is heard; skipped to the end with the mouse off, the canvas reads
+      // the baseline (no point was added, the selection is as it was). (2) Paused, a tap at the same place: "Point
+      // added" is heard (the pen works again), and at the end the canvas is no longer the baseline. (3) One Undo with
+      // focus on the box: "Undo" heard, the canvas the baseline again. (4) Skip to start, Play again, and while the
+      // button reads "Pause" a right-click on the first point: "Animation paused" heard again, the button reads "Play",
+      // no menu opens (no [role=menu], nothing named "Point actions"), the browser's own menu is cancelled, and at the
+      // end the canvas reads the baseline (nothing selected or changed). The status queue merges the same words written
+      // while the region still shows them (announce.ts): each step waits for it to come back to empty, as line-menu and
+      // point-move do. The row is 2.2.2 under the j-timing method: a pointer way to pause the moving preview, beside the
+      // Pause button and Space (no new row; nothing is claimed for 3.2.x). Faults that fail it (brief 141,
+      // PROBE-141/mut-*.txt): (as) the binding ignoring `playing`; (at) the press swallowed but `pause` not called; it
+      // was red on stage 2's build, where the page handed no `pause` (PROBE-141/red-press-while-playing.txt).
+      name: 'press-while-playing',
+      method: 'j-timing',
+      rows: ['2.2.2'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const [first] = TAPS;
+        const EMPTY = [0.3, 0.7];
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const box = await page.locator(PREVIEW).boundingBox();
+        const on = ([fx, fy]) => ({ x: box.x + box.width * fx, y: box.y + box.height * fy });
+        const off = async () => { await page.mouse.move(1, 1); await settle(); };
+        const said = () => page.evaluate(() => [...window.__said]);
+        const heardSince = (from, words) => page.waitForFunction(([f, w]) => window.__said.slice(f).includes(w), [from, words], { timeout: 6000 }).then(() => true, () => false);
+        const drained = () => page.waitForFunction((s) => document.querySelector(s)?.textContent === '', STATUS, { timeout: 12000 }).then(() => true, () => false);
+        const button = () => page.locator('#play-pause').textContent().then((t) => (t ?? '').trim());
+        const prevented = () => page.evaluate(() => window.__menuPrevented);
+        const atEnd = async () => { await page.getByRole('button', { name: 'Skip to end' }).click(); await off(); return (await pixels(page)).hash; };
+        const wrong = [];
+        // Skip to start and Play; true once the button reads "Pause" (the play under way).
+        const play = async (when) => {
+          await drained();
+          await page.getByRole('button', { name: 'Skip to start' }).click();
+          await drained();
+          await page.getByRole('button', { name: 'Play' }).click();
+          const going = await page.waitForFunction(() => document.querySelector('#play-pause')?.textContent?.trim() === 'Pause', undefined, { timeout: 3000 }).then(() => true, () => false);
+          if (!going) wrong.push(`${when}: after Play the button read ${JSON.stringify(await button())}, not "Pause"`);
+          await drained();
+          return going;
+        };
+        // After a press while playing: the button reads "Play" at once (read first: the route is 4 s long and would end by
+        // itself while the words are waited for), and "Animation paused" is heard.
+        const paused = async (from, when) => {
+          const now = await button();
+          if (now !== 'Play') wrong.push(`${when}: the button read ${JSON.stringify(now)} just after the press, not "Play" (the play went on)`);
+          if (!(await heardSince(from, 'Animation paused'))) wrong.push(`${when}: "Animation paused" was not heard`);
+        };
+        await page.evaluate(() => { window.__menuPrevented = null; document.addEventListener('contextmenu', (e) => { window.__menuPrevented = e.defaultPrevented; }); });
+        await page.locator(STATUS).evaluate((s) => { window.__said = []; new MutationObserver(() => { window.__said.push(s.textContent ?? ''); }).observe(s, { childList: true, characterData: true, subtree: true }); });
+        const baseline = await atEnd();
+        // (1) A tap on empty picture while playing.
+        if (await play('(1)')) {
+          const from = (await said()).length;
+          const { x, y } = on(EMPTY);
+          await page.mouse.click(x, y);
+          await settle();
+          await paused(from, '(1)');
+          await drained();
+          if ((await said()).slice(from).includes('Point added')) wrong.push('(1) "Point added" was heard after the tap while playing');
+          if ((await atEnd()) !== baseline) wrong.push('(1) at the end the canvas did not read as before the tap (a point was added or the selection changed)');
+        }
+        // (2) The same tap, paused: the pen's again.
+        await drained();
+        let from = (await said()).length;
+        const { x, y } = on(EMPTY);
+        await page.mouse.click(x, y);
+        await settle();
+        if (!(await heardSince(from, 'Point added'))) wrong.push('(2) "Point added" was not heard after the tap, paused');
+        if ((await atEnd()) === baseline) wrong.push('(2) at the end the canvas read as before the tap, paused (nothing was added)');
+        // (3) One Undo with focus on the box.
+        await drained();
+        await page.locator(PREVIEW).focus();
+        from = (await said()).length;
+        await page.keyboard.press(UNDO);
+        await settle();
+        if (!(await heardSince(from, 'Undo'))) wrong.push('(3) "Undo" was not heard');
+        if ((await atEnd()) !== baseline) wrong.push('(3) after one Undo the canvas did not read the baseline');
+        // (4) A right-click on the first point while playing.
+        if (await play('(4)')) {
+          from = (await said()).length;
+          const point = on(first);
+          await page.mouse.click(point.x, point.y, { button: 'right' });
+          await settle();
+          await paused(from, '(4)');
+          const menu = await page.evaluate(() => document.querySelector('[role=menu]')?.getAttribute('aria-label') ?? null);
+          if (menu !== null) wrong.push(`(4) a menu opened (${JSON.stringify(menu)}) on a right-click while playing`);
+          if ((await page.getByRole('menu', { name: 'Point actions' }).count()) !== 0) wrong.push('(4) "Point actions" opened');
+          if ((await prevented()) !== true) wrong.push('(4) the browser\'s own menu was not cancelled');
+          if ((await atEnd()) !== baseline) wrong.push('(4) at the end the canvas did not read the baseline (the right-click changed something)');
+        }
+        await drained();
+        const ok = !wrong.length;
+        record('2.2.2', ok, ok ? 'in pen-drawn, by the pointer: while the route played (the button read "Pause"), a tap on empty picture paused it ("Animation paused" heard, the button read "Play"), no "Point added" was heard, and at the end the canvas read as before; the same tap, paused, added a point ("Point added" heard, the canvas changed), and one Undo ("Undo" heard) brought the canvas back; played again, a right-click on the first point paused it ("Animation paused" heard, the button read "Play"), opened no menu, cancelled the browser\'s own, and changed nothing on the canvas (D272 (c))' : wrong.join('; '));
       },
     },
     {

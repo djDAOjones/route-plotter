@@ -33,6 +33,13 @@ import { Timeline } from './shell/Timeline';
  *  App does not make the play bar subscribe anew. (The bar holds two subscriptions, one per hook.) */
 const toldOfChange = (listener: () => void) => pageSession().store.subscribe(listener);
 const playsNow = () => pageSession().store.playback().playing;
+/**
+ * The preview's pause (brief 141, FD; D272 (c), provisional): Play or pause's own toggle, so the press is heard as
+ * "Animation paused" as Space and the Pause button are. The canvas calls it only while the store plays (dom.ts point 11).
+ */
+const pausePlay = (): void => {
+  pageSession().transport.playPause();
+};
 
 /** The notice's opener: the session's, but Close also puts focus on "Open project" before the notice goes. */
 const noticeOpener: OpenProps['opener'] = {
@@ -76,7 +83,7 @@ export function App() {
           Help
         </Button>
       }
-      preview={<Preview drawer={pageSession().preview.drawer} inputs={pageSession().preview.inputs} subscribe={toldOfChange} store={pageSession().store} announce={pageSession().announce} />}
+      preview={<Preview drawer={pageSession().preview.drawer} inputs={pageSession().preview.inputs} subscribe={toldOfChange} store={pageSession().store} announce={pageSession().announce} pause={pausePlay} />}
       transport={
         <PlayBar
           transport={pageSession().transport}
