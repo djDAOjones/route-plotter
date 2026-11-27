@@ -241,6 +241,47 @@ const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 1, reason: "the preview shows
 // is given (the line drawn there, or nothing); the most opaque of the route's hue is the guide's pixel, its ratio by the
 // formula below. A page journey (the-guide) cannot record 1.4.11: the catalogue lists only the contrast method for it,
 // and the report refuses a row whose methods a test's does not name (tools/a11y-report.mjs).
+// One reader of the canvas for pen-drawn's measure, run in the page (Codex's list line 15: the box's background, the
+// compositing, the luminance and the contrast written once for the five marks): at 'start' the guide's line, at 'end'
+// the line, both points and the ring, each as described above; null when no box under the canvas has an opaque
+// background of its own.
+const penMarksRead = (c, [first, second, when]) => {
+  let bg = null;
+  for (let e = c.parentElement; e && !bg; e = e.parentElement) {
+    const v = (getComputedStyle(e).backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+    if (v.length === 3 || (v.length === 4 && v[3] === 1)) bg = v.slice(0, 3);
+  }
+  if (!bg) return null;
+  const ctx = c.getContext('2d');
+  const at = (fx, fy) => [...ctx.getImageData(Math.floor(fx), Math.floor(fy), 1, 1).data];
+  const over = ([r, g, b, a]) => [r, g, b].map((v, i) => (v * a + bg[i] * (255 - a)) / 255);
+  const lum = (rgb) => rgb.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const ratio = (p) => { const [x, y] = [lum(over(p)), lum(bg)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const routeHue = ([r, g, b, a]) => a > 60 && r > 120 && r > g && g >= b;
+  const [px, py, qx, qy] = [second[0] * c.width, second[1] * c.height, first[0] * c.width, first[1] * c.height];
+  const len = Math.hypot(px - qx, py - qy), [ux, uy] = [(px - qx) / len, (py - qy) / len];
+  if (when === 'start') {
+    const [mx, my] = [(px + qx) / 2, (py + qy) / 2];
+    const places = Array.from({ length: 25 }, (_, k) => {
+      let best = [0, 0, 0, 0];
+      for (let d = -3; d <= 3; d += 1) { const p = at(mx + ux * (k - 12) - uy * d, my + uy * (k - 12) + ux * d); if (p[3] > best[3]) best = p; }
+      return best;
+    });
+    const hued = places.filter(routeHue), bare = places.filter((p) => p[3] === 0).length;
+    const pixel = hued.reduce((best, p) => (p[3] > best[3] ? p : best), [0, 0, 0, 0]);
+    return { bg: `rgb(${bg.join(', ')})`, pixel, hued: hued.length, bare, ratio: hued.length && bare ? ratio(pixel) : NaN };
+  }
+  let line = [0, 0, 0, 0];
+  for (let dy = -3; dy <= 3; dy += 1) { const p = at(0.5 * c.width, 0.5 * c.height + dy); if (p[3] > line[3]) line = p; }
+  const out = 30 * (c.width / c.getBoundingClientRect().width);
+  // The first distance out from (x, y) along (dx, dy) whose pixel is not fully opaque; past `out`, none.
+  const edge = (x, y, dx, dy) => { let e = 1; while (e <= out && at(x + dx * e, y + dy * e)[3] === 255) e += 1; return e > out ? NaN : e; };
+  const point = (x, y) => Math.min(...[[-uy, ux], [uy, -ux]].map(([dx, dy]) => { const h = Math.round(edge(x, y, dx, dy) / 2); return Number.isFinite(h) ? ratio(at(x + dx * h, y + dy * h)) : NaN; }));
+  let ring = 0;
+  const rim = edge(px, py, ux, uy);
+  for (let d = rim + 1; d <= out; d += 1) { const p = at(px + ux * d, py + uy * d); if (p[3] > 60 && !routeHue(p)) ring = Math.max(ring, ratio(p)); }
+  return { bg: `rgb(${bg.join(', ')})`, line: ratio(line), first: point(qx, qy), second: point(px, py), ring: Number.isFinite(rim) ? ring : NaN };
+};
 const PEN_DRAWN_ASIDE = [{
   selector: PREVIEW,
   count: 1,
@@ -248,58 +289,11 @@ const PEN_DRAWN_ASIDE = [{
   measure: async ({ page }) => {
     await page.getByRole('button', { name: 'Skip to start' }).click();
     await twoFrames(page);
-    const guide = await page.locator(CANVAS).evaluate((c, [first, second]) => {
-      let bg = null;
-      for (let e = c.parentElement; e && !bg; e = e.parentElement) {
-        const v = (getComputedStyle(e).backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
-        if (v.length === 3 || (v.length === 4 && v[3] === 1)) bg = v.slice(0, 3);
-      }
-      if (!bg) return null;
-      const ctx = c.getContext('2d');
-      const at = (fx, fy) => [...ctx.getImageData(Math.floor(fx), Math.floor(fy), 1, 1).data];
-      const over = ([r, g, b, a]) => [r, g, b].map((v, i) => (v * a + bg[i] * (255 - a)) / 255);
-      const lum = (rgb) => rgb.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
-      const ratio = (p) => { const [x, y] = [lum(over(p)), lum(bg)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-      const routeHue = ([r, g, b, a]) => a > 60 && r > 120 && r > g && g >= b;
-      const [px, py, qx, qy] = [second[0] * c.width, second[1] * c.height, first[0] * c.width, first[1] * c.height];
-      const len = Math.hypot(px - qx, py - qy), [ux, uy] = [(px - qx) / len, (py - qy) / len], [mx, my] = [(px + qx) / 2, (py + qy) / 2];
-      const places = Array.from({ length: 25 }, (_, k) => {
-        let best = [0, 0, 0, 0];
-        for (let d = -3; d <= 3; d += 1) { const p = at(mx + ux * (k - 12) - uy * d, my + uy * (k - 12) + ux * d); if (p[3] > best[3]) best = p; }
-        return best;
-      });
-      const hued = places.filter(routeHue), bare = places.filter((p) => p[3] === 0).length;
-      const pixel = hued.reduce((best, p) => (p[3] > best[3] ? p : best), [0, 0, 0, 0]);
-      return { bg: `rgb(${bg.join(', ')})`, pixel, hued: hued.length, bare, ratio: hued.length && bare ? ratio(pixel) : NaN };
-    }, TAPS);
+    const guide = await page.locator(CANVAS).evaluate(penMarksRead, [...TAPS, 'start']);
     if (!guide) throw new Error('no box with an opaque background stands under the canvas');
     await page.getByRole('button', { name: 'Skip to end' }).click();
     await twoFrames(page);
-    const read = await page.locator(CANVAS).evaluate((c, [first, second]) => {
-      let bg = null;
-      for (let e = c.parentElement; e && !bg; e = e.parentElement) {
-        const v = (getComputedStyle(e).backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
-        if (v.length === 3 || (v.length === 4 && v[3] === 1)) bg = v.slice(0, 3);
-      }
-      if (!bg) return null;
-      const ctx = c.getContext('2d');
-      const at = (fx, fy) => [...ctx.getImageData(Math.floor(fx), Math.floor(fy), 1, 1).data];
-      const over = ([r, g, b, a]) => [r, g, b].map((v, i) => (v * a + bg[i] * (255 - a)) / 255);
-      const lum = (rgb) => rgb.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
-      const ratio = (p) => { const [x, y] = [lum(over(p)), lum(bg)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
-      const routeHue = ([r, g, b, a]) => a > 60 && r > 120 && r > g && g >= b;
-      let line = [0, 0, 0, 0];
-      for (let dy = -3; dy <= 3; dy += 1) { const p = at(0.5 * c.width, 0.5 * c.height + dy); if (p[3] > line[3]) line = p; }
-      const [px, py, qx, qy] = [second[0] * c.width, second[1] * c.height, first[0] * c.width, first[1] * c.height];
-      const len = Math.hypot(px - qx, py - qy), [ux, uy] = [(px - qx) / len, (py - qy) / len], out = 30 * (c.width / c.getBoundingClientRect().width);
-      // The first distance out from (x, y) along (dx, dy) whose pixel is not fully opaque; past `out`, none.
-      const edge = (x, y, dx, dy) => { let e = 1; while (e <= out && at(x + dx * e, y + dy * e)[3] === 255) e += 1; return e > out ? NaN : e; };
-      const point = (x, y) => Math.min(...[[-uy, ux], [uy, -ux]].map(([dx, dy]) => { const h = Math.round(edge(x, y, dx, dy) / 2); return Number.isFinite(h) ? ratio(at(x + dx * h, y + dy * h)) : NaN; }));
-      let ring = 0;
-      const rim = edge(px, py, ux, uy);
-      for (let d = rim + 1; d <= out; d += 1) { const p = at(px + ux * d, py + uy * d); if (p[3] > 60 && !routeHue(p)) ring = Math.max(ring, ratio(p)); }
-      return { bg: `rgb(${bg.join(', ')})`, line: ratio(line), first: point(qx, qy), second: point(px, py), ring: Number.isFinite(rim) ? ring : NaN };
-    }, TAPS);
+    const read = await page.locator(CANVAS).evaluate(penMarksRead, [...TAPS, 'end']);
     if (!read) throw new Error('no box with an opaque background stands under the canvas');
     const against = `against the box's background ${read.bg}, in pen-drawn`;
     const guideMark = `the guide's line at the start, where only it draws (its most opaque pixel of the route's hue, rgba(${guide.pixel.join(', ')}); of 25 places along it ${guide.hued} the route's hue, ${guide.bare} bare) against the box's background ${guide.bg}, in pen-drawn`;
