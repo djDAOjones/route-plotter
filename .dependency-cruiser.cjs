@@ -7,7 +7,10 @@
 // test split, signed 2026-11-11). The rules prove imports only: no callback isolation, purity, offline operation, size or rendering
 // parity. A package's own imports are not followed (doNotFollow), so a package in PACKAGES vouches for itself.
 //
-// STACK-04 (Route Plotter v4), from the architecture plan's §8 (A7), provisional under the owner's overnight grant G3:
+// STACK-04 (Route Plotter v4), from the architecture plan's §8 (A7), made under the owner's overnight grant G3 and kept
+// by his delegated decision of 27 Nov 2026 (decision 5 of the full-suite decisions, on his word "ideally you just decide
+// what is best, but I want the full suite minus promptfoo"; STACK-06), the player's use of the features' model/ and
+// draw/ parts recorded as an exception in project/digests/app-opinion.md (STACK-05):
 // the pack's core and adapters rules, PACKAGES and the unresolvable rule are kept as written; its player and exported
 // rules are replaced by the plan's narrower closure (rules 6 and 7); src/features/ gains the plan's rules 1 to 5, which
 // the pack does not have, rule 4 as two entries; and a cycle rule holds the plan's measure M3 at zero. Every rule is proved by a planted
@@ -18,7 +21,8 @@
 // in src/core/ import their runners and are outside the core rule.
 const PACKAGES = [];
 
-// CORE-03, provisional under grant G3 (its decision entry): the ZIP library, for the ZIP adapter's save and open. It is
+// CORE-03, made under grant G3 (its decision entry) and kept by the owner's delegated decision of 27 Nov 2026 (as
+// above): the ZIP library, for the ZIP adapter's save and open. It is
 // listed for the adapters alone, never in PACKAGES, which would open it to the core and the features too; the player
 // and exported code are still barred from it by NEVER_IN_PLAYER below, whatever any list says.
 const ADAPTER_PACKAGES = ['jszip'];

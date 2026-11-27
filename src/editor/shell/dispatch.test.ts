@@ -10,7 +10,7 @@ import { createEditorTransport, WORDS } from '../transport/transport';
 import { dispatchKey, type FocusKind, type PressPlace } from './dispatch';
 import { actionFor, KEYS, type ActionIn, type KeyPress } from './keys';
 
-const UP = { ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, defaultPrevented: false, repeat: false };
+const UP = { ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, defaultPrevented: false, repeat: false, isComposing: false };
 const press = (key: string, held: Partial<Omit<KeyPress, 'key'>> = {}): KeyPress => ({ ...UP, ...held, key });
 const OPEN: PressPlace = { typing: false, dialogOpen: false, focus: 'other' };
 const PLATFORMS = [true, false] as const;
@@ -587,6 +587,60 @@ describe('Open project’s chord (D207)', () => {
       expect(key(chord(mac), { mac, singleKeys: false })).toBe(true);
       expect(key(chord(mac, { repeat: true }), { mac })).toBe(true);
       expect(ran).toEqual(['openProject']);
+    }
+  });
+});
+
+describe('composition stands down (STACK-06, item B; the app opinion: "keys stand down in text entry, composition and widgets")', () => {
+  // A key pressed while an input method is composing a character (Japanese, Chinese, Korean; a dead key) is the input
+  // method's: the dispatch runs nothing, ends no nudge burst and takes nothing, whatever the key and wherever it is
+  // pressed, Open project's chord included.
+  const named = (mac: boolean): readonly (readonly [string, KeyPress])[] => [
+    ['Space (play)', press(' ')],
+    ['Escape', press('Escape')],
+    ['Delete', press('Delete')],
+    ['Cmd or Ctrl+Z (undo)', press('z', command(mac))],
+    ['Cmd or Ctrl+O (open)', press('o', command(mac))],
+  ];
+
+  it('Space, Escape, Delete, Cmd or Ctrl+Z and Cmd or Ctrl+O, composing: not taken, nothing called', () => {
+    for (const mac of PLATFORMS) {
+      for (const [name, pressed] of named(mac)) {
+        const { store, ran, said, ends, keysHanded, key } = rig();
+        const before = store.playback();
+        expect(key({ ...pressed, isComposing: true }, { mac }), name).toBe(false);
+        expect(ran, name).toEqual([]);
+        expect(ends, name).toEqual([]);
+        expect(keysHanded, name).toEqual([]);
+        expect(said, name).toEqual([]);
+        expect(store.playback(), name).toEqual(before);
+      }
+    }
+  });
+
+  it('every key of the table, composing, in every kind of place: not taken, nothing called', () => {
+    const kinds: readonly FocusKind[] = ['button', 'link', 'menuitem', 'slider', 'other'];
+    for (const mac of PLATFORMS) {
+      for (const { action, press: pressed } of tablePresses(mac)) {
+        for (const focus of kinds) {
+          for (const typing of [false, true]) {
+            const { ran, ends, key } = rig();
+            const place = { typing, dialogOpen: false, focus };
+            expect(key({ ...pressed, isComposing: true }, { mac, place }), `${action} ${JSON.stringify(place)}`).toBe(false);
+            expect(ran, action).toEqual([]);
+            expect(ends, action).toEqual([]);
+          }
+        }
+      }
+    }
+  });
+
+  it('the same presses not composing are taken as before', () => {
+    for (const mac of PLATFORMS) {
+      for (const [name, pressed] of named(mac)) {
+        const { key } = rig();
+        expect(key({ ...pressed, isComposing: false }, { mac }), name).toBe(true);
+      }
     }
   });
 });
