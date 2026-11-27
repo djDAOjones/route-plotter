@@ -2945,13 +2945,16 @@ export default {
       // reads "Mark as start" again. (5) Shift+F10, ArrowDown twice to "Set lead start": focus is on it; Enter, Space and
       // a click on it leave the menu open, focus on it and the canvas as before; Escape. (6) After the status comes back
       // to empty, Shift+F10, End, Enter on "Delete": the point's marker and the line no longer read, the status comes to
-      // "Point deleted"; one Undo draws the canvas as before. (7) A window 200 px high at the usual width (set before the
+      // "Point deleted"; one Undo draws the canvas as before. Each item's words (D269) and each "Undo" are waited for as
+      // they come (comesToWords), never by a fixed wait. (7) A window 200 px high at the usual width (set before the
       // menu opens: a resize closes it), the page scrolled to put the first point mid-window, a right-click on it: End
       // reaches "Delete", whose box and the menu's lie inside the window, the item the element at its own centre; a wheel
       // scroll up over the menu scrolls its items and leaves it open; a scroll of the page outside it closes it (Codex
       // finding 1 on brief 136's range; red on a1e37df: Delete from 200 to 244 px, PROBE-137/red-run-a1e37df.txt); the
-      // window is put back. Over the whole run the status said nothing but "Undo" and
-      // "Point deleted" (the other items are silent: D269). Faults that fail it (brief 136, PROBE-136/mut-*.txt): (y) the
+      // window is put back. Over the whole run the status said, in turn and each once, "Point made a bend", "Undo", "Start
+      // marked", "Undo", "Point deleted", "Undo" (brief 137, D269 and Codex list line 17: every change of the status is
+      // kept, not a set, so a repeat fails); the disabled item said nothing. Before brief 137 it read only "Undo" and
+      // "Point deleted", as a set (the other items were silent then). Faults that fail it (brief 136, PROBE-136/mut-*.txt): (y) the
       // menu mounted inside .preview fails (1); (z) focus not returned on Escape fails (2); (aa) an item that is off
       // still run (and the menu closed) fails (5); (af) "Make bend" not dispatched fails (3); (brief 137,
       // PROBE-137/mut-*.txt) (ag) the menu's maximum height removed fails (7) at End (Delete from 200 to 244 px); (ah) the
@@ -2976,6 +2979,7 @@ export default {
           return n;
         }, first);
         const keys = { wrong: [] }, names = { wrong: [] }, order = { wrong: [] };
+        const heard = async (words, after) => { if (!(await comesToWords(page, words))) names.wrong.push(`after ${after} the status did not come to ${JSON.stringify(words)}`); };
         let tabs = 0;
         while (!(await focusOn(page, PREVIEW)) && tabs < 8) { await page.keyboard.press('Tab'); tabs += 1; }
         if (!(await focusOn(page, PREVIEW))) keys.wrong.push('eight presses of Tab did not reach the preview box');
@@ -3028,17 +3032,21 @@ export default {
         for (let n = 0; n < 3; n += 1) await page.keyboard.press('ArrowDown');
         if ((await focusedItem()) !== 'Make bend') keys.wrong.push(`three ArrowDowns reached ${JSON.stringify(await focusedItem())}, not "Make bend"`);
         await press('Enter');
+        await heard('Point made a bend', '"Make bend"');
         const bend = { open: await shown(), box: await focusOn(page, PREVIEW), dark: await dark(), hash: await hash() };
         if (bend.open || stopDark >= 3 || bend.dark < 3 || bend.hash === before) keys.wrong.push(`after "Make bend" the menu was ${bend.open ? '' : 'not '}open and ${bend.dark} pixel(s) within 2 px of the point read dark (a bend's grey dot reads at least 3; ${stopDark} read so as a stop, before)${bend.hash === before ? ', and the canvas was as before' : ''}`);
         if (!bend.box) order.wrong.push('after "Make bend" focus was not on the box');
         await press(UNDO);
+        await heard('Undo', 'the Undo of "Make bend"');
         if ((await hash()) !== before) keys.wrong.push('after one Undo the canvas was not as before "Make bend"');
         // (4) "Mark as start", read by the menu's words.
         const firstItem = async () => { await press('Shift+F10'); const w = await focusedItem(); await press('Escape'); return w; };
         await press('Shift+F10');
         await press('Enter');
+        await heard('Start marked', '"Mark as start"');
         const marked = await firstItem();
         await press(UNDO);
+        await heard('Undo', 'the Undo of "Mark as start"');
         const unmarked = await firstItem();
         if (marked !== 'Remove start mark' || unmarked !== 'Mark as start') keys.wrong.push(`after "Mark as start" the menu's first item read ${JSON.stringify(marked)}, and after one Undo ${JSON.stringify(unmarked)}`);
         // (5) The item that is off.
@@ -3061,6 +3069,7 @@ export default {
         const gone = { mark: await markBeyond(page, first, second), line: orange(await strokeAt(page, 0.5, 0.5), 40), said: await comesToWords(page, 'Point deleted') };
         if (gone.mark || gone.line || !gone.said) keys.wrong.push(`after "Delete" the marker read ${gone.mark ? '' : 'not '}beyond the point, the line ${gone.line ? '' : 'not '}at the middle, and "Point deleted" was ${gone.said ? '' : 'not '}said`);
         await press(UNDO);
+        await heard('Undo', 'the Undo of "Delete"');
         if ((await hash()) !== kept) keys.wrong.push('after one Undo the canvas was not as before "Delete"');
         // (7) A short window (Codex finding 1 on brief 136's range): 200 px high at the usual width, set before the menu
         // opens (a resize closes it), the page scrolled to put the first point mid-window, then a right-click on it.
@@ -3115,11 +3124,12 @@ export default {
         await page.setViewportSize(view);
         await settle();
         if (!(await focusOn(page, PREVIEW))) order.wrong.push('focus was not on the preview box at the end');
-        const said = [...new Set((await page.evaluate(() => window.__said)).filter(Boolean))];
-        if (said.some((w) => w !== 'Undo' && w !== 'Point deleted')) names.wrong.push(`the status said ${JSON.stringify(said)}; only "Undo" and "Point deleted" were expected`);
+        const said = (await page.evaluate(() => window.__said)).filter(Boolean);
+        const SAID = ['Point made a bend', 'Undo', 'Start marked', 'Undo', 'Point deleted', 'Undo'];
+        if (JSON.stringify(said) !== JSON.stringify(SAID)) names.wrong.push(`the status said ${JSON.stringify(said)} in turn; ${JSON.stringify(SAID)} were expected, each once (D269; the disabled item says nothing)`);
         const how = `in pen-drawn, focus moved to the preview box by Tab (${tabs} presses), End, Escape`;
         const wrong = [...names.wrong, ...keys.wrong];
-        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `${how}: a right-click on the point shows a menu named "Point actions" with menuitems ${JSON.stringify(ITEMS)} (wrappers of role none, a separator before Delete), "Set lead start" aria-disabled and described by "${LEAD}"; the point is selected; over the run the status said only ${JSON.stringify(said)}; Shift+F10 opens it; ArrowDown, ArrowUp, Home and End move and wrap; Escape closes it with the point still selected; "Make bend" by Enter draws the point's grey dot (${bend.dark} dark pixels within 2 px, ${stopDark} as a stop) and changes the canvas, and one Undo draws the canvas as before; "Mark as start" makes the menu read "Remove start mark", undone by one Undo; "Set lead start" on the lead's start stays open on Enter, Space and a click and changes nothing; "Delete" removes the point and its line, says "Point deleted", and one Undo draws the canvas as before; in a window 200 px high End reaches "Delete" inside the window (its box from ${short.fit?.item.join(' to ')} px), a wheel over the menu scrolls it and leaves it open, and a scroll of the page outside closes it`);
+        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `${how}: a right-click on the point shows a menu named "Point actions" with menuitems ${JSON.stringify(ITEMS)} (wrappers of role none, a separator before Delete), "Set lead start" aria-disabled and described by "${LEAD}"; the point is selected; over the run the status said, in turn and each once, ${JSON.stringify(said)} (D269's words after "Make bend" and "Mark as start", "Point deleted" once after "Delete", nothing for the disabled item); Shift+F10 opens it; ArrowDown, ArrowUp, Home and End move and wrap; Escape closes it with the point still selected; "Make bend" by Enter draws the point's grey dot (${bend.dark} dark pixels within 2 px, ${stopDark} as a stop) and changes the canvas, and one Undo draws the canvas as before; "Mark as start" makes the menu read "Remove start mark", undone by one Undo; "Set lead start" on the lead's start stays open on Enter, Space and a click and changes nothing; "Delete" removes the point and its line, says "Point deleted", and one Undo draws the canvas as before; in a window 200 px high End reaches "Delete" inside the window (its box from ${short.fit?.item.join(' to ')} px), a wheel over the menu scrolls it and leaves it open, and a scroll of the page outside closes it`);
         record('2.4.3', !order.wrong.length, order.wrong.length ? order.wrong.join('; ') : `${how}: the menu stands in document.body, outside .preview, at the click (or just right of the point by Shift+F10), focus on its first item on opening; after Escape, an item chosen, and at the end focus is on the preview box`);
       },
     },

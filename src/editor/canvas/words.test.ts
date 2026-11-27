@@ -1,4 +1,4 @@
-// CORE-06 (brief 133, rulings CR and CT; D268): the words the status area says after each edit, and select all's line.
+// CORE-06 (brief 133, rulings CR and CT; D268; brief 137, D269 for the point's menu): the words the status area says after each edit, and select all's line.
 import { describe, expect, it } from 'vitest';
 import { newPoint, newRoute, newScene, type IdSource, type Route } from '../../core/model/scene';
 import type { Current } from '../store/command';
@@ -75,10 +75,25 @@ describe('the words for each edit (D268)', () => {
     expect(editWords('Move point', before, currentOf(three, moving(other, [0])))).toBe('Point moved');
   });
 
-  it('a nudge, the marks, the lead start, a point’s kind, the line’s commands and an unknown label are silent', () => {
+  it('the point’s menu items say D269’s words', () => {
+    const before = currentOf(three);
+    const after = currentOf(three);
+    const WORDS = [
+      ['Mark as start', 'Start marked'],
+      ['Remove start mark', 'Start mark removed'],
+      ['Mark as end', 'End marked'],
+      ['Remove end mark', 'End mark removed'],
+      ['Set lead start', 'Lead start set'],
+      ['Make stop', 'Point made a stop'],
+      ['Make bend', 'Point made a bend'],
+    ] as const;
+    for (const [label, words] of WORDS) expect.soft(editWords(label, before, after), label).toBe(words);
+  });
+
+  it('a nudge, the line’s commands and an unknown label are silent', () => {
     const before = currentOf(three);
     const after = currentOf(moving(three, [0, 1]));
-    for (const label of ['Nudge', 'Mark as start', 'Mark as end', 'Remove start mark', 'Remove end mark', 'Set lead start', 'Make stop', 'Make bend', 'Make line one way', 'Make line two-way', 'Reverse line', 'Delete line', 'Change the line settings', '']) {
+    for (const label of ['Nudge', 'Make line one way', 'Make line two-way', 'Reverse line', 'Delete line', 'Change the line settings', '']) {
       expect(editWords(label, before, after), label).toBeNull();
     }
   });

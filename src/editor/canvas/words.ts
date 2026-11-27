@@ -2,10 +2,12 @@
 // line the page's one status area says after an edit, so a screen-reader user hears what it did. v3's words where v3
 // spoke ("Undo", "Redo"), "point" where v4's page already says point. A count comes from the points of every route
 // before and after the step, never from the label (which gives singular or plural at most, and Duplicate neither): the
-// points fewer for a delete, the points more for a duplicate, the points standing elsewhere for a move. Every other
-// step is silent: a nudge (v3 was), the marks, the lead's start, a point's kind and the line's commands (the point's
-// menu and the line's are not on the page yet: their chats name their words). Select all is not a step, so it has its
-// own line, `allSelected`.
+// points fewer for a delete, the points more for a duplicate, the points standing elsewhere for a move. The point's
+// menu's items (brief 137, D269, provisional: the same short past-tense pattern) say "Start marked", "Start mark
+// removed", "End marked", "End mark removed", "Lead start set", "Point made a stop" and "Point made a bend"; an item
+// that is off makes no step, so it says nothing. Every other step is silent: a nudge (v3 was) and the line's commands
+// (the line's menu is not on the page yet: its chat names their words). Select all is not a step, so it has its own
+// line, `allSelected`.
 import type { Current } from '../store/command';
 import type { Stepped } from '../store/store';
 
@@ -47,6 +49,20 @@ export function editWords(label: string, before: Current, after: Current): strin
     case 'Move point':
     case 'Move points':
       return counted(moved(before, after), 'moved');
+    case 'Mark as start':
+      return 'Start marked';
+    case 'Remove start mark':
+      return 'Start mark removed';
+    case 'Mark as end':
+      return 'End marked';
+    case 'Remove end mark':
+      return 'End mark removed';
+    case 'Set lead start':
+      return 'Lead start set';
+    case 'Make stop':
+      return 'Point made a stop';
+    case 'Make bend':
+      return 'Point made a bend';
     default:
       return null;
   }
