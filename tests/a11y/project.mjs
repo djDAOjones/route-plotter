@@ -1932,9 +1932,11 @@ export default {
       // "Open cancelled" is heard once more and nothing else, and focus is back on "Open project". Then a second ask
       // while one is shown (Codex on 3491f00): with the dialog up and focus moved by Tab to "Replace", the page's own
       // Open key (Cmd/Ctrl+O) opens nothing (the open dialog takes it, keydown.ts), and the button is behind the
-      // dialog, so from the page a second ask comes only from a second file chosen before the first was read and read
-      // after the question showed. The journey holds that order itself: it presses "Open project" twice, choosing the
-      // same file in the first chooser, moving focus to "Replace" once the question shows, then choosing in the second;
+      // dialog, so from the page a second ask comes only from a second picker opened before the first question
+      // appeared, its file chosen after the question showed (were the second file chosen before the first question
+      // appeared, the first open would be superseded and never ask). The journey holds that order itself: it presses
+      // "Open project" twice, so both pickers are open before any file is chosen, then chooses the same file in the
+      // first, moves focus to "Replace" once the question shows, then chooses in the second;
       // the first open is set aside unsaid (openLogic.ts point 14), one dialog stays, and focus goes back to "Keep my
       // route". Escape then keeps the route as before. Open again and "Replace": "Project opened" heard, the opened
       // project drawn (the canvas changed), focus back on "Open project". Open once more, nothing drawn since: no
