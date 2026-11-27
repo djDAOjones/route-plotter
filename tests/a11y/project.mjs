@@ -2049,7 +2049,13 @@ export default {
         // Waits until the canvas has the shape asked (within 0.02), its box's size times the ratio (to a pixel) and the
         // blue at (fx, fy): the frame drawn at the box's settled size. CORE-06 (brief 111): Open's busy notice takes
         // room from the box while a project opens, and gives it back when it goes, so a frame of the right shape can
-        // be drawn at the smaller size before the box grows again; `frameAs` still checks the size by itself.
+        // be drawn at the smaller size before the box grows again; `frameAs` still checks the size by itself. Brief 129:
+        // so each open is waited out to `quiet` (the status emptied, about 2 s on) before `drawnAs`: the busy line goes
+        // with "Project opened", the room is measured again a task later and the canvas follows a frame after that, so
+        // a frame drawn at the smaller size in that gap met `drawnAs` and `frameAs` then read the grown box against it
+        // (2 of 40 runs on f9e285b: 684 by 385 against 704 by 396; the canvas was its box at the next reading,
+        // PROBE-129). Steps (b) and (c) waited `quiet` before their open, for the last "Project opened"; now each
+        // open is followed by it, the first included, so the next one starts quiet as before.
         const drawnAs = (shape, fx, fy) => page.waitForFunction(([sel, rgb, shape, x, y]) => {
           const c = document.querySelector(sel);
           if (Math.abs(c.width / c.height - shape) > 0.02) return false;
@@ -2073,7 +2079,7 @@ export default {
         const square = (await atNow(page)).text?.split(' of ')[1];
         const png = await plainPng(page, 200, 100, '#3366cc');
         // (a) the golden's video, 1920 by 1080.
-        if (!(await choose(page, await projectFile(png, true))) || !(await saysOpened(page))) wrong.push('the project with the picture did not open');
+        if (!(await choose(page, await projectFile(png, true))) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the project with the picture did not open');
         if (!(await drawnAs(16 / 9, 0.75, 0.2778))) wrong.push('with the picture and a 1920 by 1080 video, no 16 to 9 frame with the blue at (0.75, 0.2778) came');
         const wide = await frameAs('1920 by 1080', 16 / 9, [[0.75, 0.2778], [0.75, 0.7222]], [[0.75, 0.02], [0.75, 0.98]]);
         const pictured = (await atNow(page)).text?.split(' of ')[1];
@@ -2083,11 +2089,11 @@ export default {
         await page.waitForTimeout(500);
         if ((await pixels(page)).hash !== drawn.hash) wrong.push('with the picture drawn and nothing playing, the canvas changed over half a second');
         // (b) the same project with a video of 1080 by 1920.
-        if (!(await quiet(page)) || !(await choose(page, await projectFile(png, true, false, { width: 1080, height: 1920 }))) || !(await saysOpened(page))) wrong.push('the project with an upright video did not open');
+        if (!(await choose(page, await projectFile(png, true, false, { width: 1080, height: 1920 }))) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the project with an upright video did not open');
         if (!(await drawnAs(9 / 16, 0.75, 0.4))) wrong.push('with the picture and a 1080 by 1920 video, no 9 to 16 frame with the blue at (0.75, 0.4) came');
         const upright = await frameAs('1080 by 1920', 9 / 16, [[0.75, 0.4], [0.75, 0.6]], [[0.75, 0.2], [0.75, 0.8]]);
         // (c) the golden again.
-        if (!(await quiet(page)) || !(await choose(page, await projectFile(png, true))) || !(await saysOpened(page))) wrong.push('the project with the picture did not open again');
+        if (!(await choose(page, await projectFile(png, true))) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the project with the picture did not open again');
         if (!(await drawnAs(16 / 9, 0.75, 0.2778))) wrong.push('the golden opened again did not bring back a 16 to 9 frame with the blue at (0.75, 0.2778)');
         const again = await frameAs('1920 by 1080 again', 16 / 9, [[0.75, 0.2778], [0.75, 0.7222]], [[0.75, 0.02], [0.75, 0.98]]);
         // (d) the length's two readings.
