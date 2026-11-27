@@ -274,7 +274,15 @@ const penMarksRead = (c, [first, second, when]) => {
     });
     const hued = places.filter(routeHue), bare = places.filter((p) => p[3] === 0).length;
     const pixel = hued.reduce((best, p) => (p[3] > best[3] ? p : best), [0, 0, 0, 0]);
-    return { bg: `rgb(${bg.join(', ')})`, pixel, hued: hued.length, bare, ratio: hued.length && bare ? ratio(pixel) : NaN };
+    // The way arrow (D275; brief 151), two thirds along from the first tap, pointing to the second: 9 places along by
+    // 2 to 4 px each side of the line, where the 2-wide guide never reaches; of those the route's hue at alpha 200 or
+    // more, red over blue by more than 100 (routeHue alone lets the white edge's rgb(255, 254, 254) through: probed,
+    // PROBE-151/probe-3.txt), is the arrow's fill inside its white edge, the most opaque its pixel.
+    const [ax, ay] = [qx + ((px - qx) * 2) / 3, qy + ((py - qy) * 2) / 3];
+    const fills = [];
+    for (let s = -4; s <= 4; s += 1) for (const d of [-4, -3, -2, 2, 3, 4]) { const p = at(ax + ux * s - uy * d, ay + uy * s + ux * d); if (routeHue(p) && p[3] >= 200 && p[0] - p[2] > 100) fills.push(p); }
+    const fill = fills.reduce((best, p) => (p[3] > best[3] ? p : best), [0, 0, 0, 0]);
+    return { bg: `rgb(${bg.join(', ')})`, pixel, hued: hued.length, bare, ratio: hued.length && bare ? ratio(pixel) : NaN, arrow: { pixel: fill, hued: fills.length, ratio: fills.length ? ratio(fill) : NaN } };
   }
   let line = [0, 0, 0, 0];
   for (let dy = -3; dy <= 3; dy += 1) { const p = at(0.5 * c.width, 0.5 * c.height + dy); if (p[3] > line[3]) line = p; }
@@ -290,7 +298,7 @@ const penMarksRead = (c, [first, second, when]) => {
 const PEN_DRAWN_ASIDE = [{
   selector: PREVIEW,
   count: 1,
-  reason: "the user's own picture and routes in their own colours, as the export will draw them, are still set aside (1.4.11, essential); measured are only the editor's own marks at the default settings (the guide's line where only it draws, the line, both points, the selected point's ring) on the plain background with no picture, each against the box's own background",
+  reason: "the user's own picture and routes in their own colours, as the export will draw them, are still set aside (1.4.11, essential); measured are only the editor's own marks at the default settings (the guide's line where only it draws, its way arrow, the line, both points, the selected point's ring) on the plain background with no picture, each against the box's own background",
   measure: async ({ page }) => {
     await page.getByRole('button', { name: 'Skip to start' }).click();
     await twoFrames(page);
@@ -302,7 +310,8 @@ const PEN_DRAWN_ASIDE = [{
     if (!read) throw new Error('no box with an opaque background stands under the canvas');
     const against = `against the box's background ${read.bg}, in pen-drawn`;
     const guideMark = `the guide's line at the start, where only it draws (its most opaque pixel of the route's hue, rgba(${guide.pixel.join(', ')}); of 25 places along it ${guide.hued} the route's hue, ${guide.bare} bare) against the box's background ${guide.bg}, in pen-drawn`;
-    return [{ mark: guideMark, ratio: guide.ratio }, ...[['the line', read.line], ['the first point', read.first], ['the second point', read.second], ["the selected point's ring", read.ring]].map(([mark, ratio]) => ({ mark: `${mark} ${against}`, ratio }))];
+    const arrowMark = `the way arrow on the one-way line at the start, two thirds along (its most opaque pixel of the route's hue off the line, rgba(${guide.arrow.pixel.join(', ')}); ${guide.arrow.hued} such of 54 places) against the box's background ${guide.bg}, in pen-drawn`;
+    return [{ mark: guideMark, ratio: guide.ratio }, { mark: arrowMark, ratio: guide.arrow.ratio }, ...[['the line', read.line], ['the first point', read.first], ['the second point', read.second], ["the selected point's ring", read.ring]].map(([mark, ratio]) => ({ mark: `${mark} ${against}`, ratio }))];
   },
 }];
 const pixels = (page) => page.locator(CANVAS).evaluate((c) => {
@@ -331,6 +340,23 @@ const rowAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y]) => {
     return best;
   });
 }, [fx, fy]);
+// CORE-06 (brief 151; D275): the way arrow on a one-way line, read where the guide never reaches. Of the 25 columns
+// centred on a place on a level line, the pixels in rows 2 to 4 canvas px above and below the line's row, nearly opaque
+// (alpha over 200): `hue` those of the route's colour (near()), `white` those white (each channel over 200). The guide
+// is 2 wide (unitAt(1) whatever the pixel ratio) and lights none of them; the arrow (v3's 7 ahead and 4.2 behind and to
+// each side, canvas px, edged white 1.5 wide as the marks) lights both. Probed at 1280 by 800 (PROBE-151/probe-guide-2.txt):
+// paused, hue 3 and white about 20 at the arrow; none at 0.4 or 0.55 of the way; playing, none.
+const arrowAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y, rgb]) => {
+  const d = c.getContext('2d').getImageData(Math.floor(x * c.width) - 12, Math.floor(y * c.height) - 4, 25, 9).data;
+  let hue = 0, white = 0;
+  for (const row of [0, 1, 2, 6, 7, 8]) for (let col = 0; col < 25; col += 1) {
+    const i = (row * 25 + col) * 4;
+    if (d[i + 3] <= 200) continue;
+    if (rgb.every((v, k) => Math.abs(d[i + k] - v) <= 24)) hue += 1;
+    else if (d[i] > 200 && d[i + 1] > 200 && d[i + 2] > 200) white += 1;
+  }
+  return { hue, white };
+}, [fx, fy, ORANGE]);
 const near = (p, rgb) => p[3] > 200 && rgb.every((v, i) => Math.abs(p[i] - v) <= 24);
 // CORE-06 (brief 114, Codex line 24): the pen's marks in the pen-drawn state, each read where only it draws. At 0:00 the
 // animation has drawn the first point alone (its line and the second point appear as the animation reaches them), so it
@@ -374,11 +400,16 @@ const ringsAt = (page, places) => page.locator(CANVAS).evaluate((c, taps) => {
   });
 }, places);
 const orange = ([r, g, b, a], least) => a > least && r > 120 && r > g && g >= b;
+// The line is read a third of the way from the first tap, not at its middle (CORE-06, brief 151): the way arrow on a
+// one-way line while paused (D275) sits two thirds along, and at 320 CSS px wide (reflow, canvas 256 by 144, the line
+// about 38 px) its white edge reaches the middle's column (probed: PROBE-151/probe-reflow.txt); a third along is clear
+// of it at every size and still clear of the first point's marker.
 const marksDrawn = async (page) => {
   await page.getByRole('button', { name: 'Skip to end' }).click();
   await twoFrames(page);
   const [first, second] = TAPS;
-  return { first: await markBeyond(page, first, second), second: await markBeyond(page, second, first), line: orange(await strokeAt(page, 0.5, 0.5), 40) };
+  const third = [0, 1].map((i) => first[i] + (second[i] - first[i]) / 3);
+  return { first: await markBeyond(page, first, second), second: await markBeyond(page, second, first), line: orange(await strokeAt(page, ...third), 40) };
 };
 // True once the canvas is its box times the ratio (to a pixel), within 3 s. CORE-06 (brief 111): Open's busy notice
 // takes room from the box while a project opens and gives it back when it goes, so a frame drawn just after an open
@@ -2049,8 +2080,9 @@ export default {
       // D251's second half (Joe, 26 Nov: "End, plus a guide (d)"; D265; brief 128, BT): while the preview is not playing,
       // the editor's guide traces every line of every route and marks every point, whatever the line's look; while
       // playing it is gone. (1) A trail's project opened (opens-at-the-end's), paused at the end, where a trail draws
-      // nothing: along 25 columns at 0.65 of the way from the first stop's x (0.25 of the square) to the second's
-      // (0.75), the guide's dashes, some columns the line's colour (alpha 64 or more) and some bare (rowAt: dashed 6 on
+      // nothing: along 25 columns at 0.55 of the way from the first stop's x (0.25 of the square) to the second's
+      // (0.75; 0.65 until brief 151, moved off the way arrow two thirds along, D275, whose white edge filled 6 of those
+      // columns: PROBE-151/probe-guide.txt, 7 lit where the dashes light 13), the guide's dashes, some columns the line's colour (alpha 64 or more) and some bare (rowAt: dashed 6 on
       // and 4 off); at each stop, the line's colour opaque (strokeAt, near(); the stops' own markers read so with the
       // guide off too, probed: the guide's dot is proved at the copies, (4)). (2) Play: the position rises, and at that
       // place every column is bare (the trail's comet starts behind the head at the first stop and is nowhere near). (3)
@@ -2061,8 +2093,11 @@ export default {
       // before Cmd+D. Faults that fail it (PROBE-128/mut): (u) the guide drawn while playing fails (2); (w) the guide for
       // the selected route only fails (1), (3) and (4). (v) `playing` out of the drawer's Key does not fail it: in the page
       // a Pause, or the end, always brings a position not yet drawn (point 4g's frame late), so a frame is drawn anyway;
-      // the Node test of point 4b holds it (previewLogic.test.ts, a Pause at the same position books). It claims nothing for
-      // an export (the import rules keep the guide out of one: catalogue.editor.ts) and nothing spoken.
+      // the Node test of point 4b holds it (previewLogic.test.ts, a Pause at the same position books). (5) D275 (brief 151): at
+      // each of (1), (3) and (3b), round two thirds of the way (the trail's line runs one way, first stop to second), rows
+      // 2 to 4 px off the line hold the route's colour and white (arrowAt): the way arrow, which the 2-wide guide never
+      // reaches; in (2), playing, none. It claims nothing for an export (the import rules keep the guide out of one:
+      // catalogue.editor.ts) and nothing spoken.
       name: 'the-guide',
       method: 'j-timing',
       rows: ['2.2.2'],
@@ -2074,23 +2109,31 @@ export default {
         await twoFrames(page);
         const opened = await pixels(page);
         const [x0, x1] = [squareX(opened, 0.25), squareX(opened, 0.75)];
-        const along = x0 + 0.65 * (x1 - x0);
+        const along = x0 + 0.55 * (x1 - x0);
+        const way = x0 + (2 / 3) * (x1 - x0);
+        const arrowed = (a) => a.hue >= 1 && a.white >= 8;
         const lit = (p) => p[3] >= 64 && ORANGE.every((v, i) => Math.abs(p[i] - v) <= 24);
         const dashes = async () => { const row = await rowAt(page, along, 0.5); return { lit: row.filter(lit).length, alphas: row.map((p) => p[3]).join(', ') }; };
         const atEnd = await dashes();
+        const arrowEnd = await arrowAt(page, way, 0.5);
+        if (!arrowed(arrowEnd)) wrong.push(`paused at the end, round ${way.toFixed(4)} (two thirds along the one-way line) rows 2 to 4 px off it read ${arrowEnd.hue} of the line's colour and ${arrowEnd.white} white, not the way arrow (D275)`);
         if (!(atEnd.lit >= 5 && atEnd.lit <= 20)) wrong.push(`paused at the end, ${atEnd.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${atEnd.alphas}), not the guide's dashes`);
         const stops = [await strokeAt(page, x0, 0.5), await strokeAt(page, x1, 0.5)];
         if (!stops.every((p) => near(p, ORANGE))) wrong.push(`paused at the end the stops read ${stops.map((p) => p.join(', ')).join(' and ')}, not the line's colour`);
         await page.locator(PLAY).click();
         await page.waitForTimeout(250);
         const playing = await dashes();
+        const arrowPlaying = await arrowAt(page, way, 0.5);
         const moving = await sample(page, 3);
         if (!(moving.at(-1)[1] > 0)) wrong.push(`after Play the position read ${moving.map(([, v]) => v).join(', ')}, not rising`);
+        if (arrowPlaying.hue !== 0 || arrowPlaying.white !== 0) wrong.push(`playing, round ${way.toFixed(4)} rows 2 to 4 px off the line read ${arrowPlaying.hue} of the line's colour and ${arrowPlaying.white} white: the way arrow is drawn while playing`);
         if (playing.lit !== 0) wrong.push(`playing, ${playing.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${playing.alphas}): the guide is drawn while playing`);
         await page.locator(PLAY).click();
         if (!(await comesToWords(page, PAUSED))) wrong.push(`Pause: "${PAUSED}" was not said`);
         await twoFrames(page);
         const paused = await dashes();
+        const arrowPaused = await arrowAt(page, way, 0.5);
+        if (!arrowed(arrowPaused)) wrong.push(`paused again, round ${way.toFixed(4)} rows 2 to 4 px off the line read ${arrowPaused.hue} of the line's colour and ${arrowPaused.white} white, not the way arrow`);
         if (!(paused.lit >= 5 && paused.lit <= 20)) wrong.push(`paused again, ${paused.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${paused.alphas}), not the guide's dashes`);
         // (3b) Played through: at "Animation complete" the playing stops at the end, and the guide is back.
         await page.locator(PLAY).click();
@@ -2098,6 +2141,8 @@ export default {
         if (!done) wrong.push(`"${COMPLETE}" was not said`);
         await twoFrames(page);
         const ended = await dashes();
+        const arrowEnded = await arrowAt(page, way, 0.5);
+        if (!arrowed(arrowEnded)) wrong.push(`at "${COMPLETE}" round ${way.toFixed(4)} rows 2 to 4 px off the line read ${arrowEnded.hue} of the line's colour and ${arrowEnded.white} white, not the way arrow`);
         if (!(ended.lit >= 5 && ended.lit <= 20)) wrong.push(`at "${COMPLETE}" ${ended.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${ended.alphas}), not the guide's dashes`);
         // (4) Duplicate's copies.
         await open('pen-drawn');
