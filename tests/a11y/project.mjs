@@ -2923,7 +2923,9 @@ export default {
       },
     },
     {
-      // 2.1.1, 4.1.2, 2.4.3 (CORE-06, brief 135; brief 130's CF; D267 (a), provisional): the point's menu. In pen-drawn,
+      // 2.1.1, 2.4.3 (CORE-06, brief 135; brief 130's CF; D267 (a), provisional): the point's menu. Its name and roles are
+      // read too and fail 2.1.1 (the items the keys operate), but claim nothing for 4.1.2: the catalogue lists only axe,
+      // lint and a snapshot for 4.1.2, and tools/a11y-run.mjs refuses a journey that claims it (brief 136). In pen-drawn,
       // as edit-keys begins (Tab to the preview box, End, Escape). The status region's every text is kept from here.
       // (1) A right-click on the first tap (the lead's start): a menu named "Point actions" shows, in document.body and
       // not inside .preview, its top left at the click (within 2 px), focus on its first item; its items read, in order,
@@ -2950,7 +2952,7 @@ export default {
       // (G2's "Move", D250) nor for the marks' drawing.
       name: 'point-menu',
       method: 'keyboard',
-      rows: ['2.1.1', '4.1.2', '2.4.3'],
+      rows: ['2.1.1', '2.4.3'],
       run: async ({ page, open, record }) => {
         await open('pen-drawn');
         const [first, second] = TAPS;
@@ -3057,8 +3059,8 @@ export default {
         const said = [...new Set((await page.evaluate(() => window.__said)).filter(Boolean))];
         if (said.some((w) => w !== 'Undo' && w !== 'Point deleted')) names.wrong.push(`the status said ${JSON.stringify(said)}; only "Undo" and "Point deleted" were expected`);
         const how = `in pen-drawn, focus moved to the preview box by Tab (${tabs} presses), End, Escape`;
-        record('2.1.1', !keys.wrong.length, keys.wrong.length ? keys.wrong.join('; ') : `${how}: Shift+F10 opens the point's menu; ArrowDown, ArrowUp, Home and End move and wrap; Escape closes it with the point still selected; "Make bend" by Enter draws the point's grey dot (${bend.dark} dark pixels within 2 px, ${stopDark} as a stop) and changes the canvas, and one Undo draws the canvas as before; "Mark as start" makes the menu read "Remove start mark", undone by one Undo; "Set lead start" on the lead's start stays open on Enter, Space and a click and changes nothing; "Delete" removes the point and its line, says "Point deleted", and one Undo draws the canvas as before`);
-        record('4.1.2', !names.wrong.length, names.wrong.length ? names.wrong.join('; ') : `${how}: a right-click on the point shows a menu named "Point actions" with menuitems ${JSON.stringify(ITEMS)} (wrappers of role none, a separator before Delete), "Set lead start" aria-disabled and described by "${LEAD}"; the point is selected; over the run the status said only ${JSON.stringify(said)}`);
+        const wrong = [...names.wrong, ...keys.wrong];
+        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `${how}: a right-click on the point shows a menu named "Point actions" with menuitems ${JSON.stringify(ITEMS)} (wrappers of role none, a separator before Delete), "Set lead start" aria-disabled and described by "${LEAD}"; the point is selected; over the run the status said only ${JSON.stringify(said)}; Shift+F10 opens it; ArrowDown, ArrowUp, Home and End move and wrap; Escape closes it with the point still selected; "Make bend" by Enter draws the point's grey dot (${bend.dark} dark pixels within 2 px, ${stopDark} as a stop) and changes the canvas, and one Undo draws the canvas as before; "Mark as start" makes the menu read "Remove start mark", undone by one Undo; "Set lead start" on the lead's start stays open on Enter, Space and a click and changes nothing; "Delete" removes the point and its line, says "Point deleted", and one Undo draws the canvas as before`);
         record('2.4.3', !order.wrong.length, order.wrong.length ? order.wrong.join('; ') : `${how}: the menu stands in document.body, outside .preview, at the click (or just right of the point by Shift+F10), focus on its first item on opening; after Escape, an item chosen, and at the end focus is on the preview box`);
       },
     },
