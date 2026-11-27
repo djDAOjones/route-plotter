@@ -3406,7 +3406,11 @@ export default {
       // no keyboard way). Faults that fail it (brief 140, PROBE-140/mut-*.txt): (ao) the opener ignoring line hits;
       // (ap) the direction item always "Make line one way"; (aq) the line's words dropped. Step (8) was red on brief 143's
       // stage 2 build with the guide's dotted branch removed: "(8) after "Reverse line" the line's middle read 72% of 43
-      // samples in the route's hue, longest run 7, not dotted" (the lane's PROBE-143/red-line-menu.txt).
+      // samples in the route's hue, longest run 7, not dotted" (the lane's PROBE-143/red-line-menu.txt). Faults that
+      // fail (8), run by sub-chat 143 (PROBE-143/mut-ba.txt, mut-bb.txt, mut-bd.txt): (ba) a left-out line drawn in the
+      // guide's dashes: the same words as the red run; (bb) the sentence never added: ""Line reversed. 1 line the lead
+      // does not walk" was not heard after "Reverse line"" and ""Undo. The lead walks every line" was not heard"; (bd)
+      // "The lead walks every line" never said: the second of those.
       name: 'line-menu',
       method: 'j-order',
       rows: ['2.4.3'],
