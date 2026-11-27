@@ -1427,6 +1427,9 @@ describe('the point\'s menu\'s opener (point 9, brief 130, CB and CE (e))', () =
   });
 });
 
+/** Every binding `boundLineMenu` made, undone after each test, so a failing one leaves nothing bound (unbinding twice is harmless). */
+const lineCleanups: (() => void)[] = [];
+
 /** Bound with a line's menu handed (point 9), and the point's menu unless `pointMenu` is false: what each opened on. */
 function boundLineMenu(pointMenu = true) {
   const made = scene();
@@ -1439,6 +1442,7 @@ function boundLineMenu(pointMenu = true) {
     ...(pointMenu ? { menu: (open: MenuOpen) => opened.push(open) } : {}),
     lineMenu: (open) => lines.push(open),
   });
+  lineCleanups.push(unbind);
   const rightClick = (x: number, y: number): boolean => {
     let prevented = false;
     canvas.fire('contextmenu', { ...client(x, y), button: 2, preventDefault: () => { prevented = true; } });
@@ -1450,6 +1454,10 @@ function boundLineMenu(pointMenu = true) {
 }
 
 describe('a line\'s menu\'s opener (point 9, brief 140, ED; D271 (a))', () => {
+  afterEach(() => {
+    for (const undo of lineCleanups.splice(0).reverse()) undo();
+  });
+
   it('is listened for with a line\'s menu handed alone', () => {
     const { canvas, unbind } = boundLineMenu(false);
     expect(canvas.added.map(([type]) => type)).toContain('contextmenu');
