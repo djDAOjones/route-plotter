@@ -3154,7 +3154,10 @@ export default {
       // point as the pen always does ("Point added"), undone at once. (2b) A right-click on empty picture while it waits:
       // "Move cancelled" said, no menu opened, the canvas as before. (2c) Focus leaving the preview: "Move" chosen, then
       // a click on the "Skip to end" button: "Move cancelled" among the status's changes, the cursor not "crosshair",
-      // and the next click on the second point's old place is the pen's (the route's points read as before the click).
+      // the canvas as before. After each of the three cancels, the history is read as unchanged (gpt-6-astra, Codex list
+      // line 20: the canvas alone cannot see an empty step): before (2), one Undo and one Redo, the canvas read after
+      // each; after each cancel the same Undo and Redo must read the same two canvases, so one Undo takes back the step
+      // before "Move" (a step the cancel left would be undone first, and the Undo would draw the canvas unchanged).
       // (3) The group: Escape clears the selection, a command-click on each point selects both (as group-drag does,
       // before the right-click); a right-click on the second, "Move" clicked: the group's prompt; a click at DRAG_TO:
       // both markers read at their places moved by the same offset (the second at DRAG_TO), neither at its tap, and "2
@@ -3236,6 +3239,22 @@ export default {
         // (2) Escape.
         await off();
         const baseline = await hash();
+        // One Undo and one Redo, the canvas read after each (the history check of each cancel, Codex list line 20).
+        const undoRedo = async () => {
+          await unfocus();
+          await page.keyboard.press(UNDO);
+          await off();
+          const undone = await hash();
+          await page.keyboard.press(REDO);
+          await off();
+          return { undone, redone: await hash() };
+        };
+        const history = await undoRedo();
+        if (history.undone === history.redone) wrong.push('(2) before "Move" one Undo drew the canvas as one Redo did, so the history check could see nothing');
+        const historyKept = async (when) => {
+          const now = await undoRedo();
+          if (now.undone !== history.undone || now.redone !== history.redone) wrong.push(`${when}: one Undo then one Redo did not draw the canvases they drew before "Move" (${now.undone === history.redone ? 'the Undo changed nothing: the cancel left a step' : 'the history changed'})`);
+        };
         if (await chooseMove(second, MOVE_ONE, '(2)')) {
           await off();
           await page.keyboard.press('Escape');
@@ -3243,6 +3262,7 @@ export default {
           if (!(await comesToWords(page, CANCELLED))) wrong.push(`(2) after Escape the status did not come to "${CANCELLED}"`);
           if ((await hash()) !== baseline) wrong.push('(2) after Escape the canvas was not as before "Move"');
           await notWaiting('(2) after Escape');
+          await historyKept('(2) after Escape');
           await tapAt(EMPTY);
           if (!(await comesToWords(page, POINT_ADDED))) wrong.push(`(2) the click after Escape did not add a point ("${POINT_ADDED}" not heard)`);
           await unfocus();
@@ -3260,6 +3280,7 @@ export default {
           await off();
           if ((await hash()) !== baseline) wrong.push('(2b) after the right-click the canvas was not as before "Move"');
           await notWaiting('(2b) after the right-click');
+          await historyKept('(2b) after the right-click');
         }
         // (2c) Focus leaving the preview.
         if (await chooseMove(second, MOVE_ONE, '(2c)')) {
@@ -3269,6 +3290,7 @@ export default {
           if (!(await heardSince(from, CANCELLED))) wrong.push(`(2c) a click on "Skip to end" while it waited did not say "${CANCELLED}"`);
           await notWaiting('(2c) after the click on "Skip to end"');
           if ((await hash()) !== baseline) wrong.push('(2c) after the click on "Skip to end" the canvas was not as before "Move"');
+          await historyKept('(2c) after the click on "Skip to end"');
         }
         // (3) The group.
         await page.keyboard.press('Escape');
@@ -3292,7 +3314,7 @@ export default {
           if (!(await heardSince(from, '2 points moved'))) wrong.push('(3) the status never said "2 points moved"');
         }
         const ok = !wrong.length;
-        record('2.5.7', ok, ok ? `in pen-drawn, by the pointer alone: the second point right-clicked and its menu's "Move" clicked, the status said "${MOVE_ONE}" and the cursor read crosshair; one click on empty picture drew its marker there and not at its tap, "${POINT_MOVED}" said once and "${POINT_ADDED}" never, and one Undo put it back; Escape, a right-click and a click on "Skip to end" each cancelled the wait with "${CANCELLED}" and the canvas as before; with both points selected, "Move" on the second and one click drew both markers moved by the same offset, "2 points moved" said. The preview's two drags (a point's, a group's) have this single-pointer way; the timeline's drag is checked by pointer-cancellation; no keyboard way is credited` : wrong.join('; '));
+        record('2.5.7', ok, ok ? `in pen-drawn, by the pointer alone: the second point right-clicked and its menu's "Move" clicked, the status said "${MOVE_ONE}" and the cursor read crosshair; one click on empty picture drew its marker there and not at its tap, "${POINT_MOVED}" said once and "${POINT_ADDED}" never, and one Undo put it back; Escape, a right-click and a click on "Skip to end" each cancelled the wait with "${CANCELLED}" and the canvas as before, and after each one Undo then one Redo drew the canvases they drew before "Move" (the history unchanged); with both points selected, "Move" on the second and one click drew both markers moved by the same offset, "2 points moved" said. The preview's two drags (a point's, a group's) have this single-pointer way; the timeline's drag is checked by pointer-cancellation; no keyboard way is credited` : wrong.join('; '));
         record('2.5.1', ok, ok ? 'the page\'s path gestures are its three drags, each with a single-pointer way: a point\'s and a group\'s on the preview by the point\'s menu "Move" and one click (shown in this run: one point, Escape, a right-click, focus leaving, the group); the timeline\'s by a press on the track (pointer-cancellation\'s 2.5.7)' : wrong.join('; '));
       },
     },
