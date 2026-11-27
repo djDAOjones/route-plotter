@@ -58,7 +58,7 @@
 //    machine is idle (no press open), from a mouse or a pen only (any other pointer type, or none, never hovers), hit-tests the last frame drawn as a down
 //    does, but without `refresh()` (a move never books a frame by itself), and hands the holder the point or line
 //    under it, or null. A pointerleave on the canvas, every pointerdown, a blur and the removal of the binding clear
-//    it; while a press or a drag is open nothing is hovered.
+//    it; while a press or a drag is open nothing is hovered, nor while the route plays (point 11).
 // 7. The Editing keys (brief 123, ruling AO; v3's Delete or Backspace, Cmd or Ctrl+D and Cmd or Ctrl+A): `editKey` is
 //    what keydown.ts hands the dispatch, each action a function of the store and whether a drag is open, true exactly
 //    when there was something to act on (the key is then taken), and never while a drag is open. "The route" is the
@@ -122,6 +122,18 @@
 //    refused on that press) cancel the gesture, nothing changed and nothing to undo, saying "Move cancelled"; the
 //    window's blur, the binding's removal and a project opened under the wait (the store closes the gesture) end it
 //    saying nothing. Hover goes on while it waits. `watchMove` tells the page when a wait starts and ends (its crosshair).
+// 11. A press while the route plays (brief 141, FB; D272 (c), provisional until the owner answers): the lead has drawn
+//    only part of the route, so a press on the picture while the store's `playback.playing` is true pauses the play and
+//    does nothing else. A pointerdown on the canvas, any button and any pointer type, with no "Move" wait open (point
+//    10 keeps its own path, first, unchanged): `pause` is called if handed, the down's default is cancelled, and the
+//    machine is never told of it, so no tap, drag or toggle follows (nothing placed, joined, inserted, selected or
+//    moved; no step), and no hover is set (any is cleared). Its menu event, which comes after the down when play has
+//    already paused, is swallowed as point 10's is: no menu of ours, the browser's cancelled. A menu event while
+//    playing with no press before it is the same: `pause`, the browser's menu cancelled, no menu, no selection. The
+//    hover's move (point 6) sets no hover and clears any while playing. A press begun while paused and still held
+//    when play starts is left as built, and the keys are untouched. The caller hands `pause` to stop the play: the
+//    binding calls it only when the store reads `playing`, so a toggle (the page's Play or pause) only ever pauses
+//    here, but one that could start play from a pause must not be handed.
 import { canvasToImage, imageToCanvas, type ImageBounds } from '../../core/geometry/transform';
 import type { Frame } from '../../adapters/render/layers';
 import type { Screen } from '../../adapters/render/overlays';
@@ -255,6 +267,8 @@ export interface CanvasBindingOptions<E extends PointerFields> {
   readonly menu?: (open: MenuOpen) => void;
   /** What opens a line's menu (point 9); none, a right-click on a line opens nothing. */
   readonly lineMenu?: (open: LineMenuOpen) => void;
+  /** What pauses the play, called on a press on the picture while the store plays (point 11); none, nothing is called. */
+  readonly pause?: () => void;
 }
 
 /** Where a line for the page's one status area goes (points 7 and 10); by default, nowhere. */
@@ -372,7 +386,7 @@ const ON_WINDOW: readonly (readonly [string, Kind | 'blur'])[] = [
 ];
 
 /** Binds the pen to `canvas` (point 3); gives back what removes every listener it added. */
-export function bindCanvas<E extends PointerFields>({ canvas, win, store, geometry, refresh, mac, hover, menu, lineMenu }: CanvasBindingOptions<E>): () => void {
+export function bindCanvas<E extends PointerFields>({ canvas, win, store, geometry, refresh, mac, hover, menu, lineMenu, pause }: CanvasBindingOptions<E>): () => void {
   /** The last frame's geometry in the pointer's CSS pixels, or null before the first. */
   const inCss = (): Geometry | null => {
     const drawn = geometry();
@@ -495,10 +509,19 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     },
   });
 
-  /** An idle mouse or pen move: what lies under it in the last frame drawn, never a refresh (point 6). */
+  /** Whether the route plays now (point 11). */
+  const playing = (): boolean => store.getState().playback.playing;
+  /** A press or a menu event while playing (point 11): the play paused, the event's default cancelled, nothing else. */
+  const pauseOnly = (event: E): void => {
+    hover?.set(null);
+    event.preventDefault?.();
+    pause?.();
+  };
+
+  /** An idle mouse or pen move: what lies under it in the last frame drawn, never a refresh (point 6); none while playing (point 11). */
   const rest = (place: Pixel, event: E): void => {
     if (hover === undefined) return;
-    if ((event.pointerType !== 'mouse' && event.pointerType !== 'pen') || binding.state().phase !== 'idle') {
+    if ((event.pointerType !== 'mouse' && event.pointerType !== 'pen') || binding.state().phase !== 'idle' || playing()) {
       hover.set(null);
       return;
     }
@@ -543,6 +566,12 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
       onWaiting(waiting, kind, event, where);
       return;
     }
+    // A press while playing only pauses (point 11); its menu event, after the pause, is swallowed.
+    if (kind === 'down' && playing()) {
+      swallowMenu = true;
+      pauseOnly(event);
+      return;
+    }
     if (kind === 'blur') {
       hover?.set(null);
       send({ kind });
@@ -578,6 +607,11 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
       swallowMenu = false;
       event.preventDefault?.();
       endMove(true);
+      return;
+    }
+    // While playing, the menu event alone pauses and opens nothing (point 11).
+    if (playing()) {
+      pauseOnly(event);
       return;
     }
     if (!menuMay() || !refresh()) return;

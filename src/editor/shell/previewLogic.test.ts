@@ -590,7 +590,7 @@ describe('when a frame is drawn (ruling 4)', () => {
     expect(frames.booked()).toBe(0);
   });
 
-  it('(d) playing, a hover with no route selected draws nothing; with the route selected, its line with its "+" idle or active, or its point; another route\'s, nothing (briefs 118 and 120; 128, BS b)', () => {
+  it('(d) playing, a hover draws nothing, the route selected or not (brief 141, FC; D272 (c)); paused with the route selected, its line with its "+" idle or active, or its point; another route\'s, nothing (briefs 118 and 120; 128, BS b)', () => {
     const recorder = new Recorder();
     const { store, drawer, target, frames, requests, hover } = drawerOf(upTheMiddle([wide]), (request) => compose(recorder, request));
     at(store, 0, 1, true);
@@ -619,19 +619,33 @@ describe('when a frame is drawn (ruling 4)', () => {
     store.select({ route: routeId, points: [] });
     hover.set(null);
     frames.run();
+    const still = recorder.take();
+    expect(still).toEqual(asked([OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    // Playing with the route selected: a hover on its line, its "+" or its point draws no halo, "+" or ring (D272 (c)).
+    for (const each of [{ routeId, lineId, onPlus: false }, { routeId, lineId, onPlus: true }, { routeId, pointId }]) {
+      hover.set(each);
+      frames.run();
+      expect(recorder.take()).toEqual(still);
+    }
+    // Paused: the guide under the selected route's overlays (point 4d), and the hover drawn again.
+    const ids = store.getState().project.scene.routes.map((each) => each.id);
+    const guide = [OVERLAY_MAKERS.guideLines(ids), OVERLAY_MAKERS.guideDots(ids)];
+    hover.set(null);
+    at(store, store.playback().atMs, 1, false);
+    frames.run();
     const plain = recorder.take();
-    expect(plain).toEqual(asked([OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(plain).toEqual(asked([...guide, OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
     // Its line: the lines' overlay hovers it with its "+" idle (brief 120, ruling AA); the glow is drawn, and the "+".
     hover.set({ routeId, lineId, onPlus: false });
     frames.run();
     const onLine = recorder.take();
-    expect(onLine).toEqual(asked([OVERLAY_MAKERS.lines([], { hovered: { routeId, lineId, plus: 'idle' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
-    expect(onLine).not.toEqual(asked([OVERLAY_MAKERS.lines([], { hovered: { routeId, lineId, plus: 'none' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(onLine).toEqual(asked([...guide, OVERLAY_MAKERS.lines([], { hovered: { routeId, lineId, plus: 'idle' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(onLine).not.toEqual(asked([...guide, OVERLAY_MAKERS.lines([], { hovered: { routeId, lineId, plus: 'none' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
     // On its "+": active.
     hover.set({ routeId, lineId, onPlus: true });
     frames.run();
     const onPlus = recorder.take();
-    expect(onPlus).toEqual(asked([OVERLAY_MAKERS.lines([], { hovered: { routeId, lineId, plus: 'active' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(onPlus).toEqual(asked([...guide, OVERLAY_MAKERS.lines([], { hovered: { routeId, lineId, plus: 'active' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
     expect(onPlus).not.toEqual(onLine);
     expect(onLine.some((line) => line.includes('rgba(15, 98, 254, 0.45)'))).toBe(true);
     expect(plain.some((line) => line.includes('rgba(15, 98, 254, 0.45)'))).toBe(false);
@@ -639,7 +653,7 @@ describe('when a frame is drawn (ruling 4)', () => {
     hover.set({ routeId, pointId });
     frames.run();
     const onPoint = recorder.take();
-    expect(onPoint).toEqual(asked([OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: { routeId, pointId } })]));
+    expect(onPoint).toEqual(asked([...guide, OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: { routeId, pointId } })]));
     expect(onPoint).not.toEqual(plain);
     // Another route's line or point: nothing more than the selected route's frame.
     for (const each of [{ routeId: 'elsewhere', lineId, onPlus: true }, { routeId: 'elsewhere', pointId }]) {
@@ -722,7 +736,7 @@ describe('when a frame is drawn (ruling 4)', () => {
     expect(playing.some((line) => line.includes('lineDash=6,4'))).toBe(false);
   });
 
-  it('(d) paused with a route selected: the guide first, under the selection\'s rings and the hover; playing, the selection\'s alone (brief 128, BS e)', () => {
+  it('(d) paused with a route selected: the guide first, under the selection\'s rings and the hover; playing, the selection\'s rings alone, no hover (brief 128, BS e; brief 141, FC)', () => {
     const recorder = new Recorder();
     const { store, drawer, target, frames, requests, hover } = drawerOf(twoRoutes([wide]), (request) => compose(recorder, request));
     drawer.attach(target);
@@ -753,8 +767,10 @@ describe('when a frame is drawn (ruling 4)', () => {
     const playing = recorder.take();
     const now = requests.at(-1);
     expect(now?.overlays).toHaveLength(2);
+    // Playing, the hover is not drawn (brief 141, FC; D272 (c)): the selection's rings alone.
+    const ringsAlone = [OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [{ routeId, pointId: copy?.id ?? '' }], hovered: null })];
     const own = new Recorder();
-    compose(own, { ...(now ?? last), overlays: theirs() });
+    compose(own, { ...(now ?? last), overlays: ringsAlone });
     expect(playing).toEqual(own.take());
   });
 

@@ -40,7 +40,9 @@
 //        `{ routeId, pointId }`. A hovered point of that route is the points
 //        overlay's `hovered`; a hovered line of that route is the lines overlay's, `{ routeId, lineId, plus }`, its
 //        "+" `'active'` while the hover is on it and `'idle'` otherwise (CORE-06, brief 120, ruling AA: a tap on the
-//        "+" inserts a point there, ../canvas/dom.ts point 2); a hover on another route draws nothing;
+//        "+" inserts a point there, ../canvas/dom.ts point 2); a hover on another route draws nothing; while the scene
+//        plays no hover is drawn at all, the selection's rings alone (brief 141, FC; D272 (c), provisional: a press
+//        while playing only pauses, ../canvas/dom.ts point 11);
 //    (e) a `paint` that throws is reported and draws nothing more that frame; the next change books as before. The
 //        reports a frame gives back go to `failed` only when they differ from the last frame's, so a module failing
 //        through a whole playing is told once;
@@ -292,14 +294,19 @@ const sameReports = (a: readonly FrameReport[], b: readonly FrameReport[]): bool
   a.length === b.length &&
   a.every((each, i) => each.routeId === b[i]?.routeId && each.featureId === b[i].featureId && each.reason === b[i].reason);
 
-/** The editor's overlays (point 4d): the guide on every route while not playing, then the selected route's; none with neither. */
+/**
+ * The editor's overlays (point 4d): the guide on every route while not playing, then the selected route's; none with
+ * neither. The hovered point's ring and the hovered line's halo and "+" are drawn only while not playing (brief 141,
+ * FC; D272 (c), provisional until the owner answers): while playing, a press pauses and does nothing else
+ * (../canvas/dom.ts point 11), so nothing offers one; the selection's rings stay.
+ */
 function overlaysOf(scene: Scene, playing: boolean, selection: Selection, hover: Hover): FrameRequest['overlays'] {
   const ids = scene.routes.map((each) => each.id);
   const guide = playing ? [] : [OVERLAY_MAKERS.guideLines(ids), OVERLAY_MAKERS.guideDots(ids)];
   const { route } = selection;
   if (route === null) return guide.length > 0 ? guide : undefined;
   const selected = selection.points.map((pointId) => ({ routeId: route, pointId }));
-  const ours = hover !== null && hover.routeId === route ? hover : null;
+  const ours = !playing && hover !== null && hover.routeId === route ? hover : null;
   const point = ours !== null && 'pointId' in ours ? { routeId: route, pointId: ours.pointId } : null;
   const line = ours !== null && 'lineId' in ours ? { routeId: route, lineId: ours.lineId, plus: ours.onPlus ? ('active' as const) : ('idle' as const) } : null;
   return [...guide, OVERLAY_MAKERS.lines([], { hovered: line }), OVERLAY_MAKERS.points([route], { selected, hovered: point })];

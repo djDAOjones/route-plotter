@@ -1799,3 +1799,158 @@ describe('"Move" then a click (point 10; brief 138, DB; D270)', () => {
   });
 });
 
+
+const playCleanups: Array<() => void> = [];
+
+/**
+ * Bound as the page binds it (a hover, both menus and `pause`, point 11), the store playing unless `playing` is false.
+ * `pause` stands in for the page's: it counts, and pauses the store as the transport would.
+ */
+function boundPlaying(playing = true) {
+  const made = scene();
+  const canvas = canvasStandIn();
+  const win = target();
+  const hover = createHover();
+  const opened: MenuOpen[] = [];
+  const lines: LineMenuOpen[] = [];
+  let pauses = 0;
+  const pause = () => {
+    pauses += 1;
+    made.store.setPlayback({ ...made.store.playback(), playing: false });
+  };
+  made.store.setPlayback({ playing, atMs: 0, speed: 1 });
+  const unbind = bindCanvas({
+    canvas, win, store: made.store, geometry: () => drawnOf(made.store), refresh: () => true, mac: true, hover,
+    menu: (open) => opened.push(open), lineMenu: (open) => lines.push(open), pause,
+  });
+  playCleanups.push(unbind);
+  /** A press and release at an image place, with `button` (0, or 2 for a right-click): whether the down was cancelled. */
+  const press = (x: number, y: number, button = 0): boolean => {
+    let prevented = false;
+    canvas.fire('pointerdown', { ...client(x, y), button, pointerType: 'mouse', preventDefault: () => { prevented = true; } });
+    canvas.fire('pointerup', { ...client(x, y), button, pointerType: 'mouse' });
+    win.fire('pointerup', { ...client(x, y), button, pointerType: 'mouse' });
+    return prevented;
+  };
+  /** The menu event alone at an image place: whether the browser's menu was cancelled. */
+  const menuEvent = (x: number, y: number): boolean => {
+    let prevented = false;
+    canvas.fire('contextmenu', { ...client(x, y), button: 2, preventDefault: () => { prevented = true; } });
+    return prevented;
+  };
+  const play = () => { made.store.setPlayback({ ...made.store.playback(), playing: true }); };
+  return { ...made, canvas, win, hover, opened, lines, unbind, press, menuEvent, play, pauses: () => pauses };
+}
+
+describe('a press while playing pauses and does nothing else (point 11; brief 141, FB; D272 (c))', () => {
+  afterEach(() => {
+    for (const undo of playCleanups.splice(0).reverse()) undo();
+  });
+
+  it('a tap on empty picture adds no point, calls `pause` once and cancels the down; the next tap, paused, adds one', () => {
+    const { store, press, pauses } = boundPlaying();
+    store.select(NOTHING_SELECTED);
+    const before = store.getState();
+    expect(press(0.3, 0.7)).toBe(true);
+    expect(pauses()).toBe(1);
+    expect(store.playback().playing).toBe(false);
+    expect(store.getState().project).toBe(before.project);
+    expect(store.getState().selection).toBe(before.selection);
+    expect(store.getState().undo).toBeNull();
+    expect(routeOf(store).points).toHaveLength(3);
+    // Paused now: the pen works as before, and `pause` is not called again.
+    expect(press(0.3, 0.7)).toBe(false);
+    expect(routeOf(store).points).toHaveLength(4);
+    expect(store.getState().undo).toBe('Add point');
+    expect(pauses()).toBe(1);
+  });
+
+  it('a tap on a point neither joins nor selects it, nor does a tap on a line\'s "+" insert; a drag moves nothing', () => {
+    const { store, route, a, b, c, canvas, win, press, play, pauses } = boundPlaying();
+    store.select({ route: route.id, points: [c] });
+    const before = store.getState();
+    press(0.2, 0.2);
+    play();
+    press(0.4, 0.4);
+    play();
+    canvas.fire('pointerdown', { ...client(0.6, 0.6), pointerType: 'mouse' });
+    canvas.fire('pointermove', { ...client(0.7, 0.3), pointerType: 'mouse' });
+    canvas.fire('pointerup', { ...client(0.7, 0.3), pointerType: 'mouse' });
+    win.fire('pointerup', { ...client(0.7, 0.3), pointerType: 'mouse' });
+    expect(pauses()).toBe(3);
+    expect(store.getState().project).toBe(before.project);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [c] });
+    expect(placeOf(store, a)).toEqual({ x: 0.2, y: 0.2 });
+    expect(placeOf(store, b)).toEqual({ x: 0.6, y: 0.6 });
+    expect(store.getState().undo).toBeNull();
+    expect(canvas.captured.size).toBe(0);
+  });
+
+  it('a right-click on a point or a line opens no menu, changes no selection, cancels the browser\'s menu and pauses once', () => {
+    const { store, route, a, opened, lines, press, menuEvent, play, pauses } = boundPlaying();
+    store.select(NOTHING_SELECTED);
+    expect(press(0.2, 0.2, 2)).toBe(true);
+    expect(menuEvent(0.2, 0.2)).toBe(true);
+    play();
+    press(0.4, 0.4, 2);
+    expect(menuEvent(0.4, 0.4)).toBe(true);
+    expect(pauses()).toBe(2);
+    expect(opened).toEqual([]);
+    expect(lines).toEqual([]);
+    expect(store.getState().selection).toEqual(NOTHING_SELECTED);
+    // The menu event alone while playing (no press before it): the same.
+    play();
+    expect(menuEvent(0.2, 0.2)).toBe(true);
+    expect(pauses()).toBe(3);
+    expect(opened).toEqual([]);
+    // Paused, the right-click opens the point's menu as before.
+    press(0.2, 0.2, 2);
+    expect(menuEvent(0.2, 0.2)).toBe(true);
+    expect(opened).toEqual([{ route: route.id, point: a, at: { x: 10 + 200, y: 20 + 160 } }]);
+    expect(pauses()).toBe(3);
+  });
+
+  it('no hover is set while playing, and one held is cleared; paused, a move hovers as before', () => {
+    const { canvas, hover, route, a, store, pauses } = boundPlaying(false);
+    canvas.fire('pointermove', mouse(0.2, 0.2));
+    expect(hover.held()).toEqual({ routeId: route.id, pointId: a });
+    store.setPlayback({ ...store.playback(), playing: true });
+    canvas.fire('pointermove', mouse(0.2, 0.2));
+    expect(hover.held()).toBeNull();
+    canvas.fire('pointermove', mouse(0.4, 0.4));
+    expect(hover.held()).toBeNull();
+    store.setPlayback({ ...store.playback(), playing: false });
+    canvas.fire('pointermove', mouse(0.4, 0.4));
+    expect(hover.held()).toEqual({ routeId: route.id, lineId: route.lines[0]?.id, onPlus: true });
+    expect(pauses()).toBe(0);
+  });
+
+  it('paused, `pause` is never called: a tap adds, a tap on a point selects it, a right-click opens its menu', () => {
+    const { store, route, b, opened, press, menuEvent, pauses } = boundPlaying(false);
+    store.select(NOTHING_SELECTED);
+    press(0.3, 0.7);
+    expect(routeOf(store).points).toHaveLength(4);
+    store.select(NOTHING_SELECTED);
+    press(0.6, 0.6);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [b] });
+    press(0.6, 0.6, 2);
+    menuEvent(0.6, 0.6);
+    expect(opened).toHaveLength(1);
+    expect(pauses()).toBe(0);
+  });
+
+  it('while "Move" waits, a click still places, playing or not, and `pause` is not called (point 10 first)', () => {
+    const { store, route, b, canvas, win, play, pauses } = boundPlaying(false);
+    store.select({ route: route.id, points: [b] });
+    expect(startMove({ route: route.id, point: b, points: [b] }, () => undefined)).toBe(true);
+    play();
+    canvas.fire('pointerdown', client(0.3, 0.7));
+    canvas.fire('pointerup', client(0.3, 0.7));
+    win.fire('pointerup', client(0.3, 0.7));
+    expect(placeOf(store, b)?.x).toBeCloseTo(0.3, 9);
+    expect(store.getState().undo).toBe('Move point');
+    expect(moveWaiting()).toBe(false);
+    expect(pauses()).toBe(0);
+    expect(store.playback().playing).toBe(true);
+  });
+});
