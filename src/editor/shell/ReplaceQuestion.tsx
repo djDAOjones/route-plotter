@@ -35,7 +35,7 @@ import { Dialog } from "../kit/Dialog";
 import { OPEN_WORDS } from "./openLogic";
 
 /** One ask, made once per ask (point 4): its identity is what the focus effect follows; its name is what it shows. */
-export interface AskedQuestion {
+interface AskedQuestion {
   readonly name: string;
 }
 
