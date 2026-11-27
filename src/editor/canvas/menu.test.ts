@@ -2,7 +2,7 @@
 // Its words and enabled state for a plain point, a marked start, a marked end, the lead's start, a stop and a bend; an
 // item that cannot run listed disabled with its reason; each item run as its built command, one undo step under the
 // command's words; Delete on a point inside the selection deleting the selection; and how the menu selects its point.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Project } from '../../adapters/io/format';
 import { newLine, newPoint, newRoute, newScene, type IdSource, type Route } from '../../core/model/scene';
 import { createStore, type Store } from '../store/store';
@@ -130,20 +130,53 @@ describe('running an item (CE (c), (d))', () => {
     }
   });
 
-  it('a remove item takes the mark off; "Make stop" makes a bend a stop', () => {
-    const { store, route, a, b, c } = scene();
-    runItem(store, item(store, route, a, 'Remove start mark'));
-    runItem(store, item(store, route, b, 'Remove end mark'));
-    runItem(store, item(store, route, c, 'Make stop'));
-    const after = routeOf(store);
-    expect(after.marks).toEqual([]);
-    expect(after.points.find((each) => each.id === c)?.kind).toBe('stop');
+  // Codex's finding 2 on brief 130: each of these three alone, from a scene of its own, so that each is held to its own
+  // change, its own words and exactly one step that one Undo takes back in full.
+  /** One undo step under `label`: one Undo gives back `before` in full, and a second has nothing to undo. */
+  const oneStep = (store: Store, before: Route, label: string) => {
+    expect(store.getState().undo).toBe(label);
+    expect(store.undo()).toEqual({ ok: true, changed: true });
+    expect(routeOf(store)).toEqual(before);
+    expect(store.getState().undo).toBeNull();
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+  };
+
+  it('"Remove start mark" takes the start mark off, and nothing else, as one step under its words', () => {
+    const { store, route, a, b } = scene();
+    const before = routeOf(store);
+    expect(runItem(store, item(store, route, a, 'Remove start mark'))).toBe(true);
+    expect(routeOf(store)).toEqual({ ...before, marks: [{ point: b, end: 'end' }] });
+    oneStep(store, before, 'Remove start mark');
   });
 
-  it('a disabled item runs nothing: no change, no step, and says so', () => {
+  it('"Remove end mark" takes the end mark off, and nothing else, as one step under its words', () => {
+    const { store, route, a, b } = scene();
+    const before = routeOf(store);
+    expect(runItem(store, item(store, route, b, 'Remove end mark'))).toBe(true);
+    expect(routeOf(store)).toEqual({ ...before, marks: [{ point: a, end: 'start' }] });
+    oneStep(store, before, 'Remove end mark');
+  });
+
+  it('"Make stop" makes a bend a stop, and nothing else, as one step under its words', () => {
+    const { store, route, c } = scene();
+    const before = routeOf(store);
+    expect(runItem(store, item(store, route, c, 'Make stop'))).toBe(true);
+    expect(routeOf(store)).toEqual({
+      ...before,
+      points: before.points.map((each) => (each.id === c ? { ...each, kind: 'stop' } : each)),
+    });
+    oneStep(store, before, 'Make stop');
+  });
+
+  it('a disabled item runs nothing: no command reaches the store, no change, no step, and says so', () => {
     const { store, route, a } = scene();
+    const disabled = item(store, route, a, 'Set lead start');
     const before = store.getState();
-    expect(runItem(store, item(store, route, a, 'Set lead start'))).toBe(false);
+    // Codex's finding 3 on brief 130: the store alone would make no step here either (the lead's start set again is
+    // unchanged), so the guard is proved by no command reaching the store at all.
+    const dispatch = vi.spyOn(store, 'dispatch');
+    expect(runItem(store, disabled)).toBe(false);
+    expect(dispatch).not.toHaveBeenCalled();
     expect(store.getState()).toBe(before);
     expect(store.getState().undo).toBeNull();
   });
