@@ -1,5 +1,5 @@
-// CORE-06, chat G1b (brief 135; brief 130's CD, built as HANDOVER-130's plan; D267 (a), provisional until the owner
-// answers): the kit's context menu, a list of items shown at a place on the page, after v3's
+// CORE-06, chat G1b (brief 135; brief 130's CD, built as HANDOVER-130's plan; D267 (a), answered by the owner,
+// 2026-11-27): the kit's context menu, a list of items shown at a place on the page, after v3's
 // v3/src/components/ContextMenu.js (Carbon's `Menu` is ruled out: PROBE-130/carbon-menu-probe.md). Its claim:
 // 1. It is drawn in a portal into `document.body`, outside the preview's set-aside box (tests/a11y/helpers.ts 326 to
 //    328: a control's graphic inside `.preview` fails that row), fixed at the place handed (client pixels) and clamped

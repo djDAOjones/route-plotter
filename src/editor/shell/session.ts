@@ -18,7 +18,8 @@
 //   each key, Help shows and sets it. It is not stored (CORE-09's), not a scene setting, and makes no undo step.
 // - Stage 6: the opener (openLogic.ts), made once beside the transports from the session's own store, the queue's
 //   `announce` and the browser's decoder (decode.ts): Open's button and notice are drawn from it. Since brief 145 (D276 (a),
-//   provisional) it carries the page's one `question` (ReplaceQuestion.tsx), handed to it as `confirmReplace`, so a
+//   kept as built: the parent chat's reading of the owner's answer of 2026-11-27, which stands unless he objects) it
+//   carries the page's one `question` (ReplaceQuestion.tsx), handed to it as `confirmReplace`, so a
 //   chosen project asks before it replaces a changed route; "Open project" draws that question. The player's
 //   transport reads what the length is made from through the preview's inputs (previewLogic.ts): the store's scene,
 //   the seed, the size and the background's size from its header, so an opened project is measured by its picture

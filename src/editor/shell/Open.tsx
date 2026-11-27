@@ -30,7 +30,8 @@
 // 7. A file's name is text a user's file brought: it is drawn as text, never as markup.
 // 8. Each is drawn from the opener's state by `useSyncExternalStore`, with the same `read` for the server's render, so
 //    Node draws them; every word is in `OPEN_WORDS` (openLogic.ts).
-// 9. D276 (a), provisional (brief 145): when the session's opener carries its `question` (ReplaceQuestion.tsx), the
+// 9. D276 (a), kept as built: the parent chat's reading of the owner's answer of 2026-11-27, which stands unless he
+//    objects (brief 145): when the session's opener carries its `question` (ReplaceQuestion.tsx), the
 //    button draws that question beside it, closed until the opener asks; its focus goes back to this button, found by
 //    its id. Without a `question` the button is as it was.
 import { InlineLoading, InlineNotification } from '@carbon/react';

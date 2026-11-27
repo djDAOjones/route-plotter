@@ -71,7 +71,8 @@
 //    given as it came (it is text a user's file brought: nothing here reads it as markup); null at rest and for
 //    `open(bytes)`. `dismiss()` clears a refusal held, and its name, with one telling; while an open is under way, and
 //    at rest, it does nothing and tells nobody.
-// 14. D276 (a), provisional (brief 144): an optional `confirmReplace(fileName)`, the page's question (sub-chat 145's
+// 14. D276 (a), kept as built: the parent chat's reading of the owner's answer of 2026-11-27, which stands unless he
+//     objects (brief 144): an optional `confirmReplace(fileName)`, the page's question (sub-chat 145's
 //    dialog, in `OPEN_WORDS`' replace words). Once io has accepted a file as a project, and before the store is asked,
 //    if the store says `changed()` (store.ts) and a question is given, the opener awaits it, with the file's name (or
 //    "the file" for `open(bytes)`). `true` goes on as points 1 to 8 and 13 have it. `false`, or a question that throws

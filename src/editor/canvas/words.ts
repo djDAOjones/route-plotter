@@ -3,10 +3,11 @@
 // spoke ("Undo", "Redo"), "point" where v4's page already says point. A count comes from the points of every route
 // before and after the step, never from the label (which gives singular or plural at most, and Duplicate neither): the
 // points fewer for a delete, the points more for a duplicate, the points standing elsewhere for a move. The point's
-// menu's items (brief 137, D269, provisional: the same short past-tense pattern) say "Start marked", "Start mark
+// menu's items (brief 137, D269, stands unless the owner objects: the same short past-tense pattern) say "Start
+// marked", "Start mark
 // removed", "End marked", "End mark removed", "Lead start set", "Point made a stop" and "Point made a bend"; an item
-// that is off makes no step, so it says nothing. The line's menu's items (brief 140, ruling EC; D271 (a), provisional
-// until the owner answers: the same pattern) say "Line made one way", "Line made two-way" and "Line reversed". Every
+// that is off makes no step, so it says nothing. The line's menu's items (brief 140, ruling EC; D271 (a), answered by
+// the owner, 2026-11-27: the same pattern) say "Line made one way", "Line made two-way" and "Line reversed". Every
 // other step is silent: a nudge (v3 was), and the line commands no menu reaches yet. Select all is not a step, so it
 // has its own line, `allSelected`.
 //
@@ -15,7 +16,7 @@
 // with it), and on a cancel by Escape, a right-click or leaving the preview, "Move cancelled". The place itself is a
 // "Move point" or "Move points" step, so the store's hook says "Point moved" or "N points moved" as above.
 //
-// Lines the lead does not walk (D273 part 1, (c), provisional until the owner answers): after a step (an edit, an Undo
+// Lines the lead does not walk (D273 part 1, (c), answered by the owner, 2026-11-27): after a step (an edit, an Undo
 // or a Redo) that changes how many lines the lead does not walk, counted over every route (../../core/timing/walk.ts's
 // leftOut), the step's own words gain ". " and one sentence: "1 line the lead does not walk", "N lines the lead does
 // not walk", or "The lead walks every line" when the count falls to 0; a step that says nothing of its own says the

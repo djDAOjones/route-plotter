@@ -1924,7 +1924,8 @@ export default {
       },
     },
     {
-      // D276 (a), provisional (brief 145, ruling JC 4; widened by brief 147, ruling KA 3): Open over a route drawn since
+      // D276 (a), kept as built: the parent chat's reading of the owner's answer of 2026-11-27, which stands unless he
+      // objects (brief 145, ruling JC 4; widened by brief 147, ruling KA 3): Open over a route drawn since
       // the page opened asks first. In pen-drawn (two taps: the route has changed), the journeys' project chosen
       // through "Open project" shows one dialog, "Replace your route?", naming the file, with focus on "Keep my route".
       // It is then kept four ways, each from a fresh Open: one Escape, "Keep my route" by its button, the dialog's
@@ -3117,7 +3118,8 @@ export default {
       },
     },
     {
-      // 2.1.1, 2.4.3 (CORE-06, brief 135; brief 130's CF; D267 (a), provisional): the point's menu. Its name and roles are
+      // 2.1.1, 2.4.3 (CORE-06, brief 135; brief 130's CF; D267 (a), answered by the owner, 2026-11-27): the point's
+      // menu. Its name and roles are
       // read too and fail 2.1.1 (the items the keys operate), but claim nothing for 4.1.2: the catalogue lists only axe,
       // lint and a snapshot for 4.1.2, and tools/a11y-run.mjs refuses a journey that claims it (brief 136). In pen-drawn,
       // as edit-keys begins (Tab to the preview box, End, Escape). The status region's every text is kept from here.
@@ -3546,7 +3548,7 @@ export default {
       },
     },
     {
-      // 2.4.3 (CORE-06, brief 140, ruling EF; D271 (a), provisional until the owner answers): a line's menu, by pointer.
+      // 2.4.3 (CORE-06, brief 140, ruling EF; D271 (a), answered by the owner, 2026-11-27): a line's menu, by pointer.
       // In pen-drawn's set-up (two taps, the second point selected), skipped to the route's end. A listener on the
       // document (after the canvas's own) notes whether each right-click's menu event was cancelled.
       // (1) A right-click three tenths along the line (line-insert-plus's place, clear of the points and the "+"): a
@@ -3721,7 +3723,7 @@ export default {
       },
     },
     {
-      // 2.2.2 (CORE-06, brief 141, FE; D272 (c), provisional until the owner answers): a press on the picture while
+      // 2.2.2 (CORE-06, brief 141, FE; D272 (c), answered by the owner, 2026-11-27): a press on the picture while
       // the route plays pauses the play and does nothing else (dom.ts point 11; the page hands the binding Play or
       // pause's own toggle, which the binding calls only while playing). In pen-drawn's set-up (two taps, one line), at
       // the route's end with the mouse off the preview, the whole canvas is read (pixels' hash) as the baseline. Then
