@@ -349,3 +349,116 @@ test('a frame asked for without overlays holds none: with every point overlay, i
   const layers = [...CATALOGUE.route, ...CATALOGUE.scene].flatMap((module) => Object.values(module.layers ?? {}));
   expect(layers).not.toContain(OVERLAY_MAKERS.points);
 });
+
+// CORE-06, D274 part 1 (brief 142, GC): the guide's dots draw, after a route's dots, v3's glyph on each point the author
+// marked (NetworkEditService.js:1236–1259): a start's triangle, an end's square, radius 7 and edge 1.5 by frame.scale
+// and unitAt(zoom) (v3's scaleSizeClamped, :940), in the route's colour edged white. Never a worked-out first point.
+
+type Mark = Route['marks'][number];
+
+function marked(scene: Scene, marks: readonly (readonly Mark[])[]): Scene {
+  return { ...scene, routes: scene.routes.map((route, i) => ({ ...route, marks: [...(marks[i] ?? [])] })) };
+}
+
+/** The frame without overlays, then with the guide's dots of every route: the overlay's lines alone. */
+function dotted(scene: Scene, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS], size = { width: 1920, height: 1080 }) {
+  const plain = draw(request(scene, { viewing: viewing.viewing, size }), viewing.catalogue);
+  const overlay = OVERLAY_MAKERS.guideDots(scene.routes.map((route) => route.id));
+  const edited = draw(request(scene, { viewing: viewing.viewing, size, overlays: [overlay] }), viewing.catalogue);
+  expect(edited.lines.slice(0, plain.lines.length)).toEqual(plain.lines);
+  expect(edited.reports).toEqual([]);
+  return edited.lines.slice(plain.lines.length);
+}
+
+/** Each moveTo, lineTo or rect on screen, by its kind and its figures under the transform written beside it. */
+const pathsOf = (lines: readonly string[]) =>
+  lines
+    .filter((line) => /^(moveTo|lineTo|rect) /.test(line))
+    .map((line) => {
+      const [kind = '', ...rest] = line.split(' ');
+      const at = rest.indexOf('@');
+      const figures = rest.slice(0, at).map(Number);
+      const [a = 0, b = 0, c = 0, d = 0, e = 0, f = 0] = rest.slice(at + 1, at + 7).map(Number);
+      const [x = 0, y = 0, w = 0, h = 0] = figures;
+      const scale = Math.hypot(a, b);
+      return { kind, x: a * x + c * y + e, y: b * x + d * y + f, w: w * scale, h: h * scale };
+    });
+
+/** Each fill's and stroke's styles as written. */
+const paints = (lines: readonly string[]) => lines.filter((line) => /^(fill|stroke) /.test(line)).map((line) => line.split(' | ')[2] ?? '');
+
+test('a marked start draws v3’s triangle and a marked end its square at the point, after the route’s dots, in its colour edged white; an unmarked point only its dot (D274)', () => {
+  const scene = sceneOf();
+  const route = scene.routes[0];
+  const [first, , , last] = route?.points ?? [];
+  const colour = route?.settings.line.colour ?? '';
+  const withMarks = marked(scene, [[{ point: last?.id ?? '', end: 'end' }, { point: first?.id ?? '', end: 'start' }]]);
+  const sizes = { 'a frame of 1080': { width: 1920, height: 1080 }, 'a frame of 540': { width: 1920, height: 540 } };
+  for (const [name, viewing] of Object.entries(VIEWINGS)) {
+    for (const [sized, size] of Object.entries(sizes)) {
+      const label = `${name}, ${sized}`;
+      const scale = size.height / 1080;
+      const unit = unitAt(viewing.zoom);
+      const r = 7 * scale * unit;
+      const lines = dotted(withMarks, viewing, size);
+      // Four dots first, one for each point, marked or not; then the two marks and nothing else.
+      const dots = circles(lines);
+      expect(dots, label).toHaveLength(4);
+      const lastDot = lines.reduce((at, line, i) => (line.startsWith('arc ') ? i : at), -1);
+      expect(lines.slice(0, lastDot).some((line) => /^(moveTo|lineTo|rect) /.test(line)), label).toBe(false);
+      const [start = { x: 0, y: 0 }, , , end = { x: 0, y: 0 }] = dots;
+      const paths = pathsOf(lines);
+      // The square first (every end before every start), then the triangle, apex up.
+      expect(paths.map((path) => path.kind), label).toEqual(['rect', 'moveTo', 'lineTo', 'lineTo']);
+      const [square, apex, right, left] = paths;
+      near([square?.x, square?.y, square?.w, square?.h], [end.x - 0.8 * r, end.y - 0.8 * r, 1.6 * r, 1.6 * r], label);
+      near([apex?.x, apex?.y], [start.x, start.y - r], label);
+      near([right?.x, right?.y], [start.x + 0.87 * r, start.y + 0.5 * r], label);
+      near([left?.x, left?.y], [start.x - 0.87 * r, start.y + 0.5 * r], label);
+      expect(lines.filter((line) => line.startsWith('closePath')), label).toHaveLength(1);
+      // Each dot a fill in the route's colour; each mark a fill in it, then a white stroke 1.5 × scale × unit wide.
+      const marks = paints(lines).slice(4);
+      expect(marks.map((paint) => paint.replace(/ lineWidth=[\d.]+/, '')), label).toEqual([
+        `fillStyle=${colour}`,
+        'strokeStyle=#ffffff',
+        `fillStyle=${colour}`,
+        'strokeStyle=#ffffff',
+      ]);
+      expect(widths(lines), label).toHaveLength(2);
+      for (const width of widths(lines)) expect(width, label).toBeCloseTo(1.5 * scale * unit, 2);
+    }
+  }
+});
+
+test('a route with no marks draws its dots exactly as before; a mark whose point the frame does not hold draws nothing (D274)', () => {
+  const scene = sceneOf('always', 2);
+  const viewing = VIEWINGS['a zoom of 1'];
+  const before = dotted(scene, viewing);
+  expect(before.filter((line) => !/^(save|beginPath|restore|arc |fill )/.test(line))).toEqual([]);
+  expect(circles(before)).toHaveLength(8);
+  // Marks on the first route only: the second route's lines, and the first's dots, are unchanged.
+  const [first] = scene.routes;
+  const withMarks = marked(scene, [[{ point: first?.points[2]?.id ?? '', end: 'start' }]]);
+  const after = dotted(withMarks, viewing);
+  const added = after.length - before.length;
+  expect(added).toBeGreaterThan(0);
+  const firstEnds = before.findIndex((line, i) => i > 0 && line === 'save' && circles(before.slice(0, i)).length === 4);
+  expect(after.slice(0, firstEnds)).toEqual(before.slice(0, firstEnds));
+  expect(after.slice(firstEnds + added)).toEqual(before.slice(firstEnds));
+  // The mark sits between the first route's dots and the second's.
+  expect(pathsOf(after.slice(firstEnds, firstEnds + added)).map((path) => path.kind)).toEqual(['moveTo', 'lineTo', 'lineTo']);
+  // A mark naming a point the route does not hold: nothing beyond the dots.
+  expect(dotted(marked(scene, [[{ point: 'not-a-point', end: 'end' }]]), viewing)).toEqual(before);
+});
+
+test('a point marked both as a start and an end draws the square, then the triangle over it (D274)', () => {
+  const scene = sceneOf();
+  const point = scene.routes[0]?.points[2];
+  const both = marked(scene, [[{ point: point?.id ?? '', end: 'start' }, { point: point?.id ?? '', end: 'end' }]]);
+  const lines = dotted(both, VIEWINGS['a zoom of 1']);
+  const at = circles(lines)[2] ?? { x: 0, y: 0 };
+  const paths = pathsOf(lines);
+  expect(paths.map((path) => path.kind)).toEqual(['rect', 'moveTo', 'lineTo', 'lineTo']);
+  near([paths[0]?.x, paths[0]?.y], [at.x - 5.6, at.y - 5.6], 'square');
+  near([paths[1]?.x, paths[1]?.y], [at.x, at.y - 7], 'apex');
+});

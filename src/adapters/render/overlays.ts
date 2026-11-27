@@ -147,6 +147,46 @@ export function guideDot(context: DrawContext, at: Place, radius: number, colour
   });
 }
 
+/** Fill the path in `colour` at full alpha, then edge it white `edge` wide (v3's glyph ink and outline). */
+function inkAndEdge(context: DrawContext, colour: string, edge: number): void {
+  context.fillStyle = colour;
+  context.fill();
+  context.strokeStyle = '#ffffff';
+  context.lineWidth = edge;
+  context.stroke();
+}
+
+/**
+ * A point the author marked as a start, drawn while paused (CORE-06, D274 part 1): v3's entry glyph
+ * (`v3/src/services/NetworkEditService.js`:1236–1259), a triangle apex up of radius r, points (x, y − r),
+ * (x + 0.87r, y + 0.5r), (x − 0.87r, y + 0.5r), filled in the route's colour and edged white. The caller hands the
+ * radius (v3's 7, :940), the edge (v3's 1.5) and the colour.
+ */
+export function startMark(context: DrawContext, at: Place, radius: number, colour: string, edge: number): void {
+  if (!finite(at.x, at.y, radius, edge) || radius <= 0 || edge <= 0) return;
+  own(context, () => {
+    context.moveTo(at.x, at.y - radius);
+    context.lineTo(at.x + radius * 0.87, at.y + radius * 0.5);
+    context.lineTo(at.x - radius * 0.87, at.y + radius * 0.5);
+    context.closePath();
+    inkAndEdge(context, colour, edge);
+  });
+}
+
+/**
+ * A point the author marked as an end, drawn while paused (CORE-06, D274 part 1): v3's exit glyph
+ * (`v3/src/services/NetworkEditService.js`:1236–1259), a square of side 1.6r centred on the point, filled in the
+ * route's colour and edged white. The caller hands the radius, the edge and the colour, as for `startMark`.
+ */
+export function endMark(context: DrawContext, at: Place, radius: number, colour: string, edge: number): void {
+  if (!finite(at.x, at.y, radius, edge) || radius <= 0 || edge <= 0) return;
+  own(context, () => {
+    const half = radius * 0.8;
+    context.rect(at.x - half, at.y - half, half * 2, half * 2);
+    inkAndEdge(context, colour, edge);
+  });
+}
+
 /** v3's "+" handle (:424–450): a disc of radius 9, or 11 when active, edged 1.5 wide, with a plus of round-capped arms. */
 export function plusHandle(context: DrawContext, at: Place, active: boolean, unit = 1, radius: number = (active ? 11 : 9) * unit): void {
   if (!finite(at.x, at.y, unit, radius) || unit <= 0 || radius <= 0) return;

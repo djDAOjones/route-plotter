@@ -2,7 +2,7 @@
 // `v3/src/services/RenderingService.js` at the lines named, read at a zoom of 1, where v3's clamp factor is 1.
 import { expect, test } from 'vitest';
 import type { DrawContext } from './context';
-import { greyDot, guideDot, hoverRing, plusHandle, selectionRect, selectionRing, unitAt } from './overlays';
+import { endMark, greyDot, guideDot, hoverRing, plusHandle, selectionRect, selectionRing, startMark, unitAt } from './overlays';
 import { Recorder } from './recorder';
 
 const AT = '@ 1 0 0 1 0 0';
@@ -199,4 +199,51 @@ test('the guide dot (CORE-06, D265): one disc filled in the colour handed, full 
   expect(context.state()).toEqual(before);
   for (const odd of [Number.NaN, 0, -1, Number.POSITIVE_INFINITY]) expect(drawn((each) => guideDot(each, { x: 30, y: 40 }, odd, '#d55e00'))).toEqual([]);
   expect(drawn((each) => guideDot(each, { x: 30, y: Number.NaN }, 3, '#d55e00'))).toEqual([]);
+});
+
+test("the start mark (CORE-06, D274): v3's entry glyph, a triangle apex up, filled in the colour handed, edged white; nothing for an unsound radius, edge or place", () => {
+  const mark: Shape = (context) => startMark(context, { x: 30, y: 40 }, 10, '#d55e00', 1.5);
+  expect(drawn(mark)).toEqual([
+    'save',
+    'beginPath',
+    `moveTo 30 30 ${AT}`,
+    `lineTo 38.7 45 ${AT}`,
+    `lineTo 21.3 45 ${AT}`,
+    `closePath ${AT}`,
+    `fill | ${AT} | fillStyle=#d55e00`,
+    `stroke | ${AT} | strokeStyle=#ffffff lineWidth=1.5`,
+    'beginPath',
+    'restore',
+  ]);
+  const context = dirtied();
+  const before = context.state();
+  expect(drawn(mark, context)).toEqual(drawn(mark));
+  expect(context.state()).toEqual(before);
+  for (const odd of [Number.NaN, 0, -1, Number.POSITIVE_INFINITY]) {
+    expect(drawn((each) => startMark(each, { x: 30, y: 40 }, odd, '#d55e00', 1.5))).toEqual([]);
+    expect(drawn((each) => startMark(each, { x: 30, y: 40 }, 10, '#d55e00', odd))).toEqual([]);
+  }
+  expect(drawn((each) => startMark(each, { x: Number.NaN, y: 40 }, 10, '#d55e00', 1.5))).toEqual([]);
+});
+
+test("the end mark (CORE-06, D274): v3's exit glyph, a square of side 1.6 × the radius on the point, filled in the colour handed, edged white; nothing for an unsound radius, edge or place", () => {
+  const mark: Shape = (context) => endMark(context, { x: 30, y: 40 }, 10, '#d55e00', 1.5);
+  expect(drawn(mark)).toEqual([
+    'save',
+    'beginPath',
+    `rect 22 32 16 16 ${AT}`,
+    `fill | ${AT} | fillStyle=#d55e00`,
+    `stroke | ${AT} | strokeStyle=#ffffff lineWidth=1.5`,
+    'beginPath',
+    'restore',
+  ]);
+  const context = dirtied();
+  const before = context.state();
+  expect(drawn(mark, context)).toEqual(drawn(mark));
+  expect(context.state()).toEqual(before);
+  for (const odd of [Number.NaN, 0, -1, Number.POSITIVE_INFINITY]) {
+    expect(drawn((each) => endMark(each, { x: 30, y: 40 }, odd, '#d55e00', 1.5))).toEqual([]);
+    expect(drawn((each) => endMark(each, { x: 30, y: 40 }, 10, '#d55e00', odd))).toEqual([]);
+  }
+  expect(drawn((each) => endMark(each, { x: 30, y: Number.NaN }, 10, '#d55e00', 1.5))).toEqual([]);
 });
