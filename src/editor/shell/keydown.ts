@@ -25,11 +25,17 @@
 // listener for any pointer press on the page (heard first, in the capture phase, so an Undo button's press meets the
 // burst closed) and for the focus leaving where it was (`focusout`).
 //
+// Brief 135 (brief 130's CB and CD): Shift+F10 or the ContextMenu key, with focus in the preview, no typed text and no
+// dialog, ends a nudge burst and opens the point's menu on the last-selected point (dom.ts point 9, `openMenuByKey`);
+// the key is taken only when it opened. It has no entry in the key table (Help unchanged: D264 is the owner's). The menu
+// is the "menu" in the Escape order above: its own listener takes every key pressed inside it, Escape included, and
+// stops it there (kit/ContextMenu.tsx point 3), so this listener never hears a key meant for the menu.
+//
 // A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).
 //
 // Single-key shortcuts (D183, WCAG 2.2's 2.1.4) are read at each key from the session's switch, on to begin with and
 // held for the visit; Help shows and sets it.
-import { cancelDrag, dragOpen, editKey, endNudge, escapeClears } from '../canvas/dom';
+import { cancelDrag, dragOpen, editKey, endNudge, escapeClears, isMenuKey, openMenuByKey } from '../canvas/dom';
 import { dispatchKey, type FocusKind, type KeyDispatch, type PressPlace } from './dispatch';
 import type { PageSession } from './session';
 
@@ -86,6 +92,14 @@ export function listenForKeys(
 ): () => void {
   const onKeyDown = (event: KeyboardEvent): void => {
     const place = placeOf(event.target);
+    // The point's menu by its key (brief 135; dom.ts point 9): Shift+F10 or the ContextMenu key on the preview.
+    if (isMenuKey(event) && !place.typing && !place.dialogOpen && event.target instanceof Element && event.target.closest('.preview') !== null) {
+      endNudge();
+      if (openMenuByKey()) {
+        event.preventDefault();
+        return;
+      }
+    }
     const escape = () => cancelDrag() || escapeClears(event, place, dragOpen(), store);
     const edit: KeyDispatch['edit'] = (action, repeat, key) => editKey(action, repeat, store, dragOpen(), key, undefined, announce);
     const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject, escape, edit, endNudge });

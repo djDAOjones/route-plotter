@@ -44,9 +44,18 @@
 //    scrolling (`touch-action: none`), so a finger draws as a mouse does. The drawer's hover (previewLogic.ts, point 4d)
 //    is handed to the binding (brief 118, ruling T): a resting mouse or pen sets it, and the drawer draws the hovered
 //    point's ring or the hovered stretch over its halo (D208) when that point or line is the selected route's.
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+// 7. CORE-06, chat G1b (brief 135; brief 130's CB and CD; D267 (a), provisional): the point's menu. The binding is
+//    handed `menu`: a right-click on a point, or Shift+F10 / the ContextMenu key on the selected one (keydown.ts), opens
+//    it, the point selected first (dom.ts point 9); the items are built then from the store (../canvas/menu.ts
+//    `pointMenu`) and drawn by the kit's menu (../kit/ContextMenu.tsx), in a portal outside this box, named "Point
+//    actions". An item chosen runs as one undo step (`runItem`); the menu closes and focus comes back to the box. Only
+//    the menu's Delete is said aloud, by the store's hook, as the Delete key's is (D268); the other items say nothing
+//    (D269 is the next orchestrator's).
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { compose, type Surface } from '../../player/compose';
-import { bindCanvas } from '../canvas/dom';
+import { bindCanvas, type MenuOpen } from '../canvas/dom';
+import { pointMenu, runItem, type MenuItem, type PointMenu } from '../canvas/menu';
+import { ContextMenu } from '../kit/ContextMenu';
 import type { Store } from '../store/store';
 import { MAC } from './keydown';
 import { canvasSize, frameShape, recordingPaint, type Drawer, type FrameInputs } from './previewLogic';
@@ -64,6 +73,8 @@ export interface PreviewProps {
 
 /** The canvas's spoken name (1.1.1). */
 export const PREVIEW_NAME = 'Route animation preview';
+/** The point's menu's name (point 7): v3's "Waypoint actions" (wiringControllers.js 788) with "point" for "waypoint"; provisional. */
+export const POINT_MENU_NAME = 'Point actions';
 
 /** The least height the box takes, in `vh`, when the room left is smaller (point 5). */
 export const PREVIEW_LEAST_VH = 30;
@@ -150,6 +161,11 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
     return `${String(width)} / ${String(height)}`;
   };
   const aspect = useSyncExternalStore(subscribe, shape, shape);
+  // The point's menu (point 7): what it shows and where, numbered so each opening draws it afresh.
+  const [menu, setMenu] = useState<{ readonly built: PointMenu; readonly at: MenuOpen['at']; readonly serial: number } | null>(null);
+  const openings = useRef(0);
+  const choose = useCallback((item: MenuItem) => { runItem(store, item); }, [store]);
+  const close = useCallback(() => { setMenu(null); }, []);
 
   useEffect(() => {
     const element = canvas.current;
@@ -158,8 +174,14 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
     // The paint (point 3) and what the last frame was drawn with (point 6): previewLogic.ts's `recordingPaint`, whose
     // geometry is unknown until a paint's record overlay runs (brief 115, ruling V).
     const painting = recordingPaint(element, (request) => compose(context, request));
+    const openMenu = (open: MenuOpen) => {
+      const built = pointMenu(store.getState(), open.route, open.point);
+      if (built === null) return;
+      openings.current += 1;
+      setMenu({ built, at: open.at, serial: openings.current });
+    };
     drawer.attach({ paint: painting.paint, surface });
-    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: MAC, hover: drawer.hover });
+    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: MAC, hover: drawer.hover, menu: openMenu });
 
     let box = { width: 0, height: 0 };
     const measure = () => {
@@ -203,9 +225,12 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
   // As wide as the slot, and no wider than the room left (or the least, if more) times the shape (point 5).
   const width = `min(100%, calc(max(var(--preview-room, 0px), ${String(PREVIEW_LEAST_VH)}vh) * ${aspect}))`;
   return (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- D245: the owner chose `application` for this one box, a canvas the pointer draws on with one tab stop; the strict set counts that role as not interactive.
+    <>
+    {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- D245: the owner chose `application` for this one box, a canvas the pointer draws on with one tab stop; the strict set counts that role as not interactive. */}
     <div ref={boxRef} className="preview" role="application" aria-label={PREVIEW_NAME} tabIndex={0} style={{ aspectRatio: aspect, width }}>
       <canvas ref={canvas} className="preview__canvas" style={{ touchAction: 'none' }} />
     </div>
+    {menu && <ContextMenu key={menu.serial} label={POINT_MENU_NAME} items={menu.built.items} at={menu.at} opener={boxRef} onChoose={choose} onClose={close} />}
+    </>
   );
 }

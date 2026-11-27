@@ -2923,6 +2923,146 @@ export default {
       },
     },
     {
+      // 2.1.1, 4.1.2, 2.4.3 (CORE-06, brief 135; brief 130's CF; D267 (a), provisional): the point's menu. In pen-drawn,
+      // as edit-keys begins (Tab to the preview box, End, Escape). The status region's every text is kept from here.
+      // (1) A right-click on the first tap (the lead's start): a menu named "Point actions" shows, in document.body and
+      // not inside .preview, its top left at the click (within 2 px), focus on its first item; its items read, in order,
+      // "Mark as start", "Mark as end", "Set lead start" (aria-disabled, described by "This point is already where the
+      // lead starts."), "Make bend", "Delete", a separator before Delete; the point is selected (its ring over 50).
+      // (2) ArrowDown moves to the second item, ArrowUp twice wraps to the last, Home to the first, End to the last,
+      // ArrowDown wraps to the first; Escape closes it, focus is back on the box and the point still ringed (an Escape
+      // that reached the editor would have cleared it). (3) Shift+F10 on the box: the menu opens just right of the point
+      // (its left 0 to 30 px right of the tap, its top within 2 px), focus on its first item; ArrowDown three times and
+      // Enter on "Make bend": the menu closes, focus is on the box, and the point reads as a bend as the 2.5.2 journey
+      // reads one: its grey dot (3 or more dark pixels within 2 px, where the stop read under 3) and the canvas changed.
+      // The stop's orange marker beyond the point is not read: the line's round cap draws orange 1 to 3 px beyond it
+      // too, as far as the stop's marker reached, so it does not tell a stop from a bend at 1280 wide (brief 136,
+      // PROBE-136/probe-ray.jsonl). One Undo draws the whole canvas as before. (4)
+      // Shift+F10, Enter on "Mark as start": the menu closes; opened again, its first item reads "Remove start mark" (no
+      // drawing reads a route's marks yet, so nothing on the canvas is claimed for it); Escape, one Undo, opened again it
+      // reads "Mark as start" again. (5) Shift+F10, ArrowDown twice to "Set lead start": focus is on it; Enter, Space and
+      // a click on it leave the menu open, focus on it and the canvas as before; Escape. (6) After the status comes back
+      // to empty, Shift+F10, End, Enter on "Delete": the point's marker and the line no longer read, the status comes to
+      // "Point deleted"; one Undo draws the canvas as before. Over the whole run the status said nothing but "Undo" and
+      // "Point deleted" (the other items are silent: D269). Faults that fail it (brief 136, PROBE-136/mut-*.txt): (y) the
+      // menu mounted inside .preview fails (1); (z) focus not returned on Escape fails (2); (aa) an item that is off
+      // still run (and the menu closed) fails (5); (af) "Make bend" not dispatched fails (3). It claims nothing for 2.5.7
+      // (G2's "Move", D250) nor for the marks' drawing.
+      name: 'point-menu',
+      method: 'keyboard',
+      rows: ['2.1.1', '4.1.2', '2.4.3'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const hash = async () => (await pixels(page)).hash;
+        const press = async (key) => { await page.keyboard.press(key); await settle(); };
+        const MENU = '[role=menu]';
+        const shown = () => page.locator(MENU).count().then((n) => n === 1);
+        const focusedItem = () => page.evaluate(() => { const e = document.activeElement; return e?.getAttribute('role') === 'menuitem' ? e.getAttribute('aria-label') : null; });
+        const dark = () => page.locator(CANVAS).evaluate((c, [fx, fy]) => {
+          const ctx = c.getContext('2d'); const [cx, cy] = [Math.floor(fx * c.width), Math.floor(fy * c.height)];
+          const reach = Math.max(2, Math.round(2 * (c.width / c.getBoundingClientRect().width))); let n = 0;
+          for (let dy = -reach; dy <= reach; dy += 1) for (let dx = -reach; dx <= reach; dx += 1) { const [r, g, b, a] = ctx.getImageData(cx + dx, cy + dy, 1, 1).data; if (a > 100 && r < 140 && g < 140 && b < 140) n += 1; }
+          return n;
+        }, first);
+        const keys = { wrong: [] }, names = { wrong: [] }, order = { wrong: [] };
+        let tabs = 0;
+        while (!(await focusOn(page, PREVIEW)) && tabs < 8) { await page.keyboard.press('Tab'); tabs += 1; }
+        if (!(await focusOn(page, PREVIEW))) keys.wrong.push('eight presses of Tab did not reach the preview box');
+        await press('End');
+        await press('Escape');
+        await page.locator(STATUS).evaluate((s) => { window.__said = []; new MutationObserver(() => { window.__said.push(s.textContent ?? ''); }).observe(s, { childList: true, characterData: true, subtree: true }); });
+        const box = await page.locator(CANVAS).boundingBox();
+        const tap = { x: box.x + box.width * first[0], y: box.y + box.height * first[1] };
+        // (1) A right-click on the first point.
+        await page.mouse.click(tap.x, tap.y, { button: 'right' });
+        await settle();
+        const menu = (await shown()) ? await page.locator(MENU).evaluate((m) => {
+          const r = m.getBoundingClientRect();
+          const items = [...m.querySelectorAll('[role=menuitem]')].map((e) => ({ name: e.getAttribute('aria-label'), off: e.getAttribute('aria-disabled') === 'true', reason: document.getElementById(e.getAttribute('aria-describedby') ?? '')?.textContent ?? null, wrapper: e.parentElement?.getAttribute('role') }));
+          const apart = m.querySelector('[role=separator]')?.nextElementSibling?.querySelector('[role=menuitem]')?.getAttribute('aria-label') ?? null;
+          return { name: m.getAttribute('aria-label'), inBody: m.parentElement === document.body, inPreview: m.closest('.preview') !== null, left: r.left, top: r.top, items, apart };
+        }) : null;
+        const ITEMS = ['Mark as start', 'Mark as end', 'Set lead start', 'Make bend', 'Delete'];
+        const LEAD = 'This point is already where the lead starts.';
+        if (menu === null) names.wrong.push('a right-click on the first point showed no menu');
+        else {
+          if (menu.name !== 'Point actions') names.wrong.push(`the menu was named ${JSON.stringify(menu.name)}`);
+          if (!menu.inBody || menu.inPreview) order.wrong.push(`the menu stood ${menu.inPreview ? 'inside .preview' : 'outside document.body'}`);
+          if (Math.abs(menu.left - tap.x) > 2 || Math.abs(menu.top - tap.y) > 2) order.wrong.push(`the menu's top left was (${menu.left}, ${menu.top}), not at the click (${tap.x}, ${tap.y})`);
+          const read = menu.items.map((i) => i.name);
+          if (JSON.stringify(read) !== JSON.stringify(ITEMS)) names.wrong.push(`its items read ${JSON.stringify(read)}`);
+          const offs = menu.items.filter((i) => i.off).map((i) => `${i.name}: ${i.reason}`);
+          if (JSON.stringify(offs) !== JSON.stringify([`Set lead start: ${LEAD}`])) names.wrong.push(`its items that are off read ${JSON.stringify(offs)}`);
+          if (menu.items.some((i) => i.wrapper !== 'none') || menu.apart !== 'Delete') names.wrong.push(`its wrappers or separator were not as built (${JSON.stringify(menu.items.map((i) => i.wrapper))}, apart ${menu.apart})`);
+        }
+        if ((await focusedItem()) !== 'Mark as start') order.wrong.push(`on opening, focus was on ${JSON.stringify(await focusedItem())}, not "Mark as start"`);
+        if ((await ringsAt(page, [first]))[0] <= 50) names.wrong.push('the right-clicked point was not ringed');
+        // (2) The arrows, Home, End, then Escape.
+        const walk = [];
+        for (const key of ['ArrowDown', 'ArrowUp', 'ArrowUp', 'Home', 'End', 'ArrowDown']) { await page.keyboard.press(key); walk.push(await focusedItem()); }
+        const WALK = ['Mark as end', 'Mark as start', 'Delete', 'Mark as start', 'Delete', 'Mark as start'];
+        if (JSON.stringify(walk) !== JSON.stringify(WALK)) keys.wrong.push(`ArrowDown, ArrowUp twice, Home, End and ArrowDown went to ${JSON.stringify(walk)}`);
+        await press('Escape');
+        if (await shown()) keys.wrong.push('Escape left the menu open');
+        if (!(await focusOn(page, PREVIEW))) order.wrong.push('after Escape focus was not back on the preview box');
+        if ((await ringsAt(page, [first]))[0] <= 50) keys.wrong.push('after Escape the point was no longer ringed');
+        // (3) Shift+F10, then "Make bend".
+        const before = await hash();
+        const stopDark = await dark();
+        await press('Shift+F10');
+        const at = (await shown()) ? await page.locator(MENU).evaluate((m) => { const r = m.getBoundingClientRect(); return { left: r.left, top: r.top }; }) : null;
+        if (at === null) keys.wrong.push('Shift+F10 on the box showed no menu');
+        else if (at.left - tap.x < 0 || at.left - tap.x > 30 || Math.abs(at.top - tap.y) > 2) order.wrong.push(`by Shift+F10 the menu's top left was (${at.left}, ${at.top}), not just right of the point (${tap.x}, ${tap.y})`);
+        if ((await focusedItem()) !== 'Mark as start') order.wrong.push('by Shift+F10 focus was not on its first item');
+        for (let n = 0; n < 3; n += 1) await page.keyboard.press('ArrowDown');
+        if ((await focusedItem()) !== 'Make bend') keys.wrong.push(`three ArrowDowns reached ${JSON.stringify(await focusedItem())}, not "Make bend"`);
+        await press('Enter');
+        const bend = { open: await shown(), box: await focusOn(page, PREVIEW), dark: await dark(), hash: await hash() };
+        if (bend.open || stopDark >= 3 || bend.dark < 3 || bend.hash === before) keys.wrong.push(`after "Make bend" the menu was ${bend.open ? '' : 'not '}open and ${bend.dark} pixel(s) within 2 px of the point read dark (a bend's grey dot reads at least 3; ${stopDark} read so as a stop, before)${bend.hash === before ? ', and the canvas was as before' : ''}`);
+        if (!bend.box) order.wrong.push('after "Make bend" focus was not on the box');
+        await press(UNDO);
+        if ((await hash()) !== before) keys.wrong.push('after one Undo the canvas was not as before "Make bend"');
+        // (4) "Mark as start", read by the menu's words.
+        const firstItem = async () => { await press('Shift+F10'); const w = await focusedItem(); await press('Escape'); return w; };
+        await press('Shift+F10');
+        await press('Enter');
+        const marked = await firstItem();
+        await press(UNDO);
+        const unmarked = await firstItem();
+        if (marked !== 'Remove start mark' || unmarked !== 'Mark as start') keys.wrong.push(`after "Mark as start" the menu's first item read ${JSON.stringify(marked)}, and after one Undo ${JSON.stringify(unmarked)}`);
+        // (5) The item that is off.
+        const still = await hash();
+        await press('Shift+F10');
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('ArrowDown');
+        const off = [await focusedItem()];
+        await press('Enter'); off.push((await shown()) && (await focusedItem()));
+        await press('Space'); off.push((await shown()) && (await focusedItem()));
+        { const b = await page.getByRole('menuitem', { name: 'Set lead start' }).boundingBox({ timeout: 2000 }).catch(() => null); if (b) await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2); } await settle(); off.push((await shown()) && (await focusedItem()));
+        if (off.some((w) => w !== 'Set lead start') || (await hash()) !== still) keys.wrong.push(`"Set lead start" on the lead's start: focus read ${JSON.stringify(off)} after reaching it, Enter, Space and a click (the menu open throughout), and the canvas ${(await hash()) === still ? 'as before' : 'changed'}`);
+        await press('Escape');
+        // (6) Delete from the menu.
+        if (!(await page.waitForFunction((s) => (document.querySelector(s)?.textContent ?? '') === '', STATUS, { timeout: 12000 }).then(() => true, () => false))) keys.wrong.push('the status did not come back to empty before Delete');
+        const kept = await hash();
+        await press('Shift+F10');
+        await page.keyboard.press('End');
+        await press('Enter');
+        const gone = { mark: await markBeyond(page, first, second), line: orange(await strokeAt(page, 0.5, 0.5), 40), said: await comesToWords(page, 'Point deleted') };
+        if (gone.mark || gone.line || !gone.said) keys.wrong.push(`after "Delete" the marker read ${gone.mark ? '' : 'not '}beyond the point, the line ${gone.line ? '' : 'not '}at the middle, and "Point deleted" was ${gone.said ? '' : 'not '}said`);
+        await press(UNDO);
+        if ((await hash()) !== kept) keys.wrong.push('after one Undo the canvas was not as before "Delete"');
+        if (!(await focusOn(page, PREVIEW))) order.wrong.push('focus was not on the preview box at the end');
+        const said = [...new Set((await page.evaluate(() => window.__said)).filter(Boolean))];
+        if (said.some((w) => w !== 'Undo' && w !== 'Point deleted')) names.wrong.push(`the status said ${JSON.stringify(said)}; only "Undo" and "Point deleted" were expected`);
+        const how = `in pen-drawn, focus moved to the preview box by Tab (${tabs} presses), End, Escape`;
+        record('2.1.1', !keys.wrong.length, keys.wrong.length ? keys.wrong.join('; ') : `${how}: Shift+F10 opens the point's menu; ArrowDown, ArrowUp, Home and End move and wrap; Escape closes it with the point still selected; "Make bend" by Enter draws the point's grey dot (${bend.dark} dark pixels within 2 px, ${stopDark} as a stop) and changes the canvas, and one Undo draws the canvas as before; "Mark as start" makes the menu read "Remove start mark", undone by one Undo; "Set lead start" on the lead's start stays open on Enter, Space and a click and changes nothing; "Delete" removes the point and its line, says "Point deleted", and one Undo draws the canvas as before`);
+        record('4.1.2', !names.wrong.length, names.wrong.length ? names.wrong.join('; ') : `${how}: a right-click on the point shows a menu named "Point actions" with menuitems ${JSON.stringify(ITEMS)} (wrappers of role none, a separator before Delete), "Set lead start" aria-disabled and described by "${LEAD}"; the point is selected; over the run the status said only ${JSON.stringify(said)}`);
+        record('2.4.3', !order.wrong.length, order.wrong.length ? order.wrong.join('; ') : `${how}: the menu stands in document.body, outside .preview, at the click (or just right of the point by Shift+F10), focus on its first item on opening; after Escape, an item chosen, and at the end focus is on the preview box`);
+      },
+    },
+    {
       // 2.5.2 (CORE-06, brief 121, ruling AD; brief 120's "+", D208's hover): a bend inserted by the "+" at a line's
       // middle, completed on the up, undone in one step, and aborted by moving off before the up. It takes the place of
       // brief 119's line-hover-halo, whose three hover readings it carries in as regression checks: the 2.5.2 credit
