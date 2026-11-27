@@ -3000,7 +3000,8 @@ export default {
           const apart = m.querySelector('[role=separator]')?.nextElementSibling?.querySelector('[role=menuitem]')?.getAttribute('aria-label') ?? null;
           return { name: m.getAttribute('aria-label'), inBody: m.parentElement === document.body, inPreview: m.closest('.preview') !== null, left: r.left, top: r.top, items, apart };
         }) : null;
-        const ITEMS = ['Mark as start', 'Mark as end', 'Set lead start', 'Make bend', 'Delete'];
+        // Brief 138 (DA; D270): "Move" stands before Delete; the walk by the arrows, Home and End is unchanged by it.
+        const ITEMS = ['Mark as start', 'Mark as end', 'Set lead start', 'Make bend', 'Move', 'Delete'];
         const LEAD = 'This point is already where the lead starts.';
         if (menu === null) names.wrong.push('a right-click on the first point showed no menu');
         else {
