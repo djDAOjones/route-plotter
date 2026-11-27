@@ -693,8 +693,9 @@ describe('when a frame is drawn (ruling 4)', () => {
     const added = paused.slice(exported.length);
     const [whole, hidden] = routes.map((route) => route.settings.line.colour);
     expect(routes[1]?.settings.line.appearance).toBe('hidden');
-    // One guide stroke a route, the route's colour, half alpha, dashed: the hidden line's too.
-    const guides = added.filter((line) => line.startsWith('stroke ') && line.includes('globalAlpha=0.5') && line.includes('lineDash=6,4'));
+    // One guide stroke a route, the route's colour, full alpha (D266's answer; the recorder writes no alpha at 1), dashed:
+    // the hidden line's too.
+    const guides = added.filter((line) => line.startsWith('stroke ') && !line.includes('globalAlpha=') && line.includes('lineDash=6,4'));
     expect(guides.map((line) => [whole, hidden].findIndex((colour) => line.includes(`strokeStyle=${colour ?? 'none'}`)))).toEqual([0, 1]);
     // A dot at every point, the copy joined to no line included: the 200 × 100 picture fitted into 1920 × 1080 is
     // 9.6 times, 60 px down, so (0.2, 0.3) is (384, 348); each a fill in its route's colour, radius 3, no edge.

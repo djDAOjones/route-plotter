@@ -3,11 +3,12 @@
 // sees them. The overlay reads each route from the frame it draws over (screen.routes: the shape and timeline every
 // module was handed, and the settings the frame's scene holds) and draws in screen pixels, after every layer.
 //
-// A hidden line's faint guide (§6: "hidden, when the editor draws a faint guide that no export draws"). The line's own
+// A hidden line's guide (§6: "hidden, when the editor draws a faint guide that no export draws"). The line's own
 // evaluation draws nothing under `hidden` (../model/line.ts), so the guide is drawn from the very shape each module
 // was handed this frame, for each route named whose line the frame holds hidden, line by line in the route's order.
-// v3's editor showed every line, so v3 has no figure for it: the look is v4's (D157), the route's own colour at half
-// alpha, 2 wide, dashed 6 on and 4 off, with round joins, every length in screen pixels by unitAt(screen.zoom) as
+// v3's editor showed every line, so v3 has no figure for it: the look is v4's (D157; its alpha by D266), the route's own
+// colour at full alpha (D266's answer, "Full colour, dashed": D157's half alpha read 1.86:1 against the preview box, under
+// WCAG 1.4.11's 3:1), still 2 wide, dashed 6 on and 4 off, with round joins, every length in screen pixels by unitAt(screen.zoom) as
 // v3's other editor helpers are (D153), so it reads as a guide and never as the line, whatever the line's own
 // thickness. Each line is its own run, broken where a place is not a number. A route named twice is drawn once, an
 // id the frame does not hold draws nothing; nothing is kept between frames (D147).
@@ -28,7 +29,7 @@
 // (segmentHitTest.js:115–128); pointAt reads a line's samples by index as v3 does (core/geometry/path.ts).
 //
 // The guide while paused (CORE-06, D265, Joe's D251 "End, plus a guide (d)"; brief 128, BP and BQ): `guideOverlay`
-// draws the same faint guide for every line of every route named, whatever the line's look (hidden, trail, shrinks or
+// draws the same guide for every line of every route named, whatever the line's look (hidden, trail, shrinks or
 // whole), from the shape and timeline each module was handed this frame, with no progress and no time, so the whole
 // route shows however far the animation has reached. The editor asks for it, for every route, only while the preview
 // is not playing (../../../editor/shell/previewLogic.ts, point 4d), and no longer asks `lineOverlay` for its
@@ -41,8 +42,8 @@ import type { ImagePoint } from '../../../core/geometry/units';
 import type { Dash } from '../model/line';
 import { DASHES } from './line';
 
-/** The guide's look (D157): alpha, width and dash in screen pixels at a zoom of 1. */
-const GUIDE = { alpha: 0.5, width: 2, dash: [6, 4] } as const;
+/** The guide's look (D157; its alpha by D266's answer, full where it was half): alpha, width and dash in screen pixels at a zoom of 1. */
+const GUIDE = { alpha: 1, width: 2, dash: [6, 4] } as const;
 
 /** v3's hovered-leg glow (RenderingService.js:343–348): white, then HOVER_ACCENT_GLOW (constants.js:49), each wider than the line by so much at a zoom of 1. */
 const GLOW = [
@@ -190,7 +191,7 @@ export function guideOverlay(routeIds: readonly string[]): Overlay {
 }
 
 /**
- * The overlay that follows the lines of the routes named, as the frame holds each: a hidden line's faint guide, then
+ * The overlay that follows the lines of the routes named, as the frame holds each: a hidden line's guide, then
  * the hovered stretch's glow, the stretch redrawn over it as its own line (D208), and its "+". Called with ids alone it draws the guides and nothing more.
  */
 export function lineOverlay(routeIds: readonly string[], { hovered = null }: LineChoices = {}): Overlay {

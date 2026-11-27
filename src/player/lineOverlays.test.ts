@@ -124,7 +124,7 @@ function both(scene: Scene, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS], r
   return { plain, added: edited.lines.slice(plain.lines.length) };
 }
 
-test('a hidden line’s guide runs on screen where the line would run, thin, dashed and half see-through, at each zoom', () => {
+test('a hidden line’s guide runs on screen where the line would run, thin and dashed, at full alpha (D266), at each zoom', () => {
   for (const [name, viewing] of Object.entries(VIEWINGS)) {
     for (const shape of [{}, { branch: true }]) {
       const hidden = sceneOf(['hidden'], shape);
@@ -134,13 +134,14 @@ test('a hidden line’s guide runs on screen where the line would run, thin, das
       const whole = draw(request(shown, { viewing: viewing.viewing }), viewing.catalogue).lines;
       sameCourse(places(added), places(whole), name);
       expect(places(added).length, name).toBeGreaterThan(20);
-      // One stroke for the route, in its colour, by unitAt (D153; D157): 2 wide, dashed 6 on and 4 off, at half alpha.
+      // One stroke for the route, in its colour, by unitAt (D153; D157): 2 wide, dashed 6 on and 4 off, at full alpha
+      // (D266's answer; the recorder writes no alpha at 1).
       const unit = unitAt(viewing.zoom);
       const [stroke, ...more] = strokes(added);
       expect(more, name).toEqual([]);
       expect(widthOf(stroke), name).toBe(2 * unit);
       expect(stroke, name).toContain(`lineDash=${6 * unit},${4 * unit}`);
-      expect(stroke, name).toContain('globalAlpha=0.5');
+      expect(stroke, name).not.toContain('globalAlpha=');
       expect(stroke, name).toContain(hidden.routes[0]?.settings.line.colour ?? 'none');
     }
   }
@@ -276,14 +277,14 @@ test('D208: over its glow the hovered stretch is redrawn whole as its own line: 
     expect(whole.length, name).toBeGreaterThan(5);
     alongside(part.redrawn, whole, name);
   }
-  // A hidden line's stretch is redrawn in the guide's look, over its halo: 2 wide, dashed 6 on and 4 off, half alpha.
+  // A hidden line's stretch is redrawn in the guide's look, over its halo: 2 wide, dashed 6 on and 4 off, full alpha (D266).
   const viewing = VIEWINGS['a zoom of 1'];
   const hidden = sceneOf(['hidden']);
   const [, , , again, ...rest] = strokes(both(hidden, viewing, hidden.routes, { hovered: hover(hidden) }).added);
   expect(rest).toEqual([]);
   expect(widthOf(again)).toBe(2);
   expect(again).toContain('lineDash=6,4');
-  expect(again).toContain('globalAlpha=0.5');
+  expect(again).not.toContain('globalAlpha=');
   expect(again).not.toContain('lineCap=round');
   expect(again).toContain(hidden.routes[0]?.settings.line.colour ?? 'none');
   // Nothing hovered: no redraw, as no glow.
