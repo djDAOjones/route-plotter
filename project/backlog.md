@@ -42,6 +42,8 @@
 
 ### The full PM-Skills suite on v4 — the owner's word of 2026-11-27
 
+- [ ] STACK-06 — Item B: the editor's .tsx boundary rule, the composer's owner, the `isComposing` stand-down, and the boundary rules' "provisional" words off — since 2026-11-27 — (from: STACK-05, 2026-11-27)
+
 ### Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
 
 - [ ] CORE-06 — Drawing routes on the canvas — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
@@ -49,6 +51,7 @@
 - [ ] GATE-04 — The accessibility run's port is settable — since 2026-11-24 — (from: PLAN-9, 2026-11-24)
 - [~] GATE-05 — v4's gate in place of v3's; frozen v3 locked — since 2026-11-25
 - [ ] CORE-14 — A label fades over half a second of the lead's moving, whatever the pauses — since 2026-11-24 — (from: PLAN-9, 2026-11-24)
+- [ ] CORE-16 — The settings slider on the browser's own range input, its trial before CORE-13 or CORE-12 adds a slider — since 2026-11-27 — (from: STACK-05, 2026-11-27)
 - [ ] CORE-13 — The settings the drawing already takes — since 2026-11-20 — (from: CORE-04, 2026-11-20)
 - [ ] CORE-12 — The core panels and the points list — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
 - [ ] CORE-07 — The scene outline — since 2026-11-18 — (from: PLAN-6, 2026-11-18)

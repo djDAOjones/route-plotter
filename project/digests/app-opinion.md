@@ -87,11 +87,14 @@ His conventions signed on 2026-10-28, his three lines quoted;
   best, but I want the full suite minus promptfoo".
 - 2026-11-27, dated and temporary — "focused controls never
   remount": the editor's Carbon slider is remounted, focused or not,
-  its focus taken back, after a key that moved it, a refused report or
-  a new setting (`src/editor/kit/SettingSlider.tsx`:24-38, 103-113,
-  226). Fixed before CORE-13 or CORE-12 adds another slider, by a
-  trial of the browser's own range input in that file; until then this
-  exception stands. Decision STACK-05, 2026-11-27, on the same word.
+  after a key that moved it, a new setting or scale, and a report that
+  changed nothing held when no press is active and its thumb stands
+  off (`src/editor/kit/SettingSlider.tsx`:24-38, 103-113, 158-161,
+  226); the new one takes the focus back only where the old one had it
+  and nothing else has it since (:118-126, :169-173). Fixed before
+  CORE-13 or CORE-12 adds another slider, by a trial of the browser's
+  own range input in that file (CORE-16); until then this exception
+  stands. Decision STACK-05, 2026-11-27, on the same word.
 
 ## Deeper references
 
