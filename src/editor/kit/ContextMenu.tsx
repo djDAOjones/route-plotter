@@ -3,7 +3,8 @@
 // v3/src/components/ContextMenu.js (Carbon's `Menu` is ruled out: PROBE-130/carbon-menu-probe.md). Its claim:
 // 1. It is drawn in a portal into `document.body`, outside the preview's set-aside box (tests/a11y/helpers.ts 326 to
 //    328: a control's graphic inside `.preview` fails that row), fixed at the place handed (client pixels) and clamped
-//    to the window, 8 px in from each edge (`clampMenu`), before it is painted.
+//    to the window, 8 px in from each edge (`clampMenu`), before it is painted. Its height is held inside the window
+//    (menuLook.css) and its items scroll inside it when they do not fit; the focused item is brought into view.
 // 2. Roles: a `menu` named by its `label`; each item a `menuitem` button in a wrapper of role `none` (divs: the lint's strict set refuses `menu` on a list), named by its words
 //    (`aria-label`); an item set apart has a `separator` before it. An item with a reason is off: `aria-disabled`, still
 //    focusable, its reason a visible line inside it that describes it (`aria-describedby`), as v3's.
@@ -12,7 +13,8 @@
 //    that is on hands it to `onChoose` and closes; one that is off does nothing and the menu stays open (v3 lines 69 to
 //    72). Every keydown inside is stopped there, by a listener on the menu itself, so none reaches the editor's
 //    listener on `document` (keydown.ts: else its Delete or arrows would act on the selection under the menu).
-// 4. A pointer press outside it, the window's blur, a scroll anywhere and a resize close it (v3 lines 105 to 110). On
+// 4. A pointer press outside it, the window's blur, a scroll anywhere outside it and a resize close it (v3 lines 105 to
+//    110); a scroll of its own items does not. On
 //    every close with focus inside the menu, focus goes back to `opener` (the preview box), so Escape and Tab leave
 //    focus where the menu was opened from; a press outside then moves focus as that press would.
 // 5. While it is open, the browser's own menu is refused on it and on its opener (a keyboard ContextMenu key may fire
@@ -118,7 +120,10 @@ export function MenuList<I extends ContextMenuItem>({ label, items, at, opener, 
       const step = menuStep(event.key, index, all.length);
       if (step.kind === 'keep') return;
       event.preventDefault();
-      if (step.kind === 'focus') all[step.index]?.focus();
+      if (step.kind === 'focus') {
+        all[step.index]?.focus();
+        all[step.index]?.scrollIntoView({ block: 'nearest' });
+      }
       else if (step.kind === 'choose') choose(index);
       else close();
     };
@@ -127,6 +132,9 @@ export function MenuList<I extends ContextMenuItem>({ label, items, at, opener, 
       if (button) choose(buttons().indexOf(button));
     };
     const onOutside = (event: Event) => {
+      if (!(event.target instanceof Node) || !element.contains(event.target)) close();
+    };
+    const onScroll = (event: Event) => {
       if (!(event.target instanceof Node) || !element.contains(event.target)) close();
     };
     const onOwnMenu = (event: Event) => {
@@ -138,7 +146,7 @@ export function MenuList<I extends ContextMenuItem>({ label, items, at, opener, 
     document.addEventListener('pointerdown', onOutside, true);
     document.addEventListener('contextmenu', onOwnMenu, true);
     window.addEventListener('blur', close);
-    window.addEventListener('scroll', close, true);
+    window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', close);
     return () => {
       element.removeEventListener('keydown', onKey);
@@ -146,7 +154,7 @@ export function MenuList<I extends ContextMenuItem>({ label, items, at, opener, 
       document.removeEventListener('pointerdown', onOutside, true);
       document.removeEventListener('contextmenu', onOwnMenu, true);
       window.removeEventListener('blur', close);
-      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', close);
     };
   }, [items, opener, onChoose, onClose]);

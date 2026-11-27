@@ -2945,7 +2945,12 @@ export default {
       // reads "Mark as start" again. (5) Shift+F10, ArrowDown twice to "Set lead start": focus is on it; Enter, Space and
       // a click on it leave the menu open, focus on it and the canvas as before; Escape. (6) After the status comes back
       // to empty, Shift+F10, End, Enter on "Delete": the point's marker and the line no longer read, the status comes to
-      // "Point deleted"; one Undo draws the canvas as before. Over the whole run the status said nothing but "Undo" and
+      // "Point deleted"; one Undo draws the canvas as before. (7) A window 200 px high at the usual width (set before the
+      // menu opens: a resize closes it), the page scrolled to put the first point mid-window, a right-click on it: End
+      // reaches "Delete", whose box and the menu's lie inside the window, the item the element at its own centre; a wheel
+      // scroll up over the menu scrolls its items and leaves it open; a scroll of the page outside it closes it (Codex
+      // finding 1 on brief 136's range; red on a1e37df: Delete from 200 to 244 px, PROBE-137/red-run-a1e37df.txt); the
+      // window is put back. Over the whole run the status said nothing but "Undo" and
       // "Point deleted" (the other items are silent: D269). Faults that fail it (brief 136, PROBE-136/mut-*.txt): (y) the
       // menu mounted inside .preview fails (1); (z) focus not returned on Escape fails (2); (aa) an item that is off
       // still run (and the menu closed) fails (5); (af) "Make bend" not dispatched fails (3). It claims nothing for 2.5.7
@@ -3055,12 +3060,60 @@ export default {
         if (gone.mark || gone.line || !gone.said) keys.wrong.push(`after "Delete" the marker read ${gone.mark ? '' : 'not '}beyond the point, the line ${gone.line ? '' : 'not '}at the middle, and "Point deleted" was ${gone.said ? '' : 'not '}said`);
         await press(UNDO);
         if ((await hash()) !== kept) keys.wrong.push('after one Undo the canvas was not as before "Delete"');
+        // (7) A short window (Codex finding 1 on brief 136's range): 200 px high at the usual width, set before the menu
+        // opens (a resize closes it), the page scrolled to put the first point mid-window, then a right-click on it.
+        const view = page.viewportSize();
+        await page.setViewportSize({ width: view.width, height: 200 });
+        await settle();
+        await page.locator(CANVAS).evaluate((c, [, fy]) => {
+          for (let n = 0; n < 2; n += 1) {
+            const r = c.getBoundingClientRect(); const dy = r.top + r.height * fy - window.innerHeight / 2;
+            let e = c.parentElement;
+            while (e && e !== document.body && !(e.scrollHeight > e.clientHeight && /(auto|scroll)/.test(getComputedStyle(e).overflowY))) e = e.parentElement;
+            (e && e !== document.body ? e : document.scrollingElement).scrollBy(0, dy);
+          }
+        }, first);
+        await settle();
+        const low = await page.locator(CANVAS).boundingBox();
+        await page.mouse.click(low.x + low.width * first[0], low.y + low.height * first[1], { button: 'right' });
+        await settle();
+        const short = { open: await shown() };
+        if (short.open) {
+          await press('End');
+          short.end = await focusedItem();
+          short.fit = await page.evaluate(() => {
+            const m = document.querySelector('[role=menu]'); const e = document.activeElement; const r = e.getBoundingClientRect(); const b = m.getBoundingClientRect();
+            const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('[role=menuitem]') === e;
+            return { item: [r.top, r.bottom], menu: [b.top, b.bottom], height: window.innerHeight, inside: r.top >= 0 && r.bottom <= window.innerHeight && b.top >= 0 && b.bottom <= window.innerHeight, hit, scrolled: m.scrollTop };
+          });
+          const mid = await page.locator(MENU).boundingBox();
+          await page.mouse.move(mid.x + mid.width / 2, mid.y + mid.height / 2);
+          await page.mouse.wheel(0, -120);
+          await settle();
+          short.wheel = { open: await shown(), scrolled: (await shown()) ? await page.locator(MENU).evaluate((m) => m.scrollTop) : null };
+          await page.locator(CANVAS).evaluate((c) => {
+            let e = c.parentElement;
+            while (e && e !== document.body && !(e.scrollHeight > e.clientHeight && /(auto|scroll)/.test(getComputedStyle(e).overflowY))) e = e.parentElement;
+            (e && e !== document.body ? e : document.scrollingElement).scrollBy(0, -10);
+          });
+          await settle();
+          short.outside = await shown();
+        }
+        if (!short.open) keys.wrong.push('in a window 200 px high a right-click on the point showed no menu');
+        else {
+          const f = short.fit;
+          if (short.end !== 'Delete' || !f.inside || !f.hit) keys.wrong.push(`in a window ${f.height} px high, End reached ${JSON.stringify(short.end)}, its box from ${f.item[0]} to ${f.item[1]} px and the menu's from ${f.menu[0]} to ${f.menu[1]} px${f.hit ? '' : ', the item not the element at its own centre'}`);
+          if (!short.wheel.open || !(short.wheel.scrolled < f.scrolled)) keys.wrong.push(`in the short window a wheel scroll up over the menu left it ${short.wheel.open ? `open, its scroll ${f.scrolled} then ${short.wheel.scrolled}` : 'closed'}`);
+          else if (short.outside) keys.wrong.push('in the short window a scroll of the page outside the menu left it open');
+        }
+        await page.setViewportSize(view);
+        await settle();
         if (!(await focusOn(page, PREVIEW))) order.wrong.push('focus was not on the preview box at the end');
         const said = [...new Set((await page.evaluate(() => window.__said)).filter(Boolean))];
         if (said.some((w) => w !== 'Undo' && w !== 'Point deleted')) names.wrong.push(`the status said ${JSON.stringify(said)}; only "Undo" and "Point deleted" were expected`);
         const how = `in pen-drawn, focus moved to the preview box by Tab (${tabs} presses), End, Escape`;
         const wrong = [...names.wrong, ...keys.wrong];
-        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `${how}: a right-click on the point shows a menu named "Point actions" with menuitems ${JSON.stringify(ITEMS)} (wrappers of role none, a separator before Delete), "Set lead start" aria-disabled and described by "${LEAD}"; the point is selected; over the run the status said only ${JSON.stringify(said)}; Shift+F10 opens it; ArrowDown, ArrowUp, Home and End move and wrap; Escape closes it with the point still selected; "Make bend" by Enter draws the point's grey dot (${bend.dark} dark pixels within 2 px, ${stopDark} as a stop) and changes the canvas, and one Undo draws the canvas as before; "Mark as start" makes the menu read "Remove start mark", undone by one Undo; "Set lead start" on the lead's start stays open on Enter, Space and a click and changes nothing; "Delete" removes the point and its line, says "Point deleted", and one Undo draws the canvas as before`);
+        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `${how}: a right-click on the point shows a menu named "Point actions" with menuitems ${JSON.stringify(ITEMS)} (wrappers of role none, a separator before Delete), "Set lead start" aria-disabled and described by "${LEAD}"; the point is selected; over the run the status said only ${JSON.stringify(said)}; Shift+F10 opens it; ArrowDown, ArrowUp, Home and End move and wrap; Escape closes it with the point still selected; "Make bend" by Enter draws the point's grey dot (${bend.dark} dark pixels within 2 px, ${stopDark} as a stop) and changes the canvas, and one Undo draws the canvas as before; "Mark as start" makes the menu read "Remove start mark", undone by one Undo; "Set lead start" on the lead's start stays open on Enter, Space and a click and changes nothing; "Delete" removes the point and its line, says "Point deleted", and one Undo draws the canvas as before; in a window 200 px high End reaches "Delete" inside the window (its box from ${short.fit?.item.join(' to ')} px), a wheel over the menu scrolls it and leaves it open, and a scroll of the page outside closes it`);
         record('2.4.3', !order.wrong.length, order.wrong.length ? order.wrong.join('; ') : `${how}: the menu stands in document.body, outside .preview, at the click (or just right of the point by Shift+F10), focus on its first item on opening; after Escape, an item chosen, and at the end focus is on the preview box`);
       },
     },
