@@ -8,7 +8,7 @@
 // brief 125, and a test holds them kept for a slider and a menu item.
 //
 // Its claim:
-// 0. STACK-06 (item B; the app opinion's editor rule, project/digests/app-opinion.md: "keys stand down in text entry,
+// 0. STACK-06 (item B; the app opinion's editor rule, the record's app-opinion digest: "keys stand down in text entry,
 //    composition and widgets"): a key pressed while an input method is composing a character (`isComposing`: Japanese,
 //    Chinese or Korean input, a dead key) is the input method's. The dispatch stands down before anything else: it
 //    runs no action, calls no `escape`, `edit` or `endNudge` and nothing of the store or the transport, and takes

@@ -38,7 +38,7 @@
 //
 // A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).
 //
-// STACK-06 (item B; the app opinion's editor rule, project/digests/app-opinion.md: "keys stand down in text entry,
+// STACK-06 (item B; the app opinion's editor rule, the record's app-opinion digest: "keys stand down in text entry,
 // composition and widgets"): a key pressed while an input method composes a character is the input method's. This
 // listener stands down at its head, before the menu key's branch, so Shift+F10 or the ContextMenu key cannot open the
 // point's menu mid-composition and no nudge burst is ended; the dispatch stands down too (its point 0), for any other

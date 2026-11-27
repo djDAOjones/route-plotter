@@ -3,7 +3,7 @@
 // the 2D context, the composer and everything that draws, binds or measures, and gives back what lets it all go.
 // Moved whole from Preview.tsx's effect (its points 2 to 4 and 6), with nothing it does changed.
 // Its claim:
-// 1. The app opinion's editor rule (project/digests/app-opinion.md): React "may mount the canvas host, never draws";
+// 1. The app opinion's editor rule (the record's app-opinion digest): React "may mount the canvas host, never draws";
 //    "one owner per DOM subtree". This is the canvas's owner: the only editor file that imports the composer, and the
 //    boundary rule `editor-screens-never-draw` (.dependency-cruiser.cjs) keeps every editor React file from importing
 //    it, the player's transport or the renderer's kit itself.

@@ -12,7 +12,7 @@
 //    the box, not the canvas, so the canvas never takes Tab itself (2.1.2). Nothing in it is live: Play, Pause and
 //    "Animation complete" are said by the status region already. The theme's focus ring rings it, as it rings anything
 //    with a tab stop.
-// 2. to 4. STACK-06 (item B; the app opinion, project/digests/app-opinion.md: React "may mount the canvas host, never
+// 2. to 4. STACK-06 (item B; the app opinion, the record's app-opinion digest: React "may mount the canvas host, never
 //    draws"): the drawing is the canvas's owner, mountCanvas.ts, a plain TypeScript file (its points 2 to 6: the
 //    drawer attached and detached, the paint and its surface, the size drawn and its watchers, the pointer's binding).
 //    This screen renders the canvas and hands it there at mount, with its own menu openers and `pause`; it imports
