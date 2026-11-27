@@ -74,7 +74,7 @@ export interface PreviewProps {
 /** The canvas's spoken name (1.1.1). */
 export const PREVIEW_NAME = 'Route animation preview';
 /** The point's menu's name (point 7): v3's "Waypoint actions" (wiringControllers.js 788) with "point" for "waypoint"; provisional. */
-export const POINT_MENU_NAME = 'Point actions';
+const POINT_MENU_NAME = 'Point actions';
 
 /** The least height the box takes, in `vh`, when the room left is smaller (point 5). */
 export const PREVIEW_LEAST_VH = 30;
