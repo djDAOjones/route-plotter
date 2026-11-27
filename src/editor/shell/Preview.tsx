@@ -48,9 +48,10 @@
 //    handed `menu`: a right-click on a point, or Shift+F10 / the ContextMenu key on the selected one (keydown.ts), opens
 //    it, the point selected first (dom.ts point 9); the items are built then from the store (../canvas/menu.ts
 //    `pointMenu`) and drawn by the kit's menu (../kit/ContextMenu.tsx), in a portal outside this box, named "Point
-//    actions". An item chosen runs as one undo step (`runItem`); the menu closes and focus comes back to the box. Only
-//    the menu's Delete is said aloud, by the store's hook, as the Delete key's is (D268); the other items say nothing
-//    (D269 is the next orchestrator's).
+//    actions". An item chosen runs as one undo step (`runItem`); the menu closes and focus comes back to the box. Each
+//    item that makes a step is said aloud by the store's hook in ../canvas/words.ts: Delete as the Delete key's is
+//    (D268), the others in D269's words ("Start marked", "Point made a bend" and so on; provisional); an item that is off
+//    makes no step and says nothing. The line's menu (point 9) is said the same way, in D271's words.
 // 8. CORE-06, chat G2b (brief 139; brief 138's DD; D242, D250 (a), D270, provisional until the owner objects): the
 //    menu's "Move" is handed to the binding (../canvas/dom.ts point 10, `startMove`), told the session's `announce` for
 //    its prompt; the menu has already closed and given focus back to the box. While a wait is open (`watchMove`) the
