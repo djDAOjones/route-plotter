@@ -2953,7 +2953,9 @@ export default {
       // window is put back. Over the whole run the status said nothing but "Undo" and
       // "Point deleted" (the other items are silent: D269). Faults that fail it (brief 136, PROBE-136/mut-*.txt): (y) the
       // menu mounted inside .preview fails (1); (z) focus not returned on Escape fails (2); (aa) an item that is off
-      // still run (and the menu closed) fails (5); (af) "Make bend" not dispatched fails (3). It claims nothing for 2.5.7
+      // still run (and the menu closed) fails (5); (af) "Make bend" not dispatched fails (3); (brief 137,
+      // PROBE-137/mut-*.txt) (ag) the menu's maximum height removed fails (7) at End (Delete from 200 to 244 px); (ah) the
+      // scroll listener closing on a scroll inside the menu fails (7): End's own scroll into view closes it. It claims nothing for 2.5.7
       // (G2's "Move", D250) nor for the marks' drawing.
       name: 'point-menu',
       method: 'keyboard',
@@ -3082,10 +3084,13 @@ export default {
           await press('End');
           short.end = await focusedItem();
           short.fit = await page.evaluate(() => {
-            const m = document.querySelector('[role=menu]'); const e = document.activeElement; const r = e.getBoundingClientRect(); const b = m.getBoundingClientRect();
+            const m = document.querySelector('[role=menu]'); const e = document.activeElement; if (m === null || !m.contains(e)) return null;
+            const r = e.getBoundingClientRect(); const b = m.getBoundingClientRect();
             const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('[role=menuitem]') === e;
             return { item: [r.top, r.bottom], menu: [b.top, b.bottom], height: window.innerHeight, inside: r.top >= 0 && r.bottom <= window.innerHeight && b.top >= 0 && b.bottom <= window.innerHeight, hit, scrolled: m.scrollTop };
           });
+        }
+        if (short.open && short.fit !== null) {
           const mid = await page.locator(MENU).boundingBox();
           await page.mouse.move(mid.x + mid.width / 2, mid.y + mid.height / 2);
           await page.mouse.wheel(0, -120);
@@ -3100,6 +3105,7 @@ export default {
           short.outside = await shown();
         }
         if (!short.open) keys.wrong.push('in a window 200 px high a right-click on the point showed no menu');
+        else if (short.fit === null) keys.wrong.push(`in a window 200 px high End closed the menu (focus on ${JSON.stringify(short.end)})`);
         else {
           const f = short.fit;
           if (short.end !== 'Delete' || !f.inside || !f.hit) keys.wrong.push(`in a window ${f.height} px high, End reached ${JSON.stringify(short.end)}, its box from ${f.item[0]} to ${f.item[1]} px and the menu's from ${f.menu[0]} to ${f.menu[1]} px${f.hit ? '' : ', the item not the element at its own centre'}`);
