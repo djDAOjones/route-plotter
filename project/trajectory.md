@@ -8,6 +8,10 @@
      items the canon record shipped before the migration, in v3's form;
      their why is in the frozen canon decision log (history.md). -->
 
+## The full PM-Skills suite on v4 — the owner's word of 2026-11-27
+
+- STACK-05 — the record reads the owner's app opinion: the pack's digest at v5.0.3 with two dated exceptions, routed by its By-task row; the profile's Gate, App opinion, Standards and Budget lines; Set 1 his by D57; record-only, by pull request (2026-11-27) — see decisions
+
 ## pm-skills 5.0.3 — the owner's word of 2026-11-26
 
 - REFRESH-503 — the project runs pm-skills 5.0.3: the version stamp, three tools and three verbs replaced as a set, the accessibility pack's three tools kept by decision, no pack, no signed file touched, no local edit lost, by pull request (2026-11-26) — see decisions

@@ -17,7 +17,7 @@ The owner asked for the full PM-Skills suite, minus promptfoo, in operation on v
 
 Updated: 2026-11-27
 
-Next step: Write the record: the digest with its two exceptions, the profile's and rules' lines, Set 1, the decision entry and the wishes.
+Next step: None in this item; item B of the owner's order follows: the editor's .tsx boundary rule, the composer's plain-TypeScript owner and the key dispatcher's `isComposing` stand-down.
 
 Open question: None.
 
@@ -32,3 +32,4 @@ Open question: None.
 ## Notes
 
 - 2026-11-27 — Opened by sub-chat 146 on the owner's order of 2026-11-27, typed to the parent chat: "put the full PM-Skills suite, minus promptfoo, into operation on v4 exactly as the decisions file sets out: CORE-06's close first, then item A, then item B, before any other v4 code; the rest in its order. The decisions in that file are made, on my delegation; do not ask me them again."
+- 2026-11-27 — Built and closed by STACK-05's pull request, record-only: the digest from PM-Skills' tag v5.0.3 (d599678), read by `gh api`, equal byte for byte to the draft copy in the lane before its two exceptions were added; the lines as the lane's draft, with the budgets at 625 and 800; the digest is 779 words against its row's 650, a warning, the signed row unchanged. What stays unwritten, the Accessibility testing line and its row, is STACK-05.1.

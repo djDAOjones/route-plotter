@@ -42,8 +42,6 @@
 
 ### The full PM-Skills suite on v4 — the owner's word of 2026-11-27
 
-- [~] STACK-05 — The app opinion routed into the record — since 2026-11-27
-
 ### Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
 
 - [ ] CORE-06 — Drawing routes on the canvas — since 2026-11-18 — (from: PLAN-6, 2026-11-18)
