@@ -438,3 +438,93 @@ test('a branch hovered glows along the branch alone; the line’s width is its l
   expect(line).toBe(6);
   expect(strokes(edited.lines.slice(big.lines.length)).map(widthOf)).toEqual([line + 9, line + 4, line]); // the redraw at the line's own
 });
+
+/** The guide while paused (D265) for every route of the scene, as the editor asks for it: the lines it adds to the frame. */
+function guided(scene: Scene, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS]): string[] & { line: { x: number; y: number }[] } {
+  const ids = scene.routes.map((route) => route.id);
+  const plain = draw(request(scene, { viewing: viewing.viewing }), viewing.catalogue);
+  const edited = draw(request(scene, { viewing: viewing.viewing, overlays: [OVERLAY_MAKERS.guideLines(ids)] }), viewing.catalogue);
+  expect(edited.lines.slice(0, plain.lines.length)).toEqual(plain.lines);
+  expect(edited.reports).toEqual([]);
+  // The scene's routes are drawn `whole`, so the frame without overlays holds every line where it runs.
+  return Object.assign(edited.lines.slice(plain.lines.length), { line: places(plain.lines) });
+}
+
+/** Each stroke of `lines` with the places of the path it strokes. */
+function sections(lines: readonly string[]): { stroke: string; at: { x: number; y: number }[] }[] {
+  const out: { stroke: string; at: { x: number; y: number }[] }[] = [];
+  let path: string[] = [];
+  for (const line of lines) {
+    if (line.startsWith('stroke ')) {
+      out.push({ stroke: line, at: places(path) });
+      path = [];
+    } else path.push(line);
+  }
+  return out;
+}
+
+/** The scene's one route (a stop, a bend, two stops, and a fifth point off the third), its lead start set to the point at `startAt` (none for null). */
+function ledFrom(startAt: number | null): Scene {
+  const scene = sceneOf(['whole'], { branch: true });
+  return { ...scene, routes: scene.routes.map((route) => ({ ...route, leadStart: startAt === null ? null : (route.points[startAt]?.id ?? '') })) };
+}
+
+test('paused, the lines the lead does not walk are drawn dotted at the route’s full colour, the walked ones dashed as before (D273 part 1)', () => {
+  for (const [name, viewing] of Object.entries(VIEWINGS)) {
+    const unit = unitAt(viewing.zoom);
+    const colour = ledFrom(0).routes[0]?.settings.line.colour ?? 'none';
+    // Led from the second point, the one-way first line points back at it: the lead cannot reach it.
+    const route = ledFrom(1).routes[0];
+    expect(route?.lines.length, name).toBe(4);
+    const [walked, dotted, ...more] = sections(guided(ledFrom(1), viewing));
+    expect(more, name).toEqual([]);
+    // The walked lines: one stroke in the guide's look, as before (2 wide, dashed 6 on and 4 off, butt caps).
+    expect(widthOf(walked?.stroke), name).toBe(2 * unit);
+    expect(walked?.stroke, name).toContain(`lineDash=${6 * unit},${4 * unit}`);
+    expect(walked?.stroke, name).not.toContain('lineCap=');
+    expect(walked?.stroke, name).toContain(colour);
+    // The left-out line: one stroke, 3 wide, round dots every 8, round joins, the route's colour at full alpha.
+    expect(widthOf(dotted?.stroke), name).toBe(3 * unit);
+    expect(dotted?.stroke, name).toContain(`lineDash=0,${8 * unit}`);
+    expect(dotted?.stroke, name).toContain('lineCap=round');
+    expect(dotted?.stroke, name).toContain('lineJoin=round');
+    expect(dotted?.stroke, name).not.toContain('globalAlpha=');
+    expect(dotted?.stroke, name).toContain(colour);
+    // Together they run where the route's lines run, drawn whole by the line's own layer in the same frame.
+    sameCourse([...(walked?.at ?? []), ...(dotted?.at ?? [])], guided(ledFrom(1), viewing).line, name);
+    expect(dotted?.at.length, name).toBeGreaterThan(1);
+    expect(walked?.at.length, name).toBeGreaterThan(dotted?.at.length ?? 0);
+  }
+  // At a zoom of 1 the dotted course is the first line's (it lies left of the second point; every walked line right of it).
+  const [walked, dotted] = sections(guided(ledFrom(1), VIEWINGS['a zoom of 1']));
+  const left = Math.max(...(dotted?.at ?? []).map(({ x }) => x));
+  expect(left).toBeLessThanOrEqual(Math.min(...(walked?.at ?? []).map(({ x }) => x)) + 0.5);
+});
+
+test('a route the lead walks whole draws one dashed stroke as before; a loop’s closing line is dotted; with no lead start every line is dotted', () => {
+  const viewing = VIEWINGS['a zoom of 1'];
+  const unit = unitAt(viewing.zoom);
+  const plainly = guided(ledFrom(0), viewing);
+  const whole = sections(plainly);
+  expect(whole).toHaveLength(1);
+  sameCourse(whole[0]?.at ?? [], plainly.line, 'the lead walks every line');
+  expect(whole[0]?.stroke).toContain(`lineDash=${6 * unit},${4 * unit}`);
+  expect(whole[0]?.stroke).not.toContain('lineCap=');
+  // A loop: the last stop joined back to the first by a one-way line; the lead walks round and leaves that line out.
+  const plain = ledFrom(0);
+  const closed = { ...plain, routes: plain.routes.map((route) => ({ ...route, lines: [...route.lines, newLine(() => 'closer', route.points[3]?.id ?? '', route.points[0]?.id ?? '')] })) };
+  const looped = guided(closed, viewing);
+  const [walked, closer, ...more] = sections(looped);
+  expect(more).toEqual([]);
+  sameCourse([...(walked?.at ?? []), ...(closer?.at ?? [])], looped.line, 'the loop');
+  expect(walked?.stroke).toContain(`lineDash=${6 * unit},${4 * unit}`);
+  expect(closer?.stroke).toContain(`lineDash=0,${8 * unit}`);
+  expect(closer?.at.length).toBeGreaterThan(1);
+  // No lead start: the lead walks nothing, so the one stroke is dotted.
+  const unled = guided(ledFrom(null), viewing);
+  const none = sections(unled);
+  expect(none).toHaveLength(1);
+  expect(none[0]?.stroke).toContain(`lineDash=0,${8 * unit}`);
+  expect(none[0]?.stroke).toContain('lineCap=round');
+  sameCourse(none[0]?.at ?? [], unled.line, 'no lead start');
+});

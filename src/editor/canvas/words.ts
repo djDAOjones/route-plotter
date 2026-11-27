@@ -14,6 +14,13 @@
 // waits, so it has its own lines: on choosing it, the prompt (one for a point alone, another when the selection comes
 // with it), and on a cancel by Escape, a right-click or leaving the preview, "Move cancelled". The place itself is a
 // "Move point" or "Move points" step, so the store's hook says "Point moved" or "N points moved" as above.
+//
+// Lines the lead does not walk (D273 part 1, (c), provisional until the owner answers): after a step (an edit, an Undo
+// or a Redo) that changes how many lines the lead does not walk, counted over every route (../../core/timing/walk.ts's
+// leftOut), the step's own words gain ". " and one sentence: "1 line the lead does not walk", "N lines the lead does
+// not walk", or "The lead walks every line" when the count falls to 0; a step that says nothing of its own says the
+// sentence alone. When the count stands, the words are exactly as above. Select all and "Move"'s own lines are not steps.
+import { leadWalk } from '../../core/timing/walk';
 import type { Current } from '../store/command';
 import type { Stepped } from '../store/store';
 
@@ -80,11 +87,25 @@ export function editWords(label: string, before: Current, after: Current): strin
   }
 }
 
-/** What a step the store tells of says: a commit its edit's words, an Undo "Undo" and a Redo "Redo", whatever the step. */
+/** How many lines the lead does not walk, over every route (D273). */
+const leftOutOf = (current: Current): number =>
+  current.project.scene.routes.reduce((n, route) => n + leadWalk(route).leftOut.length, 0);
+
+/** The sentence for `n` lines the lead does not walk (D273): "The lead walks every line" for none. */
+function leftOutWords(n: number): string {
+  if (n === 0) return 'The lead walks every line';
+  return n === 1 ? '1 line the lead does not walk' : `${String(n)} lines the lead does not walk`;
+}
+
+/**
+ * What a step the store tells of says: a commit its edit's words, an Undo "Undo" and a Redo "Redo", whatever the step;
+ * then, when the step changes how many lines the lead does not walk, that count's sentence (D273).
+ */
 export function stepWords(step: Stepped): string | null {
-  if (step.kind === 'undo') return 'Undo';
-  if (step.kind === 'redo') return 'Redo';
-  return editWords(step.label, step.before, step.after);
+  const own = step.kind === 'undo' ? 'Undo' : step.kind === 'redo' ? 'Redo' : editWords(step.label, step.before, step.after);
+  const now = leftOutOf(step.after);
+  if (now === leftOutOf(step.before)) return own;
+  return own === null ? leftOutWords(now) : `${own}. ${leftOutWords(now)}`;
 }
 
 /** Select all's line, `n` the points the selection now holds: "All N points selected", one point as a step says it. */

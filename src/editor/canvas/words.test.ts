@@ -1,6 +1,6 @@
 // CORE-06 (brief 133, rulings CR and CT; D268; brief 137, D269 for the point's menu): the words the status area says after each edit, and select all's line.
 import { describe, expect, it } from 'vitest';
-import { newPoint, newRoute, newScene, type IdSource, type Route } from '../../core/model/scene';
+import { newLine, newPoint, newRoute, newScene, type IdSource, type Route } from '../../core/model/scene';
 import type { Current } from '../store/command';
 import { NOTHING_SELECTED } from '../store/selection';
 import type { Stepped } from '../store/store';
@@ -125,6 +125,52 @@ describe('what a step says (D268)', () => {
       expect(stepWords(step(label, 'undo'))).toBe('Undo');
       expect(stepWords(step(label, 'redo'))).toBe('Redo');
     }
+  });
+});
+
+describe('the lines the lead does not walk (D273 part 1, provisional)', () => {
+  /** A route of three points A, B, C joined by `lines` ("A>B" one way, "A-B" both ways), its lead start at `lead`. */
+  function led(lines: readonly string[], lead: 'A' | 'B' | 'C' | null): Route {
+    const route = routeOf([[0.1, 0.1], [0.5, 0.5], [0.9, 0.9]]);
+    const id = (name: string) => route.points['ABC'.indexOf(name)]?.id ?? '';
+    return {
+      ...route,
+      leadStart: lead === null ? null : id(lead),
+      lines: lines.map((spec, i) => ({ ...newLine(nextId, id(spec[0] ?? ''), id(spec[2] ?? '')), id: `line-${String(i)}`, direction: spec[1] === '-' ? 'both ways' : 'one way' })),
+    };
+  }
+  const step = (label: string, kind: Stepped['kind'], before: Current, after: Current): Stepped => ({ label, before, after, kind });
+  const walked = currentOf(led(['A>B'], 'A'));
+  const reversed = currentOf(led(['B>A'], 'A'));
+
+  it('a step that leaves a line out says so after its own words; its Undo says the lead walks every line; its Redo says it again', () => {
+    expect(stepWords(step('Reverse line', 'commit', walked, reversed))).toBe('Line reversed. 1 line the lead does not walk');
+    expect(stepWords(step('Reverse line', 'undo', reversed, walked))).toBe('Undo. The lead walks every line');
+    expect(stepWords(step('Reverse line', 'redo', walked, reversed))).toBe('Redo. 1 line the lead does not walk');
+  });
+
+  it('counts every line of every route, and says two or more in the plural', () => {
+    const chain = currentOf(led(['A>B', 'B>C'], 'A'));
+    const fromEnd = currentOf(led(['A>B', 'B>C'], 'C'));
+    expect(stepWords(step('Set lead start', 'commit', chain, fromEnd))).toBe('Lead start set. 2 lines the lead does not walk');
+    const looped = currentOf(led(['A>B', 'B>C', 'C>A'], 'A'), led(['A>B'], 'A'));
+    expect(stepWords(step('Reverse line', 'undo', fromEnd, looped))).toBe('Undo. 1 line the lead does not walk');
+    // One route gains a left-out line while another loses one: the count stands, so the words are as before.
+    expect(stepWords(step('Reverse line', 'commit', currentOf(led(['A>B'], 'A'), led(['B>A'], 'A')), currentOf(led(['B>A'], 'A'), led(['A>B'], 'A'))))).toBe('Line reversed');
+  });
+
+  it('a silent step that changes the count says the sentence alone', () => {
+    expect(stepWords(step('Nudge', 'commit', walked, reversed))).toBe('1 line the lead does not walk');
+    expect(stepWords(step('Nudge', 'commit', reversed, walked))).toBe('The lead walks every line');
+  });
+
+  it('a step that leaves the count as it was says exactly what it said before', () => {
+    expect(stepWords(step('Make line two-way', 'commit', walked, currentOf(led(['A-B'], 'A'))))).toBe('Line made two-way');
+    expect(stepWords(step('Reverse line', 'commit', reversed, reversed))).toBe('Line reversed');
+    expect(stepWords(step('Nudge', 'commit', reversed, reversed))).toBeNull();
+    expect(stepWords(step('Nudge', 'undo', walked, walked))).toBe('Undo');
+    // No lead start leaves every line out; a step that keeps it so adds nothing.
+    expect(stepWords(step('Add point', 'commit', currentOf(led(['A>B'], null)), currentOf(led(['B>A'], null))))).toBe('Point added');
   });
 });
 

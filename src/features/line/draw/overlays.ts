@@ -34,6 +34,14 @@
 // route shows however far the animation has reached. The editor asks for it, for every route, only while the preview
 // is not playing (../../../editor/shell/previewLogic.ts, point 4d), and no longer asks `lineOverlay` for its
 // selected-only guide, which this one replaces; `lineOverlay` keeps its guide for a caller that names routes.
+//
+// Lines the lead does not walk (CORE-06, D273 part 1, built as recommended (c) and provisional until the owner answers):
+// the guide draws each route's walked lines as above, one stroke, then the lines its lead never walks (the timeline's
+// walk.leftOut: a line that closes a loop, a line it cannot reach, every line with no lead start;
+// ../../../core/timing/walk.ts) as one more stroke in its own look, `LEFT_OUT`: the route's colour at full alpha (never
+// faded, as D266 ruled for the guide), 3 wide, round dots every 8, round joins, by unitAt(screen.zoom). It is paused
+// only, as the guide is; how such a line shows in play and in videos (D273 part 2) waits on the owner. A route the lead
+// walks whole is drawn exactly as before.
 import type { DrawContext } from '../../../adapters/render/context';
 import type { Frame } from '../../../adapters/render/layers';
 import { plusHandle, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
@@ -43,7 +51,10 @@ import type { Dash } from '../model/line';
 import { DASHES } from './line';
 
 /** The guide's look (D157; its alpha by D266's answer, full where it was half): alpha, width and dash in screen pixels at a zoom of 1. */
-const GUIDE = { alpha: 1, width: 2, dash: [6, 4] } as const;
+const GUIDE = { alpha: 1, width: 2, dash: [6, 4], cap: 'butt' } as const;
+
+/** A line the lead does not walk, in the guide (D273 part 1): full alpha, wider, and round dots every 8 (a dash of 0 under round caps), in screen pixels at a zoom of 1. */
+const LEFT_OUT = { alpha: 1, width: 3, dash: [0, 8], cap: 'round' } as const;
 
 /** v3's hovered-leg glow (RenderingService.js:343–348): white, then HOVER_ACCENT_GLOW (constants.js:49), each wider than the line by so much at a zoom of 1. */
 const GLOW = [
@@ -91,16 +102,16 @@ function trace(context: DrawContext, runs: readonly Place[][]): void {
 }
 
 /** The guide: one stroke of the route's runs, with every style it uses set here and put back after. */
-function guide(context: DrawContext, runs: readonly Place[][], colour: string, unit: number): void {
+function guide(context: DrawContext, runs: readonly Place[][], colour: string, unit: number, look: typeof GUIDE | typeof LEFT_OUT = GUIDE): void {
   context.save();
   try {
-    context.globalAlpha = GUIDE.alpha;
+    context.globalAlpha = look.alpha;
     context.globalCompositeOperation = 'source-over';
-    context.setLineDash(GUIDE.dash.map((length) => length * unit));
+    context.setLineDash(look.dash.map((length) => length * unit));
     context.lineDashOffset = 0;
-    context.lineCap = 'butt';
+    context.lineCap = look.cap;
     context.lineJoin = 'round';
-    context.lineWidth = GUIDE.width * unit;
+    context.lineWidth = look.width * unit;
     context.strokeStyle = colour;
     context.beginPath();
     trace(context, runs);
@@ -175,7 +186,8 @@ function stretchOf(hovered: HoveredLine, frame: Frame, screen: Screen, unit: num
 
 /**
  * The guide while paused (D265): every line of each route named, whatever its look, in the guide's look (D157), one
- * stroke a route, in the routes' order. A route named twice is drawn once; an id the frame does not hold draws nothing.
+ * stroke a route, in the routes' order; then the route's lines the lead does not walk, one more stroke in `LEFT_OUT`'s
+ * look (D273 part 1). A route named twice is drawn once; an id the frame does not hold draws nothing.
  */
 export function guideOverlay(routeIds: readonly string[]): Overlay {
   return (context: DrawContext, _frame: Frame, screen: Screen) => {
@@ -184,8 +196,15 @@ export function guideOverlay(routeIds: readonly string[]): Overlay {
     for (const id of new Set(routeIds)) {
       const route = screen.routes.get(id);
       if (route === undefined) continue;
-      const runs = route.shape.lines.flatMap((line) => runsOf(route.timeline.shapes.get(line.id)?.samples ?? [], screen));
-      if (runs.length > 0) guide(context, runs, route.settings.line.colour, unit);
+      const leftOut = new Set(route.timeline.walk.leftOut);
+      const runsFor = (left: boolean) =>
+        route.shape.lines
+          .filter((line) => leftOut.has(line.id) === left)
+          .flatMap((line) => runsOf(route.timeline.shapes.get(line.id)?.samples ?? [], screen));
+      const walked = runsFor(false);
+      if (walked.length > 0) guide(context, walked, route.settings.line.colour, unit);
+      const left = runsFor(true);
+      if (left.length > 0) guide(context, left, route.settings.line.colour, unit, LEFT_OUT);
     }
   };
 }
@@ -201,8 +220,15 @@ export function lineOverlay(routeIds: readonly string[], { hovered = null }: Lin
     for (const id of new Set(routeIds)) {
       const route = screen.routes.get(id);
       if (route === undefined || route.settings.line.appearance !== 'hidden') continue;
-      const runs = route.shape.lines.flatMap((line) => runsOf(route.timeline.shapes.get(line.id)?.samples ?? [], screen));
-      if (runs.length > 0) guide(context, runs, route.settings.line.colour, unit);
+      const leftOut = new Set(route.timeline.walk.leftOut);
+      const runsFor = (left: boolean) =>
+        route.shape.lines
+          .filter((line) => leftOut.has(line.id) === left)
+          .flatMap((line) => runsOf(route.timeline.shapes.get(line.id)?.samples ?? [], screen));
+      const walked = runsFor(false);
+      if (walked.length > 0) guide(context, walked, route.settings.line.colour, unit);
+      const left = runsFor(true);
+      if (left.length > 0) guide(context, left, route.settings.line.colour, unit, LEFT_OUT);
     }
     const stretch = hovered === null ? null : stretchOf(hovered, frame, screen, unit);
     if (stretch === null || hovered === null) return;
