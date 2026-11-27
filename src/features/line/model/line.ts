@@ -213,6 +213,23 @@ const alike = (a: LineStyle, b: LineStyle) => a.colour === b.colour && a.width =
  */
 const styleOf = ({ colour, thickness }: Settings): LineStyle => ({ colour, width: thickness, dash: 'solid' });
 
+/**
+ * D273 part 2 (iii), the owner's answer of 2026-11-27 ("Appear at either end"): under `grows`, a line the lead never
+ * walks shows whole once the lead has arrived at either of its ends along a walked line, and stays whole; one with
+ * neither end arrived at shows nothing. The lead start is never arrived at (no walked line ends there), so a loop's
+ * closing line shows when the lead arrives at its far end. Every other appearance keeps its way (D282): such a line
+ * shows as every line does before the lead reaches it.
+ */
+function leftOutProgress({ appearance }: Settings, { timeline, shape }: RouteInput<Settings>['route'], lead: RouteInput<Settings>['lead']): (lineId: string) => number {
+  const arrived = new Set<string>();
+  if (appearance === 'grows') for (const line of timeline.lines) if ((lead.progress.get(line.lineId) ?? 0) >= 1) arrived.add(line.to);
+  const ends = new Map(shape.lines.map((line) => [line.id, line]));
+  return (lineId) => {
+    const line = ends.get(lineId);
+    return line !== undefined && (arrived.has(line.from) || arrived.has(line.to)) ? 1 : 0;
+  };
+}
+
 function evaluate({ settings, route, lead, timeMs }: RouteInput<Settings>): Evaluation<LineDrawing> {
   const { appearance } = settings;
   if (appearance === 'hidden') return { ok: true, value: { strokes: [] } };
@@ -220,12 +237,13 @@ function evaluate({ settings, route, lead, timeMs }: RouteInput<Settings>): Eval
   const shown = appearance === 'trail' ? comet(settings.trailLength, timeline, lead, timeMs) : SHOWN[appearance];
   const style = styleOf(settings);
   const order = [...timeline.lines.map((line) => line.lineId), ...timeline.walk.leftOut];
+  const leftOut = leftOutProgress(settings, route, lead);
   const strokes: { points: ImagePoint[]; style: LineStyle }[] = [];
   for (const lineId of order) {
     const shape = timeline.shapes.get(lineId);
     if (shape === undefined) continue;
-    // A line the lead never walks is never passed: it shows as every line does before the lead reaches it.
-    const [from, to] = shown(lead.progress.get(lineId) ?? 0, lineId);
+    // A line the lead never walks has no progress of its own: `leftOut` gives it one (D273 part 2).
+    const [from, to] = shown(lead.progress.get(lineId) ?? leftOut(lineId), lineId);
     const points = between(shape.samples, from, to);
     if (points.length < 2) continue;
     const previous = strokes.at(-1);
