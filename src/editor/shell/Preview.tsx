@@ -51,9 +51,14 @@
 //    actions". An item chosen runs as one undo step (`runItem`); the menu closes and focus comes back to the box. Only
 //    the menu's Delete is said aloud, by the store's hook, as the Delete key's is (D268); the other items say nothing
 //    (D269 is the next orchestrator's).
+// 8. CORE-06, chat G2b (brief 139; brief 138's DD; D242, D250 (a), D270, provisional until the owner objects): the
+//    menu's "Move" is handed to the binding (../canvas/dom.ts point 10, `startMove`), told the session's `announce` for
+//    its prompt; the menu has already closed and given focus back to the box. While a wait is open (`watchMove`) the
+//    canvas shows a crosshair. Focus leaving the box for anywhere outside it cancels the wait (`cancelMove`, which says
+//    "Move cancelled"); the window's own blur is left to the binding, which ends it saying nothing.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { compose, type Surface } from '../../player/compose';
-import { bindCanvas, type MenuOpen } from '../canvas/dom';
+import { bindCanvas, cancelMove, startMove, watchMove, type MenuOpen, type Say } from '../canvas/dom';
 import { pointMenu, runItem, type MenuItem, type PointMenu } from '../canvas/menu';
 import { ContextMenu } from '../kit/ContextMenu';
 import type { Store } from '../store/store';
@@ -69,6 +74,8 @@ export interface PreviewProps {
   readonly subscribe: (listener: () => void) => () => void;
   /** The session's store, which the pen's taps change (point 6). */
   readonly store: Store;
+  /** The session's status area, told "Move"'s prompt (point 8); silent when not given. */
+  readonly announce?: Say;
 }
 
 /** The canvas's spoken name (1.1.1). */
@@ -151,7 +158,7 @@ const surface = (size: { width: number; height: number }): Surface => {
   return { context, image };
 };
 
-export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
+export function Preview({ drawer, inputs, subscribe, store, announce }: PreviewProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   // The box's shape: the video's, the scene's export width and height (point 5), as one string so a telling that leaves
@@ -164,8 +171,28 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
   // The point's menu (point 7): what it shows and where, numbered so each opening draws it afresh.
   const [menu, setMenu] = useState<{ readonly built: PointMenu; readonly at: MenuOpen['at']; readonly serial: number } | null>(null);
   const openings = useRef(0);
-  const choose = useCallback((item: MenuItem) => { runItem(store, item); }, [store]);
+  const choose = useCallback((item: MenuItem) => {
+    if (item.move !== null && item.reason === null) startMove(item.move, announce);
+    else runItem(store, item);
+  }, [store, announce]);
   const close = useCallback(() => { setMenu(null); }, []);
+  // "Move"'s wait (point 8): the crosshair while it is open; focus leaving the box cancels it.
+  const [moving, setMoving] = useState(false);
+  useEffect(() => watchMove(setMoving), []);
+  useEffect(() => {
+    const element = boxRef.current;
+    if (!element) return undefined;
+    const left = (event: FocusEvent) => {
+      const next = event.relatedTarget;
+      if (next instanceof Node && element.contains(next)) return;
+      if (!document.hasFocus()) return;
+      cancelMove();
+    };
+    element.addEventListener('focusout', left);
+    return () => {
+      element.removeEventListener('focusout', left);
+    };
+  }, []);
 
   useEffect(() => {
     const element = canvas.current;
@@ -228,7 +255,7 @@ export function Preview({ drawer, inputs, subscribe, store }: PreviewProps) {
     <>
     {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- D245: the owner chose `application` for this one box, a canvas the pointer draws on with one tab stop; the strict set counts that role as not interactive. */}
     <div ref={boxRef} className="preview" role="application" aria-label={PREVIEW_NAME} tabIndex={0} style={{ aspectRatio: aspect, width }}>
-      <canvas ref={canvas} className="preview__canvas" style={{ touchAction: 'none' }} />
+      <canvas ref={canvas} className="preview__canvas" style={moving ? { touchAction: 'none', cursor: 'crosshair' } : { touchAction: 'none' }} />
     </div>
     {menu && <ContextMenu key={menu.serial} label={POINT_MENU_NAME} items={menu.built.items} at={menu.at} opener={boxRef} onChoose={choose} onClose={close} />}
     </>

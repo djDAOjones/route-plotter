@@ -1079,11 +1079,11 @@ export default {
       // disabled with nothing to play, does nothing on any press. The timeline, a slider, does move on the down-event, as
       // a provisional scrub: Escape before the release aborts it (the position back where the press found it, focus
       // kept, and the moves and release after it change nothing), and the release completes it with no undo step.
-      // 2.5.7: the page has two dragging movements (CORE-06, brief 115). The timeline's, the thumb along the track, has a
-      // single-pointer alternative with the same result: a drag of the thumb completed at 70 % of the track, then, on a
-      // fresh page, a whole press on the track at the same point, the two positions compared. A point's drag on the
-      // preview has none yet: it does not meet 2.5.7, its single-pointer way is owed (D250, the owner's), and this row
-      // checks the timeline's drag only; no keyboard way is credited to 2.5.7. Every press goes through the pointer adapter, so a touch run can credit it. "Open project"
+      // 2.5.7: the page's dragging movements are the timeline's and the preview's two (a point's, a group's; CORE-06,
+      // briefs 115 and 122). The timeline's, the thumb along the track, has a single-pointer alternative with the same
+      // result: a drag of the thumb completed at 70 % of the track, then, on a fresh page, a whole press on the track at
+      // the same point, the two positions compared. This row checks the timeline's drag only; the preview's two have the
+      // point's menu "Move" then one click (D270), checked by point-move (brief 139); no keyboard way is credited to 2.5.7. Every press goes through the pointer adapter, so a touch run can credit it. "Open project"
       // (stage 6) opens the browser's file chooser on a whole press only, none on the down-event or on a press moved
       // off. The preview (CORE-06, brief 112): the pen's tap, read while held, after a press moved off and after a whole
       // press: a point on the up only, in one undo step. Any other control needs its
@@ -1284,7 +1284,7 @@ export default {
           else done.push(name);
         }
         const slid = slider.length > 0;
-        record('2.5.7', slid && !problems.some((p) => p.startsWith('slider')), slid ? `of the page's two dragging movements, this row checks the timeline's only: its thumb along the track has a single-pointer alternative with the same result: ${compared}; a point's drag on the preview has no single-pointer alternative yet and does not meet 2.5.7 (owed, D250)` : problems.find((p) => p.startsWith('slider')) ?? 'the timeline was not met');
+        record('2.5.7', slid && !problems.some((p) => p.startsWith('slider')), slid ? `of the page's dragging movements, this row checks the timeline's only: its thumb along the track has a single-pointer alternative with the same result: ${compared}; the preview's two (a point's, a group's) have the point's menu "Move" then one click, checked by point-move` : problems.find((p) => p.startsWith('slider')) ?? 'the timeline was not met');
         record('2.5.2', !problems.length && done.length > 0 && slid, problems.length ? problems.join('; ') : done.length && slid ? `${done.length} button(s), link(s) and switch(es) do nothing on the down-event or on a press moved off before release, and, where enabled, act on a whole press, on the up-event: ${done.join(', ')}; the slider, ${slider.join(', ')}, moves on the down-event as a provisional scrub, which Escape aborts before the release (abort before completion) and the release completes, with no undo step` : 'no control to press, or the timeline not met');
       },
     },
@@ -2686,8 +2686,8 @@ export default {
       // (4) One Undo (focus off the Skip button): the whole canvas reads as the hash before (3), the baseline.
       // The 2.5.2 credit rests on (2) to (4) alone. Faults that fail it (brief 122): (u) the toggle's call removed from
       // bindCanvas fails (1); (v) groupOf giving the grabbed point alone fails (3); (w) the "taken out" branch made "add
-      // again" fails (1b). Nothing is claimed for 2.5.7: a group's drag is a second dragging movement on the preview under
-      // the same debt as a point's (D250: the owner's answer is the point's menu "Move", chat G). Nothing for 2.5.8,
+      // again" fails (1b). Nothing is claimed for 2.5.7 here: a group's drag has its single-pointer way in the point's menu
+      // "Move" then one click (D250, D270), checked by point-move (brief 139). Nothing for 2.5.8,
       // 1.4.11 (the rings stay under the preview's set-aside) or 1.4.13.
       name: 'group-drag',
       method: 'j-pointer',
@@ -2962,7 +2962,7 @@ export default {
       // scroll listener closing on a scroll inside the menu fails (7): End's own scroll into view closes it. (ai) "Make bend"'s
       // words left out of editWords fails (3) and the run's words; (aj) a second "Point deleted" announced 2.5 s after the
       // first fails the run's words (one announced in the same task is merged by the queue, announce.ts, so never shown). It claims nothing for 2.5.7
-      // (G2's "Move", D250) nor for the marks' drawing.
+      // ("Move", which stands before Delete here, is checked by point-move, brief 139) nor for the marks' drawing.
       name: 'point-menu',
       method: 'keyboard',
       rows: ['2.1.1', '2.4.3'],
@@ -3139,6 +3139,164 @@ export default {
       },
     },
     {
+      // 2.5.7 and 2.5.1 (CORE-06, brief 139 for brief 138's DE; D242, D250 (a), D270, provisional until the owner
+      // objects): the preview's two dragging movements, a point's and a group's, each have a single-pointer way, the
+      // point's menu "Move" then one click, by the pointer alone (no key between the right-click and the place, except
+      // where Escape is the step). In pen-drawn's set-up (two taps, the second point selected), skipped to the route's
+      // end; the mouse is off the preview at every whole-canvas reading (a resting mouse draws the hover).
+      // (1) One point: a right-click on the second point, "Move" clicked in its menu: the status comes to D270's prompt
+      // and the canvas's cursor reads "crosshair" (it read otherwise before); a click on empty picture at DRAG_TO; skipped
+      // to the end again, its marker reads at DRAG_TO and not at its tap (markBeyond, as point-drag-moves reads), the
+      // cursor no longer "crosshair", and in the status's every change since the click "Point moved" once and "Point
+      // added" never (the click placed no point); one Undo (focus off the Skip button) draws it at its tap again.
+      // (2) Escape: the whole canvas read (pixels' hash), "Move" chosen again, the mouse off, Escape: the status comes to
+      // "Move cancelled", the canvas reads as before, the cursor not "crosshair"; a click on empty picture then adds a
+      // point as the pen always does ("Point added"), undone at once. (2b) A right-click on empty picture while it waits:
+      // "Move cancelled" said, no menu opened, the canvas as before. (2c) Focus leaving the preview: "Move" chosen, then
+      // a click on the "Skip to end" button: "Move cancelled" among the status's changes, the cursor not "crosshair",
+      // and the next click on the second point's old place is the pen's (the route's points read as before the click).
+      // (3) The group: Escape clears the selection, a command-click on each point selects both (as group-drag does,
+      // before the right-click); a right-click on the second, "Move" clicked: the group's prompt; a click at DRAG_TO:
+      // both markers read at their places moved by the same offset (the second at DRAG_TO), neither at its tap, and "2
+      // points moved" among the status's changes.
+      // 2.5.7 rests on (1) to (3); the timeline's drag is checked by pointer-cancellation (a press on the track); no
+      // keyboard way is credited. 2.5.1: the page's path gestures are its three drags and each has a single-pointer
+      // way: the preview's two shown here, the timeline's by pointer-cancellation. Faults that fail it (brief 139,
+      // PROBE-139/mut-*.txt): (ak) the pen's tap not held off while it waits; (al) Escape not cancelling the wait; (am)
+      // only the menu's point moved in the group case.
+      name: 'point-move',
+      method: 'j-pointer',
+      rows: ['2.5.1', '2.5.7'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const shift = [DRAG_TO[0] - second[0], DRAG_TO[1] - second[1]];
+        const firstTo = [first[0] + shift[0], first[1] + shift[1]];
+        const EMPTY = [0.3, 0.7];
+        const MOVE_ONE = 'Move: click where the point should go, or press Escape to cancel';
+        const MOVE_GROUP = 'Move: click where the point should go; the other selected points come with it. Escape cancels';
+        const CANCELLED = 'Move cancelled';
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const atEnd = async () => { await page.getByRole('button', { name: 'Skip to end' }).click(); await settle(); };
+        const hash = async () => (await pixels(page)).hash;
+        const box = await page.locator(PREVIEW).boundingBox();
+        const on = ([fx, fy]) => ({ x: box.x + box.width * fx, y: box.y + box.height * fy });
+        const off = async () => { await page.mouse.move(1, 1); await settle(); };
+        const tapAt = async (place) => { const { x, y } = on(place); await pointer.tap(x, y); await settle(); };
+        const cursor = () => page.locator(CANVAS).evaluate((c) => getComputedStyle(c).cursor);
+        const said = () => page.evaluate(() => [...window.__said]);
+        // The queue shows each message in turn, each held a while (announce.ts): wait for words among the changes since
+        // `from`, and for the region to come back to empty (the queue drained) before counting.
+        const heardSince = (from, words) => page.waitForFunction(([f, w]) => window.__said.slice(f).includes(w), [from, words], { timeout: 6000 }).then(() => true, () => false);
+        const drained = () => page.waitForFunction((s) => document.querySelector(s)?.textContent === '', STATUS, { timeout: 10000 }).then(() => true, () => false);
+        const menuShown = () => page.locator('[role=menu]').count().then((n) => n === 1);
+        const unfocus = () => page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+        const wrong = [];
+        // A right-click on a place, then "Move" clicked in the menu; false when there was no "Move" to click.
+        const chooseMove = async (place, prompt, when) => {
+          const { x, y } = on(place);
+          await page.mouse.click(x, y, { button: 'right' });
+          await settle();
+          const item = page.getByRole('menuitem', { name: 'Move' });
+          if ((await item.count()) !== 1) { wrong.push(`${when}: the right-click showed no "Move"`); return false; }
+          await item.click();
+          await settle();
+          if (!(await comesToWords(page, prompt))) wrong.push(`${when}: the status did not come to ${JSON.stringify(prompt)}`);
+          if ((await cursor()) !== 'crosshair') wrong.push(`${when}: while it waited the cursor read ${JSON.stringify(await cursor())}, not "crosshair"`);
+          return true;
+        };
+        const notWaiting = async (when) => { const c = await cursor(); if (c === 'crosshair') wrong.push(`${when}: the cursor still read "crosshair"`); };
+        const read = async () => ({ tap: await markBeyond(page, second, first), moved: await markBeyond(page, DRAG_TO, first) });
+        await atEnd();
+        await page.locator(STATUS).evaluate((s) => { window.__said = []; new MutationObserver(() => { window.__said.push(s.textContent ?? ''); }).observe(s, { childList: true, characterData: true, subtree: true }); });
+        // (1) One point.
+        await off();
+        const before = await read();
+        if (!before.tap || before.moved) wrong.push(`(1) before "Move" the marker read ${before.tap ? '' : 'not '}at the tap and ${before.moved ? '' : 'not '}at the new place`);
+        await notWaiting('(1) before "Move"');
+        if (await chooseMove(second, MOVE_ONE, '(1)')) {
+          const from = (await said()).length;
+          await tapAt(DRAG_TO);
+          await off();
+          await notWaiting('(1) after the click');
+          await atEnd();
+          const after = await read();
+          if (!after.moved || after.tap) wrong.push(`(1) after the click the marker read ${after.moved ? '' : 'not '}at the new place and ${after.tap ? '' : 'not '}at the tap`);
+          await heardSince(from, POINT_MOVED);
+          await drained();
+          const since = (await said()).slice(from);
+          const moved = since.filter((w) => w === POINT_MOVED).length;
+          if (moved !== 1 || since.includes(POINT_ADDED)) wrong.push(`(1) after the click the status said "${POINT_MOVED}" ${moved} time(s)${since.includes(POINT_ADDED) ? ` and "${POINT_ADDED}"` : ''}`);
+          await unfocus();
+          await page.keyboard.press(UNDO);
+          await atEnd();
+          const undone = await read();
+          if (!undone.tap || undone.moved) wrong.push(`(1) after one Undo the marker read ${undone.tap ? '' : 'not '}at the tap and ${undone.moved ? '' : 'not '}at the new place`);
+        }
+        // (2) Escape.
+        await off();
+        const baseline = await hash();
+        if (await chooseMove(second, MOVE_ONE, '(2)')) {
+          await off();
+          await page.keyboard.press('Escape');
+          await settle();
+          if (!(await comesToWords(page, CANCELLED))) wrong.push(`(2) after Escape the status did not come to "${CANCELLED}"`);
+          if ((await hash()) !== baseline) wrong.push('(2) after Escape the canvas was not as before "Move"');
+          await notWaiting('(2) after Escape');
+          await tapAt(EMPTY);
+          if (!(await comesToWords(page, POINT_ADDED))) wrong.push(`(2) the click after Escape did not add a point ("${POINT_ADDED}" not heard)`);
+          await unfocus();
+          await page.keyboard.press(UNDO);
+          await off();
+          if ((await hash()) !== baseline) wrong.push('(2) the Undo of the pen\'s point did not draw the canvas as before');
+        }
+        // (2b) A right-click while it waits.
+        if (await chooseMove(second, MOVE_ONE, '(2b)')) {
+          const { x, y } = on(EMPTY);
+          await page.mouse.click(x, y, { button: 'right' });
+          await settle();
+          if (!(await comesToWords(page, CANCELLED))) wrong.push(`(2b) after a right-click the status did not come to "${CANCELLED}"`);
+          if (await menuShown()) wrong.push('(2b) the right-click that cancelled opened a menu');
+          await off();
+          if ((await hash()) !== baseline) wrong.push('(2b) after the right-click the canvas was not as before "Move"');
+          await notWaiting('(2b) after the right-click');
+        }
+        // (2c) Focus leaving the preview.
+        if (await chooseMove(second, MOVE_ONE, '(2c)')) {
+          const from = (await said()).length;
+          await atEnd();
+          await off();
+          if (!(await heardSince(from, CANCELLED))) wrong.push(`(2c) a click on "Skip to end" while it waited did not say "${CANCELLED}"`);
+          await notWaiting('(2c) after the click on "Skip to end"');
+          if ((await hash()) !== baseline) wrong.push('(2c) after the click on "Skip to end" the canvas was not as before "Move"');
+        }
+        // (3) The group.
+        await page.keyboard.press('Escape');
+        await settle();
+        for (const place of [first, second]) {
+          const { x, y } = on(place);
+          await page.keyboard.down(COMMAND);
+          await page.mouse.click(x, y);
+          await page.keyboard.up(COMMAND);
+          await off();
+        }
+        const rings = await ringsAt(page, [first, second]);
+        if (rings.some((n) => n <= 50)) wrong.push(`(3) the command-clicks left the rings at ${JSON.stringify(rings)} pixels, not both ringed`);
+        if (await chooseMove(second, MOVE_GROUP, '(3)')) {
+          const from = (await said()).length;
+          await tapAt(DRAG_TO);
+          await off();
+          await atEnd();
+          const marks = { second: await markBeyond(page, DRAG_TO, firstTo), first: await markBeyond(page, firstTo, DRAG_TO), secondTap: await markBeyond(page, second, first), firstTap: await markBeyond(page, first, second) };
+          if (!marks.second || !marks.first || marks.secondTap || marks.firstTap) wrong.push(`(3) after the click the second marker read ${marks.second ? '' : 'not '}at DRAG_TO and the first ${marks.first ? '' : 'not '}moved by the same offset; ${marks.secondTap ? 'the second still at its tap' : 'the second not at its tap'}, ${marks.firstTap ? 'the first still at its tap' : 'the first not at its tap'}`);
+          if (!(await heardSince(from, '2 points moved'))) wrong.push('(3) the status never said "2 points moved"');
+        }
+        const ok = !wrong.length;
+        record('2.5.7', ok, ok ? `in pen-drawn, by the pointer alone: the second point right-clicked and its menu's "Move" clicked, the status said "${MOVE_ONE}" and the cursor read crosshair; one click on empty picture drew its marker there and not at its tap, "${POINT_MOVED}" said once and "${POINT_ADDED}" never, and one Undo put it back; Escape, a right-click and a click on "Skip to end" each cancelled the wait with "${CANCELLED}" and the canvas as before; with both points selected, "Move" on the second and one click drew both markers moved by the same offset, "2 points moved" said. The preview's two drags (a point's, a group's) have this single-pointer way; the timeline's drag is checked by pointer-cancellation; no keyboard way is credited` : wrong.join('; '));
+        record('2.5.1', ok, ok ? 'the page\'s path gestures are its three drags, each with a single-pointer way: a point\'s and a group\'s on the preview by the point\'s menu "Move" and one click (shown in this run: one point, Escape, a right-click, focus leaving, the group); the timeline\'s by a press on the track (pointer-cancellation\'s 2.5.7)' : wrong.join('; '));
+      },
+    },
+    {
       // 2.5.2 (CORE-06, brief 121, ruling AD; brief 120's "+", D208's hover): a bend inserted by the "+" at a line's
       // middle, completed on the up, undone in one step, and aborted by moving off before the up. It takes the place of
       // brief 119's line-hover-halo, whose three hover readings it carries in as regression checks: the 2.5.2 credit
@@ -3179,7 +3337,7 @@ export default {
       // (the insert undone at (7) is still the step to redo, so the abort made no step).
       // Faults that fail it (brief 121): (r) penTap's insert branch removed fails (6); (s) the insert done on the down
       // fails (5); (t) a moved press giving a tap fails (8). Nothing is claimed for 2.5.8 (the "+"'s target size, D255),
-      // 1.4.11 (the "+" and the halo stay under the preview's set-aside), 1.4.13, or 2.5.7 (still owed, D250).
+      // 1.4.11 (the "+" and the halo stay under the preview's set-aside), 1.4.13, or 2.5.7 (the preview's drags' single-pointer way is checked by point-move, brief 139).
       name: 'line-insert-plus',
       method: 'j-pointer',
       rows: ['2.5.2'],

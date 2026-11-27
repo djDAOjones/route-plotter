@@ -51,8 +51,8 @@
       "evidence": ""
     },
     "pointer-gestures": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "present",
+      "evidence": "CORE-06 (2026-11-27): the page has three drags, path gestures of one pointer: the timeline's thumb along its track, and on the preview a point's drag and a selection's. Each has a single-pointer way: the timeline's a press on the track (pointer-cancellation, 2.5.7); the preview's two the point's menu \"Move\" then one click on the picture, which moved one point, and both points of a selection by the same offset, Escape, a right-click and a click on another control cancelling (point-move, 2.5.1 and 2.5.7; D270)."
     },
     "device-motion": {
       "state": "unknown",
@@ -531,7 +531,7 @@
     "2.5.1": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
@@ -579,7 +579,7 @@
     "2.5.7": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
