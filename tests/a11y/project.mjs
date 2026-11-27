@@ -3319,6 +3319,131 @@ export default {
       },
     },
     {
+      // 2.4.3 (CORE-06, brief 140, ruling EF; D271 (a), provisional until the owner answers): a line's menu, by pointer.
+      // In pen-drawn's set-up (two taps, the second point selected), skipped to the route's end. A listener on the
+      // document (after the canvas's own) notes whether each right-click's menu event was cancelled.
+      // (1) A right-click three tenths along the line (line-insert-plus's place, clear of the points and the "+"): a
+      // menu named "Line actions" stands in document.body, outside .preview, its menuitems "Make line two-way" then
+      // "Reverse line" (the line runs one way), focus on the first; the browser's menu cancelled. Escape closes it,
+      // focus on the box, and the rings at the two taps read as before the right-click (the selection unchanged).
+      // (2) Again; "Make line two-way" clicked: the menu closes, focus on the box, "Line made two-way" heard. (3) Again:
+      // the first item now reads "Make line one way" (the direction read back); "Reverse line" clicked: "Line reversed"
+      // heard, focus on the box. (4) One Undo: "Undo" heard, and a right-click still shows "Make line one way" (the Undo
+      // took back the Reverse alone, which the editor does not draw); Escape. (5) A second Undo: a right-click shows
+      // "Make line two-way"; Escape. (6) The mouse rests on the line's middle, as line-insert-plus hovers the "+", then a
+      // right-click there opens the same menu; Escape closes it with focus on the box. (7) A right-click on empty picture
+      // opens no menu and leaves the browser's menu alone. Over the run the status said, in turn and each once, "Line
+      // made two-way", "Line reversed", "Undo", "Undo" (words read as point-move reads them). The menu opens by pointer
+      // only: nothing is claimed for 2.1.1 (no key picks out a line yet, D271 part (1)), nor for 1.4.11 or 2.5.x. The
+      // row is 2.4.3 under the j-order method (the catalogue takes 2.4.3 from keyboard or j-order journeys; this one has
+      // no keyboard way). Faults that fail it (brief 140, PROBE-140/mut-*.txt): (ao) the opener ignoring line hits;
+      // (ap) the direction item always "Make line one way"; (aq) the line's words dropped.
+      name: 'line-menu',
+      method: 'j-order',
+      rows: ['2.4.3'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const ALONG = 0.3;
+        const LINE = [first[0] + (second[0] - first[0]) * ALONG, first[1] + (second[1] - first[1]) * ALONG];
+        const MIDDLE = [(first[0] + second[0]) / 2, (first[1] + second[1]) / 2];
+        const EMPTY = [0.3, 0.7];
+        const NAME = 'Line actions';
+        const [TWO, ONE, REVERSE] = ['Make line two-way', 'Make line one way', 'Reverse line'];
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const box = await page.locator(PREVIEW).boundingBox();
+        const on = ([fx, fy]) => ({ x: box.x + box.width * fx, y: box.y + box.height * fy });
+        const off = async () => { await page.mouse.move(1, 1); await settle(); };
+        const said = () => page.evaluate(() => [...window.__said]);
+        const heardSince = (from, words) => page.waitForFunction(([f, w]) => window.__said.slice(f).includes(w), [from, words], { timeout: 6000 }).then(() => true, () => false);
+        const drained = () => page.waitForFunction((s) => document.querySelector(s)?.textContent === '', STATUS, { timeout: 12000 }).then(() => true, () => false);
+        const readMenu = () => page.evaluate(() => {
+          const m = document.querySelector('[role=menu]');
+          if (!m) return null;
+          const e = document.activeElement;
+          return { name: m.getAttribute('aria-label'), inBody: m.parentElement === document.body, inPreview: m.closest('.preview') !== null, items: [...m.querySelectorAll('[role=menuitem]')].map((each) => each.getAttribute('aria-label')), focused: e?.getAttribute('role') === 'menuitem' ? e.getAttribute('aria-label') : null };
+        });
+        const rightClick = async (place) => { const { x, y } = on(place); await page.mouse.click(x, y, { button: 'right' }); await settle(); };
+        const prevented = () => page.evaluate(() => window.__menuPrevented);
+        const ringed = async () => (await ringsAt(page, [first, second])).map((n) => n > 50);
+        const wrong = [];
+        // A right-click at `place` opens "Line actions" with `head` first, then "Reverse line", focus on the first.
+        const opens = async (place, head, when) => {
+          await rightClick(place);
+          const m = await readMenu();
+          if (m === null) { wrong.push(`${when}: the right-click opened no menu`); return false; }
+          if (m.name !== NAME) wrong.push(`${when}: the menu was named ${JSON.stringify(m.name)}`);
+          if (!m.inBody || m.inPreview) wrong.push(`${when}: the menu stood ${m.inPreview ? 'inside .preview' : 'outside document.body'}`);
+          if (JSON.stringify(m.items) !== JSON.stringify([head, REVERSE])) wrong.push(`${when}: its items read ${JSON.stringify(m.items)}, not ${JSON.stringify([head, REVERSE])}`);
+          if (m.focused !== head) wrong.push(`${when}: focus was on ${JSON.stringify(m.focused)} on opening, not ${JSON.stringify(head)}`);
+          if ((await prevented()) !== true) wrong.push(`${when}: the browser's own menu was not cancelled`);
+          return true;
+        };
+        const closes = async (when) => {
+          await page.keyboard.press('Escape');
+          await settle();
+          if ((await readMenu()) !== null) wrong.push(`${when}: Escape left the menu open`);
+          if (!(await focusOn(page, PREVIEW))) wrong.push(`${when}: after Escape focus was not on the preview box`);
+        };
+        const choose = async (label, words, when) => {
+          const from = (await said()).length;
+          await page.getByRole('menuitem', { name: label }).click();
+          await settle();
+          if ((await readMenu()) !== null) wrong.push(`${when}: the menu stayed open after "${label}"`);
+          if (!(await focusOn(page, PREVIEW))) wrong.push(`${when}: after "${label}" focus was not on the preview box`);
+          if (!(await heardSince(from, words))) wrong.push(`${when}: "${words}" was not heard after "${label}"`);
+        };
+        // The queue merges the same words written while the region still shows them (announce.ts): each Undo waits for
+        // the region to come back to empty, so the second "Undo" is written again.
+        const undo = async (when) => {
+          await drained();
+          const from = (await said()).length;
+          await page.keyboard.press(UNDO);
+          await settle();
+          if (!(await heardSince(from, 'Undo'))) wrong.push(`${when}: "Undo" was not heard`);
+        };
+        await page.getByRole('button', { name: 'Skip to end' }).click();
+        await settle();
+        await page.evaluate(() => { window.__menuPrevented = null; document.addEventListener('contextmenu', (e) => { window.__menuPrevented = e.defaultPrevented; }); });
+        await page.locator(STATUS).evaluate((s) => { window.__said = []; new MutationObserver(() => { window.__said.push(s.textContent ?? ''); }).observe(s, { childList: true, characterData: true, subtree: true }); });
+        await off();
+        const rings = await ringed();
+        // (1) Opened, read, closed; the selection unchanged.
+        if (await opens(LINE, TWO, '(1)')) {
+          await closes('(1)');
+          await off();
+          const now = await ringed();
+          if (JSON.stringify(now) !== JSON.stringify(rings)) wrong.push(`(1) the rings at the taps read ${JSON.stringify(now)} after the menu, ${JSON.stringify(rings)} before (the selection changed)`);
+        }
+        // (2) "Make line two-way".
+        if (await opens(LINE, TWO, '(2)')) await choose(TWO, 'Line made two-way', '(2)');
+        // (3) The direction read back; "Reverse line".
+        if (await opens(LINE, ONE, '(3)')) await choose(REVERSE, 'Line reversed', '(3)');
+        // (4) One Undo: the Reverse alone taken back.
+        await undo('(4)');
+        if (await opens(LINE, ONE, '(4)')) await closes('(4)');
+        // (5) A second Undo: the line one way again.
+        await undo('(5)');
+        if (await opens(LINE, TWO, '(5)')) await closes('(5)');
+        // (6) The "+": the mouse rests on the line's middle first.
+        const middle = on(MIDDLE);
+        await page.mouse.move(middle.x, middle.y);
+        await settle();
+        if (await opens(MIDDLE, TWO, '(6) on the "+"')) await closes('(6)');
+        // (7) Empty picture.
+        await rightClick(EMPTY);
+        if ((await readMenu()) !== null) wrong.push('(7) a right-click on empty picture opened a menu');
+        if ((await prevented()) !== false) wrong.push('(7) a right-click on empty picture cancelled the browser\'s menu');
+        await off();
+        await drained();
+        const all = (await said()).filter(Boolean);
+        const SAID = ['Line made two-way', 'Line reversed', 'Undo', 'Undo'];
+        if (JSON.stringify(all) !== JSON.stringify(SAID)) wrong.push(`the status said ${JSON.stringify(all)} in turn; ${JSON.stringify(SAID)} were expected, each once (D271)`);
+        const ok = !wrong.length;
+        record('2.4.3', ok, ok ? `in pen-drawn, by the pointer: a right-click three tenths along the line, and one on its "+" with the mouse resting there, each opened a menu named "${NAME}" in document.body, outside .preview, focus on its first item, the browser's menu cancelled; its items read "${TWO}" then "${REVERSE}" while the line ran one way and "${ONE}" first after "${TWO}" was chosen; after Escape and after each item chosen the menu closed and focus was on the preview box; the rings at the taps read as before the menu (the selection unchanged); over the run the status said, in turn and each once, ${JSON.stringify(all)} (D271's words, then one Undo that left "${ONE}" first and a second that brought back "${TWO}"); a right-click on empty picture opened no menu and left the browser's own. The menu opens by pointer only (no 2.1.1 claim)` : wrong.join('; '));
+      },
+    },
+    {
       // 2.5.2 (CORE-06, brief 121, ruling AD; brief 120's "+", D208's hover): a bend inserted by the "+" at a line's
       // middle, completed on the up, undone in one step, and aborted by moving off before the up. It takes the place of
       // brief 119's line-hover-halo, whose three hover readings it carries in as regression checks: the 2.5.2 credit

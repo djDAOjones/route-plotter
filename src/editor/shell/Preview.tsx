@@ -56,10 +56,16 @@
 //    its prompt; the menu has already closed and given focus back to the box. While a wait is open (`watchMove`) the
 //    canvas shows a crosshair. Focus leaving the box for anywhere outside it cancels the wait (`cancelMove`, which says
 //    "Move cancelled"); the window's own blur is left to the binding, which ends it saying nothing.
+// 9. CORE-06, chat G2c (brief 140, ruling EE; D271 (a), provisional until the owner answers): a line's menu. The binding
+//    is also handed `lineMenu`: a right-click on a line or its "+" opens it, selecting nothing (dom.ts point 9); its
+//    items are built then from the store (../canvas/menu.ts `lineMenu`: "Make line two-way" or "Make line one way",
+//    then "Reverse line") and drawn by the same kit menu, named "Line actions". An item chosen runs as one undo step
+//    (`runItem`), the store's hook says its words ("Line made two-way", "Line made one way", "Line reversed"), and the
+//    menu closes with focus back on the box. It opens by pointer only: no key picks out a line yet.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { compose, type Surface } from '../../player/compose';
-import { bindCanvas, cancelMove, startMove, watchMove, type MenuOpen, type Say } from '../canvas/dom';
-import { pointMenu, runItem, type MenuItem, type PointMenu } from '../canvas/menu';
+import { bindCanvas, cancelMove, startMove, watchMove, type LineMenuOpen, type MenuOpen, type Say } from '../canvas/dom';
+import { lineMenu, pointMenu, runItem, type Menu, type MenuItem } from '../canvas/menu';
 import { ContextMenu } from '../kit/ContextMenu';
 import type { Store } from '../store/store';
 import { MAC } from './keydown';
@@ -82,6 +88,8 @@ export interface PreviewProps {
 export const PREVIEW_NAME = 'Route animation preview';
 /** The point's menu's name (point 7): v3's "Waypoint actions" (wiringControllers.js 788) with "point" for "waypoint"; provisional. */
 const POINT_MENU_NAME = 'Point actions';
+/** A line's menu's name (point 9; D271 (a), provisional). */
+const LINE_MENU_NAME = 'Line actions';
 
 /** The least height the box takes, in `vh`, when the room left is smaller (point 5). */
 export const PREVIEW_LEAST_VH = 30;
@@ -168,8 +176,9 @@ export function Preview({ drawer, inputs, subscribe, store, announce }: PreviewP
     return `${String(width)} / ${String(height)}`;
   };
   const aspect = useSyncExternalStore(subscribe, shape, shape);
-  // The point's menu (point 7): what it shows and where, numbered so each opening draws it afresh.
-  const [menu, setMenu] = useState<{ readonly built: PointMenu; readonly at: MenuOpen['at']; readonly serial: number } | null>(null);
+  // The point's menu or a line's (points 7 and 9): what it shows, its name and where, numbered so each opening draws it
+  // afresh.
+  const [menu, setMenu] = useState<{ readonly built: Menu; readonly label: string; readonly at: MenuOpen['at']; readonly serial: number } | null>(null);
   const openings = useRef(0);
   const choose = useCallback((item: MenuItem) => {
     if (item.move !== null && item.reason === null) startMove(item.move, announce);
@@ -205,10 +214,16 @@ export function Preview({ drawer, inputs, subscribe, store, announce }: PreviewP
       const built = pointMenu(store.getState(), open.route, open.point);
       if (built === null) return;
       openings.current += 1;
-      setMenu({ built, at: open.at, serial: openings.current });
+      setMenu({ built, label: POINT_MENU_NAME, at: open.at, serial: openings.current });
+    };
+    const openLineMenu = (open: LineMenuOpen) => {
+      const built = lineMenu(store.getState(), open.route, open.line);
+      if (built === null) return;
+      openings.current += 1;
+      setMenu({ built, label: LINE_MENU_NAME, at: open.at, serial: openings.current });
     };
     drawer.attach({ paint: painting.paint, surface });
-    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: MAC, hover: drawer.hover, menu: openMenu });
+    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: MAC, hover: drawer.hover, menu: openMenu, lineMenu: openLineMenu });
 
     let box = { width: 0, height: 0 };
     const measure = () => {
@@ -257,7 +272,7 @@ export function Preview({ drawer, inputs, subscribe, store, announce }: PreviewP
     <div ref={boxRef} className="preview" role="application" aria-label={PREVIEW_NAME} tabIndex={0} style={{ aspectRatio: aspect, width }}>
       <canvas ref={canvas} className="preview__canvas" style={moving ? { touchAction: 'none', cursor: 'crosshair' } : { touchAction: 'none' }} />
     </div>
-    {menu && <ContextMenu key={menu.serial} label={POINT_MENU_NAME} items={menu.built.items} at={menu.at} opener={boxRef} onChoose={choose} onClose={close} />}
+    {menu && <ContextMenu key={menu.serial} label={menu.label} items={menu.built.items} at={menu.at} opener={boxRef} onChoose={choose} onClose={close} />}
     </>
   );
 }
