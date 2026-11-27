@@ -22,6 +22,7 @@ const RULES = {
   feature: 'no-feature-reaches-another-or-a-catalogue',
   catalogues: 'only-the-catalogues-import-a-feature',
   features: 'core-and-adapters-never-reach-features',
+  screens: 'editor-screens-never-draw',
   cycles: 'no-cycles',
   unresolvable: 'no-unresolvable',
 };
@@ -63,6 +64,7 @@ const PLANTS = {
   'adapter-reaches-a-feature': [['adapters', 'src/adapters/render.ts', 'src/features/a/model/settings.ts'],
     ['features', 'src/adapters/render.ts', 'src/features/a/model/settings.ts'],
     ['catalogues', 'src/adapters/render.ts', 'src/features/a/model/settings.ts']],
+  'editor-screen-reaches-the-composer': [['screens', 'src/editor/Screen.tsx', 'src/player/compose.ts']],
   'cycle-in-core': [['cycles', 'src/core/a.ts', 'src/core/b.ts']],
   'unresolvable-import': [['unresolvable', 'src/editor/App.ts', './missing']],
 };

@@ -12,15 +12,11 @@
 //    the box, not the canvas, so the canvas never takes Tab itself (2.1.2). Nothing in it is live: Play, Pause and
 //    "Animation complete" are said by the status region already. The theme's focus ring rings it, as it rings anything
 //    with a tab stop.
-// 2. At mount it attaches the session's drawer to the canvas (`attach({ paint, surface })`); at unmount it detaches.
-//    React's strict mode mounts twice: `attach` lets an earlier target go.
-// 3. `paint` (previewLogic.ts's `recordingPaint`, its point 7, since brief 115) sets the canvas's `width` and
-//    `height` to the request's size when they differ, then composes the request on the canvas's context in the same
-//    call, so a resize never shows a blank frame; it gives back the composer's reports. It sets no transform and no style of its own (the composer resets and clears first, CORE-04.6).
-//    `surface` is an OffscreenCanvas the size asked, its context and itself, as the composer's `Surface`.
-// 4. The size drawn is the canvas's box in CSS pixels times the device's pixel ratio (`canvasSize`, held to 3), handed
-//    to the session's inputs (`resize`): a ResizeObserver hears the box, and a `matchMedia` on the resolution now hears
-//    a change of the pixel ratio alone (a browser zoom, a move to another screen), armed again at each change.
+// 2. to 4. STACK-06 (item B; the app opinion, project/digests/app-opinion.md: React "may mount the canvas host, never
+//    draws"): the drawing is the canvas's owner, mountCanvas.ts, a plain TypeScript file (its points 2 to 6: the
+//    drawer attached and detached, the paint and its surface, the size drawn and its watchers, the pointer's binding).
+//    This screen renders the canvas and hands it there at mount, with its own menu openers and `pause`; it imports
+//    nothing of the player or the renderer (the boundary rule `editor-screens-never-draw`).
 // 5. The box (frameLook.css): the video's shape (D202, the owner's choice): the scene's export width to its height
 //    (`frameShape`, previewLogic.ts's point 6), with a picture or without one, so the preview draws the frame the video
 //    draws. CORE-06 (D209, the owner's "Remove and enlarge"): it takes the height left in the window, as wide as its
@@ -36,7 +32,7 @@
 //    frame before the picture as the export draws it (background.ts); with no picture shown the canvas holds nothing
 //    there and the box's own background shows.
 // 6. CORE-06 (brief 112): the canvas takes the pointer (src/editor/canvas/dom.ts, `bindCanvas`), bound at mount and
-//    unbound at unmount with the drawer. `paint` adds one overlay to each request, which draws nothing and keeps what the
+//    unbound at unmount with the drawer, by the canvas's owner (mountCanvas.ts, since STACK-06). `paint` adds one overlay to each request, which draws nothing and keeps what the
 //    frame was drawn with (the image's bounds as the frame's transform places them, each route's shape and timeline);
 //    the pointer is hit-tested against that, in its CSS pixels. The pen's tap (on the up, never the down, 2.5.2) places
 //    a point, joined from the selected one; each down first has the drawer draw now if the store has moved on since the
@@ -67,13 +63,12 @@
 //    page's (App.tsx: Play or pause's toggle, heard "Animation paused"): a press or right-click on the picture while
 //    the route plays pauses it and does nothing else (dom.ts point 11), and the drawer draws no hover while it plays.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { compose, type Surface } from '../../player/compose';
-import { bindCanvas, cancelMove, startMove, watchMove, type LineMenuOpen, type MenuOpen, type Say } from '../canvas/dom';
+import { cancelMove, startMove, watchMove, type LineMenuOpen, type MenuOpen, type Say } from '../canvas/dom';
 import { lineMenu, pointMenu, runItem, type Menu, type MenuItem } from '../canvas/menu';
 import { ContextMenu } from '../kit/ContextMenu';
 import type { Store } from '../store/store';
-import { MAC } from './keydown';
-import { canvasSize, frameShape, recordingPaint, type Drawer, type FrameInputs } from './previewLogic';
+import { mountCanvas } from './mountCanvas';
+import { frameShape, type Drawer, type FrameInputs } from './previewLogic';
 
 export interface PreviewProps {
   /** The session's one drawer. */
@@ -165,13 +160,6 @@ export function watchRoom(box: RoomBox, column: RoomColumn, win: RoomWindow): ()
   };
 }
 
-const surface = (size: { width: number; height: number }): Surface => {
-  const image = new OffscreenCanvas(size.width, size.height);
-  const context = image.getContext('2d');
-  if (context === null) throw new Error('an offscreen canvas gave no 2D context');
-  return { context, image };
-};
-
 export function Preview({ drawer, inputs, subscribe, store, announce, pause }: PreviewProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -209,13 +197,10 @@ export function Preview({ drawer, inputs, subscribe, store, announce, pause }: P
     };
   }, []);
 
+  // The canvas's owner (points 2 to 4 and 6): mountCanvas.ts draws, binds and measures; this hands it the menus' openers.
   useEffect(() => {
     const element = canvas.current;
-    const context = element?.getContext('2d');
-    if (!element || !context) return undefined;
-    // The paint (point 3) and what the last frame was drawn with (point 6): previewLogic.ts's `recordingPaint`, whose
-    // geometry is unknown until a paint's record overlay runs (brief 115, ruling V).
-    const painting = recordingPaint(element, (request) => compose(context, request));
+    if (!element) return undefined;
     const openMenu = (open: MenuOpen) => {
       const built = pointMenu(store.getState(), open.route, open.point);
       if (built === null) return;
@@ -228,38 +213,7 @@ export function Preview({ drawer, inputs, subscribe, store, announce, pause }: P
       openings.current += 1;
       setMenu({ built, label: LINE_MENU_NAME, at: open.at, serial: openings.current });
     };
-    drawer.attach({ paint: painting.paint, surface });
-    const unbind = bindCanvas({ canvas: element, win: window, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: MAC, hover: drawer.hover, menu: openMenu, lineMenu: openLineMenu, ...(pause === undefined ? {} : { pause }) });
-
-    let box = { width: 0, height: 0 };
-    const measure = () => {
-      inputs.resize(canvasSize(box, devicePixelRatio));
-    };
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry === undefined) return;
-      box = { width: entry.contentRect.width, height: entry.contentRect.height };
-      measure();
-    });
-    observer.observe(element);
-
-    let ratio: MediaQueryList | null = null;
-    const hearRatio = () => {
-      ratio?.removeEventListener('change', onRatio);
-      ratio = matchMedia(`(resolution: ${String(devicePixelRatio)}dppx)`);
-      ratio.addEventListener('change', onRatio);
-    };
-    function onRatio() {
-      hearRatio();
-      measure();
-    }
-    hearRatio();
-
-    return () => {
-      unbind();
-      ratio?.removeEventListener('change', onRatio);
-      observer.disconnect();
-      drawer.detach();
-    };
+    return mountCanvas(element, { drawer, inputs, store, menu: openMenu, lineMenu: openLineMenu, pause });
   }, [drawer, inputs, store, pause]);
 
   // The room left (point 5).
