@@ -16,7 +16,8 @@
 //
 // Brief 123 (ruling AN): the Editing keys, Delete or Backspace, Cmd or Ctrl+D and Cmd or Ctrl+A, go through the
 // dispatch (which keeps typed text and a dialog's keys out first) to `editKey` (src/editor/canvas/dom.ts, point 7),
-// handed whether a drag is open; the key is taken only when there was something to act on.
+// handed whether a drag is open; the key is taken only when there was something to act on. Brief 134 (ruling CU; D263,
+// D268): select all's line goes to the session's `announce`, the page's one status area (zoom left to its default).
 //
 // Brief 125 (rulings AW and AY): the arrows, alone or with Shift, go the same way to `editKey` with the arrow pressed
 // (the nudge, dom.ts point 8). A run of nudges is one undo step, ended at once by anything else: the dispatch ends it
@@ -79,14 +80,14 @@ function placeOf(target: EventTarget | null): PressPlace {
  * calls; gives back the call that stops listening (React's effect cleanup).
  */
 export function listenForKeys(
-  { store, transport, singleKeys }: PageSession,
+  { store, transport, singleKeys, announce }: PageSession,
   openHelp: () => void,
   openProject: () => void,
 ): () => void {
   const onKeyDown = (event: KeyboardEvent): void => {
     const place = placeOf(event.target);
     const escape = () => cancelDrag() || escapeClears(event, place, dragOpen(), store);
-    const edit: KeyDispatch['edit'] = (action, repeat, key) => editKey(action, repeat, store, dragOpen(), key);
+    const edit: KeyDispatch['edit'] = (action, repeat, key) => editKey(action, repeat, store, dragOpen(), key, undefined, announce);
     const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject, escape, edit, endNudge });
     if (taken) event.preventDefault();
   };

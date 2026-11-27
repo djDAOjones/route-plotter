@@ -26,9 +26,14 @@
 //   decoder (loadPicture.ts) and never closed, as the session lives as long as the page; and the drawer, on the
 //   session's own frame source. A paint that throws, a picture that cannot be loaded and a frame's reports when they
 //   change go to the page's `reportError`; nothing is shown on the page for them (a later item's).
+// - CORE-06 (brief 134, ruling CU; D263, the owner's "Yes, every edit", in D268's words): the queue is made before the
+//   store, and the store's `stepped` hook says each step's words (../canvas/words.ts `stepWords`: an edit's line, "Undo",
+//   "Redo") through it, a silent step's null left out before the queue. The session hands `announce` on, so select
+//   all's line goes the same way (keydown.ts). The point's menu says nothing yet (D268: its own chat names its words).
 import { newScene } from '../../core/model/scene';
 import { createTransport, type FrameSource } from '../../player/transport/transport';
-import { createAnnouncementQueue, type Priority } from '../kit/announce';
+import { stepWords } from '../canvas/words';
+import { createAnnouncementQueue, type Announce, type Priority } from '../kit/announce';
 import { createStore, type Store } from '../store/store';
 import { createEditorTransport, hasSomethingToPlay, WORDS, type EditorTransport } from '../transport/transport';
 import { decode } from './decode';
@@ -52,6 +57,8 @@ export interface PageSession {
   /** What the preview's canvas needs: the one inputs (its size, and the scene whose export gives its shape) and the one
    *  drawer (brief 84). */
   readonly preview: { readonly inputs: FrameInputs; readonly drawer: Drawer };
+  /** The page's one status area's writer, for a line no step says: select all's (D268). */
+  readonly announce: Announce;
 }
 
 /** The live region the page draws now, or null before it is drawn and after it is gone. */
@@ -84,8 +91,15 @@ const frames: FrameSource<number> = {
 
 function make(): PageSession {
   const nextId = () => crypto.randomUUID();
-  const store = createStore({ project: { scene: newScene(nextId), images: [] }, nextId });
   const { announce } = createAnnouncementQueue(regionNow, (callback, ms) => setTimeout(callback, ms));
+  const store = createStore({
+    project: { scene: newScene(nextId), images: [] },
+    nextId,
+    stepped: (step) => {
+      const words = stepWords(step);
+      if (words !== null) announce(words);
+    },
+  });
   const inputs = createFrameInputs({ store });
   const player = createTransport({
     frames,
@@ -125,7 +139,7 @@ function make(): PageSession {
     },
   });
   const preview = Object.freeze({ inputs, drawer });
-  return Object.freeze({ store, transport, canPlay, timeline, singleKeys: holdForVisit(true), opener, preview });
+  return Object.freeze({ store, transport, canPlay, timeline, singleKeys: holdForVisit(true), opener, preview, announce });
 }
 
 let made: PageSession | null = null;

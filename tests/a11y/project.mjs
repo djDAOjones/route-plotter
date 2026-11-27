@@ -72,6 +72,11 @@ const STATUS = '[role=status]';
 const said = async (page) => (await page.locator(STATUS).textContent()) ?? '';
 const SKIPPED_TO_START = 'Skipped to start';
 const SKIPPED_TO_END = 'Skipped to end';
+// What the status region says after an edit (CORE-06, brief 134, ruling CV; D263's answer, "Yes, every edit", in D268's
+// words, src/editor/canvas/words.ts): the pen's tap that places a point, and a point's drag released; a cancelled drag
+// says nothing.
+const POINT_ADDED = 'Point added';
+const POINT_MOVED = 'Point moved';
 // Said when a start is refused, and shown under the play bar while there is nothing to play (WORDS.nothingToPlay).
 const NOTHING_TO_PLAY = 'Add at least two points to a route to play.';
 // The play bar's buttons and the line that says why Play is off.
@@ -805,6 +810,10 @@ export default {
         await page.mouse.click(1, 1);
         // Play has just been enabled: the final state is measured once the page's transitions have ended.
         await page.waitForFunction(() => document.getAnimations().length === 0, undefined, { timeout: 3000 });
+        // The taps' "Point added" (brief 134, ruling CV; D263, D268) holds the status region for its two seconds: the
+        // state is the editor at rest, its status empty, as the snapshot below has it. Measured (brief 134): without this
+        // wait the status still read "Point added" as the set-up ended, and the snapshot (a partial match) passed anyway.
+        if (!(await page.waitForFunction((s) => (document.querySelector(s)?.textContent ?? '') === '', STATUS, { timeout: 6000 }).then(() => true, () => false))) throw new Error('the status region did not come back to empty after the taps');
       },
       // Reviewed (brief 113): as the shell's, but two points joined by a line make a route that plays, so Play is
       // enabled, the reason it was not is gone, and the timeline runs to the route's length (0:04).
@@ -1163,27 +1172,33 @@ export default {
             // The preview (CORE-06, brief 112): the pen's tap acts on the up only (2.5.2). On the shell's empty route a
             // press on an empty place is read while held, after it is moved off the box and released (abandoned), and
             // after a whole press: nothing drawn changes on the down or by the abandoned press; the whole press places
-            // one point (what is drawn changes) in one undo step (one Undo draws the frame found again), saying nothing.
+            // one point (what is drawn changes) in one undo step (one Undo draws the frame found again). Brief 134 (ruling
+            // CV; D263, D268): the status region is empty after the held press, the abandoned press and the whole press's
+            // down, and says "Point added" after the whole press.
             const box = await control.boundingBox();
             const x = box.x + box.width * 0.3, y = box.y + box.height * 0.5;
             const bad = [];
             const now = async () => { await page.waitForTimeout(250); await twoFrames(page); return (await pixels(page)).hash; };
             const before = await now();
+            const quiet = async (when) => { const words = await said(page); if (words !== '') bad.push(`${when} said ${JSON.stringify(words)}`); };
             await pointer.down(x, y);
             if ((await now()) !== before) bad.push('a press held on an empty place changed what it draws');
+            await quiet('a press held on an empty place');
             await pointer.move(x + box.width + 40, y);
             await pointer.up();
             if ((await now()) !== before) bad.push('a press moved off it and released changed what it draws');
+            await quiet('a press moved off it and released');
             await pointer.down(x, y);
             if ((await now()) !== before) bad.push('the down of a whole press changed what it draws');
+            await quiet('the down of a whole press');
             await pointer.up();
             if ((await now()) === before) bad.push('a whole press drew no point');
-            if ((await said(page)) !== '') bad.push(`a press said ${JSON.stringify(await said(page))}`);
+            if ((await said(page)) !== POINT_ADDED) bad.push(`a whole press said ${JSON.stringify(await said(page))}, not ${JSON.stringify(POINT_ADDED)}`);
             await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
             await page.keyboard.press(UNDO);
             if ((await now()) !== before) bad.push('one Undo did not take the point away: the press was not one step');
             if (bad.length) problems.push(`${name}: ${bad.join('; ')}`);
-            else done.push(`${name} (the pen's tap: nothing on the down, nothing left by a press moved off, one point and one undo step on the up)`);
+            else done.push(`${name} (the pen's tap: nothing drawn or said on the down, nothing left or said by a press moved off, one point and one undo step on the up, saying "${POINT_ADDED}")`);
             continue;
           }
           if (!href && !isHelp && !skip && !offPlay && !isOpen) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
@@ -2621,7 +2636,8 @@ export default {
       // moves to DRAG_TO in four steps: read while held, the canvas has changed and the marker is drawn at DRAG_TO (the
       // drag is live). Escape: the canvas is as before the press. The pointer then moves on and is let go: the canvas is
       // still as before the press, so the later release places nothing. It fails with cancelDrag doing nothing (brief
-      // 116, (g)).
+      // 116, (g)). Brief 134 (ruling CV; D268, a cancelled drag says nothing): in the three seconds after the release the
+      // status region never says "Point moved" (Skip to end's words may still show).
       name: 'point-drag-escape',
       method: 'j-pointer',
       rows: ['2.5.2'],
@@ -2644,7 +2660,8 @@ export default {
         await pointer.move(to.x + 20, to.y + 20);
         await pointer.up();
         if ((await now()) !== before) wrong.push('the release after Escape changed what is drawn');
-        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : 'in pen-drawn, the second point pressed and dragged to a new place, drawn there while held; Escape before the release drew the whole canvas as before the press, and the release after it changed nothing drawn');
+        if (!(await neverSays(page, POINT_MOVED))) wrong.push(`the drag cancelled by Escape said "${POINT_MOVED}"`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, the second point pressed and dragged to a new place, drawn there while held; Escape before the release drew the whole canvas as before the press, and the release after it changed nothing drawn; in the 3 s after the release the status region never said "${POINT_MOVED}"`);
       },
     },
     {

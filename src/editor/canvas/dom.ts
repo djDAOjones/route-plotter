@@ -25,7 +25,8 @@
 //    Mac, Ctrl elsewhere) and no Alt and no Shift changes the selection, never a step, never the project. That route
 //    selected, the point in the selection: taken out, the others' order kept, and with none left nothing is selected (as
 //    Escape leaves it); that route selected, the point not in it: added at the end; nothing selected, or another route:
-//    that point alone. It says nothing aloud (the pen's silence, A6). Every other tap with a modifier held means nothing:
+//    that point alone. It says nothing aloud: it is not a step, and D268 (D263's answer) words steps and select all only.
+//    Every other tap with a modifier held means nothing:
 //    the command key on nothing, on a line or its "+", or on another route's point; any tap with Alt or Shift held (D257
 //    asks the owner whether v3's Shift+click delete comes back; Alt is G's branch); Ctrl on a Mac. A press with a
 //    modifier held never drags (pointer.ts, `pressed`), so a selection made this way is dragged by a plain press.
@@ -69,7 +70,8 @@
 //    a drag is (`holdOnPicture`, D237); a refusal cancels the gesture and the key is still taken. `selectAll`: the
 //    route holds a point, and every point of it is selected in the route's order, never a step. A held key's repeat
 //    acts no more and says the same. Select all hands a `say` its one line when it changes the selection (brief 133,
-//    CT; ./words.ts); the page gives it nothing yet, so none says anything aloud (D263's answer, wired in stage 2).
+//    CT; ./words.ts), and the page gives it the status area's `announce` (keydown.ts); Delete's and Duplicate's steps
+//    are said by the store's `stepped` hook (../shell/session.ts), in D268's words (D263's answer, brief 134).
 // 8. The nudge (brief 125, rulings AX and AY; v3's InteractionHandler.js 970 to 992, wiringControllers.js 295 to 327,
 //    app/undoRedo.js 99 to 107): `editKey` with `nudge` or `nudgeFurther` and the arrow pressed moves the selected
 //    points of the route by 0.5% of the picture (`NUDGE`), or 2% (`NUDGE_FURTHER`), along the arrow (up is minus y),
@@ -83,7 +85,8 @@
 //    closed), the bound canvas for a pointer press and the window's blur, and keydown.ts for the focus leaving where it
 //    was and any pointer press on the page; a press on another store commits the old store's burst there first.
 //    Another gesture owning the store (a begin it would refuse) is left alone, and the key is not taken, at the edge
-//    too; nothing is taken with nothing selected on the route or while a drag is open. Nothing is said aloud (D263).
+//    too; nothing is taken with nothing selected on the route or while a drag is open. Nothing is said aloud: D268
+//    (D263's answer) keeps a nudge silent, as v3 was.
 // 9. The point's menu's opener (brief 130, ruling CB; D267 (a)). With a `menu` handed, a `contextmenu` on the canvas
 //    hit-tests the last frame drawn as a down does (points before lines, ./hit.ts); on a point it cancels the browser's
 //    own menu, selects the point (kept as it is when the point is already in the selection: ./menu.ts `menuSelection`,
