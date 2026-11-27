@@ -30,10 +30,14 @@
 // 7. A file's name is text a user's file brought: it is drawn as text, never as markup.
 // 8. Each is drawn from the opener's state by `useSyncExternalStore`, with the same `read` for the server's render, so
 //    Node draws them; every word is in `OPEN_WORDS` (openLogic.ts).
+// 9. D276 (a), provisional (brief 145): when the session's opener carries its `question` (ReplaceQuestion.tsx), the
+//    button draws that question beside it, closed until the opener asks; its focus goes back to this button, found by
+//    its id. Without a `question` the button is as it was.
 import { InlineLoading, InlineNotification } from '@carbon/react';
-import { useSyncExternalStore } from 'react';
+import { useMemo, useSyncExternalStore, type RefObject } from 'react';
 import { FileButton } from '../kit/FileButton';
 import { OPEN_WORDS, type Opener } from './openLogic';
+import { ReplaceQuestion, type ReplaceAsker } from './ReplaceQuestion';
 
 /** The button's id. */
 const OPEN_ID = 'open-project';
@@ -42,21 +46,35 @@ const ACCEPT = ['.zip'];
 
 export interface OpenProps {
   /** The page's one opener, made by the session. */
-  readonly opener: Pick<Opener, 'read' | 'subscribe' | 'openFile' | 'dismiss'>;
+  readonly opener: Pick<Opener, 'read' | 'subscribe' | 'openFile' | 'dismiss'> & {
+    /** D276 (a): the question the opener asks before replacing a changed route (point 9). */
+    readonly question?: Pick<ReplaceAsker, 'read' | 'answer' | 'subscribe'>;
+  };
 }
+
+/** The button itself, found by its id when the question gives focus back (point 9). */
+const openButton = (): RefObject<HTMLElement | null> => ({
+  get current() {
+    return typeof document === 'undefined' ? null : document.getElementById(OPEN_ID);
+  },
+});
 
 /** "Open project": a button that asks for one project file and hands it to the opener. */
 export function OpenButton({ opener }: OpenProps) {
+  const back = useMemo(() => openButton(), []);
   return (
-    <FileButton
-      id={OPEN_ID}
-      accept={ACCEPT}
-      onChoose={(file) => {
-        void opener.openFile(file);
-      }}
-    >
-      {OPEN_WORDS.button}
-    </FileButton>
+    <>
+      <FileButton
+        id={OPEN_ID}
+        accept={ACCEPT}
+        onChoose={(file) => {
+          void opener.openFile(file);
+        }}
+      >
+        {OPEN_WORDS.button}
+      </FileButton>
+      {opener.question === undefined ? null : <ReplaceQuestion asker={opener.question} opener={back} />}
+    </>
   );
 }
 

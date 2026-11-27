@@ -17,6 +17,7 @@ import { createFrameInputs } from './previewLogic';
 import { createStore } from '../store/store';
 import { createEditorTransport, hasSomethingToPlay, WORDS } from '../transport/transport';
 import { createOpener, OPEN_WORDS, type OpenerOptions } from './openLogic';
+import { createReplaceAsker } from './ReplaceQuestion';
 
 function counter(prefix: string): IdSource {
   let n = 0;
@@ -1191,5 +1192,26 @@ describe('D276 (a), brief 144: the opener asks before a chosen project replaces 
     expect(await second).toEqual({ kind: 'cancelled' });
     expect(said).toEqual([OPEN_WORDS.cancelled]);
     expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
+  });
+
+  it('with the page’s asker, a second Open while asking leaves one question: the older kept, only the latest opens (brief 145, JC 2)', async () => {
+    const asker = createReplaceAsker();
+    const { store, opener, said } = changedSession(asker.ask);
+    const before = store.getState().project;
+    const until = async (done: () => boolean) => {
+      for (let i = 0; i < 500 && !done(); i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(done()).toBe(true);
+    };
+    const first = opener.openFile(fileOfBytes('one.zip', await fileOf(routeOf(3, 0, 'b'))).file);
+    await until(() => asker.read() === 'one.zip');
+    const second = opener.openFile(fileOfBytes('two.zip', await fileOf(routeOf(4, 0, 'c'))).file);
+    await until(() => asker.read() === 'two.zip');
+    expect(await first).toEqual({ kind: 'superseded' });
+    expect(store.getState().project).toBe(before);
+    expect(said).toEqual([]);
+    asker.answer(true);
+    expect(await second).toEqual({ kind: 'opened' });
+    expect(store.getState().project.scene).toEqual(routeOf(4, 0, 'c').scene);
+    expect(said).toEqual([OPEN_WORDS.opened]);
   });
 });

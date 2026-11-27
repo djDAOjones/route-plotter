@@ -17,7 +17,9 @@
 // - The switch for single-key shortcuts (D183) is held here for the visit, on to begin with: the listener reads it at
 //   each key, Help shows and sets it. It is not stored (CORE-09's), not a scene setting, and makes no undo step.
 // - Stage 6: the opener (openLogic.ts), made once beside the transports from the session's own store, the queue's
-//   `announce` and the browser's decoder (decode.ts): Open's button and notice are drawn from it. The player's
+//   `announce` and the browser's decoder (decode.ts): Open's button and notice are drawn from it. Since brief 145 (D276 (a),
+//   provisional) it carries the page's one `question` (ReplaceQuestion.tsx), handed to it as `confirmReplace`, so a
+//   chosen project asks before it replaces a changed route; "Open project" draws that question. The player's
 //   transport reads what the length is made from through the preview's inputs (previewLogic.ts): the store's scene,
 //   the seed, the size and the background's size from its header, so an opened project is measured by its picture
 //   from the open's own telling, not as a square.
@@ -39,6 +41,7 @@ import { createEditorTransport, hasSomethingToPlay, WORDS, type EditorTransport 
 import { decode } from './decode';
 import { holdForVisit, type Held } from './held';
 import { createOpener, type Opener } from './openLogic';
+import { createReplaceAsker, type ReplaceAsker } from './ReplaceQuestion';
 import { loadPicture } from './loadPicture';
 import { createDrawer, createFrameInputs, createPictures, type Drawer, type FrameInputs } from './previewLogic';
 import { createLengthReader, createTimeline, type Timeline } from './timelineLogic';
@@ -53,7 +56,7 @@ export interface PageSession {
   /** Whether single-key shortcuts are on (D183). */
   readonly singleKeys: Held<boolean>;
   /** Open's opener: a project file's bytes into the store (stage 6). */
-  readonly opener: Opener;
+  readonly opener: Opener & { readonly question: ReplaceAsker };
   /** What the preview's canvas needs: the one inputs (its size, and the scene whose export gives its shape) and the one
    *  drawer (brief 84). */
   readonly preview: { readonly inputs: FrameInputs; readonly drawer: Drawer };
@@ -121,7 +124,8 @@ function make(): PageSession {
     frameRate: () => store.getState().project.scene.settings.export.frameRate,
   });
   const length = createLengthReader({ store, length: () => player.length(), frames });
-  const opener = createOpener({ store, announce, player, decode });
+  const question = createReplaceAsker();
+  const opener = Object.freeze({ ...createOpener({ store, announce, player, decode, confirmReplace: question.ask }), question });
   const timeline = createTimeline({ store, transport, length, opened: () => opener.opened() });
   const pictures = createPictures({ store, load: loadPicture, report: (error) => { reportError(error); } });
   const drawer = createDrawer({
