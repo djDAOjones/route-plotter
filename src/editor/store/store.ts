@@ -14,6 +14,12 @@
 // is reported. Either way, what `getState()` shows is always what the next command receives. The store does not claim
 // to withstand code written to break it.
 //
+// CORE-06 (brief 133, ruling CS; D263, the owner's "Yes, every edit"): `stepped`, given, hears each step once, after the
+// subscribers: one made (a dispatch or a gesture's commit that changed the project), or one Undo or Redo took. Never a
+// gesture's begin or its moves, a cancel, a selection, Open, the transport's slice, an edit refused or one that ended as
+// it began, nor an Undo or Redo refused: so the page says one line an edit and nothing for the rest. It is called as a
+// subscriber is: one that throws is reported and never undoes the step.
+//
 // Beside the project, outside the undo history, the store holds the player's transport's slice (stage 2): what an
 // interface shows of it, playing or not, the position and the speed. A change to it is never a step, never clears
 // Redo, is taken while a gesture is open and tells subscribers as any change does, with a new state whose project is
@@ -88,11 +94,24 @@ export interface Store extends PlaybackHolder {
   open(project: Project): Outcome;
 }
 
+/**
+ * A step as `stepped` hears it: its label, what the change found and what it left (for an Undo, the step's after and
+ * before), and whether a commit made it or an Undo or a Redo took it.
+ */
+export interface Stepped {
+  readonly label: string;
+  readonly before: Current;
+  readonly after: Current;
+  readonly kind: 'commit' | 'undo' | 'redo';
+}
+
 export interface StoreOptions {
   readonly project: Project;
   readonly nextId: IdSource;
   /** Where an error a subscriber throws goes; by default it is thrown again on its own, after the others have run. */
   readonly report?: (error: unknown) => void;
+  /** Called once for each step made, undone or redone, after the subscribers (the header's CORE-06 paragraph). */
+  readonly stepped?: (step: Stepped) => void;
 }
 
 interface Step {
@@ -137,7 +156,7 @@ function problemsOf(project: Project): Refusal | null {
 }
 
 /** Throws a TypeError on a project that is not plain data (own.ts), a RangeError on one its declarations refuse. */
-export function createStore({ project, nextId, report = rethrowLater }: StoreOptions): Store {
+export function createStore({ project, nextId, report = rethrowLater, stepped }: StoreOptions): Store {
   const held = own(project);
   const invalid = problemsOf(held);
   if (invalid !== null) throw new RangeError('The editor’s store was given a project its declarations refuse.');
@@ -160,19 +179,34 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
     });
   let state = stateNow();
 
+  /** Calls `call`, as a subscriber is called: what it throws goes to the reporter, and a reporter's throw on its own later. */
+  function heard(call: () => void): void {
+    try {
+      call();
+    } catch (error) {
+      try {
+        report(error);
+      } catch (failure) {
+        rethrowLater(failure);
+      }
+    }
+  }
+
   function publish(): void {
     state = stateNow();
     for (const listener of [...listeners]) {
-      try {
+      heard(() => {
         listener.call();
-      } catch (error) {
-        try {
-          report(error);
-        } catch (failure) {
-          rethrowLater(failure);
-        }
-      }
+      });
     }
+  }
+
+  /** Tells `stepped`, given, of one step, after the subscribers have been told of the change. */
+  function tell(step: Stepped): void {
+    if (stepped === undefined) return;
+    heard(() => {
+      stepped(step);
+    });
   }
 
   /** Runs `command` on what is now and checks what it gives; changes `current` only when both hold. */
@@ -193,13 +227,15 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
   function close(gesture: Opened): Outcome {
     opened = null;
     const made = !sameValue(gesture.before.project, current.project);
+    const step: Step = { label: gesture.label, before: gesture.before, after: current };
     if (made) {
-      undoSteps = [...undoSteps, { label: gesture.label, before: gesture.before, after: current }].slice(-MAX_STEPS);
+      undoSteps = [...undoSteps, step].slice(-MAX_STEPS);
       redoSteps = [];
     } else {
       current = currentOf(gesture.before.project, current.selection);
     }
     publish();
+    if (made) tell({ ...step, kind: 'commit' });
     return { ok: true, changed: made };
   }
 
@@ -234,12 +270,14 @@ export function createStore({ project, nextId, report = rethrowLater }: StoreOpt
   function travel(from: readonly Step[], to: readonly Step[], toward: 'before' | 'after'): Outcome | null {
     const step = from.at(-1);
     if (step === undefined) return null;
+    const found = current;
     current = step[toward];
     const rest = from.slice(0, -1);
     const added = [...to, step];
     if (toward === 'before') [undoSteps, redoSteps] = [rest, added];
     else [redoSteps, undoSteps] = [rest, added];
     publish();
+    tell({ label: step.label, before: found, after: current, kind: toward === 'before' ? 'undo' : 'redo' });
     return { ok: true, changed: true };
   }
 

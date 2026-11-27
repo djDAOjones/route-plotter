@@ -922,6 +922,37 @@ describe('the Editing keys (point 7; brief 123, ruling AO)', () => {
     expect(editKey('selectAll', true, store, false)).toBe(true);
     expect(store.getState().selection).toEqual(NOTHING_SELECTED);
   });
+
+  it('Select all says its one line when it changes the selection, and nothing when it changes nothing (brief 133, CT)', () => {
+    const { store, route, a } = scene();
+    store.select({ route: route.id, points: [a] });
+    const say = vi.fn();
+    expect(editKey('selectAll', false, store, false, '', 1, say)).toBe(true);
+    expect(say.mock.calls).toEqual([['All 3 points selected']]);
+    expect(editKey('selectAll', false, store, false, '', 1, say)).toBe(true);
+    expect(say).toHaveBeenCalledTimes(1);
+    store.select(NOTHING_SELECTED);
+    expect(selectAll(store, false, false, say)).toBe(true);
+    expect(say.mock.calls).toEqual([['All 3 points selected'], ['All 3 points selected']]);
+  });
+
+  it('a held Select all’s repeat says nothing, though it is taken (brief 133, CT)', () => {
+    const { store } = scene();
+    store.select(NOTHING_SELECTED);
+    const say = vi.fn();
+    expect(editKey('selectAll', true, store, false, '', 1, say)).toBe(true);
+    expect(say).not.toHaveBeenCalled();
+    expect(store.getState().selection).toEqual(NOTHING_SELECTED);
+  });
+
+  it('a Select all not taken says nothing: no route, a route with no point, a drag open (brief 133, CT)', () => {
+    const say = vi.fn();
+    for (const routes of ['none', 'empty'] as const) expect(editKey('selectAll', false, bare(routes), false, '', 1, say)).toBe(false);
+    const { store } = scene();
+    store.select(NOTHING_SELECTED);
+    expect(selectAll(store, true, false, say)).toBe(false);
+    expect(say).not.toHaveBeenCalled();
+  });
 });
 
 describe('the nudge (point 8; brief 125, rulings AX and AY)', () => {

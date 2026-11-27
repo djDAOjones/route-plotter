@@ -68,7 +68,8 @@
 //    selection (D238, answered 25 Nov: "Copies, then carry on"), held on the picture as a group keeping its shape, as
 //    a drag is (`holdOnPicture`, D237); a refusal cancels the gesture and the key is still taken. `selectAll`: the
 //    route holds a point, and every point of it is selected in the route's order, never a step. A held key's repeat
-//    acts no more and says the same. None says anything aloud (the pen's silence; D263 asks the owner).
+//    acts no more and says the same. Select all hands a `say` its one line when it changes the selection (brief 133,
+//    CT; ./words.ts); the page gives it nothing yet, so none says anything aloud (D263's answer, wired in stage 2).
 // 8. The nudge (brief 125, rulings AX and AY; v3's InteractionHandler.js 970 to 992, wiringControllers.js 295 to 327,
 //    app/undoRedo.js 99 to 107): `editKey` with `nudge` or `nudgeFurther` and the arrow pressed moves the selected
 //    points of the route by 0.5% of the picture (`NUDGE`), or 2% (`NUDGE_FURTHER`), along the arrow (up is minus y),
@@ -106,6 +107,7 @@ import { hitTest, type HitRoute } from './hit';
 import { hoverOf, type HoverHolder } from './hover';
 import { menuSelection } from './menu';
 import type { Modifiers, Pixel, PointerInput } from './pointer';
+import { allSelected } from './words';
 
 /** A point's half-size at scale 1, in reference pixels: 30 px across (D241). */
 export const MARKER_HALF = 15;
@@ -490,11 +492,20 @@ export function duplicateSelected(store: EditStore, drag: boolean, repeat = fals
   return true;
 }
 
-/** Cmd or Ctrl+A (point 7): every point of the route selected, in the route's order, never a step; true when it has one. */
-export function selectAll(store: EditStore, drag: boolean, repeat = false): boolean {
+/** Where a line for the page's one status area goes (point 7: select all's); by default, nowhere. */
+export type Say = (words: string) => void;
+const silent: Say = () => undefined;
+
+/**
+ * Cmd or Ctrl+A (point 7): every point of the route selected, in the route's order, never a step; true when it has one.
+ * When the press changes the selection, `say` is handed its one line (./words.ts `allSelected`); a repeat says nothing.
+ */
+export function selectAll(store: EditStore, drag: boolean, repeat = false, say: Say = silent): boolean {
   const route = store.getState().project.scene.routes[0];
   if (drag || route === undefined || route.points.length === 0) return false;
-  if (!repeat) store.select({ route: route.id, points: route.points.map((point) => point.id) });
+  if (repeat) return true;
+  const done = store.select({ route: route.id, points: route.points.map((point) => point.id) });
+  if (done.ok && done.changed) say(allSelected(store.getState().selection.points.length));
   return true;
 }
 
@@ -567,10 +578,13 @@ function quietFromNow(open: NonNullable<typeof burst>): void {
   open.timer = setTimeout(endNudge, NUDGE_QUIET_MS);
 }
 
-/** The Editing keys' one path (points 7 and 8), as keydown.ts hands it to the dispatch: true when the key is taken. */
-export function editKey(action: EditAction, repeat: boolean, store: EditStore, drag: boolean, key = '', zoom = zoomNow()): boolean {
+/**
+ * The Editing keys' one path (points 7 and 8), as keydown.ts hands it to the dispatch: true when the key is taken.
+ * `say` is select all's (point 7).
+ */
+export function editKey(action: EditAction, repeat: boolean, store: EditStore, drag: boolean, key = '', zoom = zoomNow(), say: Say = silent): boolean {
   if (action === 'nudge' || action === 'nudgeFurther') return nudgeSelected(store, drag, key, action === 'nudgeFurther', zoom);
   if (action === 'deleteSelection') return deleteSelected(store, drag, repeat);
   if (action === 'duplicate') return duplicateSelected(store, drag, repeat);
-  return selectAll(store, drag, repeat);
+  return selectAll(store, drag, repeat, say);
 }
