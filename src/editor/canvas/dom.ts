@@ -19,7 +19,9 @@
 //    is the selected route, whatever points of it are selected, or none (brief 121, ruling AE, narrowing ruling Z's
 //    "whatever the pen stood on"); with nothing selected or another route selected, a tap on the "+"'s place means
 //    nothing. A tap on a line off its "+" (D254 asks the owner), or on another route's point or line, means nothing yet.
-//    A place beyond the picture, the tap's or the "+"'s, is held to its edge (D237: the clamp is the page's).
+//    A tap's place beyond the picture is held to its edge (D237: the clamp is the page's). The "+" adds its bend at
+//    the line's middle exactly, wherever that lies, as a duplicate's copy is never pulled in (D278, provisional:
+//    INTAKE.19, a point added beside points off the picture stays beside them).
 //    A tap with a modifier held is never the pen's. `toggleTap` (brief 122, ruling AH; v3's Cmd/Ctrl+click,
 //    InteractionHandler.js:668-672): a tap on a point of the first route with the platform's command key held (Cmd on a
 //    Mac, Ctrl elsewhere) and no Alt and no Shift changes the selection, never a step, never the project. That route
@@ -197,7 +199,7 @@ export function penTap({ project, selection }: Pick<ReturnType<Store['getState']
   if (under === null) return penStep(route.id, pen, { place: { x: clamp(tap.place.x), y: clamp(tap.place.y), kind: 'stop' } });
   if (under.kind === 'point' && under.route === route.id) return penStep(route.id, pen, { point: under.id });
   if (under.kind === 'line' && under.route === route.id && under.plus !== undefined && selection.route === route.id) {
-    return splitLine(route.id, under.id, { x: clamp(under.plus.x), y: clamp(under.plus.y), kind: 'bend' });
+    return splitLine(route.id, under.id, { x: under.plus.x, y: under.plus.y, kind: 'bend' });
   }
   return null;
 }

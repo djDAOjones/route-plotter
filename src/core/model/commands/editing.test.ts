@@ -310,6 +310,15 @@ describe('duplicating points (D238, answered 25 Nov: copies, as built)', () => {
     expect(after.lines[3]).toEqual({ id: 'd3', from: 'd2', to: 'd1', direction: 'both ways', speedFactor: 2.5 });
   });
 
+  it('a copy of a point beyond the picture\'s edge stays beside it, never pulled onto the picture (INTAKE.19, D278)', () => {
+    const base = marked();
+    const route = { ...base, points: base.points.map((p) => (p.id === 'A' ? { ...p, x: 1.5, y: -0.3 } : p)) };
+    const { route: after, points } = done(duplicatePoints(route, counter('d'), ['A']));
+    expect(points).toEqual(['d1']);
+    expect(after.points[3]).toMatchObject({ id: 'd1', x: 1.5 + DUPLICATE_OFFSET, y: -0.3 + DUPLICATE_OFFSET });
+    expect(checked(after)).toBe(true);
+  });
+
   it('one point gives an unjoined copy; an unknown point refuses; nothing named gives back the same route', () => {
     const route = marked();
     const { route: one, points } = done(duplicatePoints(route, counter('d'), ['A']));

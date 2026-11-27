@@ -221,13 +221,13 @@ describe('the pen\'s tap', () => {
     expect(penTap(store.getState(), tap({ kind: 'line', route: other.id, id: line, plus }, plus))).toBeNull();
   });
 
-  it('holds a "+" place beyond the picture to its edge (D237)', () => {
+  it('a "+" on a line beyond the picture adds its point there, D278', () => {
     const { store, route } = scene();
     store.select({ route: route.id, points: [] });
     const line = route.lines[0]?.id ?? '';
     const command = penTap(store.getState(), tap({ kind: 'line', route: route.id, id: line, plus: { x: -0.1, y: 1.2 } }, { x: 0.5, y: 0.5 }));
     if (command) store.dispatch(command);
-    expect(routeOf(store).points[3]).toMatchObject({ x: 0, y: 1, kind: 'bend' });
+    expect(routeOf(store).points[3]).toMatchObject({ x: -0.1, y: 1.2, kind: 'bend' });
   });
 
   it('holds a place beyond the picture to its edge (D237)', () => {
