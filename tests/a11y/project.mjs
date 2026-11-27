@@ -3487,9 +3487,12 @@ export default {
       // end the canvas reads the baseline (nothing selected or changed). The status queue merges the same words written
       // while the region still shows them (announce.ts): each step waits for it to come back to empty, as line-menu and
       // point-move do. The row is 2.2.2 under the j-timing method: a pointer way to pause the moving preview, beside the
-      // Pause button and Space (no new row; nothing is claimed for 3.2.x). Faults that fail it (brief 141,
-      // PROBE-141/mut-*.txt): (as) the binding ignoring `playing`; (at) the press swallowed but `pause` not called; it
-      // was red on stage 2's build, where the page handed no `pause` (PROBE-141/red-press-while-playing.txt).
+      // Pause button and Space (no new row; nothing is claimed for 3.2.x). Faults that fail it, run by sub-chat 142
+      // (the lane's PROBE-142/mut-as.txt, mut-at.txt): (as) the binding's playing branch removed: 2.2.2 failed with
+      // "the button read "Pause" just after the press, not "Play" (the play went on)" and ""Point added" was heard
+      // after the tap while playing"; (at) the press swallowed but `pause` not called: 2.2.2 failed with "the button
+      // read "Pause" just after the press" and ""Animation paused" was not heard" at steps (1) and (4). It was red on
+      // stage 2's build, where the page handed no `pause` (PROBE-141/red-press-while-playing.txt).
       name: 'press-while-playing',
       method: 'j-timing',
       rows: ['2.2.2'],
