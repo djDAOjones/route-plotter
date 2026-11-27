@@ -528,3 +528,12 @@ test('a route the lead walks whole draws one dashed stroke as before; a loop’s
   expect(none[0]?.stroke).toContain('lineCap=round');
   sameCourse(none[0]?.at ?? [], unled.line, 'no lead start');
 });
+
+test('a hidden line’s guide (lineOverlay) stays one dashed stroke when the lead leaves a line out: the dots are the paused guide’s alone', () => {
+  const led = ledFrom(1);
+  const hidden = { ...led, routes: led.routes.map((route) => ({ ...route, settings: { ...route.settings, line: { ...route.settings.line, appearance: 'hidden' as const } } })) };
+  const [stroke, ...more] = strokes(both(hidden, VIEWINGS['a zoom of 1']).added);
+  expect(more).toEqual([]);
+  expect(stroke).toContain(`lineDash=${6 * unitAt(1)},${4 * unitAt(1)}`);
+  expect(stroke).not.toContain('lineCap=');
+});

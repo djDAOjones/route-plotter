@@ -220,15 +220,8 @@ export function lineOverlay(routeIds: readonly string[], { hovered = null }: Lin
     for (const id of new Set(routeIds)) {
       const route = screen.routes.get(id);
       if (route === undefined || route.settings.line.appearance !== 'hidden') continue;
-      const leftOut = new Set(route.timeline.walk.leftOut);
-      const runsFor = (left: boolean) =>
-        route.shape.lines
-          .filter((line) => leftOut.has(line.id) === left)
-          .flatMap((line) => runsOf(route.timeline.shapes.get(line.id)?.samples ?? [], screen));
-      const walked = runsFor(false);
-      if (walked.length > 0) guide(context, walked, route.settings.line.colour, unit);
-      const left = runsFor(true);
-      if (left.length > 0) guide(context, left, route.settings.line.colour, unit, LEFT_OUT);
+      const runs = route.shape.lines.flatMap((line) => runsOf(route.timeline.shapes.get(line.id)?.samples ?? [], screen));
+      if (runs.length > 0) guide(context, runs, route.settings.line.colour, unit);
     }
     const stretch = hovered === null ? null : stretchOf(hovered, frame, screen, unit);
     if (stretch === null || hovered === null) return;
