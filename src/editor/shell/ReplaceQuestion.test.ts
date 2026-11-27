@@ -29,7 +29,7 @@ describe('the replace asker (point 1 and 2)', () => {
       told += 1;
     });
     const yes = asker.ask('walk.zip');
-    expect(asker.read()).toBe('walk.zip');
+    expect(asker.read()?.name).toBe('walk.zip');
     asker.answer(true);
     expect(asker.read()).toBeNull();
     expect(await yes).toBe(true);
@@ -48,10 +48,26 @@ describe('the replace asker (point 1 and 2)', () => {
     const older = asker.ask('one.zip');
     const newer = asker.ask('two.zip');
     expect(await older).toBe(false);
-    expect(asker.read()).toBe('two.zip');
+    expect(asker.read()?.name).toBe('two.zip');
     asker.answer(true);
     expect(await newer).toBe(true);
     expect(asker.read()).toBeNull();
+  });
+
+  it('each ask is its own question: a second ask for the same file gives a new snapshot, steady between asks (Codex, brief 147)', () => {
+    // The focus effect runs again only when the snapshot changes (ReplaceQuestion.tsx point 4). With the file's name
+    // alone as the snapshot (3491f00), a second ask for the same file read the same string, the effect did not run and
+    // focus stayed where it was ("Replace", say). Node cannot run the effect (this file draws static markup); the
+    // journey `open-over-changes` reads focus on the page.
+    const asker = createReplaceAsker();
+    void asker.ask('walk.zip');
+    const first = asker.read();
+    expect(asker.read()).toBe(first);
+    void asker.ask('walk.zip');
+    const second = asker.read();
+    expect(second).not.toBe(first);
+    expect(asker.read()).toBe(second);
+    expect([first?.name, second?.name]).toEqual(['walk.zip', 'walk.zip']);
   });
 });
 

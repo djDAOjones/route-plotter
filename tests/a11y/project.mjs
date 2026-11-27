@@ -1893,15 +1893,22 @@ export default {
       },
     },
     {
-      // D276 (a), provisional (brief 145, ruling JC 4): Open over a route drawn since the page opened asks first. In
-      // pen-drawn (two taps: the route has changed), the journeys' project chosen through "Open project" shows one
-      // dialog, "Replace your route?", naming the file, with focus on "Keep my route"; one Escape closes it, the canvas
-      // reads as before (the same pixels), "Open cancelled" is heard once and nothing else, and focus is back on "Open
-      // project". Open again and "Replace": "Project opened" heard, the opened project drawn (the canvas changed), focus
-      // back on "Open project". Open once more, nothing drawn since: no dialog, "Project opened". It claims 3.3.4 (the
-      // one action that throws work away is confirmed); the runner refuses 2.4.3 for a j-forms journey, so focus is read
-      // here as part of 3.3.4's result only. While the `user-input` feature is unknown 3.3.4 stays unresolved in the
-      // report whatever this records; 3.3.6 and the feature's evidence are the next chat's (brief 145, ruling JD).
+      // D276 (a), provisional (brief 145, ruling JC 4; widened by brief 147, ruling KA 3): Open over a route drawn since
+      // the page opened asks first. In pen-drawn (two taps: the route has changed), the journeys' project chosen
+      // through "Open project" shows one dialog, "Replace your route?", naming the file, with focus on "Keep my route".
+      // It is then kept four ways, each from a fresh Open: one Escape, "Keep my route" by its button, the dialog's
+      // Close, and a press outside it; each time the dialog is gone, the canvas reads as before (the same pixels),
+      // "Open cancelled" is heard once more and nothing else, and focus is back on "Open project". Then a second ask
+      // while one is shown (Codex on 3491f00): with the dialog up and focus moved by Tab to "Replace", the page's own
+      // Open key (Cmd/Ctrl+O) opens nothing (the open dialog takes it, keydown.ts), and the button is behind the
+      // dialog, so from the page a second ask comes only from a second file chosen before the first was read and read
+      // after the question showed. The journey holds that order itself: it presses "Open project" twice, choosing the
+      // same file in the first chooser, moving focus to "Replace" once the question shows, then choosing in the second;
+      // the first open is set aside unsaid (openLogic.ts point 14), one dialog stays, and focus goes back to "Keep my
+      // route". Escape then keeps the route as before. Open again and "Replace": "Project opened" heard, the opened
+      // project drawn (the canvas changed), focus back on "Open project". Open once more, nothing drawn since: no
+      // dialog, "Project opened". It claims 3.3.4 (the one action that throws work away is confirmed); the runner
+      // refuses 2.4.3 for a j-forms journey, so focus is read here as part of 3.3.4's result only.
       name: 'open-over-changes',
       method: 'j-forms',
       rows: ['3.3.4'],
@@ -1911,9 +1918,23 @@ export default {
         const question = page.getByRole('dialog', { name: 'Replace your route?' });
         const asked = () => question.waitFor({ state: 'visible', timeout: 6000 }).then(() => true, () => false);
         const focused = () => page.evaluate(() => document.activeElement?.textContent?.trim() || document.activeElement?.tagName || 'nothing');
+        const focusComesTo = (words) => page.waitForFunction((w) => document.activeElement?.textContent?.trim() === w, words, { timeout: 3000 }).then(() => true, () => false);
         const says = (w) => page.waitForFunction(([sel, words]) => document.querySelector(sel)?.textContent === words, [STATUS, w], { timeout: 6000 }).then(() => true, () => false);
         const drawn = await pixels(page);
         const heard = await hear(page);
+        let cancels = 0;
+        // After a way of keeping: the dialog gone, "Open cancelled" heard once more, the canvas as before, focus back.
+        const keptBy = async (how) => {
+          if (await question.count()) wrong.push(`${how} left the dialog open`);
+          if (!(await says('Open cancelled'))) wrong.push(`"Open cancelled" was not said after ${how}`);
+          await quiet(page);
+          await twoFrames(page);
+          cancels += 1;
+          if ((await pixels(page)).hash !== drawn.hash) wrong.push(`after ${how} the canvas did not read as before the Open: the route was replaced`);
+          if (!(await focusOn(page, OPEN))) wrong.push(`after ${how} focus was on "${await focused()}", not "Open project"`);
+          const texts = await heard();
+          if (JSON.stringify(texts) !== JSON.stringify(Array(cancels).fill('Open cancelled'))) wrong.push(`after ${how} the status region had said ${JSON.stringify(texts)}, not "Open cancelled" ${cancels} time(s) and nothing else`);
+        };
         // (1) Asked, kept by Escape.
         if (!(await choose(page, await projectFile()))) wrong.push('a press on "Open project" opened no file chooser');
         if (!(await asked())) wrong.push('no "Replace your route?" dialog showed over a drawn route');
@@ -1924,18 +1945,52 @@ export default {
           const first = await focused();
           if (first !== 'Keep my route') wrong.push(`as the dialog opened focus was on "${first}", not "Keep my route"`);
           await page.keyboard.press('Escape');
-          if (await question.count()) wrong.push('one Escape left the dialog open');
-          if (!(await says('Open cancelled'))) wrong.push('"Open cancelled" was not said after Escape');
-          await quiet(page);
-          await twoFrames(page);
-          if ((await pixels(page)).hash !== drawn.hash) wrong.push('after Escape the canvas did not read as before the Open: the route was replaced');
-          if (!(await focusOn(page, OPEN))) wrong.push(`after Escape focus was on "${await focused()}", not "Open project"`);
+          await keptBy('Escape');
+        }
+        // (1b) Kept by "Keep my route", by Close and by a press outside, each from a fresh Open.
+        for (const [how, act] of [
+          ['"Keep my route" by its button', () => question.getByRole('button', { name: 'Keep my route', exact: true }).click()],
+          ['the dialog\'s Close', () => question.getByRole('button', { name: 'Close', exact: true }).click()],
+          ['a press outside the dialog', () => page.mouse.click(4, 4)],
+        ]) {
+          if (!(await choose(page, await projectFile()))) wrong.push(`before ${how} a press on "Open project" opened no file chooser`);
+          if (!(await asked())) wrong.push(`before ${how} no dialog showed over the drawn route`);
+          else {
+            await act();
+            await keptBy(how);
+          }
+        }
+        // (1c) A second ask while one is shown: one dialog, focus back on "Keep my route".
+        {
+          const chooser = () => page.waitForEvent('filechooser', { timeout: 3000 }).then((c) => c, () => null);
+          const one = chooser();
+          await page.locator(OPEN).click();
+          const c1 = await one;
+          const two = chooser();
+          await page.locator(OPEN).click();
+          const c2 = await two;
+          if (!c1 || !c2) wrong.push(`two presses on "Open project" opened ${[c1, c2].filter(Boolean).length} file chooser(s), not two`);
+          else {
+            await c1.setFiles(await projectFile());
+            if (!(await asked())) wrong.push('no dialog showed for the first of two files chosen');
+            else {
+              await page.keyboard.press('Tab');
+              const moved = await focused();
+              if (moved !== 'Replace') wrong.push(`Tab from "Keep my route" put focus on "${moved}", not "Replace"`);
+              const { opened } = await pressOpenKey(page, 1500);
+              if (opened) wrong.push('the Open key, pressed in the dialog, opened a file chooser');
+              await c2.setFiles(await projectFile());
+              if (!(await focusComesTo('Keep my route'))) wrong.push(`a second ask for the same file while the question showed left focus on "${await focused()}", not "Keep my route"`);
+              if ((await page.getByRole('dialog').count()) !== 1) wrong.push(`after a second ask ${await page.getByRole('dialog').count()} dialogs showed, not one`);
+              await page.keyboard.press('Escape');
+              await keptBy('Escape on the second ask');
+            }
+          }
         }
         const kept = await heard();
-        if (JSON.stringify(kept) !== JSON.stringify(['Open cancelled'])) wrong.push(`after Escape the status region said ${JSON.stringify(kept)}, not "Open cancelled" once and nothing else`);
         // (2) Asked, replaced.
-        if (!(await choose(page, await projectFile()))) wrong.push('the second press on "Open project" opened no file chooser');
-        if (!(await asked())) wrong.push('no dialog showed on the second Open over the drawn route');
+        if (!(await choose(page, await projectFile()))) wrong.push('the press before "Replace" opened no file chooser');
+        if (!(await asked())) wrong.push('no dialog showed on the Open before "Replace" over the drawn route');
         else {
           await question.getByRole('button', { name: 'Replace', exact: true }).click();
           if (!(await saysOpened(page))) wrong.push(`after "Replace" the status region never said "${OPENED}"`);
@@ -1952,7 +2007,7 @@ export default {
         if (!(await saysOpened(page))) wrong.push(`with nothing drawn since, the status region never said "${OPENED}"`);
         if (await page.getByRole('dialog').count()) wrong.push('with nothing drawn since the last Open a dialog showed');
         await quiet(page);
-        record('3.3.4', !wrong.length, wrong.length ? wrong.join('; ') : `over a drawn route Open asked "Replace your route?" in one dialog with focus on "Keep my route"; one Escape kept the route (the canvas as before), said "Open cancelled" once and put focus back on "Open project"; "Replace" opened the project, said "${OPENED}" once and put focus back on "Open project"; with nothing drawn since, Open asked nothing`);
+        record('3.3.4', !wrong.length, wrong.length ? wrong.join('; ') : `over a drawn route Open asked "Replace your route?" in one dialog with focus on "Keep my route"; one Escape, "Keep my route" by its button, the dialog's Close and a press outside each kept the route (the canvas as before), said "Open cancelled" once more and put focus back on "Open project"; with focus moved to "Replace", the Open key opened nothing, and a second ask for the same file left one dialog with focus back on "Keep my route", and Escape kept the route; "Replace" opened the project, said "${OPENED}" once and put focus back on "Open project"; with nothing drawn since, Open asked nothing`);
       },
     },
     {

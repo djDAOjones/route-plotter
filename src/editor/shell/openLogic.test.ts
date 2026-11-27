@@ -1203,9 +1203,9 @@ describe('D276 (a), brief 144: the opener asks before a chosen project replaces 
       expect(done()).toBe(true);
     };
     const first = opener.openFile(fileOfBytes('one.zip', await fileOf(routeOf(3, 0, 'b'))).file);
-    await until(() => asker.read() === 'one.zip');
+    await until(() => asker.read()?.name === 'one.zip');
     const second = opener.openFile(fileOfBytes('two.zip', await fileOf(routeOf(4, 0, 'c'))).file);
-    await until(() => asker.read() === 'two.zip');
+    await until(() => asker.read()?.name === 'two.zip');
     expect(await first).toEqual({ kind: 'superseded' });
     expect(store.getState().project).toBe(before);
     expect(said).toEqual([]);

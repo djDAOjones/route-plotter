@@ -15,7 +15,10 @@
 //    the kit has no button of its own). Closed, it draws nothing.
 // 4. Focus goes to "Keep my route" when it opens: Carbon's own focus-on-open (Modal.js 262 to 275) runs in Modal's
 //    effect and puts it on the kit's content wrapper; this component's effect runs after its child's, so it moves focus
-//    on to "Keep my route" (the safe answer under a stray Enter). It runs again when a new ask replaces the question.
+//    on to "Keep my route" (the safe answer under a stray Enter). It runs again when a new ask replaces the question,
+//    even for the same file (Codex on 3491f00, brief 147, ruling KA): the asker's snapshot is one object made once per
+//    ask (`AskedQuestion`), not the file's name, so `useSyncExternalStore` reads the same object between asks and a new
+//    one on each ask, and the effect, keyed on that object, puts focus back on "Keep my route" whatever had it.
 // 5. Escape, the dialog's close button or a press outside it keep the route (the kit's `onClose`), as "Keep my route"
 //    does. Every way of closing gives focus back to "Open project" (the kit's own return for its close; the buttons do
 //    the same: the question cleared synchronously, then the opener focused).
@@ -31,12 +34,17 @@ import { flushSync } from "react-dom";
 import { Dialog } from "../kit/Dialog";
 import { OPEN_WORDS } from "./openLogic";
 
+/** One ask, made once per ask (point 4): its identity is what the focus effect follows; its name is what it shows. */
+export interface AskedQuestion {
+  readonly name: string;
+}
+
 /** The page's one question about replacing the route (point 1). */
 export interface ReplaceAsker {
   /** Shows the question for `fileName`; `true` means replace. The opener's `confirmReplace`. */
   readonly ask: (fileName: string) => Promise<boolean>;
-  /** The file asked about, or null when no question is shown. */
-  readonly read: () => string | null;
+  /** The question shown (the same object until the next ask or answer), or null when none is shown. */
+  readonly read: () => AskedQuestion | null;
   /** Settles the question shown: `true` replaces, `false` keeps. Nothing shown, nothing done. */
   readonly answer: (replace: boolean) => void;
   /** Calls `listener` when the question shown changes; gives back the call that stops it. */
@@ -45,7 +53,7 @@ export interface ReplaceAsker {
 
 export function createReplaceAsker(): ReplaceAsker {
   let shown: {
-    readonly name: string;
+    readonly question: AskedQuestion;
     readonly settle: (replace: boolean) => void;
   } | null = null;
   const listeners = new Set<() => void>();
@@ -63,11 +71,11 @@ export function createReplaceAsker(): ReplaceAsker {
     ask: (fileName: string) =>
       new Promise<boolean>((resolve) => {
         const older = shown;
-        shown = { name: fileName, settle: resolve };
+        shown = { question: Object.freeze({ name: fileName }), settle: resolve };
         older?.settle(false);
         tell();
       }),
-    read: () => shown?.name ?? null,
+    read: () => shown?.question ?? null,
     answer,
     subscribe: (listener: () => void) => {
       listeners.add(listener);
@@ -93,11 +101,11 @@ const BUTTONS: CSSProperties = {
 
 /** "Replace your route?": the kit's dialog with "Keep my route" and "Replace", focus on "Keep my route". */
 export function ReplaceQuestion({ asker, opener }: ReplaceQuestionProps) {
-  const name = useSyncExternalStore(asker.subscribe, asker.read, asker.read);
+  const asked = useSyncExternalStore(asker.subscribe, asker.read, asker.read);
   const keep = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    if (name !== null) keep.current?.focus();
-  }, [name]);
+    if (asked !== null) keep.current?.focus();
+  }, [asked]);
   const settle = (replace: boolean) => {
     flushSync(() => {
       asker.answer(replace);
@@ -108,12 +116,12 @@ export function ReplaceQuestion({ asker, opener }: ReplaceQuestionProps) {
     <Dialog
       opener={opener}
       heading={OPEN_WORDS.replaceTitle}
-      open={name !== null}
+      open={asked !== null}
       onClose={() => {
         asker.answer(false);
       }}
     >
-      <p>{OPEN_WORDS.replaceText(name ?? "")}</p>
+      <p>{OPEN_WORDS.replaceText(asked?.name ?? "")}</p>
       <div style={BUTTONS}>
         <button
           ref={keep}
