@@ -234,11 +234,45 @@ const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 1, reason: "the preview shows
 // second point away from the first, from beyond the marker's outer edge on that ray out to 30 CSS px. Probed (brief
 // 117, PROBE-117/probe): at 1280 by 800 the canvas is 704 px wide, the marker's edge 3 px out, the arrow covers the
 // second point's centre and 1 px round it, and the ring's dash on that ray is black.
+// The guide's line (CORE-06, brief 132, CP; D266, the owner's "Full colour, dashed"): read first, at Skip to start, where
+// nothing of the line is drawn yet and the guide drawn while paused (D265) stands alone between the taps. 25 places 1
+// canvas px apart along the line, centred between the taps, each the most opaque of the 7 pixels across the line there:
+// some are the route's hue (the dashes) and some bare (alpha 0, the gaps, where the box's background shows), or no ratio
+// is given (the line drawn there, or nothing); the most opaque of the route's hue is the guide's pixel, its ratio by the
+// formula below. A page journey (the-guide) cannot record 1.4.11: the catalogue lists only the contrast method for it,
+// and the report refuses a row whose methods a test's does not name (tools/a11y-report.mjs).
 const PEN_DRAWN_ASIDE = [{
   selector: PREVIEW,
   count: 1,
-  reason: "the user's own picture and routes in their own colours, as the export will draw them, are still set aside (1.4.11, essential); measured are only the editor's own marks at the default settings (the line, both points, the selected point's ring) on the plain background with no picture, each against the box's own background",
+  reason: "the user's own picture and routes in their own colours, as the export will draw them, are still set aside (1.4.11, essential); measured are only the editor's own marks at the default settings (the guide's line where only it draws, the line, both points, the selected point's ring) on the plain background with no picture, each against the box's own background",
   measure: async ({ page }) => {
+    await page.getByRole('button', { name: 'Skip to start' }).click();
+    await twoFrames(page);
+    const guide = await page.locator(CANVAS).evaluate((c, [first, second]) => {
+      let bg = null;
+      for (let e = c.parentElement; e && !bg; e = e.parentElement) {
+        const v = (getComputedStyle(e).backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+        if (v.length === 3 || (v.length === 4 && v[3] === 1)) bg = v.slice(0, 3);
+      }
+      if (!bg) return null;
+      const ctx = c.getContext('2d');
+      const at = (fx, fy) => [...ctx.getImageData(Math.floor(fx), Math.floor(fy), 1, 1).data];
+      const over = ([r, g, b, a]) => [r, g, b].map((v, i) => (v * a + bg[i] * (255 - a)) / 255);
+      const lum = (rgb) => rgb.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+      const ratio = (p) => { const [x, y] = [lum(over(p)), lum(bg)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+      const routeHue = ([r, g, b, a]) => a > 60 && r > 120 && r > g && g >= b;
+      const [px, py, qx, qy] = [second[0] * c.width, second[1] * c.height, first[0] * c.width, first[1] * c.height];
+      const len = Math.hypot(px - qx, py - qy), [ux, uy] = [(px - qx) / len, (py - qy) / len], [mx, my] = [(px + qx) / 2, (py + qy) / 2];
+      const places = Array.from({ length: 25 }, (_, k) => {
+        let best = [0, 0, 0, 0];
+        for (let d = -3; d <= 3; d += 1) { const p = at(mx + ux * (k - 12) - uy * d, my + uy * (k - 12) + ux * d); if (p[3] > best[3]) best = p; }
+        return best;
+      });
+      const hued = places.filter(routeHue), bare = places.filter((p) => p[3] === 0).length;
+      const pixel = hued.reduce((best, p) => (p[3] > best[3] ? p : best), [0, 0, 0, 0]);
+      return { bg: `rgb(${bg.join(', ')})`, pixel, hued: hued.length, bare, ratio: hued.length && bare ? ratio(pixel) : NaN };
+    }, TAPS);
+    if (!guide) throw new Error('no box with an opaque background stands under the canvas');
     await page.getByRole('button', { name: 'Skip to end' }).click();
     await twoFrames(page);
     const read = await page.locator(CANVAS).evaluate((c, [first, second]) => {
@@ -268,7 +302,8 @@ const PEN_DRAWN_ASIDE = [{
     }, TAPS);
     if (!read) throw new Error('no box with an opaque background stands under the canvas');
     const against = `against the box's background ${read.bg}, in pen-drawn`;
-    return [['the line', read.line], ['the first point', read.first], ['the second point', read.second], ["the selected point's ring", read.ring]].map(([mark, ratio]) => ({ mark: `${mark} ${against}`, ratio }));
+    const guideMark = `the guide's line at the start, where only it draws (its most opaque pixel of the route's hue, rgba(${guide.pixel.join(', ')}); of 25 places along it ${guide.hued} the route's hue, ${guide.bare} bare) against the box's background ${guide.bg}, in pen-drawn`;
+    return [{ mark: guideMark, ratio: guide.ratio }, ...[['the line', read.line], ['the first point', read.first], ['the second point', read.second], ["the selected point's ring", read.ring]].map(([mark, ratio]) => ({ mark: `${mark} ${against}`, ratio }))];
   },
 }];
 const pixels = (page) => page.locator(CANVAS).evaluate((c) => {
