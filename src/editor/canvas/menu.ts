@@ -16,10 +16,16 @@
 // the route, the point and the points to move (Delete's rule: the whole selection when the point is in it, else the
 // point alone), so `runItem` never dispatches it and the page hands it to the canvas's binding (dom.ts point 10), where
 // the next click on the picture places it. It is off, with its reason, only when the point is no longer on the route.
+//
+// CORE-06, chat G2c (brief 140, ruling EB; D271 (a), provisional until the owner answers): a line's menu, `lineMenu`,
+// built from the project and the line as the menu opens (dom.ts point 9). Its items, in order: "Make line two-way" when the line
+// runs one way, "Make line one way" when it runs both ways (so the item also tells which it is now), then "Reverse
+// line". Each runs a built store command (./commands.ts `setDirection`, `reverseLine`) through `runItem`, as the point's
+// do, one undo step under its words; none is "Move" nor set apart. Opening it selects nothing (lines cannot be selected).
 import type { Command, Current, Refusal } from '../store/command';
 import type { Selection } from '../store/selection';
 import type { Store } from '../store/store';
-import { deletePoints, markPoint, setKind, setLeadStart, unmarkPoint } from './commands';
+import { deletePoints, markPoint, reverseLine, setDirection, setKind, setLeadStart, unmarkPoint } from './commands';
 
 /** What "Move" hands the canvas's binding (dom.ts point 10): the route, the menu's point, and every point to move. */
 export interface MoveRequest {
@@ -41,15 +47,25 @@ export interface MenuItem {
   readonly apart: boolean;
 }
 
-export interface PointMenu {
+/** What the page shows of either menu (a point's or a line's): its items, in order. */
+export interface Menu {
+  readonly items: readonly MenuItem[];
+}
+
+export interface PointMenu extends Menu {
   readonly route: string;
   readonly point: string;
-  readonly items: readonly MenuItem[];
+}
+
+export interface LineMenu extends Menu {
+  readonly route: string;
+  readonly line: string;
 }
 
 /** The reason an item cannot run, from the store's refusal of its command. */
 function refusalReason(refusal: Refusal): string {
   if (refusal.why === 'refused-edit' && refusal.refusal.refused === 'no-such-point') return 'This point is no longer on the route.';
+  if (refusal.why === 'refused-edit' && refusal.refusal.refused === 'no-such-line') return 'This line is no longer on the route.';
   if (refusal.why === 'missing') return 'This route is no longer in the project.';
   return 'The route cannot take this change now.';
 }
@@ -103,6 +119,16 @@ export function pointMenu(current: Current, routeId: string, pointId: string): P
   }));
   const move: MenuItem = { label: 'Move', command: null, move: { route: routeId, point: pointId, points: ids }, reason: moveReason(current, routeId, pointId), apart: false };
   return { route: routeId, point: pointId, items: [...items.slice(0, -1), move, ...items.slice(-1)] };
+}
+
+/** The menu of line `lineId` of route `routeId`, or null when the project holds no such line. */
+export function lineMenu(current: Current, routeId: string, lineId: string): LineMenu | null {
+  const route = current.project.scene.routes.find((each) => each.id === routeId);
+  const line = route?.lines.find((each) => each.id === lineId);
+  if (line === undefined) return null;
+  const built = [setDirection(routeId, lineId, line.direction === 'one way' ? 'both ways' : 'one way'), reverseLine(routeId, lineId)];
+  const items = built.map((command): MenuItem => ({ label: command.label, command, move: null, reason: itemReason(current, command, UNCHANGED), apart: false }));
+  return { route: routeId, line: lineId, items };
 }
 
 /**

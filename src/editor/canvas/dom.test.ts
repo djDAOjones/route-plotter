@@ -12,7 +12,7 @@ import { NOTHING_SELECTED } from '../store/selection';
 import { movePoints, penStep } from './commands';
 import { createStore, type Store } from '../store/store';
 import { bindCanvas, cancelDrag, deleteSelected, dragOpen, duplicateSelected, editKey, endNudge, escapeClears, holdOnPicture, selectAll, inCssPixels, MARKER_HALF, NUDGE, NUDGE_FURTHER, NUDGE_QUIET_MS, penTap, recordGeometry, toggleTap, zoomNow, type CanvasElement, type Geometry, type PointerFields } from './dom';
-import { isMenuKey, openMenuByKey, type MenuOpen } from './dom';
+import { isMenuKey, openMenuByKey, type LineMenuOpen, type MenuOpen } from './dom';
 import { cancelMove, moveWaiting, startMove, watchMove } from './dom';
 import { MOVE_WORDS } from './words';
 import type { Tap } from './gesture';
@@ -1350,7 +1350,7 @@ describe('the point\'s menu\'s opener (point 9, brief 130, CB and CE (e))', () =
     unbind();
   });
 
-  it('a right-click on empty picture or on a line opens nothing and leaves the browser\'s menu alone', () => {
+  it('with no line\'s menu handed, a right-click on empty picture or on a line opens nothing and leaves the browser\'s menu alone', () => {
     const { store, opened, rightClick, unbind } = boundMenu();
     const before = store.getState();
     expect(rightClick(0.1, 0.9)).toBe(false);
@@ -1424,6 +1424,91 @@ describe('the point\'s menu\'s opener (point 9, brief 130, CB and CE (e))', () =
     expect(press('F10', { shiftKey: true, altKey: true })).toBe(false);
     expect(press('F10', { shiftKey: true, metaKey: true })).toBe(false);
     expect(press('Enter', { shiftKey: true })).toBe(false);
+  });
+});
+
+/** Bound with a line's menu handed (point 9), and the point's menu unless `pointMenu` is false: what each opened on. */
+function boundLineMenu(pointMenu = true) {
+  const made = scene();
+  const canvas = canvasStandIn();
+  const win = target();
+  const opened: MenuOpen[] = [];
+  const lines: LineMenuOpen[] = [];
+  const unbind = bindCanvas({
+    canvas, win, store: made.store, geometry: () => drawnOf(made.store), refresh: () => true, mac: true,
+    ...(pointMenu ? { menu: (open: MenuOpen) => opened.push(open) } : {}),
+    lineMenu: (open) => lines.push(open),
+  });
+  const rightClick = (x: number, y: number): boolean => {
+    let prevented = false;
+    canvas.fire('contextmenu', { ...client(x, y), button: 2, preventDefault: () => { prevented = true; } });
+    return prevented;
+  };
+  const line = made.route.lines[0]?.id;
+  if (line === undefined) throw new Error('a line');
+  return { ...made, canvas, win, unbind, opened, lines, rightClick, line };
+}
+
+describe('a line\'s menu\'s opener (point 9, brief 140, ED; D271 (a))', () => {
+  it('is listened for with a line\'s menu handed alone', () => {
+    const { canvas, unbind } = boundLineMenu(false);
+    expect(canvas.added.map(([type]) => type)).toContain('contextmenu');
+    unbind();
+    expect(canvas.count()).toBe(0);
+  });
+
+  it('a right-click on a line opens its menu at the pointer, cancels the browser\'s menu, and selects nothing', () => {
+    const { route, line, store, opened, lines, rightClick, unbind } = boundLineMenu();
+    store.select(NOTHING_SELECTED);
+    const before = store.getState();
+    expect(rightClick(0.3, 0.3)).toBe(true);
+    expect(lines).toEqual([{ route: route.id, line, at: { x: 10 + 300, y: 20 + 240 } }]);
+    expect(opened).toEqual([]);
+    expect(store.getState()).toBe(before);
+    unbind();
+  });
+
+  it('a right-click on a line\'s "+" opens the same menu, the selection held as it was', () => {
+    const { route, line, a, store, lines, rightClick, unbind } = boundLineMenu(false);
+    store.select({ route: route.id, points: [a] });
+    const before = store.getState();
+    expect(rightClick(0.4, 0.4)).toBe(true);
+    expect(lines).toEqual([{ route: route.id, line, at: { x: 10 + 400, y: 20 + 320 } }]);
+    expect(store.getState()).toBe(before);
+    unbind();
+  });
+
+  it('a right-click on a point opens the point\'s menu, not the line\'s; on empty picture neither, the browser\'s menu left alone', () => {
+    const { b, opened, lines, rightClick, unbind } = boundLineMenu();
+    expect(rightClick(0.6, 0.6)).toBe(true);
+    expect(opened.map((each) => each.point)).toEqual([b]);
+    expect(rightClick(0.1, 0.9)).toBe(false);
+    expect(lines).toEqual([]);
+    unbind();
+  });
+
+  it('opens nothing during a drag or while another gesture holds the store', () => {
+    const { route, a, store, canvas, lines, rightClick, unbind } = boundLineMenu();
+    store.select({ route: route.id, points: [a] });
+    canvas.fire('pointerdown', client(0.6, 0.6));
+    canvas.fire('pointermove', client(0.7, 0.45));
+    expect(dragOpen()).toBe(true);
+    expect(rightClick(0.3, 0.3)).toBe(false);
+    cancelDrag();
+    const begun = store.begin('Elsewhere');
+    expect(begun.ok).toBe(true);
+    expect(rightClick(0.3, 0.3)).toBe(false);
+    if (begun.ok) begun.gesture.cancel();
+    expect(lines).toEqual([]);
+    unbind();
+  });
+
+  it('has no keyboard way: with a line\'s menu alone handed, the menu\'s key opens nothing', () => {
+    const { route, a, store, lines, unbind } = boundLineMenu(false);
+    store.select({ route: route.id, points: [a] });
+    expect(openMenuByKey()).toBe(false);
+    expect(lines).toEqual([]);
+    unbind();
   });
 });
 

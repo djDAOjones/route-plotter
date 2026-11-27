@@ -5,9 +5,10 @@
 // points fewer for a delete, the points more for a duplicate, the points standing elsewhere for a move. The point's
 // menu's items (brief 137, D269, provisional: the same short past-tense pattern) say "Start marked", "Start mark
 // removed", "End marked", "End mark removed", "Lead start set", "Point made a stop" and "Point made a bend"; an item
-// that is off makes no step, so it says nothing. Every other step is silent: a nudge (v3 was) and the line's commands
-// (the line's menu is not on the page yet: its chat names their words). Select all is not a step, so it has its own
-// line, `allSelected`.
+// that is off makes no step, so it says nothing. The line's menu's items (brief 140, ruling EC; D271 (a), provisional
+// until the owner answers: the same pattern) say "Line made one way", "Line made two-way" and "Line reversed". Every
+// other step is silent: a nudge (v3 was), and the line commands no menu reaches yet. Select all is not a step, so it
+// has its own line, `allSelected`.
 //
 // "Move" from the point's menu (brief 138, ruling DC; D270, provisional until the owner objects) is not a step while it
 // waits, so it has its own lines: on choosing it, the prompt (one for a point alone, another when the selection comes
@@ -68,6 +69,12 @@ export function editWords(label: string, before: Current, after: Current): strin
       return 'Point made a stop';
     case 'Make bend':
       return 'Point made a bend';
+    case 'Make line one way':
+      return 'Line made one way';
+    case 'Make line two-way':
+      return 'Line made two-way';
+    case 'Reverse line':
+      return 'Line reversed';
     default:
       return null;
   }

@@ -90,10 +90,17 @@ describe('the words for each edit (D268)', () => {
     for (const [label, words] of WORDS) expect.soft(editWords(label, before, after), label).toBe(words);
   });
 
-  it('a nudge, the line’s commands and an unknown label are silent', () => {
+  it('the line\'s menu\'s items (brief 140, EC; D271): "Line made one way", "Line made two-way", "Line reversed"', () => {
+    const before = currentOf(three);
+    expect(editWords('Make line one way', before, before)).toBe('Line made one way');
+    expect(editWords('Make line two-way', before, before)).toBe('Line made two-way');
+    expect(editWords('Reverse line', before, before)).toBe('Line reversed');
+  });
+
+  it('a nudge, the line commands no menu reaches and an unknown label are silent', () => {
     const before = currentOf(three);
     const after = currentOf(moving(three, [0, 1]));
-    for (const label of ['Nudge', 'Make line one way', 'Make line two-way', 'Reverse line', 'Delete line', 'Change the line settings', '']) {
+    for (const label of ['Nudge', 'Delete line', 'Change the line settings', '']) {
       expect(editWords(label, before, after), label).toBeNull();
     }
   });

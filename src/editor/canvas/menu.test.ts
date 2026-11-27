@@ -8,7 +8,7 @@ import { newLine, newPoint, newRoute, newScene, type IdSource, type Route } from
 import { createStore, type Store } from '../store/store';
 import { NOTHING_SELECTED } from '../store/selection';
 import { deletePoints } from './commands';
-import { itemReason, menuSelection, pointMenu, runItem, type MenuItem } from './menu';
+import { itemReason, lineMenu, menuSelection, pointMenu, runItem, type MenuItem } from './menu';
 
 function counter(prefix: string): IdSource {
   let n = 0;
@@ -244,5 +244,77 @@ describe('the selection the menu opens with (CB)', () => {
     expect(menuSelection(held, route, b)).toEqual({ route, points: [b] });
     expect(menuSelection({ route: 'elsewhere', points: [d] }, route, d)).toEqual({ route, points: [d] });
     void store;
+  });
+});
+
+describe('a line\'s menu (brief 140, EB; D271 (a))', () => {
+  const lineOf = (store: Store, index = 0) => {
+    const line = routeOf(store).lines[index];
+    if (line === undefined) throw new Error('a line');
+    return line;
+  };
+  const lineItems = (store: Store, route: string, line: string) => {
+    const menu = lineMenu(store.getState(), route, line);
+    if (menu === null) throw new Error('a line menu');
+    return menu;
+  };
+
+  it('a line running one way: "Make line two-way" first, then "Reverse line", both on, none apart, none "Move"', () => {
+    const { store, route } = scene();
+    const line = lineOf(store);
+    expect(line.direction).toBe('one way');
+    const menu = lineItems(store, route, line.id);
+    expect(menu.route).toBe(route);
+    expect(menu.line).toBe(line.id);
+    expect(shape(menu.items)).toEqual([['Make line two-way', true, false], ['Reverse line', true, false]]);
+    expect(menu.items.every((each) => each.move === null && each.command !== null)).toBe(true);
+  });
+
+  it('the direction item runs as one undo step and the menu then names the other direction', () => {
+    const { store, route } = scene();
+    const line = lineOf(store);
+    const [direction] = lineItems(store, route, line.id).items;
+    if (direction === undefined) throw new Error('an item');
+    expect(runItem(store, direction)).toBe(true);
+    expect(lineOf(store).direction).toBe('both ways');
+    expect(store.getState().undo).toBe('Make line two-way');
+    expect(shape(lineItems(store, route, line.id).items)).toEqual([['Make line one way', true, false], ['Reverse line', true, false]]);
+    const [back] = lineItems(store, route, line.id).items;
+    if (back === undefined) throw new Error('an item');
+    expect(runItem(store, back)).toBe(true);
+    expect(lineOf(store).direction).toBe('one way');
+    store.undo();
+    expect(lineOf(store).direction).toBe('both ways');
+  });
+
+  it('"Reverse line" swaps the line\'s ends as one undo step, its id and direction kept; one Undo puts them back', () => {
+    const { store, route } = scene();
+    const line = lineOf(store);
+    const reverse = lineItems(store, route, line.id).items[1];
+    if (reverse === undefined) throw new Error('an item');
+    const selection = store.getState().selection;
+    expect(runItem(store, reverse)).toBe(true);
+    expect(lineOf(store)).toMatchObject({ id: line.id, from: line.to, to: line.from, direction: line.direction });
+    expect(store.getState().undo).toBe('Reverse line');
+    expect(store.getState().selection).toBe(selection);
+    store.undo();
+    expect(lineOf(store)).toMatchObject({ id: line.id, from: line.from, to: line.to });
+  });
+
+  it('no such line or route: no menu; a line gone since the menu opened: its items off with their reason, running nothing', () => {
+    const { store, route, a } = scene();
+    const line = lineOf(store);
+    expect(lineMenu(store.getState(), route, 'nothing')).toBeNull();
+    expect(lineMenu(store.getState(), 'nothing', line.id)).toBeNull();
+    const held = lineItems(store, route, line.id);
+    store.dispatch(deletePoints(route, [a]));
+    expect(routeOf(store).lines.some((each) => each.id === line.id)).toBe(false);
+    for (const { command } of held.items) {
+      if (command === null) throw new Error('a command');
+      expect(itemReason(store.getState(), command, '')).toBe('This line is no longer on the route.');
+    }
+    const undo = store.getState().undo;
+    for (const each of held.items) expect(runItem(store, each)).toBe(false);
+    expect(store.getState().undo).toBe(undo);
   });
 });
