@@ -2,7 +2,6 @@
   "signed": "2026-11-18",
   "keep": null,
   "endOfLife": {},
-  "provisional": "STACK-02, 2026-11-19, under the owner's overnight grants G3 and G4 of 2026-11-18. Not yet signed by him as Set 1: 'signed' is the date of G4, his answer 'Yes, read and install (Recommended)', whose option read 'the pack's packages are installed at the versions it names. The pinned list is shown to you in the morning, not before installing.' The checker reads this file only once the profile has an App opinion line, which awaits his signature; at that signature he signs Set 1 or changes it, and the date becomes his.",
   "pinned": {
     "react": "19.1.10",
     "react-dom": "19.1.10",
@@ -22,7 +21,10 @@
     "@types/react": "19.1.17",
     "@types/react-dom": "19.1.11",
     "@types/prop-types": "15.7.15",
-    "eslint-plugin-jsx-a11y": "6.10.2"
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "@playwright/test": "1.56.1",
+    "@axe-core/playwright": "4.13.0",
+    "axe-core": "4.13.0"
   },
   "conflicts": [
     "ESLint 9, or no jsx-a11y: npm marks eslint 9.39.5 as no longer supported (read 2026-11-19); eslint-plugin-jsx-a11y 6.10.2 runs on ESLint 9 only. Its end-of-life date was not read, so endOfLife records none.",
