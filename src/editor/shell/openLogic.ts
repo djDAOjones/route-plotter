@@ -19,12 +19,12 @@
 //    refusal with no problems, is one problem for the whole project. A stand-in `openProject` that throws is given back
 //    as io's own catch-all is (`WORDS.openedUnsafe`, "it is damaged").
 // 4. DEF-67: when a project opens, `announce` is handed `OPEN_WORDS.opened`, once, after the store has taken it; the
-//    opener says nothing else, ever. A throw from `announce` is caught and dropped: the open has happened and stays
-//    opened (point 6). It never pauses through either transport and never skips through the editor's (whose
-//    `skipToEnd` says "Skipped to end"): the store's Open writes "paused" at the start (AT_START), which the player's
-//    transport's frame already booked meets, saying nothing and booking no more (its claim's point 2), and point 5's
-//    seek is the player's own, which says nothing. So nothing says "Animation paused", whether or not something was
-//    playing, and nothing is said for the move to the end.
+//    opener says nothing else, ever, but point 14's "Open cancelled". A throw from `announce` is caught and dropped:
+//    the open has happened and stays opened (point 6). It never pauses through either transport and never skips
+//    through the editor's (whose `skipToEnd` says "Skipped to end"): the store's Open writes "paused" at the start
+//    (AT_START), which the player's transport's frame already booked meets, saying nothing and booking no more (its
+//    claim's point 2), and point 5's seek is the player's own, which says nothing. So nothing says "Animation
+//    paused", whether or not something was playing, and nothing is said for the move to the end.
 // 5. Criterion 3's open half, and D251's first half (Joe, 26 Nov: "End, plus a guide"; brief 127, BG to BJ): once the
 //    store has taken a project, and before "Project opened" is said, the opener seeks the player's transport handed in
 //    to its play length, `player.seek(player.length())`, the place End reaches (Hold at start, the content's end with a
@@ -71,6 +71,19 @@
 //    given as it came (it is text a user's file brought: nothing here reads it as markup); null at rest and for
 //    `open(bytes)`. `dismiss()` clears a refusal held, and its name, with one telling; while an open is under way, and
 //    at rest, it does nothing and tells nobody.
+// 14. D276 (a), provisional (brief 144): an optional `confirmReplace(fileName)`, the page's question (sub-chat 145's
+//    dialog, in `OPEN_WORDS`' replace words). Once io has accepted a file as a project, and before the store is asked,
+//    if the store says `changed()` (store.ts) and a question is given, the opener awaits it, with the file's name (or
+//    "the file" for `open(bytes)`). `true` goes on as points 1 to 8 and 13 have it. `false`, or a question that throws
+//    or rejects, changes nothing (the store is not called: project, history, selection and the transport's slice stay
+//    the same object; nothing seeks, nothing is counted), says `OPEN_WORDS.cancelled` once through `announce` (in
+//    D270's "Move cancelled" voice; a throw from it dropped), puts the state at rest and gives `{ kind: 'cancelled' }`.
+//    A refusal (io's, too large, unreadable) never asks; an unchanged route never asks; with no question given, or a
+//    store with no `changed`, the opener is as it was. The question counts as part of the read for point 6: while it
+//    waits, `opening` stays true with the file's name, and a later ask supersedes it, so whatever the waiting question
+//    is then answered, that open changes nothing and says nothing (`superseded`); only the latest ask can open. The
+//    later ask asks for itself when it is a project, so the page may have two questions up: closing the older one when
+//    a new ask begins is the page's (145).
 import { openProject as ioOpenProject, type Opened } from '../../adapters/io/open';
 import type { Decode } from '../../adapters/io/images';
 import type { Project } from '../../adapters/io/format';
@@ -97,6 +110,16 @@ export const OPEN_WORDS = Object.freeze({
   close: 'Close',
   /** The refusal's icon's name: said before its title, the one thing beside colour that says what it is. */
   error: 'Error',
+  /** D276 (a): the question's title, before a chosen project replaces a changed route (the page's dialog, 145). */
+  replaceTitle: 'Replace your route?',
+  /** D276 (a): the question's text, naming the file. */
+  replaceText: (name: string) => `Replace your route with ${name}? What you have drawn is not saved and will be lost.`,
+  /** D276 (a): the button that replaces the route. */
+  replace: 'Replace',
+  /** D276 (a): the button that keeps it (focused first; Escape is the same, the page's). */
+  keep: 'Keep my route',
+  /** D276 (a): said when the question is answered "keep", as D270 says "Move cancelled". */
+  cancelled: 'Open cancelled',
 });
 
 /** What the page reads: the same frozen object until one field changes. */
@@ -122,7 +145,9 @@ type OpenResult =
   | { readonly kind: 'refused'; readonly refusal: Refusal }
   /** A later open was asked for before this one was read, so it never reached the store and changed nothing. An open
    * the store has taken is `opened`, whatever was asked for after. */
-  | { readonly kind: 'superseded' };
+  | { readonly kind: 'superseded' }
+  /** The route had changed and the question was answered "keep" (or failed): nothing changed (point 14). */
+  | { readonly kind: 'cancelled' };
 
 export interface Opener {
   /** Opens a project file's bytes into the store; never rejects (claim points 4 and 7). */
@@ -139,7 +164,8 @@ export interface Opener {
 }
 
 export interface OpenerOptions {
-  readonly store: Pick<Store, 'open'>;
+  /** The store; its `changed` is read only when a question is given (point 14). */
+  readonly store: Pick<Store, 'open'> & Partial<Pick<Store, 'changed'>>;
   readonly announce: Announce;
   /** The player's transport: an opened project is sought to its play length through it, silently (point 5). */
   readonly player: Pick<Transport, 'seek' | 'length'>;
@@ -147,6 +173,8 @@ export interface OpenerOptions {
   readonly decode: Decode;
   /** io's Open; handed in only by a test that stands in for it. */
   readonly openProject?: (bytes: Uint8Array, decode: Decode) => Promise<Opened>;
+  /** D276 (a): asked before a chosen project replaces a changed route; `true` replaces it (point 14). */
+  readonly confirmReplace?: (fileName: string) => Promise<boolean>;
 }
 
 const QUIET: OpenerState = Object.freeze({ opening: false, refusal: null, name: null });
@@ -180,7 +208,9 @@ function intoStore(store: Pick<Store, 'open'>, project: Project): Refusal | null
   }
 }
 
-export function createOpener({ store, announce, player, decode, openProject = ioOpenProject }: OpenerOptions): Opener {
+export function createOpener({
+  store, announce, player, decode, openProject = ioOpenProject, confirmReplace,
+}: OpenerOptions): Opener {
   let state = QUIET;
   /** How many opens have been asked for: an open may act only while it is the latest. */
   let asked = 0;
@@ -219,8 +249,8 @@ export function createOpener({ store, announce, player, decode, openProject = io
     return mine;
   };
 
-  /** One ask ends, with what io gave it (points 1 to 7). */
-  const settle = (mine: number, name: string | null, opened: Opened): OpenResult => {
+  /** One ask ends, with what io gave it and, where asked, the answer (points 1 to 7, 14). */
+  const land = (mine: number, name: string | null, opened: Opened): OpenResult => {
     if (mine !== asked) return { kind: 'superseded' };
     const refusal = opened.ok ? intoStore(store, opened.project) : opened.refusal;
     if (refusal !== null) {
@@ -244,6 +274,37 @@ export function createOpener({ store, announce, player, decode, openProject = io
     }
     if (mine === asked) hold({ opening: false, refusal: null, name: null });
     return { kind: 'opened' };
+  };
+
+  /** The question, awaited; "keep" or a failed question changes nothing but the state, put at rest (point 14). */
+  const ask = async (
+    mine: number,
+    name: string | null,
+    opened: Opened,
+    question: (fileName: string) => Promise<boolean>,
+  ): Promise<OpenResult> => {
+    let replace = false;
+    try {
+      replace = (await question(name ?? 'the file')) === true;
+    } catch {
+      // A failed question keeps the route: the safe side.
+    }
+    if (mine !== asked) return { kind: 'superseded' };
+    if (replace) return land(mine, name, opened);
+    try {
+      announce(OPEN_WORDS.cancelled);
+    } catch {
+      // dropped, as point 4's
+    }
+    if (mine === asked) hold({ opening: false, refusal: null, name: null });
+    return { kind: 'cancelled' };
+  };
+
+  /** One ask ends: a project over a changed route is asked about first, when a question is given (point 14). */
+  const settle = (mine: number, name: string | null, opened: Opened): OpenResult | Promise<OpenResult> => {
+    if (mine !== asked) return { kind: 'superseded' };
+    const asking = opened.ok && confirmReplace !== undefined && store.changed?.() === true;
+    return asking ? ask(mine, name, opened, confirmReplace) : land(mine, name, opened);
   };
 
   return Object.freeze({

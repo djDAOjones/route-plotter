@@ -28,6 +28,16 @@
 // made on it (`createTransport({ holder: store, … })`); the transport never imports the store (rule 6). The claim holds
 // for the slice: `setPlayback` reads each of its argument's fields once, before anything changes, and refuses one that
 // is not a whole, finite playback with nothing told; a subscriber told of the change that throws never undoes it.
+//
+// CORE-06 (brief 144, D276 (a), provisional): `changed()` says whether the project held differs from the store's
+// baseline, the project it started with or last opened (a successful Open; a refused one keeps the baseline). A step
+// (a dispatch or a gesture's commit that changed the project) and a Redo make it true; Undo back to the baseline makes
+// it false. A selection, the transport's slice, a refused edit, an edit or commit that ended as it began, a gesture's
+// begin, its moves before its commit and a cancel never change it: while a gesture is open it reads the project the
+// gesture found. It compares by identity, not with `sameValue`: Undo hands back the very project a step found (a step
+// records `current`, and Undo puts it back), a selection keeps the project object, and a gesture that ends as it began
+// puts back the object it found; so Undo back to the baseline gives the baseline itself (pinned in store.test.ts). Two
+// steps that return the route by hand to the opened shape read as changed: the safe side, the route is asked about.
 import type { Project } from '../../adapters/io/format';
 import { checkScene, type IdSource } from '../../core/model/scene';
 import { AT_START, FASTEST, SLOWEST, type Playback, type PlaybackHolder } from '../../player/transport/transport';
@@ -92,6 +102,8 @@ export interface Store extends PlaybackHolder {
    * that is not plain data throws a TypeError, and one its declarations refuse is refused, before anything changes.
    */
   open(project: Project): Outcome;
+  /** Whether the project held differs from the one the store started with or last opened (D276 (a)). */
+  changed(): boolean;
 }
 
 /**
@@ -162,6 +174,8 @@ export function createStore({ project, nextId, report = rethrowLater, stepped }:
   if (invalid !== null) throw new RangeError('The editor’s store was given a project its declarations refuse.');
 
   let current = currentOf(held, NOTHING_SELECTED);
+  /** The project the store started with or last opened: `changed()` compares with it by identity. */
+  let baseline: Project = held;
   let undoSteps: readonly Step[] = [];
   let redoSteps: readonly Step[] = [];
   let opened: Opened | null = null;
@@ -330,9 +344,11 @@ export function createStore({ project, nextId, report = rethrowLater, stepped }:
       undoSteps = [];
       redoSteps = [];
       current = currentOf(project, NOTHING_SELECTED);
+      baseline = project;
       playback = AT_START;
       publish();
       return { ok: true, changed: true };
     },
+    changed: () => (opened?.before.project ?? current.project) !== baseline,
   };
 }

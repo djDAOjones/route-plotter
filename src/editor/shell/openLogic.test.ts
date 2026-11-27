@@ -124,7 +124,7 @@ function handMade() {
 /** The store, both transports, a queue that records and the opener, as the session will make them. */
 function sessionOf(
   project: Project,
-  opener: Partial<Pick<OpenerOptions, 'decode' | 'openProject'>> = {},
+  opener: Partial<Pick<OpenerOptions, 'decode' | 'openProject' | 'confirmReplace'>> = {},
   /** Called after each saying is recorded: a test may ask for an open there, or throw. */
   onSay: (message: string) => void = () => undefined,
   /** The page's own inputs (`createFrameInputs`), whose picture size is read from the background's header; by default
@@ -164,8 +164,13 @@ function sessionOf(
       opens.store += 1;
       return store.open(next);
     },
+    changed: () => store.changed(),
   };
-  const made = createOpener({ store: counted, announce, player, decode: opener.decode ?? atOnce, ...(opener.openProject ? { openProject: opener.openProject } : {}) });
+  const made = createOpener({
+    store: counted, announce, player, decode: opener.decode ?? atOnce,
+    ...(opener.openProject ? { openProject: opener.openProject } : {}),
+    ...(opener.confirmReplace ? { confirmReplace: opener.confirmReplace } : {}),
+  });
   const tellings = { count: 0 };
   made.subscribe(() => {
     tellings.count += 1;
@@ -1047,5 +1052,144 @@ describe('point 13 (PRS2, brief 94): the opener counts the projects the store ha
     expect(await a).toEqual({ kind: 'superseded' });
     expect(await b).toEqual({ kind: 'opened' });
     expect(run.opener.opened()).toBe(1);
+  });
+});
+
+describe('D276 (a), brief 144: the opener asks before a chosen project replaces a changed route', () => {
+  /** A question that records each name it is asked about and answers `answer`. */
+  function asking(answer: boolean | (() => Promise<boolean>)) {
+    const asked: string[] = [];
+    const confirmReplace = (name: string): Promise<boolean> => {
+      asked.push(name);
+      return typeof answer === 'boolean' ? Promise.resolve(answer) : answer();
+    };
+    return { asked, confirmReplace };
+  }
+
+  /** A session over a route of two stops, changed by one step. */
+  function changedSession(confirmReplace?: (name: string) => Promise<boolean>) {
+    const run = sessionOf(routeOf(2, 0, 'a'), confirmReplace ? { confirmReplace } : {});
+    expect(run.store.dispatch(setSceneSetting('clock', 'holdAtStartMs', 300)).ok).toBe(true);
+    expect(run.store.changed()).toBe(true);
+    return run;
+  }
+
+  it('the words, for the page', () => {
+    expect(OPEN_WORDS.replaceTitle).toBe('Replace your route?');
+    expect(OPEN_WORDS.replaceText('walk.zip')).toBe('Replace your route with walk.zip? What you have drawn is not saved and will be lost.');
+    expect(OPEN_WORDS.replace).toBe('Replace');
+    expect(OPEN_WORDS.keep).toBe('Keep my route');
+    expect(OPEN_WORDS.cancelled).toBe('Open cancelled');
+  });
+
+  it('an unchanged route never asks: the file opens as today', async () => {
+    const question = asking(false);
+    const { store, opener, said } = sessionOf(routeOf(2, 0, 'a'), { confirmReplace: question.confirmReplace });
+    expect(await opener.openFile(fileOfBytes('walk.zip', await fileOf(routeOf(3, 0, 'b'))).file)).toEqual({ kind: 'opened' });
+    expect(question.asked).toEqual([]);
+    expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+  });
+
+  it('a changed route asks, by the file’s name, once the file is a project; "true" opens as today', async () => {
+    const question = asking(true);
+    const { store, opener, said, opens } = changedSession(question.confirmReplace);
+    expect(await opener.openFile(fileOfBytes('walk.zip', await fileOf(routeOf(3, 0, 'b'))).file)).toEqual({ kind: 'opened' });
+    expect(question.asked).toEqual(['walk.zip']);
+    expect(opens.store).toBe(1);
+    expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(store.changed()).toBe(false);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+    expect(opener.opened()).toBe(1);
+  });
+
+  it('"false" changes nothing: project, history, selection, transport and play state as before; "Open cancelled" is said', async () => {
+    const question = asking(false);
+    const { store, opener, said, opens, player } = changedSession(question.confirmReplace);
+    const routeId = store.getState().project.scene.routes[0]?.id ?? '';
+    store.select({ route: routeId, points: [] });
+    const lengthBefore = player.length();
+    const before = store.getState();
+    const result = await opener.openFile(fileOfBytes('walk.zip', await fileOf(routeOf(3, 0, 'b'))).file);
+    expect(result).toEqual({ kind: 'cancelled' });
+    expect(question.asked).toEqual(['walk.zip']);
+    expect(opens.store).toBe(0);
+    expect(store.getState()).toBe(before);
+    expect(store.getState().undo).toBe(before.undo);
+    expect(store.playback()).toBe(before.playback);
+    expect(player.length()).toBe(lengthBefore);
+    expect(store.changed()).toBe(true);
+    expect(said).toEqual([OPEN_WORDS.cancelled]);
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
+    expect(opener.opened()).toBe(0);
+  });
+
+  it('a question that fails keeps the route, as "false" does', async () => {
+    const question = asking(() => Promise.reject(new Error('the dialog failed')));
+    const { store, opener, said } = changedSession(question.confirmReplace);
+    const before = store.getState();
+    expect(await opener.open(await fileOf(routeOf(3, 0, 'b')))).toEqual({ kind: 'cancelled' });
+    expect(question.asked).toEqual(['the file']);
+    expect(store.getState()).toBe(before);
+    expect(said).toEqual([OPEN_WORDS.cancelled]);
+  });
+
+  it('a file that is not a project, too large or unreadable is refused as today and never asks', async () => {
+    const question = asking(true);
+    const { store, opener, said } = changedSession(question.confirmReplace);
+    const before = store.getState();
+    expect((await opener.openFile(fileOfBytes('notes.zip', NOT_A_FILE).file)).kind).toBe('refused');
+    expect((await opener.openFile(fileOfBytes('huge.zip', NOT_A_FILE, ARCHIVE_LIMITS.zipBytes + 1).file)).kind).toBe('refused');
+    const unreadable = { name: 'gone.zip', size: 4, arrayBuffer: () => Promise.reject(new Error('moved')) };
+    expect((await opener.openFile(unreadable)).kind).toBe('refused');
+    expect((await opener.open(NOT_A_FILE)).kind).toBe('refused');
+    expect(question.asked).toEqual([]);
+    expect(store.getState()).toBe(before);
+    expect(said).toEqual([]);
+  });
+
+  it('with no question given, a changed route is replaced as today', async () => {
+    const { store, opener, said } = changedSession();
+    expect(await opener.openFile(fileOfBytes('walk.zip', await fileOf(routeOf(3, 0, 'b'))).file)).toEqual({ kind: 'opened' });
+    expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+  });
+
+  it('a second Open while the question waits supersedes the first: the first never opens, whatever its answer; the second asks for itself', async () => {
+    const answers: ((answer: boolean) => void)[] = [];
+    const question = asking(() => new Promise<boolean>((resolve) => { answers.push(resolve); }));
+    const { store, opener, said, opens } = changedSession(question.confirmReplace);
+    const first = opener.openFile(fileOfBytes('one.zip', await fileOf(routeOf(3, 0, 'b'))).file);
+    while (answers.length < 1) await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: 'one.zip' });
+    const second = opener.openFile(fileOfBytes('two.zip', await fileOf(routeOf(4, 0, 'c'))).file);
+    while (answers.length < 2) await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(question.asked).toEqual(['one.zip', 'two.zip']);
+    answers[0]?.(true);
+    expect(await first).toEqual({ kind: 'superseded' });
+    expect(opens.store).toBe(0);
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: 'two.zip' });
+    answers[1]?.(true);
+    expect(await second).toEqual({ kind: 'opened' });
+    expect(opens.store).toBe(1);
+    expect(store.getState().project.scene).toEqual(routeOf(4, 0, 'c').scene);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+  });
+
+  it('a superseded first answered "false" says nothing; the later answer stands', async () => {
+    const answers: ((answer: boolean) => void)[] = [];
+    const question = asking(() => new Promise<boolean>((resolve) => { answers.push(resolve); }));
+    const { opener, said } = changedSession(question.confirmReplace);
+    const first = opener.open(await fileOf(routeOf(3, 0, 'b')));
+    while (answers.length < 1) await new Promise((resolve) => setTimeout(resolve, 0));
+    const second = opener.open(await fileOf(routeOf(4, 0, 'c')));
+    while (answers.length < 2) await new Promise((resolve) => setTimeout(resolve, 0));
+    answers[0]?.(false);
+    expect(await first).toEqual({ kind: 'superseded' });
+    expect(said).toEqual([]);
+    answers[1]?.(false);
+    expect(await second).toEqual({ kind: 'cancelled' });
+    expect(said).toEqual([OPEN_WORDS.cancelled]);
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
   });
 });
