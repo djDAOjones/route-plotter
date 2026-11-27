@@ -12,6 +12,7 @@ import { NOTHING_SELECTED } from '../store/selection';
 import { movePoints, penStep } from './commands';
 import { createStore, type Store } from '../store/store';
 import { bindCanvas, cancelDrag, deleteSelected, dragOpen, duplicateSelected, editKey, endNudge, escapeClears, holdOnPicture, selectAll, inCssPixels, MARKER_HALF, NUDGE, NUDGE_FURTHER, NUDGE_QUIET_MS, penTap, recordGeometry, toggleTap, zoomNow, type CanvasElement, type Geometry, type PointerFields } from './dom';
+import { isMenuKey, openMenuByKey, type MenuOpen } from './dom';
 import type { Tap } from './gesture';
 import { createHover, type Hover } from './hover';
 import type { Modifiers, Under } from './pointer';
@@ -1266,5 +1267,129 @@ describe('the hover (point 6; brief 118, ruling S)', () => {
       expect(made.told).toEqual([]);
       made.unbind();
     }
+  });
+});
+
+/** Bound with a menu handed (point 9): what it was opened on, each time. */
+function boundMenu() {
+  const made = scene();
+  const canvas = canvasStandIn();
+  const win = target();
+  const opened: MenuOpen[] = [];
+  const unbind = bindCanvas({ canvas, win, store: made.store, geometry: () => drawnOf(made.store), refresh: () => true, mac: true, menu: (open) => opened.push(open) });
+  /** A right-click's menu event at an image place: whether the browser's own menu was cancelled. */
+  const rightClick = (x: number, y: number): boolean => {
+    let prevented = false;
+    canvas.fire('contextmenu', { ...client(x, y), button: 2, preventDefault: () => { prevented = true; } });
+    return prevented;
+  };
+  return { ...made, canvas, win, unbind, opened, rightClick };
+}
+
+describe('the point\'s menu\'s opener (point 9, brief 130, CB and CE (e))', () => {
+  it('is listened for only with a menu handed', () => {
+    const plain = bound();
+    expect(plain.canvas.added.some(([type]) => type === 'contextmenu')).toBe(false);
+    plain.unbind();
+    const { canvas, unbind } = boundMenu();
+    expect(canvas.added.map(([type]) => type)).toContain('contextmenu');
+    unbind();
+    expect(canvas.count()).toBe(0);
+  });
+
+  it('a right-click on a point opens its menu at the pointer, selects it alone, and cancels the browser\'s menu', () => {
+    const { route, b, store, opened, rightClick, unbind } = boundMenu();
+    store.select(NOTHING_SELECTED);
+    expect(rightClick(0.6, 0.6)).toBe(true);
+    expect(opened).toEqual([{ route: route.id, point: b, at: { x: 10 + 600, y: 20 + 480 } }]);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [b] });
+    expect(store.getState().undo).toBeNull();
+    unbind();
+  });
+
+  it('a right-click on a point already in the selection keeps the selection as it is', () => {
+    const { route, a, b, store, opened, rightClick, unbind } = boundMenu();
+    store.select({ route: route.id, points: [b, a] });
+    const held = store.getState().selection;
+    expect(rightClick(0.6, 0.6)).toBe(true);
+    expect(opened.map((each) => each.point)).toEqual([b]);
+    expect(store.getState().selection).toBe(held);
+    unbind();
+  });
+
+  it('a right-click on empty picture or on a line opens nothing and leaves the browser\'s menu alone', () => {
+    const { store, opened, rightClick, unbind } = boundMenu();
+    const before = store.getState();
+    expect(rightClick(0.1, 0.9)).toBe(false);
+    expect(rightClick(0.3, 0.3)).toBe(false);
+    expect(rightClick(0.5, 0.5)).toBe(false);
+    expect(opened).toEqual([]);
+    expect(store.getState()).toBe(before);
+    unbind();
+  });
+
+  it('opens nothing during a drag, by right-click or by key, and cancels nothing', () => {
+    const { route, a, store, canvas, opened, rightClick, unbind } = boundMenu();
+    store.select({ route: route.id, points: [a] });
+    canvas.fire('pointerdown', client(0.6, 0.6));
+    canvas.fire('pointermove', client(0.7, 0.45));
+    expect(dragOpen()).toBe(true);
+    expect(rightClick(0.2, 0.2)).toBe(false);
+    expect(openMenuByKey()).toBe(false);
+    expect(opened).toEqual([]);
+    cancelDrag();
+    unbind();
+  });
+
+  it('opens nothing while another gesture holds the store (a nudge burst ended first by the page)', () => {
+    const { route, a, store, opened, rightClick, unbind } = boundMenu();
+    store.select({ route: route.id, points: [a] });
+    const begun = store.begin('Elsewhere');
+    expect(begun.ok).toBe(true);
+    expect(rightClick(0.2, 0.2)).toBe(false);
+    expect(openMenuByKey()).toBe(false);
+    expect(opened).toEqual([]);
+    if (begun.ok) begun.gesture.cancel();
+    unbind();
+  });
+
+  it('by key, with nothing selected opens nothing; with points selected, the last-selected, just right of its marker', () => {
+    const { route, a, b, store, opened, unbind } = boundMenu();
+    store.select(NOTHING_SELECTED);
+    expect(openMenuByKey()).toBe(false);
+    // The route still selected but its selected point deleted (the store drops what went): nothing either.
+    store.select({ route: route.id, points: [a] });
+    expect(editKey('deleteSelection', false, store, false)).toBe(true);
+    expect(store.getState().selection).toEqual({ route: route.id, points: [] });
+    expect(openMenuByKey()).toBe(false);
+    expect(opened).toEqual([]);
+    store.undo();
+    store.select({ route: route.id, points: [a, b] });
+    const held = store.getState().selection;
+    expect(openMenuByKey()).toBe(true);
+    // b at (0.6, 0.6) of an image 1000 by 800 CSS pixels at (10, 20); its marker 30 canvas pixels half-wide, 15 in CSS.
+    expect(opened).toEqual([{ route: route.id, point: b, at: { x: 10 + 600 + 15, y: 20 + 480 } }]);
+    expect(store.getState().selection).toBe(held);
+    unbind();
+    expect(openMenuByKey()).toBe(false);
+  });
+
+  it('by key, a canvas bound without a menu opens nothing', () => {
+    const { route, a, store, unbind } = bound();
+    store.select({ route: route.id, points: [a] });
+    expect(openMenuByKey()).toBe(false);
+    unbind();
+  });
+
+  it('the menu\'s key is the ContextMenu key or Shift+F10 alone', () => {
+    const press = (key: string, held: Partial<Record<'shiftKey' | 'altKey' | 'ctrlKey' | 'metaKey', boolean>> = {}) =>
+      isMenuKey({ key, shiftKey: false, altKey: false, ctrlKey: false, metaKey: false, ...held });
+    expect(press('ContextMenu')).toBe(true);
+    expect(press('F10', { shiftKey: true })).toBe(true);
+    expect(press('F10')).toBe(false);
+    expect(press('F10', { shiftKey: true, ctrlKey: true })).toBe(false);
+    expect(press('F10', { shiftKey: true, altKey: true })).toBe(false);
+    expect(press('F10', { shiftKey: true, metaKey: true })).toBe(false);
+    expect(press('Enter', { shiftKey: true })).toBe(false);
   });
 });

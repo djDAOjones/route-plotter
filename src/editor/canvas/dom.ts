@@ -83,7 +83,17 @@
 //    was and any pointer press on the page; a press on another store commits the old store's burst there first.
 //    Another gesture owning the store (a begin it would refuse) is left alone, and the key is not taken, at the edge
 //    too; nothing is taken with nothing selected on the route or while a drag is open. Nothing is said aloud (D263).
-import type { ImageBounds } from '../../core/geometry/transform';
+// 9. The point's menu's opener (brief 130, ruling CB; D267 (a)). With a `menu` handed, a `contextmenu` on the canvas
+//    hit-tests the last frame drawn as a down does (points before lines, ./hit.ts); on a point it cancels the browser's
+//    own menu, selects the point (kept as it is when the point is already in the selection: ./menu.ts `menuSelection`,
+//    never a step) and hands the page the point and the pointer's place on the page. On empty picture, a line or its
+//    "+", nothing is done and the browser's menu is left alone (a line's menu is G2's). `openMenuByKey` is keydown.ts's
+//    for Shift+F10 and the ContextMenu key (`isMenuKey`) with focus in the preview: with a point selected it hands the
+//    page the last-selected point, placed on the page just right of its marker; with none, nothing. Neither opens while
+//    a drag is open or the store's gesture is (a nudge burst is ended first, by the down or by keydown.ts), as the
+//    Editing keys refuse; both open while the pen draws (the pen is always on). The `contextmenu` is listened for only
+//    with a `menu` to hand it to.
+import { imageToCanvas, type ImageBounds } from '../../core/geometry/transform';
 import type { Frame } from '../../adapters/render/layers';
 import type { Screen } from '../../adapters/render/overlays';
 import type { Command } from '../store/command';
@@ -94,6 +104,7 @@ import { DUPLICATE_OFFSET, type Start } from '../../core/model/commands/editing'
 import { bindPointer, type PointerBinding, type Tap } from './gesture';
 import { hitTest, type HitRoute } from './hit';
 import { hoverOf, type HoverHolder } from './hover';
+import { menuSelection } from './menu';
 import type { Modifiers, Pixel, PointerInput } from './pointer';
 
 /** A point's half-size at scale 1, in reference pixels: 30 px across (D241). */
@@ -163,7 +174,14 @@ export function toggleTap({ project, selection }: Pick<ReturnType<Store['getStat
 
 /** What `bindCanvas` reads of a pointer event: a real PointerEvent on the page, a plain object in Node. */
 export type PointerFields = Pick<PointerEvent, 'pointerId' | 'isPrimary' | 'button' | 'clientX' | 'clientY' | 'altKey' | 'shiftKey' | 'metaKey' | 'ctrlKey'> &
-  Partial<Pick<PointerEvent, 'pointerType'>>;
+  Partial<Pick<PointerEvent, 'pointerType' | 'preventDefault'>>;
+
+/** What the point's menu opens on (point 9): the route, the point, and where on the page, in CSS pixels. */
+export interface MenuOpen {
+  readonly route: string;
+  readonly point: string;
+  readonly at: { readonly x: number; readonly y: number };
+}
 
 /** What `bindCanvas` takes of a target it listens on, its events of type `E`. */
 interface Listened<E extends PointerFields> {
@@ -196,19 +214,32 @@ export interface CanvasBindingOptions<E extends PointerFields> {
   readonly mac: boolean;
   /** Where the point or line under a resting mouse or pen is held (point 6); none, no hover. */
   readonly hover?: Pick<HoverHolder, 'set'>;
+  /** What opens the point's menu (point 9); none, no menu. */
+  readonly menu?: (open: MenuOpen) => void;
 }
 
 /**
  * The bindings on the page now, each with what ends its press as a blur does, so that keydown.ts can ask whether a drag
  * is open (point 4) and cancel it (point 5), and with the zoom of the frame its canvas last drew (point 8).
  */
-const live = new Map<PointerBinding, { readonly blur: () => void; readonly zoom: () => number | undefined }>();
+const live = new Map<PointerBinding, { readonly blur: () => void; readonly zoom: () => number | undefined; readonly menu: () => boolean }>();
 
 /** The zoom of the frame the first bound canvas last drew, the nudge's divisor (point 8); 1 with none drawn or bound. */
 export const zoomNow = (): number => [...live.values()][0]?.zoom() ?? 1;
 
 /** Whether a drag is open on any bound canvas now. */
 export const dragOpen = (): boolean => [...live.keys()].some((binding) => binding.state().phase === 'dragging');
+
+/** Whether a key press is the menu's key (point 9): the ContextMenu key, or Shift+F10 with no other modifier. */
+export function isMenuKey(press: Pick<KeyboardEvent, 'key' | 'shiftKey' | 'altKey' | 'ctrlKey' | 'metaKey'>): boolean {
+  if (press.key === 'ContextMenu') return true;
+  return press.key === 'F10' && press.shiftKey && !press.altKey && !press.ctrlKey && !press.metaKey;
+}
+
+/** Opens the point's menu on the last-selected point from the keyboard (point 9); true when a bound canvas opened it. */
+export function openMenuByKey(): boolean {
+  return [...live.values()].some(({ menu }) => menu());
+}
 
 /** Cancels every drag open on a bound canvas (point 5); true when one was open, and Escape is then taken. */
 export function cancelDrag(): boolean {
@@ -248,7 +279,7 @@ const ON_WINDOW: readonly (readonly [string, Kind | 'blur'])[] = [
 ];
 
 /** Binds the pen to `canvas` (point 3); gives back what removes every listener it added. */
-export function bindCanvas<E extends PointerFields>({ canvas, win, store, geometry, refresh, mac, hover }: CanvasBindingOptions<E>): () => void {
+export function bindCanvas<E extends PointerFields>({ canvas, win, store, geometry, refresh, mac, hover, menu }: CanvasBindingOptions<E>): () => void {
   /** The last frame's geometry in the pointer's CSS pixels, or null before the first. */
   const inCss = (): Geometry | null => {
     const drawn = geometry();
@@ -290,11 +321,36 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
     }
   };
 
+  /** Whether the menu may open now (point 9): one is handed, and no drag nor other gesture is open. */
+  const menuMay = (): boolean => menu !== undefined && binding.state().phase !== 'dragging' && store.getState().gesture === null;
+  /** Opens the menu on a point (point 9), selecting it first as `menuSelection` says. */
+  const openOn = (route: string, point: string, place: MenuOpen['at']): void => {
+    const { selection } = store.getState();
+    const next = menuSelection(selection, route, point);
+    if (next !== selection) store.select(next);
+    menu?.({ route, point, at: place });
+  };
+
   live.set(binding, {
     blur: () => {
       send({ kind: 'blur' });
     },
     zoom: () => geometry()?.zoom,
+    menu: () => {
+      // As a down does, the canvas is first brought to the store, so the point is placed where it is now (ruling K).
+      if (!menuMay() || !refresh()) return false;
+      const now = inCss();
+      if (now === null) return false;
+      const { selection } = store.getState();
+      const last = selection.points[selection.points.length - 1];
+      const drawn = now.routes.find((each) => each.route.id === selection.route);
+      const point = drawn?.route.points.find((each) => each.id === last);
+      if (drawn === undefined || point === undefined) return false;
+      const rect = canvas.getBoundingClientRect();
+      const place = imageToCanvas(now.bounds, point);
+      openOn(drawn.route.id, point.id, { x: rect.left + place.x + drawn.markerHalf, y: rect.top + place.y });
+      return true;
+    },
   });
 
   /** An idle mouse or pen move: what lies under it in the last frame drawn, never a refresh (point 6). */
@@ -336,8 +392,19 @@ export function bindCanvas<E extends PointerFields>({ canvas, win, store, geomet
   const onLeave = (): void => {
     hover?.set(null);
   };
-  // The leave is listened for only with a holder to clear (point 6).
-  const onCanvas = hover === undefined ? listeners(ON_CANVAS) : [...listeners(ON_CANVAS), ['pointerleave', onLeave] as const];
+  /** A right-click or the like on the canvas (point 9): the menu on a point hit, else nothing and the browser's own. */
+  const onMenu = (event: E): void => {
+    if (!menuMay() || !refresh()) return;
+    const now = inCss();
+    if (now === null) return;
+    const under = hitTest(at(event), now.bounds, now.routes);
+    if (under?.kind !== 'point') return;
+    event.preventDefault?.();
+    openOn(under.route, under.id, { x: event.clientX, y: event.clientY });
+  };
+  // The leave is listened for only with a holder to clear (point 6), the menu's event only with a menu (point 9).
+  const withLeave = hover === undefined ? listeners(ON_CANVAS) : [...listeners(ON_CANVAS), ['pointerleave', onLeave] as const];
+  const onCanvas = menu === undefined ? withLeave : [...withLeave, ['contextmenu', onMenu] as const];
   const onWindow = listeners(ON_WINDOW);
   for (const [type, listener] of onCanvas) canvas.addEventListener(type, listener);
   for (const [type, listener] of onWindow) win.addEventListener(type, listener);
