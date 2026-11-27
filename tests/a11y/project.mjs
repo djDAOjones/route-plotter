@@ -2953,12 +2953,15 @@ export default {
       // finding 1 on brief 136's range; red on a1e37df: Delete from 200 to 244 px, PROBE-137/red-run-a1e37df.txt); the
       // window is put back. Over the whole run the status said, in turn and each once, "Point made a bend", "Undo", "Start
       // marked", "Undo", "Point deleted", "Undo" (brief 137, D269 and Codex list line 17: every change of the status is
-      // kept, not a set, so a repeat fails); the disabled item said nothing. Before brief 137 it read only "Undo" and
+      // kept, not a set, so a repeat fails; read once the status has come back to empty, the queue drained); the
+      // disabled item said nothing. Before brief 137 it read only "Undo" and
       // "Point deleted", as a set (the other items were silent then). Faults that fail it (brief 136, PROBE-136/mut-*.txt): (y) the
       // menu mounted inside .preview fails (1); (z) focus not returned on Escape fails (2); (aa) an item that is off
       // still run (and the menu closed) fails (5); (af) "Make bend" not dispatched fails (3); (brief 137,
       // PROBE-137/mut-*.txt) (ag) the menu's maximum height removed fails (7) at End (Delete from 200 to 244 px); (ah) the
-      // scroll listener closing on a scroll inside the menu fails (7): End's own scroll into view closes it. It claims nothing for 2.5.7
+      // scroll listener closing on a scroll inside the menu fails (7): End's own scroll into view closes it. (ai) "Make bend"'s
+      // words left out of editWords fails (3) and the run's words; (aj) a second "Point deleted" announced 2.5 s after the
+      // first fails the run's words (one announced in the same task is merged by the queue, announce.ts, so never shown). It claims nothing for 2.5.7
       // (G2's "Move", D250) nor for the marks' drawing.
       name: 'point-menu',
       method: 'keyboard',
@@ -3124,6 +3127,7 @@ export default {
         await page.setViewportSize(view);
         await settle();
         if (!(await focusOn(page, PREVIEW))) order.wrong.push('focus was not on the preview box at the end');
+        if (!(await page.waitForFunction((st) => (document.querySelector(st)?.textContent ?? '') === '', STATUS, { timeout: 12000 }).then(() => true, () => false))) names.wrong.push('the status did not come back to empty at the end');
         const said = (await page.evaluate(() => window.__said)).filter(Boolean);
         const SAID = ['Point made a bend', 'Undo', 'Start marked', 'Undo', 'Point deleted', 'Undo'];
         if (JSON.stringify(said) !== JSON.stringify(SAID)) names.wrong.push(`the status said ${JSON.stringify(said)} in turn; ${JSON.stringify(SAID)} were expected, each once (D269; the disabled item says nothing)`);
