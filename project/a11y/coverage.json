@@ -8,7 +8,7 @@
     },
     "live-media": {
       "state": "absent",
-      "evidence": "STACK-08 (2026-11-28): the page as built has no live audio or video: no getUserMedia, getDisplayMedia, MediaRecorder or RTCPeerConnection in src/, and it makes no network request at all (no fetch, XMLHttpRequest, WebSocket or EventSource in src/), so nothing can stream into it."
+      "evidence": "STACK-08 (2026-11-28): the page as built has no live audio or video: no getUserMedia, getDisplayMedia, MediaRecorder or RTCPeerConnection in src/, and it makes no request of the app's own (no fetch, XMLHttpRequest, WebSocket or EventSource in src/), so nothing can stream into it."
     },
     "autoplay-audio": {
       "state": "absent",
@@ -28,7 +28,7 @@
     },
     "flashing": {
       "state": "unknown",
-      "evidence": ""
+      "evidence": "STACK-08 (2026-11-28): kept unknown, not absent: the preview animates the user's own route over the user's own picture in the user's own colours while it plays (moving-content), so whether anything shown flashes more than three times a second, or in red, depends on what the user draws and opens and cannot be read from source; the catalogue's only method for 2.3.1 and 2.3.2 is flash-capture, an extended one (frames of each flashing item, for specialist analysis), which no run makes yet. Its rows stay unverified, a shortfall recorded, until that capture runs or an item bounds what the preview can show."
     },
     "moving-content": {
       "state": "present",
@@ -36,19 +36,19 @@
     },
     "authentication": {
       "state": "absent",
-      "evidence": "STACK-08 (2026-11-28): the page as built has no sign-in or verification step: no password field, sign-in, OAuth or credential in src/, no account, and no network request at all (no fetch, XMLHttpRequest, WebSocket or EventSource in src/); a project is opened from the user's own files. Absent as built; an item that adds an account or a server sets it present."
+      "evidence": "STACK-08 (2026-11-28): the page as built has no sign-in or verification step: no password field, sign-in, OAuth or credential in src/, no account, and no request of the app's own (no fetch, XMLHttpRequest, WebSocket or EventSource in src/); a project is opened from the user's own files. Absent as built; an item that adds an account or a server sets it present."
     },
     "multi-step": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "present",
+      "evidence": "STACK-08 (2026-11-28, brief 164): Open over a route drawn since the page opened is a process of more than one step: \"Open project\", the file chosen in the browser's chooser, then \"Replace your route?\" (src/editor/shell/ReplaceQuestion.tsx), whose \"Replace\" opens the file. The journey replace-asks-nothing-again (j-multi-step, 3.3.7, tests/a11y/project.mjs), in pen-drawn, reads that the dialog names the file already chosen (\"Replace your route with <name>?\"), holds no field of any kind (input, select, textarea, contenteditable, textbox or combobox) and that \"Replace\" opens that file with no second choice of file (no chooser opens, \"Project opened\" said): nothing the user gave earlier in the process is asked again. Save is not on the page yet: when it is, or any other process of more than one step, it needs this check too."
     },
     "timers": {
       "state": "absent",
-      "evidence": "STACK-08 (2026-11-28): the page as built sets no time limit and no session that expires: it has no sign-in and makes no network request, so nothing can expire, and each setTimeout in src/ is the page's own, never a limit on the user: Preview.tsx measures its box on the next turn (0 ms); session.ts and kit/announce.ts hold each status message for a while in the hidden live region (cds--visually-hidden, not read on screen) before the next; Carbon's Modal returns focus by one after it closes (noted in kit/Dialog.tsx); canvas/dom.ts joins arrow presses less than 400 ms apart into one undo step (NUDGE_QUIET_MS), a press after that is only a new step. Playing the route takes as long as the route, but it is not a limit: nothing is lost or refused when it ends, and it is paused, stepped and restarted at will (moving-content, 2.2.2)."
+      "evidence": "STACK-08 (2026-11-28): the page as built sets no time limit and no session that expires: it has no sign-in and makes no request of the app's own (no fetch, XMLHttpRequest, WebSocket or EventSource in src/), so nothing can expire, and each setTimeout in src/ is the page's own, never a limit on the user: Preview.tsx measures its box on the next turn (0 ms); session.ts and kit/announce.ts hold each status message for a while in the hidden live region (cds--visually-hidden, not read on screen) before the next; Carbon's Modal returns focus by one after it closes (noted in kit/Dialog.tsx); canvas/dom.ts joins arrow presses less than 400 ms apart into one undo step (NUDGE_QUIET_MS), a press after that is only a new step. Playing the route takes as long as the route, but it is not a limit: nothing is lost or refused when it ends, and it is paused, stepped and restarted at will (moving-content, 2.2.2)."
     },
     "interruptions": {
       "state": "absent",
-      "evidence": "STACK-08 (2026-11-28): the page as built never interrupts: it makes no network request (no fetch, XMLHttpRequest, WebSocket or EventSource in src/), has no service worker, notification, alert(), confirm() or prompt(), and no timer that shows anything of its own (the live region's timer only spaces out words already queued); what it shows or says follows the user's own action: the refusal's notice (role=\"alert\", src/editor/shell/Open.tsx) after a file is chosen, \"Replace your route?\" after Open over a drawn route, and the hidden live region's status words after a key, a button or an edit."
+      "evidence": "STACK-08 (2026-11-28): the page as built never interrupts: it makes no request of the app's own (no fetch, XMLHttpRequest, WebSocket or EventSource in src/), has no service worker, notification, alert(), confirm() or prompt(), and no timer that shows anything of its own (the live region's timer only spaces out words already queued); what it shows or says follows the user's own action: the refusal's notice (role=\"alert\", src/editor/shell/Open.tsx) after a file is chosen, \"Replace your route?\" after Open over a drawn route, and the hidden live region's status words after a key, a button or an edit."
     },
     "pointer-gestures": {
       "state": "present",
@@ -75,8 +75,8 @@
       "evidence": "STACK-08 (2026-11-28): the product is one page: Vite builds the single index.html (vite.config.mjs, the editor's config; the exported player is a script, not a page), the page has no link (no <a> element in src/), no route or history change (no pushState or location in src/), and Help is a dialog on the same page. Absent as built; the item that adds a second page or screen sets it present."
     },
     "languages": {
-      "state": "absent",
-      "evidence": "STACK-08 (2026-11-28): the page as built is in one language: index.html declares lang=\"en-GB\", src/ sets no other lang, and every word the page writes is English (its own words and Carbon's English defaults). The only text of the user's it shows in words is a refused file's name in the title \"Could not open <name>\" (src/editor/shell/openLogic.ts), a name, which 3.1.2 excepts; anything a project draws is pixels in the preview. Absent as built; the item that adds a second language, or text the user types onto the page, sets it present or says why not."
+      "state": "present",
+      "evidence": "STACK-08 (2026-11-28, brief 164): the page's own words are English (index.html declares lang=\"en-GB\", src/ sets no other lang, its own words and Carbon's English defaults), but it shows text from the user's own files, which may be in any language: a refused project's notice quotes up to 40 characters of a string value found in the file (src/core/schema/check.ts describe(), put after \"found\" by src/adapters/io/words.ts and shown as the notice's subtitle, src/editor/shell/Open.tsx), and the file's name is shown while opening (\"Opening <name>\", Open.tsx), in a refusal's title (\"Could not open <name>\") and in \"Replace your route with <name>?\". So 3.1.2 applies. It rests on axe's valid-lang, which every state runs (each lang the page sets is a valid one); the quoted values and names carry no lang of their own because their language cannot be known (a value read from a file, or a name, is words of indeterminate language, which 3.1.2 excepts). Anything a project draws is pixels in the preview. An item that adds a second language of the page's own, or text the user types onto the page, must mark its language."
     },
     "canvas": {
       "state": "present",
@@ -664,10 +664,7 @@
     "3.1.2": {
       "adoption": "required",
       "applicability": {
-        "state": "not_applicable",
-        "absent": [
-          "languages"
-        ]
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
@@ -812,7 +809,7 @@
     "3.3.7": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []

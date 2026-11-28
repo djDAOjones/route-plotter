@@ -2052,6 +2052,42 @@ export default {
       },
     },
     {
+      // STACK-08 (brief 164), 3.3.7 Redundant Entry: Open over a route drawn since the page opened is a process of more
+      // than one step ("Open project", the file chosen, then "Replace your route?"). In pen-drawn, the project chosen
+      // once, the dialog asks for nothing the user gave before: it names the file already chosen ("Replace your route
+      // with <name>?"), holds no field of any kind (ASKS_AGAIN), and "Replace" opens that file with no second choice of
+      // file: no file chooser opens within 3 s of the press, "Project opened" is said and the canvas no longer reads as
+      // the drawn route. Save is not on the page yet; when it is, its steps need this check too.
+      name: 'replace-asks-nothing-again',
+      method: 'j-multi-step',
+      rows: ['3.3.7'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const wrong = [];
+        const ASKS_AGAIN = 'input, select, textarea, [contenteditable]:not([contenteditable="false"]), [role=textbox], [role=combobox]';
+        const question = page.getByRole('dialog', { name: 'Replace your route?' });
+        const file = await projectFile();
+        const drawn = await pixels(page);
+        let fields = [];
+        if (!(await choose(page, file))) wrong.push('a press on "Open project" opened no file chooser');
+        if (!(await question.waitFor({ state: 'visible', timeout: 6000 }).then(() => true, () => false))) wrong.push('no "Replace your route?" dialog showed over a drawn route');
+        else {
+          const text = await question.innerText();
+          if (!text.includes(`Replace your route with ${file.name}?`)) wrong.push(`the dialog read "${text}", not naming the file already chosen, ${file.name}`);
+          fields = await question.locator(ASKS_AGAIN).evaluateAll((els) => els.map((e) => e.outerHTML.slice(0, 80)));
+          if (fields.length) wrong.push(`the dialog holds ${fields.length} field(s) that could ask again: ${fields.join(' | ')}`);
+          const askedAgain = page.waitForEvent('filechooser', { timeout: 3000 }).then(() => true, () => false);
+          await question.getByRole('button', { name: 'Replace', exact: true }).click();
+          if (!(await saysOpened(page))) wrong.push(`after "Replace" the status region never said "${OPENED}"`);
+          if (await askedAgain) wrong.push('"Replace" opened a file chooser: the file was asked for again');
+          await quiet(page);
+          await twoFrames(page);
+          if ((await pixels(page)).hash === drawn.hash) wrong.push('after "Replace" the canvas read as the drawn route: the file chosen was not opened');
+        }
+        record('3.3.7', !wrong.length, wrong.length ? wrong.join('; ') : `Open over a drawn route takes three steps ("Open project", ${file.name} chosen, "Replace your route?") and asks for nothing already given: the dialog names ${file.name}, holds no field of any kind (0 matching ${ASKS_AGAIN}), and "Replace" opened that file with no second chooser within 3 s, "${OPENED}" said and the canvas changed`);
+      },
+    },
+    {
       // D251's first half (Joe, 26 Nov: "End, plus a guide"; brief 127): a project whose route ends in a trail opened, the
       // timeline waits at its end, its words "x of x" (the trail's run-on and Hold at end counted: longer than the empty
       // page's 0:02), and stays there with nothing pressed; the status region says "Project opened" and nothing else
