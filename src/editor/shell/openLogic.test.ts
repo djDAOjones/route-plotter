@@ -828,7 +828,14 @@ describe('point 9: a file too large is never read', () => {
 });
 
 describe('point 10: a file that cannot be read', () => {
-  const unreadable = { reason: 'unsafe', message: IO_WORDS.openedUnsafe('it could not be read') };
+  const unreadable = { reason: 'unsafe', message: IO_WORDS.openedUnreadable };
+
+  it('says the file could not be read and to choose it again, not that the project is unsafe (STACK-08)', () => {
+    expect(unreadable.message).toBe(
+      'This file could not be read: it may have been moved, or the browser may no longer have access to it. Choose ' +
+        'it again from where it is now. Nothing was opened.',
+    );
+  });
 
   it('a read that rejects: nothing changes, refused in io’s words, held with the name', async () => {
     const io = countingOpen();

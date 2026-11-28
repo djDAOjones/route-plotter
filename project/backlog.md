@@ -44,6 +44,7 @@
 
 - [~] STACK-06 — Item B: the editor's .tsx boundary rule, the composer's owner, the `isComposing` stand-down, and the boundary rules' "provisional" words off — since 2026-11-27 — (from: STACK-05, 2026-11-27)
 - [~] STACK-07 — Item C, first part: the JSDoc digest adopted, eslint-plugin-jsdoc on the owner's yes, v4's exports documented — since 2026-11-28 — (from: STACK-06, 2026-11-28)
+- [~] STACK-08 — Item C, second part: accessibility before CORE-07 — since 2026-11-28 — (from: STACK-07, 2026-11-28)
 
 ### Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
 

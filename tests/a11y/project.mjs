@@ -158,7 +158,10 @@ const OPEN = '#open-project';
 const OPENED = 'Project opened';
 const PAUSED = 'Animation paused';
 const LENGTH_MS = 6000;
-const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damaged. Nothing was opened.';
+const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damaged. Choose a project saved by Route Plotter v4 (a .zip file). Nothing was opened.';
+// Its two parts, checked apart (STACK-08): what is wrong (3.3.1) and what to choose instead (3.3.3).
+const NOT_A_PROJECT_CAUSE = 'This file is not a Route Plotter project, or it is damaged.';
+const NOT_A_PROJECT_CHOICE = 'Choose a project saved by Route Plotter v4 (a .zip file).';
 // (No import statement: the run's loader would make this file CommonJS. Node's own modules are reached by
 // `process.getBuiltinModule`, jszip through a require made at the repository's root (the run's A11Y_ROOT, else the
 // working folder); both only when a journey asks for the file.)
@@ -445,7 +448,7 @@ const headerOnlyPng = () => {
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]), ihdr, crc]);
 };
 // io's words for an image that does not decode (words.ts, openedInvalid, with images.ts's problem).
-const NOT_SHOWN = 'This project could not be opened, because some of it is outside what Route Plotter allows (images[0]: expected a PNG image that can be shown, found a damaged image). Nothing was opened.';
+const NOT_SHOWN = 'This project could not be opened, because some of it is outside what Route Plotter allows (images[0]: expected a PNG image that can be shown, found a damaged image). Choose a project saved by Route Plotter v4 and not changed since. Nothing was opened.';
 const TEXT_FILE = { name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Not a project.\n') };
 // The same text under a name of 60 characters with no spaces: the refusal's title carries it (brief 80, step 2).
 const LONG_NAME = `${'a'.repeat(56)}.txt`;
@@ -1942,10 +1945,13 @@ export default {
       // route". Escape then keeps the route as before. Open again and "Replace": "Project opened" heard, the opened
       // project drawn (the canvas changed), focus back on "Open project". Open once more, nothing drawn since: no
       // dialog, "Project opened". It claims 3.3.4 (the one action that throws work away is confirmed); the runner
-      // refuses 2.4.3 for a j-forms journey, so focus is read here as part of 3.3.4's result only.
+      // refuses 2.4.3 for a j-forms journey, so focus is read here as part of 3.3.4's result only. 3.3.6 (STACK-08,
+      // brief 161): Open over changes is the page's one submission that throws work away, and it is confirmed; the
+      // canvas edits are reversed by one Undo (a-delete-is-undone); the switch is turned back by itself; the timeline
+      // is a position, not a submission.
       name: 'open-over-changes',
       method: 'j-forms',
-      rows: ['3.3.4'],
+      rows: ['3.3.4', '3.3.6'],
       run: async ({ page, open, record }) => {
         await open('pen-drawn');
         const wrong = [];
@@ -2041,7 +2047,69 @@ export default {
         if (!(await saysOpened(page))) wrong.push(`with nothing drawn since, the status region never said "${OPENED}"`);
         if (await page.getByRole('dialog').count()) wrong.push('with nothing drawn since the last Open a dialog showed');
         await quiet(page);
+        record('3.3.6', !wrong.length, wrong.length ? wrong.join('; ') : 'Open over a drawn route is confirmed: "Replace your route?" asked, each way of keeping kept the route as before, only "Replace" opened the project');
         record('3.3.4', !wrong.length, wrong.length ? wrong.join('; ') : `over a drawn route Open asked "Replace your route?" in one dialog with focus on "Keep my route"; one Escape, "Keep my route" by its button, the dialog's Close and a press outside each kept the route (the canvas as before), said "Open cancelled" once more and put focus back on "Open project"; with focus moved to "Replace", the Open key opened nothing, and a second ask for the same file left one dialog with focus back on "Keep my route", and Escape kept the route; "Replace" opened the project, said "${OPENED}" once and put focus back on "Open project"; with nothing drawn since, Open asked nothing`);
+      },
+    },
+    {
+      // STACK-08 (briefs 164 and 165), 3.3.7 Redundant Entry: Open over a route drawn since the page opened is a process
+      // of more than one step ("Open project", the file chosen, then "Replace your route?"). First, for reference,
+      // two-stops.zip is opened on the page fresh (nothing drawn), and its canvas and timeline are read. Then, in
+      // pen-drawn, the project chosen once, the dialog asks for nothing the user gave before: it names the file already
+      // chosen ("Replace your route with <name>?"); its only controls are the buttons "Close", "Keep my route" and
+      // "Replace", each once, and nothing in it is focusable or has an entry role but those three (DIALOG_CONTROLS,
+      // ENTRY); and "Replace" opens that file with no second choice of file: no file chooser opens within 3 s of the
+      // press, "Project opened" is said, and the canvas and the timeline read as the reference's, so the file opened is
+      // the one chosen (another project, or a cleared canvas, reads otherwise). Save is not on the page yet; when it
+      // is, its steps need this check too.
+      name: 'replace-asks-nothing-again',
+      method: 'j-multi-step',
+      rows: ['3.3.7'],
+      run: async ({ page, open, record }) => {
+        const wrong = [];
+        const ENTRY = 'input, select, textarea, [contenteditable]:not([contenteditable="false"]), [role=textbox], [role=combobox], [role=searchbox], [role=listbox], [role=option], [role=radio], [role=checkbox], [role=switch], [role=slider], [role=spinbutton]';
+        const DIALOG_CONTROLS = ['Close', 'Keep my route', 'Replace'];
+        const file = await projectFile();
+        await open('shell');
+        let reference = null;
+        if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) wrong.push(`for reference, ${file.name} did not open on a fresh page`);
+        else { await quiet(page); await twoFrames(page); reference = { canvas: await pixels(page), at: await atNow(page) }; }
+        await open('pen-drawn');
+        const question = page.getByRole('dialog', { name: 'Replace your route?' });
+        const drawn = await pixels(page);
+        if (reference && reference.canvas.hash === drawn.hash) wrong.push(`the reference ${file.name} reads as the drawn route, so the canvas cannot tell them apart`);
+        let controls = [];
+        if (!(await choose(page, file))) wrong.push('a press on "Open project" opened no file chooser');
+        if (!(await question.waitFor({ state: 'visible', timeout: 6000 }).then(() => true, () => false))) wrong.push('no "Replace your route?" dialog showed over a drawn route');
+        else {
+          const text = await question.innerText();
+          if (!text.includes(`Replace your route with ${file.name}?`)) wrong.push(`the dialog read "${text}", not naming the file already chosen, ${file.name}`);
+          // Every element in the dialog that is focusable (any tabindex, in the Tab order or not), operable (a widget's
+          // role) or of an entry role, with its role and name. Carbon's focus landing (the dialog's body, a div with
+          // tabindex=-1, data-modal-primary-focus and no role, where focus goes as the dialog opens) is allowed once.
+          controls = await question.locator('*').evaluateAll((els, entry) => els.filter((e) => e.matches(entry) || e.matches('button, a[href], area[href], summary, iframe, embed, object, audio[controls], video[controls], [tabindex], [role=button], [role=link], [role=menuitem], [role=menuitemcheckbox], [role=menuitemradio], [role=menu], [role=menubar], [role=tab], [role=tablist], [role=tree], [role=treeitem], [role=grid], [role=gridcell], [role=scrollbar]')).map((e) => ({
+            entry: e.matches(entry),
+            landing: e.matches('div[tabindex="-1"][data-modal-primary-focus]:not([role])'),
+            role: e.getAttribute('role') || e.tagName.toLowerCase(),
+            name: (e.getAttribute('aria-label') || (e.getAttribute('aria-labelledby') || '').split(/\s+/).map((id) => document.getElementById(id)?.textContent ?? '').join(' ') || e.textContent || '').trim(),
+            html: e.outerHTML.slice(0, 80),
+          })), ENTRY);
+          const expected = (c) => !c.entry && c.role === 'button' && DIALOG_CONTROLS.includes(c.name);
+          const other = controls.filter((c) => !expected(c) && !(c.landing && !c.entry));
+          if (controls.filter((c) => c.landing).length > 1) wrong.push('the dialog holds more than one focus landing');
+          if (other.length) wrong.push(`the dialog holds ${other.length} control(s) beyond ${DIALOG_CONTROLS.join(', ')}, which could ask again: ${other.map((c) => `${c.role} "${c.name}" ${c.html}`).join(' | ')}`);
+          for (const n of DIALOG_CONTROLS) { const k = controls.filter((c) => expected(c) && c.name === n).length; if (k !== 1) wrong.push(`the dialog holds ${k} button(s) "${n}", not one`); }
+          const askedAgain = page.waitForEvent('filechooser', { timeout: 3000 }).then(() => true, () => false);
+          await question.getByRole('button', { name: 'Replace', exact: true }).click();
+          if (!(await saysOpened(page))) wrong.push(`after "Replace" the status region never said "${OPENED}"`);
+          if (await askedAgain) wrong.push('"Replace" opened a file chooser: the file was asked for again');
+          await quiet(page);
+          await twoFrames(page);
+          const after = { canvas: await pixels(page), at: await atNow(page) };
+          if (reference && after.canvas.hash !== reference.canvas.hash) wrong.push(`after "Replace" the canvas did not read as ${file.name} opened on a fresh page (hash ${after.canvas.hash}, ${after.canvas.drawn} pixels drawn; the reference's ${reference.canvas.hash}, ${reference.canvas.drawn}): the file chosen was not what opened`);
+          if (reference && (after.at.now !== reference.at.now || after.at.text !== reference.at.text)) wrong.push(`after "Replace" the timeline read ${after.at.now} "${after.at.text}", not the reference's ${reference.at.now} "${reference.at.text}"`);
+        }
+        record('3.3.7', !wrong.length, wrong.length ? wrong.join('; ') : `Open over a drawn route takes three steps ("Open project", ${file.name} chosen, "Replace your route?") and asks for nothing already given: the dialog names ${file.name}; of the ${controls.length} elements in it that are focusable (any tabindex), operable (a widget's role) or of an entry role (${ENTRY}), the only ones are the buttons ${DIALOG_CONTROLS.join(', ')}, each once, and Carbon's focus landing (the dialog's body, tabindex=-1, no role), none of an entry role; and "Replace" opened that file with no second chooser within 3 s, "${OPENED}" said, the canvas and the timeline ("${reference.at.text}") reading as ${file.name} opened on a fresh page`);
       },
     },
     {
@@ -2539,9 +2607,14 @@ export default {
       // 4.1.3 (stage 6): a file that is no project is refused by one alert (role alert, said by itself), titled with the
       // file's name and holding io's sentence whole, the status region saying nothing; focus stays on "Open project"
       // and the play bar is as it was. After Close the same file chosen again is a new choice, refused again.
+      // 3.3.1 (STACK-08, brief 161): the error is identified and described in text: the alert's title names the item
+      // (the file, "Could not open notes.txt") and its first sentence says what is wrong with it. 3.3.3: the
+      // suggestion, "Choose a project saved by Route Plotter v4 (a .zip file).", is checked on its own, so a refusal
+      // that lost it fails 3.3.3 and not 3.3.1 (4.1.3 holds the sentence whole, so fails too). Every other refusal to
+      // open has its suggestion held by the unit test (src/adapters/io/words.test.ts), not by a journey.
       name: 'refused-not-a-project',
       method: 'j-forms',
-      rows: ['4.1.3'],
+      rows: ['4.1.3', '3.3.1', '3.3.3'],
       run: async ({ page, open, record }) => {
         await open('shell');
         const heard = await hear(page);
@@ -2556,6 +2629,13 @@ export default {
         if (count !== 1) wrong.push(`${count} alert(s), not one`);
         if (title !== `Could not open ${TEXT_FILE.name}`) wrong.push(`the alert's title is ${JSON.stringify(title)}, not "Could not open ${TEXT_FILE.name}"`);
         if (!words.includes(NOT_A_PROJECT)) wrong.push(`the alert does not hold io's sentence whole: ${JSON.stringify(words)}`);
+        const identified = [
+          title !== `Could not open ${TEXT_FILE.name}` && `the alert's title is ${JSON.stringify(title)}: it does not name the file`,
+          !words.includes(NOT_A_PROJECT_CAUSE) && `the alert does not say what is wrong in text ("${NOT_A_PROJECT_CAUSE}"): ${JSON.stringify(words)}`,
+        ].filter(Boolean);
+        record('3.3.1', !identified.length, identified.length ? identified.join('; ') : `the error identified and described in text: the alert's title names the item, "Could not open ${TEXT_FILE.name}", and it says "${NOT_A_PROJECT_CAUSE}"`);
+        const suggested = words.includes(NOT_A_PROJECT_CHOICE);
+        record('3.3.3', suggested, suggested ? `the alert suggests the correction: "${NOT_A_PROJECT_CHOICE}"` : `the alert suggests no correction ("${NOT_A_PROJECT_CHOICE}" not in ${JSON.stringify(words)})`);
         if (await neverSays(page, OPENED, 2500) === false || (await heard()).length) wrong.push(`the status region said ${JSON.stringify(await heard())}`);
         if (!(await focusOn(page, OPEN))) wrong.push('focus left "Open project"');
         if ((await bar()) !== before) wrong.push(`the play bar was ${before} and is ${await bar()}`);
@@ -2566,6 +2646,119 @@ export default {
         const again = await alerts(page).first().waitFor({ timeout: 5000 }).then(() => true, () => false);
         if (!again) wrong.push('the same file chosen again showed no alert');
         record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `one alert, "Could not open ${TEXT_FILE.name}" and io's sentence whole; the status region silent; focus kept; the play bar as it was; Close removed it, and the same file chosen again was refused again`);
+      },
+    },
+    {
+      // 1.3.5 and 3.3.2 (STACK-08, briefs 161 and 162): every field on the page, hidden ones included (FIELDS with
+      // every input, type=hidden too, not only those shown), read in the shell, with Help open, and with the
+      // "Replace your route?" dialog open over a drawn route.
+      // The page has four: the file input under "Open project" (hidden: out of the layout, the tab order and the
+      // accessibility tree; the button, named by its visible word, opens its chooser, kit/FileButton.tsx), the switch
+      // "Single-key shortcuts" in Help, the slider "Timeline", and the slider's own number box, which Carbon's Slider
+      // renders as an input of type=hidden (hideTextInput, kit/SettingSlider.tsx) labelled by the same visible
+      // "Timeline"; the dialog holds none. 1.3.5: no field carries an `autocomplete` purpose and none takes typed
+      // text, so none collects the user's own details (a field that does must carry its purpose). 3.3.2: each has a
+      // visible label or instructions: the file input the visible "Open project" beside it, the switch its visible
+      // label as its name, the slider its visible label "Timeline" tied to it, and its hidden number box that label
+      // too; the canvas, an application, sits in the region under the visible heading "Preview" (its keys in Help's
+      // tables). A further field, or any field inside the dialog, fails both until its check is written here.
+      name: 'inputs-purpose-and-labels',
+      method: 'j-forms',
+      rows: ['1.3.5', '3.3.2'],
+      run: async ({ page, open, record }) => {
+        // This journey's own inventory: the shared FIELDS with every input, type=hidden included, not only shown ones.
+        const ALL = FIELDS.replace('input:not([type=hidden])', 'input');
+        const read = () => page.locator(ALL).evaluateAll((all) => all.map((e) => {
+          const by = e.getAttribute('aria-labelledby'), label = by ? document.getElementById(by) : null;
+          const before = e.previousElementSibling;
+          return {
+            what: e.id ? `#${e.id}` : `${e.tagName.toLowerCase()}[type=${e.getAttribute('type') ?? ''}]`,
+            tag: e.tagName.toLowerCase(), type: e.getAttribute('type') ?? '', role: e.getAttribute('role') ?? '',
+            autocomplete: e.getAttribute('autocomplete'), hidden: e.hidden, tabIndex: e.tabIndex,
+            typed: e.isContentEditable || e.tagName === 'TEXTAREA' || ['textbox', 'searchbox', 'combobox'].includes(e.getAttribute('role') ?? '')
+              || (e.tagName === 'INPUT' && !['file', 'hidden', 'checkbox', 'radio', 'range', 'button', 'submit', 'reset', 'image', 'color'].includes(e.getAttribute('type') ?? 'text')),
+            opener: before && before.id === 'open-project' && before.getBoundingClientRect().height > 0 ? (before.textContent ?? '').trim() : '',
+            labelledBy: label && label.getBoundingClientRect().height > 0 ? (label.textContent ?? '').trim() : '',
+          };
+        }));
+        const seen = [];
+        await open('shell');
+        seen.push(['the shell', await read()]);
+        await helpButton(page).click();
+        await helpDialog(page).waitFor();
+        seen.push(['Help open', await read()]);
+        const switchName = await named(page.getByRole('switch', { name: 'Single-key shortcuts', exact: true }));
+        const switchShown = await helpDialog(page).getByText('Single-key shortcuts', { exact: true }).filter({ visible: true }).count();
+        await open('pen-drawn');
+        const question = page.getByRole('dialog', { name: 'Replace your route?' });
+        const asked = (await choose(page, await projectFile())) && await question.waitFor({ state: 'visible', timeout: 6000 }).then(() => true, () => false);
+        const inQuestion = asked ? await question.locator(ALL).count() : -1;
+        if (asked) seen.push(['"Replace your route?" open', await read()]);
+        if (asked) await page.keyboard.press('Escape');
+        await open('shell');
+        const heading = await page.getByRole('region', { name: 'Preview' }).getByRole('heading', { name: 'Preview', level: 2 }).filter({ visible: true }).count();
+        const app = await page.getByRole('region', { name: 'Preview' }).getByRole('application').count();
+        const known = {
+          'input[type=file]': (f) => f.hidden && f.tabIndex === -1 && f.opener === 'Open project',
+          '#single-keys': (f) => f.role === 'switch' && switchName.startsWith('switch "Single-key shortcuts"') && switchShown === 1,
+          '#timeline': (f) => f.role === 'slider' && f.labelledBy === 'Timeline',
+          '#timeline-input-for-slider': (f) => f.tag === 'input' && f.type === 'hidden' && f.labelledBy === 'Timeline',
+        };
+        const purpose = [], labels = [], found = new Set();
+        if (!asked) purpose.push('no "Replace your route?" dialog showed over the drawn route'), labels.push('no "Replace your route?" dialog showed over the drawn route');
+        if (inQuestion > 0) {
+          const line = `the "Replace your route?" dialog holds ${inQuestion} field(s): write their check here`;
+          purpose.push(line), labels.push(line);
+        }
+        for (const [where, fields] of seen) {
+          for (const f of fields) {
+            found.add(f.what);
+            if (f.autocomplete !== null) purpose.push(`${where}: ${f.what} carries autocomplete="${f.autocomplete}"`);
+            if (f.typed) purpose.push(`${where}: ${f.what} takes typed text: check whether it collects the user's own details and carries their purpose`);
+            if (!known[f.what]) {
+              const line = `${where}: ${f.what} (${f.tag} ${f.type} ${f.role}) is a field this journey does not know: write its checks`;
+              purpose.push(line), labels.push(line);
+            } else if (!known[f.what](f)) labels.push(`${where}: ${f.what} has no visible label or instructions as written here (${JSON.stringify(f)}${f.what === '#single-keys' ? `, named ${switchName}, its words shown ${switchShown} time(s)` : ''})`);
+          }
+        }
+        for (const what of Object.keys(known)) if (!found.has(what)) labels.push(`${what} was not found: the page changed; read it again`);
+        if (heading !== 1 || app !== 1) labels.push(`the region "Preview" holds ${heading} visible heading(s) "Preview" and ${app} application(s), not one of each`);
+        const list = [...found].join(', ');
+        record('1.3.5', !purpose.length, purpose.length ? purpose.join('; ') : `every field, hidden ones included, in the shell, with Help open and with "Replace your route?" open (${list}): none carries an autocomplete purpose and none takes typed text, so none collects the user's own details`);
+        record('3.3.2', !labels.length, labels.length ? labels.join('; ') : `each input has a visible label or instructions: the hidden file input, out of the tab order, opened by the visible button "Open project" beside it; the switch named by its visible label "Single-key shortcuts" in Help; the slider "Timeline" by its visible label tied to it, and its hidden number box (type=hidden) by the same label; "Replace your route?" holds no field; the canvas application sits in the region under the visible heading "Preview"`);
+      },
+    },
+    {
+      // 3.3.6 (STACK-08, brief 161): a canvas edit is reversible. In pen-drawn, as edit-keys begins (Tab to the preview
+      // box, End, Escape), Cmd/Ctrl+A then Delete takes both points away (neither marker drawn, nor the line between
+      // them); one Undo draws the whole canvas as before the Delete (pixels' hash) and both markers again. Tap, move,
+      // duplicate and the point menu's "Delete" are undone the same way (one Undo, the keyboard and pointer journeys);
+      // Open over changes is confirmed (open-over-changes).
+      name: 'a-delete-is-undone',
+      method: 'j-forms',
+      rows: ['3.3.6'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const press = async (key) => { await page.keyboard.press(key); await page.waitForTimeout(250); await twoFrames(page); };
+        const marks = async () => ({ first: await markBeyond(page, first, second), second: await markBeyond(page, second, first) });
+        const wrong = [];
+        let tabs = 0;
+        while (!(await focusOn(page, PREVIEW)) && tabs < 8) { await page.keyboard.press('Tab'); tabs += 1; }
+        if (!(await focusOn(page, PREVIEW))) wrong.push('eight presses of Tab did not reach the preview box');
+        await press('End');
+        await press('Escape');
+        await press(`${COMMAND}+a`);
+        const before = (await pixels(page)).hash;
+        const drawn = await marks();
+        if (!drawn.first || !drawn.second) wrong.push(`before the Delete the markers read ${JSON.stringify(drawn)}, not both drawn`);
+        await press('Delete');
+        const gone = { ...(await marks()), line: orange(await strokeAt(page, 0.5, 0.5), 40) };
+        if (gone.first || gone.second || gone.line) wrong.push(`after Delete the drawing read ${JSON.stringify(gone)}: the points were not taken away`);
+        await press(UNDO);
+        const back = await marks();
+        if ((await pixels(page)).hash !== before || !back.first || !back.second) wrong.push(`after one Undo the canvas was ${(await pixels(page)).hash === before ? '' : 'not '}as before the Delete and the markers read ${JSON.stringify(back)}`);
+        record('3.3.6', !wrong.length, wrong.length ? wrong.join('; ') : 'in pen-drawn, Cmd/Ctrl+A then Delete took both points away (neither marker nor the line drawn); one Undo drew the whole canvas as before the Delete, both markers again');
       },
     },
     {
