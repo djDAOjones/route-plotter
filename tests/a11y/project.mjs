@@ -2052,39 +2052,64 @@ export default {
       },
     },
     {
-      // STACK-08 (brief 164), 3.3.7 Redundant Entry: Open over a route drawn since the page opened is a process of more
-      // than one step ("Open project", the file chosen, then "Replace your route?"). In pen-drawn, the project chosen
-      // once, the dialog asks for nothing the user gave before: it names the file already chosen ("Replace your route
-      // with <name>?"), holds no field of any kind (ASKS_AGAIN), and "Replace" opens that file with no second choice of
-      // file: no file chooser opens within 3 s of the press, "Project opened" is said and the canvas no longer reads as
-      // the drawn route. Save is not on the page yet; when it is, its steps need this check too.
+      // STACK-08 (briefs 164 and 165), 3.3.7 Redundant Entry: Open over a route drawn since the page opened is a process
+      // of more than one step ("Open project", the file chosen, then "Replace your route?"). First, for reference,
+      // two-stops.zip is opened on the page fresh (nothing drawn), and its canvas and timeline are read. Then, in
+      // pen-drawn, the project chosen once, the dialog asks for nothing the user gave before: it names the file already
+      // chosen ("Replace your route with <name>?"); its only controls are the buttons "Close", "Keep my route" and
+      // "Replace", each once, and nothing in it is focusable or has an entry role but those three (DIALOG_CONTROLS,
+      // ENTRY); and "Replace" opens that file with no second choice of file: no file chooser opens within 3 s of the
+      // press, "Project opened" is said, and the canvas and the timeline read as the reference's, so the file opened is
+      // the one chosen (another project, or a cleared canvas, reads otherwise). Save is not on the page yet; when it
+      // is, its steps need this check too.
       name: 'replace-asks-nothing-again',
       method: 'j-multi-step',
       rows: ['3.3.7'],
       run: async ({ page, open, record }) => {
-        await open('pen-drawn');
         const wrong = [];
-        const ASKS_AGAIN = 'input, select, textarea, [contenteditable]:not([contenteditable="false"]), [role=textbox], [role=combobox]';
-        const question = page.getByRole('dialog', { name: 'Replace your route?' });
+        const ENTRY = 'input, select, textarea, [contenteditable]:not([contenteditable="false"]), [role=textbox], [role=combobox], [role=searchbox], [role=listbox], [role=option], [role=radio], [role=checkbox], [role=switch], [role=slider], [role=spinbutton]';
+        const DIALOG_CONTROLS = ['Close', 'Keep my route', 'Replace'];
         const file = await projectFile();
+        await open('shell');
+        let reference = null;
+        if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) wrong.push(`for reference, ${file.name} did not open on a fresh page`);
+        else { await quiet(page); await twoFrames(page); reference = { canvas: await pixels(page), at: await atNow(page) }; }
+        await open('pen-drawn');
+        const question = page.getByRole('dialog', { name: 'Replace your route?' });
         const drawn = await pixels(page);
-        let fields = [];
+        if (reference && reference.canvas.hash === drawn.hash) wrong.push(`the reference ${file.name} reads as the drawn route, so the canvas cannot tell them apart`);
+        let controls = [];
         if (!(await choose(page, file))) wrong.push('a press on "Open project" opened no file chooser');
         if (!(await question.waitFor({ state: 'visible', timeout: 6000 }).then(() => true, () => false))) wrong.push('no "Replace your route?" dialog showed over a drawn route');
         else {
           const text = await question.innerText();
           if (!text.includes(`Replace your route with ${file.name}?`)) wrong.push(`the dialog read "${text}", not naming the file already chosen, ${file.name}`);
-          fields = await question.locator(ASKS_AGAIN).evaluateAll((els) => els.map((e) => e.outerHTML.slice(0, 80)));
-          if (fields.length) wrong.push(`the dialog holds ${fields.length} field(s) that could ask again: ${fields.join(' | ')}`);
+          // Every element in the dialog that is focusable (any tabindex, in the Tab order or not), operable (a widget's
+          // role) or of an entry role, with its role and name. Carbon's focus landing (the dialog's body, a div with
+          // tabindex=-1, data-modal-primary-focus and no role, where focus goes as the dialog opens) is allowed once.
+          controls = await question.locator('*').evaluateAll((els, entry) => els.filter((e) => e.matches(entry) || e.matches('button, a[href], area[href], summary, iframe, embed, object, audio[controls], video[controls], [tabindex], [role=button], [role=link], [role=menuitem], [role=menuitemcheckbox], [role=menuitemradio], [role=menu], [role=menubar], [role=tab], [role=tablist], [role=tree], [role=treeitem], [role=grid], [role=gridcell], [role=scrollbar]')).map((e) => ({
+            entry: e.matches(entry),
+            landing: e.matches('div[tabindex="-1"][data-modal-primary-focus]:not([role])'),
+            role: e.getAttribute('role') || e.tagName.toLowerCase(),
+            name: (e.getAttribute('aria-label') || (e.getAttribute('aria-labelledby') || '').split(/\s+/).map((id) => document.getElementById(id)?.textContent ?? '').join(' ') || e.textContent || '').trim(),
+            html: e.outerHTML.slice(0, 80),
+          })), ENTRY);
+          const expected = (c) => !c.entry && c.role === 'button' && DIALOG_CONTROLS.includes(c.name);
+          const other = controls.filter((c) => !expected(c) && !(c.landing && !c.entry));
+          if (controls.filter((c) => c.landing).length > 1) wrong.push('the dialog holds more than one focus landing');
+          if (other.length) wrong.push(`the dialog holds ${other.length} control(s) beyond ${DIALOG_CONTROLS.join(', ')}, which could ask again: ${other.map((c) => `${c.role} "${c.name}" ${c.html}`).join(' | ')}`);
+          for (const n of DIALOG_CONTROLS) { const k = controls.filter((c) => expected(c) && c.name === n).length; if (k !== 1) wrong.push(`the dialog holds ${k} button(s) "${n}", not one`); }
           const askedAgain = page.waitForEvent('filechooser', { timeout: 3000 }).then(() => true, () => false);
           await question.getByRole('button', { name: 'Replace', exact: true }).click();
           if (!(await saysOpened(page))) wrong.push(`after "Replace" the status region never said "${OPENED}"`);
           if (await askedAgain) wrong.push('"Replace" opened a file chooser: the file was asked for again');
           await quiet(page);
           await twoFrames(page);
-          if ((await pixels(page)).hash === drawn.hash) wrong.push('after "Replace" the canvas read as the drawn route: the file chosen was not opened');
+          const after = { canvas: await pixels(page), at: await atNow(page) };
+          if (reference && after.canvas.hash !== reference.canvas.hash) wrong.push(`after "Replace" the canvas did not read as ${file.name} opened on a fresh page (hash ${after.canvas.hash}, ${after.canvas.drawn} pixels drawn; the reference's ${reference.canvas.hash}, ${reference.canvas.drawn}): the file chosen was not what opened`);
+          if (reference && (after.at.now !== reference.at.now || after.at.text !== reference.at.text)) wrong.push(`after "Replace" the timeline read ${after.at.now} "${after.at.text}", not the reference's ${reference.at.now} "${reference.at.text}"`);
         }
-        record('3.3.7', !wrong.length, wrong.length ? wrong.join('; ') : `Open over a drawn route takes three steps ("Open project", ${file.name} chosen, "Replace your route?") and asks for nothing already given: the dialog names ${file.name}, holds no field of any kind (0 matching ${ASKS_AGAIN}), and "Replace" opened that file with no second chooser within 3 s, "${OPENED}" said and the canvas changed`);
+        record('3.3.7', !wrong.length, wrong.length ? wrong.join('; ') : `Open over a drawn route takes three steps ("Open project", ${file.name} chosen, "Replace your route?") and asks for nothing already given: the dialog names ${file.name}; of the ${controls.length} elements in it that are focusable (any tabindex), operable (a widget's role) or of an entry role (${ENTRY}), the only ones are the buttons ${DIALOG_CONTROLS.join(', ')}, each once, and Carbon's focus landing (the dialog's body, tabindex=-1, no role), none of an entry role; and "Replace" opened that file with no second chooser within 3 s, "${OPENED}" said, the canvas and the timeline ("${reference.at.text}") reading as ${file.name} opened on a fresh page`);
       },
     },
     {
