@@ -18,7 +18,9 @@ export default defineConfig(
   { files: ['src/**/*.tsx'], extends: [reactHooks.configs.flat['recommended-latest']] },
   // STACK-07 (the JSDoc house digest), on the owner's "Yes, add it" of 27 Nov 2026: rule 1,
   // every exported function and class carries a doc comment, and no type is written inside one, TypeScript holding the
-  // types. Only these two rules: the plugin's recommended set asks @param and @returns tags the types already carry.
+  // types. Only these three rules: the plugin's recommended set asks @param and @returns tags the types already carry.
+  // No type inside a doc comment: no-types refuses a braced type on @param and @returns, and check-tag-names, typed,
+  // refuses the tags TypeScript makes redundant (@type, @typedef and their kin) along with tag names it does not know.
   // Arrow functions and function expressions are asked for where a const names them or a default export is one, and
   // publicOnly keeps that to the exported ones, whether exported in place or by reference (`export { f }`,
   // `export default f`). Callbacks inside an exported object or call are not asked for: no declarator names them.
@@ -36,6 +38,7 @@ export default defineConfig(
         ]),
       }],
       'jsdoc/no-types': 'error',
+      'jsdoc/check-tag-names': ['error', { typed: true }],
     },
   },
   {
