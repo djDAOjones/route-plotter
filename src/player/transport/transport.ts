@@ -100,6 +100,10 @@ const sameKey = (a: Key, b: Key): boolean => a.every((value, i) => Object.is(val
 const samePlayback = (a: Playback, b: Playback): boolean =>
   a.playing === b.playing && Object.is(a.atMs, b.atMs) && Object.is(a.speed, b.speed);
 
+/**
+ * The player's transport: moves the position through the scene, from 0 to its play length, booking frames while it
+ * plays and keeping the playback in the holder it is given.
+ */
 export function createTransport<H>({
   frames, holder, inputs, report, ended, catalogue = CATALOGUE,
 }: TransportOptions<H>): Transport {

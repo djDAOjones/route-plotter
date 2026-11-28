@@ -53,6 +53,7 @@ function coursesOf({ points, lines }: Shape): (point: Shape['points'][number]) =
   };
 }
 
+/** The module's evaluation, once a route a frame: the stops' markers now; none when the settings say never. */
 function evaluate({ settings, route, timeMs }: RouteInput<Settings>): Evaluation<MarkersDrawing> {
   const look = lookOf(settings);
   const { appearance } = settings;

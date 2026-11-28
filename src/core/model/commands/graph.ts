@@ -24,6 +24,7 @@ export type EditRefusal =
   /** The route holds no line with this id. */
   | { readonly refused: 'no-such-line'; readonly id: string };
 
+/** Whether an edit gave back a refusal rather than a route: the test a caller makes before it uses the result. */
 export const isRefusal = <T extends object>(result: T | EditRefusal): result is EditRefusal => 'refused' in result;
 
 /** Whether the route holds a point with this id. */

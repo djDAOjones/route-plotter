@@ -9,6 +9,7 @@ function isPlainRecord(value: unknown): value is Readonly<Record<string, unknown
   return prototype === Object.prototype || prototype === null;
 }
 
+/** Whether two of the store's values hold the same thing, so a gesture that ends where it began leaves no undo step. */
 export function sameValue(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (Array.isArray(a) && Array.isArray(b)) {

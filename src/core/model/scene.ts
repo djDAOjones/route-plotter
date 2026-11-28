@@ -211,10 +211,12 @@ export function newScene(nextId: IdSource): Scene {
   return { ...defaultsOf(SCENE.of), routes: [newRoute(nextId)] };
 }
 
+/** A new point at the place and of the kind given, every other setting at its default; it takes an id from `nextId`. */
 export function newPoint(nextId: IdSource, at: Pick<Point, 'x' | 'y' | 'kind'>): Point {
   return { ...defaultsOf(POINT_FIELDS), ...at, id: nextId() };
 }
 
+/** A new line from one point to another, every setting at its default; it takes the next id from `nextId`. */
 export function newLine(nextId: IdSource, from: string, to: string): Line {
   return { ...defaultsOf(LINE_FIELDS), id: nextId(), from, to };
 }

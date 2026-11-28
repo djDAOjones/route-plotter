@@ -113,6 +113,7 @@ export interface FrameInputs {
   subscribe(listener: () => void): () => void;
 }
 
+/** What each frame and the length are made from: the store's scene and the canvas's size, whose change is told. */
 export function createFrameInputs({ store }: { readonly store: Pick<Store, 'getState'> }): FrameInputs {
   let size = START_SIZE;
   /** Each background record's header size, kept by the record: read once, the same frozen object after (Codex, 2). */
@@ -168,6 +169,10 @@ export interface PicturesOptions {
   readonly report: (error: unknown) => void;
 }
 
+/**
+ * The background's picture, loaded apart from the frame's inputs: it holds the bitmap, closes one no longer wanted, and
+ * reports a failed load.
+ */
 export function createPictures({ store, load, report }: PicturesOptions): Pictures {
   /** The record that is the background now, as last heard. */
   let wanted: ImageRecord | null = null;
@@ -312,6 +317,10 @@ function overlaysOf(scene: Scene, playing: boolean, selection: Selection, hover:
   return [...guide, OVERLAY_MAKERS.lines([], { hovered: line }), OVERLAY_MAKERS.points([route], { selected, hovered: point })];
 }
 
+/**
+ * Draws the store's scene on the page's target through the one composer, a frame at a time, and at once when the canvas
+ * asks before a tap (`drawNow`), so a tap never hit-tests a frame older than the store.
+ */
 export function createDrawer<H>({ store, inputs, pictures, hover = createHover(), frames, report, failed }: DrawerOptions<H>): Drawer {
   let attached: { readonly target: Target; readonly stops: readonly (() => void)[] } | null = null;
   let booked: { readonly handle: H; readonly ticket: object } | null = null;

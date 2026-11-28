@@ -9,6 +9,7 @@
 // only this decoder can refuse it; a decoder giving null for all fails the first, one trusting the header the second.
 import type { Decode } from '../../adapters/io/images';
 
+/** io's decoder in the browser: the size an image decodes to, or null when the browser cannot; it keeps nothing. */
 export const decode: Decode = async (bytes, type) => {
   try {
     const bitmap = await createImageBitmap(new Blob([bytes.slice()], { type }));

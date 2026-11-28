@@ -104,6 +104,7 @@ export interface EditorTransport {
   scrub(ms: number): void;
 }
 
+/** The editor's commands over the player's transport, one function each, so a button and its key cannot differ. */
 export function createEditorTransport({
   transport, playback, announce, canPlay, frameRate = () => EXPORT_SETTINGS.frameRate.default,
 }: EditorTransportOptions): EditorTransport {

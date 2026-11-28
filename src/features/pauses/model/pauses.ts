@@ -25,6 +25,7 @@ interface Pauses {
   readonly windows: readonly PauseWindow[];
 }
 
+/** The module's evaluation, once a route a frame: each head held at a stop, how long it has waited and for how long. */
 function evaluate({ lead }: RouteInput<Settings>): Evaluation<Pauses> {
   const windows = lead.heads.flatMap(({ pointId, pause }) =>
     pointId === null || pause === null ? [] : [{ pointId, elapsedMs: pause.elapsedMs, totalMs: pause.totalMs }],

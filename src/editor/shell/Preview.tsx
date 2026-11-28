@@ -89,7 +89,7 @@ export interface PreviewProps {
 
 /** The canvas's spoken name (1.1.1). */
 export const PREVIEW_NAME = 'Route animation preview';
-/** The point's menu's name (point 7): v3's "Waypoint actions" (wiringControllers.js 788) with "point" for "waypoint"; provisional. */
+/** The point's menu's name (point 7): v3's "Waypoint actions" (wiringControllers.js 788) with "point" for "waypoint"; stands unless the owner objects. */
 const POINT_MENU_NAME = 'Point actions';
 /** A line's menu's name (point 9; D271 (a), answered by the owner, 2026-11-27). */
 const LINE_MENU_NAME = 'Line actions';
@@ -162,6 +162,7 @@ export function watchRoom(box: RoomBox, column: RoomColumn, win: RoomWindow): ()
   };
 }
 
+/** Frame's `preview` slot: React mounts the canvas and hands it to its plain owner, mountCanvas.ts, which draws. */
 export function Preview({ drawer, inputs, subscribe, store, announce, pause }: PreviewProps) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);

@@ -5,8 +5,9 @@ Updated: 2026-11-19
 <!-- pm-next architecture record, specification 3.26 — keep this line -->
 
 <!-- Route Plotter v4's architecture record (PM-Skills 5.0.1, specification 3.26), written by STACK-04 from the v4
-     architecture plan (reviews/v4-architecture-plan-2026-11-18.md, §8 and §14), provisional under the owner's
-     overnight grant G3. Frozen v3's own architecture file is v3/ARCHITECTURE.md, moved there by the same item.
+     architecture plan (reviews/v4-architecture-plan-2026-11-18.md, §8 and §14), made under the owner's
+     overnight grant G3 and standing on his delegated decisions of 27 Nov 2026. Frozen v3's own architecture file
+     is v3/ARCHITECTURE.md, moved there by the same item.
      The rules file routes code changes here. A change that adds, removes or renames a container or an external
      system, moves the boundary, or changes how two of them talk, or how the code is layered, updates this file and
      its Updated line in the same change. Directories belong in structure.md. -->

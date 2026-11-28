@@ -43,6 +43,8 @@
   - AAA aim, AA floor; the editor kind: React and Carbon React in the editor, the exported player free of both
 - House conventions → digest: house-conventions
   - the owner's code, naming, documentation, testing and persistence rules, carried from canon
+- JSDoc house digest → digest: jsdoc
+  - rules 1 and 2 for exported TypeScript: every export carries a doc comment that says why; the types stay in the TypeScript
 
 ## Conventions
 
