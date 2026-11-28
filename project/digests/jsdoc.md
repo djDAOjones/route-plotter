@@ -55,13 +55,13 @@ own.
   errors under `strict`, tighter than a ratchet. So they are met that
   way, not skipped: a shared shape is a named, exported type, and no
   type is written inside a doc comment in v4's `src/`, tests apart:
-  `jsdoc/no-restricted-syntax` refuses a braced type on any tag,
-  `jsdoc/no-types` on `@param` and `@returns` too, and
-  `jsdoc/check-tag-names` (`typed`) the tags TypeScript makes
-  redundant, such as `@type` and `@typedef`. The ratchet
-  is not installed: it checks `src/**/*.js`, and v4's `src/` has no
-  JavaScript. Rules 1 and 2 apply as written, rule 1 enforced by
-  `jsdoc/require-jsdoc` on exports (`eslint.config.mjs`). Decision
+  `jsdoc/no-restricted-syntax` refuses a type the parser reads on any
+  tag, inline links, `@see` and `@example` excepted; `jsdoc/no-types`
+  on `@param` and `@returns`, links too; and `jsdoc/check-tag-names`
+  (`typed`) `@type`, `@typedef` and kin. No ratchet, as it checks
+  `src/**/*.js` and `src/` has no JavaScript. Rules 1 and 2 apply as
+  written, rule 1 enforced by `jsdoc/require-jsdoc` on exports
+  (`eslint.config.mjs`). Decision
   STACK-07, 2026-11-28, on the owner's words "JSdoc can be used for
   typescript" and "Yes, add it" (27 Nov 2026).
 
