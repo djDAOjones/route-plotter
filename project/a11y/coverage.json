@@ -67,8 +67,8 @@
       "evidence": "CORE-05 (2026-11-21): the editor listens for its keys on the page (src/editor/shell/keydown.ts, dispatch.ts, keys.ts): Space plays or pauses, Home and End (and < and >) skip to start and end, comma and full stop step one frame back and forward (D205, 2026-11-24), Cmd or Ctrl with Z undoes and with Shift redoes, and the keys of one printable character the table names (J, K, L, comma, full stop, < and >, and ? for Help) are live while their switch, \"Single-key shortcuts\" in Help, is on, as the page opens, and do nothing while it is off (D183; src/editor/shell/Help.tsx, held for the visit in session.ts). Help, a button after the paragraph, opens a dialog (src/editor/kit/Dialog.tsx) listing every shortcut. The play bar after Help (src/editor/shell/PlayBar.tsx), \"Skip to start\", \"Play\" and \"Skip to end\", calls what Home, Space and End call; with nothing to play Space, K, J and L say why and start nothing, and Play is disabled and described by that reason. Journeys: character-key-shortcuts (2.1.4, both ways), fields-and-status (3.3.5, 4.1.3), reading-and-focus-order (2.4.3), pointer-cancellation (2.5.2), keyboard-task (3.2.2); keyboard functions skip-to-start-by-home, skip-to-end-by-end, open-help-by-button, open-help-by-question-mark, close-help-by-escape, single-keys-off, single-keys-on, skip-to-start-by-button, skip-to-end-by-button-space-kept, play-refused-by-space, play-refused-by-k and play-refused-by-k-, -j- and -l-on-button The timeline, a slider in the play bar (src/editor/shell/Timeline.tsx), keeps its own keys: the arrows move it, with Shift four times as far; Home and End on it go to its start and end, and Page Up and Page Down a tenth of it up and down (the kit's slider takes them, D193), saying nothing; the single keys on it say what they say elsewhere, and nothing while their switch is off."
     },
     "user-input": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "present",
+      "evidence": "STACK-08 (2026-11-28): the page takes three inputs from the user, and none of the user's own details: a file, chosen through the visible button \"Open project\" (its file input hidden, out of the tab order); the switch \"Single-key shortcuts\" in Help; the slider \"Timeline\"; and edits on the canvas, an application in the region under the visible heading \"Preview\". No field carries an autocomplete purpose or takes typed text (1.3.5), and each has a visible label or instructions (3.3.2): the journey inputs-purpose-and-labels, over every field, hidden ones included, in the shell, with Help open and with \"Replace your route?\" open. A file refused is identified and described in text, its title naming the file and its first sentence what is wrong (3.3.1), and a correction is suggested, checked on its own (3.3.3): the journey refused-not-a-project; every other refusal to open ends with what to choose instead, held by the unit test src/adapters/io/words.test.ts, not by a journey. Submissions (3.3.4, 3.3.6): Open over a drawn route is confirmed by \"Replace your route?\" (open-over-changes); a canvas edit is reversed by one Undo (a-delete-is-undone: Delete then Undo draws the canvas as before; tap, move and duplicate are undone the same way in the keyboard and pointer journeys); the switch is turned back by itself; the timeline is a position, not a submission. Save is not on the page yet: when it is, its refusals and any field it adds need these checks again."
     },
     "page-set": {
       "state": "unknown",
@@ -203,7 +203,7 @@
     "1.3.5": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
@@ -691,7 +691,7 @@
     "3.3.1": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
@@ -699,7 +699,7 @@
     "3.3.2": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
@@ -707,7 +707,7 @@
     "3.3.3": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
@@ -715,7 +715,7 @@
     "3.3.4": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
@@ -731,7 +731,7 @@
     "3.3.6": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "applicable"
       },
       "evidence": [],
       "results": []
