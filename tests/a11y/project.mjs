@@ -158,7 +158,7 @@ const OPEN = '#open-project';
 const OPENED = 'Project opened';
 const PAUSED = 'Animation paused';
 const LENGTH_MS = 6000;
-const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damaged. Nothing was opened.';
+const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damaged. Choose a project saved by Route Plotter v4 (a .zip file). Nothing was opened.';
 // (No import statement: the run's loader would make this file CommonJS. Node's own modules are reached by
 // `process.getBuiltinModule`, jszip through a require made at the repository's root (the run's A11Y_ROOT, else the
 // working folder); both only when a journey asks for the file.)
@@ -445,7 +445,7 @@ const headerOnlyPng = () => {
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]), ihdr, crc]);
 };
 // io's words for an image that does not decode (words.ts, openedInvalid, with images.ts's problem).
-const NOT_SHOWN = 'This project could not be opened, because some of it is outside what Route Plotter allows (images[0]: expected a PNG image that can be shown, found a damaged image). Nothing was opened.';
+const NOT_SHOWN = 'This project could not be opened, because some of it is outside what Route Plotter allows (images[0]: expected a PNG image that can be shown, found a damaged image). Choose a project saved by Route Plotter v4 and not changed since. Nothing was opened.';
 const TEXT_FILE = { name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Not a project.\n') };
 // The same text under a name of 60 characters with no spaces: the refusal's title carries it (brief 80, step 2).
 const LONG_NAME = `${'a'.repeat(56)}.txt`;

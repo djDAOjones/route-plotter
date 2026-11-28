@@ -33,11 +33,17 @@ describe('the words Save and Open show an author', () => {
     }
   });
 
+  it('say, when they refuse to open, what to choose instead, just before saying nothing was opened (STACK-08, 3.3.3)', () => {
+    for (const [name, message] of Object.entries(MESSAGES)) {
+      if (name.startsWith('opened')) expect(message, name).toMatch(/ (Choose|Open it in) [^.]+(\.[^ .][^.]*)*\. Nothing was opened\.$/);
+    }
+  });
+
   it('list the first five things found, then how many more', () => {
     const files = Array.from({ length: 7 }, (_, index) => `file${index + 1}.txt`);
     expect(WORDS.openedUnknown({ features: [], fields: [], files })).toBe(
       'This file holds what this preview of Route Plotter does not know (files: file1.txt, file2.txt, file3.txt, ' +
-        'file4.txt, file5.txt and 2 more). Nothing was opened.',
+        'file4.txt, file5.txt and 2 more). Choose a project saved by this preview. Nothing was opened.',
     );
   });
 });

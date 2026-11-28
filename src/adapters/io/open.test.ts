@@ -190,7 +190,7 @@ describe('the refusals by name, with the words each shows (brief 17, proof 4)', 
       expect(await refusal(await zipOf({ 'project.json': text({ ...file, version }), ...images })), `version ${version}`).toEqual({
         reason: 'other-preview',
         version: String(version),
-        message: `This file was saved by another preview of Route Plotter v4 (save format ${version}); this preview opens save format ${FORMAT_VERSION} only. Nothing was opened.`,
+        message: `This file was saved by another preview of Route Plotter v4 (save format ${version}); this preview opens save format ${FORMAT_VERSION} only. Choose a project saved by this preview. Nothing was opened.`,
       });
     }
   });
@@ -204,7 +204,7 @@ describe('the refusals by name, with the words each shows (brief 17, proof 4)', 
       features: ['crowd'],
       fields: [],
       files: [],
-      message: 'This file holds what this preview of Route Plotter does not know (features: crowd). Nothing was opened.',
+      message: 'This file holds what this preview of Route Plotter does not know (features: crowd). Choose a project saved by this preview. Nothing was opened.',
     });
   });
 
@@ -219,7 +219,7 @@ describe('the refusals by name, with the words each shows (brief 17, proof 4)', 
       features: [],
       fields: ['scene.routes[0].glow'],
       files: [],
-      message: 'This file holds what this preview of Route Plotter does not know (settings: scene.routes[0].glow). Nothing was opened.',
+      message: 'This file holds what this preview of Route Plotter does not know (settings: scene.routes[0].glow). Choose a project saved by this preview. Nothing was opened.',
     });
   });
 });
