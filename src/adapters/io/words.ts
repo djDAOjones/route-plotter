@@ -51,6 +51,9 @@ export const WORDS = {
   openedUnsafe: (why: string) =>
     `This file cannot be opened safely, because ${why}. Choose a project saved by Route Plotter v4 and not changed ` +
     'since. Nothing was opened.',
+  openedUnreadable:
+    'This file could not be read: it may have been moved, or the browser may no longer have access to it. Choose it ' +
+    'again from where it is now. Nothing was opened.',
   openedTooLarge: (what: string) =>
     `This file is too large to open: ${what}. Choose a smaller project. Nothing was opened.`,
   openedV3:

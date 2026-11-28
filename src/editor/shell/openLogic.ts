@@ -187,7 +187,7 @@ const TOO_LARGE: Refusal = Object.freeze({
 });
 
 /** A file whose bytes could not be read, in io's words (point 10). */
-const UNREADABLE: Refusal = Object.freeze({ reason: 'unsafe', message: IO_WORDS.openedUnsafe('it could not be read') });
+const UNREADABLE: Refusal = Object.freeze({ reason: 'unsafe', message: IO_WORDS.openedUnreadable });
 
 /** The store's refusal or throw, as io words a refusal: the store's problems under `scene`, or one for the whole. */
 function storeRefusal(problems: readonly Problem[] | null): Refusal {

@@ -15,6 +15,7 @@ const MESSAGES: Readonly<Record<keyof typeof WORDS, string>> = {
   savedUnsafe: WORDS.savedUnsafe('its settings are nested more than 64 deep'),
   openedNotAProject: WORDS.openedNotAProject,
   openedUnsafe: WORDS.openedUnsafe('it is encrypted'),
+  openedUnreadable: WORDS.openedUnreadable,
   openedTooLarge: WORDS.openedTooLarge('image 1 is over 16 MB'),
   openedV3: WORDS.openedV3,
   openedOtherPreview: WORDS.openedOtherPreview('2', 1),
