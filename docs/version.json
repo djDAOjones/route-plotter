@@ -1,15 +1,19 @@
 {
   "app": "Route Plotter",
-  "version": "4.0.0-preview.6",
-  "preview": 6,
-  "source": "9b5a0f1524bd1124ff81e4ead6810d09394891d9",
-  "published": "2026-11-25T21:43:05Z",
+  "version": "4.0.0-preview.7",
+  "preview": 7,
+  "source": "979f3327db86f1f837e3dcee830c826d4a8cf660",
+  "published": "2026-11-28T00:59:38Z",
   "address": "https://djdaojones.github.io/route-plotter/",
   "whatIsNew": [
-    "No item has shipped since the last publish."
+    "STACK-05 — the record reads the owner's app opinion: the pack's digest at v5.0.3 with two dated exceptions, routed by its By-task row; the profile's Gate, App opinion, Standards and Budget lines; Set 1 his by D57; record-only, by pull request (2026-11-27)",
+    "REFRESH-503 — the project runs pm-skills 5.0.3: the version stamp, three tools and three verbs replaced as a set, the accessibility pack's three tools kept by decision, no pack, no signed file touched, no local edit lost, by pull request (2026-11-26)"
   ],
   "whatToTry": [
-    "Nothing visible changes in the app: this only changes which of CI's checks run, and refuses changes to frozen v3.",
-    "🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+    "Open the editor (a build of this branch) and try:",
+    "**Draw**: click twice on the picture. Each click adds a point, joined to the one before by a line. Undo and Redo take back or bring back each step.",
+    "**A point's menu**: right-click a point (or select one and press Shift+F10 or the Menu key). The menu \"Point actions\" offers Mark as start, Mark as end, Set lead start, Make bend (or Make stop), Move and Delete. The arrow keys move through it, Enter chooses, Escape closes it. A greyed item says why it is off. Each choice is one step you can undo, and a screen reader hears it (\"Start marked\", \"Point made a bend\", \"Point deleted\" and so on).",
+    "**A short window**: make the window short or zoom in: the menu stays inside the window and scrolls within itself.",
+    "**Move without dragging**: right-click a point, choose Move, then click where it should go. A selection of several points moves together, keeping its shape. The pointer is a crosshair while it waits; Escape, a right-click or clicking outside the picture cancels (\"Move cancelled\"). One Undo puts it back."
   ]
 }

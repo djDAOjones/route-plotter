@@ -1,14 +1,14 @@
 {
- "asOf": "2026-11-25T21:33:46Z",
- "commit": "9b5a0f1",
+ "asOf": "2026-11-28T00:45:26Z",
+ "commit": "979f332",
  "summary": {
-  "v4Items": 42,
+  "v4Items": 43,
   "v4Done": 17,
-  "v4InProgress": 2,
+  "v4InProgress": 1,
   "v4SignOff": 3,
-  "v4ToDo": 20,
-  "shipped": 74,
-  "open": 29
+  "v4ToDo": 22,
+  "shipped": 76,
+  "open": 31
  },
  "phases": [
   {
@@ -149,7 +149,7 @@
     {
      "id": "CORE-06",
      "name": "Drawing routes on the map",
-     "status": "In progress",
+     "status": "To do",
      "done": null,
      "since": "2026-11-18"
     },
@@ -180,6 +180,13 @@
      "status": "To do",
      "done": null,
      "since": "2026-11-24"
+    },
+    {
+     "id": "CORE-16",
+     "name": "The settings slider on the browser's own range input, its trial before CORE-13 or CORE-12 adds a slider",
+     "status": "To do",
+     "done": null,
+     "since": "2026-11-27"
     },
     {
      "id": "CORE-13",
@@ -336,8 +343,29 @@
    ]
   }
  ],
- "otherOpen": [],
+ "otherOpen": [
+  {
+   "id": "STACK-06",
+   "name": "Item B: the editor's .tsx boundary rule, the composer's owner, the `isComposing` stand-down, and the boundary rules' \"provisional\" words off",
+   "status": "In progress",
+   "done": null,
+   "since": "2026-11-27",
+   "group": "The full PM-Skills suite on v4"
+  }
+ ],
  "otherWork": [
+  {
+   "name": "The full PM-Skills suite on v4",
+   "items": 1,
+   "started": "2026-11-27",
+   "finished": "2026-11-27"
+  },
+  {
+   "name": "Project tooling updates",
+   "items": 6,
+   "started": "2026-10-21",
+   "finished": "2026-11-26"
+  },
   {
    "name": "The client progress page",
    "items": 1,
@@ -348,12 +376,6 @@
    "name": "Version 3 reviewed against the v4 vision",
    "items": 3,
    "started": "2026-11-18",
-   "finished": "2026-11-18"
-  },
-  {
-   "name": "Project tooling updates",
-   "items": 5,
-   "started": "2026-10-21",
    "finished": "2026-11-18"
   },
   {
@@ -559,6 +581,16 @@
    "date": "2026-11-25",
    "open": 29,
    "shipped": 74
+  },
+  {
+   "date": "2026-11-26",
+   "open": 29,
+   "shipped": 75
+  },
+  {
+   "date": "2026-11-27",
+   "open": 31,
+   "shipped": 76
   }
  ]
 }
