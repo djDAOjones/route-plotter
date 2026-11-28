@@ -1,4 +1,4 @@
 import { panels } from '../features/catalogue.editor';
-import { compose } from '../player/compose';
+import { mountCanvas } from './host';
 import { keep } from '../adapters/storage';
-export const App = (): unknown => [panels, compose, keep];
+export const App = (): unknown => [panels, mountCanvas, keep];

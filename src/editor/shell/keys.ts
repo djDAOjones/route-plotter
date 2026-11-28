@@ -62,6 +62,8 @@ export interface KeyPress {
   readonly defaultPrevented: boolean;
   /** The key is held down and this press is its repeat. */
   readonly repeat: boolean;
+  /** An input method is composing a character with this key (STACK-06): the dispatch stands down (its point 0). */
+  readonly isComposing: boolean;
 }
 
 /** One row of help: the keys as they are shown, and what they do. */

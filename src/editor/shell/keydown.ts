@@ -38,6 +38,14 @@
 //
 // A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).
 //
+// STACK-06 (item B; the app opinion's editor rule, the record's app-opinion digest: "keys stand down in text entry,
+// composition and widgets"): a key pressed while an input method composes a character is the input method's. This
+// listener stands down at its head, before the menu key's branch, so Shift+F10 or the ContextMenu key cannot open the
+// point's menu mid-composition and no nudge burst is ended; the dispatch stands down too (its point 0), for any other
+// caller. A keydown whose `keyCode` is 229 counts as composing here as well: Safari sends the key that ends a
+// composition (Enter choosing the characters) with `isComposing` false and that code, the browsers' mark of a key the
+// input method is handling. The pointer and focus listeners are unchanged.
+//
 // Single-key shortcuts (D183, WCAG 2.2's 2.1.4) are read at each key from the session's switch, on to begin with and
 // held for the visit; Help shows and sets it.
 import { cancelDrag, cancelMove, dragOpen, editKey, endNudge, escapeClears, isMenuKey, moveWaiting, openMenuByKey } from '../canvas/dom';
@@ -96,6 +104,8 @@ export function listenForKeys(
   openProject: () => void,
 ): () => void {
   const onKeyDown = (event: KeyboardEvent): void => {
+    // An input method composing owns the key (STACK-06): nothing of the editor's runs.
+    if (event.isComposing || event.keyCode === 229) return;
     const place = placeOf(event.target);
     // The point's menu by its key (brief 135; dom.ts point 9): Shift+F10 or the ContextMenu key on the preview.
     if (isMenuKey(event) && !place.typing && !place.dialogOpen && event.target instanceof Element && event.target.closest('.preview') !== null) {

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { RETIRED_WORDS } from '../../adapters/io/fixtures';
 import { actionFor, helpRows, KEYS, matches, type KeyPress } from './keys';
 
-const UP = { ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, defaultPrevented: false, repeat: false };
+const UP = { ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, defaultPrevented: false, repeat: false, isComposing: false };
 const press = (key: string, held: Partial<Omit<KeyPress, 'key'>> = {}): KeyPress => ({ ...UP, ...held, key });
 
 const PLATFORMS = [true, false] as const;

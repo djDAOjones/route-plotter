@@ -42,7 +42,7 @@
 
 ### The full PM-Skills suite on v4 — the owner's word of 2026-11-27
 
-- [ ] STACK-06 — Item B: the editor's .tsx boundary rule, the composer's owner, the `isComposing` stand-down, and the boundary rules' "provisional" words off — since 2026-11-27 — (from: STACK-05, 2026-11-27)
+- [~] STACK-06 — Item B: the editor's .tsx boundary rule, the composer's owner, the `isComposing` stand-down, and the boundary rules' "provisional" words off — since 2026-11-27 — (from: STACK-05, 2026-11-27)
 
 ### Phase 7 — the core, end to end — the owner's overnight word of 2026-11-18 (PLAN-7)
 

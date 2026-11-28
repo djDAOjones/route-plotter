@@ -8,6 +8,12 @@
 // brief 125, and a test holds them kept for a slider and a menu item.
 //
 // Its claim:
+// 0. STACK-06 (item B; the app opinion's editor rule, the record's app-opinion digest: "keys stand down in text entry,
+//    composition and widgets"): a key pressed while an input method is composing a character (`isComposing`: Japanese,
+//    Chinese or Korean input, a dead key) is the input method's. The dispatch stands down before anything else: it
+//    runs no action, calls no `escape`, `edit` or `endNudge` and nothing of the store or the transport, and takes
+//    nothing, Open project's chord included (point 2's "everywhere" yields here: the browser and the input method own
+//    the key while it composes).
 // 1. One key, at most one effect (DEF-13.1). The action the key table names for the press (`actionFor`) runs once, and
 //    the key is taken when something ran, and also when a held key's repeat of an action that does not repeat is
 //    passed over (point 5: it runs nothing, but the key was the editor's); the listener cancels the key's default only
@@ -130,6 +136,8 @@ const KEPT: Readonly<Record<FocusKind, readonly string[]>> = Object.freeze({
 /** Runs the action `press` means here, if any; true when one ran or a held repeat was passed over (point 5), and the listener then cancels the key. */
 export function dispatchKey(dispatch: KeyDispatch): boolean {
   const { press, mac, endNudge } = dispatch;
+  // An input method composing owns the key: nothing runs, nothing ends, nothing is taken (point 0).
+  if (press.isComposing) return false;
   const action = actionFor(press, mac);
   const nudge = action === 'nudge' || action === 'nudgeFurther';
   // Any other key ends a nudge burst before anything of it runs (point 8).
