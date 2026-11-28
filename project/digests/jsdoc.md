@@ -54,7 +54,11 @@ own.
   the TypeScript itself, and `npm run typecheck` holds them at zero
   errors under `strict`, tighter than a ratchet. So they are met that
   way, not skipped: a shared shape is a named, exported type, and no
-  type is written inside a doc comment (`jsdoc/no-types`). The ratchet
+  type is written inside a doc comment in v4's `src/`, tests apart:
+  `jsdoc/no-restricted-syntax` refuses a braced type on any tag,
+  `jsdoc/no-types` on `@param` and `@returns` too, and
+  `jsdoc/check-tag-names` (`typed`) the tags TypeScript makes
+  redundant, such as `@type` and `@typedef`. The ratchet
   is not installed: it checks `src/**/*.js`, and v4's `src/` has no
   JavaScript. Rules 1 and 2 apply as written, rule 1 enforced by
   `jsdoc/require-jsdoc` on exports (`eslint.config.mjs`). Decision
