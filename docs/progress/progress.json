@@ -1,6 +1,6 @@
 {
- "asOf": "2026-11-28T00:45:26Z",
- "commit": "979f332",
+ "asOf": "2026-11-28T08:34:39Z",
+ "commit": "c682379",
  "summary": {
   "v4Items": 43,
   "v4Done": 17,
@@ -8,7 +8,7 @@
   "v4SignOff": 3,
   "v4ToDo": 22,
   "shipped": 76,
-  "open": 31
+  "open": 32
  },
  "phases": [
   {
@@ -346,10 +346,18 @@
  "otherOpen": [
   {
    "id": "STACK-06",
-   "name": "Item B: the editor's .tsx boundary rule, the composer's owner, the `isComposing` stand-down, and the boundary rules' \"provisional\" words off",
+   "name": "Item B: the app opinion's three fixes",
    "status": "In progress",
    "done": null,
    "since": "2026-11-27",
+   "group": "The full PM-Skills suite on v4"
+  },
+  {
+   "id": "STACK-07",
+   "name": "Item C, first part: JSDoc on v4",
+   "status": "In progress",
+   "done": null,
+   "since": "2026-11-28",
    "group": "The full PM-Skills suite on v4"
   }
  ],
@@ -590,6 +598,11 @@
   {
    "date": "2026-11-27",
    "open": 31,
+   "shipped": 76
+  },
+  {
+   "date": "2026-11-28",
+   "open": 32,
    "shipped": 76
   }
  ]
