@@ -22,7 +22,8 @@ export default defineConfig(
   // No type inside a doc comment: no-restricted-syntax refuses a braced type on any tag (@throws {Error}, @yields {T}
   // and the rest) in any doc comment; no-types refuses one on @param and @returns as well, and check-tag-names, typed,
   // refuses the tags TypeScript makes redundant (@type, @typedef and their kin) along with tag names it does not know.
-  // Untyped tags and inline {@link} references are accepted.
+  // Untyped tags and inline {@link} references are accepted, and so are braces after @see and @example, which the
+  // parser reads as a reference or as code, not as a type.
   // Arrow functions and function expressions are asked for where a const names them or a default export is one, and
   // publicOnly keeps that to the exported ones, whether exported in place or by reference (`export { f }`,
   // `export default f`). Callbacks inside an exported object or call are not asked for: no declarator names them.
