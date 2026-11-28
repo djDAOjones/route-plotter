@@ -3,28 +3,28 @@
   "level": "AAA",
   "features": {
     "media": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the page as built has no prerecorded audio or video: no <video> or <audio> element, no HTMLMediaElement, Audio or AudioContext in src/ (searched, tests and goldens aside), and the one file it opens is a project (.zip, src/editor/shell/Open.tsx), whose picture is decoded as an image (src/editor/shell/decode.ts, createImageBitmap). The preview's moving route is an animation drawn on a canvas, not media (moving-content, canvas). Absent as built; the item that adds a video, on the page or as an export people watch, sets it present."
     },
     "live-media": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the page as built has no live audio or video: no getUserMedia, getDisplayMedia, MediaRecorder or RTCPeerConnection in src/, and it makes no network request at all (no fetch, XMLHttpRequest, WebSocket or EventSource in src/), so nothing can stream into it."
     },
     "autoplay-audio": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the page as built makes no sound: no <audio> or <video> element and no Audio or AudioContext in src/, so no audio can start, by itself or otherwise. Absent as built; the item that adds sound sets it present."
     },
     "pdf": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the page as built offers no PDF: no .pdf or application/pdf in src/ or index.html, no link (no <a> element in src/) and no download (no download attribute and no createObjectURL in src/; Blob is used only to decode a project's picture)."
     },
     "native-ios": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the product is a web page: Vite builds index.html (vite.config.mjs, the editor's config, plus the exported player's single script); the repository holds no Xcode or iOS project and package.json no native wrapper (no Capacitor, Cordova, React Native, Electron or Tauri)."
     },
     "native-android": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the product is a web page: Vite builds index.html (vite.config.mjs, the editor's config, plus the exported player's single script); the repository holds no Gradle or Android project and package.json no native wrapper (no Capacitor, Cordova, React Native, Electron or Tauri)."
     },
     "flashing": {
       "state": "unknown",
@@ -35,28 +35,28 @@
       "evidence": "CORE-05 (2026-11-23): the preview moves while a playing runs. It starts only on Play (never by itself), Pause stops it, and nothing moves while still, a picture that arrives late included (drawn once, then the same pixels): the journeys the-preview-draws, the-preview-plays, the-preview-shows-the-picture and the-preview-is-still (2.2.2)."
     },
     "authentication": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the page as built has no sign-in or verification step: no password field, sign-in, OAuth or credential in src/, no account, and no network request at all (no fetch, XMLHttpRequest, WebSocket or EventSource in src/); a project is opened from the user's own files. Absent as built; an item that adds an account or a server sets it present."
     },
     "multi-step": {
       "state": "unknown",
       "evidence": ""
     },
     "timers": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the page as built sets no time limit and no session that expires: it has no sign-in and makes no network request, so nothing can expire, and each setTimeout in src/ is the page's own, never a limit on the user: Preview.tsx measures its box on the next turn (0 ms); session.ts and kit/announce.ts hold each status message for a while in the hidden live region (cds--visually-hidden, not read on screen) before the next; Carbon's Modal returns focus by one after it closes (noted in kit/Dialog.tsx); canvas/dom.ts joins arrow presses less than 400 ms apart into one undo step (NUDGE_QUIET_MS), a press after that is only a new step. Playing the route takes as long as the route, but it is not a limit: nothing is lost or refused when it ends, and it is paused, stepped and restarted at will (moving-content, 2.2.2)."
     },
     "interruptions": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the page as built never interrupts: it makes no network request (no fetch, XMLHttpRequest, WebSocket or EventSource in src/), has no service worker, notification, alert(), confirm() or prompt(), and no timer that shows anything of its own (the live region's timer only spaces out words already queued); what it shows or says follows the user's own action: the refusal's notice (role=\"alert\", src/editor/shell/Open.tsx) after a file is chosen, \"Replace your route?\" after Open over a drawn route, and the hidden live region's status words after a key, a button or an edit."
     },
     "pointer-gestures": {
       "state": "present",
       "evidence": "CORE-06 (2026-11-27): the page has three drags, path gestures of one pointer: the timeline's thumb along its track, and on the preview a point's drag and a selection's. Each has a single-pointer way: the timeline's a press on the track (pointer-cancellation, 2.5.7); the preview's two the point's menu \"Move\" then one click on the picture, which moved one point, and both points of a selection by the same offset, Escape, a right-click and a click on another control cancelling (point-move, 2.5.1 and 2.5.7; D270)."
     },
     "device-motion": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the page as built is operated by no motion: no DeviceMotion or DeviceOrientation event, Accelerometer or Gyroscope in src/; it is used by keyboard and pointer only."
     },
     "hover-focus-content": {
       "state": "present",
@@ -71,20 +71,20 @@
       "evidence": "STACK-08 (2026-11-28): the page takes four kinds of input from the user, and none of the user's own details: a file, chosen through the visible button \"Open project\" (its file input hidden, out of the tab order); the switch \"Single-key shortcuts\" in Help; the slider \"Timeline\" (its number box an input of type=hidden, labelled by the same visible word); and edits on the canvas, an application in the region under the visible heading \"Preview\". No field carries an autocomplete purpose or takes typed text (1.3.5), and each has a visible label or instructions (3.3.2): the journey inputs-purpose-and-labels, over every field, every input (type=hidden too) included, in the shell, with Help open and with \"Replace your route?\" open. A file refused is identified and described in text, its title naming the file and its first sentence what is wrong (3.3.1), and a correction is suggested, checked on its own (3.3.3): the journey refused-not-a-project; every other refusal to open ends with what to choose instead, held by the unit test src/adapters/io/words.test.ts, not by a journey. Submissions (3.3.4, 3.3.6): Open over a drawn route is confirmed by \"Replace your route?\" (open-over-changes); a canvas edit is reversed by one Undo (a-delete-is-undone: Delete then Undo draws the canvas as before; tap, move and duplicate are undone the same way in the keyboard and pointer journeys); the switch is turned back by itself; the timeline is a position, not a submission. Save is not on the page yet: when it is, its refusals and any field it adds need these checks again."
     },
     "page-set": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the product is one page: Vite builds the single index.html (vite.config.mjs, the editor's config; the exported player is a script, not a page), the page has no link (no <a> element in src/), no route or history change (no pushState or location in src/), and Help is a dialog on the same page. Absent as built; the item that adds a second page or screen sets it present."
     },
     "languages": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the page as built is in one language: index.html declares lang=\"en-GB\", src/ sets no other lang, and every word the page writes is English (its own words and Carbon's English defaults). The only text of the user's it shows in words is a refused file's name in the title \"Could not open <name>\" (src/editor/shell/openLogic.ts), a name, which 3.1.2 excepts; anything a project draws is pixels in the preview. Absent as built; the item that adds a second language, or text the user types onto the page, sets it present or says why not."
     },
     "canvas": {
       "state": "present",
       "evidence": "CORE-05 (2026-11-23): the editor draws its preview on a canvas (src/editor/shell/Preview.tsx), in a box that is an image named \"Route animation preview\" (1.1.1, the reviewed snapshot); nothing in it could be operated until CORE-06. CORE-06 (2026-11-25, brief 112): the box is a toolbar with one tab stop (an application since brief 114, D245), and its canvas takes the pointer: the pen's tap places a point on the up-event, joined from the selected one, and Escape clears the selection; pointer-cancellation reads it while a press is held, after a press moved off and after a whole press (2.5.2). CORE-06 (2026-11-26, brief 116): a point on it is dragged by the pointer; point-drag-moves reads the dragged point's marker at its new place, not at its tap, after the release, and at its tap again, not at the new place, after one Undo, and point-drag-escape reads the whole canvas as before the press after Escape mid-drag and after the release that follows (2.5.2). The point's drag has no single-pointer alternative yet (2.5.7 owed, D250). CORE-06 (2026-11-26, brief 117, D252): in pen-drawn only, the preview's set-aside carries a measure (tests/a11y/project.mjs, PEN_DRAWN_ASIDE; run by contrastRows in tests/a11y/helpers.ts after the state's other contrast readings): skipped to the route's end, the line, both points' markers and the selected point's ring, each pixel composited over the box's own background and its ratio taken against it, each at 3:1 or it fails 1.4.11, as does a measure that reads nothing. It claims only the plain background with no picture in pen-drawn at the default settings; the user's own picture and routes in their own colours stay set aside (1.4.11, essential), and the other states that show the preview keep the set-aside unmeasured. No row of the catalogue is triggered by this feature alone. CORE-06 (2026-11-26, brief 119, D208; brief 120; brief 121, ruling AD): with the route selected, an idle mouse or pen on a line draws its stretch with a white and blue halo, the line redrawn over it in its own colour, and an insert handle (a \"+\") at the line's middle; a tap on the \"+\" inserts a bend there. line-insert-plus, in pen-drawn skipped to the route's end, first reads the hover with no press, as regression checks that earn nothing by themselves: three tenths along the line, its centre pixel in the line's own colour and a pixel beside it in the halo, both as before once the mouse leaves the preview, then the \"+\" drawn active with the mouse on it. Its 2.5.2 credit rests on the press, the up, Undo and the abort alone: a press on the \"+\", held, leaves the whole canvas as before; the up draws the new bend's grey dot at the middle; one Undo draws the whole canvas as before; a press on the \"+\" moved 45 px off it and released there adds no point, and one Redo then draws the undone bend again, so the abort made no step (2.5.2). It claims nothing for 1.4.11 (the halo and the \"+\" stay under the preview's set-aside), 1.4.13, 2.5.7 (still owed, D250) or 2.5.8 (the \"+\"'s target size, D255). CORE-06 (2026-11-26, brief 122, rulings AH and AJ): Cmd+click on a point (Ctrl+click elsewhere) adds it to the selection or takes it out, never a step, so a plain press on one of several selected points drags them all. group-drag, in pen-drawn skipped to the route's end with the selection cleared by Escape, first reads the selection's ring at each tap (the pixels drawn and not the route's hue 5 to 9 px from it) as each point is picked, one taken out and put back, which earns nothing by itself. Its 2.5.2 credit rests on the abort, the up and Undo alone: a press on the second point moved past the threshold and aborted by Escape leaves the whole canvas as before the press, and the release after it changes nothing; pressed, dragged and released, both points' markers are drawn at their new places and neither at its tap; one Undo draws the whole canvas as before the drag (2.5.2). A group's drag is a second dragging movement on the preview with no single-pointer alternative yet, under the same 2.5.7 debt as a point's (D250). It claims nothing for 1.4.11 (the rings stay under the preview's set-aside), 1.4.13 or 2.5.8. CORE-06 (2026-11-26, briefs 123 and 124): with points selected, Delete or Backspace deletes them, Cmd+D (Ctrl+D elsewhere) copies them 2% of the picture right and down as one step and Cmd+A (Ctrl+A) selects every point. edit-keys, in pen-drawn with focus moved to the preview box by Tab, End and Escape pressed there, does the three edits with keys alone: Cmd+A rings both points (the ring's pixels, read as group-drag reads them); Cmd+D rings a copy 2% right and down of each, the originals still drawn (the copies draw no marker of their own, since the lead's walk does not reach them, so their ring is what is read); one Undo draws the whole canvas as before it; Cmd+A then Delete leaves neither marker nor the line; one Undo draws the whole canvas as before it; focus stays on the box (2.1.1). Its claim is only that these three edits are done from the keyboard alone: drawing points is still a pointer's (the pen's tap), and it claims nothing for 2.5.7 and nothing spoken (D263). CORE-06 (2026-11-26, briefs 125 and 126): with points selected, an arrow moves them 0.5% of the picture over the zoom, Shift with it 2%, held on the picture, and a run of presses less than 400 ms apart is one undo step. nudge-keys, in pen-drawn begun as edit-keys begins, then Cmd+A, nudges with keys alone: ArrowRight three times moves both points' rings 1.5% of the picture right, neither ring left at its tap; one Undo draws the whole canvas as before the three; Shift+ArrowDown moves the rings 2% lower; after a wait past 400 ms, ArrowLeft and one Undo draw the canvas as after Shift+ArrowDown (2.1.1). Its last step, ArrowRight, a pointer press on the page's header and ArrowRight inside 400 ms, then one Undo drawing the canvas as after one ArrowRight alone, checks that a press on the page ends a run (the page's own listener) and adds nothing to the claim. The keys' claim, edit-keys' and nudge-keys', is only that the three edits and the nudge are done from the keyboard alone: drawing points is still a pointer's, it claims nothing for 2.5.7 (a point's single-pointer move is the point's menu item Move, still owed, D250), and nothing is spoken (D263). CORE-06 (2026-11-27, brief 132, D266, the owner's \"Full colour, dashed\"): the guide drawn while the preview is not playing (D265) is the route's colour at full alpha, still 2 wide and dashed 6 on and 4 off. PEN_DRAWN_ASIDE's measure first presses Skip to start, where nothing of the line is drawn yet and only the guide draws between the taps, and reads 25 places along the line, each the most opaque of the 7 pixels across it: some must be the route's hue and some bare (the box's background shows), or it gives no ratio; the most opaque of the route's hue, composited and taken against the box's background by the measure's formula, at 3:1 or it fails 1.4.11: rgba(213, 94, 0, 255) against rgb(244, 244, 244), 3.52:1; with the half alpha it replaced put back, rgba(213, 94, 0, 128), 1.86:1, and 1.4.11 fails. It claims only the guide in the default colour on the plain background with no picture in pen-drawn; the guide over the user's own picture, or in their own colours, stays set aside. CORE-06 (2026-11-27, brief 151, D275 (a), the owner's \"Every one-way line (Recommended)\"): while paused only (with the guide; never in play or a video) a small filled arrow sits on every one-way line, two thirds along, pointing the way the lead walks it (or from the line's first point to its second where the lead does not walk it), in the route's colour at full alpha with the marks' thin white edge; a two-way line has none. PEN_DRAWN_ASIDE's measure, at the start, reads 9 places along by 2 to 4 px either side of the line round the arrow, where the 2-wide guide never reaches; the most opaque pixel of the route's hue (red over blue by more than 100, so not the white edge) is the arrow's fill: rgba(213, 96, 4, 255) against rgb(244, 244, 244), 3.47:1. The journey the-guide reads the arrow paused (the route's colour and white in those rows) and none of it playing. It claims only the arrow in the default colour on the plain background with no picture in pen-drawn. CORE-06 (2026-11-27, briefs 135 and 136, D267 (a), answered by the owner, 2026-11-27, \"Keep v4's menu (Recommended)\", and D269, which stands unless he objects): the point's menu. The journey point-menu, in pen-drawn with focus on the box: a right-click on a point shows a menu named \"Point actions\" in document.body, outside .preview, its menuitems \"Mark as start\", \"Mark as end\", \"Set lead start\" (aria-disabled, described by \"This point is already where the lead starts.\"), \"Make bend\" and \"Delete\" (a separator before it), the point selected; focus is on its first item on opening, and after Escape, an item chosen and at the end it is on the box (2.4.3); Shift+F10 on the box opens it; ArrowDown, ArrowUp, Home and End move and wrap; Escape closes it with the point still selected; \"Make bend\" by Enter draws the point's grey dot (3 dark pixels within 2 px, 0 as a stop) and one Undo the canvas as before; \"Mark as start\" makes the menu read \"Remove start mark\", undone by one Undo; \"Set lead start\" on the lead's start stays open on Enter, Space and a click and changes nothing; \"Delete\" removes the point and its line and says \"Point deleted\" (2.1.1); over the run the status said, in turn and each once, \"Point made a bend\", \"Undo\", \"Start marked\", \"Undo\", \"Point deleted\", \"Undo\" (D269's words; the disabled item says nothing); in a window 200 px high End reaches \"Delete\" inside the window, a wheel over the menu scrolls it and leaves it open, and a scroll of the page outside closes it. Each of eight faults fails it: the menu mounted inside .preview, focus not returned on Escape, an item that is off still run, \"Make bend\" not dispatched, the menu's maximum height removed, a scroll inside the menu closing it, \"Make bend\"'s words left out, a second \"Point deleted\" said. Its name and roles are read and fail the journey, but it claims nothing for 4.1.2 (the catalogue lists only axe, lint and a snapshot for 4.1.2, and the runner refuses a journey's claim on it), nothing for 2.5.7 (the menu's \"Move\" is still owed, D250) and nothing for the marks' drawing: no drawing read a route's marks then (brief 142's journeys read them since). CORE-06 (2026-11-27, brief 140, D271 (a), answered by the owner, 2026-11-27, \"Keep line menu (Recommended)\"): a line's menu. The journey line-menu (j-order), in pen-drawn skipped to the route's end, by the pointer: a right-click three tenths along the line, and one on its \"+\" with the mouse resting there, each opens a menu named \"Line actions\" in document.body, outside .preview, focus on its first item, the browser's menu cancelled; its items read \"Make line two-way\" then \"Reverse line\" while the line runs one way, and \"Make line one way\" first after \"Make line two-way\" is chosen; after Escape and after each item chosen the menu closes and focus is on the preview box (2.4.3); the rings at the taps read as before the menu (the selection unchanged); over the run the status said, in turn and each once, \"Line made two-way\", \"Line reversed\", \"Undo\", \"Undo\", the first Undo leaving \"Make line one way\" first and the second bringing back \"Make line two-way\"; a right-click on empty picture opens no menu and leaves the browser's own. It opens by pointer only: it claims nothing for 2.1.1 (no key picks out a line yet, D271 part (1)), 1.4.11 or 2.5.x, and the editor then drew no arrow on a one-way line (D271 part (2); since brief 151 it draws one while paused, D275). CORE-06 (2026-11-27, brief 141, D272 (c), answered by the owner, 2026-11-27, \"Keep: press pauses (Recommended)\"): a press on the picture while the route plays pauses it and does nothing else, and no hover is drawn while it plays. The journey press-while-playing (j-timing, 2.2.2), in pen-drawn, by the pointer: while the route plays (the button reads \"Pause\"), a tap on empty picture pauses it (\"Animation paused\" heard, the button reads \"Play\"), no \"Point added\" is heard and at the route's end the canvas reads as before; the same tap, paused, adds a point (\"Point added\" heard), and one Undo (\"Undo\" heard) brings the canvas back; played again, a right-click on the first point pauses it, opens no menu, cancels the browser's own and changes nothing on the canvas. It is a pointer way to pause the moving preview, beside the Pause button and Space; it claims nothing for 3.2.x. The point's menu's open state (Codex list line 18): pen-drawn's interaction \"open point menu\" (a right-click on the first point) has a reviewed snapshot listing the menu \"Point actions\" and each item with its state (\"Set lead start\" [disabled]), checked by the state's ARIA snapshot test for 4.1.2 (the run reads \"after open point menu, states as reviewed\"). No axe runs on the open menu: a menu-open state would add 14 tests a run, and the menu closes on Tab and blur inside three of them; the reduced-motion test now samples the interaction too."
     },
     "exports": {
-      "state": "unknown",
-      "evidence": ""
+      "state": "absent",
+      "evidence": "STACK-08 (2026-11-28): the page as built exports no file: no download attribute, no createObjectURL and no save picker (showSaveFilePicker) in src/ (Blob is used only to decode a project's picture); the exported player (src/exported/player.ts, built by vite.config.mjs's playerConfig) is built by the project but not offered on the page. No row of the catalogue is triggered by this feature. Absent as built; the item that adds Save or an export sets it present."
     }
   },
   "rows": {
@@ -99,7 +99,10 @@
     "1.2.1": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "media"
+        ]
       },
       "evidence": [],
       "results": []
@@ -107,7 +110,10 @@
     "1.2.2": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "media"
+        ]
       },
       "evidence": [],
       "results": []
@@ -115,7 +121,10 @@
     "1.2.3": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "media"
+        ]
       },
       "evidence": [],
       "results": []
@@ -123,7 +132,10 @@
     "1.2.4": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "live-media"
+        ]
       },
       "evidence": [],
       "results": []
@@ -131,7 +143,10 @@
     "1.2.5": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "media"
+        ]
       },
       "evidence": [],
       "results": []
@@ -139,7 +154,10 @@
     "1.2.6": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "media"
+        ]
       },
       "evidence": [],
       "results": []
@@ -147,7 +165,10 @@
     "1.2.7": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "media"
+        ]
       },
       "evidence": [],
       "results": []
@@ -155,7 +176,10 @@
     "1.2.8": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "media"
+        ]
       },
       "evidence": [],
       "results": []
@@ -163,7 +187,10 @@
     "1.2.9": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "live-media"
+        ]
       },
       "evidence": [],
       "results": []
@@ -227,7 +254,10 @@
     "1.4.2": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "autoplay-audio"
+        ]
       },
       "evidence": [],
       "results": []
@@ -267,7 +297,10 @@
     "1.4.7": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "media"
+        ]
       },
       "evidence": [],
       "results": []
@@ -355,7 +388,10 @@
     "2.2.1": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "timers"
+        ]
       },
       "evidence": [],
       "results": []
@@ -371,7 +407,10 @@
     "2.2.3": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "timers"
+        ]
       },
       "evidence": [],
       "results": []
@@ -379,7 +418,10 @@
     "2.2.4": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "interruptions"
+        ]
       },
       "evidence": [],
       "results": []
@@ -387,7 +429,11 @@
     "2.2.5": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "authentication",
+          "timers"
+        ]
       },
       "evidence": [],
       "results": []
@@ -395,7 +441,10 @@
     "2.2.6": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "timers"
+        ]
       },
       "evidence": [],
       "results": []
@@ -427,7 +476,10 @@
     "2.4.1": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "page-set"
+        ]
       },
       "evidence": [],
       "results": []
@@ -459,7 +511,10 @@
     "2.4.5": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "page-set"
+        ]
       },
       "evidence": [],
       "results": []
@@ -483,7 +538,10 @@
     "2.4.8": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "page-set"
+        ]
       },
       "evidence": [],
       "results": []
@@ -555,7 +613,10 @@
     "2.5.4": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "device-motion"
+        ]
       },
       "evidence": [],
       "results": []
@@ -603,7 +664,10 @@
     "3.1.2": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "languages"
+        ]
       },
       "evidence": [],
       "results": []
@@ -659,7 +723,10 @@
     "3.2.3": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "page-set"
+        ]
       },
       "evidence": [],
       "results": []
@@ -667,7 +734,10 @@
     "3.2.4": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "page-set"
+        ]
       },
       "evidence": [],
       "results": []
@@ -683,7 +753,10 @@
     "3.2.6": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "page-set"
+        ]
       },
       "evidence": [],
       "results": []
@@ -747,7 +820,10 @@
     "3.3.8": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "authentication"
+        ]
       },
       "evidence": [],
       "results": []
@@ -755,7 +831,10 @@
     "3.3.9": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "authentication"
+        ]
       },
       "evidence": [],
       "results": []
@@ -891,7 +970,11 @@
     "SUP04": {
       "adoption": "advisory",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "native-ios",
+          "native-android"
+        ]
       },
       "evidence": [],
       "results": []
@@ -947,7 +1030,11 @@
     "N01": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "native-ios",
+          "native-android"
+        ]
       },
       "evidence": [],
       "results": []
@@ -955,7 +1042,11 @@
     "N02": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "native-ios",
+          "native-android"
+        ]
       },
       "evidence": [],
       "results": []
@@ -963,7 +1054,11 @@
     "N03": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "native-ios",
+          "native-android"
+        ]
       },
       "evidence": [],
       "results": []
@@ -971,7 +1066,11 @@
     "N04": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "native-ios",
+          "native-android"
+        ]
       },
       "evidence": [],
       "results": []
@@ -979,7 +1078,11 @@
     "N05": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "native-ios",
+          "native-android"
+        ]
       },
       "evidence": [],
       "results": []
@@ -987,7 +1090,11 @@
     "N06": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "native-ios",
+          "native-android"
+        ]
       },
       "evidence": [],
       "results": []
@@ -995,7 +1102,11 @@
     "N07": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "native-ios",
+          "native-android"
+        ]
       },
       "evidence": [],
       "results": []
@@ -1003,7 +1114,11 @@
     "N08": {
       "adoption": "required",
       "applicability": {
-        "state": "unresolved"
+        "state": "not_applicable",
+        "absent": [
+          "native-ios",
+          "native-android"
+        ]
       },
       "evidence": [],
       "results": []

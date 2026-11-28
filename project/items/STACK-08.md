@@ -16,7 +16,7 @@ The owner's decisions of 27 Nov 2026 put, before CORE-07: "`user-input` and `poi
 
 Updated: 2026-11-28
 
-Next step: stage 2 (the states "project open" and "playing", `pointer-gestures`); then stage 3.
+Next step: stage 2b (the states "project open" and "playing"); then stage 3.
 
 Open question: None.
 
@@ -32,3 +32,4 @@ Open question: None.
 - 2026-11-28 — Sub-chat 161 (brief 161), stage 1, the unreadable file. A file whose bytes could not be read (moved, or the browser lost access) no longer says to choose a project saved by v4 and not changed since; it says "This file could not be read: it may have been moved, or the browser may no longer have access to it. Choose it again from where it is now. Nothing was opened." (io's new `openedUnreadable`; the refusal's reason is unchanged). Codex's list, line 1.
 - 2026-11-28 — Sub-chat 161, stage 1, the six input rows. `user-input` is present: the page takes a file (through "Open project"), the switch "Single-key shortcuts", the slider "Timeline" and canvas edits, and none of the user's own details. Journeys: inputs-purpose-and-labels (new; 1.3.5, 3.3.2: every field, hidden ones included, in the shell, with Help open and with "Replace your route?" open), refused-not-a-project (3.3.1, 3.3.3: the suggestion checked on its own), open-over-changes (3.3.4, 3.3.6) and a-delete-is-undone (new; 3.3.6: Delete, then one Undo draws the canvas as before). The other refusals' suggestions are held by the unit test, not journeys.
 - 2026-11-28 — Sub-chat 162 (brief 162), stage 1, the inventory. inputs-purpose-and-labels now reads every input, type=hidden included (its own selector; the shared FIELDS unchanged), and a field it does not know, or any field inside "Replace your route?", fails both 1.3.5 and 3.3.2. Read so, it found a fourth field: the Timeline slider's own number box, which Carbon renders as an input of type=hidden, labelled by the same visible "Timeline"; the journey now checks it. The `user-input` evidence now counts four kinds of input, not three. Codex's list, lines 2 and 3.
+- 2026-11-28 — Sub-chat 163 (brief 163), stage 2a, the features. Thirteen features the page as built does not have are absent, each with what was looked for and where: media, live-media, autoplay-audio, pdf, native-ios, native-android, authentication, timers, interruptions, device-motion, page-set, languages and exports; their 35 rows are not applicable. flashing (2.3.1, 2.3.2: the preview animates the user's own route and picture, which source cannot judge) and multi-step (3.3.7: no journey checks it) stay unknown. The report: 52 checked, 0 failed, 28 unverified of 80, 35 not applicable (was 52, 0, 63 of 115).
