@@ -19,11 +19,12 @@ export default defineConfig(
   // STACK-07 (the JSDoc house digest), on the owner's "Yes, add it" of 27 Nov 2026: rule 1,
   // every exported function and class carries a doc comment, and no type is written inside one, TypeScript holding the
   // types. Only these four rules: the plugin's recommended set asks @param and @returns tags the types already carry.
-  // No type inside a doc comment: no-restricted-syntax refuses a braced type on any tag (@throws {Error}, @yields {T}
-  // and the rest) in any doc comment; no-types refuses one on @param and @returns as well, and check-tag-names, typed,
-  // refuses the tags TypeScript makes redundant (@type, @typedef and their kin) along with tag names it does not know.
-  // Untyped tags and inline {@link} references are accepted, and so are braces after @see and @example, which the
-  // parser reads as a reference or as code, not as a type.
+  // No type inside a doc comment: no-restricted-syntax refuses, in any doc comment, a type the parser reads on any tag
+  // (@throws {Error}, @yields {T} and the rest); no-types refuses one on @param and @returns as well, and
+  // check-tag-names, typed, refuses the tags TypeScript makes redundant (@type, @typedef and their kin) along with tag
+  // names it does not know. Excepted: untyped tags; inline {@link}, {@linkcode} and {@linkplain} references, on a tag
+  // or in its text (on @param and @returns in the text, as no-types reads one where their type goes as a type); and
+  // braces after @see and @example, which the parser reads as a reference or as code, not a type.
   // Arrow functions and function expressions are asked for where a const names them or a default export is one, and
   // publicOnly keeps that to the exported ones, whether exported in place or by reference (`export { f }`,
   // `export default f`). Callbacks inside an exported object or call are not asked for: no declarator names them.
@@ -44,7 +45,7 @@ export default defineConfig(
       'jsdoc/check-tag-names': ['error', { typed: true }],
       'jsdoc/no-restricted-syntax': ['error', {
         contexts: [{
-          comment: 'JsdocBlock:has(JsdocTag[rawType!=""])',
+          comment: 'JsdocBlock:has(JsdocTag[rawType!=""][rawType!=/^@link(code|plain)?\\b/])',
           context: 'any',
           message: 'No type inside a doc comment: TypeScript holds the types, so write the tag without the {braces}.',
         }],

@@ -27,6 +27,7 @@ const PLANTS = {
   'throws-type.ts': [['jsdoc/no-restricted-syntax', 4]],
   'documented.ts': [],
   'documented-default.ts': [],
+  'documented-links.ts': [],
 };
 
 async function lint(file) {
