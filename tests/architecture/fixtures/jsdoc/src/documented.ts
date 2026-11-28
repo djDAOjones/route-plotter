@@ -1,7 +1,13 @@
 // STACK-07's legal case: each kind of export the rule covers, documented, so a rule that fires too widely fails.
 
-/** A documented function declaration. */
+/**
+ * A documented function declaration, with untyped tags, which are accepted.
+ * @param value The value to double.
+ * @returns The value doubled.
+ * @throws When the value is not finite.
+ */
 export function documented(value: number): number {
+  if (!Number.isFinite(value)) throw new RangeError('not finite');
   return value * 2;
 }
 
