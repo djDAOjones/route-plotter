@@ -1,4 +1,5 @@
-// CORE-06, D276 (a), provisional (brief 145): the page's question before a chosen project replaces a changed route
+// CORE-06, D276 (a), kept as built: the parent chat's reading of the owner's answer of 2026-11-27, which stands unless
+// he objects (brief 145): the page's question before a chosen project replaces a changed route
 // (ReplaceQuestion.tsx). Node holds the asker and the markup; focus, Escape and the return are the journey
 // `open-over-changes`'s (tests/a11y/project.mjs).
 import { createElement } from 'react';

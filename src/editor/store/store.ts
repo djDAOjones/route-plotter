@@ -29,7 +29,8 @@
 // for the slice: `setPlayback` reads each of its argument's fields once, before anything changes, and refuses one that
 // is not a whole, finite playback with nothing told; a subscriber told of the change that throws never undoes it.
 //
-// CORE-06 (brief 144, D276 (a), provisional): `changed()` says whether the project held differs from the store's
+// CORE-06 (brief 144, D276 (a), kept as built: the parent chat's reading of the owner's answer of 2026-11-27, which
+// stands unless he objects): `changed()` says whether the project held differs from the store's
 // baseline, the project it started with or last opened (a successful Open; a refused one keeps the baseline). A step
 // (a dispatch or a gesture's commit that changed the project) and a Redo make it true; Undo back to the baseline makes
 // it false. A selection, the transport's slice, a refused edit, an edit or commit that ended as it began, a gesture's

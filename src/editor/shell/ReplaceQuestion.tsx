@@ -1,4 +1,5 @@
-// CORE-06, D276 (a), provisional (brief 145, ruling JC): the page's question before a chosen project replaces a changed
+// CORE-06, D276 (a), kept as built: the parent chat's reading of the owner's answer of 2026-11-27, which stands unless
+// he objects (brief 145, ruling JC): the page's question before a chosen project replaces a changed
 // route, the opener's `confirmReplace` (openLogic.ts point 14). v3 did not ask (it kept a recovery copy instead); v4 has
 // no save yet, and an opened project cannot be undone, so the editor asks first.
 //

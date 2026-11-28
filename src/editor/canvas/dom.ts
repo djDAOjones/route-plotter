@@ -93,7 +93,7 @@
 //    hit-tests the last frame drawn as a down does (points before lines, ./hit.ts); on a point it cancels the browser's
 //    own menu, selects the point (kept as it is when the point is already in the selection: ./menu.ts `menuSelection`,
 //    never a step) and hands the page the point and the pointer's place on the page. A line's menu (brief 140, ruling
-//    ED; D271 (a), provisional until the owner answers): with a `lineMenu` handed, a right-click on a line or its "+"
+//    ED; D271 (a), answered by the owner, 2026-11-27): with a `lineMenu` handed, a right-click on a line or its "+"
 //    cancels the browser's menu and hands the page the route, the line and the pointer's place, and changes no
 //    selection (lines cannot be selected); it has no keyboard way (nothing picks out a line from the keyboard yet). On
 //    empty picture, or on a point or line whose menu is not handed, nothing is done and the browser's menu is left
@@ -124,7 +124,7 @@
 //    refused on that press) cancel the gesture, nothing changed and nothing to undo, saying "Move cancelled"; the
 //    window's blur, the binding's removal and a project opened under the wait (the store closes the gesture) end it
 //    saying nothing. Hover goes on while it waits. `watchMove` tells the page when a wait starts and ends (its crosshair).
-// 11. A press while the route plays (brief 141, FB; D272 (c), provisional until the owner answers): the lead has drawn
+// 11. A press while the route plays (brief 141, FB; D272 (c), answered by the owner, 2026-11-27): the lead has drawn
 //    only part of the route, so a press on the picture while the store's `playback.playing` is true pauses the play and
 //    does nothing else. A pointerdown on the canvas, any button and any pointer type, with no "Move" wait open (point
 //    10 keeps its own path, first, unchanged): `pause` is called if handed, the down's default is cancelled, and the

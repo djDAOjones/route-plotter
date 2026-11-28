@@ -40,26 +40,28 @@
 //    scrolling (`touch-action: none`), so a finger draws as a mouse does. The drawer's hover (previewLogic.ts, point 4d)
 //    is handed to the binding (brief 118, ruling T): a resting mouse or pen sets it, and the drawer draws the hovered
 //    point's ring or the hovered stretch over its halo (D208) when that point or line is the selected route's.
-// 7. CORE-06, chat G1b (brief 135; brief 130's CB and CD; D267 (a), provisional): the point's menu. The binding is
+// 7. CORE-06, chat G1b (brief 135; brief 130's CB and CD; D267 (a), answered by the owner, 2026-11-27): the point's
+//    menu. The binding is
 //    handed `menu`: a right-click on a point, or Shift+F10 / the ContextMenu key on the selected one (keydown.ts), opens
 //    it, the point selected first (dom.ts point 9); the items are built then from the store (../canvas/menu.ts
 //    `pointMenu`) and drawn by the kit's menu (../kit/ContextMenu.tsx), in a portal outside this box, named "Point
 //    actions". An item chosen runs as one undo step (`runItem`); the menu closes and focus comes back to the box. Each
 //    item that makes a step is said aloud by the store's hook in ../canvas/words.ts: Delete as the Delete key's is
-//    (D268), the others in D269's words ("Start marked", "Point made a bend" and so on; provisional); an item that is off
+//    (D268), the others in D269's words ("Start marked", "Point made a bend" and so on; stands unless the owner
+//    objects); an item that is off
 //    makes no step and says nothing. The line's menu (point 9) is said the same way, in D271's words.
 // 8. CORE-06, chat G2b (brief 139; brief 138's DD; D242, D250 (a), D270, provisional until the owner objects): the
 //    menu's "Move" is handed to the binding (../canvas/dom.ts point 10, `startMove`), told the session's `announce` for
 //    its prompt; the menu has already closed and given focus back to the box. While a wait is open (`watchMove`) the
 //    canvas shows a crosshair. Focus leaving the box for anywhere outside it cancels the wait (`cancelMove`, which says
 //    "Move cancelled"); the window's own blur is left to the binding, which ends it saying nothing.
-// 9. CORE-06, chat G2c (brief 140, ruling EE; D271 (a), provisional until the owner answers): a line's menu. The binding
+// 9. CORE-06, chat G2c (brief 140, ruling EE; D271 (a), answered by the owner, 2026-11-27): a line's menu. The binding
 //    is also handed `lineMenu`: a right-click on a line or its "+" opens it, selecting nothing (dom.ts point 9); its
 //    items are built then from the store (../canvas/menu.ts `lineMenu`: "Make line two-way" or "Make line one way",
 //    then "Reverse line") and drawn by the same kit menu, named "Line actions". An item chosen runs as one undo step
 //    (`runItem`), the store's hook says its words ("Line made two-way", "Line made one way", "Line reversed"), and the
 //    menu closes with focus back on the box. It opens by pointer only: no key picks out a line yet.
-// 10. CORE-06, close (brief 141, FD; D272 (c), provisional until the owner answers): the binding is handed `pause`, the
+// 10. CORE-06, close (brief 141, FD; D272 (c), answered by the owner, 2026-11-27): the binding is handed `pause`, the
 //    page's (App.tsx: Play or pause's toggle, heard "Animation paused"): a press or right-click on the picture while
 //    the route plays pauses it and does nothing else (dom.ts point 11), and the drawer draws no hover while it plays.
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -89,7 +91,7 @@ export interface PreviewProps {
 export const PREVIEW_NAME = 'Route animation preview';
 /** The point's menu's name (point 7): v3's "Waypoint actions" (wiringControllers.js 788) with "point" for "waypoint"; provisional. */
 const POINT_MENU_NAME = 'Point actions';
-/** A line's menu's name (point 9; D271 (a), provisional). */
+/** A line's menu's name (point 9; D271 (a), answered by the owner, 2026-11-27). */
 const LINE_MENU_NAME = 'Line actions';
 
 /** The least height the box takes, in `vh`, when the room left is smaller (point 5). */

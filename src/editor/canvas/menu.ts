@@ -1,4 +1,4 @@
-// CORE-06, chat G1 (brief 130, rulings CB, CC; D267 (a), provisional until the owner answers): the point's menu as one
+// CORE-06, chat G1 (brief 130, rulings CB, CC; D267 (a), answered by the owner, 2026-11-27): the point's menu as one
 // pure list, built from the project and the point as the menu opens. Its items, in order: "Mark as start" or "Remove
 // start mark", "Mark as end" or "Remove end mark", "Set lead start", "Make stop" or "Make bend", then "Delete" set
 // apart. Each runs a store command already built (./commands.ts), whose undo words are the item's words; Delete's are
@@ -17,7 +17,7 @@
 // point alone), so `runItem` never dispatches it and the page hands it to the canvas's binding (dom.ts point 10), where
 // the next click on the picture places it. It is off, with its reason, only when the point is no longer on the route.
 //
-// CORE-06, chat G2c (brief 140, ruling EB; D271 (a), provisional until the owner answers): a line's menu, `lineMenu`,
+// CORE-06, chat G2c (brief 140, ruling EB; D271 (a), answered by the owner, 2026-11-27): a line's menu, `lineMenu`,
 // built from the project and the line as the menu opens (dom.ts point 9). Its items, in order: "Make line two-way" when the line
 // runs one way, "Make line one way" when it runs both ways (so the item also tells which it is now), then "Reverse
 // line". Each runs a built store command (./commands.ts `setDirection`, `reverseLine`) through `runItem`, as the point's

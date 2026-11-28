@@ -5,6 +5,7 @@
 import { expect, test } from 'vitest';
 import { unitAt, type Overlay, type Screen } from '../adapters/render/overlays';
 import { Recorder } from '../adapters/render/recorder';
+import { pointAt } from '../core/geometry/path';
 import type { View } from '../core/feature/contract';
 import { newLine, newPoint, newRoute, newScene, type Route, type Scene } from '../core/model/scene';
 import { CATALOGUE, type Catalogue, type SceneFeature } from '../features/catalogue';
@@ -463,6 +464,21 @@ function sections(lines: readonly string[]): { stroke: string; at: { x: number; 
   return out;
 }
 
+/** The guide's own strokes, dashed or dotted, leaving out the way arrows' white edges (D275), which carry no dash. */
+const guideStrokes = (lines: readonly string[]) => sections(lines).filter((each) => each.stroke.includes('lineDash='));
+
+/** The way arrows among `lines` (D275): each fill, the corners of the path it fills on screen, and the stroke that edges it. */
+function arrowsIn(lines: readonly string[]): { corners: { x: number; y: number }[]; fill: string; edge: string }[] {
+  const out: { corners: { x: number; y: number }[]; fill: string; edge: string }[] = [];
+  let path: string[] = [];
+  for (const [i, line] of lines.entries()) {
+    if (line === 'beginPath') path = [];
+    else if (line.startsWith('fill ')) out.push({ corners: places(path), fill: line, edge: lines[i + 1] ?? '' });
+    else path.push(line);
+  }
+  return out;
+}
+
 /** The scene's one route (a stop, a bend, two stops, and a fifth point off the third), its lead start set to the point at `startAt` (none for null). */
 function ledFrom(startAt: number | null): Scene {
   const scene = sceneOf(['whole'], { branch: true });
@@ -476,7 +492,7 @@ test('paused, the lines the lead does not walk are drawn dotted at the route’s
     // Led from the second point, the one-way first line points back at it: the lead cannot reach it.
     const route = ledFrom(1).routes[0];
     expect(route?.lines.length, name).toBe(4);
-    const [walked, dotted, ...more] = sections(guided(ledFrom(1), viewing));
+    const [walked, dotted, ...more] = guideStrokes(guided(ledFrom(1), viewing));
     expect(more, name).toEqual([]);
     // The walked lines: one stroke in the guide's look, as before (2 wide, dashed 6 on and 4 off, butt caps).
     expect(widthOf(walked?.stroke), name).toBe(2 * unit);
@@ -496,7 +512,7 @@ test('paused, the lines the lead does not walk are drawn dotted at the route’s
     expect(walked?.at.length, name).toBeGreaterThan(dotted?.at.length ?? 0);
   }
   // At a zoom of 1 the dotted course is the first line's (it lies left of the second point; every walked line right of it).
-  const [walked, dotted] = sections(guided(ledFrom(1), VIEWINGS['a zoom of 1']));
+  const [walked, dotted] = guideStrokes(guided(ledFrom(1), VIEWINGS['a zoom of 1']));
   const left = Math.max(...(dotted?.at ?? []).map(({ x }) => x));
   expect(left).toBeLessThanOrEqual(Math.min(...(walked?.at ?? []).map(({ x }) => x)) + 0.5);
 });
@@ -505,7 +521,7 @@ test('a route the lead walks whole draws one dashed stroke as before; a loop’s
   const viewing = VIEWINGS['a zoom of 1'];
   const unit = unitAt(viewing.zoom);
   const plainly = guided(ledFrom(0), viewing);
-  const whole = sections(plainly);
+  const whole = guideStrokes(plainly);
   expect(whole).toHaveLength(1);
   sameCourse(whole[0]?.at ?? [], plainly.line, 'the lead walks every line');
   expect(whole[0]?.stroke).toContain(`lineDash=${6 * unit},${4 * unit}`);
@@ -514,7 +530,7 @@ test('a route the lead walks whole draws one dashed stroke as before; a loop’s
   const plain = ledFrom(0);
   const closed = { ...plain, routes: plain.routes.map((route) => ({ ...route, lines: [...route.lines, newLine(() => 'closer', route.points[3]?.id ?? '', route.points[0]?.id ?? '')] })) };
   const looped = guided(closed, viewing);
-  const [walked, closer, ...more] = sections(looped);
+  const [walked, closer, ...more] = guideStrokes(looped);
   expect(more).toEqual([]);
   sameCourse([...(walked?.at ?? []), ...(closer?.at ?? [])], looped.line, 'the loop');
   expect(walked?.stroke).toContain(`lineDash=${6 * unit},${4 * unit}`);
@@ -522,7 +538,7 @@ test('a route the lead walks whole draws one dashed stroke as before; a loop’s
   expect(closer?.at.length).toBeGreaterThan(1);
   // No lead start: the lead walks nothing, so the one stroke is dotted.
   const unled = guided(ledFrom(null), viewing);
-  const none = sections(unled);
+  const none = guideStrokes(unled);
   expect(none).toHaveLength(1);
   expect(none[0]?.stroke).toContain(`lineDash=0,${8 * unit}`);
   expect(none[0]?.stroke).toContain('lineCap=round');
@@ -536,4 +552,84 @@ test('a hidden line’s guide (lineOverlay) stays one dashed stroke when the lea
   expect(more).toEqual([]);
   expect(stroke).toContain(`lineDash=${6 * unitAt(1)},${4 * unitAt(1)}`);
   expect(stroke).not.toContain('lineCap=');
+});
+
+/** The frame and screen the composer hands each overlay for `scene` under a viewing. */
+function handedUnder(scene: Scene, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS]): Parameters<Overlay> extends [unknown, ...infer Rest] ? Rest : never {
+  const seen: Parameters<Overlay>[] = [];
+  draw(request(scene, { viewing: viewing.viewing, overlays: [(...args) => void seen.push(args)] }), viewing.catalogue);
+  const [, frame, screen] = seen[0] ?? [];
+  if (frame === undefined || screen === undefined) throw new Error('no overlay was handed a frame');
+  return [frame, screen];
+}
+
+/** An arrow's middle and way from its corners (the kit's wayArrow): tip = at + way × size, back = at − way × 0.6 × size. The recorder writes places to a few decimals, so read to 0.01. */
+function arrowOf(corners: readonly { x: number; y: number }[]) {
+  const [tip, one, two] = corners;
+  if (tip === undefined || one === undefined || two === undefined) throw new Error('an arrow of fewer than three corners');
+  const back = { x: (one.x + two.x) / 2, y: (one.y + two.y) / 2 };
+  const reach = Math.hypot(tip.x - back.x, tip.y - back.y);
+  const way = { x: (tip.x - back.x) / reach, y: (tip.y - back.y) / reach };
+  return { at: { x: tip.x - (tip.x - back.x) / 1.6, y: tip.y - (tip.y - back.y) / 1.6 }, way, size: reach / 1.6 };
+}
+
+test('paused, every one-way line carries one arrow two thirds along, pointing from its first point to its second; a two-way line none (D275)', () => {
+  for (const [name, viewing] of Object.entries(VIEWINGS)) {
+    const unit = unitAt(viewing.zoom);
+    const led = ledFrom(0);
+    // The third line runs both ways: no arrow on it.
+    const scene = { ...led, routes: led.routes.map((route) => ({ ...route, lines: route.lines.map((line, i) => (i === 2 ? { ...line, direction: 'both ways' as const } : line)) })) };
+    const route = scene.routes[0];
+    if (route === undefined) throw new Error('no route');
+    const [, screen] = handedUnder(scene, viewing);
+    const held = screen.routes.get(route.id);
+    if (held === undefined) throw new Error('the frame holds no route');
+    const oneWay = route.lines.filter((line) => line.direction === 'one way');
+    expect(oneWay, name).toHaveLength(3);
+    const arrows = arrowsIn(guided(scene, viewing));
+    expect(arrows, name).toHaveLength(oneWay.length);
+    for (const [i, line] of oneWay.entries()) {
+      const arrow = arrows[i];
+      if (arrow === undefined) throw new Error(`no arrow for line ${i}`);
+      const { at, way, size } = arrowOf(arrow.corners);
+      // v3's size 7 and edge 1.5, by unitAt(zoom); the route's colour at full alpha, edged white.
+      expect(size, name).toBeCloseTo(7 * unit, 2);
+      expect(arrow.fill, name).toContain(`fillStyle=${route.settings.line.colour}`);
+      expect(arrow.fill, name).not.toContain('globalAlpha=');
+      expect(arrow.edge, name).toContain('strokeStyle=#ffffff');
+      expect(arrow.edge, name).toContain(`lineWidth=${1.5 * unit}`);
+      // Two thirds along the line's samples by index, as the frame holds them.
+      const samples = held.timeline.shapes.get(line.id)?.samples ?? [];
+      const middle = pointAt(samples, 2 / 3);
+      const expected = middle === null ? null : screen.place(middle);
+      expect(expected, name).not.toBeNull();
+      expect(at.x, name).toBeCloseTo(expected?.x ?? Number.NaN, 2);
+      expect(at.y, name).toBeCloseTo(expected?.y ?? Number.NaN, 2);
+      // Pointing from the line's first point to its second, and nearer its second (the "+" sits at the middle).
+      const [from, to] = [line.from, line.to].map((id) => route.points.find((point) => point.id === id)).map((point) => (point ? screen.place(point) : null));
+      if (!from || !to) throw new Error('a line’s point is not on screen');
+      expect(way.x * (to.x - from.x) + way.y * (to.y - from.y), name).toBeGreaterThan(0);
+      expect(Math.hypot(at.x - to.x, at.y - to.y), name).toBeLessThan(Math.hypot(at.x - from.x, at.y - from.y));
+    }
+  }
+  // `guided` checks that the frame asked for without the overlay (a video, the player, the editor while playing) is the
+  // beginning of the frame asked for with it: the arrows are the overlay's alone, asked for only while paused
+  // (previewLogic.test.ts holds that the editor asks for the guide only while not playing).
+});
+
+test('a one-way line the lead does not walk points its own way, from its first point to its second (D275)', () => {
+  const viewing = VIEWINGS['a zoom of 1'];
+  // Led from the second point, the one-way first line points back at it: the lead cannot reach it.
+  const scene = ledFrom(1);
+  const route = scene.routes[0];
+  const first = route?.lines[0];
+  if (route === undefined || first === undefined) throw new Error('no route');
+  const [, screen] = handedUnder(scene, viewing);
+  expect(screen.routes.get(route.id)?.timeline.walk.leftOut).toEqual([first.id]);
+  const arrows = arrowsIn(guided(scene, viewing));
+  expect(arrows).toHaveLength(route.lines.length);
+  const { way } = arrowOf(arrows[0]?.corners ?? []);
+  const [from, to] = [first.from, first.to].map((id) => route.points.find((point) => point.id === id)).map((point) => (point ? screen.place(point) : null));
+  if (!from || !to) throw new Error('a line’s point is not on screen');
+  expect(way.x * (to.x - from.x) + way.y * (to.y - from.y)).toBeGreaterThan(0);
 });

@@ -187,6 +187,27 @@ export function endMark(context: DrawContext, at: Place, radius: number, colour:
   });
 }
 
+/**
+ * The way a one-way line goes, drawn while paused (CORE-06, D275, the owner's "Every one-way line"): v3's arrow
+ * (`v3/src/services/NetworkEditService.js`:1215–1233), a triangle at `at` pointing toward `toward`, its tip `size`
+ * ahead and its back 0.6 × `size` behind and to each side. Filled in the colour handed at full alpha (v3's was 0.9;
+ * full, as the guide and the marks are, D266) and edged white `edge` wide, as the marks are (D274). Nothing where
+ * `toward` is `at` itself, so no way can be read.
+ */
+export function wayArrow(context: DrawContext, at: Place, toward: Place, size: number, colour: string, edge: number): void {
+  if (!finite(at.x, at.y, toward.x, toward.y, size, edge) || size <= 0 || edge <= 0) return;
+  const length = Math.hypot(toward.x - at.x, toward.y - at.y);
+  if (!(length > 0)) return;
+  const [ux, uy, back] = [(toward.x - at.x) / length, (toward.y - at.y) / length, 0.6 * size];
+  own(context, () => {
+    context.moveTo(at.x + ux * size, at.y + uy * size);
+    context.lineTo(at.x - ux * back - uy * back, at.y - uy * back + ux * back);
+    context.lineTo(at.x - ux * back + uy * back, at.y - uy * back - ux * back);
+    context.closePath();
+    inkAndEdge(context, colour, edge);
+  });
+}
+
 /** v3's "+" handle (:424–450): a disc of radius 9, or 11 when active, edged 1.5 wide, with a plus of round-capped arms. */
 export function plusHandle(context: DrawContext, at: Place, active: boolean, unit = 1, radius: number = (active ? 11 : 9) * unit): void {
   if (!finite(at.x, at.y, unit, radius) || unit <= 0 || radius <= 0) return;

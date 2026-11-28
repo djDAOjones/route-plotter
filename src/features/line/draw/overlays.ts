@@ -35,16 +35,23 @@
 // is not playing (../../../editor/shell/previewLogic.ts, point 4d), and no longer asks `lineOverlay` for its
 // selected-only guide, which this one replaces; `lineOverlay` keeps its guide for a caller that names routes.
 //
-// Lines the lead does not walk (CORE-06, D273 part 1, built as recommended (c) and provisional until the owner answers):
+// Lines the lead does not walk (CORE-06, D273 part 1, answered by the owner, 2026-11-27: "Look and words (Recommended)"):
 // the guide draws each route's walked lines as above, one stroke, then the lines its lead never walks (the timeline's
 // walk.leftOut: a line that closes a loop, a line it cannot reach, every line with no lead start;
 // ../../../core/timing/walk.ts) as one more stroke in its own look, `LEFT_OUT`: the route's colour at full alpha (never
 // faded, as D266 ruled for the guide), 3 wide, round dots every 8, round joins, by unitAt(screen.zoom). It is paused
-// only, as the guide is; how such a line shows in play and in videos (D273 part 2) waits on the owner. A route the lead
-// walks whole is drawn exactly as before.
+// only, as the guide is; how such a line shows in play and in videos (D273 part 2, "Appear at either end") is the line
+// module's (../model/line.ts). A route the lead walks whole is drawn exactly as before.
+//
+// The way of a one-way line (CORE-06, D275, the owner's "Every one-way line (Recommended)", 2026-11-27): after a
+// route's strokes, `guideOverlay` draws the kit's wayArrow on every line of the route that runs one way, never on a
+// line that runs both ways, so it too is drawn only while paused, never in play or a video. It sits two thirds along
+// the line's samples by index (the "+" sits at the middle) and points the way the samples run, which is the way the
+// lead walks the line, or its own `from` to `to` where the lead does not walk it (../../../core/timing/shape.ts):
+// v3's size 7 and edge 1.5 by unitAt(screen.zoom), as the marks are (D274), in the route's colour at full alpha.
 import type { DrawContext } from '../../../adapters/render/context';
 import type { Frame } from '../../../adapters/render/layers';
-import { plusHandle, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
+import { plusHandle, unitAt, wayArrow, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
 import { pointAt } from '../../../core/geometry/path';
 import type { ImagePoint } from '../../../core/geometry/units';
 import type { Dash } from '../model/line';
@@ -89,6 +96,20 @@ function runsOf(samples: readonly ImagePoint[], screen: Screen): Place[][] {
   }
   if (run.length > 1) runs.push(run);
   return runs;
+}
+
+/** The way arrow's place along a one-way line's samples, by index, and its size and edge at a zoom of 1 (D275; v3's 7 and 1.5). */
+const ARROW = { along: 2 / 3, size: 7, edge: 1.5 } as const;
+
+/** A one-way line's arrow (D275): at `ARROW.along` of its samples, pointing the way they run there; nothing where either sample there is off the screen's numbers. */
+function arrowOn(context: DrawContext, samples: readonly ImagePoint[], screen: Screen, colour: string, unit: number): void {
+  if (samples.length < 2) return;
+  const k = Math.min(Math.floor(ARROW.along * (samples.length - 1)), samples.length - 2);
+  const [middle, before, after] = [pointAt(samples, ARROW.along), samples[k], samples[k + 1]];
+  if (middle === null || before === undefined || after === undefined) return;
+  const [at, a, b] = [screen.place(middle), screen.place(before), screen.place(after)];
+  if (at === null || a === null || b === null) return;
+  wayArrow(context, at, { x: at.x + b.x - a.x, y: at.y + b.y - a.y }, ARROW.size * unit, colour, ARROW.edge * unit);
 }
 
 /** The runs as one path. */
@@ -187,7 +208,8 @@ function stretchOf(hovered: HoveredLine, frame: Frame, screen: Screen, unit: num
 /**
  * The guide while paused (D265): every line of each route named, whatever its look, in the guide's look (D157), one
  * stroke a route, in the routes' order; then the route's lines the lead does not walk, one more stroke in `LEFT_OUT`'s
- * look (D273 part 1). A route named twice is drawn once; an id the frame does not hold draws nothing.
+ * look (D273 part 1); then an arrow on each of its one-way lines (D275). A route named twice is drawn once; an id the
+ * frame does not hold draws nothing.
  */
 export function guideOverlay(routeIds: readonly string[]): Overlay {
   return (context: DrawContext, _frame: Frame, screen: Screen) => {
@@ -205,6 +227,7 @@ export function guideOverlay(routeIds: readonly string[]): Overlay {
       if (walked.length > 0) guide(context, walked, route.settings.line.colour, unit);
       const left = runsFor(true);
       if (left.length > 0) guide(context, left, route.settings.line.colour, unit, LEFT_OUT);
+      for (const line of route.shape.lines) if (line.direction === 'one way') arrowOn(context, route.timeline.shapes.get(line.id)?.samples ?? [], screen, route.settings.line.colour, unit);
     }
   };
 }

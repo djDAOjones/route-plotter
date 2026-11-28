@@ -34,7 +34,8 @@ import { Timeline } from './shell/Timeline';
 const toldOfChange = (listener: () => void) => pageSession().store.subscribe(listener);
 const playsNow = () => pageSession().store.playback().playing;
 /**
- * The preview's pause (brief 141, FD; D272 (c), provisional): Play or pause's own toggle, so the press is heard as
+ * The preview's pause (brief 141, FD; D272 (c), answered by the owner, 2026-11-27): Play or pause's own toggle, so the
+ * press is heard as
  * "Animation paused" as Space and the Pause button are. The canvas calls it only while the store plays (dom.ts point 11).
  */
 const pausePlay = (): void => {

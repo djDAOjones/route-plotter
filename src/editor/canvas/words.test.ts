@@ -128,7 +128,7 @@ describe('what a step says (D268)', () => {
   });
 });
 
-describe('the lines the lead does not walk (D273 part 1, provisional)', () => {
+describe('the lines the lead does not walk (D273 part 1, answered by the owner, 2026-11-27)', () => {
   /** A route of three points A, B, C joined by `lines` ("A>B" one way, "A-B" both ways), its lead start at `lead`. */
   function led(lines: readonly string[], lead: 'A' | 'B' | 'C' | null): Route {
     const route = routeOf([[0.1, 0.1], [0.5, 0.5], [0.9, 0.9]]);
