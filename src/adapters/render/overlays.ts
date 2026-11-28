@@ -133,6 +133,81 @@ export function greyDot(context: DrawContext, at: Place, radius: number, edge: n
   });
 }
 
+/**
+ * The editor's guide dot on a point while the preview is not playing (CORE-06, D265, brief 128, BQ): a disc filled in
+ * the route's colour at full alpha, no edge, so it reads as the route's own mark and never as a ring. The caller hands
+ * the radius (3 × unitAt(zoom)) and the colour.
+ */
+export function guideDot(context: DrawContext, at: Place, radius: number, colour: string): void {
+  if (!finite(at.x, at.y, radius) || radius <= 0) return;
+  own(context, () => {
+    context.fillStyle = colour;
+    context.arc(at.x, at.y, radius, 0, Math.PI * 2);
+    context.fill();
+  });
+}
+
+/** Fill the path in `colour` at full alpha, then edge it white `edge` wide (v3's glyph ink and outline). */
+function inkAndEdge(context: DrawContext, colour: string, edge: number): void {
+  context.fillStyle = colour;
+  context.fill();
+  context.strokeStyle = '#ffffff';
+  context.lineWidth = edge;
+  context.stroke();
+}
+
+/**
+ * A point the author marked as a start, drawn while paused (CORE-06, D274 part 1): v3's entry glyph
+ * (`v3/src/services/NetworkEditService.js`:1236–1259), a triangle apex up of radius r, points (x, y − r),
+ * (x + 0.87r, y + 0.5r), (x − 0.87r, y + 0.5r), filled in the route's colour and edged white. The caller hands the
+ * radius (v3's 7, :940), the edge (v3's 1.5) and the colour.
+ */
+export function startMark(context: DrawContext, at: Place, radius: number, colour: string, edge: number): void {
+  if (!finite(at.x, at.y, radius, edge) || radius <= 0 || edge <= 0) return;
+  own(context, () => {
+    context.moveTo(at.x, at.y - radius);
+    context.lineTo(at.x + radius * 0.87, at.y + radius * 0.5);
+    context.lineTo(at.x - radius * 0.87, at.y + radius * 0.5);
+    context.closePath();
+    inkAndEdge(context, colour, edge);
+  });
+}
+
+/**
+ * A point the author marked as an end, drawn while paused (CORE-06, D274 part 1): v3's exit glyph
+ * (`v3/src/services/NetworkEditService.js`:1236–1259), a square of side 1.6r centred on the point, filled in the
+ * route's colour and edged white. The caller hands the radius, the edge and the colour, as for `startMark`.
+ */
+export function endMark(context: DrawContext, at: Place, radius: number, colour: string, edge: number): void {
+  if (!finite(at.x, at.y, radius, edge) || radius <= 0 || edge <= 0) return;
+  own(context, () => {
+    const half = radius * 0.8;
+    context.rect(at.x - half, at.y - half, half * 2, half * 2);
+    inkAndEdge(context, colour, edge);
+  });
+}
+
+/**
+ * The way a one-way line goes, drawn while paused (CORE-06, D275, the owner's "Every one-way line"): v3's arrow
+ * (`v3/src/services/NetworkEditService.js`:1215–1233), a triangle at `at` pointing toward `toward`, its tip `size`
+ * ahead and its back 0.6 × `size` behind and to each side. Filled in the colour handed at full alpha (v3's was 0.9;
+ * full, as the guide and the marks are, D266) and edged white `edge` wide, as the marks are (D274). Nothing where
+ * `toward` is `at` itself, so no way can be read.
+ */
+export function wayArrow(context: DrawContext, at: Place, toward: Place, size: number, colour: string, edge: number): void {
+  if (!finite(at.x, at.y, toward.x, toward.y, size, edge) || size <= 0 || edge <= 0) return;
+  const length = Math.hypot(toward.x - at.x, toward.y - at.y);
+  if (!(length > 0)) return;
+  const [ux, uy, back] = [(toward.x - at.x) / length, (toward.y - at.y) / length, 0.6 * size];
+  own(context, () => {
+    context.moveTo(at.x + ux * size, at.y + uy * size);
+    context.lineTo(at.x - ux * back - uy * back, at.y - uy * back + ux * back);
+    context.lineTo(at.x - ux * back + uy * back, at.y - uy * back - ux * back);
+    context.closePath();
+    inkAndEdge(context, colour, edge);
+  });
+}
+
 /** v3's "+" handle (:424–450): a disc of radius 9, or 11 when active, edged 1.5 wide, with a plus of round-capped arms. */
 export function plusHandle(context: DrawContext, at: Place, active: boolean, unit = 1, radius: number = (active ? 11 : 9) * unit): void {
   if (!finite(at.x, at.y, unit, radius) || unit <= 0 || radius <= 0) return;

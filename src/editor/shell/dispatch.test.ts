@@ -32,13 +32,13 @@ function tablePresses(mac: boolean): { readonly action: string; readonly press: 
   return KEYS.flatMap(({ action, keys, modifiers }) =>
     keys.map((key) => ({
       action,
-      press: press(key, modifiers.includes('command') ? command(mac, modifiers.includes('shift')) : {}),
+      press: press(key, modifiers.includes('command') ? command(mac, modifiers.includes('shift')) : { shiftKey: modifiers.includes('shift') }),
     })),
   );
 }
 
 /** A real store on an empty project, the real editor's transport over a player's transport kept in it. */
-function rig() {
+function rig({ escapeDoes = true, editDoes = true } = {}) {
   let n = 0;
   const project: Project = { scene: newScene(() => `id-${String((n += 1))}`), images: [] };
   const store = createStore({ project, nextId: () => `new-${String((n += 1))}` });
@@ -94,9 +94,27 @@ function rig() {
   const openProject = () => {
     ran.push('openProject');
   };
+  // The page's Escape (keydown.ts): true when it cancelled a drag or cleared the selection.
+  const escape = () => {
+    ran.push('escape');
+    return escapeDoes;
+  };
+  // The page's Editing keys (dom.ts's `editKey`): true when there was something to act on; a repeat is recorded as held,
+  // and the key pressed is kept (the nudge reads which arrow).
+  const keysHanded: string[] = [];
+  const edit = (action: ActionIn<'Editing'>, repeat: boolean, pressed: string) => {
+    ran.push(repeat ? `${action} held` : action);
+    keysHanded.push(pressed);
+    return editDoes;
+  };
+  // The page's `endNudge` (dom.ts): each call records how many actions had run before it.
+  const ends: number[] = [];
+  const endNudge = () => {
+    ends.push(ran.length);
+  };
   const key = (pressed: KeyPress, { mac = true, place = OPEN, singleKeys = true } = {}) =>
-    dispatchKey({ press: pressed, mac, place, singleKeys, store: bound, transport, openHelp, openProject });
-  return { store, said, ran, outcomes, key };
+    dispatchKey({ press: pressed, mac, place, singleKeys, store: bound, transport, openHelp, openProject, escape, edit, endNudge });
+  return { store, said, ran, outcomes, key, keysHanded, ends };
 }
 
 describe('the shell’s key dispatch', () => {
@@ -114,7 +132,8 @@ describe('the shell’s key dispatch', () => {
     const { ran, said, key } = rig();
     const others = [
       // `?` left this list when it became Help's key (stage 5); point 4's tests press it.
-      press('a'), press('Escape'), press('Tab'), press('Enter'), press('ArrowLeft'),
+      // ArrowLeft left this list when the arrows became the nudge (brief 125); its own tests are below.
+      press('a'), press('Tab'), press('Enter'), press('PageUp'),
       press('l', { ctrlKey: true }), press('l', { metaKey: true }), press('k', { altKey: true }), press('z'),
       press(' ', { defaultPrevented: true }), press('Home', { defaultPrevented: true }),
       press('z', { metaKey: true, defaultPrevented: true }),
@@ -158,6 +177,10 @@ describe('the shell’s key dispatch', () => {
   it('point 2: a menu item keeps Space and Enter, and also Home and End; the rest still run from it', () => {
     const { ran, key } = rig();
     const place = { ...OPEN, focus: 'menuitem' as const };
+    for (const arrow of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) {
+      expect(key(press(arrow), { place }), arrow).toBe(false);
+      expect(key(press(arrow, { shiftKey: true }), { place }), `Shift+${arrow}`).toBe(false);
+    }
     expect(key(press(' '), { place })).toBe(false);
     expect(key(press('Enter'), { place })).toBe(false);
     expect(key(press('Home'), { place })).toBe(false);
@@ -188,6 +211,10 @@ describe('the shell’s key dispatch', () => {
     const place = { ...OPEN, focus: 'slider' as const };
     expect(key(press('Home'), { place })).toBe(false);
     expect(key(press('End'), { place })).toBe(false);
+    for (const arrow of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) {
+      expect(key(press(arrow), { place }), arrow).toBe(false);
+      expect(key(press(arrow, { shiftKey: true }), { place }), `Shift+${arrow}`).toBe(false);
+    }
     expect(ran).toEqual([]);
     expect(key(press(' '), { place })).toBe(true);
     expect(key(press(','), { place })).toBe(true);
@@ -263,7 +290,12 @@ describe('the shell’s key dispatch', () => {
       expect(key(press('End'), off)).toBe(true);
       expect(key(press('z', command(mac)), off)).toBe(true);
       expect(key(press('z', command(mac, true)), off)).toBe(true);
-      expect(ran).toEqual(['playPause', 'skipToStart', 'skipToEnd', 'undo', 'redo']);
+      // The Editing keys (point 7) are none of one printable character without a command key: the switch leaves them on.
+      expect(key(press('Delete'), off)).toBe(true);
+      expect(key(press('Backspace'), off)).toBe(true);
+      expect(key(press('d', command(mac)), off)).toBe(true);
+      expect(key(press('a', command(mac)), off)).toBe(true);
+      expect(ran).toEqual(['playPause', 'skipToStart', 'skipToEnd', 'undo', 'redo', 'deleteSelection', 'deleteSelection', 'duplicate', 'selectAll']);
     }
   });
 
@@ -317,9 +349,199 @@ describe('the shell’s key dispatch', () => {
   });
 });
 
+describe('the Editing keys’ one path (point 7; CORE-06, brief 123, ruling AN)', () => {
+  const editPresses = (mac: boolean) => [
+    { action: 'deleteSelection', press: press('Delete') },
+    { action: 'deleteSelection', press: press('Backspace') },
+    { action: 'duplicate', press: press('d', command(mac)) },
+    { action: 'selectAll', press: press('a', command(mac)) },
+  ];
+
+  it('calls the page’s edit once with its action and is taken when there was something to act on', () => {
+    for (const mac of PLATFORMS) {
+      for (const { action, press: pressed } of editPresses(mac)) {
+        const { ran, key } = rig();
+        expect(key(pressed, { mac }), action).toBe(true);
+        expect(ran).toEqual([action]);
+      }
+    }
+  });
+
+  it('with nothing to act on is not taken (left to the browser), its first press or a held one', () => {
+    for (const mac of PLATFORMS) {
+      for (const { action, press: pressed } of editPresses(mac)) {
+        const { ran, key } = rig({ editDoes: false });
+        expect(key(pressed, { mac }), action).toBe(false);
+        expect(key({ ...pressed, repeat: true }, { mac }), `${action} held`).toBe(false);
+        expect(ran).toEqual([action, `${action} held`]);
+      }
+    }
+  });
+
+  it('a held key is passed on as a repeat (the page acts no more) and is taken under the same condition', () => {
+    for (const mac of PLATFORMS) {
+      for (const { action, press: pressed } of editPresses(mac)) {
+        const { ran, key } = rig();
+        expect(key({ ...pressed, repeat: true }, { mac }), action).toBe(true);
+        expect(ran).toEqual([`${action} held`]);
+      }
+    }
+  });
+
+  it('is never called in typed text (Backspace and Cmd or Ctrl+A stay the field’s), in a dialog, or for a press already taken', () => {
+    for (const mac of PLATFORMS) {
+      const { ran, key } = rig();
+      for (const { press: pressed } of editPresses(mac)) {
+        expect(key(pressed, { mac, place: { ...OPEN, typing: true } })).toBe(false);
+        expect(key(pressed, { mac, place: { ...OPEN, dialogOpen: true } })).toBe(false);
+        expect(key({ ...pressed, defaultPrevented: true }, { mac })).toBe(false);
+      }
+      expect(ran).toEqual([]);
+    }
+  });
+
+  it('is called from a focused button, link, menu item or slider: none of them keeps these keys', () => {
+    for (const focus of ['button', 'link', 'menuitem', 'slider'] as const) {
+      const { ran, key } = rig();
+      for (const { press: pressed } of editPresses(true)) expect(key(pressed, { place: { ...OPEN, focus } }), focus).toBe(true);
+      expect(ran).toEqual(['deleteSelection', 'deleteSelection', 'duplicate', 'selectAll']);
+    }
+  });
+});
+
+describe('the nudge (point 7; CORE-06, brief 125, ruling AW)', () => {
+  const ARROWS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'] as const;
+  const nudgePresses = ARROWS.flatMap((arrow) => [
+    { action: 'nudge', press: press(arrow) },
+    { action: 'nudgeFurther', press: press(arrow, { shiftKey: true }) },
+  ]);
+
+  it('an arrow calls the page’s edit with the nudge, Shift with it the further nudge, handing the arrow; taken when it acted', () => {
+    for (const mac of PLATFORMS) {
+      const { ran, key, keysHanded } = rig();
+      for (const { action, press: pressed } of nudgePresses) expect(key(pressed, { mac }), action).toBe(true);
+      expect(ran).toEqual(nudgePresses.map(({ action }) => action));
+      expect(keysHanded).toEqual(nudgePresses.map(({ press: pressed }) => pressed.key));
+    }
+  });
+
+  it('a held arrow is not a repeat that acts no more: each repeat is handed on as a press (the entry repeats)', () => {
+    const { ran, key } = rig();
+    for (const { action, press: pressed } of nudgePresses) expect(key({ ...pressed, repeat: true }), action).toBe(true);
+    expect(ran).toEqual(nudgePresses.map(({ action }) => action));
+  });
+
+  it('with nothing to act on (no selection, a drag open, a begin refused) is not taken, held or not', () => {
+    const { ran, key } = rig({ editDoes: false });
+    for (const { press: pressed } of nudgePresses) {
+      expect(key(pressed)).toBe(false);
+      expect(key({ ...pressed, repeat: true })).toBe(false);
+    }
+    expect(ran).toHaveLength(nudgePresses.length * 2);
+  });
+
+  it('is never called in typed text, in a dialog, from a slider or a menu item (they keep the arrows), or for a press already taken', () => {
+    for (const mac of PLATFORMS) {
+      const { ran, key } = rig();
+      for (const { press: pressed } of nudgePresses) {
+        expect(key(pressed, { mac, place: { ...OPEN, typing: true } })).toBe(false);
+        expect(key(pressed, { mac, place: { ...OPEN, dialogOpen: true } })).toBe(false);
+        expect(key(pressed, { mac, place: { ...OPEN, focus: 'slider' } })).toBe(false);
+        expect(key(pressed, { mac, place: { ...OPEN, focus: 'menuitem' } })).toBe(false);
+        expect(key({ ...pressed, defaultPrevented: true }, { mac })).toBe(false);
+      }
+      expect(ran).toEqual([]);
+    }
+  });
+
+  it('is called from a focused button or link (they keep only Space and Enter), and with single-key shortcuts off', () => {
+    for (const focus of ['button', 'link'] as const) {
+      const { ran, key } = rig();
+      for (const { press: pressed } of nudgePresses) expect(key(pressed, { place: { ...OPEN, focus }, singleKeys: false }), focus).toBe(true);
+      expect(ran).toEqual(nudgePresses.map(({ action }) => action));
+    }
+  });
+});
+
+describe('a nudge burst ended by anything else (point 8; CORE-06, brief 125, ruling AY)', () => {
+  it('every press of the table that is not a nudge ends an open burst first, before its action runs (Undo then puts back the burst whole)', () => {
+    for (const mac of PLATFORMS) {
+      for (const { action, press: pressed } of tablePresses(mac).filter(({ action }) => action !== 'nudge' && action !== 'nudgeFurther')) {
+        const { ran, ends, key } = rig();
+        key(pressed, { mac });
+        expect(ends, action).toEqual([0]);
+        expect(ran.length, action).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it('so does a key no entry names, typed text, a press in a dialog and a press already taken', () => {
+    const { ends, key } = rig();
+    key(press('x'));
+    key(press('Tab'));
+    key(press('z'), { place: { ...OPEN, typing: true } });
+    key(press('k'), { place: { ...OPEN, dialogOpen: true } });
+    key(press('Home', { defaultPrevented: true }));
+    expect(ends).toEqual([0, 0, 0, 0, 0]);
+  });
+
+  it('a modifier key alone ends nothing, so Shift pressed during a burst does not split it', () => {
+    const { ends, key } = rig();
+    for (const name of ['Shift', 'Control', 'Meta', 'Alt']) key(press(name, { shiftKey: name === 'Shift' }));
+    expect(ends).toEqual([]);
+  });
+
+  it('a nudge taken ends nothing; a nudge not taken (a slider’s, typed text’s, or with nothing to act on) ends the burst', () => {
+    const taken = rig();
+    taken.key(press('ArrowRight'));
+    taken.key(press('ArrowDown', { shiftKey: true, repeat: true }));
+    expect(taken.ends).toEqual([]);
+    const kept = rig();
+    kept.key(press('ArrowRight'), { place: { ...OPEN, focus: 'slider' } });
+    kept.key(press('ArrowRight'), { place: { ...OPEN, typing: true } });
+    expect(kept.ends).toHaveLength(2);
+    const nothing = rig({ editDoes: false });
+    nothing.key(press('ArrowLeft'));
+    expect(nothing.ends).toEqual([1]);
+  });
+});
+
 // D207: Cmd or Ctrl+O is the editor's wherever it is pressed and is always taken, so the browser's own "Open File" never
 // opens over the editor; it opens the chooser from every kind of place, a typing field included, but not while a dialog
 // is open. What a test here cannot show: whether Chrome hands a real Cmd or Ctrl+O to the page at all.
+describe('Escape’s one path (point 6; CORE-06, brief 115, ruling U)', () => {
+  it('calls the page’s Escape once and is taken when it did something (a drag cancelled or the selection cleared)', () => {
+    for (const mac of PLATFORMS) {
+      const { ran, key } = rig();
+      expect(key(press('Escape'), { mac })).toBe(true);
+      expect(ran).toEqual(['escape']);
+    }
+  });
+
+  it('with nothing to do is not taken, its first press or a held one, with single-key shortcuts on or off', () => {
+    const { ran, key } = rig({ escapeDoes: false });
+    expect(key(press('Escape'))).toBe(false);
+    expect(key(press('Escape', { repeat: true }))).toBe(false);
+    expect(key(press('Escape'), { singleKeys: false })).toBe(false);
+    expect(ran).toEqual(['escape', 'escape', 'escape']);
+  });
+
+  it('is never called in typed text, in a dialog, for a press already taken, or with Ctrl, Cmd or Alt held', () => {
+    const { ran, key } = rig();
+    expect(key(press('Escape'), { place: { ...OPEN, typing: true } })).toBe(false);
+    expect(key(press('Escape'), { place: { ...OPEN, dialogOpen: true } })).toBe(false);
+    expect(key(press('Escape', { defaultPrevented: true }))).toBe(false);
+    for (const held of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }]) expect(key(press('Escape', held)), JSON.stringify(held)).toBe(false);
+    expect(ran).toEqual([]);
+  });
+
+  it('works with single-key shortcuts off: Escape is not one printable character', () => {
+    const { ran, key } = rig();
+    expect(key(press('Escape'), { singleKeys: false })).toBe(true);
+    expect(ran).toEqual(['escape']);
+  });
+});
+
 describe('Open project’s chord (D207)', () => {
   const kinds: readonly FocusKind[] = ['button', 'link', 'menuitem', 'slider', 'other'];
   const chord = (mac: boolean, held: Partial<Omit<KeyPress, 'key'>> = {}) => press('o', { ...command(mac), ...held });

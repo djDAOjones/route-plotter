@@ -5,6 +5,7 @@
 // `nextId` (CORE-01's hand-over). A command changes only what it names, keeping every other value and key order as it
 // was, so the project after a set of edits never depends on their order (DEF-10's lesson).
 import type { Project } from '../../adapters/io/format';
+import type { EditRefusal } from '../../core/model/commands/graph';
 import type { Checked } from '../../core/schema/check';
 import { newRoute, type IdSource, type Route, type Scene } from '../../core/model/scene';
 import type { Selection } from './selection';
@@ -21,7 +22,9 @@ type Problems = Extract<Checked<Scene>, { ok: false }>['problems'];
 export type Refusal =
   | { readonly why: 'gesture-open' | 'gesture-closed' | 'nothing-to-undo' | 'nothing-to-redo' | 'not-a-playback' }
   | { readonly why: 'missing'; readonly what: string }
-  | { readonly why: 'invalid'; readonly problems: Problems };
+  | { readonly why: 'invalid'; readonly problems: Problems }
+  /** A drawing edit the route could not take (CORE-06): the core's own refusal, naming what it refused. */
+  | { readonly why: 'refused-edit'; readonly refusal: EditRefusal };
 
 interface CommandContext {
   readonly nextId: IdSource;

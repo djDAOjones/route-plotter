@@ -3,8 +3,9 @@
 // DOM, this reads none), whether single-key shortcuts are on, and the functions the key table's actions name. It runs
 // at most one action and says whether it took the key. No DOM, no browser global, no React, so it is tested in Node,
 // on the real table: every entry, every kind of place, both switch positions. What today's table cannot show: Enter,
-// the arrows, Page Up and Page Down are kept (point 2) for entries the table does not have yet; no entry uses them, so
-// no test on the real table fails without them, and they are held by reading, not by a test.
+// Page Up and Page Down are kept (point 2) for entries the table does not have yet; no entry uses them, so no test on
+// the real table fails without them, and they are held by reading, not by a test. The arrows are the nudge's since
+// brief 125, and a test holds them kept for a slider and a menu item.
 //
 // Its claim:
 // 1. One key, at most one effect (DEF-13.1). The action the key table names for the press (`actionFor`) runs once, and
@@ -33,6 +34,26 @@
 //    and Redo, which run at each repeat as in every editor, and the frame steps `,` and `.` (D205), which step at
 //    each. Decided from the entry, not from a second list of keys; every check of points 1, 2 and 4 comes first, so a
 //    repeat is never taken where its first press would not be.
+// 6. Escape (brief 115, ruling U) has one path: its entry calls what the page hands in (`escape`: a point's drag
+//    cancelled, else the selection cleared), after points 1 and 2's checks (a press already taken, a dialog, typed
+//    text), and is taken only when that did something, its repeats too; with nothing to do it is not taken.
+// 7. The Editing entries, Delete or Backspace, Cmd or Ctrl+D and Cmd or Ctrl+A (brief 123, ruling AN), call what the
+//    page hands in (`edit`, with the action and whether the press is a held key's repeat), after points 1, 2 and 4's
+//    checks (a press already taken, a dialog, typed text: Backspace and Cmd or Ctrl+A in a text field stay the
+//    field's; none of the three is one printable character without a command key, so the switch leaves all three on).
+//    The key is taken exactly when the page says there was something to act on; with nothing, it is left to the
+//    browser (Cmd or Ctrl+D with nothing selected still bookmarks the page, Cmd or Ctrl+A still selects its text). A
+//    held key's repeat acts no more (the page's rule for an entry that does not repeat, as point 5's) and is taken
+//    under the same condition. The nudge (brief 125, ruling AW) is two more Editing entries: an arrow alone, and
+//    Shift with an arrow (the further nudge); `edit` is handed the arrow pressed. Both entries repeat, so a held
+//    arrow's repeat is handed on as a press, not as a repeat. A slider and a menu item keep the arrows (point 2),
+//    typed text and a dialog keep every key, and the arrows are not one printable character, so the switch leaves
+//    them on.
+// 8. A nudge burst (brief 125, ruling AY: the page's, one undo step for a run of nudges) is ended by any other key
+//    before anything of that key runs: every press that is not a nudge, a modifier key pressed alone excepted (so
+//    Shift pressed during a run does not split it), calls the page's `endNudge` first, whatever it then does, so Undo
+//    or Redo meets the burst closed and puts it back whole. A nudge that is not taken (a slider's arrow, typed text's,
+//    nothing to move) ends it too, afterwards.
 // It does not claim to withstand code written to break it.
 //
 // Ported from v3's guard (InteractionHandler.js 890 to 970), and where it differs:
@@ -54,7 +75,7 @@
 //   runs once, Undo, Redo and the frame steps excepted (point 5, D189, D205).
 import type { Store } from '../store/store';
 import type { EditorTransport } from '../transport/transport';
-import { actionFor, KEYS, type ActionIn, type KeyPress } from './keys';
+import { actionFor, KEYS, type ActionId, type ActionIn, type KeyPress } from './keys';
 
 /** What kind of control has focus, as far as which keys it keeps. */
 export type FocusKind = 'button' | 'link' | 'menuitem' | 'slider' | 'other';
@@ -74,15 +95,27 @@ export interface KeyDispatch {
   readonly place: PressPlace;
   /** Whether keys of one printable character are shortcuts (D183); the page holds them off until their switch. */
   readonly singleKeys: boolean;
-  readonly store: Pick<Store, Exclude<ActionIn<'General'>, 'help' | 'openProject'>>;
+  readonly store: Pick<Store, Exclude<ActionIn<'General'>, 'help' | 'openProject' | 'escape'>>;
   readonly transport: Pick<EditorTransport, ActionIn<'Playback'>>;
   /** Opens Help: the page's, handed in. */
   readonly openHelp: () => void;
   /** Opens the file chooser for a project: the Open button's own, handed in by the page. */
   readonly openProject: () => void;
+  /** Escape's one path, the page's, handed in (brief 115, ruling U): true when it cancelled a drag or cleared the selection. */
+  readonly escape: () => boolean;
+  /**
+   * The Editing entries' one path, the page's, handed in (brief 123, ruling AN): true when there was something to act
+   * on; a held key's repeat (`repeat`) acts no more but says the same. `key` is the key pressed (the nudge reads its
+   * arrow); an entry that repeats (the nudges) is never handed a repeat.
+   */
+  readonly edit: (action: ActionIn<'Editing'>, repeat: boolean, key: string) => boolean;
+  /** Ends an open nudge burst at once (point 8), the page's, handed in: nothing when none is open. */
+  readonly endNudge: () => void;
 }
 
 const ACTIVATION: readonly string[] = [' ', 'Enter'];
+/** A modifier key pressed alone: it ends no nudge burst (point 8). */
+const MODIFIER_KEYS: readonly string[] = ['Shift', 'Control', 'Meta', 'Alt', 'AltGraph', 'CapsLock', 'Fn'];
 const ARROWS: readonly string[] = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
 
 /** The keys each kind of control acts on itself, and so keeps (claim point 2). */
@@ -95,8 +128,19 @@ const KEPT: Readonly<Record<FocusKind, readonly string[]>> = Object.freeze({
 });
 
 /** Runs the action `press` means here, if any; true when one ran or a held repeat was passed over (point 5), and the listener then cancels the key. */
-export function dispatchKey({ press, mac, place, singleKeys, store, transport, openHelp, openProject }: KeyDispatch): boolean {
+export function dispatchKey(dispatch: KeyDispatch): boolean {
+  const { press, mac, endNudge } = dispatch;
   const action = actionFor(press, mac);
+  const nudge = action === 'nudge' || action === 'nudgeFurther';
+  // Any other key ends a nudge burst before anything of it runs (point 8).
+  if (!nudge && !MODIFIER_KEYS.includes(press.key)) endNudge();
+  const taken = run(dispatch, action);
+  if (nudge && !taken) endNudge();
+  return taken;
+}
+
+/** Points 1 to 7 for the action `press` means. */
+function run({ press, place, singleKeys, store, transport, openHelp, openProject, escape, edit }: KeyDispatch, action: ActionId | null): boolean {
   // Open project's chord is the editor's everywhere (point 2): taken in a dialog, where it runs nothing.
   const everywhere = action === 'openProject';
   if (place.dialogOpen) return everywhere;
@@ -105,6 +149,10 @@ export function dispatchKey({ press, mac, place, singleKeys, store, transport, o
   if (entry === undefined) return false;
   const singleKey = press.key.length === 1 && press.key !== ' ' && !entry.modifiers.includes('command');
   if (singleKey && !singleKeys) return false;
+  // Escape is taken only when it did something, held or not: with nothing to do it is left to the page (point 6).
+  if (entry.action === 'escape') return escape();
+  // The Editing entries are taken only when there was something to act on, held or not (point 7).
+  if (entry.group === 'Editing') return edit(entry.action, press.repeat && !entry.repeats, press.key);
   if (press.repeat && !entry.repeats) return true;
   if (entry.action === 'help') openHelp();
   else if (entry.action === 'openProject') openProject();

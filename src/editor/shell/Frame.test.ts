@@ -72,12 +72,11 @@ describe('the frame, as it draws', () => {
       preview: mark('preview'),
       pointsList: mark('pointsList'),
       outline: mark('outline'),
-      intro: mark('intro'),
       children: mark('after'),
       notice: mark('notice'),
       open: mark('open'),
     });
-    expect(slotsInOrder(html)).toEqual(['open', 'notice', 'outline', 'pointsList', 'intro', 'preview', 'transport', 'panels', 'exportPanel', 'after']);
+    expect(slotsInOrder(html)).toEqual(['open', 'notice', 'outline', 'pointsList', 'preview', 'transport', 'panels', 'exportPanel', 'after']);
     const order = ['<header', '<h1', 'data-slot="open"', 'id="help"', '</header>', '<main', 'data-slot="notice"', 'frame__column--left'].map((at) => html.indexOf(at));
     expect(order.every((at, i) => at >= 0 && (i === 0 || at > (order[i - 1] ?? -1)))).toBe(true);
     expect(html).toMatch(/<main[^>]*><div class="frame__notice">/);

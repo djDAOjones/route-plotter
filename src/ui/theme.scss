@@ -110,6 +110,14 @@ main {
   }
 }
 
+// Play's background is not faded (CORE-06, brief 114, ruling Q; Codex line 23). Carbon fades a button's background
+// over 70 ms but turns its text white at once, so as Play is enabled its white text stood on greys from #c6c6c6
+// (1.71:1) down to #393939: below the 7:1 enabled text is held to (1.4.6), for about four frames. Its other
+// transitions stand.
+#play-pause {
+  transition-property: box-shadow, border-color, outline;
+}
+
 // Reduced motion: Carbon's transitions stop when the user asks (the accessibility pack's SUP02).
 @media (prefers-reduced-motion: reduce) {
   *,

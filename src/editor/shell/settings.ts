@@ -38,6 +38,9 @@ function wordsFor(refusal: Refusal): string {
       return WORDS.nothingToRedo;
     case 'not-a-playback':
       return WORDS.notAPlayback;
+    case 'refused-edit':
+      // A drawing edit's refusal (CORE-06); the settings never dispatch one. Not in WORDS, which D181 agreed word for word.
+      return 'That change cannot be made on this route.';
   }
 }
 

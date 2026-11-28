@@ -5,6 +5,7 @@
 import { expect, test } from 'vitest';
 import { unitAt, type Overlay, type Screen } from '../adapters/render/overlays';
 import { Recorder } from '../adapters/render/recorder';
+import { pointAt } from '../core/geometry/path';
 import type { View } from '../core/feature/contract';
 import { newLine, newPoint, newRoute, newScene, type Route, type Scene } from '../core/model/scene';
 import { CATALOGUE, type Catalogue, type SceneFeature } from '../features/catalogue';
@@ -124,7 +125,7 @@ function both(scene: Scene, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS], r
   return { plain, added: edited.lines.slice(plain.lines.length) };
 }
 
-test('a hidden line’s guide runs on screen where the line would run, thin, dashed and half see-through, at each zoom', () => {
+test('a hidden line’s guide runs on screen where the line would run, thin and dashed, at full alpha (D266), at each zoom', () => {
   for (const [name, viewing] of Object.entries(VIEWINGS)) {
     for (const shape of [{}, { branch: true }]) {
       const hidden = sceneOf(['hidden'], shape);
@@ -134,13 +135,14 @@ test('a hidden line’s guide runs on screen where the line would run, thin, das
       const whole = draw(request(shown, { viewing: viewing.viewing }), viewing.catalogue).lines;
       sameCourse(places(added), places(whole), name);
       expect(places(added).length, name).toBeGreaterThan(20);
-      // One stroke for the route, in its colour, by unitAt (D153; D157): 2 wide, dashed 6 on and 4 off, at half alpha.
+      // One stroke for the route, in its colour, by unitAt (D153; D157): 2 wide, dashed 6 on and 4 off, at full alpha
+      // (D266's answer; the recorder writes no alpha at 1).
       const unit = unitAt(viewing.zoom);
       const [stroke, ...more] = strokes(added);
       expect(more, name).toEqual([]);
       expect(widthOf(stroke), name).toBe(2 * unit);
       expect(stroke, name).toContain(`lineDash=${6 * unit},${4 * unit}`);
-      expect(stroke, name).toContain('globalAlpha=0.5');
+      expect(stroke, name).not.toContain('globalAlpha=');
       expect(stroke, name).toContain(hidden.routes[0]?.settings.line.colour ?? 'none');
     }
   }
@@ -185,7 +187,7 @@ test('the hovered stretch glows as v3’s: white at the line’s width + 9, then
   for (const [name, viewing] of Object.entries(VIEWINGS)) {
     const scene = sceneOf(['whole']);
     const { plain, added } = both(scene, viewing, scene.routes, { hovered: hover(scene) });
-    const [white, accent, ...more] = strokes(added);
+    const [white, accent, , ...more] = strokes(added); // the third is the redraw (D208), its own test below
     expect(more, name).toEqual([]);
     // The line's width on screen is its layer's: thickness 3 × frame.scale (1 at 1080p) × the zoom; 9 and 4 by unitAt (D153).
     const line = 3 * viewing.zoom;
@@ -196,7 +198,7 @@ test('the hovered stretch glows as v3’s: white at the line’s width + 9, then
     expect(widthOf(accent), name).toBeCloseTo(line + 4 * unit, 6);
     expect(white, name).toContain('lineCap=round');
     // Along the line where its own layer draws it (within 0.1 px), and the hovered line alone, not the route's other two.
-    const glow = places(added);
+    const glow = places(added.slice(0, added.indexOf(white ?? '')));
     const drawn = places(plain.lines);
     expect(glow.filter(({ x, y }) => !drawn.some((at) => Math.hypot(at.x - x, at.y - y) <= 0.1)), name).toEqual([]);
     expect(glow.length, name).toBeGreaterThan(5);
@@ -211,7 +213,7 @@ test('the hovered stretch glows as v3’s: white at the line’s width + 9, then
 test('a hidden line hovered glows round its guide; no glow for none hovered, ids that match nothing, or another route’s line', () => {
   const viewing = VIEWINGS['a zoom of 1'];
   const hidden = sceneOf(['hidden']);
-  const [guide, white, accent, ...more] = strokes(both(hidden, viewing, hidden.routes, { hovered: hover(hidden) }).added);
+  const [guide, white, accent, , ...more] = strokes(both(hidden, viewing, hidden.routes, { hovered: hover(hidden) }).added); // then the redraw (D208)
   expect(guide).toContain('lineDash=');
   expect(more).toEqual([]);
   // The guide's 2 wide, not the hidden line's thickness, under v3's 9 and 4.
@@ -224,13 +226,72 @@ test('a hidden line hovered glows round its guide; no glow for none hovered, ids
   expect(glows({ routeId: first?.id ?? '', lineId: 'no-such-line', plus: 'idle' })).toEqual([]);
   expect(glows({ routeId: first?.id ?? '', lineId: second?.lines[0]?.id ?? '', plus: 'idle' })).toEqual([]);
   // The stretch names its own route: it glows whether or not its route is among those whose guides are asked for.
-  expect(glows(hover(two, 'none', 0, 1), [])).toHaveLength(2);
+  expect(glows(hover(two, 'none', 0, 1), [])).toHaveLength(3); // the glow's two and the redraw (D208)
   // A thickness not a number gives no width: nothing drawn, nothing thrown.
   const odd = { ...two, routes: two.routes.map((route) => ({ ...route, settings: { ...route.settings, line: { ...route.settings.line, thickness: Number.NaN } } })) };
   const plain = draw(request(odd), viewing.catalogue);
   const edited = draw(request(odd, { overlays: [OVERLAY_MAKERS.lines([], { hovered: hover(odd) })] }), viewing.catalogue);
   expect(strokes(edited.lines.slice(plain.lines.length))).toEqual([]);
   expect(edited.reports).toEqual(plain.reports);
+});
+
+test('D208: over its glow the hovered stretch is redrawn whole as its own line: the route’s colour, full alpha, its width and dash on screen, round', () => {
+  for (const [name, viewing] of Object.entries(VIEWINGS)) {
+    const scene = sceneOf(['whole']);
+    const colour = scene.routes[0]?.settings.line.colour ?? 'none';
+    const { plain, added } = both(scene, viewing, scene.routes, { hovered: hover(scene, 'idle') });
+    const [white, accent, line, ...more] = strokes(added);
+    expect([white?.includes('rgba(255, 255, 255, 0.85)'), accent?.includes('rgba(15, 98, 254, 0.45)')], name).toEqual([true, true]);
+    // The redraw comes after the glow and before the "+" (its edge and arms the two strokes left).
+    expect(more, name).toHaveLength(2);
+    expect(added.indexOf(line ?? ''), name).toBeLessThan(added.findIndex((call) => call.startsWith('arc ')));
+    // The line's own look: its colour at full alpha, its layer's width on screen (thickness 3 × frame.scale 1 × the zoom),
+    // solid as its layer draws it (the model holds no dash yet: no lineDash), round caps and joins.
+    const own = strokes(plain.lines)[0] ?? '';
+    expect(line, name).toContain(colour);
+    expect(line, name).not.toContain('globalAlpha=');
+    expect(widthOf(line), name).toBeCloseTo(3 * viewing.zoom, 6);
+    expect([own.includes('lineDash='), line?.includes('lineDash=')], name).toEqual([false, false]);
+    expect(line, name).toContain('lineCap=round');
+    expect(line, name).toContain('lineJoin=round');
+    // The whole stretch (D253): the redraw's course is the glow's, place by place.
+    const glowed = places(added.slice(0, added.indexOf(white ?? '')));
+    const redrawn = places(added.slice(added.indexOf(accent ?? '') + 1, added.indexOf(line ?? '')));
+    expect(glowed.length, name).toBeGreaterThan(5);
+    alongside(redrawn, glowed, name);
+    // A line shown only in part (it grows, and the lead is part way along the stretch at this moment) is still redrawn
+    // whole (Codex list line 30): its redraw goes through every place of the same stretch redrawn where the line shows whole.
+    const growing = sceneOf(['grows']);
+    const shownWhole = { ...growing, routes: growing.routes.map((route) => ({ ...route, settings: { ...route.settings, line: { ...route.settings.line, appearance: 'whole' as const } } })) };
+    const redrawOf = (made: Scene) => {
+      const ask = (extra: Partial<FrameRequest>) => draw(request(made, { sceneMs: 5_000, viewing: viewing.viewing, ...extra }), viewing.catalogue);
+      const bare = ask({});
+      const lines = ask({ overlays: [OVERLAY_MAKERS.lines([], { hovered: hover(made) })] }).lines.slice(bare.lines.length);
+      const [, glowTop, own] = strokes(lines);
+      return { bare: places(bare.lines), redrawn: places(lines.slice(lines.indexOf(glowTop ?? '') + 1, lines.indexOf(own ?? ''))) };
+    };
+    const whole = redrawOf(shownWhole).redrawn;
+    const part = redrawOf(growing);
+    const shown = whole.filter(({ x, y }) => part.bare.some((at) => Math.hypot(at.x - x, at.y - y) <= 0.1));
+    // The frame draws the stretch only in part: some of its places, not all.
+    expect([shown.length > 0, shown.length < whole.length], name).toEqual([true, true]);
+    expect(whole.length, name).toBeGreaterThan(5);
+    alongside(part.redrawn, whole, name);
+  }
+  // A hidden line's stretch is redrawn in the guide's look, over its halo: 2 wide, dashed 6 on and 4 off, full alpha (D266).
+  const viewing = VIEWINGS['a zoom of 1'];
+  const hidden = sceneOf(['hidden']);
+  const [, , , again, ...rest] = strokes(both(hidden, viewing, hidden.routes, { hovered: hover(hidden) }).added);
+  expect(rest).toEqual([]);
+  expect(widthOf(again)).toBe(2);
+  expect(again).toContain('lineDash=6,4');
+  expect(again).not.toContain('globalAlpha=');
+  expect(again).not.toContain('lineCap=round');
+  expect(again).toContain(hidden.routes[0]?.settings.line.colour ?? 'none');
+  // Nothing hovered: no redraw, as no glow.
+  const scene = sceneOf(['whole']);
+  expect(strokes(both(scene, viewing, scene.routes, { hovered: null }).added)).toEqual([]);
+  expect(strokes(both(scene, viewing).added)).toEqual([]);
 });
 
 test('the "+" sits at the hovered stretch’s middle, after the glow: radius 9, 11 with the pointer on it, none with no insert (:401–450)', () => {
@@ -245,11 +306,11 @@ test('the "+" sits at the hovered stretch’s middle, after the glow: radius 9, 
       const [arc, ...others] = arcs(added);
       expect(others, name).toEqual([]);
       const first = added.indexOf(arc ?? '');
-      // The glow's two strokes come first; the "+" is its disc, then its arms.
-      expect(strokes(added.slice(0, first)), name).toHaveLength(2);
+      // The glow's two strokes come first, then the redraw (D208); the "+" is its disc, then its arms.
+      expect(strokes(added.slice(0, first)), name).toHaveLength(3);
       expect(Number(arc?.split(' ')[3]), name).toBeCloseTo(radius * unit, 6);
       // The middle by index of the stretch's samples, as placed on screen (the glow's own places).
-      const glow = places(added.slice(0, first));
+      const glow = places(added.slice(0, added.indexOf(strokes(added)[0] ?? '')));
       const [a, b] = [glow[Math.floor((glow.length - 1) / 2)], glow[Math.ceil((glow.length - 1) / 2)]];
       const [centre] = places([(arc ?? '').replace(/^arc /, 'moveTo ')]);
       expect(Math.hypot(((a?.x ?? 0) + (b?.x ?? 0)) / 2 - (centre?.x ?? 0), ((a?.y ?? 0) + (b?.y ?? 0)) / 2 - (centre?.y ?? 0)), name).toBeLessThan(0.1);
@@ -318,7 +379,7 @@ test('drawn straight onto a dirtied canvas, the lines’ overlay sets every styl
   const before = context.state();
   expect(before.path.length).toBeGreaterThan(0);
   const clean = onto(new Recorder());
-  expect(strokes(clean)).toHaveLength(5); // the guide, the glow's two, the "+"'s edge and arms
+  expect(strokes(clean)).toHaveLength(6); // the guide, the glow's two, the redraw (D208), the "+"'s edge and arms
   expect(onto(context)).toEqual(clean);
   expect(context.state()).toEqual({ ...before, path: [] });
   // A hovered line of no sample or one: neither glow nor "+" (no guide is asked for).
@@ -334,8 +395,8 @@ test('drawn straight onto a dirtied canvas, the lines’ overlay sets every styl
   }
 });
 
-test('the glow alone, onto a canvas with a path left open, strokes the stretch and nothing else, twice, and leaves no path', () => {
-  // No guide clears the open path before the glow and no "+" clears it after: the glow's own two beginPath() calls alone.
+test('the glow alone, onto a canvas with a path left open, strokes the stretch and nothing else, twice, then the redraw, and leaves no path', () => {
+  // No guide clears the open path before the glow and no "+" clears it after: the glow's and the redraw's own beginPath() calls alone.
   const scene = sceneOf(['hidden', 'whole'], { branch: true });
   for (const open of [false, true]) {
     const context = new Watching();
@@ -345,7 +406,7 @@ test('the glow alone, onto a canvas with a path left open, strokes the stretch a
     }
     const { stroked, left, course } = glowOnto(context, scene, 3, 1);
     expect(course.length, String(open)).toBeGreaterThan(1);
-    expect(stroked, String(open)).toHaveLength(2);
+    expect(stroked, String(open)).toHaveLength(3); // the glow's two, the redraw (D208)
     for (const [i, path] of stroked.entries()) strokesAlong(path, course, `${open ? 'a path open' : 'clean'}, stroke ${i}`);
     expect(left, String(open)).toEqual([]);
   }
@@ -355,7 +416,7 @@ test('a branch hovered glows along the branch alone; the line’s width is its l
   const viewing = VIEWINGS['a zoom of 1'];
   const scene = sceneOf(['whole'], { branch: true });
   const { plain, added } = both(scene, viewing, scene.routes, { hovered: hover(scene, 'none', 3) });
-  const glow = places(added);
+  const glow = places(added.slice(0, added.indexOf(strokes(added)[0] ?? '')));
   const drawn = places(plain.lines);
   expect(glow.filter(({ x, y }) => !drawn.some((at) => Math.hypot(at.x - x, at.y - y) <= 0.1))).toEqual([]);
   // Its whole course is the branch's own line (index 3), place by place: nothing of the trunk, between the ends or beyond.
@@ -365,7 +426,7 @@ test('a branch hovered glows along the branch alone; the line’s width is its l
   const [white, blue] = strokes(added);
   expect([white, blue].map(widthOf)).toEqual([12, 7]);
   expect([white?.includes('rgba(255, 255, 255, 0.85)'), blue?.includes('rgba(15, 98, 254, 0.45)')]).toEqual([true, true]);
-  expect(stroked).toHaveLength(2);
+  expect(stroked).toHaveLength(3); // the glow's two, the redraw (D208), each along that course
   for (const [i, path] of stroked.entries()) strokesAlong(path, course, `stroke ${i}`);
   // From the third point (0.6, 0.55) to the fifth (0.7, 0.8), on the picture drawn 1,440 wide from x = 240.
   const ends = [glow[0], glow[glow.length - 1]].map((at) => [Math.round(at?.x ?? 0), Math.round(at?.y ?? 0)]);
@@ -376,5 +437,199 @@ test('a branch hovered glows along the branch alone; the line’s width is its l
   const edited = draw(request(scene, { size, overlays: [OVERLAY_MAKERS.lines([], { hovered: hover(scene) })] }), viewing.catalogue);
   const line = widthOf(strokes(big.lines)[0]);
   expect(line).toBe(6);
-  expect(strokes(edited.lines.slice(big.lines.length)).map(widthOf)).toEqual([line + 9, line + 4]);
+  expect(strokes(edited.lines.slice(big.lines.length)).map(widthOf)).toEqual([line + 9, line + 4, line]); // the redraw at the line's own
+});
+
+/** The guide while paused (D265) for every route of the scene, as the editor asks for it: the lines it adds to the frame. */
+function guided(scene: Scene, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS]): string[] & { line: { x: number; y: number }[] } {
+  const ids = scene.routes.map((route) => route.id);
+  const plain = draw(request(scene, { viewing: viewing.viewing }), viewing.catalogue);
+  const edited = draw(request(scene, { viewing: viewing.viewing, overlays: [OVERLAY_MAKERS.guideLines(ids)] }), viewing.catalogue);
+  expect(edited.lines.slice(0, plain.lines.length)).toEqual(plain.lines);
+  expect(edited.reports).toEqual([]);
+  // The scene's routes are drawn `whole`, so the frame without overlays holds every line where it runs.
+  return Object.assign(edited.lines.slice(plain.lines.length), { line: places(plain.lines) });
+}
+
+/** Each stroke of `lines` with the places of the path it strokes. */
+function sections(lines: readonly string[]): { stroke: string; at: { x: number; y: number }[] }[] {
+  const out: { stroke: string; at: { x: number; y: number }[] }[] = [];
+  let path: string[] = [];
+  for (const line of lines) {
+    if (line.startsWith('stroke ')) {
+      out.push({ stroke: line, at: places(path) });
+      path = [];
+    } else path.push(line);
+  }
+  return out;
+}
+
+/** The guide's own strokes, dashed or dotted, leaving out the way arrows' white edges (D275), which carry no dash. */
+const guideStrokes = (lines: readonly string[]) => sections(lines).filter((each) => each.stroke.includes('lineDash='));
+
+/** The way arrows among `lines` (D275): each fill, the corners of the path it fills on screen, and the stroke that edges it. */
+function arrowsIn(lines: readonly string[]): { corners: { x: number; y: number }[]; fill: string; edge: string }[] {
+  const out: { corners: { x: number; y: number }[]; fill: string; edge: string }[] = [];
+  let path: string[] = [];
+  for (const [i, line] of lines.entries()) {
+    if (line === 'beginPath') path = [];
+    else if (line.startsWith('fill ')) out.push({ corners: places(path), fill: line, edge: lines[i + 1] ?? '' });
+    else path.push(line);
+  }
+  return out;
+}
+
+/** The scene's one route (a stop, a bend, two stops, and a fifth point off the third), its lead start set to the point at `startAt` (none for null). */
+function ledFrom(startAt: number | null): Scene {
+  const scene = sceneOf(['whole'], { branch: true });
+  return { ...scene, routes: scene.routes.map((route) => ({ ...route, leadStart: startAt === null ? null : (route.points[startAt]?.id ?? '') })) };
+}
+
+test('paused, the lines the lead does not walk are drawn dotted at the route’s full colour, the walked ones dashed as before (D273 part 1)', () => {
+  for (const [name, viewing] of Object.entries(VIEWINGS)) {
+    const unit = unitAt(viewing.zoom);
+    const colour = ledFrom(0).routes[0]?.settings.line.colour ?? 'none';
+    // Led from the second point, the one-way first line points back at it: the lead cannot reach it.
+    const route = ledFrom(1).routes[0];
+    expect(route?.lines.length, name).toBe(4);
+    const [walked, dotted, ...more] = guideStrokes(guided(ledFrom(1), viewing));
+    expect(more, name).toEqual([]);
+    // The walked lines: one stroke in the guide's look, as before (2 wide, dashed 6 on and 4 off, butt caps).
+    expect(widthOf(walked?.stroke), name).toBe(2 * unit);
+    expect(walked?.stroke, name).toContain(`lineDash=${6 * unit},${4 * unit}`);
+    expect(walked?.stroke, name).not.toContain('lineCap=');
+    expect(walked?.stroke, name).toContain(colour);
+    // The left-out line: one stroke, 3 wide, round dots every 8, round joins, the route's colour at full alpha.
+    expect(widthOf(dotted?.stroke), name).toBe(3 * unit);
+    expect(dotted?.stroke, name).toContain(`lineDash=0,${8 * unit}`);
+    expect(dotted?.stroke, name).toContain('lineCap=round');
+    expect(dotted?.stroke, name).toContain('lineJoin=round');
+    expect(dotted?.stroke, name).not.toContain('globalAlpha=');
+    expect(dotted?.stroke, name).toContain(colour);
+    // Together they run where the route's lines run, drawn whole by the line's own layer in the same frame.
+    sameCourse([...(walked?.at ?? []), ...(dotted?.at ?? [])], guided(ledFrom(1), viewing).line, name);
+    expect(dotted?.at.length, name).toBeGreaterThan(1);
+    expect(walked?.at.length, name).toBeGreaterThan(dotted?.at.length ?? 0);
+  }
+  // At a zoom of 1 the dotted course is the first line's (it lies left of the second point; every walked line right of it).
+  const [walked, dotted] = guideStrokes(guided(ledFrom(1), VIEWINGS['a zoom of 1']));
+  const left = Math.max(...(dotted?.at ?? []).map(({ x }) => x));
+  expect(left).toBeLessThanOrEqual(Math.min(...(walked?.at ?? []).map(({ x }) => x)) + 0.5);
+});
+
+test('a route the lead walks whole draws one dashed stroke as before; a loop’s closing line is dotted; with no lead start every line is dotted', () => {
+  const viewing = VIEWINGS['a zoom of 1'];
+  const unit = unitAt(viewing.zoom);
+  const plainly = guided(ledFrom(0), viewing);
+  const whole = guideStrokes(plainly);
+  expect(whole).toHaveLength(1);
+  sameCourse(whole[0]?.at ?? [], plainly.line, 'the lead walks every line');
+  expect(whole[0]?.stroke).toContain(`lineDash=${6 * unit},${4 * unit}`);
+  expect(whole[0]?.stroke).not.toContain('lineCap=');
+  // A loop: the last stop joined back to the first by a one-way line; the lead walks round and leaves that line out.
+  const plain = ledFrom(0);
+  const closed = { ...plain, routes: plain.routes.map((route) => ({ ...route, lines: [...route.lines, newLine(() => 'closer', route.points[3]?.id ?? '', route.points[0]?.id ?? '')] })) };
+  const looped = guided(closed, viewing);
+  const [walked, closer, ...more] = guideStrokes(looped);
+  expect(more).toEqual([]);
+  sameCourse([...(walked?.at ?? []), ...(closer?.at ?? [])], looped.line, 'the loop');
+  expect(walked?.stroke).toContain(`lineDash=${6 * unit},${4 * unit}`);
+  expect(closer?.stroke).toContain(`lineDash=0,${8 * unit}`);
+  expect(closer?.at.length).toBeGreaterThan(1);
+  // No lead start: the lead walks nothing, so the one stroke is dotted.
+  const unled = guided(ledFrom(null), viewing);
+  const none = guideStrokes(unled);
+  expect(none).toHaveLength(1);
+  expect(none[0]?.stroke).toContain(`lineDash=0,${8 * unit}`);
+  expect(none[0]?.stroke).toContain('lineCap=round');
+  sameCourse(none[0]?.at ?? [], unled.line, 'no lead start');
+});
+
+test('a hidden line’s guide (lineOverlay) stays one dashed stroke when the lead leaves a line out: the dots are the paused guide’s alone', () => {
+  const led = ledFrom(1);
+  const hidden = { ...led, routes: led.routes.map((route) => ({ ...route, settings: { ...route.settings, line: { ...route.settings.line, appearance: 'hidden' as const } } })) };
+  const [stroke, ...more] = strokes(both(hidden, VIEWINGS['a zoom of 1']).added);
+  expect(more).toEqual([]);
+  expect(stroke).toContain(`lineDash=${6 * unitAt(1)},${4 * unitAt(1)}`);
+  expect(stroke).not.toContain('lineCap=');
+});
+
+/** The frame and screen the composer hands each overlay for `scene` under a viewing. */
+function handedUnder(scene: Scene, viewing: (typeof VIEWINGS)[keyof typeof VIEWINGS]): Parameters<Overlay> extends [unknown, ...infer Rest] ? Rest : never {
+  const seen: Parameters<Overlay>[] = [];
+  draw(request(scene, { viewing: viewing.viewing, overlays: [(...args) => void seen.push(args)] }), viewing.catalogue);
+  const [, frame, screen] = seen[0] ?? [];
+  if (frame === undefined || screen === undefined) throw new Error('no overlay was handed a frame');
+  return [frame, screen];
+}
+
+/** An arrow's middle and way from its corners (the kit's wayArrow): tip = at + way × size, back = at − way × 0.6 × size. The recorder writes places to a few decimals, so read to 0.01. */
+function arrowOf(corners: readonly { x: number; y: number }[]) {
+  const [tip, one, two] = corners;
+  if (tip === undefined || one === undefined || two === undefined) throw new Error('an arrow of fewer than three corners');
+  const back = { x: (one.x + two.x) / 2, y: (one.y + two.y) / 2 };
+  const reach = Math.hypot(tip.x - back.x, tip.y - back.y);
+  const way = { x: (tip.x - back.x) / reach, y: (tip.y - back.y) / reach };
+  return { at: { x: tip.x - (tip.x - back.x) / 1.6, y: tip.y - (tip.y - back.y) / 1.6 }, way, size: reach / 1.6 };
+}
+
+test('paused, every one-way line carries one arrow two thirds along, pointing from its first point to its second; a two-way line none (D275)', () => {
+  for (const [name, viewing] of Object.entries(VIEWINGS)) {
+    const unit = unitAt(viewing.zoom);
+    const led = ledFrom(0);
+    // The third line runs both ways: no arrow on it.
+    const scene = { ...led, routes: led.routes.map((route) => ({ ...route, lines: route.lines.map((line, i) => (i === 2 ? { ...line, direction: 'both ways' as const } : line)) })) };
+    const route = scene.routes[0];
+    if (route === undefined) throw new Error('no route');
+    const [, screen] = handedUnder(scene, viewing);
+    const held = screen.routes.get(route.id);
+    if (held === undefined) throw new Error('the frame holds no route');
+    const oneWay = route.lines.filter((line) => line.direction === 'one way');
+    expect(oneWay, name).toHaveLength(3);
+    const arrows = arrowsIn(guided(scene, viewing));
+    expect(arrows, name).toHaveLength(oneWay.length);
+    for (const [i, line] of oneWay.entries()) {
+      const arrow = arrows[i];
+      if (arrow === undefined) throw new Error(`no arrow for line ${i}`);
+      const { at, way, size } = arrowOf(arrow.corners);
+      // v3's size 7 and edge 1.5, by unitAt(zoom); the route's colour at full alpha, edged white.
+      expect(size, name).toBeCloseTo(7 * unit, 2);
+      expect(arrow.fill, name).toContain(`fillStyle=${route.settings.line.colour}`);
+      expect(arrow.fill, name).not.toContain('globalAlpha=');
+      expect(arrow.edge, name).toContain('strokeStyle=#ffffff');
+      expect(arrow.edge, name).toContain(`lineWidth=${1.5 * unit}`);
+      // Two thirds along the line's samples by index, as the frame holds them.
+      const samples = held.timeline.shapes.get(line.id)?.samples ?? [];
+      const middle = pointAt(samples, 2 / 3);
+      const expected = middle === null ? null : screen.place(middle);
+      expect(expected, name).not.toBeNull();
+      expect(at.x, name).toBeCloseTo(expected?.x ?? Number.NaN, 2);
+      expect(at.y, name).toBeCloseTo(expected?.y ?? Number.NaN, 2);
+      // Pointing from the line's first point to its second, and nearer its second (the "+" sits at the middle).
+      const [from, to] = [line.from, line.to].map((id) => route.points.find((point) => point.id === id)).map((point) => (point ? screen.place(point) : null));
+      if (!from || !to) throw new Error('a line’s point is not on screen');
+      expect(way.x * (to.x - from.x) + way.y * (to.y - from.y), name).toBeGreaterThan(0);
+      expect(Math.hypot(at.x - to.x, at.y - to.y), name).toBeLessThan(Math.hypot(at.x - from.x, at.y - from.y));
+    }
+  }
+  // `guided` checks that the frame asked for without the overlay (a video, the player, the editor while playing) is the
+  // beginning of the frame asked for with it: the arrows are the overlay's alone, asked for only while paused
+  // (previewLogic.test.ts holds that the editor asks for the guide only while not playing).
+});
+
+test('a one-way line the lead does not walk points its own way, from its first point to its second (D275)', () => {
+  const viewing = VIEWINGS['a zoom of 1'];
+  // Led from the second point, the one-way first line points back at it: the lead cannot reach it.
+  const scene = ledFrom(1);
+  const route = scene.routes[0];
+  const first = route?.lines[0];
+  if (route === undefined || first === undefined) throw new Error('no route');
+  const [, screen] = handedUnder(scene, viewing);
+  expect(screen.routes.get(route.id)?.timeline.walk.leftOut).toEqual([first.id]);
+  const arrows = arrowsIn(guided(scene, viewing));
+  expect(arrows).toHaveLength(route.lines.length);
+  const { way } = arrowOf(arrows[0]?.corners ?? []);
+  const [from, to] = [first.from, first.to].map((id) => route.points.find((point) => point.id === id)).map((point) => (point ? screen.place(point) : null));
+  if (!from || !to) throw new Error('a line’s point is not on screen');
+  expect(way.x * (to.x - from.x) + way.y * (to.y - from.y)).toBeGreaterThan(0);
 });

@@ -19,7 +19,7 @@ describe('Help, as it draws', () => {
     for (const mac of [true, false]) {
       const html = draw(true, mac);
       expect(html).toMatch(/<h2[^>]*>Help<\/h2>/);
-      expect([...html.matchAll(/<caption>([^<]*)<\/caption>/g)].map((m) => m[1])).toEqual(['Playback', 'General']);
+      expect([...html.matchAll(/<caption>([^<]*)<\/caption>/g)].map((m) => m[1])).toEqual(['Playback', 'General', 'Editing']);
       const rows = [...html.matchAll(/<tr><th scope="row">([^<]*)<\/th><td>(.*?)<\/td><\/tr>/g)];
       expect(rows.map((m) => m[1])).toEqual(helpRows(mac).map(({ words }) => words));
       rows.forEach((m, i) => {
@@ -40,8 +40,11 @@ describe('Help, as it draws', () => {
 
   it('names in the sentence every key of one character the table has, and nothing else is a single key', () => {
     expect(singleKeysShown(true)).toEqual(['K', 'J', 'L', '<', '>', ',', '.', '?']);
+    // The Editing keys (brief 123, ruling AM) are none of one printable character without a command key: the switch leaves them on.
+    expect(singleKeysShown(false)).toEqual(['K', 'J', 'L', '<', '>', ',', '.', '?']);
     expect(switchHelp(true)).toBe(
-      'Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Open project, Undo and Redo keep working.',
+      'Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Delete, Backspace, Open project, Undo, Redo, ' +
+        'Duplicate and Select all keep working.',
     );
   });
 

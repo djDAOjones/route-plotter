@@ -4,8 +4,11 @@
 // to 1041; Undo and Redo, keybindings.js 295 to 308) and help's `?` (keybindings.js 316 to 322, "Open help"), save that
 // `,` and `.` now do what v3's table said: step one frame back and forward (D205, the owner's choice of 24 Nov), while
 // Home and `<`, End and `>` still skip; and Cmd or Ctrl+O, "Open project" (D207, the owner's choice of 24 Nov; v3 had
-// no key for it), which opens the Open button's own file chooser. Nothing else yet: Escape and the canvas's keys come with the stages that give
-// them something to do.
+// no key for it), which opens the Open button's own file chooser. CORE-06 added Escape (brief 115) and a third group,
+// Editing (brief 123, ruling AM; v3's InteractionHandler.js 995 to 998 and 1055 to 1059, keybindings.js 134 to 140):
+// Delete or Backspace deletes the selected points, Cmd or Ctrl+D duplicates them, Cmd or Ctrl+A selects all points.
+// Brief 125 (ruling AW; v3's InteractionHandler.js 970 to 992) added the nudge to Editing: an arrow alone nudges the
+// selected points, Shift with an arrow nudges them further; both repeat while held (one burst, one step: dom.ts).
 //
 // A press is given by shape (a real KeyboardEvent fits; a test needs none), and whether the machine is a Mac is handed
 // in: the module names no browser global. The shell binds each action's id to a function of the same name (the
@@ -14,7 +17,11 @@
 // How a press is matched:
 // - An entry with no modifier (every playback key) matches only when Ctrl, Cmd and Alt are all up, so no shortcut
 //   takes a browser chord such as Ctrl or Cmd with L (DEF-63; v3 answered `l` whatever was held). Shift is not asked:
-//   `<` and `>` need it on most keyboards, and v3 let Shift with any of these through.
+//   `<` and `>` need it on most keyboards, and v3 let Shift with any of these through. One exception: a key that an
+//   entry with Shift and no command key also names (the arrows: the further nudge) is matched by that entry with
+//   Shift held and by the plain one only with Shift up, so a press still matches at most one entry.
+// - An entry that declares Shift and no command key (the further nudge) matches only with Shift held, Ctrl, Cmd and
+//   Alt up.
 // - `command` is Cmd on a Mac and Ctrl elsewhere (v3's `meta`); an entry that declares it matches only when exactly
 //   that key is held, the other and Alt up, and Shift as the entry declares it (Open project and Undo without, Redo
 //   with).
@@ -31,7 +38,7 @@
 type Modifier = 'command' | 'shift';
 
 /** Where help lists an action. */
-type Group = 'Playback' | 'General';
+type Group = 'Playback' | 'General' | 'Editing';
 
 interface KeyEntry<A extends string = ActionId, G extends Group = Group> {
   readonly action: A;
@@ -71,6 +78,9 @@ const entry = <A extends string, G extends Group>(
 ): KeyEntry<A, G> =>
   Object.freeze({ action, keys: Object.freeze([...keys]), modifiers: Object.freeze([...modifiers]), words, group, repeats });
 
+/** The arrows, as a KeyboardEvent names them. */
+const ARROW_KEYS: readonly string[] = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+
 /** The table: one entry per action. */
 export const KEYS = Object.freeze([
   entry('playPause', [' ', 'k'], 'Play/pause', 'Playback'),
@@ -84,6 +94,12 @@ export const KEYS = Object.freeze([
   entry('undo', ['z'], 'Undo', 'General', ['command'], true),
   entry('redo', ['z'], 'Redo', 'General', ['command', 'shift'], true),
   entry('help', ['?'], 'Open help', 'General'),
+  entry('escape', ['Escape'], 'Cancel a point drag, or clear the selection', 'General'),
+  entry('deleteSelection', ['Delete', 'Backspace'], 'Delete the selected points', 'Editing'),
+  entry('duplicate', ['d'], 'Duplicate the selected points', 'Editing', ['command']),
+  entry('selectAll', ['a'], 'Select all points', 'Editing', ['command']),
+  entry('nudge', ARROW_KEYS, 'Nudge the selected points', 'Editing', [], true),
+  entry('nudgeFurther', ARROW_KEYS, 'Nudge them further', 'Editing', ['shift'], true),
 ]);
 
 /** Every action a key may ask for, read from the table: the shell binds each to a function of the same name. */
@@ -92,11 +108,20 @@ export type ActionId = (typeof KEYS)[number]['action'];
 /** The actions help lists in `group`, read from the table's rows. */
 export type ActionIn<G extends Group> = Extract<(typeof KEYS)[number], { readonly group: G }>['action'];
 
+/** The keys an entry with Shift and no command key names: Shift with one of them is that entry's alone. */
+const SHIFTED: ReadonlySet<string> = new Set(
+  KEYS.filter(({ modifiers }) => modifiers.includes('shift') && !modifiers.includes('command')).flatMap(({ keys }) => keys),
+);
+
 /** Whether `entry` takes `press` on this machine; dispatch gives the first that does. */
 export function matches({ keys, modifiers }: KeyEntry, press: KeyPress, mac: boolean): boolean {
   const key = press.key.length === 1 ? press.key.toLowerCase() : press.key;
   if (!keys.includes(key) || press.altKey) return false;
-  if (!modifiers.includes('command')) return !press.ctrlKey && !press.metaKey;
+  if (!modifiers.includes('command')) {
+    if (press.ctrlKey || press.metaKey) return false;
+    if (modifiers.includes('shift')) return press.shiftKey;
+    return !press.shiftKey || !SHIFTED.has(key);
+  }
   const [held, other] = mac ? [press.metaKey, press.ctrlKey] : [press.ctrlKey, press.metaKey];
   return held && !other && press.shiftKey === modifiers.includes('shift');
 }
@@ -107,7 +132,13 @@ export function actionFor(press: KeyPress, mac: boolean): ActionId | null {
   return KEYS.find((candidate) => matches(candidate, press, mac))?.action ?? null;
 }
 
-const SHOWN: Readonly<Record<string, string>> = { ' ': 'Space' };
+const SHOWN: Readonly<Record<string, string>> = {
+  ' ': 'Space',
+  ArrowLeft: 'Left arrow',
+  ArrowRight: 'Right arrow',
+  ArrowUp: 'Up arrow',
+  ArrowDown: 'Down arrow',
+};
 
 function shown(key: string, modifiers: readonly Modifier[], mac: boolean): string {
   const name = SHOWN[key] ?? (key.length === 1 ? key.toUpperCase() : key);

@@ -60,7 +60,7 @@ export const test = base.extend<{ a11yBrowser: void }>({
 });
 export { expect };
 
-export type State = { name?: string; path: string; setAside?: { selector: string; reason: string; count: number }[]; setup?: (a: { page: Page }) => Promise<void>; snapshot?: string; snapshotRoot?: string; interactions?: { name: string; run: (a: { page: Page }) => Promise<void>; snapshot?: string }[]; keeps?: { content?: string[]; cues?: string[]; functions?: { name: string; run: (a: { page: Page }) => Promise<boolean> }[] } };
+export type State = { name?: string; path: string; setAside?: { selector: string; reason: string; count: number; measure?: (a: { page: Page }) => Promise<{ mark: string; ratio: number }[]> }[]; setup?: (a: { page: Page }) => Promise<void>; snapshot?: string; snapshotRoot?: string; interactions?: { name: string; run: (a: { page: Page }) => Promise<void>; snapshot?: string }[]; keeps?: { content?: string[]; cues?: string[]; functions?: { name: string; run: (a: { page: Page }) => Promise<boolean> }[] } };
 export async function open(page: Page, state: State) {
   await page.goto(state.path);
   if (state.setup) await state.setup({ page });
@@ -327,13 +327,33 @@ export async function contrastRows(page: Page, state: State): Promise<Rows> {
   // of graphics standing in it here (none is this same failure), or one that holds a control's own graphic, fails the
   // row, so none can linger, stand empty or grow unseen.
   const misdeclared = [...declared.flatMap((d, i) => [...(d.reason?.trim() ? [] : [`set aside ${d.selector}: no reason given`]), ...(setAside[i] === d.count ? [] : [`set aside ${d.selector} on state ${state.name ?? state.path}: ${setAside[i]} raster or canvas graphic(s) found, ${d.count} declared`])]), ...asideControl];
-  const asideWords = declared.length ? `; ${setAside.reduce((a, b) => a + b, 0)} raster or canvas graphic(s) set aside, not measured: ${declared.map((d, i) => `${d.selector} (${setAside[i]}), ${d.reason}`).join('; ')}` : '';
   const short = (r: number) => r.toFixed(2);
   const nativeLow: string[] = [];
   for (const n of native) { const [i, el] = n.split(' '); if (!(await ink(page, page.locator(`[data-a11y-ink="${i}"]`)))) nativeLow.push(`${el}: no pixel at 3:1 against its surround`); }
   await page.evaluate(() => document.querySelectorAll('[data-a11y-ink]').forEach((e) => e.removeAttribute('data-a11y-ink')));
   const cues = await stateCues(page, state);
-  const fail1411 = [...misdeclared, ...boundaries.filter((b) => b.ratio < 3).map((b) => `${b.el} boundary ${short(b.ratio)}:1`), ...nativeLow, ...graphics.filter((g) => g.state === 'fail').map((g) => `${g.el}: ${g.reason}`), ...cues.fails];
+  // A declaration may carry a measure (brief 117, D252): what it reads of the marks drawn in what it sets aside, each
+  // mark with its ratio. It runs after every other reading here, so a press it makes changes none of them. Every
+  // reading under 3:1 (1.4.11's ratio, the same at AA and AAA) fails the row naming the selector, the mark and the
+  // ratio; so does a ratio that is not a finite number, a measure that reads nothing, and one that throws: a measure
+  // that reads nothing is never a pass. A passing measure's marks and ratios are named in the pass words.
+  const measuredWords: string[] = [], measureFails: string[] = [];
+  for (const d of declared) {
+    if (!d.measure) { measuredWords.push(''); continue; }
+    let read: { mark: string; ratio: number }[] = [];
+    try { read = await d.measure({ page }); } catch (e) { measureFails.push(`set aside ${d.selector}: its measure threw: ${String((e as Error)?.message ?? e).split('\n')[0].slice(0, 160)}`); measuredWords.push(''); continue; }
+    if (!Array.isArray(read) || !read.length) { measureFails.push(`set aside ${d.selector}: its measure read nothing`); measuredWords.push(''); continue; }
+    for (const m of read) {
+      if (!Number.isFinite(m?.ratio)) measureFails.push(`set aside ${d.selector}, measured: ${m?.mark ?? 'a mark'} gave no ratio (${String(m?.ratio)})`);
+      else if (m.ratio < 3) measureFails.push(`set aside ${d.selector}, measured: ${m.mark} ${short(m.ratio)}:1, under 3:1`);
+    }
+    measuredWords.push(read.map((m) => `${m?.mark} ${Number.isFinite(m?.ratio) ? short(m.ratio) : String(m?.ratio)}:1`).join(', '));
+  }
+  // Declarations without a measure read as before; one with a measure says its marks were measured, the rest of the
+  // graphic still set aside with its reason.
+  const anyMeasured = measuredWords.some(Boolean);
+  const asideWords = declared.length ? `; ${setAside.reduce((a, b) => a + b, 0)} raster or canvas graphic(s) set aside${anyMeasured ? '' : ', not measured'}: ${declared.map((d, i) => `${d.selector} (${setAside[i]}), ${measuredWords[i] ? `its marks measured, each at 3:1: ${measuredWords[i]}; the rest not measured: ` : anyMeasured ? 'not measured: ' : ''}${d.reason}`).join('; ')}` : '';
+  const fail1411 = [...misdeclared, ...measureFails, ...boundaries.filter((b) => b.ratio < 3).map((b) => `${b.el} boundary ${short(b.ratio)}:1`), ...nativeLow, ...graphics.filter((g) => g.state === 'fail').map((g) => `${g.el}: ${g.reason}`), ...cues.fails];
   const open1411 = [...graphicsUnresolved, ...cues.unresolved];
   const rows: Rows = {
     // contrast.mjs judges the text: what WCAG exempts set aside, a text shadow measured or a review, no pair not run.

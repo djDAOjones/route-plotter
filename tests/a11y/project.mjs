@@ -48,19 +48,35 @@
 // want of a j-forms journey crediting them (brief 77, ruling 3: owed at the close). Brief 78 tried holding 1.3.5,
 // 3.3.4 and 3.3.6 not applicable: the coverage tool refuses it (a row is not applicable only when its own trigger
 // feature, here `user-input` itself, is declared absent), so the feature stays unknown and the six rows owed.
+// CORE-06, chat E1 (2026-11-25, brief 109): the paragraph above the preview, "Version 4 is being built here", and its
+// link to GitHub are gone (D209), and the preview takes the height left. The preview's box is now operable: an
+// application named "Route animation preview" (D245; brief 114: it was a toolbar) with one tab stop, met by Tab
+// after "Help" where the link was. READING, FOCUS and both snapshots follow; the journeys that stood on the link stand
+// on the page's controls: the reduced-motion focus and the kept function focus the preview, the 320 px walk meets it
+// in the link's place, Home on the focused preview speaks with focus kept (4.1.3), the single keys say nothing on it
+// with the switch off (2.1.4), and the shell's keyboard task (P06) is turning single-key shortcuts off and on in Help
+// by Tab, Enter, Space and Escape. The preview stays set aside from the contrast check, its count now what the probe
+// finds once the box is no image: the canvas alone.
+// CORE-06, chat E1c (2026-11-25, brief 112): the canvas takes the pointer; the pen's tap places a point on the up and
+// joins it from the selected one, and Escape clears the selection. pointer-cancellation reads the preview while a press
+// is held, after a press moved off and after a whole press (2.5.2).
 
 const ORIGIN = 'http://127.0.0.1:4173';
 // The reviewed sequences: the text blocks a reader meets, in order (1.3.2); the controls Tab reaches, in order
-// (2.4.3); each route and its title (2.4.2); the one place the shell links to. A change to the shell is reviewed here.
-const READING = ['Route Plotter', 'Version 4 is being built here.', 'Preview', 'Timeline', 'Add at least two points to a route to play.'];
-const FOCUS = ['button "Open project"', 'button "Help"', 'link "GitHub"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
+// (2.4.3); each route and its title (2.4.2). A change to the shell is reviewed here.
+const READING = ['Route Plotter', 'Preview', 'Timeline', 'Add at least two points to a route to play.'];
+const FOCUS = ['button "Open project"', 'button "Help"', 'application "Route animation preview"', 'button "Skip to start"', 'button "Skip to end"', 'slider "Timeline"'];
 const ROUTES = [{ path: '/', title: 'Route Plotter' }];
-const PROGRESS = 'https://github.com/djDAOjones/route-plotter';
 // The shell's one status region, and the words the editor's keys say in it (the editor's transport's own, WORDS).
 const STATUS = '[role=status]';
 const said = async (page) => (await page.locator(STATUS).textContent()) ?? '';
 const SKIPPED_TO_START = 'Skipped to start';
 const SKIPPED_TO_END = 'Skipped to end';
+// What the status region says after an edit (CORE-06, brief 134, ruling CV; D263's answer, "Yes, every edit", in D268's
+// words, src/editor/canvas/words.ts): the pen's tap that places a point, and a point's drag released; a cancelled drag
+// says nothing.
+const POINT_ADDED = 'Point added';
+const POINT_MOVED = 'Point moved';
 // Said when a start is refused, and shown under the play bar while there is nothing to play (WORDS.nothingToPlay).
 const NOTHING_TO_PLAY = 'Add at least two points to a route to play.';
 // The play bar's buttons and the line that says why Play is off.
@@ -90,6 +106,10 @@ const dragBy = async (pointer, from, to, steps = 4) => {
 // The fields a person meets: those drawn (Carbon keeps a hidden number input beside its slider, never shown, D181).
 const shownFields = (page) => page.locator(FIELDS).filter({ visible: true });
 const UNDO = process.platform === 'darwin' ? 'Meta+z' : 'Control+z';
+// Redo's chord (CORE-06, brief 121): Cmd+Shift+Z on a Mac, Ctrl+Shift+Z elsewhere, as the editor's key list says.
+const REDO = process.platform === 'darwin' ? 'Meta+Shift+z' : 'Control+Shift+z';
+// The platform's command key alone (CORE-06, brief 122): held round a click for the toggle, Cmd on a Mac, Ctrl elsewhere.
+const COMMAND = process.platform === 'darwin' ? 'Meta' : 'Control';
 // Open project's chord (D207), as UNDO is built: Cmd+O on a Mac, Ctrl+O elsewhere.
 const OPEN_KEY = process.platform === 'darwin' ? 'Meta+o' : 'Control+o';
 // Presses Open project's chord where focus is and gives whether the page's own file chooser opened within `ms` and
@@ -118,6 +138,16 @@ const helpButton = (page) => page.locator(HELP);
 const helpDialog = (page) => page.getByRole('dialog', { name: 'Help' });
 const singleKeys = (page) => page.locator(SWITCH);
 const focusIs = (page, sel) => page.evaluate((s) => !!document.activeElement?.matches(s), sel);
+// Help's content as a scrollable region (brief 123): once its three tables no longer fit the window, the kit's dialog
+// (Carbon) makes the content a region named Help, in the Tab order, so the keyboard can scroll it. Shift+Tab from where
+// focus lands (the content's start, inside it) meets that region first, and Close one press later.
+const HELP_REGION = '[role=dialog] [role=region]';
+const shiftTabToClose = async (page) => {
+  await page.keyboard.press('Shift+Tab');
+  const region = await focusIs(page, HELP_REGION);
+  if (region) await page.keyboard.press('Shift+Tab');
+  return region;
+};
 // Focus goes back to "Help" when Help closes (the kit's own call, kit/Dialog.tsx; Carbon's timer does not run on unmount): wait for it all the same.
 const backOnHelp = (page) => page.waitForFunction((s) => !!document.activeElement?.matches(s), HELP, { timeout: 2000 }).then(() => true, () => false);
 // The status region holds a message about 2 s: wait for it to empty before a check that it says nothing.
@@ -140,8 +170,10 @@ const NOT_A_PROJECT = 'This file is not a Route Plotter project, or it is damage
 // golden's words have moved; the route unchanged).
 // With `video` ({ width, height }), the golden's export size, 1920 by 1080, is made that one (one replacement in its
 // text, which throws if the golden's words have moved): the video's shape, which the preview takes (D202).
+// With `trail`, the golden's line drawn "grows" is drawn as a trail (one replacement, which throws if the golden's words
+// have moved): the trail runs on after the lead stops, so the play length is longer than the golden's.
 const LONG_MS = 1200000;
-const projectFile = async (png, upright, long = false, video = null) => {
+const projectFile = async (png, upright, long = false, video = null, trail = false) => {
   const root = process.env.A11Y_ROOT || process.cwd();
   const zip = new (process.getBuiltinModule('node:module').createRequire(`${root}/package.json`)('jszip'))();
   const read = process.getBuiltinModule('node:fs').readFileSync(`${root}/src/editor/shell/goldens/two-stops.project.json`, 'utf8');
@@ -151,6 +183,11 @@ const projectFile = async (png, upright, long = false, video = null) => {
     const from = '"clock":{"length":"from content","fixedLengthMs":10000,';
     if (golden.split(from).length !== 2) throw new Error('the golden\'s clock no longer reads "from content" with fixedLengthMs 10000, once');
     golden = golden.replace(from, `"clock":{"length":"fixed","fixedLengthMs":${LONG_MS},`);
+  }
+  if (trail) {
+    const from = '"appearance":"grows"';
+    if (golden.split(from).length !== 2) throw new Error('the golden\'s line no longer reads "grows", once');
+    golden = golden.replace(from, '"appearance":"trail"');
   }
   if (video) {
     const from = '"export":{"width":1920,"height":1080,';
@@ -163,7 +200,7 @@ const projectFile = async (png, upright, long = false, video = null) => {
     zip.file('project.json', golden.replace(/"images":\[\]}$/, '"images":[{"id":"golden-5","type":"image/png"}]}'));
     zip.file('images/1.png', png, { createFolders: false }); // as io's Save: no `images/` folder entry, which io refuses
   }
-  return { name: png ? 'with-image.zip' : long ? 'long.zip' : 'two-stops.zip', mimeType: 'application/zip', buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }) };
+  return { name: png ? 'with-image.zip' : long ? 'long.zip' : trail ? 'trail.zip' : 'two-stops.zip', mimeType: 'application/zip', buffer: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }) };
 };
 // A real PNG, 4 by 4, made by the page's own canvas (`toBlob`) in the run.
 const canvasPng = async (page) => Buffer.from(await page.evaluate(() => new Promise((resolve) => {
@@ -180,11 +217,103 @@ const ORANGE = [213, 94, 0];
 const BLUE = [51, 102, 204]; // #3366cc, the plain picture's
 // 1.4.11 (finding 85, ruled; D200): the preview is set aside from the contrast check on every state that shows it. Its
 // pixels are the user's own picture and routes in their own colours, as the export draws them (1.4.11's essential
-// presentation), and nothing of the editor's own is drawn on it yet. The item that first draws the editor's own marks
-// there (a selected route's rings, hover: CORE-06) narrows or replaces this, and measures them by their pixels.
-// The count is reviewed: the graphics standing in the preview on both states that declare it (the image wrapper and its
-// canvas). A different number found fails 1.4.11, so CORE-06 changes it with what it draws there.
-const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 2, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); nothing of the editor's own is drawn on it yet" }];
+// presentation). CORE-06 (brief 109) draws the editor's own marks on the same canvas (its points, its lines and the
+// selection's rings), never in an SVG or the DOM over it. They are left out of the probe only because they share the
+// canvas with the user's picture, and sharing it establishes nothing of their contrast: that is still to be measured,
+// by the next chat's (E2) pixel journey, not built yet. The count is reviewed: the graphics standing in the preview on every state
+// that declares it, now the canvas alone (the box is an application, no longer an image). A different number found fails
+// 1.4.11, so a change to what stands there changes it.
+const PREVIEW_ASIDE = [{ selector: PREVIEW, count: 1, reason: "the preview shows the user's own picture and routes in their own colours, as the export will draw them (1.4.11, essential); the editor's own marks (points, lines, the selection's rings) are left out only because they are drawn on the same canvas; their contrast is not measured yet, and is still to be measured by a pixel journey (E2)" }];
+// 1.4.11 (CORE-06, brief 117, ruling N; D252): pen-drawn's set-aside carries a measure, which contrastRows runs after
+// every other reading of the state's contrast check (helpers.ts). pen-drawn alone draws a route; the two states above
+// keep PREVIEW_ASIDE. In pen-drawn (the plain background, no picture, the default settings: two points and their line,
+// the second point selected) the route is drawn whole only once the animation reaches its end, so the measure presses
+// Skip to end and waits two frames. Where nothing is drawn the canvas is transparent and the box's own background
+// shows: the nearest box under the canvas with an opaque background of its own. Each pixel read is composited over that
+// background and its ratio taken against it. The line: its most opaque pixel of the seven in the column at the middle
+// of the two taps. Each point: its marker, on the two rays from its tap square to the line; out from the tap the pixels
+// are fully opaque up to the marker's outer edge (its white rim's antialiased fringe), and the pixel halfway to that
+// edge is the marker's fill alone, clear of the line (half its width), of the rim and of the lead's head, which at the
+// route's end is drawn over the second point and reaches a third of its size to each side; the lower of the two sides.
+// The selected point's ring: the best of the pixels drawn (alpha over 60) and not the route's hue on the ray from the
+// second point away from the first, from beyond the marker's outer edge on that ray out to 30 CSS px. Probed (brief
+// 117, PROBE-117/probe): at 1280 by 800 the canvas is 704 px wide, the marker's edge 3 px out, the arrow covers the
+// second point's centre and 1 px round it, and the ring's dash on that ray is black.
+// The guide's line (CORE-06, brief 132, CP; D266, the owner's "Full colour, dashed"): read first, at Skip to start, where
+// nothing of the line is drawn yet and the guide drawn while paused (D265) stands alone between the taps. 25 places 1
+// canvas px apart along the line, centred between the taps, each the most opaque of the 7 pixels across the line there:
+// some are the route's hue (the dashes) and some bare (alpha 0, the gaps, where the box's background shows), or no ratio
+// is given (the line drawn there, or nothing); the most opaque of the route's hue is the guide's pixel, its ratio by the
+// formula below. A page journey (the-guide) cannot record 1.4.11: the catalogue lists only the contrast method for it,
+// and the report refuses a row whose methods a test's does not name (tools/a11y-report.mjs).
+// One reader of the canvas for pen-drawn's measure, run in the page (Codex's list line 15: the box's background, the
+// compositing, the luminance and the contrast written once for the five marks): at 'start' the guide's line, at 'end'
+// the line, both points and the ring, each as described above; null when no box under the canvas has an opaque
+// background of its own.
+const penMarksRead = (c, [first, second, when]) => {
+  let bg = null;
+  for (let e = c.parentElement; e && !bg; e = e.parentElement) {
+    const v = (getComputedStyle(e).backgroundColor.match(/[\d.]+/g) ?? []).map(Number);
+    if (v.length === 3 || (v.length === 4 && v[3] === 1)) bg = v.slice(0, 3);
+  }
+  if (!bg) return null;
+  const ctx = c.getContext('2d');
+  const at = (fx, fy) => [...ctx.getImageData(Math.floor(fx), Math.floor(fy), 1, 1).data];
+  const over = ([r, g, b, a]) => [r, g, b].map((v, i) => (v * a + bg[i] * (255 - a)) / 255);
+  const lum = (rgb) => rgb.map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+  const ratio = (p) => { const [x, y] = [lum(over(p)), lum(bg)]; return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const routeHue = ([r, g, b, a]) => a > 60 && r > 120 && r > g && g >= b;
+  const [px, py, qx, qy] = [second[0] * c.width, second[1] * c.height, first[0] * c.width, first[1] * c.height];
+  const len = Math.hypot(px - qx, py - qy), [ux, uy] = [(px - qx) / len, (py - qy) / len];
+  if (when === 'start') {
+    const [mx, my] = [(px + qx) / 2, (py + qy) / 2];
+    const places = Array.from({ length: 25 }, (_, k) => {
+      let best = [0, 0, 0, 0];
+      for (let d = -3; d <= 3; d += 1) { const p = at(mx + ux * (k - 12) - uy * d, my + uy * (k - 12) + ux * d); if (p[3] > best[3]) best = p; }
+      return best;
+    });
+    const hued = places.filter(routeHue), bare = places.filter((p) => p[3] === 0).length;
+    const pixel = hued.reduce((best, p) => (p[3] > best[3] ? p : best), [0, 0, 0, 0]);
+    // The way arrow (D275; brief 151), two thirds along from the first tap, pointing to the second: 9 places along by
+    // 2 to 4 px each side of the line, where the 2-wide guide never reaches; of those the route's hue at alpha 200 or
+    // more, red over blue by more than 100 (routeHue alone lets the white edge's rgb(255, 254, 254) through: probed,
+    // PROBE-151/probe-3.txt), is the arrow's fill inside its white edge, the most opaque its pixel.
+    const [ax, ay] = [qx + ((px - qx) * 2) / 3, qy + ((py - qy) * 2) / 3];
+    const fills = [];
+    for (let s = -4; s <= 4; s += 1) for (const d of [-4, -3, -2, 2, 3, 4]) { const p = at(ax + ux * s - uy * d, ay + uy * s + ux * d); if (routeHue(p) && p[3] >= 200 && p[0] - p[2] > 100) fills.push(p); }
+    const fill = fills.reduce((best, p) => (p[3] > best[3] ? p : best), [0, 0, 0, 0]);
+    return { bg: `rgb(${bg.join(', ')})`, pixel, hued: hued.length, bare, ratio: hued.length && bare ? ratio(pixel) : NaN, arrow: { pixel: fill, hued: fills.length, ratio: fills.length ? ratio(fill) : NaN } };
+  }
+  let line = [0, 0, 0, 0];
+  for (let dy = -3; dy <= 3; dy += 1) { const p = at(0.5 * c.width, 0.5 * c.height + dy); if (p[3] > line[3]) line = p; }
+  const out = 30 * (c.width / c.getBoundingClientRect().width);
+  // The first distance out from (x, y) along (dx, dy) whose pixel is not fully opaque; past `out`, none.
+  const edge = (x, y, dx, dy) => { let e = 1; while (e <= out && at(x + dx * e, y + dy * e)[3] === 255) e += 1; return e > out ? NaN : e; };
+  const point = (x, y) => Math.min(...[[-uy, ux], [uy, -ux]].map(([dx, dy]) => { const h = Math.round(edge(x, y, dx, dy) / 2); return Number.isFinite(h) ? ratio(at(x + dx * h, y + dy * h)) : NaN; }));
+  let ring = 0;
+  const rim = edge(px, py, ux, uy);
+  for (let d = rim + 1; d <= out; d += 1) { const p = at(px + ux * d, py + uy * d); if (p[3] > 60 && !routeHue(p)) ring = Math.max(ring, ratio(p)); }
+  return { bg: `rgb(${bg.join(', ')})`, line: ratio(line), first: point(qx, qy), second: point(px, py), ring: Number.isFinite(rim) ? ring : NaN };
+};
+const PEN_DRAWN_ASIDE = [{
+  selector: PREVIEW,
+  count: 1,
+  reason: "the user's own picture and routes in their own colours, as the export will draw them, are still set aside (1.4.11, essential); measured are only the editor's own marks at the default settings (the guide's line where only it draws, its way arrow, the line, both points, the selected point's ring) on the plain background with no picture, each against the box's own background",
+  measure: async ({ page }) => {
+    await page.getByRole('button', { name: 'Skip to start' }).click();
+    await twoFrames(page);
+    const guide = await page.locator(CANVAS).evaluate(penMarksRead, [...TAPS, 'start']);
+    if (!guide) throw new Error('no box with an opaque background stands under the canvas');
+    await page.getByRole('button', { name: 'Skip to end' }).click();
+    await twoFrames(page);
+    const read = await page.locator(CANVAS).evaluate(penMarksRead, [...TAPS, 'end']);
+    if (!read) throw new Error('no box with an opaque background stands under the canvas');
+    const against = `against the box's background ${read.bg}, in pen-drawn`;
+    const guideMark = `the guide's line at the start, where only it draws (its most opaque pixel of the route's hue, rgba(${guide.pixel.join(', ')}); of 25 places along it ${guide.hued} the route's hue, ${guide.bare} bare) against the box's background ${guide.bg}, in pen-drawn`;
+    const arrowMark = `the way arrow on the one-way line at the start, two thirds along (its most opaque pixel of the route's hue off the line, rgba(${guide.arrow.pixel.join(', ')}); ${guide.arrow.hued} such of 54 places) against the box's background ${guide.bg}, in pen-drawn`;
+    return [{ mark: guideMark, ratio: guide.ratio }, { mark: arrowMark, ratio: guide.arrow.ratio }, ...[['the line', read.line], ['the first point', read.first], ['the second point', read.second], ["the selected point's ring", read.ring]].map(([mark, ratio]) => ({ mark: `${mark} ${against}`, ratio }))];
+  },
+}];
 const pixels = (page) => page.locator(CANVAS).evaluate((c) => {
   const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
   let hash = 0, drawn = 0;
@@ -200,7 +329,95 @@ const strokeAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y]) => 
   for (let i = 0; i < d.length; i += 4) if (d[i + 3] > best[3]) best = [d[i], d[i + 1], d[i + 2], d[i + 3]];
   return best;
 }, [fx, fy]);
+// CORE-06 (brief 128, BN): the most opaque pixel of each column (7 rows, as strokeAt) along 25 columns centred on a
+// place: the editor's guide while paused (D265) is dashed 6 on and 4 off in canvas pixels (unitAt(1) whatever the
+// pixel ratio), so in any 25 columns it leaves some bare, and only the frame's own line fills every one.
+const rowAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y]) => {
+  const d = c.getContext('2d').getImageData(Math.floor(x * c.width) - 12, Math.floor(y * c.height) - 3, 25, 7).data;
+  return Array.from({ length: 25 }, (_, col) => {
+    let best = [0, 0, 0, 0];
+    for (let row = 0; row < 7; row += 1) { const i = (row * 25 + col) * 4; if (d[i + 3] > best[3]) best = [d[i], d[i + 1], d[i + 2], d[i + 3]]; }
+    return best;
+  });
+}, [fx, fy]);
+// CORE-06 (brief 151; D275): the way arrow on a one-way line, read where the guide never reaches. Of the 25 columns
+// centred on a place on a level line, the pixels in rows 2 to 4 canvas px above and below the line's row, nearly opaque
+// (alpha over 200): `hue` those of the route's colour (near()), `white` those white (each channel over 200). The guide
+// is 2 wide (unitAt(1) whatever the pixel ratio) and lights none of them; the arrow (v3's 7 ahead and 4.2 behind and to
+// each side, canvas px, edged white 1.5 wide as the marks) lights both. Probed at 1280 by 800 (PROBE-151/probe-guide-2.txt):
+// paused, hue 3 and white about 20 at the arrow; none at 0.4 or 0.55 of the way; playing, none.
+const arrowAt = (page, fx, fy) => page.locator(CANVAS).evaluate((c, [x, y, rgb]) => {
+  const d = c.getContext('2d').getImageData(Math.floor(x * c.width) - 12, Math.floor(y * c.height) - 4, 25, 9).data;
+  let hue = 0, white = 0;
+  for (const row of [0, 1, 2, 6, 7, 8]) for (let col = 0; col < 25; col += 1) {
+    const i = (row * 25 + col) * 4;
+    if (d[i + 3] <= 200) continue;
+    if (rgb.every((v, k) => Math.abs(d[i + k] - v) <= 24)) hue += 1;
+    else if (d[i] > 200 && d[i + 1] > 200 && d[i + 2] > 200) white += 1;
+  }
+  return { hue, white };
+}, [fx, fy, ORANGE]);
 const near = (p, rgb) => p[3] > 200 && rgb.every((v, i) => Math.abs(p[i] - v) <= 24);
+// CORE-06 (brief 114, Codex line 24): the pen's marks in the pen-drawn state, each read where only it draws. At 0:00 the
+// animation has drawn the first point alone (its line and the second point appear as the animation reaches them), so it
+// skips to the end first. Orange is told by hue (red over green over blue; the selection's ring is white and black) and
+// a least opacity, since at 320 CSS px wide the canvas is 256 px and its line's pixels are faint (alpha under 90). The
+// line: the most opaque pixel of the column at the middle of the two taps, at alpha over 40. Each point: its marker on
+// the far side from the other point, where the line does not reach (its round cap stands out half its width, under a
+// pixel), 1 to a marker's radius away along that ray, at alpha over 60. Each is false when its mark is cleared, at 1280
+// and at 320 CSS px wide (probed, brief 114).
+const TAPS = [[0.45, 0.4], [0.55, 0.6]];
+// CORE-06 (brief 116): where the drag journeys take the second point, inside the picture and well clear of the line.
+const DRAG_TO = [0.6, 0.42];
+const markBeyond = (page, [fx, fy], [ox, oy]) => page.locator(CANVAS).evaluate((c, [x, y, ax, ay]) => {
+  const ctx = c.getContext('2d');
+  const [px, py, qx, qy] = [x * c.width, y * c.height, ax * c.width, ay * c.height];
+  const len = Math.hypot(px - qx, py - qy);
+  const reach = Math.max(2, Math.ceil(c.width * 0.006));
+  for (let d = 1; d <= reach; d += 1) {
+    const [r, g, b, a] = ctx.getImageData(Math.floor(px + ((px - qx) / len) * d), Math.floor(py + ((py - qy) / len) * d), 1, 1).data;
+    if (a > 60 && r > 120 && r > g && g >= b) return true;
+  }
+  return false;
+}, [fx, fy, ox, oy]);
+// CORE-06 (brief 122; shared by brief 124): the selection's ring round each place, read where only it draws: the pixels
+// drawn (alpha over 60) and not the route's hue (orange, as markBeyond tells it) 5 to 9 units from the place. Probed
+// (PROBE-122/probe-ring): a selected point's ring gives about 140 such pixels at 1280 by 800, an unselected point none.
+const ringsAt = (page, places) => page.locator(CANVAS).evaluate((c, taps) => {
+  const unit = c.width / c.getBoundingClientRect().width;
+  const ctx = c.getContext('2d');
+  return taps.map(([fx, fy]) => {
+    const [cx, cy, reach] = [fx * c.width, fy * c.height, Math.ceil(9 * unit) + 1];
+    const d = ctx.getImageData(Math.floor(cx) - reach, Math.floor(cy) - reach, 2 * reach + 1, 2 * reach + 1).data;
+    let n = 0;
+    for (let y = 0; y <= 2 * reach; y += 1) for (let x = 0; x <= 2 * reach; x += 1) {
+      const dist = Math.round(Math.hypot(x - reach, y - reach) / unit);
+      const i = (y * (2 * reach + 1) + x) * 4;
+      const [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+      if (dist >= 5 && dist <= 9 && a > 60 && !(r > 120 && r > g && g >= b)) n += 1;
+    }
+    return n;
+  });
+}, places);
+const orange = ([r, g, b, a], least) => a > least && r > 120 && r > g && g >= b;
+// The line is read a third of the way from the first tap, not at its middle (CORE-06, brief 151): the way arrow on a
+// one-way line while paused (D275) sits two thirds along, and at 320 CSS px wide (reflow, canvas 256 by 144, the line
+// about 38 px) its white edge reaches the middle's column (probed: PROBE-151/probe-reflow.txt); a third along is clear
+// of it at every size and still clear of the first point's marker.
+const marksDrawn = async (page) => {
+  await page.getByRole('button', { name: 'Skip to end' }).click();
+  await twoFrames(page);
+  const [first, second] = TAPS;
+  const third = [0, 1].map((i) => first[i] + (second[i] - first[i]) / 3);
+  return { first: await markBeyond(page, first, second), second: await markBeyond(page, second, first), line: orange(await strokeAt(page, ...third), 40) };
+};
+// True once the canvas is its box times the ratio (to a pixel), within 3 s. CORE-06 (brief 111): Open's busy notice
+// takes room from the box while a project opens and gives it back when it goes, so a frame drawn just after an open
+// may be at the smaller size; two captures compared by their pixels are taken at the box's settled size.
+const sizeSettled = (page) => page.waitForFunction((sel) => {
+  const c = document.querySelector(sel), box = c.parentElement.getBoundingClientRect(), s = Math.min(devicePixelRatio, 3);
+  return Math.abs(c.width - box.width * s) <= 1 && Math.abs(c.height - box.height * s) <= 1;
+}, CANVAS, { timeout: 3000 }).then(() => true, () => false);
 const boxOf = (page) => page.locator(PREVIEW).evaluate((e) => { const r = e.getBoundingClientRect(); return { width: r.width, height: r.height, ratio: devicePixelRatio }; });
 // Two frames on, so a frame booked by what just happened has been drawn.
 const twoFrames = (page) => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
@@ -282,8 +499,10 @@ const alerts = (page) => page.locator('[role=alert]');
 // "Playing animation" waits behind "Project opened" for whatever is left of its two seconds while the reverse from the
 // middle takes about three, so a reading taken when the words show can come after the position has reached 0
 // (FINDING-97). Checked from the frames: J starts at or under 510, never goes up, stands at some frame strictly between
-// 0 and where it started, and ends at 0, with "Playing animation" and then "Animation complete" said; L never goes
-// down, ends past where it started, with "Playing animation" said. Then focus is still on the button and the key opened
+// 0 and where it started, and ends at 0, with "Playing animation" and then "Animation complete" said. L starts at 1000,
+// where an open leaves the position (its end: D251, brief 127), and so restarts from 0, as Play does at the end
+// (DEF-62): it goes down once, to 50 or under, never goes down again, and ends past its lowest, with "Playing
+// animation" said; its reader stops once the position has risen past its lowest. Then focus is still on the button and the key opened
 // no file chooser. (FINDING-78's crash of J after a press, Carbon's late echo, is mended: brief 79.)
 const PLAYING = 'Playing animation';
 const COMPLETE = 'Animation complete';
@@ -306,7 +525,7 @@ async function playsFromOpen(page, key) {
         const n = Number(document.querySelector(t)?.getAttribute('aria-valuenow'));
         const said = document.querySelector(s)?.textContent ?? '';
         frames.push([n, said]);
-        const done = back ? said === complete : frames.some((f) => f[1] === playing) && n > frames[0][0];
+        const done = back ? said === complete : frames.some((f) => f[1] === playing) && n > Math.min(...frames.map((f) => f[0]));
         if (done || performance.now() > until) resolve(frames); else requestAnimationFrame(tick);
       };
       tick();
@@ -320,7 +539,7 @@ async function playsFromOpen(page, key) {
   const playedAt = words.indexOf(PLAYING);
   const moved = key === 'j'
     ? start <= 510 && steps.every((d) => d <= 0) && at.some((n) => n > 0 && n < start) && end === 0 && playedAt !== -1 && words.indexOf(COMPLETE, playedAt) > playedAt
-    : steps.every((d) => d >= 0) && end > start && playedAt !== -1;
+    : start === 1000 && steps.filter((d) => d < 0).length === 1 && Math.min(...at) <= 50 && end > Math.min(...at) && playedAt !== -1;
   return moved && (await focusOn(page, OPEN)) && choosers === 0;
 }
 // Open Help by its button from the keyboard, Tab to its switch, press Space, close it by Escape. The switch is drawn
@@ -336,40 +555,64 @@ async function flipByKeyboard(page) {
   await page.keyboard.press('Escape');
   return { before, after, back: await backOnHelp(page) };
 }
-// What Help shows, as reviewed: its close button, heading, the two groups of the key table and the switch. The chords
+// What Help shows, as reviewed: its close button, heading, the three groups of the key table (Editing added by brief
+// 123, its two nudge rows by brief 125) and the switch. With the third table its content no longer fits a 1280 by 800 window, so the kit's dialog
+// (Carbon) makes it a scrollable region named Help, which holds the tables and the switch. The chords
 // read Cmd on a Mac and Ctrl elsewhere; a punctuation key is read by its name (comma, full stop, less than, greater
 // than, question mark). Carbon's "Close" tooltip, shown while Close has focus, is not listed. Behind
 // it, the play bar's Play stays disabled (a stated node, so listed).
+// Reviewed (brief 141, FF; Codex list line 18): the point's menu open on pen-drawn's first point, read from the page
+// (PROBE-141/run-snap): "Point actions" in document.body, its items in order with their states. "Set lead start" is
+// off, its reason beside it, as the lead already starts at the first point (D267 (a)); a separator stands before
+// Delete. The rest of the page is as pen-drawn's snapshot has it, behind the menu.
+const POINT_MENU_OPEN = [
+  '- menu "Point actions":',
+  '  - menuitem "Mark as start"',
+  '  - menuitem "Mark as end"',
+  '  - menuitem "Set lead start" [disabled]',
+  '  - menuitem "Make bend"',
+  '  - menuitem "Move"',
+  '  - separator',
+  '  - menuitem "Delete"',
+].join('\n');
 const helpOpen = (checked) => [
   '- group "Playback":',
   '  - button "Play" [disabled]',
   '- dialog "Help":',
   '  - button "Close"',
   '  - heading "Help" [level=2]',
-  '  - table "Playback":',
-  '    - caption: Playback',
-  '    - rowgroup:',
-  '      - row "Play/pause Space K"',
-  '      - row "Play reverse J"',
-  '      - row "Play forward L"',
-  '      - row "Skip to start Home less than"',
-  '      - row "Skip to end End greater than"',
-  '      - row "Step back one frame comma"',
-  '      - row "Step forward one frame full stop"',
-  '  - table "General":',
-  '    - caption: General',
-  '    - rowgroup:',
-  '      - row /Open project (Cmd|Ctrl)\\+O/',
-  '      - row /Undo (Cmd|Ctrl)\\+Z/',
-  '      - row /Redo (Cmd|Ctrl)\\+Shift\\+Z/',
-  '      - row "Open help question mark"',
-  `  - switch "Single-key shortcuts"${checked ? ' [checked]' : ''}`,
-  '  - paragraph: Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Open project, Undo and Redo keep working.',
+  '  - region "Help":',
+  '    - table "Playback":',
+  '      - caption: Playback',
+  '      - rowgroup:',
+  '        - row "Play/pause Space K"',
+  '        - row "Play reverse J"',
+  '        - row "Play forward L"',
+  '        - row "Skip to start Home less than"',
+  '        - row "Skip to end End greater than"',
+  '        - row "Step back one frame comma"',
+  '        - row "Step forward one frame full stop"',
+  '    - table "General":',
+  '      - caption: General',
+  '      - rowgroup:',
+  '        - row /Open project (Cmd|Ctrl)\\+O/',
+  '        - row /Undo (Cmd|Ctrl)\\+Z/',
+  '        - row /Redo (Cmd|Ctrl)\\+Shift\\+Z/',
+  '        - row "Open help question mark"',
+  '    - table "Editing":',
+  '      - caption: Editing',
+  '      - rowgroup:',
+  '        - row "Delete the selected points Delete Backspace"',
+  '        - row /Duplicate the selected points (Cmd|Ctrl)\\+D/',
+  '        - row /Select all points (Cmd|Ctrl)\\+A/',
+  '        - row "Nudge the selected points Left arrow Right arrow Up arrow Down arrow"',
+  '        - row "Nudge them further Shift+Left arrow Shift+Right arrow Shift+Up arrow Shift+Down arrow"',
+  `    - switch "Single-key shortcuts"${checked ? ' [checked]' : ''}`,
+  '    - paragraph: Turned off, K, J, L, <, >, comma, full stop and ? do nothing. Space, Home, End, Delete, Backspace, Open project, Undo, Redo, Duplicate and Select all keep working.',
 ].join('\n');
 // The processes the shell presents (CONF03): none. A process is a series of steps toward a goal inside the app; the
-// shell has no form and no link to another of the app's pages, and its one link leaves Route Plotter for a page it does
-// not own, which is no step of a Route Plotter process and is not tested here. The item that adds a process names it
-// here and writes the journey that runs every step.
+// shell has no form and no link at all (its one link, to a page it did not own, went with D209). The item that adds a
+// process names it here and writes the journey that runs every step.
 const PROCESSES = [];
 
 // What the journeys look for: every control a pointer or Tab reaches (the pack's target selector); fields and
@@ -397,7 +640,6 @@ async function settled({ page }) {
 }
 const arrives = (page, url) => page.waitForURL(url, { timeout: 5000 }).then(() => true, () => false);
 const named = async (locator) => (await locator.ariaSnapshot()).split('\n')[0].replace(/^- /, '').replace(/:$/, '');
-const progressLink = (page) => page.getByRole('link', { name: 'GitHub' });
 // Tab from a fresh open until focus leaves the page or comes round: each control met, by role and name, and where it
 // sits; the problems against the reviewed order (2.4.3).
 async function tabOrder(page, tab) {
@@ -442,14 +684,9 @@ export default {
         '  - button "Open project"',
         '  - button "Help"',
         '- main:',
-        '  - paragraph:',
-        '    - text: Version 4 is being built here. It cannot make anything yet. Its progress is on',
-        '    - link "GitHub":',
-        `      - /url: ${PROGRESS}`,
-        '    - text: .',
         '  - region "Preview":',
         '    - heading "Preview" [level=2]',
-        '    - img "Route animation preview"',
+        '    - application "Route animation preview"',
         '  - group "Playback":',
         '    - button "Skip to start"',
         '    - button "Play" [disabled]',
@@ -462,7 +699,7 @@ export default {
       ].join('\n'),
       dialogs: [{ name: 'help', opener: HELP }],
       interactions: [
-        { name: 'focus the progress link', run: async ({ page }) => { await progressLink(page).focus(); } },
+        { name: 'focus the preview', run: async ({ page }) => { await page.locator(PREVIEW).focus(); } },
         { name: 'open help', run: async ({ page }) => { await helpButton(page).click(); await helpDialog(page).waitFor(); }, snapshot: helpOpen(true) },
         {
           name: 'turn single-key shortcuts off',
@@ -478,7 +715,7 @@ export default {
       keeps: {
         content: ['h1', 'main p', PREVIEW, REASON],
         functions: [
-          { name: 'follow the progress link', run: async ({ page }) => { await progressLink(page).click(); return arrives(page, PROGRESS); } },
+          { name: 'focus the preview', run: async ({ page }) => { await page.locator(PREVIEW).focus(); return focusOn(page, PREVIEW); } },
           // Help is closed again after, so the page is left as found (the forced-colours test counts stateful controls next).
           { name: 'open help', run: async ({ page }) => { await helpButton(page).click(); const shown = await helpDialog(page).isVisible(); await page.keyboard.press('Escape'); return shown && backOnHelp(page); } },
           { name: 'skip to start by its button', run: async ({ page }) => { await page.locator(SKIP_START).click(); return (await said(page)) === SKIPPED_TO_START; } },
@@ -513,14 +750,9 @@ export default {
         '    - img "Error"',
         `    - text: Could not open ${LONG_NAME} ${NOT_A_PROJECT}`,
         '    - button "Close"',
-        '  - paragraph:',
-        '    - text: Version 4 is being built here. It cannot make anything yet. Its progress is on',
-        '    - link "GitHub":',
-        `      - /url: ${PROGRESS}`,
-        '    - text: .',
         '  - region "Preview":',
         '    - heading "Preview" [level=2]',
-        '    - img "Route animation preview"',
+        '    - application "Route animation preview"',
         '  - group "Playback":',
         '    - button "Skip to start"',
         '    - button "Play" [disabled]',
@@ -555,7 +787,7 @@ export default {
               try {
                 await page.setViewportSize({ width: 320, height: size.height });
                 const key = page.context().browser()?.browserType().name() === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab'; // the pack's tabKey
-                const seven = ['Open project', 'Help', 'Close', 'GitHub', 'Skip to start', 'Skip to end', 'Timeline'];
+                const seven = ['Open project', 'Help', 'Close', 'Route animation preview', 'Skip to start', 'Skip to end', 'Timeline'];
                 const walked = [], problems = [], edges = [];
                 for (let i = 0; i < 20; i++) {
                   await page.keyboard.press(key);
@@ -594,14 +826,94 @@ export default {
         ],
       },
     },
+    {
+      // CORE-06 (brief 109, ruling 11; built by brief 113): the pen has drawn. On the plain background (no picture), two
+      // taps on nothing: two points and one line, the second point selected. The setup waits for the frame itself, never
+      // on the page having settled alone: the canvas at its box's size, two frames drawn after each tap, and the canvas
+      // then holding what it did not hold before the taps (it throws if not). A press on the banner's blank corner then
+      // puts the Tab starting point at the document's start, as refused-long-name's does; it is not on the canvas. Last,
+      // it waits until no transition runs on the page, for the final state only. Brief 114 (Codex line 23) measured
+      // Play during its enabling transition: Carbon faded its background over 70 ms under text already white, 1.71:1 at
+      // worst (the 6.10:1 brief 113 met was one frame of it); the theme no longer fades Play's background, and the
+      // setup throws if Play's transition names its background again, so the frames before the wait are held to 7:1.
+      name: 'pen-drawn',
+      path: '/',
+      setAside: PEN_DRAWN_ASIDE,
+      setup: async ({ page }) => {
+        await settled({ page });
+        if (!(await sizeSettled(page))) throw new Error('the canvas was not its box times the ratio');
+        await twoFrames(page);
+        const empty = await pixels(page);
+        const box = await page.locator(PREVIEW).boundingBox();
+        for (const [fx, fy] of TAPS) {
+          await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy);
+          await twoFrames(page);
+        }
+        if ((await pixels(page)).hash === empty.hash) throw new Error('two taps on the preview drew nothing');
+        const fades = await page.locator('#play-pause').evaluate((el) => getComputedStyle(el).transitionProperty);
+        if (/\b(all|background(-color)?)\b/.test(fades)) throw new Error(`Play's background fades as it is enabled (${fades})`);
+        await page.mouse.click(1, 1);
+        // Play has just been enabled: the final state is measured once the page's transitions have ended.
+        await page.waitForFunction(() => document.getAnimations().length === 0, undefined, { timeout: 3000 });
+        // The taps' "Point added" (brief 134, ruling CV; D263, D268) holds the status region for its two seconds: the
+        // state is the editor at rest, its status empty, as the snapshot below has it. Measured (brief 134): without this
+        // wait the status still read "Point added" as the set-up ended, and the snapshot (a partial match) passed anyway.
+        if (!(await page.waitForFunction((s) => (document.querySelector(s)?.textContent ?? '') === '', STATUS, { timeout: 6000 }).then(() => true, () => false))) throw new Error('the status region did not come back to empty after the taps');
+      },
+      // Reviewed (brief 113): as the shell's, but two points joined by a line make a route that plays, so Play is
+      // enabled, the reason it was not is gone, and the timeline runs to the route's length (0:04).
+      snapshot: [
+        '- banner "Route Plotter":',
+        '  - heading "Route Plotter" [level=1]',
+        '  - button "Open project"',
+        '  - button "Help"',
+        '- main:',
+        '  - region "Preview":',
+        '    - heading "Preview" [level=2]',
+        '    - application "Route animation preview"',
+        '  - group "Playback":',
+        '    - button "Skip to start"',
+        '    - button "Play"',
+        '    - button "Skip to end"',
+        '    - text: Timeline 0:00',
+        '    - slider "Timeline"',
+        '    - text: 0:04',
+        '  - status',
+      ].join('\n'),
+      dialogs: [],
+      // Nothing here draws motion: the points stand until they are edited. "open point menu" (brief 141, FF; Codex list
+      // line 18): a right-click on the first point opens "Point actions"; its reviewed snapshot is the catalogue's
+      // evidence for 4.1.2 for the menu (each item's role, name and state). No axe runs on the open menu (a menu-open
+      // state would add 14 tests a run, and the menu closes on Tab and blur inside three of them); the reduced-motion
+      // test now samples this interaction too.
+      interactions: [
+        {
+          name: 'open point menu',
+          run: async ({ page }) => {
+            const box = await page.locator(PREVIEW).boundingBox();
+            const [fx, fy] = TAPS[0];
+            await page.mouse.click(box.x + box.width * fx, box.y + box.height * fy, { button: 'right' });
+            await page.locator('[role=menu]').waitFor();
+          },
+          snapshot: POINT_MENU_OPEN,
+        },
+      ],
+      keeps: {
+        content: [PREVIEW],
+        functions: [
+          // Brief 114 (Codex line 24): each mark read where only it draws, at the route's end (marksDrawn).
+          { name: 'at the route\'s end, both points and their line are drawn where tapped', run: async ({ page }) => { const m = await marksDrawn(page); return m.first && m.second && m.line; } },
+        ],
+      },
+    },
     // { name: 'home', path: '/', snapshot: '- main:\n  - heading "Home" [level=1]', dialogs: [{ name: 'help', opener: '#help' }],
     //   interactions: [{ name: 'open menu', run: async ({ page }) => page.getByRole('button', { name: 'Menu' }).click(), snapshot: '- button "Menu" [expanded]' }],
     //   keeps: { content: ['h1', '#total'], cues: ['#saved-icon'], functions: [{ name: 'save', run: async ({ page }) => { await page.getByRole('button', { name: 'Save' }).click(); return page.getByRole('status').isVisible(); } }] } },
   ],
   // Keyboard functions run at no delay and with long gaps between keys: steps of { focus }, { press } or { type }.
   keyboardFunctions: [
-    // Enter on the focused link follows it: the editor's keys never take a link's own activation.
-    { name: 'follow-progress-link', state: 'shell', steps: [{ focus: 'main a[href]' }, { press: 'Enter' }], check: async ({ page }) => arrives(page, PROGRESS) },
+    // The editor's keys act with the preview focused (CORE-06), and focus stays on it.
+    { name: 'skip-to-end-by-end-on-preview', state: 'shell', steps: [{ focus: PREVIEW }, { press: 'End' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_END && focusOn(page, PREVIEW) },
     // The editor's keys, each checked by the words it says in the status region.
     { name: 'skip-to-start-by-home', state: 'shell', steps: [{ press: 'Home' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_START },
     { name: 'skip-to-end-by-end', state: 'shell', steps: [{ press: 'End' }], check: async ({ page }) => (await said(page)) === SKIPPED_TO_END },
@@ -794,10 +1106,10 @@ export default {
           await helpButton(page).focus();
           await page.keyboard.press('Enter');
           await helpDialog(page).waitFor();
-          await page.keyboard.press('Shift+Tab');
+          const viaRegion = await shiftTabToClose(page);
           const onClose = await focusIs(page, '.cds--modal-close');
           await page.keyboard.press('Escape');
-          if (!onClose) focus.push('Shift+Tab from where focus landed did not reach "Close"');
+          if (!onClose) focus.push(`Shift+Tab from where focus landed${viaRegion ? ', then from Help\'s scrollable region,' : ''} did not reach "Close"`);
           else if (await helpDialog(page).isVisible()) focus.push('on "Close", one Escape left Help open (D206: one Escape closes it wherever focus is)');
           if (!(await backOnHelp(page))) focus.push('focus did not return to "Help" when one Escape on "Close" closed it');
         }
@@ -821,17 +1133,21 @@ export default {
     },
     {
       // 2.5.2: each button, link and switch does nothing on the down-event, a press moved off it before release does
-      // nothing, and a whole press acts, on the up-event: the progress link (followed), "Help" (its dialog opens) and,
+      // nothing, and a whole press acts, on the up-event: "Help" (its dialog opens) and,
       // inside Help, the switch (it turns). A press on the switch is moved off to a point inside the dialog, as a press
       // outside Help closes it. The play bar: each skip says its words on a whole press and nothing before; Play,
       // disabled with nothing to play, does nothing on any press. The timeline, a slider, does move on the down-event, as
       // a provisional scrub: Escape before the release aborts it (the position back where the press found it, focus
       // kept, and the moves and release after it change nothing), and the release completes it with no undo step.
-      // 2.5.7: its one drag, the thumb along the track, has a single-pointer alternative with the same result: a drag of
-      // the thumb completed at 70 % of the track, then, on a fresh page, a whole press on the track at the same point,
-      // the two positions compared. Every press goes through the pointer adapter, so a touch run can credit it. "Open project"
+      // 2.5.7: the page's dragging movements are the timeline's and the preview's two (a point's, a group's; CORE-06,
+      // briefs 115 and 122). The timeline's, the thumb along the track, has a single-pointer alternative with the same
+      // result: a drag of the thumb completed at 70 % of the track, then, on a fresh page, a whole press on the track at
+      // the same point, the two positions compared. This row checks the timeline's drag only; the preview's two have the
+      // point's menu "Move" then one click (D270), checked by point-move (brief 139); no keyboard way is credited to 2.5.7. Every press goes through the pointer adapter, so a touch run can credit it. "Open project"
       // (stage 6) opens the browser's file chooser on a whole press only, none on the down-event or on a press moved
-      // off. Any other control needs its own journey.
+      // off. The preview (CORE-06, brief 112): the pen's tap, read while held, after a press moved off and after a whole
+      // press: a point on the up only, in one undo step. Any other control needs its
+      // own journey.
       name: 'pointer-cancellation',
       method: 'j-pointer',
       rows: ['2.5.2', '2.5.7'],
@@ -853,6 +1169,7 @@ export default {
           const skip = await control.evaluate((e, [a, b]) => (e.matches(a) ? 'start' : e.matches(b) ? 'end' : ''), [SKIP_START, SKIP_END]);
           const offPlay = await control.evaluate((e, s) => e.matches(s) && e.disabled, PLAY);
           const isOpen = await control.evaluate((e, s) => e.matches(s), OPEN);
+          const isPreview = await control.evaluate((e, s) => e.matches(s), PREVIEW);
           if (await control.evaluate((e, s) => e.matches(s), TIMELINE)) {
             const bad = [];
             // 2.5.2: a press on the track and a drag, aborted by Escape before the release.
@@ -911,6 +1228,39 @@ export default {
             else { slider.push(`${name}`); compared = `a drag of the thumb completed at 70 % of the track held ${dragged.now} (${dragged.text}), and a whole press on the track at the same point ${kept.now} (${kept.text}), within ${tolerance} (two pixels); neither made an undo step`; }
             continue;
           }
+          if (isPreview) {
+            // The preview (CORE-06, brief 112): the pen's tap acts on the up only (2.5.2). On the shell's empty route a
+            // press on an empty place is read while held, after it is moved off the box and released (abandoned), and
+            // after a whole press: nothing drawn changes on the down or by the abandoned press; the whole press places
+            // one point (what is drawn changes) in one undo step (one Undo draws the frame found again). Brief 134 (ruling
+            // CV; D263, D268): the status region is empty after the held press, the abandoned press and the whole press's
+            // down, and says "Point added" after the whole press.
+            const box = await control.boundingBox();
+            const x = box.x + box.width * 0.3, y = box.y + box.height * 0.5;
+            const bad = [];
+            const now = async () => { await page.waitForTimeout(250); await twoFrames(page); return (await pixels(page)).hash; };
+            const before = await now();
+            const quiet = async (when) => { const words = await said(page); if (words !== '') bad.push(`${when} said ${JSON.stringify(words)}`); };
+            await pointer.down(x, y);
+            if ((await now()) !== before) bad.push('a press held on an empty place changed what it draws');
+            await quiet('a press held on an empty place');
+            await pointer.move(x + box.width + 40, y);
+            await pointer.up();
+            if ((await now()) !== before) bad.push('a press moved off it and released changed what it draws');
+            await quiet('a press moved off it and released');
+            await pointer.down(x, y);
+            if ((await now()) !== before) bad.push('the down of a whole press changed what it draws');
+            await quiet('the down of a whole press');
+            await pointer.up();
+            if ((await now()) === before) bad.push('a whole press drew no point');
+            if ((await said(page)) !== POINT_ADDED) bad.push(`a whole press said ${JSON.stringify(await said(page))}, not ${JSON.stringify(POINT_ADDED)}`);
+            await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+            await page.keyboard.press(UNDO);
+            if ((await now()) !== before) bad.push('one Undo did not take the point away: the press was not one step');
+            if (bad.length) problems.push(`${name}: ${bad.join('; ')}`);
+            else done.push(`${name} (the pen's tap: nothing drawn or said on the down, nothing left or said by a press moved off, one point and one undo step on the up, saying "${POINT_ADDED}")`);
+            continue;
+          }
           if (!href && !isHelp && !skip && !offPlay && !isOpen) { problems.push(`${name} is neither a link nor "Help": write its pointer journey (what its up-event does, and how a press is abandoned)`); continue; }
           const box = await control.boundingBox();
           const x = box.x + box.width / 2, y = box.y + box.height / 2;
@@ -959,6 +1309,9 @@ export default {
             done.push(name);
             // Inside Help, the switch: a point in the dialog clear of its controls to move the press off to.
             const sw = singleKeys(page), was = await sw.getAttribute('aria-checked');
+            // Help scrolls at 1280 by 800 (FINDING-123, D264): with the nudge's two rows (brief 125) the switch sits below
+            // the region's visible part, and a press at its unscrolled place lands outside Help and closes it.
+            await sw.scrollIntoViewIfNeeded();
             const sbox = await sw.boundingBox();
             const sx = sbox.x + sbox.width / 2, sy = sbox.y + sbox.height / 2;
             const inner = await page.evaluate(({ sel, ctl }) => {
@@ -991,7 +1344,7 @@ export default {
           else done.push(name);
         }
         const slid = slider.length > 0;
-        record('2.5.7', slid && !problems.some((p) => p.startsWith('slider')), slid ? `the one drag, the timeline's thumb along its track, has a single-pointer alternative with the same result: ${compared}` : problems.find((p) => p.startsWith('slider')) ?? 'the timeline was not met');
+        record('2.5.7', slid && !problems.some((p) => p.startsWith('slider')), slid ? `of the page's dragging movements, this row checks the timeline's only: its thumb along the track has a single-pointer alternative with the same result: ${compared}; the preview's two (a point's, a group's) have the point's menu "Move" then one click, checked by point-move` : problems.find((p) => p.startsWith('slider')) ?? 'the timeline was not met');
         record('2.5.2', !problems.length && done.length > 0 && slid, problems.length ? problems.join('; ') : done.length && slid ? `${done.length} button(s), link(s) and switch(es) do nothing on the down-event or on a press moved off before release, and, where enabled, act on a whole press, on the up-event: ${done.join(', ')}; the slider, ${slider.join(', ')}, moves on the down-event as a provisional scrub, which Escape aborts before the release (abort before completion) and the release completes, with no undo step` : 'no control to press, or the timeline not met');
       },
     },
@@ -1175,8 +1528,9 @@ export default {
             name: 'Close', trigger: '[role=dialog] .cds--modal-close', words: 'Close', byException: true,
             // Help opened from the keyboard, the pointer away; focus lands at the content's start, not on Close.
             setup: async () => { await open('shell'); await page.mouse.move(OFF.x, OFF.y); await helpButton(page).focus(); await page.keyboard.press('Enter'); await helpDialog(page).waitFor(); },
-            // Shift+Tab from the content's start reaches Close (the kit's Dialog).
-            focus: async () => { await page.keyboard.press('Shift+Tab'); },
+            // Shift+Tab from the content's start reaches Close (the kit's Dialog), past Help's scrollable region when its
+            // content scrolls (brief 123).
+            focus: async () => { await shiftTabToClose(page); },
             kept: async () => String(await helpDialog(page).isVisible()),
           },
           {
@@ -1339,8 +1693,8 @@ export default {
       // read with the switch. A further field needs its own check here. The play bar's Play, disabled with nothing to
       // play, has its reason: the line under the group, visible, tied to it by aria-describedby and not in its name
       // (UI-06 J-21). 4.1.3: the shell's one status region, role status, is empty
-      // and nothing changes in the 2 s after the shell loads; a real key (Home, with the progress link focused) raises
-      // the editor's message in it, and focus stays on the link. A further status region needs its own check here.
+      // and nothing changes in the 2 s after the shell loads; a real key (Home, with the preview focused) raises
+      // the editor's message in it, and focus stays on the preview. A further status region needs its own check here.
       name: 'fields-and-status',
       method: 'j-forms',
       rows: ['3.3.5', '4.1.3'],
@@ -1388,10 +1742,10 @@ export default {
           watch.observe(document.body, { subtree: true, childList: true, characterData: true });
           setTimeout(() => { watch.disconnect(); done(n); }, 2000);
         }));
-        await progressLink(page).focus();
+        await page.locator(PREVIEW).focus();
         await page.keyboard.press('Home');
         const words = await said(page);
-        const focusStays = await page.evaluate((href) => document.activeElement?.getAttribute('href') === href, PROGRESS);
+        const focusStays = await focusOn(page, PREVIEW);
         const byButton = [];
         for (const [sel, want] of [[SKIP_START, SKIPPED_TO_START], [SKIP_END, SKIPPED_TO_END]]) {
           await open('shell');
@@ -1406,15 +1760,15 @@ export default {
           atRest && `the status region shows ${JSON.stringify(atRest)} at rest`,
           changes && `the shell changed ${changes} time(s) in the 2 s after it loaded`,
           words !== SKIPPED_TO_START && `Home said ${JSON.stringify(words)} in the status region, not ${JSON.stringify(SKIPPED_TO_START)}`,
-          !focusStays && 'focus left the progress link when Home raised the message',
+          !focusStays && 'focus left the preview when Home raised the message',
         ].filter(Boolean);
-        record('4.1.3', !problems.length, problems.length ? problems.join('; ') : `one status region, role status, empty at rest; nothing changes in the 2 s after the shell loads; Home, pressed on the focused progress link, says "${SKIPPED_TO_START}" in it and focus stays on the link; "Skip to start" and "Skip to end", pressed, say "${SKIPPED_TO_START}" and "${SKIPPED_TO_END}" in it with focus kept on each`);
+        record('4.1.3', !problems.length, problems.length ? problems.join('; ') : `one status region, role status, empty at rest; nothing changes in the 2 s after the shell loads; Home, pressed on the focused preview, says "${SKIPPED_TO_START}" in it and focus stays on the preview; "Skip to start" and "Skip to end", pressed, say "${SKIPPED_TO_START}" and "${SKIPPED_TO_END}" in it with focus kept on each`);
       },
     },
     {
       // 2.1.4, both ways: as the page opens, single-key shortcuts are on and < says "Skipped to start". Their switch
       // in Help, turned off by the keyboard, turns them off: J, K, L, comma, full stop, <, > and ? pressed on the page
-      // and on the focused progress link and "Skip to start" then say nothing, open nothing, follow nothing and move
+      // and on the focused preview and "Skip to start" then say nothing, open nothing, follow nothing and move
       // the timeline not at all (a frame step says nothing even when on, D205), while Home still speaks (the listener
       // was live throughout), on the focused "Skip to start" too. Turned on again, full stop steps one frame, > says
       // "Skipped to end" and K the reason there is nothing to play.
@@ -1432,9 +1786,9 @@ export default {
         if (off.after !== 'false') problems.push('Space on the switch did not turn it off');
         if (!off.back) problems.push('focus did not come back to "Help" after turning the switch off');
         if (!(await quiet(page))) problems.push('the status region did not empty');
-        for (const where of ['the page', 'the focused progress link', 'the focused "Skip to start"', 'the focused timeline']) {
+        for (const where of ['the page', 'the focused preview', 'the focused "Skip to start"', 'the focused timeline']) {
           if (where === 'the page') await page.locator('header h1').click();
-          else if (where === 'the focused progress link') await progressLink(page).focus();
+          else if (where === 'the focused preview') await page.locator(PREVIEW).focus();
           else if (where === 'the focused timeline') await page.locator(TIMELINE).focus();
           else await page.locator(SKIP_START).focus();
           for (const key of SINGLE_KEYS) {
@@ -1461,16 +1815,17 @@ export default {
         if (!(await quiet(page))) problems.push('the status region did not empty');
         await page.keyboard.press('k');
         if ((await said(page)) !== NOTHING_TO_PLAY) problems.push(`with the switch on again, K said ${JSON.stringify(await said(page))}, not ${JSON.stringify(NOTHING_TO_PLAY)}`);
-        record('2.1.4', !problems.length, problems.length ? problems.join('; ') : `single-key shortcuts can be turned off (D183): on as the page opens, < says "${SKIPPED_TO_START}"; with their switch in Help turned off by the keyboard, ${SINGLE_KEYS.join(' ')} pressed on the page, on the focused progress link, on the focused "Skip to start" and on the focused timeline say, open, follow and move nothing while Home still says "${SKIPPED_TO_START}"; turned on again, full stop steps one frame (20 thousandths) and > says "${SKIPPED_TO_END}"`);
+        record('2.1.4', !problems.length, problems.length ? problems.join('; ') : `single-key shortcuts can be turned off (D183): on as the page opens, < says "${SKIPPED_TO_START}"; with their switch in Help turned off by the keyboard, ${SINGLE_KEYS.join(' ')} pressed on the page, on the focused preview, on the focused "Skip to start" and on the focused timeline say, open, follow and move nothing while Home still says "${SKIPPED_TO_START}"; turned on again, full stop steps one frame (20 thousandths) and > says "${SKIPPED_TO_END}"`);
       },
     },
     {
       // With real key events: 2.4.3, Tab meets the reviewed controls in order; 3.2.2, the shell's one setting, the switch
       // in Help, turned off and on by Space changes no context (same page, no new window, Help still open, focus still on
       // the switch); 3.2.5, left
-      // alone for 3 s nothing changes context, nothing refreshes the page and no link opens another window, so the one
-      // change comes on request; P06, the shell's one task, following the progress link, runs by Tab and Enter and Back
-      // recovers the shell (the destination stood in, not tested); CONF03, the shell presents no process (PROCESSES).
+      // alone for 3 s nothing changes context, nothing refreshes the page and no link opens another window; P06, the
+      // shell's one task by keyboard (since D209 took its link), turning single-key shortcuts off in Help, runs by Tab,
+      // Enter, Space and Escape from a fresh open, and the same keys turn them on again, recovering the shell as it
+      // opened; CONF03, the shell presents no process (PROCESSES).
       name: 'keyboard-task',
       method: 'keyboard',
       rows: ['2.4.3', '3.2.2', '3.2.5', 'P06', 'CONF03'],
@@ -1506,15 +1861,31 @@ export default {
         const idle = page.url() === start && page.context().pages().length === pages;
         const refresh = await page.locator('meta[http-equiv="refresh" i]').count();
         const windows = await page.locator('a[target]:not([target="_self"]), form[target]:not([target="_self"])').count();
+        const change = [!idle && 'the context changed while the shell was left alone', refresh && 'a meta refresh', windows && `${windows} link(s) or form(s) open another window`].filter(Boolean);
+        record('3.2.5', !change.length, change.length ? change.join('; ') : 'left alone for 3 s nothing changed context; no refresh and no link opening another window');
+        // P06: from a fresh open, Tab to "Help", Enter, Tab to the switch, Space, Escape; then the same to undo it.
+        await open('shell');
         let reached = false;
-        for (let i = 0; i < 20 && !reached; i++) { await tab(); reached = await page.evaluate((href) => document.activeElement?.getAttribute('href') === href, PROGRESS); }
-        if (reached) await page.keyboard.press('Enter');
-        const arrived = reached && await arrives(page, PROGRESS);
-        let restored = false;
-        if (arrived) { await page.goBack(); restored = page.url() === start && await page.getByRole('heading', { level: 1, name: 'Route Plotter' }).isVisible(); }
-        const change = [!idle && 'the context changed while the shell was left alone', refresh && 'a meta refresh', windows && `${windows} link(s) or form(s) open another window`, !arrived && 'Enter on the progress link did not follow it'].filter(Boolean);
-        record('3.2.5', !change.length, change.length ? change.join('; ') : 'left alone for 3 s nothing changed context; no refresh and no link opening another window; the one change came on Enter');
-        record('P06', arrived && restored, !reached ? 'Tab did not reach the progress link' : !arrived ? 'Enter on the progress link did not follow it' : !restored ? 'Back did not bring the shell back' : 'the shell\'s one task, following the progress link, runs by Tab and Enter, and Back recovers the shell (the destination, GitHub\'s page, stood in locally and not tested)');
+        for (let i = 0; i < 20 && !reached; i++) { await tab(); reached = await focusIs(page, HELP); }
+        const task = [];
+        if (!reached) task.push('Tab did not reach "Help"');
+        else {
+          await page.keyboard.press('Enter');
+          if (!(await helpDialog(page).waitFor({ timeout: 2000 }).then(() => true, () => false))) task.push('Enter on "Help" did not open it');
+          else {
+            for (let i = 0; i < 6 && !(await focusIs(page, SWITCH)); i++) await page.keyboard.press('Tab');
+            const was = await singleKeys(page).getAttribute('aria-checked');
+            await page.keyboard.press('Space');
+            const now = await singleKeys(page).getAttribute('aria-checked');
+            await page.keyboard.press('Escape');
+            if (was !== 'true' || now !== 'false') task.push(`the switch read ${String(was)} then ${String(now)}, not on then off`);
+            if (!(await backOnHelp(page))) task.push('focus did not come back to "Help" after the task');
+            const again = await flipByKeyboard(page);
+            if (again.before !== 'false' || again.after !== 'true' || !again.back) task.push(`turned on again it read ${String(again.before)} then ${String(again.after)}${again.back ? '' : ', focus not back on "Help"'}`);
+          }
+        }
+        if (page.url() !== start) task.push(`the task left the shell for ${page.url()}`);
+        record('P06', !task.length, task.length ? task.join('; ') : 'the shell\'s one task by keyboard, turning single-key shortcuts off in Help, runs from a fresh open by Tab to "Help", Enter, Tab to the switch, Space and Escape, with focus back on "Help"; the same keys turn them on again, recovering the shell as it opened');
         // CONF03: the shell's process boundary, observed. A form, or a link to another of the app's pages, means a process
         // may be presented: it is declared in PROCESSES and its journey runs every step.
         await open('shell');
@@ -1526,7 +1897,8 @@ export default {
     {
       // 4.1.3 (stage 6): "Open project" pressed and the journeys' project chosen: the status region says "Project
       // opened", once, and nothing else, with no alert and focus kept on the button; the line saying why Play is off is
-      // gone; Play pressed plays from 0, the position rising. Criterion 3's open half on the page.
+      // gone; the position waits at the end (1000: D251, brief 127); Play pressed plays from 0, the position rising.
+      // Criterion 3's open half on the page.
       name: 'open-a-project',
       method: 'j-forms',
       rows: ['4.1.3'],
@@ -1546,16 +1918,279 @@ export default {
         await page.locator(PLAY).click();
         const played = await sample(page, 30);
         const last = played.at(-1)[1];
-        if (from !== 0) wrong.push(`the position before Play was ${from}, not 0`);
+        if (from !== 1000) wrong.push(`the position before Play was ${from}, not 1000 (the end)`);
         if (!(last > 0) || backwards(played).length) wrong.push(`after Play the position went ${played.map(([, v]) => v).join(', ')}, not rising from 0`);
-        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${OPENED}" said once and nothing else, no alert, focus kept on "Open project", the reason line gone; Play played from 0 to ${last} thousandths in 30 frames`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `"${OPENED}" said once and nothing else, no alert, focus kept on "Open project", the reason line gone, the position at 1000 (the end); Play played from 0 to ${last} thousandths in 30 frames`);
       },
     },
     {
-      // The preview (brief 84, a): before any open the canvas is sized to its box times the pixel ratio (a paint ran)
-      // and holds an empty scene's frame, nothing drawn; the golden opened, its pixels differ, the line's colour stands
-      // at the start's place by arithmetic (a square fitted to the frame's height, centred: squareX) and not yet at the
-      // middle (the line grows from the start); left alone a second, nothing changes (no motion until Play: 2.2.2).
+      // D276 (a), kept as built: the parent chat's reading of the owner's answer of 2026-11-27, which stands unless he
+      // objects (brief 145, ruling JC 4; widened by brief 147, ruling KA 3): Open over a route drawn since
+      // the page opened asks first. In pen-drawn (two taps: the route has changed), the journeys' project chosen
+      // through "Open project" shows one dialog, "Replace your route?", naming the file, with focus on "Keep my route".
+      // It is then kept four ways, each from a fresh Open: one Escape, "Keep my route" by its button, the dialog's
+      // Close, and a press outside it; each time the dialog is gone, the canvas reads as before (the same pixels),
+      // "Open cancelled" is heard once more and nothing else, and focus is back on "Open project". Then a second ask
+      // while one is shown (Codex on 3491f00): with the dialog up and focus moved by Tab to "Replace", the page's own
+      // Open key (Cmd/Ctrl+O) opens nothing (the open dialog takes it, keydown.ts), and the button is behind the
+      // dialog, so from the page a second ask comes only from a second picker opened before the first question
+      // appeared, its file chosen after the question showed (were the second file chosen before the first question
+      // appeared, the first open would be superseded and never ask). The journey holds that order itself: it presses
+      // "Open project" twice, so both pickers are open before any file is chosen, then chooses the same file in the
+      // first, moves focus to "Replace" once the question shows, then chooses in the second;
+      // the first open is set aside unsaid (openLogic.ts point 14), one dialog stays, and focus goes back to "Keep my
+      // route". Escape then keeps the route as before. Open again and "Replace": "Project opened" heard, the opened
+      // project drawn (the canvas changed), focus back on "Open project". Open once more, nothing drawn since: no
+      // dialog, "Project opened". It claims 3.3.4 (the one action that throws work away is confirmed); the runner
+      // refuses 2.4.3 for a j-forms journey, so focus is read here as part of 3.3.4's result only.
+      name: 'open-over-changes',
+      method: 'j-forms',
+      rows: ['3.3.4'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const wrong = [];
+        const question = page.getByRole('dialog', { name: 'Replace your route?' });
+        const asked = () => question.waitFor({ state: 'visible', timeout: 6000 }).then(() => true, () => false);
+        const focused = () => page.evaluate(() => document.activeElement?.textContent?.trim() || document.activeElement?.tagName || 'nothing');
+        const focusComesTo = (words) => page.waitForFunction((w) => document.activeElement?.textContent?.trim() === w, words, { timeout: 3000 }).then(() => true, () => false);
+        const says = (w) => page.waitForFunction(([sel, words]) => document.querySelector(sel)?.textContent === words, [STATUS, w], { timeout: 6000 }).then(() => true, () => false);
+        const drawn = await pixels(page);
+        const heard = await hear(page);
+        let cancels = 0;
+        // After a way of keeping: the dialog gone, "Open cancelled" heard once more, the canvas as before, focus back.
+        const keptBy = async (how) => {
+          if (await question.count()) wrong.push(`${how} left the dialog open`);
+          if (!(await says('Open cancelled'))) wrong.push(`"Open cancelled" was not said after ${how}`);
+          await quiet(page);
+          await twoFrames(page);
+          cancels += 1;
+          if ((await pixels(page)).hash !== drawn.hash) wrong.push(`after ${how} the canvas did not read as before the Open: the route was replaced`);
+          if (!(await focusOn(page, OPEN))) wrong.push(`after ${how} focus was on "${await focused()}", not "Open project"`);
+          const texts = await heard();
+          if (JSON.stringify(texts) !== JSON.stringify(Array(cancels).fill('Open cancelled'))) wrong.push(`after ${how} the status region had said ${JSON.stringify(texts)}, not "Open cancelled" ${cancels} time(s) and nothing else`);
+        };
+        // (1) Asked, kept by Escape.
+        if (!(await choose(page, await projectFile()))) wrong.push('a press on "Open project" opened no file chooser');
+        if (!(await asked())) wrong.push('no "Replace your route?" dialog showed over a drawn route');
+        else {
+          if ((await page.getByRole('dialog').count()) !== 1) wrong.push(`${await page.getByRole('dialog').count()} dialogs showed, not one`);
+          const text = await question.innerText();
+          if (!/Replace your route with \S+\? What you have drawn is not saved and will be lost\./.test(text)) wrong.push(`the dialog read "${text}", not naming the file and saying the route will be lost`);
+          const first = await focused();
+          if (first !== 'Keep my route') wrong.push(`as the dialog opened focus was on "${first}", not "Keep my route"`);
+          await page.keyboard.press('Escape');
+          await keptBy('Escape');
+        }
+        // (1b) Kept by "Keep my route", by Close and by a press outside, each from a fresh Open.
+        for (const [how, act] of [
+          ['"Keep my route" by its button', () => question.getByRole('button', { name: 'Keep my route', exact: true }).click()],
+          ['the dialog\'s Close', () => question.getByRole('button', { name: 'Close', exact: true }).click()],
+          ['a press outside the dialog', () => page.mouse.click(4, 4)],
+        ]) {
+          if (!(await choose(page, await projectFile()))) wrong.push(`before ${how} a press on "Open project" opened no file chooser`);
+          if (!(await asked())) wrong.push(`before ${how} no dialog showed over the drawn route`);
+          else {
+            await act();
+            await keptBy(how);
+          }
+        }
+        // (1c) A second ask while one is shown: one dialog, focus back on "Keep my route".
+        {
+          const chooser = () => page.waitForEvent('filechooser', { timeout: 3000 }).then((c) => c, () => null);
+          const one = chooser();
+          await page.locator(OPEN).click();
+          const c1 = await one;
+          const two = chooser();
+          await page.locator(OPEN).click();
+          const c2 = await two;
+          if (!c1 || !c2) wrong.push(`two presses on "Open project" opened ${[c1, c2].filter(Boolean).length} file chooser(s), not two`);
+          else {
+            await c1.setFiles(await projectFile());
+            if (!(await asked())) wrong.push('no dialog showed for the first of two files chosen');
+            else {
+              await page.keyboard.press('Tab');
+              const moved = await focused();
+              if (moved !== 'Replace') wrong.push(`Tab from "Keep my route" put focus on "${moved}", not "Replace"`);
+              const { opened } = await pressOpenKey(page, 1500);
+              if (opened) wrong.push('the Open key, pressed in the dialog, opened a file chooser');
+              await c2.setFiles(await projectFile());
+              if (!(await focusComesTo('Keep my route'))) wrong.push(`a second ask for the same file while the question showed left focus on "${await focused()}", not "Keep my route"`);
+              if ((await page.getByRole('dialog').count()) !== 1) wrong.push(`after a second ask ${await page.getByRole('dialog').count()} dialogs showed, not one`);
+              await page.keyboard.press('Escape');
+              await keptBy('Escape on the second ask');
+            }
+          }
+        }
+        const kept = await heard();
+        // (2) Asked, replaced.
+        if (!(await choose(page, await projectFile()))) wrong.push('the press before "Replace" opened no file chooser');
+        if (!(await asked())) wrong.push('no dialog showed on the Open before "Replace" over the drawn route');
+        else {
+          await question.getByRole('button', { name: 'Replace', exact: true }).click();
+          if (!(await saysOpened(page))) wrong.push(`after "Replace" the status region never said "${OPENED}"`);
+          if (await question.count()) wrong.push('"Replace" left the dialog open');
+          await quiet(page);
+          await twoFrames(page);
+          if ((await pixels(page)).hash === drawn.hash) wrong.push('after "Replace" the canvas read as the drawn route: the project was not shown');
+          if (!(await focusOn(page, OPEN))) wrong.push(`after "Replace" focus was on "${await focused()}", not "Open project"`);
+        }
+        const replaced = (await heard()).slice(kept.length);
+        if (JSON.stringify(replaced) !== JSON.stringify([OPENED])) wrong.push(`after "Replace" the status region said ${JSON.stringify(replaced)}, not "${OPENED}" once`);
+        // (3) Nothing drawn since the Open: no question.
+        if (!(await choose(page, await projectFile()))) wrong.push('the third press on "Open project" opened no file chooser');
+        if (!(await saysOpened(page))) wrong.push(`with nothing drawn since, the status region never said "${OPENED}"`);
+        if (await page.getByRole('dialog').count()) wrong.push('with nothing drawn since the last Open a dialog showed');
+        await quiet(page);
+        record('3.3.4', !wrong.length, wrong.length ? wrong.join('; ') : `over a drawn route Open asked "Replace your route?" in one dialog with focus on "Keep my route"; one Escape, "Keep my route" by its button, the dialog's Close and a press outside each kept the route (the canvas as before), said "Open cancelled" once more and put focus back on "Open project"; with focus moved to "Replace", the Open key opened nothing, and a second ask for the same file left one dialog with focus back on "Keep my route", and Escape kept the route; "Replace" opened the project, said "${OPENED}" once and put focus back on "Open project"; with nothing drawn since, Open asked nothing`);
+      },
+    },
+    {
+      // D251's first half (Joe, 26 Nov: "End, plus a guide"; brief 127): a project whose route ends in a trail opened, the
+      // timeline waits at its end, its words "x of x" (the trail's run-on and Hold at end counted: longer than the empty
+      // page's 0:02), and stays there with nothing pressed; the status region says "Project opened" and nothing else
+      // (not "Skipped to end", not "Animation complete"); Play then plays from 0, the position rising.
+      name: 'opens-at-the-end',
+      method: 'j-forms',
+      rows: ['4.1.3'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const empty = await atNow(page);
+        const heard = await hear(page);
+        const wrong = [];
+        if (!(await choose(page, await projectFile(null, false, false, null, true)))) wrong.push('a press on "Open project" opened no file chooser');
+        if (!(await saysOpened(page))) wrong.push(`the status region never said "${OPENED}"`);
+        const at = await atNow(page);
+        const halves = /^(\d+:\d\d) of (\d+:\d\d)$/.exec(at.text ?? '');
+        if (at.now !== 1000) wrong.push(`after the open the position was ${at.now}, not 1000 (the end)`);
+        if (!halves || halves[1] !== halves[2]) wrong.push(`after the open the time read "${at.text}", not "x of x"`);
+        if (at.text === empty.text) wrong.push(`the time read "${at.text}", as the empty page did: the opened length was not taken`);
+        const still = await sample(page, 20);
+        await page.waitForTimeout(500);
+        const later = await atNow(page);
+        if (still.some(([, v]) => v !== 1000) || later.now !== 1000 || later.text !== at.text) wrong.push(`left alone the position went ${still.map(([, v]) => v).join(', ')}, then ${later.now} ("${later.text}"), not held at the end`);
+        if ((await playLabel(page)) !== 'Play') wrong.push(`the play button reads "${await playLabel(page)}", not "Play"`);
+        await quiet(page);
+        const texts = await heard();
+        if (JSON.stringify(texts) !== JSON.stringify([OPENED])) wrong.push(`the status region said ${JSON.stringify(texts)}, not "${OPENED}" once and nothing else`);
+        await page.locator(PLAY).click();
+        const played = await sample(page, 30);
+        const last = played.at(-1)[1];
+        if (!(played[0][1] <= 50) || !(last > played[0][1]) || backwards(played).length) wrong.push(`after Play the position went ${played.map(([, v]) => v).join(', ')}, not rising from 0`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `a trail's project opened: the time "${at.text}" (the empty page's "${empty.text}"), the position 1000 and held 20 frames and half a second with Play offered; "${OPENED}" said once and nothing else; Play played from ${played[0][1]} to ${last} thousandths in 30 frames`);
+      },
+    },
+    {
+      // D251's second half (Joe, 26 Nov: "End, plus a guide (d)"; D265; brief 128, BT): while the preview is not playing,
+      // the editor's guide traces every line of every route and marks every point, whatever the line's look; while
+      // playing it is gone. (1) A trail's project opened (opens-at-the-end's), paused at the end, where a trail draws
+      // nothing: along 25 columns at 0.55 of the way from the first stop's x (0.25 of the square) to the second's
+      // (0.75; 0.65 until brief 151, moved off the way arrow two thirds along, D275, whose white edge filled 6 of those
+      // columns: PROBE-151/probe-guide.txt, 7 lit where the dashes light 13), the guide's dashes, some columns the line's colour (alpha 64 or more) and some bare (rowAt: dashed 6 on
+      // and 4 off); at each stop, the line's colour opaque (strokeAt, near(); the stops' own markers read so with the
+      // guide off too, probed: the guide's dot is proved at the copies, (4)). (2) Play: the position rises, and at that
+      // place every column is bare (the trail's comet starts behind the head at the first stop and is nowhere near). (3)
+      // Pause: "Animation paused", and the dashes are back; played through to "Animation complete", back again. (4) CARRY-F6: pen-drawn,
+      // End, Escape, Cmd+A, Cmd+D, Escape: at each copy (2% right and down of its tap, joined to no line, so the
+      // animation draws nothing for it: FINDING-124), 2 canvas px further from the line (the line passes 2.5 px from
+      // it), a pixel bare before Cmd+D reads the line's colour opaque after Escape: its guide dot; the canvas is not as
+      // before Cmd+D. Faults that fail it (PROBE-128/mut): (u) the guide drawn while playing fails (2); (w) the guide for
+      // the selected route only fails (1), (3) and (4). (v) `playing` out of the drawer's Key does not fail it: in the page
+      // a Pause, or the end, always brings a position not yet drawn (point 4g's frame late), so a frame is drawn anyway;
+      // the Node test of point 4b holds it (previewLogic.test.ts, a Pause at the same position books). (5) D275 (brief 151): at
+      // each of (1), (3) and (3b), round two thirds of the way (the trail's line runs one way, first stop to second), rows
+      // 2 to 4 px off the line hold the route's colour and white (arrowAt): the way arrow, which the 2-wide guide never
+      // reaches; in (2), playing, none. It claims nothing for an export (the import rules keep the guide out of one:
+      // catalogue.editor.ts) and nothing spoken.
+      name: 'the-guide',
+      method: 'j-timing',
+      rows: ['2.2.2'],
+      run: async ({ page, open, record }) => {
+        await open('shell');
+        const wrong = [];
+        if (!(await choose(page, await projectFile(null, false, false, null, true))) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the trail\'s project did not open');
+        if (!(await sizeSettled(page))) wrong.push('after the open the canvas was not its box times the ratio');
+        await twoFrames(page);
+        const opened = await pixels(page);
+        const [x0, x1] = [squareX(opened, 0.25), squareX(opened, 0.75)];
+        const along = x0 + 0.55 * (x1 - x0);
+        const way = x0 + (2 / 3) * (x1 - x0);
+        const arrowed = (a) => a.hue >= 1 && a.white >= 8;
+        const lit = (p) => p[3] >= 64 && ORANGE.every((v, i) => Math.abs(p[i] - v) <= 24);
+        const dashes = async () => { const row = await rowAt(page, along, 0.5); return { lit: row.filter(lit).length, alphas: row.map((p) => p[3]).join(', ') }; };
+        const atEnd = await dashes();
+        const arrowEnd = await arrowAt(page, way, 0.5);
+        if (!arrowed(arrowEnd)) wrong.push(`paused at the end, round ${way.toFixed(4)} (two thirds along the one-way line) rows 2 to 4 px off it read ${arrowEnd.hue} of the line's colour and ${arrowEnd.white} white, not the way arrow (D275)`);
+        if (!(atEnd.lit >= 5 && atEnd.lit <= 20)) wrong.push(`paused at the end, ${atEnd.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${atEnd.alphas}), not the guide's dashes`);
+        const stops = [await strokeAt(page, x0, 0.5), await strokeAt(page, x1, 0.5)];
+        if (!stops.every((p) => near(p, ORANGE))) wrong.push(`paused at the end the stops read ${stops.map((p) => p.join(', ')).join(' and ')}, not the line's colour`);
+        await page.locator(PLAY).click();
+        await page.waitForTimeout(250);
+        const playing = await dashes();
+        const arrowPlaying = await arrowAt(page, way, 0.5);
+        const moving = await sample(page, 3);
+        if (!(moving.at(-1)[1] > 0)) wrong.push(`after Play the position read ${moving.map(([, v]) => v).join(', ')}, not rising`);
+        if (arrowPlaying.hue !== 0 || arrowPlaying.white !== 0) wrong.push(`playing, round ${way.toFixed(4)} rows 2 to 4 px off the line read ${arrowPlaying.hue} of the line's colour and ${arrowPlaying.white} white: the way arrow is drawn while playing`);
+        if (playing.lit !== 0) wrong.push(`playing, ${playing.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${playing.alphas}): the guide is drawn while playing`);
+        await page.locator(PLAY).click();
+        if (!(await comesToWords(page, PAUSED))) wrong.push(`Pause: "${PAUSED}" was not said`);
+        await twoFrames(page);
+        const paused = await dashes();
+        const arrowPaused = await arrowAt(page, way, 0.5);
+        if (!arrowed(arrowPaused)) wrong.push(`paused again, round ${way.toFixed(4)} rows 2 to 4 px off the line read ${arrowPaused.hue} of the line's colour and ${arrowPaused.white} white, not the way arrow`);
+        if (!(paused.lit >= 5 && paused.lit <= 20)) wrong.push(`paused again, ${paused.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${paused.alphas}), not the guide's dashes`);
+        // (3b) Played through: at "Animation complete" the playing stops at the end, and the guide is back.
+        await page.locator(PLAY).click();
+        const done = await page.waitForFunction(([st, w]) => document.querySelector(st)?.textContent === w, [STATUS, COMPLETE], { timeout: 15000 }).then(() => true, () => false);
+        if (!done) wrong.push(`"${COMPLETE}" was not said`);
+        await twoFrames(page);
+        const ended = await dashes();
+        const arrowEnded = await arrowAt(page, way, 0.5);
+        if (!arrowed(arrowEnded)) wrong.push(`at "${COMPLETE}" round ${way.toFixed(4)} rows 2 to 4 px off the line read ${arrowEnded.hue} of the line's colour and ${arrowEnded.white} white, not the way arrow`);
+        if (!(ended.lit >= 5 && ended.lit <= 20)) wrong.push(`at "${COMPLETE}" ${ended.lit} of 25 columns at ${along.toFixed(4)} are the line's colour (alphas ${ended.alphas}), not the guide's dashes`);
+        // (4) Duplicate's copies.
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const press = async (key) => { await page.keyboard.press(key); await settle(); };
+        const box = await boxOf(page);
+        const across = (0.02 * box.height) / box.width;
+        const copies = [first, second].map(([fx, fy]) => [fx + across, fy + 0.02]);
+        const dotsAt = () => page.locator(CANVAS).evaluate((c, [places, [a, b]]) => {
+          const [dx, dy] = [(b[0] - a[0]) * c.width, (b[1] - a[1]) * c.height];
+          const len = Math.hypot(dx, dy);
+          const [nx, ny] = [dy / len, -dx / len];
+          return places.map(([fx, fy]) => {
+            const [x, y] = [fx * c.width, fy * c.height];
+            const side = Math.sign((x - a[0] * c.width) * nx + (y - a[1] * c.height) * ny) || 1;
+            return [...c.getContext('2d').getImageData(Math.floor(x + 2 * side * nx), Math.floor(y + 2 * side * ny), 1, 1).data];
+          });
+        }, [copies, [first, second]]);
+        let tabs = 0;
+        while (!(await focusOn(page, PREVIEW)) && tabs < 8) { await page.keyboard.press('Tab'); tabs += 1; }
+        if (!(await focusOn(page, PREVIEW))) wrong.push('eight presses of Tab did not reach the preview box');
+        await press('End');
+        await press('Escape');
+        const before = await dotsAt();
+        const beforeCopy = (await pixels(page)).hash;
+        await press(`${COMMAND}+a`);
+        await press(`${COMMAND}+d`);
+        await press('Escape');
+        const after = await dotsAt();
+        if (before.some((p) => near(p, ORANGE))) wrong.push(`before Cmd+D the copies' places already read ${before.map((p) => p.join(', ')).join(' and ')}`);
+        if (!after.every((p) => near(p, ORANGE))) wrong.push(`after Cmd+D and Escape the copies' places read ${after.map((p) => p.join(', ')).join(' and ')}, not their guide dots in the line's colour`);
+        if ((await pixels(page)).hash === beforeCopy) wrong.push('after Cmd+D and Escape the canvas is as before Cmd+D: the copies show nothing');
+        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `a trail's project paused at its end: at ${along.toFixed(4)} ${atEnd.lit} of 25 columns the guide's dashes (alphas ${atEnd.alphas}), both stops the line's colour; playing, none (alphas ${playing.alphas}); paused again, ${paused.lit} (the guide back); pen-drawn, after Cmd+A, Cmd+D and Escape, each copy's guide dot (${after.map((p) => p.join(', ')).join(' and ')}) where before Cmd+D there was ${before.map((p) => p.join(', ')).join(' and ')}`);
+      },
+    },
+    {
+      // The preview (brief 84, a; brief 128, BN): before any open the canvas is sized to its box times the pixel ratio
+      // (a paint ran) and holds an empty scene's frame, nothing drawn; the golden opened, its pixels differ and the
+      // position waits at the end (1000, as opens-at-the-end reads it: D251), the line's colour stands at the start's
+      // place by arithmetic (a square fitted to the frame's height, centred: squareX) and at the middle the end's faded
+      // line, read as the-preview-plays reads it (the line's colour at alpha 64 or more: near()'s 200 would pass with the
+      // line gone) in every one of 25 columns there (rowAt: the guide drawn while paused, dashed, leaves some bare, so
+      // only the frame's line passes; probed, PROBE-128/s3probe-run.txt); left alone a second, nothing changes (no
+      // motion until Play: 2.2.2).
       name: 'the-preview-draws',
       method: 'j-timing',
       rows: ['2.2.2'],
@@ -1570,16 +2205,20 @@ export default {
         if (empty.drawn) wrong.push(`before any open ${empty.drawn} pixels are drawn, not an empty scene's none`);
         if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) wrong.push('the project did not open');
         await twoFrames(page);
+        const at = await atNow(page);
         const opened = await pixels(page);
         const x = squareX(opened, 0.25);
         const start = await strokeAt(page, x, 0.5);
-        const middle = await strokeAt(page, 0.5, 0.5);
+        const row = await rowAt(page, 0.5, 0.5);
+        const middle = row[12];
+        if (at.now !== 1000) wrong.push(`after the open the position was ${at.now}, not 1000 (the end)`);
         if (opened.hash === empty.hash) wrong.push('the canvas did not change when the project opened');
         if (!near(start, ORANGE)) wrong.push(`at the start's place (${x.toFixed(4)}, 0.5) the canvas holds ${start.join(', ')}, not the line's #d55e00`);
-        if (near(middle, ORANGE)) wrong.push('at 0:00 the line already stands at the middle');
+        const bare = row.filter((p) => !(p[3] >= 64 && ORANGE.every((v, i) => Math.abs(p[i] - v) <= 24)));
+        if (bare.length) wrong.push(`at the end ${bare.length} of 25 columns at the middle are not the line's colour (alphas ${row.map((p) => p[3]).join(', ')})`);
         await page.waitForTimeout(1000);
         if ((await pixels(page)).hash !== opened.hash) wrong.push('left alone a second, the canvas changed');
-        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `the canvas ${sized.join(' by ')}, its box times the ratio, empty before an open; the golden opened: changed, #d55e00 at (${x.toFixed(4)}, 0.5), the start's place ((${opened.width} - ${opened.height}) / 2 + 0.25 x ${opened.height}, over ${opened.width}), none at the middle; still over a second with nothing playing`);
+        record('2.2.2', !wrong.length, wrong.length ? wrong.join('; ') : `the canvas ${sized.join(' by ')}, its box times the ratio, empty before an open; the golden opened: changed, the position 1000 (the end), #d55e00 at (${x.toFixed(4)}, 0.5), the start's place ((${opened.width} - ${opened.height}) / 2 + 0.25 x ${opened.height}, over ${opened.width}), the line's colour in all 25 columns at the middle (${middle.join(', ')} at its centre); still over a second with nothing playing`);
       },
     },
     {
@@ -1608,12 +2247,14 @@ export default {
         await page.locator(PLAY).click();
         const done = await page.waitForFunction(([st, w]) => document.querySelector(st)?.textContent === w, [STATUS, COMPLETE], { timeout: 12000 }).then(() => true, () => false);
         if (!done) wrong.push(`"${COMPLETE}" was not said`);
+        if (!(await sizeSettled(page))) wrong.push('at "Animation complete" the canvas was not its box times the ratio');
         await twoFrames(page);
         const ended = await pixels(page);
         const middle = await strokeAt(page, 0.5, 0.5);
         await open('shell');
-        if (!(await choose(page, await projectFile())) || !(await saysOpened(page))) wrong.push('the second open failed');
+        if (!(await choose(page, await projectFile())) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the second open failed');
         await page.keyboard.press('End');
+        if (!(await sizeSettled(page))) wrong.push('after End the canvas was not its box times the ratio');
         await twoFrames(page);
         const byEnd = await pixels(page);
         if (ended.hash !== byEnd.hash) wrong.push('at "Animation complete" the canvas is not what End draws from a fresh open');
@@ -1644,10 +2285,21 @@ export default {
       run: async ({ page, open, record }) => {
         await open('shell');
         const wrong = [];
-        // Waits until the canvas has the shape asked (within 0.02) and the blue at (fx, fy): the frame drawn.
+        // Waits until the canvas has the shape asked (within 0.02), its box's size times the ratio (to a pixel) and the
+        // blue at (fx, fy): the frame drawn at the box's settled size. CORE-06 (brief 111): Open's busy notice takes
+        // room from the box while a project opens, and gives it back when it goes, so a frame of the right shape can
+        // be drawn at the smaller size before the box grows again; `frameAs` still checks the size by itself. Brief 129:
+        // so each open is waited out to `quiet` (the status emptied, about 2 s on) before `drawnAs`: the busy line goes
+        // with "Project opened", the room is measured again a task later and the canvas follows a frame after that, so
+        // a frame drawn at the smaller size in that gap met `drawnAs` and `frameAs` then read the grown box against it
+        // (2 of 40 runs on f9e285b: 684 by 385 against 704 by 396; the canvas was its box at the next reading,
+        // PROBE-129). Steps (b) and (c) waited `quiet` before their open, for the last "Project opened"; now each
+        // open is followed by it, the first included, so the next one starts quiet as before.
         const drawnAs = (shape, fx, fy) => page.waitForFunction(([sel, rgb, shape, x, y]) => {
           const c = document.querySelector(sel);
           if (Math.abs(c.width / c.height - shape) > 0.02) return false;
+          const box = c.parentElement.getBoundingClientRect(), s = Math.min(devicePixelRatio, 3);
+          if (Math.abs(c.width - box.width * s) > 1 || Math.abs(c.height - box.height * s) > 1) return false;
           const [r, g, b, a] = c.getContext('2d').getImageData(Math.floor(x * c.width), Math.floor(y * c.height), 1, 1).data;
           return a > 200 && Math.abs(r - rgb[0]) <= 24 && Math.abs(g - rgb[1]) <= 24 && Math.abs(b - rgb[2]) <= 24;
         }, [CANVAS, BLUE, shape, fx, fy], { timeout: 3000 }).then(() => true, () => false);
@@ -1666,7 +2318,7 @@ export default {
         const square = (await atNow(page)).text?.split(' of ')[1];
         const png = await plainPng(page, 200, 100, '#3366cc');
         // (a) the golden's video, 1920 by 1080.
-        if (!(await choose(page, await projectFile(png, true))) || !(await saysOpened(page))) wrong.push('the project with the picture did not open');
+        if (!(await choose(page, await projectFile(png, true))) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the project with the picture did not open');
         if (!(await drawnAs(16 / 9, 0.75, 0.2778))) wrong.push('with the picture and a 1920 by 1080 video, no 16 to 9 frame with the blue at (0.75, 0.2778) came');
         const wide = await frameAs('1920 by 1080', 16 / 9, [[0.75, 0.2778], [0.75, 0.7222]], [[0.75, 0.02], [0.75, 0.98]]);
         const pictured = (await atNow(page)).text?.split(' of ')[1];
@@ -1676,11 +2328,11 @@ export default {
         await page.waitForTimeout(500);
         if ((await pixels(page)).hash !== drawn.hash) wrong.push('with the picture drawn and nothing playing, the canvas changed over half a second');
         // (b) the same project with a video of 1080 by 1920.
-        if (!(await quiet(page)) || !(await choose(page, await projectFile(png, true, false, { width: 1080, height: 1920 }))) || !(await saysOpened(page))) wrong.push('the project with an upright video did not open');
+        if (!(await choose(page, await projectFile(png, true, false, { width: 1080, height: 1920 }))) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the project with an upright video did not open');
         if (!(await drawnAs(9 / 16, 0.75, 0.4))) wrong.push('with the picture and a 1080 by 1920 video, no 9 to 16 frame with the blue at (0.75, 0.4) came');
         const upright = await frameAs('1080 by 1920', 9 / 16, [[0.75, 0.4], [0.75, 0.6]], [[0.75, 0.2], [0.75, 0.8]]);
         // (c) the golden again.
-        if (!(await quiet(page)) || !(await choose(page, await projectFile(png, true))) || !(await saysOpened(page))) wrong.push('the project with the picture did not open again');
+        if (!(await choose(page, await projectFile(png, true))) || !(await saysOpened(page)) || !(await quiet(page))) wrong.push('the project with the picture did not open again');
         if (!(await drawnAs(16 / 9, 0.75, 0.2778))) wrong.push('the golden opened again did not bring back a 16 to 9 frame with the blue at (0.75, 0.2778)');
         const again = await frameAs('1920 by 1080 again', 16 / 9, [[0.75, 0.2778], [0.75, 0.7222]], [[0.75, 0.02], [0.75, 0.98]]);
         // (d) the length's two readings.
@@ -1858,7 +2510,8 @@ export default {
     },
     {
       // 4.1.3 and DEF-67 (stage 6): a project opened while another plays: the status region never says "Animation
-      // paused", says "Project opened", and the position is back at 0 with nothing playing.
+      // paused", says "Project opened", and the position waits at the opened project's end (1000: D251, brief 127) with
+      // nothing playing.
       name: 'open-over-a-playing',
       method: 'j-forms',
       rows: ['4.1.3'],
@@ -1877,9 +2530,9 @@ export default {
         const texts = await heard();
         if (texts.includes(PAUSED)) wrong.push(`"${PAUSED}" was among what the region said: ${JSON.stringify(texts)}`);
         const still = await sample(page, 20);
-        if (still.some(([, v]) => v !== 0)) wrong.push(`the position went ${still.map(([, v]) => v).join(', ')}, not held at 0`);
+        if (still.some(([, v]) => v !== 1000)) wrong.push(`the position went ${still.map(([, v]) => v).join(', ')}, not held at 1000 (the end)`);
         if ((await playLabel(page)) !== 'Play') wrong.push(`the play button reads "${await playLabel(page)}", not "Play"`);
-        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `opened over a playing: "${OPENED}" said, "${PAUSED}" never (the region said ${JSON.stringify(texts)}), the position at 0 for 20 frames, Play offered`);
+        record('4.1.3', !wrong.length, wrong.length ? wrong.join('; ') : `opened over a playing: "${OPENED}" said, "${PAUSED}" never (the region said ${JSON.stringify(texts)}), the position at 1000 (the end) for 20 frames, Play offered`);
       },
     },
     {
@@ -2078,10 +2731,11 @@ export default {
     },
     {
       // 2.5.2 (brief 88, finding 86): a quick drag on a slow page. React's scheduler slowed as in the-late-echo, the
-      // twenty-minute scene opened and still, the pointer down on the timeline's thumb, moved right in five quick steps
-      // of a twentieth of the track each, then rests a moment where it is and is let go: the timeline stays, no page
-      // error is heard, and the position held is where the thumb was let go (a quarter of the track on from where it was
-      // pressed, within a hundredth of the range), and still there a second later. Before the mend the kit took Carbon's
+      // twenty-minute scene opened and still, the pointer down on the timeline's thumb, moved in five quick steps of a
+      // twentieth of the track each, then rests a moment where it is and is let go: the timeline stays, no page error is
+      // heard, and the position held is where the thumb was let go (a quarter of the track on from where it was pressed,
+      // within a hundredth of the range), and still there a second later. An open leaves the thumb at the end (D251,
+      // brief 127), so the steps go left, towards the start; before, from 0, they went right. Before the mend the kit took Carbon's
       // late follow of a position it had handed before for a move of the drag; the two answered each other until React
       // gave up (error 185) and the timeline was gone (claim point 3, the trail).
       name: 'the-quick-drag',
@@ -2106,10 +2760,10 @@ export default {
         const track = await page.locator(TRACK).boundingBox();
         const max = Number(await page.locator(TIMELINE).getAttribute('aria-valuemax'));
         const from = { x: thumb.x + thumb.width / 2, y: thumb.y + thumb.height / 2 };
-        const to = from.x + track.width / 4;
+        const to = from.x - track.width / 4;
         await page.mouse.move(from.x, from.y);
         await page.mouse.down();
-        for (let s = 1; s <= 5; s++) await page.mouse.move(from.x + (s * track.width) / 20, from.y, { steps: 2 });
+        for (let s = 1; s <= 5; s++) await page.mouse.move(from.x - (s * track.width) / 20, from.y, { steps: 2 });
         // Then the pointer rests before it is let go, as a hand does (brief 95, FINDING-94-quick-drag-ci). Carbon's slider
         // takes at most one move of a drag in each 16 ms, the first and not the last (node_modules/@carbon/react/lib/
         // components/Slider/Slider.js, line 70, EVENT_THROTTLE = 16, and lines 325 to 333, throttle leading only), and
@@ -2133,7 +2787,1188 @@ export default {
           if (later !== held) wrong.push(`a second later the position is ${later}, not ${held}`);
         }
         if (errors.length) wrong.push(`page error: ${errors[0]}`);
-        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `with React's scheduler slowed 60 ms a task, the twenty-minute scene still: the thumb pressed and moved right in five quick steps, let go at ${expected} of ${max}: the position held is ${held}, a second later too; the timeline stays, no page error`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `with React's scheduler slowed 60 ms a task, the twenty-minute scene still: the thumb pressed at the end and moved left in five quick steps, let go at ${expected} of ${max}: the position held is ${held}, a second later too; the timeline stays, no page error`);
+      },
+    },
+    {
+      // 2.5.2 (CORE-06, brief 116, ruling Y (1)): a point dragged to a new place, then undone. In pen-drawn's set-up (two
+      // taps, the second point selected), the route skipped to its end, the second point's marker is read where only it
+      // draws (markBeyond: on the ray from it away from the first point) at its tap and at DRAG_TO, a place inside the
+      // picture well clear of the line. The pointer then presses on the second point, moves to DRAG_TO in four steps and
+      // is let go. Skipped to the end again (the route's length changed), the marker is read at DRAG_TO and not at the
+      // tap; then one Undo (focus off the Skip button) and the marker is back at the tap and not at DRAG_TO. It reads the
+      // second point's marker only: no other mark is claimed. It fails with the drag's commit dropped (brief 116, (f)).
+      name: 'point-drag-moves',
+      method: 'j-pointer',
+      rows: ['2.5.2'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const atEnd = async () => { await page.getByRole('button', { name: 'Skip to end' }).click(); await page.waitForTimeout(250); await twoFrames(page); };
+        const read = async () => ({ tap: await markBeyond(page, second, first), moved: await markBeyond(page, DRAG_TO, first) });
+        const wrong = [];
+        await atEnd();
+        const before = await read();
+        if (!before.tap || before.moved) wrong.push(`before the drag the marker read ${before.tap ? '' : 'not '}at the tap and ${before.moved ? '' : 'not '}at the new place`);
+        const box = await page.locator(PREVIEW).boundingBox();
+        const from = { x: box.x + box.width * second[0], y: box.y + box.height * second[1] };
+        await dragBy(pointer, from, { x: box.x + box.width * DRAG_TO[0], y: box.y + box.height * DRAG_TO[1] });
+        await pointer.up();
+        await atEnd();
+        const after = await read();
+        if (!after.moved || after.tap) wrong.push(`after the drag the marker read ${after.moved ? '' : 'not '}at the new place and ${after.tap ? '' : 'not '}at the tap`);
+        await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+        await page.keyboard.press(UNDO);
+        await atEnd();
+        const undone = await read();
+        if (!undone.tap || undone.moved) wrong.push(`after one Undo the marker read ${undone.tap ? '' : 'not '}at the tap and ${undone.moved ? '' : 'not '}at the new place`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : 'in pen-drawn, the second point pressed and dragged to a new place in the picture: after the release its marker is drawn there and not at its tap; one Undo draws it at its tap again and not at the new place');
+      },
+    },
+    {
+      // 2.5.2 (CORE-06, brief 116, ruling Y (2)): Escape aborts a point's drag before the release. In pen-drawn's set-up,
+      // skipped to the route's end, the whole canvas is read (pixels' hash). The pointer presses on the second point and
+      // moves to DRAG_TO in four steps: read while held, the canvas has changed and the marker is drawn at DRAG_TO (the
+      // drag is live). Escape: the canvas is as before the press. The pointer then moves on and is let go: the canvas is
+      // still as before the press, so the later release places nothing. It fails with cancelDrag doing nothing (brief
+      // 116, (g)). Brief 134 (ruling CV; D268, a cancelled drag says nothing): in the three seconds after the release the
+      // status region never says "Point moved" (Skip to end's words may still show).
+      name: 'point-drag-escape',
+      method: 'j-pointer',
+      rows: ['2.5.2'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const now = async () => { await page.waitForTimeout(250); await twoFrames(page); return (await pixels(page)).hash; };
+        const wrong = [];
+        await page.getByRole('button', { name: 'Skip to end' }).click();
+        const before = await now();
+        const box = await page.locator(PREVIEW).boundingBox();
+        const from = { x: box.x + box.width * second[0], y: box.y + box.height * second[1] };
+        const to = { x: box.x + box.width * DRAG_TO[0], y: box.y + box.height * DRAG_TO[1] };
+        await dragBy(pointer, from, to);
+        const held = await now();
+        const live = held !== before && (await markBeyond(page, DRAG_TO, first));
+        if (!live) wrong.push('the press and moves on the second point did not draw it at the new place while held');
+        await page.keyboard.press('Escape');
+        if ((await now()) !== before) wrong.push('Escape mid-drag did not draw the canvas as before the press');
+        await pointer.move(to.x + 20, to.y + 20);
+        await pointer.up();
+        if ((await now()) !== before) wrong.push('the release after Escape changed what is drawn');
+        if (!(await neverSays(page, POINT_MOVED))) wrong.push(`the drag cancelled by Escape said "${POINT_MOVED}"`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, the second point pressed and dragged to a new place, drawn there while held; Escape before the release drew the whole canvas as before the press, and the release after it changed nothing drawn; in the 3 s after the release the status region never said "${POINT_MOVED}"`);
+      },
+    },
+    {
+      // 2.5.2 (CORE-06, brief 122, ruling AJ): a group's drag, reached on the page by Cmd+click (Ctrl+click elsewhere,
+      // ruling AH's toggle), is done on the up, aborted by Escape before it, and undone in one step. In pen-drawn's set-up,
+      // skipped to the route's end, Escape clears the selection (a plain tap on a point with the pen on another would
+      // join them, so the points are picked with the command key only). The mouse is off the preview at every reading
+      // where it can be (a resting mouse draws the hover, HANDOVER-121).
+      // (1) The selection's ring, read where only it draws: round each tap, the pixels drawn (alpha over 60) and not the
+      // route's hue (orange, as markBeyond tells it) 5 to 9 units from the tap. Probed (brief 122, PROBE-122/probe-ring):
+      // at 1280 by 800 the canvas is 704 px at 704 CSS px; a selected point's ring gives 140 such pixels there, an
+      // unselected point none (the lead's arrow at the second point draws within 2 px of it, inside the ring). Ringed is
+      // over 50; not ringed is under 10. After Escape neither is ringed; a command-click on the first rings it alone; one
+      // on the second rings both. (1b) A second command-click on the first takes it out (the second alone ringed) and a
+      // third puts it back (both ringed): the toggle's "taken out" branch, brief 122's (w).
+      // (2) The abort: the whole canvas read (pixels' hash) as the baseline; a press on the second point moved in four
+      // steps to DRAG_TO and, while held, Escape: the canvas reads as the baseline, both markers at their taps; the mouse
+      // then leaves the preview and is let go: still the baseline.
+      // (3) The drag: a press on the second point moved in four steps to DRAG_TO and let go; skipped to the end again,
+      // both markers read at their new places (markBeyond, as point-drag-moves reads one): the second at DRAG_TO, the
+      // first moved by the same offset; neither at its tap.
+      // (4) One Undo (focus off the Skip button): the whole canvas reads as the hash before (3), the baseline.
+      // The 2.5.2 credit rests on (2) to (4) alone. Faults that fail it (brief 122): (u) the toggle's call removed from
+      // bindCanvas fails (1); (v) groupOf giving the grabbed point alone fails (3); (w) the "taken out" branch made "add
+      // again" fails (1b). Nothing is claimed for 2.5.7 here: a group's drag has its single-pointer way in the point's menu
+      // "Move" then one click (D250, D270), checked by point-move (brief 139). Nothing for 2.5.8,
+      // 1.4.11 (the rings stay under the preview's set-aside) or 1.4.13.
+      name: 'group-drag',
+      method: 'j-pointer',
+      rows: ['2.5.2'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const shift = [DRAG_TO[0] - second[0], DRAG_TO[1] - second[1]];
+        const firstTo = [first[0] + shift[0], first[1] + shift[1]];
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const atEnd = async () => { await page.getByRole('button', { name: 'Skip to end' }).click(); await settle(); };
+        const hash = async () => (await pixels(page)).hash;
+        const box = await page.locator(PREVIEW).boundingBox();
+        const on = ([fx, fy]) => ({ x: box.x + box.width * fx, y: box.y + box.height * fy });
+        const off = async () => { await page.mouse.move(1, 1); await settle(); };
+        const commandClick = async (place) => {
+          const { x, y } = on(place);
+          await page.keyboard.down(COMMAND);
+          await page.mouse.click(x, y);
+          await page.keyboard.up(COMMAND);
+          await off();
+        };
+        const rings = () => ringsAt(page, [first, second]);
+        const ringed = async (want, when) => {
+          const counts = await rings();
+          const read = counts.map((n) => (n > 50 ? true : n < 10 ? false : null));
+          if (read.some((each, i) => each !== want[i])) wrong.push(`${when} the rings read ${JSON.stringify(counts)} pixels at the first and second taps, where the first should read ${want[0] ? 'ringed' : 'not ringed'} and the second ${want[1] ? 'ringed' : 'not ringed'}`);
+        };
+        const marks = async (at) => ({ first: await markBeyond(page, at[0], at[1]), second: await markBeyond(page, at[1], at[0]) });
+        const wrong = [];
+        await atEnd();
+        await page.keyboard.press('Escape');
+        await settle();
+        // (1) and (1b): no credit; the page's way to a multi-selection.
+        await ringed([false, false], 'after Escape');
+        await commandClick(first);
+        await ringed([true, false], 'after a command-click on the first point');
+        await commandClick(second);
+        await ringed([true, true], 'after a command-click on the second point');
+        await commandClick(first);
+        await ringed([false, true], 'after a second command-click on the first point');
+        await commandClick(first);
+        await ringed([true, true], 'after a third command-click on the first point');
+        // (2) The abort.
+        const baseline = await hash();
+        await dragBy(pointer, on(second), on(DRAG_TO));
+        await page.keyboard.press('Escape');
+        await settle();
+        const aborted = { hash: await hash(), ...(await marks([first, second])) };
+        if (aborted.hash !== baseline || !aborted.first || !aborted.second) wrong.push(`Escape mid-drag left the canvas ${aborted.hash === baseline ? 'as' : 'not as'} before the press, the first marker ${aborted.first ? '' : 'not '}at its tap and the second ${aborted.second ? '' : 'not '}at its tap`);
+        await page.mouse.move(1, 1);
+        await pointer.up();
+        await settle();
+        if ((await hash()) !== baseline) wrong.push('the release after Escape changed what is drawn');
+        // (3) The drag.
+        const beforeDrag = await hash();
+        await dragBy(pointer, on(second), on(DRAG_TO));
+        await pointer.up();
+        await atEnd();
+        const moved = await marks([firstTo, DRAG_TO]);
+        const left = await marks([first, second]);
+        if (!moved.first || !moved.second || left.first || left.second) wrong.push(`after the drag the first marker read ${moved.first ? '' : 'not '}at its new place and ${left.first ? '' : 'not '}at its tap, the second ${moved.second ? '' : 'not '}at DRAG_TO and ${left.second ? '' : 'not '}at its tap`);
+        // (4) One Undo.
+        await page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+        await page.keyboard.press(UNDO);
+        await atEnd();
+        if ((await hash()) !== beforeDrag) wrong.push('after one Undo the canvas was not as before the drag');
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : 'in pen-drawn, both points picked by command-clicks (each ringed, one taken out and put back): a press on the second moved past the threshold and aborted by Escape left the whole canvas as before the press, and the release after changed nothing; pressed, dragged and released, both markers are drawn at their new places and neither at its tap; one Undo draws the whole canvas as before the drag');
+      },
+    },
+    {
+      // 2.1.1 (CORE-06, brief 123 ruling AR, built by brief 124): the three Editing keys (Delete, Cmd+D and Cmd+A; Ctrl
+      // elsewhere) do their edits from the keyboard alone. In pen-drawn (two points joined by a line; the mouse rests at
+      // the banner's corner, off the preview, since the setup's last press), Tab reaches the preview box (at most eight
+      // presses), End skips the route to its end there and Escape clears the selection: no ring at either tap. Every key
+      // after that is pressed with focus on the box, and it is still there at the end.
+      // (1) Cmd+A: both taps ringed (ringsAt, group-drag's reading: over 50 ringed, under 10 not; probed, PROBE-124: 147
+      // and 146 after, 0 before).
+      // (2) Cmd+D: each copy stands 2% of the picture right and down of its point (no picture: the scene is a square
+      // fitted to the box's height, so 2% of it across is 0.02 times height over width of the box, squareX's ratio, and
+      // 2% down is 0.02 of the box). The copies are not reached by the lead's walk (D238: no lead's start is copied), so
+      // the animation draws no marker or line for them, at the end or anywhere (probed: after Escape the canvas is as
+      // before Cmd+D; FINDING-124). What does draw is their ring, as the copies are the selection: each copy's place
+      // reads ringed (probed 145 and 144; 39 and 40 there before, from the originals' rings 11 px away), the originals'
+      // places fall under 50 (probed 38: only the copies' rings reach their band) and both original markers are still
+      // drawn (markBeyond, each on its far side from the other).
+      // (3) Undo: the whole canvas (pixels' hash) as before (2).
+      // (4) Cmd+A, then Delete: no marker at either tap (markBeyond) and no line at their middle (strokeAt, as
+      // marksDrawn reads it).
+      // (5) Undo: the whole canvas as before (4).
+      // Faults that fail it (brief 124, PROBE-124/mut): (x) Delete's call removed from editKey fails (4); (y) Duplicate's
+      // call removed fails (2); (z) Select all picking the first point only fails (1) and (4). It claims nothing for
+      // drawing points (still a pointer's: the pen's tap), nothing for 2.5.7, and nothing spoken (D263).
+      name: 'edit-keys',
+      method: 'keyboard',
+      rows: ['2.1.1'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const hash = async () => (await pixels(page)).hash;
+        const press = async (key) => { await page.keyboard.press(key); await settle(); };
+        const box = await boxOf(page);
+        const across = (0.02 * box.height) / box.width;
+        const copies = [first, second].map(([fx, fy]) => [fx + across, fy + 0.02]);
+        const wrong = [];
+        let tabs = 0;
+        while (!(await focusOn(page, PREVIEW)) && tabs < 8) { await page.keyboard.press('Tab'); tabs += 1; }
+        if (!(await focusOn(page, PREVIEW))) wrong.push('eight presses of Tab did not reach the preview box');
+        await press('End');
+        await press('Escape');
+        const none = await ringsAt(page, TAPS);
+        if (none.some((n) => n >= 10)) wrong.push(`after Escape the taps' rings read ${JSON.stringify(none)} pixels, not under 10`);
+        // (1) Select all.
+        await press(`${COMMAND}+a`);
+        const all = await ringsAt(page, TAPS);
+        if (all.some((n) => n <= 50)) wrong.push(`after Cmd+A the taps' rings read ${JSON.stringify(all)} pixels, not both over 50`);
+        // (2) Duplicate.
+        const beforeCopy = await hash();
+        await press(`${COMMAND}+d`);
+        const [atCopies, atOriginals] = [await ringsAt(page, copies), await ringsAt(page, TAPS)];
+        const kept = { first: await markBeyond(page, first, second), second: await markBeyond(page, second, first) };
+        if (atCopies.some((n) => n <= 50) || atOriginals.some((n) => n >= 50) || !kept.first || !kept.second) wrong.push(`after Cmd+D the rings read ${JSON.stringify(atCopies)} pixels 2% right and down of the taps (both should be over 50) and ${JSON.stringify(atOriginals)} at the taps (both under 50), and the markers ${kept.first ? '' : 'not '}at the first tap and ${kept.second ? '' : 'not '}at the second`);
+        // (3) Undo.
+        await press(UNDO);
+        if ((await hash()) !== beforeCopy) wrong.push('after one Undo the canvas was not as before Cmd+D');
+        // (4) Select all, then Delete.
+        await press(`${COMMAND}+a`);
+        const beforeDelete = await hash();
+        await press('Delete');
+        const gone = { first: await markBeyond(page, first, second), second: await markBeyond(page, second, first), line: orange(await strokeAt(page, 0.5, 0.5), 40) };
+        if (gone.first || gone.second || gone.line) wrong.push(`after Cmd+A and Delete a marker read ${gone.first ? '' : 'not '}at the first tap and ${gone.second ? '' : 'not '}at the second, and the line ${gone.line ? '' : 'not '}at their middle`);
+        // (5) Undo.
+        await press(UNDO);
+        if ((await hash()) !== beforeDelete) wrong.push('after one Undo the canvas was not as before Delete');
+        if (!(await focusOn(page, PREVIEW))) wrong.push('focus was not on the preview box at the end');
+        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, with focus moved to the preview box by Tab (${tabs} presses), the route skipped to its end by End and the selection cleared by Escape, keys alone: Cmd+A rings both points; Cmd+D rings a copy 2% of the picture right and down of each (the copies the selection; the copies draw no marker of their own), the originals still drawn; one Undo draws the whole canvas as before it; Cmd+A then Delete leaves neither marker nor the line; one Undo draws the whole canvas as before it; focus stays on the box`);
+      },
+    },
+    {
+      // 2.1.1 (CORE-06, brief 126, rulings BB and BC; brief 125's BA): the arrow keys nudge the selected points, from
+      // the keyboard alone. In pen-drawn, as edit-keys begins (Tab to the preview box, End, Escape), then Cmd/Ctrl+A,
+      // with the rings both read by ringsAt (over 120 pixels each at the taps). The step is 0.5% of the picture over the
+      // zoom (dom.ts NUDGE, NUDGE_FURTHER 2%), in image fractions; the zoom in pen-drawn was read by a probe, not assumed
+      // (PROBE-126/mut/probe-1.txt: three presses moved the rings' peak 6 px on a 396 px picture, 3 × 0.005 × 396: zoom
+      // 1), and image fractions across are converted by the ratio the copies' reading uses (edit-keys: height over width).
+      // (1) ArrowRight three times at once: each tap's ring reads 1.5% of the picture right (over 120 pixels) and the old
+      // place under half that. (2) One Undo (by keyboard: the dispatch closes the burst before Undo runs, so no wait):
+      // the whole canvas (pixels' hash) reads as before (1): three presses, one step. (3) Shift+ArrowDown: each ring
+      // reads 2% lower, the old place under half. (4) A wait past NUDGE_QUIET_MS (400 ms), ArrowLeft once, one Undo: the
+      // canvas reads as after (3): a press after the quiet is a step of its own. (5) The page's listener (keydown.ts's
+      // `onElse`, registered for pointerdown and focusout): first a reference, ArrowRight once, a wait past 400 ms, the
+      // canvas read (one step from (3)), Undo. Then ArrowRight once; a pointer press on the page where nothing else
+      // is (no control, off the preview: the first such place on a 40 by 20 px grid, the page's header; probed, a press
+      // there moves focus to the body, so both of onElse's events fire, and it reaches neither the dispatch nor the
+      // canvas's binding); ArrowRight once, all three inside 400 ms (timed: the run fails if not); one Undo: the canvas
+      // reads as the reference (where the first press left the points: the press closed the burst, so the second press
+      // was its own step), and a second Undo as after (3). The hash, not the rings, judges (5): a 2 px step is under the
+      // rings' reach (probe-1: 147, 147 and 131 pixels at 0, 1 and 2 px from a ring). Faults that fail it (brief 126,
+      // PROBE-126/mut): (x) Shift's size equal to the plain one fails (3); (y) every press its own step fails (2); (z)
+      // the nudge's call removed fails (1); (w) onElse's endNudge removed fails (5). It claims nothing for 2.5.7 (D250:
+      // the point's menu "Move", G), nothing for drawing points, nothing spoken (D263).
+      name: 'nudge-keys',
+      method: 'keyboard',
+      rows: ['2.1.1'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const hash = async () => (await pixels(page)).hash;
+        const press = async (key) => { await page.keyboard.press(key); await settle(); };
+        const box = await boxOf(page);
+        const across = box.height / box.width;
+        const moved = (dx, dy) => TAPS.map(([fx, fy]) => [fx + dx * across, fy + dy]);
+        const ringsMoved = async (to, what) => {
+          const [there, before] = [await ringsAt(page, to), await ringsAt(page, TAPS)];
+          return there.some((n) => n <= 120) || before.some((n, i) => n >= (there[i] ?? 0) / 2) ? [`${what}: the rings read ${JSON.stringify(there)} pixels at the new places (both should be over 120) and ${JSON.stringify(before)} at the taps (each under half)`] : [];
+        };
+        const wrong = [];
+        let tabs = 0;
+        while (!(await focusOn(page, PREVIEW)) && tabs < 8) { await page.keyboard.press('Tab'); tabs += 1; }
+        if (!(await focusOn(page, PREVIEW))) wrong.push('eight presses of Tab did not reach the preview box');
+        await press('End');
+        await press('Escape');
+        await press(`${COMMAND}+a`);
+        const all = await ringsAt(page, TAPS);
+        if (all.some((n) => n <= 120)) wrong.push(`after Cmd+A the taps' rings read ${JSON.stringify(all)} pixels, not both over 120`);
+        const start = await hash();
+        // (1) Three quick presses.
+        for (let n = 0; n < 3; n += 1) await page.keyboard.press('ArrowRight');
+        await settle();
+        wrong.push(...(await ringsMoved(moved(0.015, 0), 'after ArrowRight three times')));
+        // (2) One Undo.
+        await press(UNDO);
+        if ((await hash()) !== start) wrong.push('after one Undo the canvas was not as before the three presses');
+        // (3) Shift+ArrowDown.
+        await press('Shift+ArrowDown');
+        wrong.push(...(await ringsMoved(moved(0, 0.02), 'after Shift+ArrowDown')));
+        const lower = await hash();
+        // (4) After the quiet, a press of its own.
+        await page.waitForTimeout(450);
+        await press('ArrowLeft');
+        await press(UNDO);
+        if ((await hash()) !== lower) wrong.push('after a wait past 400 ms, ArrowLeft and one Undo, the canvas was not as after Shift+ArrowDown');
+        if (!(await focusOn(page, PREVIEW))) wrong.push('focus was not on the preview box after (4)');
+        // (5) The page's listener: a reference step, then a press between two arrows.
+        await press('ArrowRight');
+        await page.waitForTimeout(450);
+        const oneStep = await hash();
+        await press(UNDO);
+        if ((await hash()) !== lower) wrong.push('the reference ArrowRight was not undone by one Undo');
+        const spot = await page.evaluate((sel) => {
+          for (let y = 5; y < innerHeight; y += 20) for (let x = 5; x < innerWidth; x += 40) {
+            const el = document.elementFromPoint(x, y);
+            if (el && !el.closest(sel) && !el.closest('button,a,input,select,textarea,[tabindex],[role],summary,label,dialog,canvas,[contenteditable]')) return { x, y, tag: el.tagName.toLowerCase() };
+          }
+          return null;
+        }, PREVIEW);
+        if (spot === null) wrong.push('no place on the page off the preview and every control was found');
+        else {
+          const t0 = Date.now();
+          await page.keyboard.press('ArrowRight');
+          await page.mouse.click(spot.x, spot.y);
+          await page.keyboard.press('ArrowRight');
+          const took = Date.now() - t0;
+          await settle();
+          if (took >= 400) wrong.push(`ArrowRight, the press and ArrowRight took ${took} ms, not under 400`);
+          await press(UNDO);
+          if ((await hash()) !== oneStep) wrong.push(`after ArrowRight, a press on the page's ${spot.tag} at (${spot.x}, ${spot.y}), ArrowRight and one Undo, the canvas was not as after one ArrowRight`);
+          await press(UNDO);
+          if ((await hash()) !== lower) wrong.push('a second Undo did not draw the canvas as after Shift+ArrowDown');
+        }
+        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, with focus moved to the preview box by Tab (${tabs} presses), End, Escape and Cmd+A, keys alone: ArrowRight three times moves both points' rings 1.5% of the picture right; one Undo draws the whole canvas as before them; Shift+ArrowDown moves the rings 2% lower; after a wait past 400 ms, ArrowLeft and one Undo draw the canvas as after Shift+ArrowDown; ArrowRight, a pointer press on the page's ${spot?.tag} at (${spot?.x}, ${spot?.y}) and ArrowRight, inside 400 ms, then one Undo draws the canvas as after one ArrowRight, and a second Undo as before it`);
+      },
+    },
+    {
+      // 2.1.1, 2.4.3 (CORE-06, brief 135; brief 130's CF; D267 (a), answered by the owner, 2026-11-27): the point's
+      // menu. Its name and roles are
+      // read too and fail 2.1.1 (the items the keys operate), but claim nothing for 4.1.2: the catalogue lists only axe,
+      // lint and a snapshot for 4.1.2, and tools/a11y-run.mjs refuses a journey that claims it (brief 136). In pen-drawn,
+      // as edit-keys begins (Tab to the preview box, End, Escape). The status region's every text is kept from here.
+      // (1) A right-click on the first tap (the lead's start): a menu named "Point actions" shows, in document.body and
+      // not inside .preview, its top left at the click (within 2 px), focus on its first item; its items read, in order,
+      // "Mark as start", "Mark as end", "Set lead start" (aria-disabled, described by "This point is already where the
+      // lead starts."), "Make bend", "Delete", a separator before Delete; the point is selected (its ring over 50).
+      // (2) ArrowDown moves to the second item, ArrowUp twice wraps to the last, Home to the first, End to the last,
+      // ArrowDown wraps to the first; Escape closes it, focus is back on the box and the point still ringed (an Escape
+      // that reached the editor would have cleared it). (3) Shift+F10 on the box: the menu opens just right of the point
+      // (its left 0 to 30 px right of the tap, its top within 2 px), focus on its first item; ArrowDown three times and
+      // Enter on "Make bend": the menu closes, focus is on the box, and the point reads as a bend as the 2.5.2 journey
+      // reads one: its grey dot (3 or more dark pixels within 2 px, where the stop read under 3) and the canvas changed.
+      // The stop's orange marker beyond the point is not read: the line's round cap draws orange 1 to 3 px beyond it
+      // too, as far as the stop's marker reached, so it does not tell a stop from a bend at 1280 wide (brief 136,
+      // PROBE-136/probe-ray.jsonl). One Undo draws the whole canvas as before. (4)
+      // Shift+F10, Enter on "Mark as start": the menu closes; opened again, its first item reads "Remove start mark" (no
+      // drawing reads a route's marks yet, so nothing on the canvas is claimed for it); Escape, one Undo, opened again it
+      // reads "Mark as start" again. (5) Shift+F10, ArrowDown twice to "Set lead start": focus is on it; Enter, Space and
+      // a click on it leave the menu open, focus on it and the canvas as before; Escape. (6) After the status comes back
+      // to empty, Shift+F10, End, Enter on "Delete": the point's marker and the line no longer read, the status comes to
+      // "Point deleted"; one Undo draws the canvas as before. Each item's words (D269) and each "Undo" are waited for as
+      // they come (comesToWords), never by a fixed wait. (7) A window 200 px high at the usual width (set before the
+      // menu opens: a resize closes it), the page scrolled to put the first point mid-window, a right-click on it: End
+      // reaches "Delete", whose box and the menu's lie inside the window, the item the element at its own centre; a wheel
+      // scroll up over the menu scrolls its items and leaves it open; a scroll of the page outside it closes it (Codex
+      // finding 1 on brief 136's range; red on a1e37df: Delete from 200 to 244 px, PROBE-137/red-run-a1e37df.txt); the
+      // window is put back. Over the whole run the status said, in turn and each once, "Point made a bend", "Undo", "Start
+      // marked", "Undo", "Point deleted", "Undo" (brief 137, D269 and Codex list line 17: every change of the status is
+      // kept, not a set, so a repeat fails; read once the status has come back to empty, the queue drained); the
+      // disabled item said nothing. Before brief 137 it read only "Undo" and
+      // "Point deleted", as a set (the other items were silent then). Faults that fail it (brief 136, PROBE-136/mut-*.txt): (y) the
+      // menu mounted inside .preview fails (1); (z) focus not returned on Escape fails (2); (aa) an item that is off
+      // still run (and the menu closed) fails (5); (af) "Make bend" not dispatched fails (3); (brief 137,
+      // PROBE-137/mut-*.txt) (ag) the menu's maximum height removed fails (7) at End (Delete from 200 to 244 px); (ah) the
+      // scroll listener closing on a scroll inside the menu fails (7): End's own scroll into view closes it. (ai) "Make bend"'s
+      // words left out of editWords fails (3) and the run's words; (aj) a second "Point deleted" announced 2.5 s after the
+      // first fails the run's words (one announced in the same task is merged by the queue, announce.ts, so never shown). It claims nothing for 2.5.7
+      // ("Move", which stands before Delete here, is checked by point-move, brief 139) nor for the marks' drawing.
+      name: 'point-menu',
+      method: 'keyboard',
+      rows: ['2.1.1', '2.4.3'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const hash = async () => (await pixels(page)).hash;
+        const press = async (key) => { await page.keyboard.press(key); await settle(); };
+        const MENU = '[role=menu]';
+        const shown = () => page.locator(MENU).count().then((n) => n === 1);
+        const focusedItem = () => page.evaluate(() => { const e = document.activeElement; return e?.getAttribute('role') === 'menuitem' ? e.getAttribute('aria-label') : null; });
+        // D274's marks (brief 142, GD): how many pixels round a point, beyond the guide dot's radius 3 and up to 8 canvas
+        // pixels from its centre (a mark reaches 7 at the default zoom), read the route's hue (penMarksRead's test). A mark
+        // adds such pixels where only it draws; the line through the point, the selection's ring and anything else drawn
+        // there count the same marked or not.
+        const markRead = ([fx, fy]) => page.locator(CANVAS).evaluate((c, [fx, fy]) => {
+          const ctx = c.getContext('2d'); const [cx, cy] = [fx * c.width, fy * c.height]; const [x0, y0] = [Math.floor(cx) - 8, Math.floor(cy) - 8];
+          const d = ctx.getImageData(x0, y0, 17, 17).data; let n = 0;
+          for (let i = 0; i < d.length; i += 4) {
+            const far = Math.hypot(x0 + ((i / 4) % 17) + 0.5 - cx, y0 + Math.floor(i / 68) + 0.5 - cy);
+            const [r, g, b, a] = [d[i], d[i + 1], d[i + 2], d[i + 3]];
+            if (far > 3 && far <= 8 && a > 60 && r > 120 && r > g && g >= b) n += 1;
+          }
+          return n;
+        }, [fx, fy]);
+        const dark = () => page.locator(CANVAS).evaluate((c, [fx, fy]) => {
+          const ctx = c.getContext('2d'); const [cx, cy] = [Math.floor(fx * c.width), Math.floor(fy * c.height)];
+          const reach = Math.max(2, Math.round(2 * (c.width / c.getBoundingClientRect().width))); let n = 0;
+          for (let dy = -reach; dy <= reach; dy += 1) for (let dx = -reach; dx <= reach; dx += 1) { const [r, g, b, a] = ctx.getImageData(cx + dx, cy + dy, 1, 1).data; if (a > 100 && r < 140 && g < 140 && b < 140) n += 1; }
+          return n;
+        }, first);
+        const keys = { wrong: [] }, names = { wrong: [] }, order = { wrong: [] };
+        const heard = async (words, after) => { if (!(await comesToWords(page, words))) names.wrong.push(`after ${after} the status did not come to ${JSON.stringify(words)}`); };
+        let tabs = 0;
+        while (!(await focusOn(page, PREVIEW)) && tabs < 8) { await page.keyboard.press('Tab'); tabs += 1; }
+        if (!(await focusOn(page, PREVIEW))) keys.wrong.push('eight presses of Tab did not reach the preview box');
+        await press('End');
+        await press('Escape');
+        await page.locator(STATUS).evaluate((s) => { window.__said = []; new MutationObserver(() => { window.__said.push(s.textContent ?? ''); }).observe(s, { childList: true, characterData: true, subtree: true }); });
+        const box = await page.locator(CANVAS).boundingBox();
+        const tap = { x: box.x + box.width * first[0], y: box.y + box.height * first[1] };
+        // (1) A right-click on the first point.
+        await page.mouse.click(tap.x, tap.y, { button: 'right' });
+        await settle();
+        const menu = (await shown()) ? await page.locator(MENU).evaluate((m) => {
+          const r = m.getBoundingClientRect();
+          const items = [...m.querySelectorAll('[role=menuitem]')].map((e) => ({ name: e.getAttribute('aria-label'), off: e.getAttribute('aria-disabled') === 'true', reason: document.getElementById(e.getAttribute('aria-describedby') ?? '')?.textContent ?? null, wrapper: e.parentElement?.getAttribute('role') }));
+          const apart = m.querySelector('[role=separator]')?.nextElementSibling?.querySelector('[role=menuitem]')?.getAttribute('aria-label') ?? null;
+          return { name: m.getAttribute('aria-label'), inBody: m.parentElement === document.body, inPreview: m.closest('.preview') !== null, left: r.left, top: r.top, items, apart };
+        }) : null;
+        // Brief 138 (DA; D270): "Move" stands before Delete; the walk by the arrows, Home and End is unchanged by it.
+        const ITEMS = ['Mark as start', 'Mark as end', 'Set lead start', 'Make bend', 'Move', 'Delete'];
+        const LEAD = 'This point is already where the lead starts.';
+        if (menu === null) names.wrong.push('a right-click on the first point showed no menu');
+        else {
+          if (menu.name !== 'Point actions') names.wrong.push(`the menu was named ${JSON.stringify(menu.name)}`);
+          if (!menu.inBody || menu.inPreview) order.wrong.push(`the menu stood ${menu.inPreview ? 'inside .preview' : 'outside document.body'}`);
+          if (Math.abs(menu.left - tap.x) > 2 || Math.abs(menu.top - tap.y) > 2) order.wrong.push(`the menu's top left was (${menu.left}, ${menu.top}), not at the click (${tap.x}, ${tap.y})`);
+          const read = menu.items.map((i) => i.name);
+          if (JSON.stringify(read) !== JSON.stringify(ITEMS)) names.wrong.push(`its items read ${JSON.stringify(read)}`);
+          const offs = menu.items.filter((i) => i.off).map((i) => `${i.name}: ${i.reason}`);
+          if (JSON.stringify(offs) !== JSON.stringify([`Set lead start: ${LEAD}`])) names.wrong.push(`its items that are off read ${JSON.stringify(offs)}`);
+          if (menu.items.some((i) => i.wrapper !== 'none') || menu.apart !== 'Delete') names.wrong.push(`its wrappers or separator were not as built (${JSON.stringify(menu.items.map((i) => i.wrapper))}, apart ${menu.apart})`);
+        }
+        if ((await focusedItem()) !== 'Mark as start') order.wrong.push(`on opening, focus was on ${JSON.stringify(await focusedItem())}, not "Mark as start"`);
+        if ((await ringsAt(page, [first]))[0] <= 50) names.wrong.push('the right-clicked point was not ringed');
+        // (2) The arrows, Home, End, then Escape.
+        const walk = [];
+        for (const key of ['ArrowDown', 'ArrowUp', 'ArrowUp', 'Home', 'End', 'ArrowDown']) { await page.keyboard.press(key); walk.push(await focusedItem()); }
+        const WALK = ['Mark as end', 'Mark as start', 'Delete', 'Mark as start', 'Delete', 'Mark as start'];
+        if (JSON.stringify(walk) !== JSON.stringify(WALK)) keys.wrong.push(`ArrowDown, ArrowUp twice, Home, End and ArrowDown went to ${JSON.stringify(walk)}`);
+        await press('Escape');
+        if (await shown()) keys.wrong.push('Escape left the menu open');
+        if (!(await focusOn(page, PREVIEW))) order.wrong.push('after Escape focus was not back on the preview box');
+        if ((await ringsAt(page, [first]))[0] <= 50) keys.wrong.push('after Escape the point was no longer ringed');
+        // (3) Shift+F10, then "Make bend".
+        const before = await hash();
+        const stopDark = await dark();
+        await press('Shift+F10');
+        const at = (await shown()) ? await page.locator(MENU).evaluate((m) => { const r = m.getBoundingClientRect(); return { left: r.left, top: r.top }; }) : null;
+        if (at === null) keys.wrong.push('Shift+F10 on the box showed no menu');
+        else if (at.left - tap.x < 0 || at.left - tap.x > 30 || Math.abs(at.top - tap.y) > 2) order.wrong.push(`by Shift+F10 the menu's top left was (${at.left}, ${at.top}), not just right of the point (${tap.x}, ${tap.y})`);
+        if ((await focusedItem()) !== 'Mark as start') order.wrong.push('by Shift+F10 focus was not on its first item');
+        for (let n = 0; n < 3; n += 1) await page.keyboard.press('ArrowDown');
+        if ((await focusedItem()) !== 'Make bend') keys.wrong.push(`three ArrowDowns reached ${JSON.stringify(await focusedItem())}, not "Make bend"`);
+        await press('Enter');
+        await heard('Point made a bend', '"Make bend"');
+        const bend = { open: await shown(), box: await focusOn(page, PREVIEW), dark: await dark(), hash: await hash() };
+        if (bend.open || stopDark >= 3 || bend.dark < 3 || bend.hash === before) keys.wrong.push(`after "Make bend" the menu was ${bend.open ? '' : 'not '}open and ${bend.dark} pixel(s) within 2 px of the point read dark (a bend's grey dot reads at least 3; ${stopDark} read so as a stop, before)${bend.hash === before ? ', and the canvas was as before' : ''}`);
+        if (!bend.box) order.wrong.push('after "Make bend" focus was not on the box');
+        await press(UNDO);
+        await heard('Undo', 'the Undo of "Make bend"');
+        if ((await hash()) !== before) keys.wrong.push('after one Undo the canvas was not as before "Make bend"');
+        // (4) "Mark as start", read by the menu's words.
+        const firstItem = async () => { await press('Shift+F10'); const w = await focusedItem(); await press('Escape'); return w; };
+        await press('Shift+F10');
+        await press('Enter');
+        await heard('Start marked', '"Mark as start"');
+        // D274 part 1: the start's triangle drawn while paused round the point, beyond the guide dot, and gone after the Undo.
+        const apex = await markRead(first);
+        const marked = await firstItem();
+        await press(UNDO);
+        await heard('Undo', 'the Undo of "Mark as start"');
+        const apexAfter = await markRead(first);
+        if (apex - apexAfter < 3) keys.wrong.push(`after "Mark as start" ${apex} pixel(s) 3 to 8 canvas pixels round the point read the route's hue, and ${apexAfter} after the Undo (D274's triangle adds at least 3)`);
+        const unmarked = await firstItem();
+        if (marked !== 'Remove start mark' || unmarked !== 'Mark as start') keys.wrong.push(`after "Mark as start" the menu's first item read ${JSON.stringify(marked)}, and after one Undo ${JSON.stringify(unmarked)}`);
+        // (5) The item that is off.
+        const still = await hash();
+        await press('Shift+F10');
+        await page.keyboard.press('ArrowDown');
+        await page.keyboard.press('ArrowDown');
+        const off = [await focusedItem()];
+        await press('Enter'); off.push((await shown()) && (await focusedItem()));
+        await press('Space'); off.push((await shown()) && (await focusedItem()));
+        { const b = await page.getByRole('menuitem', { name: 'Set lead start' }).boundingBox({ timeout: 2000 }).catch(() => null); if (b) await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2); } await settle(); off.push((await shown()) && (await focusedItem()));
+        if (off.some((w) => w !== 'Set lead start') || (await hash()) !== still) keys.wrong.push(`"Set lead start" on the lead's start: focus read ${JSON.stringify(off)} after reaching it, Enter, Space and a click (the menu open throughout), and the canvas ${(await hash()) === still ? 'as before' : 'changed'}`);
+        await press('Escape');
+        // (6) Delete from the menu.
+        if (!(await page.waitForFunction((s) => (document.querySelector(s)?.textContent ?? '') === '', STATUS, { timeout: 12000 }).then(() => true, () => false))) keys.wrong.push('the status did not come back to empty before Delete');
+        const kept = await hash();
+        await press('Shift+F10');
+        await page.keyboard.press('End');
+        await press('Enter');
+        const gone = { mark: await markBeyond(page, first, second), line: orange(await strokeAt(page, 0.5, 0.5), 40), said: await comesToWords(page, 'Point deleted') };
+        if (gone.mark || gone.line || !gone.said) keys.wrong.push(`after "Delete" the marker read ${gone.mark ? '' : 'not '}beyond the point, the line ${gone.line ? '' : 'not '}at the middle, and "Point deleted" was ${gone.said ? '' : 'not '}said`);
+        await press(UNDO);
+        await heard('Undo', 'the Undo of "Delete"');
+        if ((await hash()) !== kept) keys.wrong.push('after one Undo the canvas was not as before "Delete"');
+        // (6b) "Mark as end" on the second point from its menu (a right-click), D274 part 1: the end's square drawn while
+        // paused round the point, beyond the guide dot, and gone after the Undo.
+        if (!(await page.waitForFunction((s) => (document.querySelector(s)?.textContent ?? '') === '', STATUS, { timeout: 12000 }).then(() => true, () => false))) keys.wrong.push('the status did not come back to empty before "Mark as end"');
+        { const b = await page.locator(CANVAS).boundingBox(); await page.mouse.click(b.x + b.width * second[0], b.y + b.height * second[1], { button: 'right' }); }
+        await settle();
+        const endAsked = (await shown()) && (await focusedItem());
+        if (endAsked === 'Mark as start') await page.keyboard.press('ArrowDown');
+        const endItem = await focusedItem();
+        await press('Enter');
+        await heard('End marked', '"Mark as end"');
+        const corner = await markRead(second);
+        await press(UNDO);
+        await heard('Undo', 'the Undo of "Mark as end"');
+        const cornerAfter = await markRead(second);
+        if (endItem !== 'Mark as end' || corner - cornerAfter < 3) keys.wrong.push(`"Mark as end" on the second point (focus read ${JSON.stringify(endItem)}): ${corner} pixel(s) 3 to 8 canvas pixels round the point read the route's hue, and ${cornerAfter} after the Undo (D274's square adds at least 3)`);
+        // (7) A short window (Codex finding 1 on brief 136's range): 200 px high at the usual width, set before the menu
+        // opens (a resize closes it), the page scrolled to put the first point mid-window, then a right-click on it.
+        const view = page.viewportSize();
+        await page.setViewportSize({ width: view.width, height: 200 });
+        await settle();
+        await page.locator(CANVAS).evaluate((c, [, fy]) => {
+          for (let n = 0; n < 2; n += 1) {
+            const r = c.getBoundingClientRect(); const dy = r.top + r.height * fy - window.innerHeight / 2;
+            let e = c.parentElement;
+            while (e && e !== document.body && !(e.scrollHeight > e.clientHeight && /(auto|scroll)/.test(getComputedStyle(e).overflowY))) e = e.parentElement;
+            (e && e !== document.body ? e : document.scrollingElement).scrollBy(0, dy);
+          }
+        }, first);
+        await settle();
+        const low = await page.locator(CANVAS).boundingBox();
+        await page.mouse.click(low.x + low.width * first[0], low.y + low.height * first[1], { button: 'right' });
+        await settle();
+        const short = { open: await shown() };
+        if (short.open) {
+          await press('End');
+          short.end = await focusedItem();
+          short.fit = await page.evaluate(() => {
+            const m = document.querySelector('[role=menu]'); const e = document.activeElement; if (m === null || !m.contains(e)) return null;
+            const r = e.getBoundingClientRect(); const b = m.getBoundingClientRect();
+            const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('[role=menuitem]') === e;
+            return { item: [r.top, r.bottom], menu: [b.top, b.bottom], height: window.innerHeight, inside: r.top >= 0 && r.bottom <= window.innerHeight && b.top >= 0 && b.bottom <= window.innerHeight, hit, scrolled: m.scrollTop };
+          });
+        }
+        if (short.open && short.fit !== null) {
+          const mid = await page.locator(MENU).boundingBox();
+          await page.mouse.move(mid.x + mid.width / 2, mid.y + mid.height / 2);
+          await page.mouse.wheel(0, -120);
+          await settle();
+          short.wheel = { open: await shown(), scrolled: (await shown()) ? await page.locator(MENU).evaluate((m) => m.scrollTop) : null };
+          await page.locator(CANVAS).evaluate((c) => {
+            let e = c.parentElement;
+            while (e && e !== document.body && !(e.scrollHeight > e.clientHeight && /(auto|scroll)/.test(getComputedStyle(e).overflowY))) e = e.parentElement;
+            (e && e !== document.body ? e : document.scrollingElement).scrollBy(0, -10);
+          });
+          await settle();
+          short.outside = await shown();
+        }
+        if (!short.open) keys.wrong.push('in a window 200 px high a right-click on the point showed no menu');
+        else if (short.fit === null) keys.wrong.push(`in a window 200 px high End closed the menu (focus on ${JSON.stringify(short.end)})`);
+        else {
+          const f = short.fit;
+          if (short.end !== 'Delete' || !f.inside || !f.hit) keys.wrong.push(`in a window ${f.height} px high, End reached ${JSON.stringify(short.end)}, its box from ${f.item[0]} to ${f.item[1]} px and the menu's from ${f.menu[0]} to ${f.menu[1]} px${f.hit ? '' : ', the item not the element at its own centre'}`);
+          if (!short.wheel.open || !(short.wheel.scrolled < f.scrolled)) keys.wrong.push(`in the short window a wheel scroll up over the menu left it ${short.wheel.open ? `open, its scroll ${f.scrolled} then ${short.wheel.scrolled}` : 'closed'}`);
+          else if (short.outside) keys.wrong.push('in the short window a scroll of the page outside the menu left it open');
+        }
+        await page.setViewportSize(view);
+        await settle();
+        if (!(await focusOn(page, PREVIEW))) order.wrong.push('focus was not on the preview box at the end');
+        if (!(await page.waitForFunction((st) => (document.querySelector(st)?.textContent ?? '') === '', STATUS, { timeout: 12000 }).then(() => true, () => false))) names.wrong.push('the status did not come back to empty at the end');
+        const said = (await page.evaluate(() => window.__said)).filter(Boolean);
+        const SAID = ['Point made a bend', 'Undo', 'Start marked', 'Undo', 'Point deleted', 'Undo', 'End marked', 'Undo'];
+        if (JSON.stringify(said) !== JSON.stringify(SAID)) names.wrong.push(`the status said ${JSON.stringify(said)} in turn; ${JSON.stringify(SAID)} were expected, each once (D269; the disabled item says nothing)`);
+        const how = `in pen-drawn, focus moved to the preview box by Tab (${tabs} presses), End, Escape`;
+        const wrong = [...names.wrong, ...keys.wrong];
+        record('2.1.1', !wrong.length, wrong.length ? wrong.join('; ') : `${how}: a right-click on the point shows a menu named "Point actions" with menuitems ${JSON.stringify(ITEMS)} (wrappers of role none, a separator before Delete), "Set lead start" aria-disabled and described by "${LEAD}"; the point is selected; over the run the status said, in turn and each once, ${JSON.stringify(said)} (D269's words after "Make bend" and "Mark as start", "Point deleted" once after "Delete", nothing for the disabled item); Shift+F10 opens it; ArrowDown, ArrowUp, Home and End move and wrap; Escape closes it with the point still selected; "Make bend" by Enter draws the point's grey dot (${bend.dark} dark pixels within 2 px, ${stopDark} as a stop) and changes the canvas, and one Undo draws the canvas as before; "Mark as start" makes the menu read "Remove start mark", undone by one Undo; "Set lead start" on the lead's start stays open on Enter, Space and a click and changes nothing; "Delete" removes the point and its line, says "Point deleted", and one Undo draws the canvas as before; in a window 200 px high End reaches "Delete" inside the window (its box from ${short.fit?.item.join(' to ')} px), a wheel over the menu scrolls it and leaves it open, and a scroll of the page outside closes it`);
+        record('2.4.3', !order.wrong.length, order.wrong.length ? order.wrong.join('; ') : `${how}: the menu stands in document.body, outside .preview, at the click (or just right of the point by Shift+F10), focus on its first item on opening; after Escape, an item chosen, and at the end focus is on the preview box`);
+      },
+    },
+    {
+      // 2.5.7 and 2.5.1 (CORE-06, brief 139 for brief 138's DE; D242, D250 (a), D270, provisional until the owner
+      // objects): the preview's two dragging movements, a point's and a group's, each have a single-pointer way, the
+      // point's menu "Move" then one click, by the pointer alone (no key between the right-click and the place, except
+      // where Escape is the step). In pen-drawn's set-up (two taps, the second point selected), skipped to the route's
+      // end; the mouse is off the preview at every whole-canvas reading (a resting mouse draws the hover).
+      // (1) One point: a right-click on the second point, "Move" clicked in its menu: the status comes to D270's prompt
+      // and the canvas's cursor reads "crosshair" (it read otherwise before); a click on empty picture at DRAG_TO; skipped
+      // to the end again, its marker reads at DRAG_TO and not at its tap (markBeyond, as point-drag-moves reads), the
+      // cursor no longer "crosshair", and in the status's every change since the click "Point moved" once and "Point
+      // added" never (the click placed no point); one Undo (focus off the Skip button) draws it at its tap again.
+      // (2) Escape: the whole canvas read (pixels' hash), "Move" chosen again, the mouse off, Escape: the status comes to
+      // "Move cancelled", the canvas reads as before, the cursor not "crosshair"; a click on empty picture then adds a
+      // point as the pen always does ("Point added"), undone at once. (2b) A right-click on empty picture while it waits:
+      // "Move cancelled" said, no menu opened, the canvas as before. (2c) Focus leaving the preview: "Move" chosen, then
+      // a click on the "Skip to end" button: "Move cancelled" among the status's changes, the cursor not "crosshair",
+      // the canvas as before. After each of the three cancels, the history is read as unchanged (gpt-6-astra, Codex list
+      // line 20: the canvas alone cannot see an empty step): before (2), one Undo and one Redo, the canvas read after
+      // each; after each cancel the same Undo and Redo must read the same two canvases, so one Undo takes back the step
+      // before "Move" (a step the cancel left would be undone first, and the Undo would draw the canvas unchanged).
+      // (3) The group: Escape clears the selection, a command-click on each point selects both (as group-drag does,
+      // before the right-click); a right-click on the second, "Move" clicked: the group's prompt; a click at DRAG_TO:
+      // both markers read at their places moved by the same offset (the second at DRAG_TO), neither at its tap, and "2
+      // points moved" among the status's changes.
+      // 2.5.7 rests on (1) to (3); the timeline's drag is checked by pointer-cancellation (a press on the track); no
+      // keyboard way is credited. 2.5.1: the page's path gestures are its three drags and each has a single-pointer
+      // way: the preview's two shown here, the timeline's by pointer-cancellation. Faults that fail it (brief 139,
+      // PROBE-139/mut-*.txt): (ak) the pen's tap not held off while it waits; (al) Escape not cancelling the wait; (am)
+      // only the menu's point moved in the group case.
+      name: 'point-move',
+      method: 'j-pointer',
+      rows: ['2.5.1', '2.5.7'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const shift = [DRAG_TO[0] - second[0], DRAG_TO[1] - second[1]];
+        const firstTo = [first[0] + shift[0], first[1] + shift[1]];
+        const EMPTY = [0.3, 0.7];
+        const MOVE_ONE = 'Move: click where the point should go, or press Escape to cancel';
+        const MOVE_GROUP = 'Move: click where the point should go; the other selected points come with it. Escape cancels';
+        const CANCELLED = 'Move cancelled';
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const atEnd = async () => { await page.getByRole('button', { name: 'Skip to end' }).click(); await settle(); };
+        const hash = async () => (await pixels(page)).hash;
+        const box = await page.locator(PREVIEW).boundingBox();
+        const on = ([fx, fy]) => ({ x: box.x + box.width * fx, y: box.y + box.height * fy });
+        const off = async () => { await page.mouse.move(1, 1); await settle(); };
+        const tapAt = async (place) => { const { x, y } = on(place); await pointer.tap(x, y); await settle(); };
+        const cursor = () => page.locator(CANVAS).evaluate((c) => getComputedStyle(c).cursor);
+        const said = () => page.evaluate(() => [...window.__said]);
+        // The queue shows each message in turn, each held a while (announce.ts): wait for words among the changes since
+        // `from`, and for the region to come back to empty (the queue drained) before counting.
+        const heardSince = (from, words) => page.waitForFunction(([f, w]) => window.__said.slice(f).includes(w), [from, words], { timeout: 6000 }).then(() => true, () => false);
+        const drained = () => page.waitForFunction((s) => document.querySelector(s)?.textContent === '', STATUS, { timeout: 10000 }).then(() => true, () => false);
+        const menuShown = () => page.locator('[role=menu]').count().then((n) => n === 1);
+        const unfocus = () => page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+        const wrong = [];
+        // A right-click on a place, then "Move" clicked in the menu; false when there was no "Move" to click.
+        const chooseMove = async (place, prompt, when) => {
+          const { x, y } = on(place);
+          await page.mouse.click(x, y, { button: 'right' });
+          await settle();
+          const item = page.getByRole('menuitem', { name: 'Move' });
+          if ((await item.count()) !== 1) { wrong.push(`${when}: the right-click showed no "Move"`); return false; }
+          await item.click();
+          await settle();
+          if (!(await comesToWords(page, prompt))) wrong.push(`${when}: the status did not come to ${JSON.stringify(prompt)}`);
+          if ((await cursor()) !== 'crosshair') wrong.push(`${when}: while it waited the cursor read ${JSON.stringify(await cursor())}, not "crosshair"`);
+          return true;
+        };
+        const notWaiting = async (when) => { const c = await cursor(); if (c === 'crosshair') wrong.push(`${when}: the cursor still read "crosshair"`); };
+        const read = async () => ({ tap: await markBeyond(page, second, first), moved: await markBeyond(page, DRAG_TO, first) });
+        await atEnd();
+        await page.locator(STATUS).evaluate((s) => { window.__said = []; new MutationObserver(() => { window.__said.push(s.textContent ?? ''); }).observe(s, { childList: true, characterData: true, subtree: true }); });
+        // (1) One point.
+        await off();
+        const before = await read();
+        if (!before.tap || before.moved) wrong.push(`(1) before "Move" the marker read ${before.tap ? '' : 'not '}at the tap and ${before.moved ? '' : 'not '}at the new place`);
+        await notWaiting('(1) before "Move"');
+        if (await chooseMove(second, MOVE_ONE, '(1)')) {
+          const from = (await said()).length;
+          await tapAt(DRAG_TO);
+          await off();
+          await notWaiting('(1) after the click');
+          await atEnd();
+          const after = await read();
+          if (!after.moved || after.tap) wrong.push(`(1) after the click the marker read ${after.moved ? '' : 'not '}at the new place and ${after.tap ? '' : 'not '}at the tap`);
+          await heardSince(from, POINT_MOVED);
+          await drained();
+          const since = (await said()).slice(from);
+          const moved = since.filter((w) => w === POINT_MOVED).length;
+          if (moved !== 1 || since.includes(POINT_ADDED)) wrong.push(`(1) after the click the status said "${POINT_MOVED}" ${moved} time(s)${since.includes(POINT_ADDED) ? ` and "${POINT_ADDED}"` : ''}`);
+          await unfocus();
+          await page.keyboard.press(UNDO);
+          await atEnd();
+          const undone = await read();
+          if (!undone.tap || undone.moved) wrong.push(`(1) after one Undo the marker read ${undone.tap ? '' : 'not '}at the tap and ${undone.moved ? '' : 'not '}at the new place`);
+        }
+        // (2) Escape.
+        await off();
+        const baseline = await hash();
+        // One Undo and one Redo, the canvas read after each (the history check of each cancel, Codex list line 20).
+        const undoRedo = async () => {
+          await unfocus();
+          await page.keyboard.press(UNDO);
+          await off();
+          const undone = await hash();
+          await page.keyboard.press(REDO);
+          await off();
+          return { undone, redone: await hash() };
+        };
+        const history = await undoRedo();
+        if (history.undone === history.redone) wrong.push('(2) before "Move" one Undo drew the canvas as one Redo did, so the history check could see nothing');
+        const historyKept = async (when) => {
+          const now = await undoRedo();
+          if (now.undone !== history.undone || now.redone !== history.redone) wrong.push(`${when}: one Undo then one Redo did not draw the canvases they drew before "Move" (${now.undone === history.redone ? 'the Undo changed nothing: the cancel left a step' : 'the history changed'})`);
+        };
+        if (await chooseMove(second, MOVE_ONE, '(2)')) {
+          await off();
+          await page.keyboard.press('Escape');
+          await settle();
+          if (!(await comesToWords(page, CANCELLED))) wrong.push(`(2) after Escape the status did not come to "${CANCELLED}"`);
+          if ((await hash()) !== baseline) wrong.push('(2) after Escape the canvas was not as before "Move"');
+          await notWaiting('(2) after Escape');
+          await historyKept('(2) after Escape');
+          await tapAt(EMPTY);
+          if (!(await comesToWords(page, POINT_ADDED))) wrong.push(`(2) the click after Escape did not add a point ("${POINT_ADDED}" not heard)`);
+          await unfocus();
+          await page.keyboard.press(UNDO);
+          await off();
+          if ((await hash()) !== baseline) wrong.push('(2) the Undo of the pen\'s point did not draw the canvas as before');
+        }
+        // (2b) A right-click while it waits.
+        if (await chooseMove(second, MOVE_ONE, '(2b)')) {
+          const { x, y } = on(EMPTY);
+          await page.mouse.click(x, y, { button: 'right' });
+          await settle();
+          if (!(await comesToWords(page, CANCELLED))) wrong.push(`(2b) after a right-click the status did not come to "${CANCELLED}"`);
+          if (await menuShown()) wrong.push('(2b) the right-click that cancelled opened a menu');
+          await off();
+          if ((await hash()) !== baseline) wrong.push('(2b) after the right-click the canvas was not as before "Move"');
+          await notWaiting('(2b) after the right-click');
+          await historyKept('(2b) after the right-click');
+        }
+        // (2c) Focus leaving the preview.
+        if (await chooseMove(second, MOVE_ONE, '(2c)')) {
+          const from = (await said()).length;
+          await atEnd();
+          await off();
+          if (!(await heardSince(from, CANCELLED))) wrong.push(`(2c) a click on "Skip to end" while it waited did not say "${CANCELLED}"`);
+          await notWaiting('(2c) after the click on "Skip to end"');
+          if ((await hash()) !== baseline) wrong.push('(2c) after the click on "Skip to end" the canvas was not as before "Move"');
+          await historyKept('(2c) after the click on "Skip to end"');
+        }
+        // (3) The group.
+        await page.keyboard.press('Escape');
+        await settle();
+        for (const place of [first, second]) {
+          const { x, y } = on(place);
+          await page.keyboard.down(COMMAND);
+          await page.mouse.click(x, y);
+          await page.keyboard.up(COMMAND);
+          await off();
+        }
+        const rings = await ringsAt(page, [first, second]);
+        if (rings.some((n) => n <= 50)) wrong.push(`(3) the command-clicks left the rings at ${JSON.stringify(rings)} pixels, not both ringed`);
+        if (await chooseMove(second, MOVE_GROUP, '(3)')) {
+          const from = (await said()).length;
+          await tapAt(DRAG_TO);
+          await off();
+          await atEnd();
+          const marks = { second: await markBeyond(page, DRAG_TO, firstTo), first: await markBeyond(page, firstTo, DRAG_TO), secondTap: await markBeyond(page, second, first), firstTap: await markBeyond(page, first, second) };
+          if (!marks.second || !marks.first || marks.secondTap || marks.firstTap) wrong.push(`(3) after the click the second marker read ${marks.second ? '' : 'not '}at DRAG_TO and the first ${marks.first ? '' : 'not '}moved by the same offset; ${marks.secondTap ? 'the second still at its tap' : 'the second not at its tap'}, ${marks.firstTap ? 'the first still at its tap' : 'the first not at its tap'}`);
+          if (!(await heardSince(from, '2 points moved'))) wrong.push('(3) the status never said "2 points moved"');
+        }
+        const ok = !wrong.length;
+        record('2.5.7', ok, ok ? `in pen-drawn, by the pointer alone: the second point right-clicked and its menu's "Move" clicked, the status said "${MOVE_ONE}" and the cursor read crosshair; one click on empty picture drew its marker there and not at its tap, "${POINT_MOVED}" said once and "${POINT_ADDED}" never, and one Undo put it back; Escape, a right-click and a click on "Skip to end" each cancelled the wait with "${CANCELLED}" and the canvas as before, and after each one Undo then one Redo drew the canvases they drew before "Move" (the history unchanged); with both points selected, "Move" on the second and one click drew both markers moved by the same offset, "2 points moved" said. The preview's two drags (a point's, a group's) have this single-pointer way; the timeline's drag is checked by pointer-cancellation; no keyboard way is credited` : wrong.join('; '));
+        record('2.5.1', ok, ok ? 'the page\'s path gestures are its three drags, each with a single-pointer way: a point\'s and a group\'s on the preview by the point\'s menu "Move" and one click (shown in this run: one point, Escape, a right-click, focus leaving, the group); the timeline\'s by a press on the track (pointer-cancellation\'s 2.5.7)' : wrong.join('; '));
+      },
+    },
+    {
+      // 2.4.3 (CORE-06, brief 140, ruling EF; D271 (a), answered by the owner, 2026-11-27): a line's menu, by pointer.
+      // In pen-drawn's set-up (two taps, the second point selected), skipped to the route's end. A listener on the
+      // document (after the canvas's own) notes whether each right-click's menu event was cancelled.
+      // (1) A right-click three tenths along the line (line-insert-plus's place, clear of the points and the "+"): a
+      // menu named "Line actions" stands in document.body, outside .preview, its menuitems "Make line two-way" then
+      // "Reverse line" (the line runs one way), focus on the first; the browser's menu cancelled. Escape closes it,
+      // focus on the box, and the rings at the two taps read as before the right-click (the selection unchanged).
+      // (2) Again; "Make line two-way" clicked: the menu closes, focus on the box, "Line made two-way" heard. (3) Again:
+      // the first item now reads "Make line one way" (the direction read back); "Reverse line" clicked: "Line reversed"
+      // heard, focus on the box. (4) One Undo: "Undo" heard, and a right-click still shows "Make line one way" (the Undo
+      // took back the Reverse alone, which the editor does not draw); Escape. (5) A second Undo: a right-click shows
+      // "Make line two-way"; Escape. (6) The mouse rests on the line's middle, as line-insert-plus hovers the "+", then a
+      // right-click there opens the same menu; Escape closes it with focus on the box. (7) A right-click on empty picture
+      // opens no menu and leaves the browser's menu alone. (8) It shows D273 part 1's look and words (brief 143; nothing
+      // new is claimed, so no new row): the line's middle stretch read whole (the line drawn at the end, the guide over
+      // it); "Reverse line", from the menu opened as in (5), leaves the one-way line pointing back at the lead start:
+      // "Line reversed. 1 line the lead does not walk" heard, and the middle stretch reads dotted (the guide's round dots
+      // alone: "grows" draws a line the lead never reaches nowhere); one Undo: "Undo. The lead walks every line" heard,
+      // and the stretch reads whole again. Over the run the status said, in turn and each once, "Line made two-way",
+      // "Line reversed", "Undo", "Undo" and (8)'s two (words read as point-move reads them). The menu opens by pointer
+      // only: nothing is claimed for 2.1.1 (no key picks out a line yet, D271 part (1)), nor for 1.4.11 or 2.5.x. The
+      // row is 2.4.3 under the j-order method (the catalogue takes 2.4.3 from keyboard or j-order journeys; this one has
+      // no keyboard way). Faults that fail it (brief 140, PROBE-140/mut-*.txt): (ao) the opener ignoring line hits;
+      // (ap) the direction item always "Make line one way"; (aq) the line's words dropped. Step (8) was red on brief 143's
+      // stage 2 build with the guide's dotted branch removed: "(8) after "Reverse line" the line's middle read 72% of 43
+      // samples in the route's hue, longest run 7, not dotted" (the lane's PROBE-143/red-line-menu.txt). Faults that
+      // fail (8), run by sub-chat 143 (PROBE-143/mut-ba.txt, mut-bb.txt, mut-bd.txt): (ba) a left-out line drawn in the
+      // guide's dashes: the same words as the red run; (bb) the sentence never added: ""Line reversed. 1 line the lead
+      // does not walk" was not heard after "Reverse line"" and ""Undo. The lead walks every line" was not heard"; (bd)
+      // "The lead walks every line" never said: the second of those.
+      name: 'line-menu',
+      method: 'j-order',
+      rows: ['2.4.3'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const [first, second] = TAPS;
+        const ALONG = 0.3;
+        const LINE = [first[0] + (second[0] - first[0]) * ALONG, first[1] + (second[1] - first[1]) * ALONG];
+        const MIDDLE = [(first[0] + second[0]) / 2, (first[1] + second[1]) / 2];
+        const EMPTY = [0.3, 0.7];
+        const NAME = 'Line actions';
+        const [TWO, ONE, REVERSE] = ['Make line two-way', 'Make line one way', 'Reverse line'];
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const box = await page.locator(PREVIEW).boundingBox();
+        const on = ([fx, fy]) => ({ x: box.x + box.width * fx, y: box.y + box.height * fy });
+        const off = async () => { await page.mouse.move(1, 1); await settle(); };
+        const said = () => page.evaluate(() => [...window.__said]);
+        const heardSince = (from, words) => page.waitForFunction(([f, w]) => window.__said.slice(f).includes(w), [from, words], { timeout: 6000 }).then(() => true, () => false);
+        const drained = () => page.waitForFunction((s) => document.querySelector(s)?.textContent === '', STATUS, { timeout: 12000 }).then(() => true, () => false);
+        const readMenu = () => page.evaluate(() => {
+          const m = document.querySelector('[role=menu]');
+          if (!m) return null;
+          const e = document.activeElement;
+          return { name: m.getAttribute('aria-label'), inBody: m.parentElement === document.body, inPreview: m.closest('.preview') !== null, items: [...m.querySelectorAll('[role=menuitem]')].map((each) => each.getAttribute('aria-label')), focused: e?.getAttribute('role') === 'menuitem' ? e.getAttribute('aria-label') : null };
+        });
+        const rightClick = async (place) => { const { x, y } = on(place); await page.mouse.click(x, y, { button: 'right' }); await settle(); };
+        const prevented = () => page.evaluate(() => window.__menuPrevented);
+        const ringed = async () => (await ringsAt(page, [first, second])).map((n) => n > 50);
+        const wrong = [];
+        // A right-click at `place` opens "Line actions" with `head` first, then "Reverse line", focus on the first.
+        const opens = async (place, head, when) => {
+          await rightClick(place);
+          const m = await readMenu();
+          if (m === null) { wrong.push(`${when}: the right-click opened no menu`); return false; }
+          if (m.name !== NAME) wrong.push(`${when}: the menu was named ${JSON.stringify(m.name)}`);
+          if (!m.inBody || m.inPreview) wrong.push(`${when}: the menu stood ${m.inPreview ? 'inside .preview' : 'outside document.body'}`);
+          if (JSON.stringify(m.items) !== JSON.stringify([head, REVERSE])) wrong.push(`${when}: its items read ${JSON.stringify(m.items)}, not ${JSON.stringify([head, REVERSE])}`);
+          if (m.focused !== head) wrong.push(`${when}: focus was on ${JSON.stringify(m.focused)} on opening, not ${JSON.stringify(head)}`);
+          if ((await prevented()) !== true) wrong.push(`${when}: the browser's own menu was not cancelled`);
+          return true;
+        };
+        const closes = async (when) => {
+          await page.keyboard.press('Escape');
+          await settle();
+          if ((await readMenu()) !== null) wrong.push(`${when}: Escape left the menu open`);
+          if (!(await focusOn(page, PREVIEW))) wrong.push(`${when}: after Escape focus was not on the preview box`);
+        };
+        const choose = async (label, words, when) => {
+          const from = (await said()).length;
+          await page.getByRole('menuitem', { name: label }).click();
+          await settle();
+          if ((await readMenu()) !== null) wrong.push(`${when}: the menu stayed open after "${label}"`);
+          if (!(await focusOn(page, PREVIEW))) wrong.push(`${when}: after "${label}" focus was not on the preview box`);
+          if (!(await heardSince(from, words))) wrong.push(`${when}: "${words}" was not heard after "${label}"`);
+        };
+        // The queue merges the same words written while the region still shows them (announce.ts): each Undo waits for
+        // the region to come back to empty, so the second "Undo" is written again.
+        const undo = async (when, words = 'Undo') => {
+          await drained();
+          const from = (await said()).length;
+          await page.keyboard.press(UNDO);
+          await settle();
+          if (!(await heardSince(from, words))) wrong.push(`${when}: "${words}" was not heard`);
+        };
+        // The line's middle stretch (three tenths to seven tenths along), read every canvas pixel: at each, the strongest
+        // pixel within 2 across the line. `share` is the part of them in the route's hue (penMarksRead's test), `run` the
+        // longest stretch of them in a row.
+        const stretchRead = () => page.locator(CANVAS).evaluate((c, [a, b]) => {
+          const ctx = c.getContext('2d');
+          const at = (x, y) => [...ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data];
+          const routeHue = ([r, g, bl, al]) => al > 60 && r > 120 && r > g && g >= bl;
+          const [qx, qy, px, py] = [a[0] * c.width, a[1] * c.height, b[0] * c.width, b[1] * c.height];
+          const len = Math.hypot(px - qx, py - qy), [ux, uy] = [(px - qx) / len, (py - qy) / len];
+          const hued = [];
+          for (let d = 0.3 * len; d <= 0.7 * len; d += 1) {
+            let best = [0, 0, 0, 0];
+            for (let e = -2; e <= 2; e += 1) { const p = at(qx + ux * d - uy * e, qy + uy * d + ux * e); if (p[3] > best[3]) best = p; }
+            hued.push(routeHue(best));
+          }
+          let run = 0, longest = 0;
+          for (const h of hued) { run = h ? run + 1 : 0; longest = Math.max(longest, run); }
+          return { n: hued.length, share: hued.filter(Boolean).length / hued.length, run: longest };
+        }, [first, second]);
+        await page.getByRole('button', { name: 'Skip to end' }).click();
+        await settle();
+        await page.evaluate(() => { window.__menuPrevented = null; document.addEventListener('contextmenu', (e) => { window.__menuPrevented = e.defaultPrevented; }); });
+        await page.locator(STATUS).evaluate((s) => { window.__said = []; new MutationObserver(() => { window.__said.push(s.textContent ?? ''); }).observe(s, { childList: true, characterData: true, subtree: true }); });
+        await off();
+        const rings = await ringed();
+        // (1) Opened, read, closed; the selection unchanged.
+        if (await opens(LINE, TWO, '(1)')) {
+          await closes('(1)');
+          await off();
+          const now = await ringed();
+          if (JSON.stringify(now) !== JSON.stringify(rings)) wrong.push(`(1) the rings at the taps read ${JSON.stringify(now)} after the menu, ${JSON.stringify(rings)} before (the selection changed)`);
+        }
+        // (2) "Make line two-way".
+        if (await opens(LINE, TWO, '(2)')) await choose(TWO, 'Line made two-way', '(2)');
+        // (3) The direction read back; "Reverse line".
+        if (await opens(LINE, ONE, '(3)')) await choose(REVERSE, 'Line reversed', '(3)');
+        // (4) One Undo: the Reverse alone taken back.
+        await undo('(4)');
+        if (await opens(LINE, ONE, '(4)')) await closes('(4)');
+        // (5) A second Undo: the line one way again.
+        await undo('(5)');
+        if (await opens(LINE, TWO, '(5)')) await closes('(5)');
+        // (6) The "+": the mouse rests on the line's middle first.
+        const middle = on(MIDDLE);
+        await page.mouse.move(middle.x, middle.y);
+        await settle();
+        if (await opens(MIDDLE, TWO, '(6) on the "+"')) await closes('(6)');
+        // (7) Empty picture.
+        await rightClick(EMPTY);
+        if ((await readMenu()) !== null) wrong.push('(7) a right-click on empty picture opened a menu');
+        if ((await prevented()) !== false) wrong.push('(7) a right-click on empty picture cancelled the browser\'s menu');
+        await off();
+        // (8) D273 part 1: the line one way again, "Reverse line" leaves it pointing back at the lead start, so the lead
+        // cannot walk it: the words say so, and paused the line shows dotted (the guide's round dots alone, as the line's
+        // own "grows" layer draws a line the lead never reaches nowhere) where it showed whole under the guide's dashes;
+        // the Undo says the lead walks every line again, and the line reads as before.
+        await drained();
+        const walkedRead = await stretchRead();
+        if (await opens(LINE, TWO, '(8)')) await choose(REVERSE, 'Line reversed. 1 line the lead does not walk', '(8)');
+        await off();
+        const leftRead = await stretchRead();
+        await undo('(8) the Undo of "Reverse line"', 'Undo. The lead walks every line');
+        await off();
+        const backRead = await stretchRead();
+        // Probed (the lane's PROBE-143/probe-figures.md, 43 samples): walked 1.00 (longest run 43), dotted 0.42 (4), and
+        // the guide's dashes alone, fault (ba), 0.72 (7): dotted is a share from 0.20 to 0.57, walked 0.90 or more.
+        const reads = (r) => `${Math.round(r.share * 100)}% of ${String(r.n)} samples in the route's hue, longest run ${String(r.run)}`;
+        const whole = (r) => r.share >= 0.9;
+        const dotted = (r) => r.share >= 0.2 && r.share <= 0.57;
+        if (!whole(walkedRead)) wrong.push(`(8) before "Reverse line" the line's middle read ${reads(walkedRead)}, not whole`);
+        if (!dotted(leftRead)) wrong.push(`(8) after "Reverse line" the line's middle read ${reads(leftRead)}, not dotted`);
+        if (!whole(backRead)) wrong.push(`(8) after its Undo the line's middle read ${reads(backRead)}, not whole`);
+        await drained();
+        const all = (await said()).filter(Boolean);
+        const SAID = ['Line made two-way', 'Line reversed', 'Undo', 'Undo', 'Line reversed. 1 line the lead does not walk', 'Undo. The lead walks every line'];
+        if (JSON.stringify(all) !== JSON.stringify(SAID)) wrong.push(`the status said ${JSON.stringify(all)} in turn; ${JSON.stringify(SAID)} were expected, each once (D271)`);
+        const ok = !wrong.length;
+        record('2.4.3', ok, ok ? `in pen-drawn, by the pointer: a right-click three tenths along the line, and one on its "+" with the mouse resting there, each opened a menu named "${NAME}" in document.body, outside .preview, focus on its first item, the browser's menu cancelled; its items read "${TWO}" then "${REVERSE}" while the line ran one way and "${ONE}" first after "${TWO}" was chosen; after Escape and after each item chosen the menu closed and focus was on the preview box; the rings at the taps read as before the menu (the selection unchanged); over the run the status said, in turn and each once, ${JSON.stringify(all)} (D271's words, then one Undo that left "${ONE}" first and a second that brought back "${TWO}"); a right-click on empty picture opened no menu and left the browser's own. The menu opens by pointer only (no 2.1.1 claim)` : wrong.join('; '));
+      },
+    },
+    {
+      // 2.2.2 (CORE-06, brief 141, FE; D272 (c), answered by the owner, 2026-11-27): a press on the picture while
+      // the route plays pauses the play and does nothing else (dom.ts point 11; the page hands the binding Play or
+      // pause's own toggle, which the binding calls only while playing). In pen-drawn's set-up (two taps, one line), at
+      // the route's end with the mouse off the preview, the whole canvas is read (pixels' hash) as the baseline. Then
+      // Skip to start and Play: (1) while the button reads "Pause", a tap on empty picture: "Animation paused" is heard,
+      // the button reads "Play", and no "Point added" is heard; skipped to the end with the mouse off, the canvas reads
+      // the baseline (no point was added, the selection is as it was). (2) Paused, a tap at the same place: "Point
+      // added" is heard (the pen works again), and at the end the canvas is no longer the baseline. (3) One Undo with
+      // focus on the box: "Undo" heard, the canvas the baseline again. (4) Skip to start, Play again, and while the
+      // button reads "Pause" a right-click on the first point: "Animation paused" heard again, the button reads "Play",
+      // no menu opens (no [role=menu], nothing named "Point actions"), the browser's own menu is cancelled, and at the
+      // end the canvas reads the baseline (nothing selected or changed). The status queue merges the same words written
+      // while the region still shows them (announce.ts): each step waits for it to come back to empty, as line-menu and
+      // point-move do. The row is 2.2.2 under the j-timing method: a pointer way to pause the moving preview, beside the
+      // Pause button and Space (no new row; nothing is claimed for 3.2.x). Faults that fail it, run by sub-chat 142
+      // (the lane's PROBE-142/mut-as.txt, mut-at.txt): (as) the binding's playing branch removed: 2.2.2 failed with
+      // "the button read "Pause" just after the press, not "Play" (the play went on)" and ""Point added" was heard
+      // after the tap while playing"; (at) the press swallowed but `pause` not called: 2.2.2 failed with "the button
+      // read "Pause" just after the press" and ""Animation paused" was not heard" at steps (1) and (4). It was red on
+      // stage 2's build, where the page handed no `pause` (PROBE-141/red-press-while-playing.txt).
+      name: 'press-while-playing',
+      method: 'j-timing',
+      rows: ['2.2.2'],
+      run: async ({ page, open, record }) => {
+        await open('pen-drawn');
+        const [first] = TAPS;
+        const EMPTY = [0.3, 0.7];
+        const settle = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const box = await page.locator(PREVIEW).boundingBox();
+        const on = ([fx, fy]) => ({ x: box.x + box.width * fx, y: box.y + box.height * fy });
+        const off = async () => { await page.mouse.move(1, 1); await settle(); };
+        const said = () => page.evaluate(() => [...window.__said]);
+        const heardSince = (from, words) => page.waitForFunction(([f, w]) => window.__said.slice(f).includes(w), [from, words], { timeout: 6000 }).then(() => true, () => false);
+        const drained = () => page.waitForFunction((s) => document.querySelector(s)?.textContent === '', STATUS, { timeout: 12000 }).then(() => true, () => false);
+        const button = () => page.locator('#play-pause').textContent().then((t) => (t ?? '').trim());
+        const prevented = () => page.evaluate(() => window.__menuPrevented);
+        const atEnd = async () => { await page.getByRole('button', { name: 'Skip to end' }).click(); await off(); return (await pixels(page)).hash; };
+        const wrong = [];
+        // Skip to start and Play; true once the button reads "Pause" (the play under way).
+        const play = async (when) => {
+          await drained();
+          await page.getByRole('button', { name: 'Skip to start' }).click();
+          await drained();
+          await page.getByRole('button', { name: 'Play' }).click();
+          const going = await page.waitForFunction(() => document.querySelector('#play-pause')?.textContent?.trim() === 'Pause', undefined, { timeout: 3000 }).then(() => true, () => false);
+          if (!going) wrong.push(`${when}: after Play the button read ${JSON.stringify(await button())}, not "Pause"`);
+          await drained();
+          return going;
+        };
+        // After a press while playing: the button reads "Play" at once (read first: the route is 4 s long and would end by
+        // itself while the words are waited for), and "Animation paused" is heard.
+        const paused = async (from, when) => {
+          const now = await button();
+          if (now !== 'Play') wrong.push(`${when}: the button read ${JSON.stringify(now)} just after the press, not "Play" (the play went on)`);
+          if (!(await heardSince(from, 'Animation paused'))) wrong.push(`${when}: "Animation paused" was not heard`);
+        };
+        await page.evaluate(() => { window.__menuPrevented = null; document.addEventListener('contextmenu', (e) => { window.__menuPrevented = e.defaultPrevented; }); });
+        await page.locator(STATUS).evaluate((s) => { window.__said = []; new MutationObserver(() => { window.__said.push(s.textContent ?? ''); }).observe(s, { childList: true, characterData: true, subtree: true }); });
+        const baseline = await atEnd();
+        // (1) A tap on empty picture while playing.
+        if (await play('(1)')) {
+          const from = (await said()).length;
+          const { x, y } = on(EMPTY);
+          await page.mouse.click(x, y);
+          await settle();
+          await paused(from, '(1)');
+          await drained();
+          if ((await said()).slice(from).includes('Point added')) wrong.push('(1) "Point added" was heard after the tap while playing');
+          if ((await atEnd()) !== baseline) wrong.push('(1) at the end the canvas did not read as before the tap (a point was added or the selection changed)');
+        }
+        // (2) The same tap, paused: the pen's again.
+        await drained();
+        let from = (await said()).length;
+        const { x, y } = on(EMPTY);
+        await page.mouse.click(x, y);
+        await settle();
+        if (!(await heardSince(from, 'Point added'))) wrong.push('(2) "Point added" was not heard after the tap, paused');
+        if ((await atEnd()) === baseline) wrong.push('(2) at the end the canvas read as before the tap, paused (nothing was added)');
+        // (3) One Undo with focus on the box.
+        await drained();
+        await page.locator(PREVIEW).focus();
+        from = (await said()).length;
+        await page.keyboard.press(UNDO);
+        await settle();
+        if (!(await heardSince(from, 'Undo'))) wrong.push('(3) "Undo" was not heard');
+        if ((await atEnd()) !== baseline) wrong.push('(3) after one Undo the canvas did not read the baseline');
+        // (4) A right-click on the first point while playing.
+        if (await play('(4)')) {
+          from = (await said()).length;
+          const point = on(first);
+          await page.mouse.click(point.x, point.y, { button: 'right' });
+          await settle();
+          await paused(from, '(4)');
+          const menu = await page.evaluate(() => document.querySelector('[role=menu]')?.getAttribute('aria-label') ?? null);
+          if (menu !== null) wrong.push(`(4) a menu opened (${JSON.stringify(menu)}) on a right-click while playing`);
+          if ((await page.getByRole('menu', { name: 'Point actions' }).count()) !== 0) wrong.push('(4) "Point actions" opened');
+          if ((await prevented()) !== true) wrong.push('(4) the browser\'s own menu was not cancelled');
+          if ((await atEnd()) !== baseline) wrong.push('(4) at the end the canvas did not read the baseline (the right-click changed something)');
+        }
+        await drained();
+        const ok = !wrong.length;
+        record('2.2.2', ok, ok ? 'in pen-drawn, by the pointer: while the route played (the button read "Pause"), a tap on empty picture paused it ("Animation paused" heard, the button read "Play"), no "Point added" was heard, and at the end the canvas read as before; the same tap, paused, added a point ("Point added" heard, the canvas changed), and one Undo ("Undo" heard) brought the canvas back; played again, a right-click on the first point paused it ("Animation paused" heard, the button read "Play"), opened no menu, cancelled the browser\'s own, and changed nothing on the canvas (D272 (c))' : wrong.join('; '));
+      },
+    },
+    {
+      // 2.5.2 (CORE-06, brief 121, ruling AD; brief 120's "+", D208's hover): a bend inserted by the "+" at a line's
+      // middle, completed on the up, undone in one step, and aborted by moving off before the up. It takes the place of
+      // brief 119's line-hover-halo, whose three hover readings it carries in as regression checks: the 2.5.2 credit
+      // rests on readings (5) to (8) alone (the press, the up, Undo and the abort; gpt-6-astra's condition on brief 120's
+      // range, its "added question"); (1) to (4) are hovers with no press and earn nothing by themselves.
+      // In pen-drawn's set-up (two taps, the second point selected, so the route is selected), skipped to the route's
+      // end, with the mouse off the preview, the whole canvas is read (pixels' hash) as the baseline.
+      // (1) to (3), as line-hover-halo read them: two pixels where only one mark draws, three tenths of the way along the
+      // line from the first tap (about 32 px from it and 21 px from the middle, clear of both points and of the "+"):
+      // the line's centre pixel (the most opaque within 1 px of the place, the route's hue, alpha over 200), and a pixel
+      // beside it on the ray square to the line, the first fully transparent one out from the centre, used only within
+      // 3 px (the halo's two strokes are the line's width + 9 and + 4 units, overlays.ts GLOW, so it reaches at least
+      // 4.5 units out; probed, brief 119). The mouse moves there with no press: (1) the centre pixel reads in the line's
+      // own colour, as before (within 24 a channel), not the halo blended over it; (2) the pixel beside reads the halo
+      // (alpha over 200, blue at least green at least red, blue over 200). The mouse leaves the preview in one move: (3)
+      // both read as before (within 8 a channel). Each fails with its fault put back (brief 119's (k), (l), (m)).
+      // (4) The mouse moves back onto the line's middle, the "+"'s place (the middle of the two taps: the line is
+      // straight, and the overlay draws the "+" at its middle sample, brief 120). plusHandle draws it active, the mouse on
+      // it, as a disc of radius 11 units filled in the accent #0f62fe with a white cross 2 units wide, arms 5.5 long; idle,
+      // radius 9, filled white with an accent cross. Probed (brief 121, PROBE-121/probe-plus.txt): at 1280 by 800 the
+      // canvas is 704 by 396 at 704 CSS px (ratio 1, unit 1). The "+" reads active when its centre pixel is the cross's
+      // white (alpha over 200, every channel over 230) and the four pixels 4 px out on its diagonals (5.7 px from the
+      // centre: inside the disc, off the cross) read the accent fill (alpha over 200, blue over 200, red under 60);
+      // idle, both would read the other way round. Offsets scale by the canvas's ratio.
+      // (5) A press on the "+" (through the pointer adapter) adds nothing before the up: while it is held the whole
+      // canvas reads as the baseline, so no mark is added anywhere, and no pixel within 2 px of the middle reads dark (a
+      // bend's mark is v3's grey dot, black at half alpha edged white: alpha over 100, every channel under 140; the line's
+      // own pixels there read red over 200). A down clears the hover, as every down does (dom.ts, point 6), so the "+"
+      // is not drawn while held: "as before the press" is read as the canvas before the mouse came onto the preview.
+      // (6) The up adds the point there: skipped to the end again (the mouse leaves for the button), at least three
+      // pixels within 2 px of the middle read dark, the new bend's grey dot (the reading point-drag-moves makes of a
+      // marker, where only that mark draws, by a bend's own mark), and the canvas is no longer the baseline.
+      // (7) One Undo (focus off the Skip button) and the whole canvas reads as the baseline again.
+      // (8) The abort: the mouse back on the "+" (it reads active again: the route is still selected, so the "+" is
+      // live), a press there moved in four steps to 32 px right and 32 px up (45 px from the "+", well beyond
+      // DRAG_THRESHOLD's 3 px and the "+"'s 12 px, and square to the line, beyond its 8 px), and released there: the
+      // whole canvas reads as the baseline (no point added), and one Redo then draws the grey dot at the middle again
+      // (the insert undone at (7) is still the step to redo, so the abort made no step).
+      // Faults that fail it (brief 121): (r) penTap's insert branch removed fails (6); (s) the insert done on the down
+      // fails (5); (t) a moved press giving a tap fails (8). Nothing is claimed for 2.5.8 (the "+"'s target size, D255),
+      // 1.4.11 (the "+" and the halo stay under the preview's set-aside), 1.4.13, or 2.5.7 (the preview's drags' single-pointer way is checked by point-move, brief 139).
+      name: 'line-insert-plus',
+      method: 'j-pointer',
+      rows: ['2.5.2'],
+      run: async ({ page, open, record, pointer }) => {
+        await open('pen-drawn');
+        const now = async () => { await page.waitForTimeout(250); await twoFrames(page); };
+        const atEnd = async () => { await page.getByRole('button', { name: 'Skip to end' }).click(); await now(); };
+        const blur = () => page.evaluate(() => (document.activeElement instanceof HTMLElement ? document.activeElement.blur() : undefined));
+        await atEnd();
+        // Where the two pixels are, in canvas pixels, from the taps and the canvas before the hover.
+        // Three tenths along from the first tap: off the "+" at the middle (its hit 12 px, its disc 9 to 11) and the points.
+        const ALONG = 0.3;
+        const spot = await page.locator(CANVAS).evaluate((c, [[ax, ay], [bx, by], ALONG]) => {
+          const ctx = c.getContext('2d');
+          const [px, py, qx, qy] = [ax * c.width, ay * c.height, bx * c.width, by * c.height];
+          const len = Math.hypot(qx - px, qy - py), [ux, uy] = [(qx - px) / len, (qy - py) / len];
+          // The line is about 1 px wide here: of the pixels within 1 px of the place, the most opaque is its centre pixel.
+          const [fx, fy] = [Math.floor(px + (qx - px) * ALONG), Math.floor(py + (qy - py) * ALONG)];
+          let [mx, my, top] = [fx, fy, -1];
+          for (let dy = -1; dy <= 1; dy += 1) for (let dx = -1; dx <= 1; dx += 1) {
+            const alpha = ctx.getImageData(fx + dx, fy + dy, 1, 1).data[3];
+            if (alpha > top) [mx, my, top] = [fx + dx, fy + dy, alpha];
+          }
+          let d = 1;
+          while (d <= 3 && ctx.getImageData(Math.floor(mx - uy * d), Math.floor(my + ux * d), 1, 1).data[3] !== 0) d += 1;
+          return { line: [mx, my], beside: [Math.floor(mx - uy * d), Math.floor(my + ux * d)], d };
+        }, [...TAPS, ALONG]);
+        const read = () => page.locator(CANVAS).evaluate((c, at) => at.map(([x, y]) => [...c.getContext('2d').getImageData(x, y, 1, 1).data]), [spot.line, spot.beside]);
+        const same = (p, q, by) => p.every((v, i) => Math.abs(v - q[i]) <= by);
+        const halo = ([r, g, b, a]) => a > 200 && b > 200 && b >= g && g >= r;
+        // The middle: the "+"'s centre pixel, its four diagonal pixels, and the dark pixels within 2 px (a bend's grey dot).
+        const MIDDLE = [(TAPS[0][0] + TAPS[1][0]) / 2, (TAPS[0][1] + TAPS[1][1]) / 2];
+        const middle = async () => ({ hash: (await pixels(page)).hash, ...(await page.locator(CANVAS).evaluate((c, [fx, fy]) => {
+          const ctx = c.getContext('2d');
+          const ratio = c.width / c.getBoundingClientRect().width;
+          const [cx, cy] = [Math.floor(fx * c.width), Math.floor(fy * c.height)];
+          const at = (dx, dy) => [...ctx.getImageData(cx + Math.round(dx * ratio), cy + Math.round(dy * ratio), 1, 1).data];
+          const reach = Math.max(2, Math.round(2 * ratio));
+          let dark = 0;
+          for (let dy = -reach; dy <= reach; dy += 1) for (let dx = -reach; dx <= reach; dx += 1) {
+            const [r, g, b, a] = ctx.getImageData(cx + dx, cy + dy, 1, 1).data;
+            if (a > 100 && r < 140 && g < 140 && b < 140) dark += 1;
+          }
+          return { centre: at(0, 0), diagonals: [at(4, 4), at(-4, 4), at(4, -4), at(-4, -4)], dark };
+        }, MIDDLE)) });
+        const active = ({ centre: [r, g, b, a], diagonals }) => a > 200 && r > 230 && g > 230 && b > 230 && diagonals.every(([dr, , db, da]) => da > 200 && db > 200 && dr < 60);
+        const wrong = [];
+        const base = await middle();
+        if (base.dark !== 0) wrong.push(`before the hover ${base.dark} pixel(s) within 2 px of the middle read dark, with no point there`);
+        const [line, beside] = await read();
+        if (spot.d > 3) wrong.push('no pixel within 3 px of the line\'s centre, square to it, was clear of the line before the hover');
+        if (!orange(line, 200)) wrong.push(`before the hover the line's centre pixel read rgba(${line}), not the line`);
+        const box = await page.locator(CANVAS).boundingBox();
+        const [[ax, ay], [bx, by]] = TAPS;
+        await page.mouse.move(box.x + box.width * (ax + (bx - ax) * ALONG), box.y + box.height * (ay + (by - ay) * ALONG), { steps: 4 });
+        await now();
+        const [lineOn, besideOn] = await read();
+        if (!same(lineOn, line, 24) || !orange(lineOn, 200)) wrong.push(`(1) with the mouse on the line its centre pixel read rgba(${lineOn}), not the line's own rgba(${line})`);
+        if (!halo(besideOn)) wrong.push(`(2) with the mouse on the line the pixel ${spot.d} px beside it read rgba(${besideOn}), not the halo`);
+        // Off the preview in one move: the canvas hears pointer moves only over itself, so its pointerleave alone can
+        // clear the hover (a move in steps would cross empty canvas first, and a move over nothing clears it too).
+        await page.mouse.move(1, 1);
+        await now();
+        const [lineOff, besideOff] = await read();
+        if (!same(lineOff, line, 8) || !same(besideOff, beside, 8)) wrong.push(`(3) after the mouse left the preview the two pixels read rgba(${lineOff}) and rgba(${besideOff}), not as before the hover, rgba(${line}) and rgba(${beside})`);
+        const plus = { x: box.x + box.width * MIDDLE[0], y: box.y + box.height * MIDDLE[1] };
+        await page.mouse.move(plus.x, plus.y, { steps: 4 });
+        await now();
+        const on = await middle();
+        if (!active(on)) wrong.push(`(4) with the mouse on the line's middle the "+" did not read active: its centre rgba(${on.centre}), its diagonals ${on.diagonals.map((p) => `rgba(${p})`).join(', ')}`);
+        await pointer.down(plus.x, plus.y);
+        await now();
+        const held = await middle();
+        if (held.hash !== base.hash || held.dark !== 0) wrong.push(`(5) while the press on the "+" was held the canvas was ${held.hash === base.hash ? '' : 'not '}as before, and ${held.dark} pixel(s) at the middle read dark`);
+        await pointer.up();
+        await atEnd();
+        const added = await middle();
+        if (added.dark < 3 || added.hash === base.hash) wrong.push(`(6) after the up ${added.dark} pixel(s) within 2 px of the middle read dark (a bend's grey dot reads at least 3)${added.hash === base.hash ? ', and the canvas was as before' : ''}`);
+        await blur();
+        await page.keyboard.press(UNDO);
+        await atEnd();
+        const undone = await middle();
+        if (undone.hash !== base.hash) wrong.push(`(7) after one Undo the canvas was not as before the insert (${undone.dark} pixel(s) at the middle read dark)`);
+        await page.mouse.move(plus.x, plus.y, { steps: 4 });
+        await now();
+        const again = await middle();
+        if (!active(again)) wrong.push(`(8) back on the line's middle after the Undo the "+" did not read active: its centre rgba(${again.centre})`);
+        await pointer.down(plus.x, plus.y);
+        for (let i = 1; i <= 4; i += 1) await pointer.move(plus.x + 8 * i, plus.y - 8 * i);
+        await pointer.up();
+        await page.mouse.move(1, 1);
+        await atEnd();
+        const aborted = await middle();
+        if (aborted.hash !== base.hash) wrong.push(`(8) after a press on the "+" moved 45 px off it and released there the canvas was not as before (${aborted.dark} pixel(s) at the middle read dark)`);
+        await blur();
+        await page.keyboard.press(REDO);
+        await atEnd();
+        const redone = await middle();
+        if (redone.dark < 3) wrong.push(`(8) after the abort one Redo did not draw the undone bend again (${redone.dark} pixel(s) at the middle read dark): the abort made a step`);
+        record('2.5.2', !wrong.length, wrong.length ? wrong.join('; ') : `in pen-drawn, skipped to the end: (1) to (3), with no press, the mouse on the line three tenths along read its centre pixel in the line's own colour (rgba(${lineOn}), before rgba(${line})) and a pixel ${spot.d} px beside it in the halo (rgba(${besideOn})), both as before once the mouse left; (4) on the line's middle the "+" read active (centre rgba(${on.centre}), diagonals rgba(${on.diagonals[0]})); for 2.5.2: (5) a press on the "+", held, left the whole canvas as before the hover, nothing dark at the middle; (6) the up drew a bend's grey dot there (${added.dark} dark pixels within 2 px); (7) one Undo drew the whole canvas as before; (8) a press on the "+" moved 45 px off and released there left the canvas as before, and one Redo then drew the undone bend again (${redone.dark} dark pixels), so the abort made no step`);
       },
     },
     {

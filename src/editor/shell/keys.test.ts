@@ -65,10 +65,75 @@ describe('the key table, as dispatch reads it', () => {
     }
   });
 
+  it('means Escape’s one path for Escape (CORE-06, brief 115), and nothing with Ctrl, Cmd or Alt held', () => {
+    for (const mac of PLATFORMS) {
+      expect(actionFor(press('Escape'), mac)).toBe('escape');
+      for (const held of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }]) expect(actionFor(press('Escape', held), mac)).toBeNull();
+    }
+  });
+
+  it('means the Editing keys (brief 123, ruling AM): Delete or Backspace, Cmd or Ctrl+D, Cmd or Ctrl+A, then the two nudges', () => {
+    for (const mac of PLATFORMS) {
+      const [own, other] = mac ? ['metaKey', 'ctrlKey'] : ['ctrlKey', 'metaKey'];
+      for (const key of ['Delete', 'Backspace']) {
+        expect(actionFor(press(key), mac), key).toBe('deleteSelection');
+        expect(actionFor(press(key, { shiftKey: true }), mac), key).toBe('deleteSelection');
+        for (const held of WITH_CTRL_CMD_OR_ALT) expect(actionFor(press(key, held), mac), `${key} ${JSON.stringify(held)}`).toBeNull();
+      }
+      for (const [letter, action] of [['d', 'duplicate'], ['a', 'selectAll']] as const) {
+        for (const key of [letter, letter.toUpperCase()]) expect(actionFor(press(key, { [own]: true }), mac), key).toBe(action);
+        expect(actionFor(press(letter), mac)).toBeNull();
+        expect(actionFor(press(letter, { [other]: true }), mac)).toBeNull();
+        expect(actionFor(press(letter, { metaKey: true, ctrlKey: true }), mac)).toBeNull();
+        expect(actionFor(press(letter, { [own]: true, shiftKey: true }), mac)).toBeNull();
+        expect(actionFor(press(letter, { [own]: true, altKey: true }), mac)).toBeNull();
+      }
+    }
+    const editing = KEYS.filter(({ group }) => group === 'Editing');
+    expect(editing.map(({ action, words, repeats }) => ({ action, words, repeats }))).toEqual([
+      { action: 'deleteSelection', words: 'Delete the selected points', repeats: false },
+      { action: 'duplicate', words: 'Duplicate the selected points', repeats: false },
+      { action: 'selectAll', words: 'Select all points', repeats: false },
+      { action: 'nudge', words: 'Nudge the selected points', repeats: true },
+      { action: 'nudgeFurther', words: 'Nudge them further', repeats: true },
+    ]);
+    expect(KEYS.slice(-6).map(({ action }) => action)).toEqual(['escape', 'deleteSelection', 'duplicate', 'selectAll', 'nudge', 'nudgeFurther']);
+  });
+
+  // Brief 125, ruling AW: the arrows nudge the selection, Shift with them nudges it further (v3's
+  // InteractionHandler.js 970 to 992). Shift is not let through to the plain entry here, as it is for Home or `<`: the
+  // further nudge declares it, and Shift with an arrow reaches that entry alone.
+  it('means the nudge for an arrow alone and the further nudge for Shift with it (brief 125, ruling AW), and nothing with Ctrl, Cmd or Alt', () => {
+    for (const mac of PLATFORMS) {
+      for (const key of ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown']) {
+        expect(actionFor(press(key), mac), key).toBe('nudge');
+        expect(actionFor(press(key, { shiftKey: true }), mac), `Shift+${key}`).toBe('nudgeFurther');
+        expect(actionFor(press(key, { repeat: true }), mac), `${key} held`).toBe('nudge');
+        for (const held of WITH_CTRL_CMD_OR_ALT) expect(actionFor(press(key, held), mac), `${key} ${JSON.stringify(held)}`).toBeNull();
+      }
+      // Shift still reaches the entries that do not declare it, as before: Home skips with it held, `<` needs it.
+      expect(actionFor(press('Home', { shiftKey: true }), mac)).toBe('skipToStart');
+      expect(actionFor(press('Delete', { shiftKey: true }), mac)).toBe('deleteSelection');
+      const rows = helpRows(mac).filter(({ action }) => action === 'nudge' || action === 'nudgeFurther');
+      expect(rows).toEqual([
+        { action: 'nudge', group: 'Editing', keys: ['Left arrow', 'Right arrow', 'Up arrow', 'Down arrow'], words: 'Nudge the selected points' },
+        {
+          action: 'nudgeFurther',
+          group: 'Editing',
+          keys: ['Shift+Left arrow', 'Shift+Right arrow', 'Shift+Up arrow', 'Shift+Down arrow'],
+          words: 'Nudge them further',
+        },
+      ]);
+    }
+  });
+
   it('means nothing for a key the table does not name', () => {
     for (const mac of PLATFORMS) {
       // `?` is Help's key now (CORE-05, stage 5), so it left this list.
-      for (const key of ['a', 'Escape', 'Enter', 'Tab', 'ArrowLeft', 'Delete', 'Unidentified', '']) {
+      // Escape left this list when it became Escape's one path (CORE-06, brief 115); its own test is below.
+      // Delete left it when it became an Editing key (brief 123); `a` stays: Select all is Cmd or Ctrl+A, never `a` alone.
+      // ArrowLeft left it when the arrows became the nudge (brief 125); its own test is above.
+      for (const key of ['a', 'd', 'Enter', 'Tab', 'Unidentified', '']) {
         expect(actionFor(press(key), mac), key).toBeNull();
       }
     }
@@ -104,8 +169,8 @@ describe('DEF-63: no shortcut takes a browser chord such as Ctrl or Cmd with L',
     }
   });
 
-  it('Open project’s, Undo’s and Redo’s chords are the only ones the table declares', () => {
-    expect(KEYS.filter(({ modifiers }) => modifiers.length > 0).map(({ action }) => action)).toEqual(['openProject', 'undo', 'redo']);
+  it('Open project’s, Undo’s, Redo’s, Duplicate’s, Select all’s and the further nudge’s chords are the only ones the table declares', () => {
+    expect(KEYS.filter(({ modifiers }) => modifiers.length > 0).map(({ action }) => action)).toEqual(['openProject', 'undo', 'redo', 'duplicate', 'selectAll', 'nudgeFurther']);
   });
 
   // D207: Cmd+O on a Mac, Ctrl+O elsewhere, either case of the letter; the other command key, Shift or Alt held, no match.
@@ -188,8 +253,16 @@ describe('the key table, as help reads it', () => {
       undo: ['Cmd+Z'],
       redo: ['Cmd+Shift+Z'],
       help: ['?'],
+      escape: ['Escape'],
+      deleteSelection: ['Delete', 'Backspace'],
+      duplicate: ['Cmd+D'],
+      selectAll: ['Cmd+A'],
+      nudge: ['Left arrow', 'Right arrow', 'Up arrow', 'Down arrow'],
+      nudgeFurther: ['Shift+Left arrow', 'Shift+Right arrow', 'Shift+Up arrow', 'Shift+Down arrow'],
     });
-    expect(keysOf(false)).toMatchObject({ openProject: ['Ctrl+O'], undo: ['Ctrl+Z'], redo: ['Ctrl+Shift+Z'] });
+    expect(keysOf(false)).toMatchObject({
+      openProject: ['Ctrl+O'], undo: ['Ctrl+Z'], redo: ['Ctrl+Shift+Z'], duplicate: ['Ctrl+D'], selectAll: ['Ctrl+A'],
+    });
   });
 
   it('says that the comma and full stop step one frame, as they now do (D205; D175 had them skip), and repeat when held', () => {
@@ -201,7 +274,7 @@ describe('the key table, as help reads it', () => {
     expect(row('stepForward')).toMatchObject({ words: 'Step forward one frame', keys: ['.'], group: 'Playback' });
     expect(actionFor(press(','), true)).toBe('stepBack');
     expect(actionFor(press('.'), true)).toBe('stepForward');
-    expect(KEYS.filter(({ repeats }) => repeats).map(({ action }) => action)).toEqual(['stepBack', 'stepForward', 'undo', 'redo']);
+    expect(KEYS.filter(({ repeats }) => repeats).map(({ action }) => action)).toEqual(['stepBack', 'stepForward', 'undo', 'redo', 'nudge', 'nudgeFurther']);
   });
 
   it('and dispatch agree: every key help shows, pressed as shown, means that row’s action', () => {
@@ -210,7 +283,8 @@ describe('the key table, as help reads it', () => {
         for (const shown of keys) {
           const parts = shown === '+' ? ['+'] : shown.split('+');
           const name = parts[parts.length - 1] ?? '';
-          const key = name === 'Space' ? ' ' : name.length === 1 ? name.toLowerCase() : name;
+          const arrow = { 'Left arrow': 'ArrowLeft', 'Right arrow': 'ArrowRight', 'Up arrow': 'ArrowUp', 'Down arrow': 'ArrowDown' }[name];
+          const key = name === 'Space' ? ' ' : name.length === 1 ? name.toLowerCase() : (arrow ?? name);
           const held = { metaKey: mac && parts.includes('Cmd'), ctrlKey: !mac && parts.includes('Ctrl'), shiftKey: parts.includes('Shift') };
           expect(actionFor(press(key, held), mac), shown).toBe(action);
         }

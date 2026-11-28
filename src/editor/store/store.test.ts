@@ -7,7 +7,7 @@ import { newLine, newPoint, newRoute, newScene, type IdSource } from '../../core
 import { AT_START } from '../../player/transport/transport';
 import { addRoute, movePoint, removeRoute, setRouteSetting, setSceneSetting } from './command';
 import { NOTHING_SELECTED } from './selection';
-import { MAX_STEPS, createStore, type Store } from './store';
+import { MAX_STEPS, createStore, type Store, type Stepped } from './store';
 
 function counter(prefix: string): IdSource {
   let n = 0;
@@ -384,5 +384,205 @@ describe('subscribers', () => {
     stop();
     store.undo();
     expect(heard).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('stepped: each step told once (CORE-06, brief 133, ruling CS)', () => {
+  /** A store whose `stepped` records what it hears, with the reporter `report`. */
+  function told(report: (error: unknown) => void = () => undefined) {
+    const { project, route, a, b } = twoStops();
+    const heard: Stepped[] = [];
+    const store = createStore({ project, nextId: counter('new'), report, stepped: (step) => heard.push(step) });
+    return { store, route, a, b, heard };
+  }
+
+  it('a dispatch and a gesture’s commit each tell it once, after the change, with the label, what it found and what it left; the gesture’s moves never', () => {
+    const { store, route, a, heard } = told();
+    const first = store.getState();
+    store.dispatch(movePoint(route, a, { x: 0.3, y: 0.3 }));
+    expect(heard).toHaveLength(1);
+    expect(heard[0]).toEqual({ label: 'Move point', before: { project: first.project, selection: first.selection }, after: { project: store.getState().project, selection: store.getState().selection }, kind: 'commit' });
+    const begun = store.begin('Move point');
+    if (!begun.ok) throw new Error('begin was refused');
+    const found = store.getState().project;
+    begun.gesture.apply(movePoint(route, a, { x: 0.4, y: 0.4 }));
+    begun.gesture.apply(movePoint(route, a, { x: 0.5, y: 0.5 }));
+    expect(heard).toHaveLength(1);
+    expect(begun.gesture.commit()).toEqual({ ok: true, changed: true });
+    expect(heard).toHaveLength(2);
+    expect(heard[1]?.label).toBe('Move point');
+    expect(heard[1]?.kind).toBe('commit');
+    expect(heard[1]?.before.project).toBe(found);
+    expect(heard[1]?.after.project).toBe(store.getState().project);
+  });
+
+  it('never for a gesture that ends as it began, a dispatch that changes nothing, or one refused', () => {
+    const { store, route, a, heard } = told();
+    const begun = store.begin('Move point');
+    if (!begun.ok) throw new Error('begin was refused');
+    begun.gesture.apply(movePoint(route, a, { x: 0.4, y: 0.4 }));
+    begun.gesture.apply(movePoint(route, a, { x: 0.2, y: 0.2 }));
+    expect(begun.gesture.commit()).toEqual({ ok: true, changed: false });
+    expect(store.dispatch({ label: 'Nothing', apply: (current) => current })).toEqual({ ok: true, changed: false });
+    expect(store.dispatch({ label: 'Refused', apply: () => ({ why: 'missing', what: 'a point' }) })).toEqual({ ok: false, refusal: { why: 'missing', what: 'a point' } });
+    expect(heard).toEqual([]);
+  });
+
+  it('never on a cancel, a selection, Open or the transport’s slice', () => {
+    const { store, route, a, b, heard } = told();
+    const begun = store.begin('Move point');
+    if (!begun.ok) throw new Error('begin was refused');
+    begun.gesture.apply(movePoint(route, a, { x: 0.4, y: 0.4 }));
+    expect(begun.gesture.cancel()).toEqual({ ok: true, changed: true });
+    expect(store.select({ route, points: [a, b] })).toEqual({ ok: true, changed: true });
+    expect(store.setPlayback({ ...AT_START, atMs: 10 })).toEqual({ ok: true, changed: true });
+    expect(store.open(twoStops().project)).toEqual({ ok: true, changed: true });
+    expect(heard).toEqual([]);
+  });
+
+  it('once for each Undo and each Redo, the step’s label with what it found and what it left; never for one refused', () => {
+    const { store, route, a, heard } = told();
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+    expect(store.redo()).toEqual({ ok: false, refusal: { why: 'nothing-to-redo' } });
+    expect(heard).toEqual([]);
+    const first = store.getState().project;
+    store.dispatch(movePoint(route, a, { x: 0.3, y: 0.3 }));
+    const moved = store.getState().project;
+    expect(store.undo()).toEqual({ ok: true, changed: true });
+    expect(heard).toHaveLength(2);
+    expect(heard[1]).toMatchObject({ label: 'Move point', kind: 'undo' });
+    expect(heard[1]?.before.project).toBe(moved);
+    expect(heard[1]?.after.project).toBe(first);
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'nothing-to-undo' } });
+    expect(heard).toHaveLength(2);
+    expect(store.redo()).toEqual({ ok: true, changed: true });
+    expect(heard).toHaveLength(3);
+    expect(heard[2]).toMatchObject({ label: 'Move point', kind: 'redo' });
+    expect(heard[2]?.before.project).toBe(first);
+    expect(heard[2]?.after.project).toBe(moved);
+    expect(store.redo()).toEqual({ ok: false, refusal: { why: 'nothing-to-redo' } });
+    const begun = store.begin('Open');
+    expect(store.undo()).toEqual({ ok: false, refusal: { why: 'gesture-open' } });
+    if (begun.ok) begun.gesture.cancel();
+    expect(heard).toHaveLength(3);
+  });
+
+  it('one that throws keeps the step: the subscribers were told first, the error goes to the reporter, and Undo still takes it back', () => {
+    const report = vi.fn();
+    const { project, route, a } = twoStops();
+    const order: string[] = [];
+    const failure = new Error('a broken status area');
+    const store = createStore({
+      project,
+      nextId: counter('new'),
+      report,
+      stepped: () => {
+        order.push('stepped');
+        throw failure;
+      },
+    });
+    store.subscribe(() => order.push('subscriber'));
+    expect(store.dispatch(movePoint(route, a, { x: 0.3, y: 0.3 }))).toEqual({ ok: true, changed: true });
+    expect(order).toEqual(['subscriber', 'stepped']);
+    expect(report).toHaveBeenCalledWith(failure);
+    expect(pointAt(store, a)).toMatchObject({ x: 0.3, y: 0.3 });
+    expect(store.getState().undo).toBe('Move point');
+    expect(store.undo()).toEqual({ ok: true, changed: true });
+    expect(report).toHaveBeenCalledTimes(2);
+    expect(pointAt(store, a)).toMatchObject({ x: 0.2, y: 0.2 });
+  });
+});
+
+describe('changed: whether the project differs from the one the store started with or last opened (D276 (a), brief 144)', () => {
+  it('a fresh store is unchanged; a step changes it; Undo back to the baseline is unchanged; Redo changed again', () => {
+    const { project, route, a } = twoStops();
+    const store = storeOf(project);
+    expect(store.changed()).toBe(false);
+    store.dispatch(movePoint(route, a, { x: 0.3, y: 0.4 }));
+    expect(store.changed()).toBe(true);
+    store.dispatch(setRouteSetting(route, 'line', 'thickness', 10));
+    store.undo();
+    expect(store.changed()).toBe(true);
+    store.undo();
+    expect(store.changed()).toBe(false);
+    store.redo();
+    expect(store.changed()).toBe(true);
+    store.undo();
+    expect(store.changed()).toBe(false);
+  });
+
+  it('a successful Open makes the opened project the baseline: unchanged at once, changed by a step, unchanged again by Undo', () => {
+    const { project, route, a } = twoStops();
+    const store = storeOf(project);
+    store.dispatch(movePoint(route, a, { x: 0.3, y: 0.4 }));
+    expect(store.changed()).toBe(true);
+    const next = twoStops();
+    expect(store.open(next.project).ok).toBe(true);
+    expect(store.changed()).toBe(false);
+    store.dispatch(movePoint(next.route, next.a, { x: 0.6, y: 0.1 }));
+    expect(store.changed()).toBe(true);
+    store.undo();
+    expect(store.changed()).toBe(false);
+  });
+
+  it('an Open the store refuses leaves it as it was, changed or not', () => {
+    const { project, route, a } = twoStops();
+    const store = storeOf(project);
+    const broken = { ...project, scene: { ...project.scene, routes: [...project.scene.routes, ...project.scene.routes] } };
+    expect(store.open(broken).ok).toBe(false);
+    expect(store.changed()).toBe(false);
+    store.dispatch(movePoint(route, a, { x: 0.3, y: 0.4 }));
+    expect(store.open(broken).ok).toBe(false);
+    expect(store.changed()).toBe(true);
+  });
+
+  it('never changed by a selection, the transport’s slice, a refused edit or one that changes nothing', () => {
+    const { project, route, a } = twoStops();
+    const store = storeOf(project);
+    store.select({ route, points: [a] });
+    expect(store.setPlayback({ playing: true, atMs: 500, speed: 2 }).ok).toBe(true);
+    expect(store.dispatch(movePoint(route, 'no-such-point', { x: 0.3, y: 0.4 })).ok).toBe(false);
+    expect(store.dispatch(movePoint(route, a, { x: 0.2, y: 0.2 }))).toEqual({ ok: true, changed: false });
+    expect(store.changed()).toBe(false);
+  });
+
+  it('never changed by a gesture’s begin, its moves before the commit, a cancel or a commit that ends as it began; changed by a commit that moved', () => {
+    const { project, route, a } = twoStops();
+    const store = storeOf(project);
+    const first = store.begin('Move point');
+    if (!first.ok) throw new Error('begin was refused');
+    expect(store.changed()).toBe(false);
+    first.gesture.apply(movePoint(route, a, { x: 0.5, y: 0.5 }));
+    expect(store.getState().project).not.toBe(project);
+    expect(store.changed()).toBe(false);
+    first.gesture.cancel();
+    expect(store.changed()).toBe(false);
+    const second = store.begin('Move point');
+    if (!second.ok) throw new Error('begin was refused');
+    second.gesture.apply(movePoint(route, a, { x: 0.5, y: 0.5 }));
+    second.gesture.apply(movePoint(route, a, { x: 0.2, y: 0.2 }));
+    expect(second.gesture.commit()).toEqual({ ok: true, changed: false });
+    expect(store.changed()).toBe(false);
+    const third = store.begin('Move point');
+    if (!third.ok) throw new Error('begin was refused');
+    third.gesture.apply(movePoint(route, a, { x: 0.5, y: 0.5 }));
+    expect(store.changed()).toBe(false);
+    expect(third.gesture.commit()).toEqual({ ok: true, changed: true });
+    expect(store.changed()).toBe(true);
+    const fourth = store.begin('Move point');
+    if (!fourth.ok) throw new Error('begin was refused');
+    expect(store.changed()).toBe(true);
+    fourth.gesture.cancel();
+    expect(store.changed()).toBe(true);
+  });
+
+  it('Undo hands back the very project the baseline holds, so the comparison is by identity', () => {
+    const { project, route, a } = twoStops();
+    const store = storeOf(project);
+    const baseline = store.getState().project;
+    store.select({ route, points: [a] });
+    store.dispatch(movePoint(route, a, { x: 0.3, y: 0.4 }));
+    store.undo();
+    expect(store.getState().project).toBe(baseline);
   });
 });

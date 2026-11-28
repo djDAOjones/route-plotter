@@ -111,11 +111,12 @@ function timelineOf(project: Project = twoStops()) {
   const opener = createOpener({
     store,
     announce: () => undefined,
+    player,
     decode: () => Promise.reject(new Error('not reached')),
     openProject: () => Promise.resolve(next.opened),
   });
   const timeline = createTimeline({ store, transport: editor, length, opened: () => opener.opened() });
-  return { store, frames, editor, length, timeline, reads, count, opener, next };
+  return { store, frames, player, editor, length, timeline, reads, count, opener, next };
 }
 
 /** Bytes for the stand-in Open: never read. */
@@ -399,29 +400,34 @@ describe('the timeline as the kit’s slider: a drag, Escape and a key, also whi
 });
 
 describe('an edit of the timeline begun before an Open changes nothing after it (PRS2, brief 94)', () => {
-  it('begin, move, open, cancel: the position is where the open put it, not where the edit began; nothing changed', async () => {
-    const { store, editor, timeline, opener } = timelineOf(empty());
+  it('begin, move, open, cancel: the position is where the open put it (the opened scene’s end, D251), not where the edit began; nothing changed', async () => {
+    const { store, player, editor, timeline, opener } = timelineOf(empty());
     editor.scrub(1234.5);
     const begun = timeline.setting.begin();
     if (!begun.ok) throw new Error('refused');
     begun.edit.set(250);
     expect(store.playback().atMs).toBe(500);
     expect(await opener.open(ANY_BYTES)).toEqual({ kind: 'opened' });
-    expect(store.playback().atMs).toBe(0);
+    const end = player.length();
+    expect(end).toBeGreaterThan(0);
+    expect(store.playback().atMs).toBe(end);
     expect(begun.edit.cancel()).toEqual({ ok: true, changed: false });
-    expect(store.playback().atMs).toBe(0);
+    expect(store.playback().atMs).toBe(end);
   });
 
   it('begin, open, set: nothing scrubbed, and its commit answers as before', async () => {
-    const { store, editor, timeline, opener } = timelineOf(empty());
+    const { store, player, editor, timeline, opener } = timelineOf(empty());
     editor.scrub(1000);
     const begun = timeline.setting.begin();
     if (!begun.ok) throw new Error('refused');
     await opener.open(ANY_BYTES);
+    const end = player.length();
+    expect(end).toBeGreaterThan(0);
+    expect(store.playback().atMs).toBe(end);
     expect(begun.edit.set(500)).toEqual({ ok: true, changed: false });
-    expect(store.playback().atMs).toBe(0);
+    expect(store.playback().atMs).toBe(end);
     expect(begun.edit.commit()).toEqual({ ok: true, changed: false });
-    expect(store.playback().atMs).toBe(0);
+    expect(store.playback().atMs).toBe(end);
     expect(store.getState().undo).toBeNull();
   });
 
@@ -465,22 +471,24 @@ describe('an edit of the timeline begun before an Open changes nothing after it 
     expect(store.playback().atMs).toBe(1234.5);
   });
 
-  it('through the kit’s slider: a press, a move, an open, Escape, a move, the release: the position stays at the open’s start', async () => {
-    const { store, editor, timeline, opener } = timelineOf(empty());
+  it('through the kit’s slider: a press, a move, an open, Escape, a move, the release: the position stays at the open’s end (D251)', async () => {
+    const { store, player, editor, timeline, opener } = timelineOf(empty());
     const slider = createSlider(timeline.setting);
     editor.scrub(1000);
     slider.press();
     slider.report(250);
     expect(store.playback().atMs).toBe(500);
     await opener.open(ANY_BYTES);
-    expect(store.playback().atMs).toBe(0);
+    const end = player.length();
+    expect(end).toBeGreaterThan(0);
+    expect(store.playback().atMs).toBe(end);
     expect(slider.giveUp()).toEqual({ ok: true, changed: false });
-    expect(store.playback().atMs).toBe(0);
+    expect(store.playback().atMs).toBe(end);
     slider.report(900);
-    expect(store.playback().atMs).toBe(0);
+    expect(store.playback().atMs).toBe(end);
     slider.release();
     expect(slider.pressed()).toBe(false);
-    expect(store.playback().atMs).toBe(0);
+    expect(store.playback().atMs).toBe(end);
     expect(store.getState().undo).toBeNull();
   });
 });

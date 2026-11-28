@@ -6,7 +6,7 @@ import { imageToCanvas } from '../../../core/geometry/transform';
 import type { Dash, LineDrawing } from '../model/line';
 
 /** Each dash's pattern in reference pixels, as v3's applyLineStyle (RenderingService.js:2657–2671). */
-const DASHES: Record<Dash, readonly number[]> = {
+export const DASHES: Record<Dash, readonly number[]> = {
   solid: [],
   dashed: [10, 5],
   dotted: [2, 6],

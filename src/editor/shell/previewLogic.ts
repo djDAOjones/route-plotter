@@ -22,13 +22,27 @@
 // 4. When a frame is drawn (`createDrawer`; the page hands `paint` and `surface` to `attach`):
 //    (a) a frame is drawn only at a frame it booked, one booked at a time, one draw a frame however many changes came;
 //    (b) it books at attach, then only when what a frame is made from is not what the last draw used: the scene's
-//        object, the position (`playback.atMs`), the selection's object, the picture held, the size and the background's
-//        size. A telling that changes none of them (the speed, `playing` alone) books nothing: a still page draws nothing;
+//        object, the position (`playback.atMs`), the selection's object, the picture held, the hover held (`hover`,
+//        ../canvas/hover.ts, which changes its object only when its value changes), the size and the background's
+//        size, and whether it plays (`playback.playing`: a Pause at the same position redraws, so the guide of (d)
+//        shows; brief 128, BO). A telling that changes none of them (the speed alone) books nothing: a still page draws
+//        nothing;
 //    (c) the request is made when the frame runs, from what is held then: the inputs' scene, seed, size and image (with
 //        the picture's `source` when one is held), `sceneMs` the position, the `surface`; no `viewing` (CORE-06's zoom
 //        and pan) and no `images` (nothing names one yet);
-//    (d) no overlays when no route is selected, so the frame is line for line an export's; with a route selected,
-//        `OVERLAY_MAKERS.points([route], { selected })`, each selected point as `{ routeId, pointId }` (hover is CORE-06's);
+//    (d) while the scene plays (`playback.playing`) no overlays when no route is selected, so the frame is line for line
+//        an export's, a hover or none. While it does not play (paused, and a scrub of a paused scene, which has no
+//        state of its own), the guide comes first, over the export's frame: `OVERLAY_MAKERS.guideLines(ids)` then
+//        `OVERLAY_MAKERS.guideDots(ids)` for every route of the scene, selected or not, whatever its line's look
+//        (CORE-06, D265, Joe's D251 "End, plus a guide (d)"; brief 128, BO and BP). With a route selected, after it,
+//        `OVERLAY_MAKERS.lines([], { hovered })` (no ids: the lines' selected-only guide for a hidden line is this guide
+//        now, D157 into D265) then `OVERLAY_MAKERS.points([route], { selected, hovered })`, each selected point as
+//        `{ routeId, pointId }`. A hovered point of that route is the points
+//        overlay's `hovered`; a hovered line of that route is the lines overlay's, `{ routeId, lineId, plus }`, its
+//        "+" `'active'` while the hover is on it and `'idle'` otherwise (CORE-06, brief 120, ruling AA: a tap on the
+//        "+" inserts a point there, ../canvas/dom.ts point 2); a hover on another route draws nothing; while the scene
+//        plays no hover is drawn at all, the selection's rings alone (brief 141, FC; D272 (c), answered by the owner,
+//        2026-11-27: a press while playing only pauses, ../canvas/dom.ts point 11);
 //    (e) a `paint` that throws is reported and draws nothing more that frame; the next change books as before. The
 //        reports a frame gives back go to `failed` only when they differ from the last frame's, so a module failing
 //        through a whole playing is told once;
@@ -45,14 +59,23 @@
 //    export width and height (settings.ts, EXPORT_SETTINGS), with a picture or without one; the picture's size plays
 //    no part, the composer fitting it inside that frame. A width or height that is not a finite number above 0 gives
 //    START_SIZE's.
-// 7. It does not claim to withstand code written to break it.
+// 7. `recordingPaint(element, draw)`: the preview's paint (Preview.tsx's points 3 and 6), here so Node proves it (brief
+//    115, ruling V): it sets the canvas's width and height to the request's size when they differ, and draws the
+//    request with one overlay more, last, which draws nothing and records the frame's geometry (`recordGeometry`). The
+//    geometry it gives back is null from the start of each paint until that overlay runs: a paint that throws, or
+//    returns without running its overlays, leaves no old geometry for a down to hit (brief 114, ruling P; Codex
+//    line 26).
+// 8. It does not claim to withstand code written to break it.
 import type { ImageType, Project } from '../../adapters/io/format';
 import { sizeOf } from '../../adapters/io/images';
+import type { Overlay } from '../../adapters/render/overlays';
 import type { Size } from '../../core/geometry/transform';
 import type { Scene } from '../../core/model/scene';
 import { OVERLAY_MAKERS } from '../../features/catalogue.editor';
 import type { ContentRequest, FrameReport, FrameRequest, Surface } from '../../player/compose';
 import type { FrameSource } from '../../player/transport/transport';
+import { recordGeometry, type Geometry } from '../canvas/dom';
+import { createHover, type Hover, type HoverHolder } from '../canvas/hover';
 import type { Store } from '../store/store';
 import type { Selection } from '../store/selection';
 
@@ -234,6 +257,11 @@ export interface DrawerOptions<H> {
   readonly store: Pick<Store, 'getState' | 'subscribe'>;
   readonly inputs: FrameInputs;
   readonly pictures: Pick<Pictures, 'held' | 'subscribe'>;
+  /**
+   * The point or line under a resting pointer (point 4d), read with `held()` and subscribed to as `pictures` is; a
+   * holder of its own when none is handed. The drawer gives it back as `hover`, for the page's canvas binding to set.
+   */
+  readonly hover?: HoverHolder;
   readonly frames: FrameSource<H>;
   /** Where a `paint` that throws is told. */
   readonly report: (error: unknown) => void;
@@ -246,10 +274,19 @@ export interface Drawer {
   attach(target: Target): void;
   /** Draws nothing more: a frame booked is cancelled and no telling is heard. */
   detach(): void;
+  /**
+   * Draws now, in place of a frame booked, when what a frame is made from differs from what was last drawn; otherwise
+   * nothing (CORE-06, brief 113, ruling K: the canvas's binding asks at each down, so a tap never hit-tests a frame older
+   * than the store). True when the canvas then shows what the store holds; false when the paint threw (a frame is
+   * booked to try again) or nothing is attached, so the down is not taken (brief 114, ruling P, Codex line 22).
+   */
+  drawNow(): boolean;
+  /** The hover the drawer reads (point 4d): the page's canvas binding sets it (../canvas/dom.ts, point 6). */
+  readonly hover: HoverHolder;
 }
 
 /** What a frame is made from, by value: objects by identity, then numbers (point 4b). */
-type Key = readonly [Scene, number, Selection, CanvasImageSource | null, number, number, number | null, number | null];
+type Key = readonly [Scene, number, boolean, Selection, CanvasImageSource | null, Hover, number, number, number | null, number | null];
 
 const sameKey = (a: Key, b: Key): boolean => a.every((value, i) => Object.is(value, b[i]));
 
@@ -257,15 +294,25 @@ const sameReports = (a: readonly FrameReport[], b: readonly FrameReport[]): bool
   a.length === b.length &&
   a.every((each, i) => each.routeId === b[i]?.routeId && each.featureId === b[i].featureId && each.reason === b[i].reason);
 
-/** The editor's overlays for a selection: none with no route selected (point 4d). */
-function overlaysOf(selection: Selection): FrameRequest['overlays'] {
+/**
+ * The editor's overlays (point 4d): the guide on every route while not playing, then the selected route's; none with
+ * neither. The hovered point's ring and the hovered line's halo and "+" are drawn only while not playing (brief 141,
+ * FC; D272 (c), answered by the owner, 2026-11-27): while playing, a press pauses and does nothing else
+ * (../canvas/dom.ts point 11), so nothing offers one; the selection's rings stay.
+ */
+function overlaysOf(scene: Scene, playing: boolean, selection: Selection, hover: Hover): FrameRequest['overlays'] {
+  const ids = scene.routes.map((each) => each.id);
+  const guide = playing ? [] : [OVERLAY_MAKERS.guideLines(ids), OVERLAY_MAKERS.guideDots(ids)];
   const { route } = selection;
-  if (route === null) return undefined;
+  if (route === null) return guide.length > 0 ? guide : undefined;
   const selected = selection.points.map((pointId) => ({ routeId: route, pointId }));
-  return [OVERLAY_MAKERS.points([route], { selected })];
+  const ours = !playing && hover !== null && hover.routeId === route ? hover : null;
+  const point = ours !== null && 'pointId' in ours ? { routeId: route, pointId: ours.pointId } : null;
+  const line = ours !== null && 'lineId' in ours ? { routeId: route, lineId: ours.lineId, plus: ours.onPlus ? ('active' as const) : ('idle' as const) } : null;
+  return [...guide, OVERLAY_MAKERS.lines([], { hovered: line }), OVERLAY_MAKERS.points([route], { selected, hovered: point })];
 }
 
-export function createDrawer<H>({ store, inputs, pictures, frames, report, failed }: DrawerOptions<H>): Drawer {
+export function createDrawer<H>({ store, inputs, pictures, hover = createHover(), frames, report, failed }: DrawerOptions<H>): Drawer {
   let attached: { readonly target: Target; readonly stops: readonly (() => void)[] } | null = null;
   let booked: { readonly handle: H; readonly ticket: object } | null = null;
   let drawn: Key | null = null;
@@ -274,7 +321,7 @@ export function createDrawer<H>({ store, inputs, pictures, frames, report, faile
   const keyNow = (): Key => {
     const { project, playback, selection } = store.getState();
     const { size, image } = inputs.inputs();
-    return [project.scene, playback.atMs, selection, pictures.held(), size.width, size.height, image?.width ?? null, image?.height ?? null];
+    return [project.scene, playback.atMs, playback.playing, selection, pictures.held(), hover.held(), size.width, size.height, image?.width ?? null, image?.height ?? null];
   };
 
   const requestNow = (surface: Target['surface']): FrameRequest => {
@@ -282,23 +329,27 @@ export function createDrawer<H>({ store, inputs, pictures, frames, report, faile
     const source = pictures.held();
     const { playback, selection } = store.getState();
     const picture = image === null ? null : source === null ? image : { ...image, source };
-    const overlays = overlaysOf(selection);
+    const overlays = overlaysOf(scene, playback.playing, selection, hover.held());
     return { scene, sceneMs: playback.atMs, seed, size, image: picture, surface, ...(overlays ? { overlays } : {}) };
   };
 
-  const frame = (): void => {
-    if (attached === null) return;
-    drawn = keyNow();
+  /** Draws a frame; true when the paint returned. Only then is its key taken as drawn (Codex line 22). */
+  const frame = (): boolean => {
+    if (attached === null) return false;
+    const key = keyNow();
     let reports: readonly FrameReport[];
     try {
       reports = attached.target.paint(requestNow(attached.target.surface));
     } catch (error) {
       report(error);
-      return;
+      return false;
     }
-    if (sameReports(reports, lastReports)) return;
-    lastReports = reports;
-    failed(reports);
+    drawn = key;
+    if (!sameReports(reports, lastReports)) {
+      lastReports = reports;
+      failed(reports);
+    }
+    return true;
   };
 
   const book = (): void => {
@@ -331,12 +382,56 @@ export function createDrawer<H>({ store, inputs, pictures, frames, report, faile
   return {
     attach: (target) => {
       detach();
-      attached = { target, stops: [store.subscribe(changed), pictures.subscribe(changed), inputs.subscribe(changed)] };
+      attached = { target, stops: [store.subscribe(changed), pictures.subscribe(changed), hover.subscribe(changed), inputs.subscribe(changed)] };
       drawn = null;
       lastReports = [];
       book();
     },
     detach,
+    hover,
+    // Its cost: while the animation plays, the position moves every frame, so nearly every down paints a whole frame
+    // here, synchronously, before the hit test: on a long route with many marks that is one frame's composition added
+    // to the press's latency (Codex line 25). A still page pays nothing: the key matches and nothing is drawn.
+    drawNow: () => {
+      if (attached === null) return false;
+      if (drawn !== null && sameKey(drawn, keyNow())) return true;
+      if (booked !== null) {
+        const { handle } = booked;
+        booked = null;
+        frames.cancel(handle);
+      }
+      if (frame()) return true;
+      book();
+      return false;
+    },
+  };
+}
+
+/** The preview's paint and the geometry its last paint recorded (point 7). */
+export interface RecordingPaint {
+  readonly paint: (request: FrameRequest) => readonly FrameReport[];
+  /** What the last paint's overlay recorded, or null before one, or while a paint has not reached its overlay. */
+  readonly geometry: () => Geometry | null;
+}
+
+/** Point 7: `draw` is the page's composer on the canvas's context; `element` is the canvas, its size set here. */
+export function recordingPaint(
+  element: { width: number; height: number },
+  draw: (request: FrameRequest) => readonly FrameReport[],
+): RecordingPaint {
+  let drawn: Geometry | null = null;
+  const record: Overlay = (_context, frame, screen) => {
+    drawn = recordGeometry(frame, screen);
+  };
+  return {
+    paint: (request) => {
+      drawn = null;
+      const { width, height } = request.size;
+      if (element.width !== width) element.width = width;
+      if (element.height !== height) element.height = height;
+      return draw({ ...request, overlays: [...(request.overlays ?? []), record] });
+    },
+    geometry: () => drawn,
   };
 }
 

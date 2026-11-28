@@ -11,7 +11,23 @@
 // invisible, even for a stop whose marker is not shown at that moment. v3's gaps and widths go by unitAt(screen.zoom).
 // Each route's points are walked once, whatever the number selected, and a route named twice is drawn once; an id the
 // frame does not hold draws nothing; nothing is kept between frames (D147).
-import { greyDot, hoverRing, selectionRect, selectionRing, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
+//
+// The guide's dots while paused (CORE-06, D265; brief 128, BQ): `dotOverlay` marks every point of each route named,
+// joined to a line or not (Duplicate's copies, which the lead never reaches, included), with the kit's guide dot: a
+// disc in the route's colour (its line's), radius 3 × unitAt(screen.zoom), no white or black edge, so it stays inside
+// the 5 units a selection's ring starts at. The editor asks for it, for every route, only while the preview is not
+// playing (../../../editor/shell/previewLogic.ts, point 4d), drawn before the selection's rings and the hover.
+//
+// The marks while paused (CORE-06, D274 part 1; brief 142, GC): after a route's dots, each point the author marked as
+// a start or an end (`route.shape.marks`; only the marks the author set, never a worked-out first point) gets v3's
+// glyph (v3/src/services/NetworkEditService.js:1236–1259): a start the kit's `startMark` triangle, an end its `endMark`
+// square, in the route's colour edged white, v3's radius 7 and edge 1.5 (:940, :1258), sized as the guide dot is, by
+// unitAt(screen.zoom) alone (brief 142 asked for frame.scale too, as v3's scaleSizeClamped; on the editor's canvas,
+// about 400 pixels on its short side in the journeys, that made the mark 2.6 pixels, inside the guide dot's 3, so it
+// could not be seen). Drawn after all the route's dots, a mark is never covered by a later point's dot. A route's end marks are drawn before its
+// start marks, so a point that holds both shows the square with the triangle over it. A mark whose point the frame does
+// not place draws nothing. Being part of the guide's dots, the marks are drawn only while paused, never in an export.
+import { endMark, greyDot, guideDot, hoverRing, selectionRect, selectionRing, startMark, unitAt, type Overlay, type Place, type Screen } from '../../../adapters/render/overlays';
 import type { Frame } from '../../../adapters/render/layers';
 import type { DrawContext } from '../../../adapters/render/context';
 import type { Route } from '../../../core/model/scene';
@@ -65,6 +81,42 @@ function selectStop(context: DrawContext, at: Place, half: number, boxedLook: bo
 const BEND = { radius: 4, edge: 1 } as const;
 
 const NONE: ReadonlySet<string> = new Set();
+
+/** The guide dot's radius in screen pixels at a zoom of 1 (D265). */
+const GUIDE_DOT = 3;
+
+/** v3's glyph for a marked point (NetworkEditService.js:940, :1236–1259): radius 7, white edge 1.5, screen pixels at a zoom of 1 (D274). */
+const MARK = { radius: 7, edge: 1.5 } as const;
+
+/** The guide's dots while paused (D265): every point of each route named, in the route's colour, in the points' order; then its marks (D274). */
+export function dotOverlay(routeIds: readonly string[]): Overlay {
+  return (context: DrawContext, _frame: Frame, screen: Screen) => {
+    const unit = unitAt(screen.zoom);
+    const radius = GUIDE_DOT * unit;
+    const mark = MARK.radius * unit;
+    const edge = MARK.edge * unit;
+    for (const id of new Set(routeIds)) {
+      const route = screen.routes.get(id);
+      if (route === undefined) continue;
+      const colour = route.settings.line.colour;
+      const places = new Map<string, Place>();
+      for (const point of route.shape.points) {
+        const at = screen.place(point);
+        if (at === null) continue;
+        guideDot(context, at, radius, colour);
+        places.set(point.id, at);
+      }
+      for (const end of ['end', 'start'] as const) {
+        for (const each of route.shape.marks) {
+          const at = each.end === end ? places.get(each.point) : undefined;
+          if (at === undefined) continue;
+          if (end === 'start') startMark(context, at, mark, colour, edge);
+          else endMark(context, at, mark, colour, edge);
+        }
+      }
+    }
+  };
+}
 
 /**
  * The overlay that follows the chosen points of the routes handed in: every bend's grey dot (v3 drew them only while

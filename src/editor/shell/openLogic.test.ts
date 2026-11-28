@@ -11,11 +11,13 @@ import { saveProject } from '../../adapters/io/save';
 import { ARCHIVE_LIMITS } from '../../adapters/io/limits';
 import { WORDS as IO_WORDS } from '../../adapters/io/words';
 import { newLine, newPoint, newRoute, newScene, type IdSource } from '../../core/model/scene';
-import { AT_START, createTransport, FIRST_FRAME_MS, heldPlayback, type FrameSource } from '../../player/transport/transport';
+import { createTransport, FIRST_FRAME_MS, heldPlayback, type FrameSource } from '../../player/transport/transport';
 import { setSceneSetting } from '../store/command';
+import { createFrameInputs } from './previewLogic';
 import { createStore } from '../store/store';
 import { createEditorTransport, hasSomethingToPlay, WORDS } from '../transport/transport';
 import { createOpener, OPEN_WORDS, type OpenerOptions } from './openLogic';
+import { createReplaceAsker } from './ReplaceQuestion';
 
 function counter(prefix: string): IdSource {
   let n = 0;
@@ -37,6 +39,18 @@ const sizeOfPng = (bytes: Uint8Array) => {
 
 /** A decoder that decodes at once: a sound image decodes to the size its header declares. */
 const atOnce: Decode = (bytes) => Promise.resolve(sizeOfPng(bytes));
+
+/** A stand-in for the player's transport that records each seek: an opener's only use of it (point 5). */
+function recordingPlayer(lengthMs = 4321) {
+  const seeks: number[] = [];
+  const player = {
+    seek: (ms: number) => {
+      seeks.push(ms);
+    },
+    length: () => lengthMs,
+  };
+  return { player, seeks };
+}
 
 /** A decoder the test settles by hand: `settle(n)` decodes the n-th image asked for; `asked(n)` waits for n asks. */
 function byHand() {
@@ -111,9 +125,12 @@ function handMade() {
 /** The store, both transports, a queue that records and the opener, as the session will make them. */
 function sessionOf(
   project: Project,
-  opener: Partial<Pick<OpenerOptions, 'decode' | 'openProject'>> = {},
+  opener: Partial<Pick<OpenerOptions, 'decode' | 'openProject' | 'confirmReplace'>> = {},
   /** Called after each saying is recorded: a test may ask for an open there, or throw. */
   onSay: (message: string) => void = () => undefined,
+  /** The page's own inputs (`createFrameInputs`), whose picture size is read from the background's header; by default
+   *  a fixed size and no picture. */
+  sized = false,
 ) {
   const store = createStore({ project, nextId: counter('new') });
   const frames = handMade();
@@ -122,10 +139,13 @@ function sessionOf(
     said.push(message);
     onSay(message);
   };
+  const page = createFrameInputs({ store });
   const player = createTransport({
     frames: frames.source,
     holder: store,
-    inputs: () => ({ scene: store.getState().project.scene, seed: 1, size: { width: 1920, height: 1080 }, image: null }),
+    inputs: sized
+      ? page.inputs
+      : () => ({ scene: store.getState().project.scene, seed: 1, size: { width: 1920, height: 1080 }, image: null }),
     report: (error) => {
       throw error;
     },
@@ -145,8 +165,13 @@ function sessionOf(
       opens.store += 1;
       return store.open(next);
     },
+    changed: () => store.changed(),
   };
-  const made = createOpener({ store: counted, announce, decode: opener.decode ?? atOnce, ...(opener.openProject ? { openProject: opener.openProject } : {}) });
+  const made = createOpener({
+    store: counted, announce, player, decode: opener.decode ?? atOnce,
+    ...(opener.openProject ? { openProject: opener.openProject } : {}),
+    ...(opener.confirmReplace ? { confirmReplace: opener.confirmReplace } : {}),
+  });
   const tellings = { count: 0 };
   made.subscribe(() => {
     tellings.count += 1;
@@ -283,14 +308,17 @@ describe('point 3 (ruling 3c): the store’s own refusal or throw changes nothin
   });
 
   it('a stand-in store refusing with no problems gives the same whole-project refusal', async () => {
+    const { player, seeks } = recordingPlayer();
     const opener = createOpener({
       store: { open: () => ({ ok: false, refusal: { why: 'gesture-open' } }) },
       announce: () => undefined,
+      player,
       decode: atOnce,
       openProject: () => Promise.resolve({ ok: true, project: routeOf(2, 0, 'a') }),
     });
     expect(await opener.open(NOT_A_FILE)).toEqual({ kind: 'refused', refusal: WHOLE_PROJECT });
     expect(opener.read().refusal).toEqual(WHOLE_PROJECT);
+    expect(seeks).toEqual([]);
   });
 
   it('a store problem at the scene itself (path \'\') comes back at `scene`', async () => {
@@ -298,6 +326,7 @@ describe('point 3 (ruling 3c): the store’s own refusal or throw changes nothin
     const opener = createOpener({
       store: { open: () => ({ ok: false, refusal: { why: 'invalid', problems: [problem] } }) },
       announce: () => undefined,
+      player: recordingPlayer().player,
       decode: atOnce,
       openProject: () => Promise.resolve({ ok: true, project: routeOf(2, 0, 'a') }),
     });
@@ -321,21 +350,25 @@ describe('point 3 (ruling 3c): the store’s own refusal or throw changes nothin
 });
 
 describe('point 4 (ruling 3d, DEF-67): the open is announced once, and nothing says "Animation paused"', () => {
-  it('play, then open: the playing’s words, then the open’s, no more; the frame booked is met and books no more', async () => {
+  it('play, then open: the playing’s words, then the open’s, no more; paused at the end, the frame booked let go', async () => {
+    const opened = routeOf(3, 500, 'b');
     const { store, frames, said, editor, opener } = sessionOf(routeOf(2, 0, 'a'));
     editor.playPause();
     frames.run(1000);
     frames.run(1016);
     expect(store.playback().playing).toBe(true);
     expect(frames.booked()).toBe(1);
-    expect(await opener.open(await fileOf(routeOf(3, 500, 'b')))).toEqual({ kind: 'opened' });
-    expect(store.playback()).toEqual(AT_START);
-    expect(frames.booked()).toBe(1);
+    expect(await opener.open(await fileOf(opened))).toEqual({ kind: 'opened' });
+    const end = { playing: false, atMs: lengthOf(opened), speed: 1 };
+    expect(store.playback()).toEqual(end);
+    expect(frames.booked()).toBe(0);
     frames.run(1032);
     expect(frames.booked()).toBe(0);
-    expect(store.playback()).toEqual(AT_START);
+    expect(store.playback()).toEqual(end);
     expect(said).toEqual([WORDS.playing, OPEN_WORDS.opened]);
     expect(said).not.toContain(WORDS.paused);
+    expect(said).not.toContain(WORDS.skippedToEnd);
+    expect(said).not.toContain(WORDS.complete);
   });
 
   it('open with nothing playing: the open’s words alone, and no frame booked', async () => {
@@ -345,6 +378,17 @@ describe('point 4 (ruling 3d, DEF-67): the open is announced once, and nothing s
     expect(frames.booked()).toBe(0);
   });
 
+  it('the seek is made before the open’s words, and is the player’s own: nothing is said for it', async () => {
+    const opened = routeOf(3, 0, 'b');
+    const seen: unknown[] = [];
+    const { store, said, opener } = sessionOf(routeOf(2, 0, 'a'), {}, () => {
+      seen.push(store.playback());
+    });
+    await opener.open(await fileOf(opened));
+    expect(said).toEqual([OPEN_WORDS.opened]);
+    expect(seen).toEqual([{ playing: false, atMs: lengthOf(opened), speed: 1 }]);
+  });
+
   it('the words are "Project opened"', () => {
     expect(OPEN_WORDS.opened).toBe('Project opened');
     expect(Object.isFrozen(OPEN_WORDS)).toBe(true);
@@ -352,13 +396,14 @@ describe('point 4 (ruling 3d, DEF-67): the open is announced once, and nothing s
 });
 
 describe('point 5 (ruling 3e, criterion 3’s open half): an opened project plays at once with its timing built', () => {
-  it('from 0, at normal speed, its length the opened scene’s, with no step between the open and Play', async () => {
+  it('paused at the end, then from 0, at normal speed, its length the opened scene’s, with no step between the open and Play', async () => {
     const opened = routeOf(3, 700, 'b');
     const { store, frames, said, player, editor, opener } = sessionOf(routeOf(2, 0, 'a'));
     const old = player.length();
     expect(lengthOf(opened)).not.toBe(old);
     expect(await opener.open(await fileOf(opened))).toEqual({ kind: 'opened' });
-    expect(store.playback()).toEqual(AT_START);
+    expect(store.playback()).toEqual({ playing: false, atMs: lengthOf(opened), speed: 1 });
+    expect(lengthOf(opened)).toBeGreaterThan(FIRST_FRAME_MS);
     expect(frames.booked()).toBe(0);
     editor.playPause();
     expect(store.playback().playing).toBe(true);
@@ -377,6 +422,71 @@ describe('point 5 (ruling 3e, criterion 3’s open half): an opened project play
     editor.playPause();
     expect(store.playback().playing).toBe(true);
     expect(said).toEqual([WORDS.nothingToPlay, OPEN_WORDS.opened, WORDS.playing]);
+  });
+});
+
+describe('point 5 (D251, brief 127): an open the store takes, and only such an open, waits paused at the play length', () => {
+  it('a speed set before the open is put back to normal; the end is the play length, Hold at end included', async () => {
+    const opened = routeOf(3, 0, 'b');
+    const { clock } = opened.scene.settings;
+    const held = { ...opened, scene: { ...opened.scene, settings: { ...opened.scene.settings, clock: { ...clock, holdAtEndMs: clock.holdAtEndMs + 1500 } } } };
+    const { store, player, opener } = sessionOf(routeOf(2, 0, 'a'));
+    player.setSpeed(-2);
+    expect(store.playback().speed).toBe(-2);
+    await opener.open(await fileOf(held));
+    expect(lengthOf(held)).toBe(lengthOf(opened) + 1500);
+    expect(store.playback()).toEqual({ playing: false, atMs: lengthOf(held), speed: 1 });
+  });
+
+  it('a refused open moves nothing: a position scrubbed to stays, a playing plays on', async () => {
+    const { store, frames, editor, opener } = sessionOf(routeOf(3, 0, 'a'));
+    editor.scrub(250);
+    expect(await opener.open(NOT_A_FILE)).toMatchObject({ kind: 'refused' });
+    expect(store.playback()).toEqual({ playing: false, atMs: 250, speed: 1 });
+    editor.playPause();
+    frames.run(1000);
+    const playing = store.playback();
+    expect(await opener.open(NOT_A_FILE)).toMatchObject({ kind: 'refused' });
+    expect(store.playback()).toBe(playing);
+    expect(frames.booked()).toBe(1);
+  });
+
+  it('a superseded open moves nothing: the playhead waits at the later open’s end, not its own', async () => {
+    const decoder = byHand();
+    const [projectA, projectB] = [routeOf(3, 900, 'a'), routeOf(2, 0, 'b')];
+    expect(lengthOf(projectA)).not.toBe(lengthOf(projectB));
+    const [fileA, fileB] = await Promise.all([fileOf(projectA), fileOf(projectB)]);
+    const { store, opener } = sessionOf(empty(), { decode: decoder.decode });
+    const a = opener.open(fileA);
+    await decoder.asked(1);
+    const b = opener.open(fileB);
+    await decoder.asked(2);
+    decoder.settle(1);
+    expect(await b).toEqual({ kind: 'opened' });
+    const atB = store.playback();
+    expect(atB).toEqual({ playing: false, atMs: lengthOf(projectB), speed: 1 });
+    decoder.settle(0);
+    expect(await a).toEqual({ kind: 'superseded' });
+    expect(store.playback()).toBe(atB);
+  });
+
+  it('the length is the final one: built from the opened scene and its picture’s size, never one read before the open', async () => {
+    // The same upright route, unpictured on the page before (measured as a square); opened with a tall picture, whose
+    // header's size changes the length (a line's length is measured in image widths, so an upright line on a tall
+    // picture is longer). A seek made with a length read before the open lands short.
+    const flat = routeOf(3, 0, 'b');
+    const [route] = flat.scene.routes;
+    if (route === undefined) throw new Error('no route');
+    const upright = { ...route, points: route.points.map((point, i) => ({ ...point, x: 0.5, y: 0.1 + i * 0.4 })) };
+    const opened: Project = { ...flat, scene: { ...flat.scene, routes: [upright] } };
+    const pictured: Project = { ...opened, images: [{ id: 'b-image', type: 'image/png', bytes: png(64, 2000) }] };
+    const before: Project = { ...opened, images: [] };
+    const { store, player, opener } = sessionOf(before, {}, () => undefined, true);
+    const old = player.length();
+    expect(await opener.open(await fileOf(pictured))).toEqual({ kind: 'opened' });
+    const final = player.length();
+    expect(final).toBeGreaterThan(old);
+    expect(store.playback()).toEqual({ playing: false, atMs: final, speed: 1 });
   });
 });
 
@@ -553,9 +663,11 @@ describe('point 6 and ruling A: an open asked for during another’s completion'
     const project = routeOf(2, 0, 'a');
     const bad = { ...project, scene: { ...project.scene, settings: { ...project.scene.settings, clock: { ...project.scene.settings.clock, holdAtStartMs: -5 } } } };
     let first = true;
+    const { player, seeks } = recordingPlayer();
     const opener = createOpener({
       store: refusing,
       announce: () => undefined,
+      player,
       decode: decoder.decode,
       openProject: (bytes, decode) => {
         if (first) {
@@ -568,9 +680,11 @@ describe('point 6 and ruling A: an open asked for during another’s completion'
     const a = await opener.open(NOT_A_FILE);
     expect(a).toMatchObject({ kind: 'refused', refusal: { reason: 'invalid' } });
     expect(opener.read()).toEqual({ opening: true, refusal: null, name: null });
+    expect(seeks).toEqual([]);
     await decoder.asked(1);
     decoder.settle(0);
     expect(await later.b).toEqual({ kind: 'opened' });
+    expect(seeks).toEqual([4321]);
     expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
   });
 });
@@ -909,14 +1023,17 @@ describe('point 13 (PRS2, brief 94): the opener counts the projects the store ha
 
   it('the store’s own refusal or throw counts nothing', async () => {
     for (const open of [() => ({ ok: false as const, refusal: { why: 'gesture-open' as const } }), () => { throw new Error('boom'); }]) {
+      const { player, seeks } = recordingPlayer();
       const opener = createOpener({
         store: { open },
         announce: () => undefined,
+        player,
         decode: atOnce,
         openProject: () => Promise.resolve({ ok: true, project: routeOf(2, 0, 'a') }),
       });
       expect((await opener.open(NOT_A_FILE)).kind).toBe('refused');
       expect(opener.opened()).toBe(0);
+      expect(seeks).toEqual([]);
     }
   });
 
@@ -936,5 +1053,165 @@ describe('point 13 (PRS2, brief 94): the opener counts the projects the store ha
     expect(await a).toEqual({ kind: 'superseded' });
     expect(await b).toEqual({ kind: 'opened' });
     expect(run.opener.opened()).toBe(1);
+  });
+});
+
+describe('D276 (a), brief 144: the opener asks before a chosen project replaces a changed route', () => {
+  /** A question that records each name it is asked about and answers `answer`. */
+  function asking(answer: boolean | (() => Promise<boolean>)) {
+    const asked: string[] = [];
+    const confirmReplace = (name: string): Promise<boolean> => {
+      asked.push(name);
+      return typeof answer === 'boolean' ? Promise.resolve(answer) : answer();
+    };
+    return { asked, confirmReplace };
+  }
+
+  /** A session over a route of two stops, changed by one step. */
+  function changedSession(confirmReplace?: (name: string) => Promise<boolean>) {
+    const run = sessionOf(routeOf(2, 0, 'a'), confirmReplace ? { confirmReplace } : {});
+    expect(run.store.dispatch(setSceneSetting('clock', 'holdAtStartMs', 300)).ok).toBe(true);
+    expect(run.store.changed()).toBe(true);
+    return run;
+  }
+
+  it('the words, for the page', () => {
+    expect(OPEN_WORDS.replaceTitle).toBe('Replace your route?');
+    expect(OPEN_WORDS.replaceText('walk.zip')).toBe('Replace your route with walk.zip? What you have drawn is not saved and will be lost.');
+    expect(OPEN_WORDS.replace).toBe('Replace');
+    expect(OPEN_WORDS.keep).toBe('Keep my route');
+    expect(OPEN_WORDS.cancelled).toBe('Open cancelled');
+  });
+
+  it('an unchanged route never asks: the file opens as today', async () => {
+    const question = asking(false);
+    const { store, opener, said } = sessionOf(routeOf(2, 0, 'a'), { confirmReplace: question.confirmReplace });
+    expect(await opener.openFile(fileOfBytes('walk.zip', await fileOf(routeOf(3, 0, 'b'))).file)).toEqual({ kind: 'opened' });
+    expect(question.asked).toEqual([]);
+    expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+  });
+
+  it('a changed route asks, by the file’s name, once the file is a project; "true" opens as today', async () => {
+    const question = asking(true);
+    const { store, opener, said, opens } = changedSession(question.confirmReplace);
+    expect(await opener.openFile(fileOfBytes('walk.zip', await fileOf(routeOf(3, 0, 'b'))).file)).toEqual({ kind: 'opened' });
+    expect(question.asked).toEqual(['walk.zip']);
+    expect(opens.store).toBe(1);
+    expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(store.changed()).toBe(false);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+    expect(opener.opened()).toBe(1);
+  });
+
+  it('"false" changes nothing: project, history, selection, transport and play state as before; "Open cancelled" is said', async () => {
+    const question = asking(false);
+    const { store, opener, said, opens, player } = changedSession(question.confirmReplace);
+    const routeId = store.getState().project.scene.routes[0]?.id ?? '';
+    store.select({ route: routeId, points: [] });
+    const lengthBefore = player.length();
+    const before = store.getState();
+    const result = await opener.openFile(fileOfBytes('walk.zip', await fileOf(routeOf(3, 0, 'b'))).file);
+    expect(result).toEqual({ kind: 'cancelled' });
+    expect(question.asked).toEqual(['walk.zip']);
+    expect(opens.store).toBe(0);
+    expect(store.getState()).toBe(before);
+    expect(store.getState().undo).toBe(before.undo);
+    expect(store.playback()).toBe(before.playback);
+    expect(player.length()).toBe(lengthBefore);
+    expect(store.changed()).toBe(true);
+    expect(said).toEqual([OPEN_WORDS.cancelled]);
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
+    expect(opener.opened()).toBe(0);
+  });
+
+  it('a question that fails keeps the route, as "false" does', async () => {
+    const question = asking(() => Promise.reject(new Error('the dialog failed')));
+    const { store, opener, said } = changedSession(question.confirmReplace);
+    const before = store.getState();
+    expect(await opener.open(await fileOf(routeOf(3, 0, 'b')))).toEqual({ kind: 'cancelled' });
+    expect(question.asked).toEqual(['the file']);
+    expect(store.getState()).toBe(before);
+    expect(said).toEqual([OPEN_WORDS.cancelled]);
+  });
+
+  it('a file that is not a project, too large or unreadable is refused as today and never asks', async () => {
+    const question = asking(true);
+    const { store, opener, said } = changedSession(question.confirmReplace);
+    const before = store.getState();
+    expect((await opener.openFile(fileOfBytes('notes.zip', NOT_A_FILE).file)).kind).toBe('refused');
+    expect((await opener.openFile(fileOfBytes('huge.zip', NOT_A_FILE, ARCHIVE_LIMITS.zipBytes + 1).file)).kind).toBe('refused');
+    const unreadable = { name: 'gone.zip', size: 4, arrayBuffer: () => Promise.reject(new Error('moved')) };
+    expect((await opener.openFile(unreadable)).kind).toBe('refused');
+    expect((await opener.open(NOT_A_FILE)).kind).toBe('refused');
+    expect(question.asked).toEqual([]);
+    expect(store.getState()).toBe(before);
+    expect(said).toEqual([]);
+  });
+
+  it('with no question given, a changed route is replaced as today', async () => {
+    const { store, opener, said } = changedSession();
+    expect(await opener.openFile(fileOfBytes('walk.zip', await fileOf(routeOf(3, 0, 'b'))).file)).toEqual({ kind: 'opened' });
+    expect(store.getState().project.scene).toEqual(routeOf(3, 0, 'b').scene);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+  });
+
+  it('a second Open while the question waits supersedes the first: the first never opens, whatever its answer; the second asks for itself', async () => {
+    const answers: ((answer: boolean) => void)[] = [];
+    const question = asking(() => new Promise<boolean>((resolve) => { answers.push(resolve); }));
+    const { store, opener, said, opens } = changedSession(question.confirmReplace);
+    const first = opener.openFile(fileOfBytes('one.zip', await fileOf(routeOf(3, 0, 'b'))).file);
+    while (answers.length < 1) await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: 'one.zip' });
+    const second = opener.openFile(fileOfBytes('two.zip', await fileOf(routeOf(4, 0, 'c'))).file);
+    while (answers.length < 2) await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(question.asked).toEqual(['one.zip', 'two.zip']);
+    answers[0]?.(true);
+    expect(await first).toEqual({ kind: 'superseded' });
+    expect(opens.store).toBe(0);
+    expect(opener.read()).toEqual({ opening: true, refusal: null, name: 'two.zip' });
+    answers[1]?.(true);
+    expect(await second).toEqual({ kind: 'opened' });
+    expect(opens.store).toBe(1);
+    expect(store.getState().project.scene).toEqual(routeOf(4, 0, 'c').scene);
+    expect(said).toEqual([OPEN_WORDS.opened]);
+  });
+
+  it('a superseded first answered "false" says nothing; the later answer stands', async () => {
+    const answers: ((answer: boolean) => void)[] = [];
+    const question = asking(() => new Promise<boolean>((resolve) => { answers.push(resolve); }));
+    const { opener, said } = changedSession(question.confirmReplace);
+    const first = opener.open(await fileOf(routeOf(3, 0, 'b')));
+    while (answers.length < 1) await new Promise((resolve) => setTimeout(resolve, 0));
+    const second = opener.open(await fileOf(routeOf(4, 0, 'c')));
+    while (answers.length < 2) await new Promise((resolve) => setTimeout(resolve, 0));
+    answers[0]?.(false);
+    expect(await first).toEqual({ kind: 'superseded' });
+    expect(said).toEqual([]);
+    answers[1]?.(false);
+    expect(await second).toEqual({ kind: 'cancelled' });
+    expect(said).toEqual([OPEN_WORDS.cancelled]);
+    expect(opener.read()).toEqual({ opening: false, refusal: null, name: null });
+  });
+
+  it('with the page’s asker, a second Open while asking leaves one question: the older kept, only the latest opens (brief 145, JC 2)', async () => {
+    const asker = createReplaceAsker();
+    const { store, opener, said } = changedSession(asker.ask);
+    const before = store.getState().project;
+    const until = async (done: () => boolean) => {
+      for (let i = 0; i < 500 && !done(); i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(done()).toBe(true);
+    };
+    const first = opener.openFile(fileOfBytes('one.zip', await fileOf(routeOf(3, 0, 'b'))).file);
+    await until(() => asker.read()?.name === 'one.zip');
+    const second = opener.openFile(fileOfBytes('two.zip', await fileOf(routeOf(4, 0, 'c'))).file);
+    await until(() => asker.read()?.name === 'two.zip');
+    expect(await first).toEqual({ kind: 'superseded' });
+    expect(store.getState().project).toBe(before);
+    expect(said).toEqual([]);
+    asker.answer(true);
+    expect(await second).toEqual({ kind: 'opened' });
+    expect(store.getState().project.scene).toEqual(routeOf(4, 0, 'c').scene);
+    expect(said).toEqual([OPEN_WORDS.opened]);
   });
 });

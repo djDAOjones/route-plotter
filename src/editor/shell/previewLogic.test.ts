@@ -10,8 +10,11 @@ import { compose, contentEnd, type FrameReport, type FrameRequest, type Surface 
 import { createTransport, type FrameSource } from '../../player/transport/transport';
 import { setSceneSetting } from '../store/command';
 import { createStore, type Store } from '../store/store';
+import { bindCanvas, type PointerFields } from '../canvas/dom';
+import { createHover } from '../canvas/hover';
+import { OVERLAY_MAKERS } from '../../features/catalogue.editor';
 import {
-  backgroundOf, canvasSize, createDrawer, createFrameInputs, createPictures, frameShape, SEED, START_SIZE,
+  backgroundOf, canvasSize, createDrawer, createFrameInputs, createPictures, frameShape, recordingPaint, SEED, START_SIZE,
   type LoadPicture, type Picture, type Target,
 } from './previewLogic';
 
@@ -57,6 +60,25 @@ function withBend(images: Project['images'] = []): Project {
   const lines = [newLine(nextId, a.id, m.id), newLine(nextId, m.id, b.id)];
   const route = { ...newRoute(nextId), points: [a, m, b], lines, leadStart: a.id };
   return { scene: { ...newScene(nextId), routes: [route] }, images };
+}
+
+/**
+ * Two routes (CORE-06, brief 128, BS d): the first `upTheMiddle`'s, whole, with a point joined to no line (a copy, as
+ * Duplicate makes one, D238 (a): the lead never reaches it) at (0.2, 0.3); the second hidden, in another colour, from
+ * (0.3, 0.8) to (0.7, 0.2).
+ */
+function twoRoutes(images: Project['images'] = []): Project {
+  const nextId = counter('two');
+  const a = { ...newPoint(nextId, { x: 0.5, y: 0.9, kind: 'stop' }), pauseMs: 0 };
+  const b = { ...newPoint(nextId, { x: 0.5, y: 0.1, kind: 'stop' }), pauseMs: 0 };
+  const copy = { ...newPoint(nextId, { x: 0.2, y: 0.3, kind: 'stop' }), pauseMs: 0 };
+  const first = { ...newRoute(nextId), points: [a, b, copy], lines: [newLine(nextId, a.id, b.id)], leadStart: a.id };
+  const c = { ...newPoint(nextId, { x: 0.3, y: 0.8, kind: 'stop' }), pauseMs: 0 };
+  const d = { ...newPoint(nextId, { x: 0.7, y: 0.2, kind: 'stop' }), pauseMs: 0 };
+  const base = newRoute(nextId);
+  const line = { ...base.settings.line, appearance: 'hidden' as const, colour: '#0072b2' };
+  const second = { ...base, settings: { ...base.settings, line }, points: [c, d], lines: [newLine(nextId, c.id, d.id)], leadStart: c.id };
+  return { scene: { ...newScene(nextId), routes: [first, second] }, images };
 }
 
 const wide = { id: 'wide', type: 'image/png' as const, bytes: png(200, 100) };
@@ -375,8 +397,9 @@ function drawerOf(project: Project = upTheMiddle([wide]), paint?: (request: Fram
   const requests: FrameRequest[] = [];
   const reports: unknown[] = [];
   const failures: (readonly FrameReport[])[] = [];
+  const hover = createHover();
   const drawer = createDrawer({
-    store, inputs, pictures, frames: frames.source,
+    store, inputs, pictures, hover, frames: frames.source,
     report: (error) => reports.push(error),
     failed: (each) => failures.push(each),
   });
@@ -387,7 +410,7 @@ function drawerOf(project: Project = upTheMiddle([wide]), paint?: (request: Fram
     },
     surface: blank,
   };
-  return { store, inputs, frames, drawer, target, requests, reports, failures, hold, pictureListeners };
+  return { store, inputs, frames, drawer, target, requests, reports, failures, hold, pictureListeners, hover };
 }
 
 const at = (store: Store, atMs: number, speed = 1, playing = false) => store.setPlayback({ playing, atMs, speed });
@@ -406,7 +429,7 @@ describe('when a frame is drawn (ruling 4)', () => {
     expect(requests).toHaveLength(1);
   });
 
-  it('(b) books for each input a frame is made from, and not for the speed or `playing` alone', () => {
+  it('(b) books for each input a frame is made from, a Play or a Pause at the same position included, and not for the speed alone (brief 128, BO; BS c)', () => {
     const { store, inputs, drawer, target, frames, requests, hold } = drawerOf(upTheMiddle([wide]));
     drawer.attach(target);
     frames.run();
@@ -426,15 +449,22 @@ describe('when a frame is drawn (ruling 4)', () => {
     }
     expect(requests).toHaveLength(1 + changes.length);
     at(store, store.playback().atMs, 4);
+    expect(frames.booked(), 'the speed alone').toBe(0);
     at(store, store.playback().atMs, 4, true);
+    expect(frames.booked(), 'Play at the same position').toBe(1);
+    frames.run();
+    expect(requests.at(-1)?.overlays, 'playing, nothing selected').toBeUndefined();
     hold(null);
     hold(null);
     expect(frames.booked()).toBe(1);
     frames.run();
     at(store, store.playback().atMs, 2, true);
-    at(store, store.playback().atMs, 2, false);
     inputs.resize({ width: 800, height: 600 });
     expect(frames.booked()).toBe(0);
+    at(store, store.playback().atMs, 2, false);
+    expect(frames.booked(), 'Pause at the same position').toBe(1);
+    frames.run();
+    expect(requests.at(-1)?.overlays, 'paused: the guide').toHaveLength(2);
   });
 
   it('(b) books for the background’s size alone, with a stub store whose scene, position and selection stay (Codex, 4)', () => {
@@ -486,6 +516,7 @@ describe('when a frame is drawn (ruling 4)', () => {
 
   it('(c) makes the request when the frame runs, from what is held then', () => {
     const { store, inputs, drawer, target, frames, requests, hold } = drawerOf(upTheMiddle([wide]));
+    at(store, 0, 1, true); // playing, nothing selected: no overlays (point 4d)
     drawer.attach(target);
     frames.run();
     const first = requests[0];
@@ -516,9 +547,10 @@ describe('when a frame is drawn (ruling 4)', () => {
     expect(requests[0]?.image).toBeNull();
   });
 
-  it('(d) passes no overlay with nothing selected; with a route, its selected points; through compose, only the overlay differs', () => {
+  it('(d) playing, passes no overlay with nothing selected; with a route, its selected points; through compose, only the overlay differs', () => {
     const recorder = new Recorder();
     const { store, drawer, target, frames, requests } = drawerOf(upTheMiddle([wide]), (request) => compose(recorder, request));
+    at(store, 0, 1, true);
     drawer.attach(target);
     frames.run();
     const none = recorder.take();
@@ -528,13 +560,107 @@ describe('when a frame is drawn (ruling 4)', () => {
     store.select({ route: route?.id ?? null, points: [pointId] });
     frames.run();
     const selected = recorder.take();
-    expect(requests[1]?.overlays).toHaveLength(1);
+    expect(requests[1]?.overlays).toHaveLength(2); // the lines' (no hover: nothing for a line that shows), the points'
     expect(selected.length).toBeGreaterThan(none.length);
     expect(selected.slice(0, none.length)).toEqual(none);
     expect(selected.slice(none.length).some((line) => line.startsWith('arc') || line.startsWith('rect'))).toBe(true);
     store.select({ route: null, points: [] });
     frames.run();
     expect(recorder.take()).toEqual(none);
+  });
+
+  it('(b) a hover change books a frame; the same hover, as another object, books none; the drawer gives back the holder it reads', () => {
+    const { store, drawer, target, frames, requests, hover } = drawerOf();
+    expect(drawer.hover).toBe(hover);
+    drawer.attach(target);
+    frames.run();
+    const route = store.getState().project.scene.routes[0];
+    const lineId = route?.lines[0]?.id ?? '';
+    hover.set({ routeId: route?.id ?? '', lineId, onPlus: false });
+    expect(frames.booked()).toBe(1);
+    frames.run();
+    hover.set({ routeId: route?.id ?? '', lineId, onPlus: false });
+    expect(frames.booked()).toBe(0);
+    hover.set(null);
+    expect(frames.booked()).toBe(1);
+    frames.run();
+    expect(requests).toHaveLength(3);
+    drawer.detach();
+    hover.set({ routeId: route?.id ?? '', lineId, onPlus: false });
+    expect(frames.booked()).toBe(0);
+  });
+
+  it('(d) playing, a hover draws nothing, the route selected or not (brief 141, FC; D272 (c)); paused with the route selected, its line with its "+" idle or active, or its point; another route\'s, nothing (briefs 118 and 120; 128, BS b)', () => {
+    const recorder = new Recorder();
+    const { store, drawer, target, frames, requests, hover } = drawerOf(upTheMiddle([wide]), (request) => compose(recorder, request));
+    at(store, 0, 1, true);
+    drawer.attach(target);
+    frames.run();
+    const none = recorder.take();
+    const route = store.getState().project.scene.routes[0];
+    const routeId = route?.id ?? '';
+    const lineId = route?.lines[0]?.id ?? '';
+    const pointId = route?.points[1]?.id ?? '';
+    /** The frame the last request would give with these overlays in place of the drawer's. */
+    const asked = (overlays: NonNullable<FrameRequest['overlays']>) => {
+      const last = requests[requests.length - 1];
+      if (last === undefined) throw new Error('no request');
+      const own = new Recorder();
+      compose(own, { ...last, overlays });
+      return own.take();
+    };
+    // Playing, no route selected: a hover on a line or a point draws the export's frame, line for line (point 4d).
+    for (const each of [{ routeId, lineId, onPlus: true }, { routeId, pointId }]) {
+      hover.set(each);
+      frames.run();
+      expect(requests[requests.length - 1]?.overlays).toBeUndefined();
+      expect(recorder.take()).toEqual(none);
+    }
+    store.select({ route: routeId, points: [] });
+    hover.set(null);
+    frames.run();
+    const still = recorder.take();
+    expect(still).toEqual(asked([OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    // Playing with the route selected: a hover on its line, its "+" or its point draws no halo, "+" or ring (D272 (c)).
+    for (const each of [{ routeId, lineId, onPlus: false }, { routeId, lineId, onPlus: true }, { routeId, pointId }]) {
+      hover.set(each);
+      frames.run();
+      expect(recorder.take()).toEqual(still);
+    }
+    // Paused: the guide under the selected route's overlays (point 4d), and the hover drawn again.
+    const ids = store.getState().project.scene.routes.map((each) => each.id);
+    const guide = [OVERLAY_MAKERS.guideLines(ids), OVERLAY_MAKERS.guideDots(ids)];
+    hover.set(null);
+    at(store, store.playback().atMs, 1, false);
+    frames.run();
+    const plain = recorder.take();
+    expect(plain).toEqual(asked([...guide, OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    // Its line: the lines' overlay hovers it with its "+" idle (brief 120, ruling AA); the glow is drawn, and the "+".
+    hover.set({ routeId, lineId, onPlus: false });
+    frames.run();
+    const onLine = recorder.take();
+    expect(onLine).toEqual(asked([...guide, OVERLAY_MAKERS.lines([], { hovered: { routeId, lineId, plus: 'idle' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(onLine).not.toEqual(asked([...guide, OVERLAY_MAKERS.lines([], { hovered: { routeId, lineId, plus: 'none' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    // On its "+": active.
+    hover.set({ routeId, lineId, onPlus: true });
+    frames.run();
+    const onPlus = recorder.take();
+    expect(onPlus).toEqual(asked([...guide, OVERLAY_MAKERS.lines([], { hovered: { routeId, lineId, plus: 'active' } }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: null })]));
+    expect(onPlus).not.toEqual(onLine);
+    expect(onLine.some((line) => line.includes('rgba(15, 98, 254, 0.45)'))).toBe(true);
+    expect(plain.some((line) => line.includes('rgba(15, 98, 254, 0.45)'))).toBe(false);
+    // Its point: the points' overlay hovers it.
+    hover.set({ routeId, pointId });
+    frames.run();
+    const onPoint = recorder.take();
+    expect(onPoint).toEqual(asked([...guide, OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [], hovered: { routeId, pointId } })]));
+    expect(onPoint).not.toEqual(plain);
+    // Another route's line or point: nothing more than the selected route's frame.
+    for (const each of [{ routeId: 'elsewhere', lineId, onPlus: true }, { routeId: 'elsewhere', pointId }]) {
+      hover.set(each);
+      frames.run();
+      expect(recorder.take()).toEqual(plain);
+    }
   });
 
   it('(d) draws the rings of the selected point only, at its place; the point not selected keeps its own mark (Codex, 6)', () => {
@@ -557,6 +683,101 @@ describe('when a frame is drawn (ruling 4)', () => {
     const centre = (line: string) => line.split(' ').slice(1, 4).join(' ');
     expect(arcs.map(centre)).toEqual(['960 540 4', '960 156 12', '960 156 12']);
     expect(arcs.some((line) => centre(line).startsWith('960 924'))).toBe(false);
+  });
+
+  it('(d) paused, nothing selected: the guide over the export\'s frame, every line and every point of every route, a hidden line and a copy included (brief 128, BS a and d)', () => {
+    const recorder = new Recorder();
+    const { store, drawer, target, frames, requests } = drawerOf(twoRoutes([wide]), (request) => compose(recorder, request));
+    drawer.attach(target);
+    frames.run();
+    const paused = recorder.take();
+    const last = requests.at(-1);
+    if (last === undefined) throw new Error('no request');
+    const routes = store.getState().project.scene.routes;
+    const ids = routes.map((route) => route.id);
+    const of = (overlays?: NonNullable<FrameRequest['overlays']>) => {
+      const own = new Recorder();
+      compose(own, { ...last, overlays });
+      return own.take();
+    };
+    const exported = of(undefined);
+    expect(last.overlays).toHaveLength(2);
+    expect(paused).toEqual(of([OVERLAY_MAKERS.guideLines(ids), OVERLAY_MAKERS.guideDots(ids)]));
+    expect(paused.slice(0, exported.length)).toEqual(exported);
+    const added = paused.slice(exported.length);
+    const [whole, hidden] = routes.map((route) => route.settings.line.colour);
+    expect(routes[1]?.settings.line.appearance).toBe('hidden');
+    // One guide stroke a route, the route's colour, full alpha (D266's answer; the recorder writes no alpha at 1), dashed:
+    // the hidden line's too.
+    const guides = added.filter((line) => line.startsWith('stroke ') && !line.includes('globalAlpha=') && line.includes('lineDash=6,4'));
+    expect(guides.map((line) => [whole, hidden].findIndex((colour) => line.includes(`strokeStyle=${colour ?? 'none'}`)))).toEqual([0, 1]);
+    // A dot at every point, the copy joined to no line included: the 200 × 100 picture fitted into 1920 × 1080 is
+    // 9.6 times, 60 px down, so (0.2, 0.3) is (384, 348); each a fill in its route's colour, radius 3, no edge.
+    const centres = added.filter((line) => line.startsWith('arc ')).map((line) => line.split(' ').slice(1, 4).join(' '));
+    expect(centres).toEqual(['960 924 3', '960 156 3', '384 348 3', '576 828 3', '1344 252 3']);
+    // The guide's lines come first, then its dots: a fill among the lines is a way arrow, one on each route's one-way
+    // line, the route's colour, edged by one stroke that is not the guide's (D275); a fill among the dots is a dot.
+    const lined = of([OVERLAY_MAKERS.guideLines(ids)]).slice(exported.length);
+    const colourOf = (line: string) => [whole, hidden].findIndex((colour) => line.includes(`fillStyle=${colour ?? 'none'}`));
+    const fills = added.slice(lined.length).filter((line) => line.startsWith('fill '));
+    expect(fills.map(colourOf)).toEqual([0, 0, 0, 1, 1]);
+    expect(lined.filter((line) => line.startsWith('fill ')).map(colourOf)).toEqual([0, 1]);
+    expect(added.slice(lined.length).filter((line) => line.startsWith('stroke '))).toEqual([]);
+    expect(lined.filter((line) => line.startsWith('stroke ') && !guides.includes(line))).toHaveLength(2);
+  });
+
+  it('(d) playing, nothing selected or hovered: no overlays, the frame line for line an export\'s (brief 128, BS b)', () => {
+    const recorder = new Recorder();
+    const { store, drawer, target, frames, requests } = drawerOf(twoRoutes([wide]), (request) => compose(recorder, request));
+    at(store, 300, 1, true);
+    drawer.attach(target);
+    frames.run();
+    const playing = recorder.take();
+    const last = requests.at(-1);
+    if (last === undefined) throw new Error('no request');
+    expect(last.overlays).toBeUndefined();
+    const own = new Recorder();
+    compose(own, { ...last });
+    expect(playing).toEqual(own.take());
+    expect(playing.some((line) => line.includes('lineDash=6,4'))).toBe(false);
+  });
+
+  it('(d) paused with a route selected: the guide first, under the selection\'s rings and the hover; playing, the selection\'s rings alone, no hover (brief 128, BS e; brief 141, FC)', () => {
+    const recorder = new Recorder();
+    const { store, drawer, target, frames, requests, hover } = drawerOf(twoRoutes([wide]), (request) => compose(recorder, request));
+    drawer.attach(target);
+    frames.run();
+    recorder.take();
+    const routes = store.getState().project.scene.routes;
+    const ids = routes.map((route) => route.id);
+    const routeId = ids[0] ?? '';
+    const [first, , copy] = routes[0]?.points ?? [];
+    store.select({ route: routeId, points: [copy?.id ?? ''] });
+    hover.set({ routeId, pointId: first?.id ?? '' });
+    frames.run();
+    const paused = recorder.take();
+    const last = requests.at(-1);
+    if (last === undefined) throw new Error('no request');
+    const of = (overlays: NonNullable<FrameRequest['overlays']>) => {
+      const own = new Recorder();
+      compose(own, { ...last, overlays });
+      return own.take();
+    };
+    const guide = () => [OVERLAY_MAKERS.guideLines(ids), OVERLAY_MAKERS.guideDots(ids)];
+    const theirs = () => [OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [{ routeId, pointId: copy?.id ?? '' }], hovered: { routeId, pointId: first?.id ?? '' } })];
+    expect(last.overlays).toHaveLength(4);
+    expect(paused).toEqual(of([...guide(), ...theirs()]));
+    expect(paused).not.toEqual(of([...theirs(), ...guide()]));
+    at(store, store.playback().atMs, 1, true);
+    frames.run();
+    const playing = recorder.take();
+    const now = requests.at(-1);
+    expect(now?.overlays).toHaveLength(2);
+    // Playing, the hover is not drawn (brief 141, FC; D272 (c)): the selection's rings alone.
+    const ringsAlone = [OVERLAY_MAKERS.lines([], { hovered: null }), OVERLAY_MAKERS.points([routeId], { selected: [{ routeId, pointId: copy?.id ?? '' }], hovered: null })];
+    const own = new Recorder();
+    compose(own, { ...(now ?? last), overlays: ringsAlone });
+    expect(playing).toEqual(own.take());
   });
 
   it('(e) reports a paint that throws, then books on the next change', () => {
@@ -594,6 +815,61 @@ describe('when a frame is drawn (ruling 4)', () => {
     at(store, 100);
     frames.run();
     expect(failures).toEqual([[broken], []]);
+  });
+
+  it('(g) `drawNow` draws at once, in place of the frame booked, only when the store has moved on since the last frame (CORE-06, brief 113)', () => {
+    const { store, drawer, target, frames, requests } = drawerOf(upTheMiddle([wide]));
+    drawer.drawNow();
+    expect(requests).toHaveLength(0);
+    drawer.attach(target);
+    frames.run();
+    expect(requests).toHaveLength(1);
+    drawer.drawNow();
+    expect(requests).toHaveLength(1);
+    at(store, 100);
+    expect(frames.booked()).toBe(1);
+    drawer.drawNow();
+    expect(requests).toHaveLength(2);
+    expect(requests[1]?.sceneMs).toBe(100);
+    expect(frames.booked()).toBe(0);
+    frames.run();
+    expect(requests).toHaveLength(2);
+    drawer.detach();
+    at(store, 200);
+    drawer.drawNow();
+    expect(requests).toHaveLength(2);
+  });
+
+  it('(g) a good frame, a store edit, then a refresh whose paint throws: `drawNow` says the canvas is not the store\'s and books a frame; that booked frame draws it, and `drawNow` then says true without painting again (Codex lines 22 and 27)', () => {
+    let throwing = false;
+    const { store, drawer, target, frames, requests, reports } = drawerOf(upTheMiddle([wide]), () => {
+      if (throwing) throw new Error('paint');
+      return [];
+    });
+    drawer.attach(target);
+    frames.run();
+    expect(drawer.drawNow()).toBe(true);
+    expect(requests).toHaveLength(1);
+    throwing = true;
+    at(store, 100);
+    expect(drawer.drawNow()).toBe(false);
+    expect(requests).toHaveLength(2);
+    expect(reports).toHaveLength(1);
+    expect(frames.booked()).toBe(1);
+    // The key of the failed paint is not taken as drawn: the next down paints again, and says so again.
+    expect(drawer.drawNow()).toBe(false);
+    expect(requests).toHaveLength(3);
+    expect(frames.booked()).toBe(1);
+    // Recovery by the booked frame itself, not by another `drawNow` (Codex line 27).
+    throwing = false;
+    frames.run();
+    expect(requests).toHaveLength(4);
+    expect(requests[3]?.sceneMs).toBe(100);
+    expect(frames.booked()).toBe(0);
+    expect(drawer.drawNow()).toBe(true);
+    expect(requests).toHaveLength(4);
+    drawer.detach();
+    expect(drawer.drawNow()).toBe(false);
   });
 
   it('(f) after detach a booked frame draws nothing and no telling is heard', () => {
@@ -636,9 +912,16 @@ describe('when a frame is drawn (ruling 4)', () => {
     const store = storeOf(upTheMiddle([wide]));
     compose(direct, { ...createFrameInputs({ store }).inputs(), sceneMs: 0, surface: blank });
     const recorder = new Recorder();
-    const { drawer, target, frames } = drawerOf(upTheMiddle([wide]), (request) => compose(recorder, request));
+    const { store: shown, drawer, target, frames } = drawerOf(upTheMiddle([wide]), (request) => compose(recorder, request));
+    at(shown, 0, 1, true);
     drawer.attach(target);
     frames.run();
+    expect(recorder.take()).toEqual(direct.take());
+    // Paused: the composer's frame with the guide (point 4d), and nothing of the drawer's own.
+    at(shown, 0, 1, false);
+    frames.run();
+    const ids = shown.getState().project.scene.routes.map((route) => route.id);
+    compose(direct, { ...createFrameInputs({ store }).inputs(), sceneMs: 0, surface: blank, overlays: [OVERLAY_MAKERS.guideLines(ids), OVERLAY_MAKERS.guideDots(ids)] });
     expect(recorder.take()).toEqual(direct.take());
   });
 });
@@ -680,5 +963,74 @@ describe('the frame’s shape, the video’s (ruling 6, D202)', () => {
       expect(frameShape(sized(bad, 1080))).toEqual(START_SIZE);
       expect(frameShape(sized(1920, bad))).toEqual(START_SIZE);
     }
+  });
+});
+
+/** A canvas 1000 CSS pixels wide at (0, 0) on the page, its pointer listeners and capture held by hand. */
+function canvasStandIn() {
+  const live = new Map<string, Set<(event: PointerFields) => void>>();
+  const captured = new Set<number>();
+  const listened = {
+    addEventListener: (type: string, listener: (event: PointerFields) => void) => {
+      live.set(type, (live.get(type) ?? new Set()).add(listener));
+    },
+    removeEventListener: (type: string, listener: (event: PointerFields) => void) => {
+      live.get(type)?.delete(listener);
+    },
+  };
+  const canvas = {
+    ...listened,
+    width: 0,
+    height: 0,
+    captured,
+    getBoundingClientRect: () => ({ left: 0, top: 0, width: 1000 }),
+    setPointerCapture: (id: number) => captured.add(id),
+    releasePointerCapture: (id: number) => captured.delete(id),
+    hasPointerCapture: (id: number) => captured.has(id),
+    fire: (type: string, clientX: number, clientY: number) => {
+      const event: PointerFields = { pointerId: 1, isPrimary: true, button: 0, clientX, clientY, altKey: false, shiftKey: false, metaKey: false, ctrlKey: false };
+      for (const listener of [...(live.get(type) ?? [])]) listener(event);
+    },
+  };
+  return { canvas, win: { ...listened } };
+}
+
+describe('the preview\'s paint (point 7)', () => {
+  it('a good frame records, the store changes, the next paint returns without running its overlays: a down on the place tapped places nothing, joins nothing and takes no capture (brief 115, ruling V; Codex line 26)', () => {
+    const { canvas, win } = canvasStandIn();
+    const recorder = new Recorder();
+    let overlaysRun = true;
+    const painting = recordingPaint(canvas, (request) => {
+      if (overlaysRun) return compose(recorder, request);
+      return [];
+    });
+    const { store, drawer, target, frames } = drawerOf(upTheMiddle([wide]), painting.paint);
+    drawer.attach(target);
+    frames.run();
+    const recorded = painting.geometry();
+    if (recorded === null) throw new Error('the good frame recorded nothing');
+    expect(canvas.width).toBe(START_SIZE.width);
+    const unbind = bindCanvas({ canvas, win, store, geometry: painting.geometry, refresh: () => drawer.drawNow(), mac: true });
+    // An empty place a fifth of the way across the picture, half-way down, in the pointer's CSS pixels.
+    const ratio = canvas.width / 1000;
+    const { bounds } = recorded;
+    const x = (bounds.x + 0.2 * bounds.width) / ratio;
+    const y = (bounds.y + 0.5 * bounds.height) / ratio;
+    canvas.fire('pointerdown', x, y);
+    canvas.fire('pointerup', x, y);
+    const placed = store.getState().project.scene.routes[0];
+    expect(placed?.points).toHaveLength(3);
+    expect(placed?.points[2]).toMatchObject({ x: 0.2, y: 0.5 });
+    // The store has moved on; the next paint (the down's own) returns without running the recording overlay.
+    overlaysRun = false;
+    canvas.fire('pointerdown', x, y);
+    expect(canvas.captured.size).toBe(0);
+    canvas.fire('pointerup', x, y);
+    expect(store.getState().project.scene.routes[0]).toBe(placed);
+    expect(canvas.captured.size).toBe(0);
+    expect(store.getState().gesture).toBeNull();
+    expect(painting.geometry()).toBeNull();
+    unbind();
+    drawer.detach();
   });
 });

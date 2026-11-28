@@ -4,17 +4,44 @@
 // The listener sits on `document` in the bubble phase, never capture: the kit's slider and number field stop Escape
 // with React's `stopPropagation`, which stops the native event at React's root, so they win over the editor.
 //
-// Who owns Escape, in order: an open drag, then typed text (both the kit's controls', which stop it there), then a menu,
-// then a dialog, then the selection. On this page only the dialog exists: Carbon's `Modal` closes on Escape by its own
+// Who owns Escape, in order: the kit's controls' typed text (they stop it there), then a menu, then a dialog, then an
+// open drag, then the selection. On this page only the dialog exists: Carbon's `Modal` closes on Escape by its own
 // listener on `document` (on its Close button the kit's dialog takes the key first, D206) and focus goes back to its
-// opener (kit/Dialog.tsx). The key table has no Escape entry and
-// this listener no Escape branch: it gains one when a menu or the selection has something for Escape to do.
+// opener (kit/Dialog.tsx). CORE-06 (brief 112): the selection's branch, last, is this listener's (`escapeClears`,
+// src/editor/canvas/dom.ts): Escape with something selected, and no drag open, no typed text and no dialog, clears the
+// selection, so the pen's next tap starts afresh. Brief 115 (ruling U): Escape has one path, the key table's entry,
+// through the dispatch (which keeps typed text and a dialog's Escape out first): this listener hands it
+// `cancelDrag() || escapeClears(…)`, so an open drag is cancelled (its places and selection put back, nothing to undo)
+// and otherwise the selection cleared; the key is taken only when one of them did something.
+//
+// Brief 123 (ruling AN): the Editing keys, Delete or Backspace, Cmd or Ctrl+D and Cmd or Ctrl+A, go through the
+// dispatch (which keeps typed text and a dialog's keys out first) to `editKey` (src/editor/canvas/dom.ts, point 7),
+// handed whether a drag is open; the key is taken only when there was something to act on. Brief 134 (ruling CU; D263,
+// D268): select all's line goes to the session's `announce`, the page's one status area (zoom left to its default).
+//
+// Brief 125 (rulings AW and AY): the arrows, alone or with Shift, go the same way to `editKey` with the arrow pressed
+// (the nudge, dom.ts point 8). A run of nudges is one undo step, ended at once by anything else: the dispatch ends it
+// for any other key (its point 8), the canvas's binding for a press on the preview and the window's blur, and this
+// listener for any pointer press on the page (heard first, in the capture phase, so an Undo button's press meets the
+// burst closed) and for the focus leaving where it was (`focusout`).
+//
+// Brief 135 (brief 130's CB and CD): Shift+F10 or the ContextMenu key, with focus in the preview, no typed text and no
+// dialog, ends a nudge burst and opens the point's menu on the last-selected point (dom.ts point 9, `openMenuByKey`);
+// the key is taken only when it opened. It has no entry in the key table (Help unchanged: D264 is the owner's). The menu
+// is the "menu" in the Escape order above: its own listener takes every key pressed inside it, Escape included, and
+// stops it there (kit/ContextMenu.tsx point 3), so this listener never hears a key meant for the menu.
+//
+// Brief 138 (rulings DB (4) and (5); D270): while "Move" from the point's menu waits for its click (dom.ts point 10),
+// Escape cancels it ("Move cancelled"), after an open drag and before the selection: `cancelDrag() || cancelMove() ||
+// escapeClears(…)`; and the Editing keys are handed `dragOpen() || moveWaiting()`, so they do nothing, as while a drag
+// is open (the wait's store gesture refuses Undo and Redo, and the menu's key opens nothing).
 //
 // A held key (`event.repeat`) is passed on as the press's `repeat`: the dispatch runs it once (its point 5, D189).
 //
 // Single-key shortcuts (D183, WCAG 2.2's 2.1.4) are read at each key from the session's switch, on to begin with and
 // held for the visit; Help shows and sets it.
-import { dispatchKey, type FocusKind, type PressPlace } from './dispatch';
+import { cancelDrag, cancelMove, dragOpen, editKey, endNudge, escapeClears, isMenuKey, moveWaiting, openMenuByKey } from '../canvas/dom';
+import { dispatchKey, type FocusKind, type KeyDispatch, type PressPlace } from './dispatch';
 import type { PageSession } from './session';
 
 /** Whether this machine is a Mac: Undo is Cmd+Z here, and Help spells the chords so. */
@@ -64,17 +91,35 @@ function placeOf(target: EventTarget | null): PressPlace {
  * calls; gives back the call that stops listening (React's effect cleanup).
  */
 export function listenForKeys(
-  { store, transport, singleKeys }: PageSession,
+  { store, transport, singleKeys, announce }: PageSession,
   openHelp: () => void,
   openProject: () => void,
 ): () => void {
   const onKeyDown = (event: KeyboardEvent): void => {
     const place = placeOf(event.target);
-    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject });
+    // The point's menu by its key (brief 135; dom.ts point 9): Shift+F10 or the ContextMenu key on the preview.
+    if (isMenuKey(event) && !place.typing && !place.dialogOpen && event.target instanceof Element && event.target.closest('.preview') !== null) {
+      endNudge();
+      if (openMenuByKey()) {
+        event.preventDefault();
+        return;
+      }
+    }
+    const escape = () => cancelDrag() || cancelMove() || escapeClears(event, place, dragOpen(), store);
+    const edit: KeyDispatch['edit'] = (action, repeat, key) => editKey(action, repeat, store, dragOpen() || moveWaiting(), key, undefined, announce);
+    const taken = dispatchKey({ press: event, mac: MAC, place, singleKeys: singleKeys.read(), store, transport, openHelp, openProject, escape, edit, endNudge });
     if (taken) event.preventDefault();
   };
+  const onElse = (): void => {
+    endNudge();
+  };
   document.addEventListener('keydown', onKeyDown);
+  document.addEventListener('pointerdown', onElse, true);
+  document.addEventListener('focusout', onElse);
   return () => {
     document.removeEventListener('keydown', onKeyDown);
+    document.removeEventListener('pointerdown', onElse, true);
+    document.removeEventListener('focusout', onElse);
+    endNudge();
   };
 }

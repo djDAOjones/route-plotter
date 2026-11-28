@@ -2,7 +2,7 @@
 // `v3/src/services/RenderingService.js` at the lines named, read at a zoom of 1, where v3's clamp factor is 1.
 import { expect, test } from 'vitest';
 import type { DrawContext } from './context';
-import { greyDot, hoverRing, plusHandle, selectionRect, selectionRing, unitAt } from './overlays';
+import { endMark, greyDot, guideDot, hoverRing, plusHandle, selectionRect, selectionRing, startMark, unitAt, wayArrow } from './overlays';
 import { Recorder } from './recorder';
 
 const AT = '@ 1 0 0 1 0 0';
@@ -181,4 +181,101 @@ test('the grey dot is v3’s for a bend: black at 0.5, edged white at 0.5 (:2497
     expect(drawn((each) => greyDot(each, { x: 30, y: 40 }, 4, odd))).toEqual([]);
   }
   expect(drawn((each) => greyDot(each, { x: Number.NaN, y: 40 }, 4, 1))).toEqual([]);
+});
+
+test('the guide dot (CORE-06, D265): one disc filled in the colour handed, full alpha, no edge; nothing for an unsound radius or place', () => {
+  const dot: Shape = (context) => guideDot(context, { x: 30, y: 40 }, 3, '#d55e00');
+  expect(drawn(dot)).toEqual([
+    'save',
+    'beginPath',
+    `arc 30 40 3 0 6.283 clockwise ${AT}`,
+    `fill | ${AT} | fillStyle=#d55e00`,
+    'beginPath',
+    'restore',
+  ]);
+  const context = dirtied();
+  const before = context.state();
+  expect(drawn(dot, context)).toEqual(drawn(dot));
+  expect(context.state()).toEqual(before);
+  for (const odd of [Number.NaN, 0, -1, Number.POSITIVE_INFINITY]) expect(drawn((each) => guideDot(each, { x: 30, y: 40 }, odd, '#d55e00'))).toEqual([]);
+  expect(drawn((each) => guideDot(each, { x: 30, y: Number.NaN }, 3, '#d55e00'))).toEqual([]);
+});
+
+test("the start mark (CORE-06, D274): v3's entry glyph, a triangle apex up, filled in the colour handed, edged white; nothing for an unsound radius, edge or place", () => {
+  const mark: Shape = (context) => startMark(context, { x: 30, y: 40 }, 10, '#d55e00', 1.5);
+  expect(drawn(mark)).toEqual([
+    'save',
+    'beginPath',
+    `moveTo 30 30 ${AT}`,
+    `lineTo 38.7 45 ${AT}`,
+    `lineTo 21.3 45 ${AT}`,
+    `closePath ${AT}`,
+    `fill | ${AT} | fillStyle=#d55e00`,
+    `stroke | ${AT} | strokeStyle=#ffffff lineWidth=1.5`,
+    'beginPath',
+    'restore',
+  ]);
+  const context = dirtied();
+  const before = context.state();
+  expect(drawn(mark, context)).toEqual(drawn(mark));
+  expect(context.state()).toEqual(before);
+  for (const odd of [Number.NaN, 0, -1, Number.POSITIVE_INFINITY]) {
+    expect(drawn((each) => startMark(each, { x: 30, y: 40 }, odd, '#d55e00', 1.5))).toEqual([]);
+    expect(drawn((each) => startMark(each, { x: 30, y: 40 }, 10, '#d55e00', odd))).toEqual([]);
+  }
+  expect(drawn((each) => startMark(each, { x: Number.NaN, y: 40 }, 10, '#d55e00', 1.5))).toEqual([]);
+});
+
+test("the end mark (CORE-06, D274): v3's exit glyph, a square of side 1.6 × the radius on the point, filled in the colour handed, edged white; nothing for an unsound radius, edge or place", () => {
+  const mark: Shape = (context) => endMark(context, { x: 30, y: 40 }, 10, '#d55e00', 1.5);
+  expect(drawn(mark)).toEqual([
+    'save',
+    'beginPath',
+    `rect 22 32 16 16 ${AT}`,
+    `fill | ${AT} | fillStyle=#d55e00`,
+    `stroke | ${AT} | strokeStyle=#ffffff lineWidth=1.5`,
+    'beginPath',
+    'restore',
+  ]);
+  const context = dirtied();
+  const before = context.state();
+  expect(drawn(mark, context)).toEqual(drawn(mark));
+  expect(context.state()).toEqual(before);
+  for (const odd of [Number.NaN, 0, -1, Number.POSITIVE_INFINITY]) {
+    expect(drawn((each) => endMark(each, { x: 30, y: 40 }, odd, '#d55e00', 1.5))).toEqual([]);
+    expect(drawn((each) => endMark(each, { x: 30, y: 40 }, 10, '#d55e00', odd))).toEqual([]);
+  }
+  expect(drawn((each) => endMark(each, { x: 30, y: Number.NaN }, 10, '#d55e00', 1.5))).toEqual([]);
+});
+
+test("the way arrow (CORE-06, D275): v3's one-way glyph, a triangle pointing toward the place handed, filled in the colour handed at full alpha, edged white; nothing for an unsound size, edge, place or way", () => {
+  // Pointing right from (30, 40): the tip a size ahead, the back 0.6 of a size behind and 0.6 to each side (v3 :1215–1233).
+  const right: Shape = (context) => wayArrow(context, { x: 30, y: 40 }, { x: 90, y: 40 }, 10, '#d55e00', 1.5);
+  expect(drawn(right)).toEqual([
+    'save',
+    'beginPath',
+    `moveTo 40 40 ${AT}`,
+    `lineTo 24 46 ${AT}`,
+    `lineTo 24 34 ${AT}`,
+    `closePath ${AT}`,
+    `fill | ${AT} | fillStyle=#d55e00`,
+    `stroke | ${AT} | strokeStyle=#ffffff lineWidth=1.5`,
+    'beginPath',
+    'restore',
+  ]);
+  // Pointing down, then up: the way is the place handed's, however far it lies.
+  expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 30, y: 41 }, 10, '#d55e00', 1.5)).slice(2, 5)).toEqual([`moveTo 30 50 ${AT}`, `lineTo 24 34 ${AT}`, `lineTo 36 34 ${AT}`]);
+  expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 30, y: 0 }, 10, '#d55e00', 1.5)).slice(2, 5)).toEqual([`moveTo 30 30 ${AT}`, `lineTo 36 46 ${AT}`, `lineTo 24 46 ${AT}`]);
+  const context = dirtied();
+  const before = context.state();
+  expect(drawn(right, context)).toEqual(drawn(right));
+  expect(context.state()).toEqual(before);
+  for (const odd of [Number.NaN, 0, -1, Number.POSITIVE_INFINITY]) {
+    expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 90, y: 40 }, odd, '#d55e00', 1.5))).toEqual([]);
+    expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 90, y: 40 }, 10, '#d55e00', odd))).toEqual([]);
+  }
+  expect(drawn((each) => wayArrow(each, { x: Number.NaN, y: 40 }, { x: 90, y: 40 }, 10, '#d55e00', 1.5))).toEqual([]);
+  expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 90, y: Number.NaN }, 10, '#d55e00', 1.5))).toEqual([]);
+  // No way to point: the place handed is the arrow's own.
+  expect(drawn((each) => wayArrow(each, { x: 30, y: 40 }, { x: 30, y: 40 }, 10, '#d55e00', 1.5))).toEqual([]);
 });

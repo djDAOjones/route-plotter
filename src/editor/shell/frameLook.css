@@ -25,6 +25,11 @@
   grid-column: 1 / -1;
   overflow-wrap: anywhere;
 }
+/* CORE-06 (D209): at rest the notice's slot holds nothing (OpenNotice draws no element), and then takes no row and no
+   gap of the grid, so the preview below has that height too. */
+.frame__notice:empty {
+  display: none;
+}
 /* The notice's Close keeps the theme's ring (3 px, at 2.4.13), drawn inside the button in Carbon's focus colour for an
    inverse surface: the notice is dark (#393939), where the theme's #0f62fe outside the button is 2.3:1 on its left and
    bottom (351 of the 368 px a 2 px perimeter asks, brief 81); --cds-focus-inverse (#fff) on #393939 is 11.7:1. */
@@ -36,6 +41,11 @@
   .frame__notice .cds--inline-notification__close-button:focus-visible {
     outline-color: Highlight !important;
   }
+}
+/* CORE-06 (Codex's line 14, brief 111): the centre column stands at the top of its row, its height its own content's,
+   not stretched to a taller side column's, so the preview's room (Preview.tsx's point 5) is the room it leaves. */
+.frame__column--centre {
+  align-self: start;
 }
 .frame__region + .frame__region {
   margin-block-start: 2rem;
@@ -64,7 +74,7 @@
   }
 }
 /* The preview's canvas (brief 84, Preview.tsx's point 5): its shape and width are set on it from the video's shape
-   (D202); here it stands on a line of its own, never wider than its slot, centred in it, on Carbon's first layer so
+   (D202) and, since CORE-06 (D209), the room its column leaves; here it stands on a line of its own, never wider than its slot, centred in it, on Carbon's first layer so
    the frame's edges show where nothing is drawn (no picture shown; about a picture the background draws its white
    margin). The canvas fills it. */
 .preview {
