@@ -2588,21 +2588,26 @@ export default {
       },
     },
     {
-      // 1.3.5 and 3.3.2 (STACK-08, brief 161): every field on the page, hidden ones included (FIELDS, not only those
-      // shown), read in the shell, with Help open, and with the "Replace your route?" dialog open over a drawn route.
-      // The page has three: the file input under "Open project" (hidden: out of the layout, the tab order and the
+      // 1.3.5 and 3.3.2 (STACK-08, briefs 161 and 162): every field on the page, hidden ones included (FIELDS with
+      // every input, type=hidden too, not only those shown), read in the shell, with Help open, and with the
+      // "Replace your route?" dialog open over a drawn route.
+      // The page has four: the file input under "Open project" (hidden: out of the layout, the tab order and the
       // accessibility tree; the button, named by its visible word, opens its chooser, kit/FileButton.tsx), the switch
-      // "Single-key shortcuts" in Help, and the slider "Timeline"; the dialog holds none. 1.3.5: no field carries an
-      // `autocomplete` purpose and none takes typed text, so none collects the user's own details (a field that does
-      // must carry its purpose). 3.3.2: each has a visible label or instructions: the file input the visible "Open
-      // project" beside it, the switch its visible label as its name, the slider its visible label "Timeline" tied to
-      // it; the canvas, an application, sits in the region under the visible heading "Preview" (its keys in Help's
-      // tables). A further field fails both until its check is written here.
+      // "Single-key shortcuts" in Help, the slider "Timeline", and the slider's own number box, which Carbon's Slider
+      // renders as an input of type=hidden (hideTextInput, kit/SettingSlider.tsx) labelled by the same visible
+      // "Timeline"; the dialog holds none. 1.3.5: no field carries an `autocomplete` purpose and none takes typed
+      // text, so none collects the user's own details (a field that does must carry its purpose). 3.3.2: each has a
+      // visible label or instructions: the file input the visible "Open project" beside it, the switch its visible
+      // label as its name, the slider its visible label "Timeline" tied to it, and its hidden number box that label
+      // too; the canvas, an application, sits in the region under the visible heading "Preview" (its keys in Help's
+      // tables). A further field, or any field inside the dialog, fails both until its check is written here.
       name: 'inputs-purpose-and-labels',
       method: 'j-forms',
       rows: ['1.3.5', '3.3.2'],
       run: async ({ page, open, record }) => {
-        const read = () => page.locator(FIELDS).evaluateAll((all) => all.map((e) => {
+        // This journey's own inventory: the shared FIELDS with every input, type=hidden included, not only shown ones.
+        const ALL = FIELDS.replace('input:not([type=hidden])', 'input');
+        const read = () => page.locator(ALL).evaluateAll((all) => all.map((e) => {
           const by = e.getAttribute('aria-labelledby'), label = by ? document.getElementById(by) : null;
           const before = e.previousElementSibling;
           return {
@@ -2610,7 +2615,7 @@ export default {
             tag: e.tagName.toLowerCase(), type: e.getAttribute('type') ?? '', role: e.getAttribute('role') ?? '',
             autocomplete: e.getAttribute('autocomplete'), hidden: e.hidden, tabIndex: e.tabIndex,
             typed: e.isContentEditable || e.tagName === 'TEXTAREA' || ['textbox', 'searchbox', 'combobox'].includes(e.getAttribute('role') ?? '')
-              || (e.tagName === 'INPUT' && !['file', 'checkbox', 'radio', 'range', 'button', 'submit', 'reset', 'image', 'color'].includes(e.getAttribute('type') ?? 'text')),
+              || (e.tagName === 'INPUT' && !['file', 'hidden', 'checkbox', 'radio', 'range', 'button', 'submit', 'reset', 'image', 'color'].includes(e.getAttribute('type') ?? 'text')),
             opener: before && before.id === 'open-project' && before.getBoundingClientRect().height > 0 ? (before.textContent ?? '').trim() : '',
             labelledBy: label && label.getBoundingClientRect().height > 0 ? (label.textContent ?? '').trim() : '',
           };
@@ -2626,7 +2631,7 @@ export default {
         await open('pen-drawn');
         const question = page.getByRole('dialog', { name: 'Replace your route?' });
         const asked = (await choose(page, await projectFile())) && await question.waitFor({ state: 'visible', timeout: 6000 }).then(() => true, () => false);
-        const inQuestion = asked ? await question.locator(FIELDS).count() : -1;
+        const inQuestion = asked ? await question.locator(ALL).count() : -1;
         if (asked) seen.push(['"Replace your route?" open', await read()]);
         if (asked) await page.keyboard.press('Escape');
         await open('shell');
@@ -2636,24 +2641,30 @@ export default {
           'input[type=file]': (f) => f.hidden && f.tabIndex === -1 && f.opener === 'Open project',
           '#single-keys': (f) => f.role === 'switch' && switchName.startsWith('switch "Single-key shortcuts"') && switchShown === 1,
           '#timeline': (f) => f.role === 'slider' && f.labelledBy === 'Timeline',
+          '#timeline-input-for-slider': (f) => f.tag === 'input' && f.type === 'hidden' && f.labelledBy === 'Timeline',
         };
         const purpose = [], labels = [], found = new Set();
         if (!asked) purpose.push('no "Replace your route?" dialog showed over the drawn route'), labels.push('no "Replace your route?" dialog showed over the drawn route');
-        if (inQuestion > 0) labels.push(`the "Replace your route?" dialog holds ${inQuestion} field(s): write their check here`);
+        if (inQuestion > 0) {
+          const line = `the "Replace your route?" dialog holds ${inQuestion} field(s): write their check here`;
+          purpose.push(line), labels.push(line);
+        }
         for (const [where, fields] of seen) {
           for (const f of fields) {
             found.add(f.what);
             if (f.autocomplete !== null) purpose.push(`${where}: ${f.what} carries autocomplete="${f.autocomplete}"`);
             if (f.typed) purpose.push(`${where}: ${f.what} takes typed text: check whether it collects the user's own details and carries their purpose`);
-            if (!known[f.what]) labels.push(`${where}: ${f.what} (${f.tag} ${f.type} ${f.role}) is a field this journey does not know: write its label's check`);
-            else if (!known[f.what](f)) labels.push(`${where}: ${f.what} has no visible label or instructions as written here (${JSON.stringify(f)}${f.what === '#single-keys' ? `, named ${switchName}, its words shown ${switchShown} time(s)` : ''})`);
+            if (!known[f.what]) {
+              const line = `${where}: ${f.what} (${f.tag} ${f.type} ${f.role}) is a field this journey does not know: write its checks`;
+              purpose.push(line), labels.push(line);
+            } else if (!known[f.what](f)) labels.push(`${where}: ${f.what} has no visible label or instructions as written here (${JSON.stringify(f)}${f.what === '#single-keys' ? `, named ${switchName}, its words shown ${switchShown} time(s)` : ''})`);
           }
         }
         for (const what of Object.keys(known)) if (!found.has(what)) labels.push(`${what} was not found: the page changed; read it again`);
         if (heading !== 1 || app !== 1) labels.push(`the region "Preview" holds ${heading} visible heading(s) "Preview" and ${app} application(s), not one of each`);
         const list = [...found].join(', ');
         record('1.3.5', !purpose.length, purpose.length ? purpose.join('; ') : `every field, hidden ones included, in the shell, with Help open and with "Replace your route?" open (${list}): none carries an autocomplete purpose and none takes typed text, so none collects the user's own details`);
-        record('3.3.2', !labels.length, labels.length ? labels.join('; ') : `each input has a visible label or instructions: the hidden file input, out of the tab order, opened by the visible button "Open project" beside it; the switch named by its visible label "Single-key shortcuts" in Help; the slider "Timeline" by its visible label tied to it; "Replace your route?" holds no field; the canvas application sits in the region under the visible heading "Preview"`);
+        record('3.3.2', !labels.length, labels.length ? labels.join('; ') : `each input has a visible label or instructions: the hidden file input, out of the tab order, opened by the visible button "Open project" beside it; the switch named by its visible label "Single-key shortcuts" in Help; the slider "Timeline" by its visible label tied to it, and its hidden number box (type=hidden) by the same label; "Replace your route?" holds no field; the canvas application sits in the region under the visible heading "Preview"`);
       },
     },
     {
