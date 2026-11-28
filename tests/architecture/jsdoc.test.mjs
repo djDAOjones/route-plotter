@@ -4,9 +4,10 @@
 // the parser reads on any tag of a doc comment by jsdoc/no-restricted-syntax; a typed @param or @returns is refused by
 // jsdoc/no-types as well, and an @type or @typedef tag by jsdoc/check-tag-names as well, so those plants expect two
 // reports, one from each rule. The documented exports, of each kind the rule covers, with untyped tags and with inline
-// {@link}, {@linkcode} and {@linkplain} references (braces after @see and @example are not read as a type either), are
-// accepted. So a rule that stops biting, or fires too widely, is noticed on every v4 change (`npm run
-// test:architecture`). The rules are the owner's "Yes, add it" (27 Nov 2026).
+// {@link}, {@linkcode} and {@linkplain} references (on @param and @returns in the text: where their type goes,
+// jsdoc/no-types still refuses a link), are accepted; braces after @see and @example are not read as a type either. So
+// a rule that stops biting, or fires too widely, is noticed on every v4 change (`npm run test:architecture`). The rules
+// are the owner's "Yes, add it" (27 Nov 2026).
 import { strict as assert } from 'node:assert';
 import { dirname, join } from 'node:path';
 import { describe, test } from 'node:test';
