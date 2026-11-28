@@ -19,6 +19,9 @@ export default defineConfig(
   // STACK-07 (the JSDoc house digest), on the owner's "Yes, add it" of 27 Nov 2026: rule 1,
   // every exported function and class carries a doc comment, and no type is written inside one, TypeScript holding the
   // types. Only these two rules: the plugin's recommended set asks @param and @returns tags the types already carry.
+  // Arrow functions and function expressions are asked for where a const names them or a default export is one, and
+  // publicOnly keeps that to the exported ones, whether exported in place or by reference (`export { f }`,
+  // `export default f`). Callbacks inside an exported object or call are not asked for: no declarator names them.
   {
     files: ['src/**/*.{ts,tsx}'],
     ignores: ['src/**/*.test.{ts,tsx}'],
@@ -28,7 +31,7 @@ export default defineConfig(
         publicOnly: true,
         require: { FunctionDeclaration: true, ClassDeclaration: true, MethodDefinition: false },
         contexts: ['ArrowFunctionExpression', 'FunctionExpression'].flatMap((kind) => [
-          `ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ${kind}`,
+          `VariableDeclarator > ${kind}`,
           `ExportDefaultDeclaration > ${kind}`,
         ]),
       }],

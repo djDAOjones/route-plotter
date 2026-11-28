@@ -21,3 +21,16 @@ function inside(): number {
 
 /** Not a function, so the rule asks nothing of it; its private helper is not exported. */
 export const TABLE = { inside: () => inside() };
+
+/** A documented arrow function, exported by reference. */
+const byReference = (value: number): number => value + 1;
+
+/** A documented function expression, exported by reference. */
+const expression = function (value: number): number {
+  return value + 2;
+};
+
+// Exported by reference, but not a function: its callback is not asked for, as one inside an exported object is not.
+const HANDLERS = { onPick: (value: number): number => value };
+
+export { byReference, expression, HANDLERS };
