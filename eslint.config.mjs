@@ -16,7 +16,7 @@ export default defineConfig(
   { ignores: ['v3/**'] },
   ...base,
   { files: ['src/**/*.tsx'], extends: [reactHooks.configs.flat['recommended-latest']] },
-  // STACK-07 (the JSDoc house digest, project/digests/jsdoc.md), on the owner's "Yes, add it" of 27 Nov 2026: rule 1,
+  // STACK-07 (the JSDoc house digest), on the owner's "Yes, add it" of 27 Nov 2026: rule 1,
   // every exported function and class carries a doc comment, and no type is written inside one, TypeScript holding the
   // types. Only these two rules: the plugin's recommended set asks @param and @returns tags the types already carry.
   {
