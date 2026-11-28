@@ -1,11 +1,12 @@
 // V31-APP-PACK starter, React kinds (the editor and the forms tool): the common configuration plus React's hook rules
 // over TSX. Replaces eslint.config.mjs, which carries the common part alone for the "unsure" kind.
-// STACK-02 (Route Plotter v4) adds two blocks, provisional under the owner's overnight grant G3: frozen v3 in v3/ is
-// never linted as v4, and v4's tests keep the architecture plan's §15 conventions — a test exercises behaviour and never
-// reads source text (TST-11), and none relies on a real animation frame, the engine being tested through its pure
-// clock (INTAKE.18).
+// STACK-02 (Route Plotter v4) adds two blocks, made under the owner's overnight grant G3 and standing on his delegated
+// decisions of 27 Nov 2026: frozen v3 in v3/ is never linted as v4, and v4's tests keep the architecture plan's §15
+// conventions — a test exercises behaviour and never reads source text (TST-11), and none relies on a real animation
+// frame, the engine being tested through its pure clock (INTAKE.18).
 import { defineConfig } from 'eslint/config';
 import reactHooks from 'eslint-plugin-react-hooks'; // signed 2026-11-11 (P-react-hooks): React kinds only
+import jsdoc from 'eslint-plugin-jsdoc'; // STACK-07: the owner's "Yes, add it" (27 Nov 2026), v4's src/ only
 import base from './eslint.base.mjs';
 
 const TST_11 = 'TST-11: a test exercises behaviour through imports and never reads source text';
@@ -15,6 +16,25 @@ export default defineConfig(
   { ignores: ['v3/**'] },
   ...base,
   { files: ['src/**/*.tsx'], extends: [reactHooks.configs.flat['recommended-latest']] },
+  // STACK-07 (the JSDoc house digest, project/digests/jsdoc.md), on the owner's "Yes, add it" of 27 Nov 2026: rule 1,
+  // every exported function and class carries a doc comment, and no type is written inside one, TypeScript holding the
+  // types. Only these two rules: the plugin's recommended set asks @param and @returns tags the types already carry.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/**/*.test.{ts,tsx}'],
+    plugins: { jsdoc },
+    rules: {
+      'jsdoc/require-jsdoc': ['error', {
+        publicOnly: true,
+        require: { FunctionDeclaration: true, ClassDeclaration: true, MethodDefinition: false },
+        contexts: ['ArrowFunctionExpression', 'FunctionExpression'].flatMap((kind) => [
+          `ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ${kind}`,
+          `ExportDefaultDeclaration > ${kind}`,
+        ]),
+      }],
+      'jsdoc/no-types': 'error',
+    },
+  },
   {
     files: ['src/**/*.test.{ts,tsx}'],
     rules: {
