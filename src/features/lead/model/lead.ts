@@ -113,6 +113,7 @@ function headingOf(timeline: Timeline, head: LeadHead, moment: Moment, total: nu
   return (1 - progress) * share <= APPROACH ? along(chord(line)) : along(own);
 }
 
+/** The module's evaluation, once a route a frame: the lead's heads now, once it has set off and while shown. */
 function evaluate({ settings, route, lead }: RouteInput<Settings>): Evaluation<LeadDrawing> {
   const look = lookOf(settings.headSize);
   const { timeline } = route;

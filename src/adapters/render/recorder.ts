@@ -139,6 +139,10 @@ function describeImage(image: Sized): string {
   return width !== null && height !== null ? `image(${round(width)}x${round(height)})` : 'image';
 }
 
+/**
+ * The recording DrawContext: each call is kept as one line of text, with the state a browser's context would hold, so a
+ * test compares a frame with its golden as text.
+ */
 export class Recorder implements DrawContext {
   #lines: string[] = [];
   #styles: Styles = { ...DEFAULTS };

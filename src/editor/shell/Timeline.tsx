@@ -20,6 +20,7 @@ export interface TimelineProps {
 /** The timeline's slider's id; its label is tied to it. */
 const TIMELINE_ID = 'timeline';
 
+/** The play bar's timeline: the kit's slider on the timeline's setting, between the time now and the whole time. */
 export function Timeline({ timeline }: TimelineProps) {
   const { setting, readout, words } = timeline;
   const subscribe = useCallback((listener: () => void) => setting.subscribe(listener), [setting]);

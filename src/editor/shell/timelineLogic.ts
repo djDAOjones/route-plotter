@@ -43,6 +43,7 @@ export interface LengthReaderOptions<H> {
   readonly frames: FrameSource<H>;
 }
 
+/** The scene's length, read through the player's transport at most once a frame (DEF-42.1). */
 export function createLengthReader<H>({ store, length, frames }: LengthReaderOptions<H>): LengthReader {
   /** The scene the length held was read for; null until it is first asked. */
   let readFor: Scene | null = null;
@@ -114,6 +115,7 @@ export interface TimelineOptions {
 
 const NOTHING: Result = { ok: true, changed: false };
 
+/** The timeline's slider over the transport: a drag or a key seeks; its readout says the time now and in all. */
 export function createTimeline({ store, transport, length, opened }: TimelineOptions): Timeline {
   const atMs = () => store.playback().atMs;
   const read = (): number => {

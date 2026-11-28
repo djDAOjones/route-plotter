@@ -31,6 +31,7 @@ declare module 'jszip/dist/jszip.min.js' {
     readonly type: 'uint8array';
     readonly compression?: 'STORE' | 'DEFLATE';
   }
+  /** jszip's archive, as io uses it: the entries read from a file, or a new archive built and written out as bytes. */
   export default class JSZip {
     readonly files: Readonly<Record<string, ZipEntry>>;
     file(name: string): ZipEntry | null;

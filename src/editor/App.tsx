@@ -53,6 +53,7 @@ const noticeOpener: OpenProps['opener'] = {
   },
 };
 
+/** The editor's page, mounted once by main.tsx: the frame and its controls, around the page's one session. */
 export function App() {
   const [helpOpen, setHelpOpen] = useState(false);
   const helpButton = useRef<HTMLButtonElement>(null);

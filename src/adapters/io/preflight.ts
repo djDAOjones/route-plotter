@@ -197,6 +197,10 @@ export interface Budget {
   left: number;
 }
 
+/**
+ * A fresh budget for one file: every entry read from that file draws on it, so many small entries cannot together
+ * inflate past the limit.
+ */
 export const newBudget = (): Budget => ({ left: ARCHIVE_LIMITS.inflatedBytes });
 
 /**

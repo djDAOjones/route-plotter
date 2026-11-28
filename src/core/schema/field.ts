@@ -147,44 +147,54 @@ type Defaults<G extends Fields> = Omit<Values<G>, Given<G>>;
 
 type Spec<F extends Field> = Omit<F, 'kind'>;
 
+/** Declares a number field: its range, unit and default; whole numbers only when `integer` is set. */
 export function number(spec: Omit<Spec<NumberField>, 'integer'> & { readonly integer?: boolean }): NumberField {
   return { kind: 'number', ...spec, integer: spec.integer ?? false };
 }
 
+/** Declares an on-or-off field. */
 export function boolean(spec: Spec<BooleanField>): BooleanField {
   return { kind: 'boolean', ...spec };
 }
 
+/** Declares a field that takes one of a fixed list of words; `const` keeps the words as their own literal types. */
 export function choice<const C extends string>(spec: Spec<ChoiceField<C>>): ChoiceField<C> {
   return { kind: 'choice', ...spec };
 }
 
+/** Declares a colour field, saved as a six-digit hex colour. */
 export function colour(spec: Spec<ColourField>): ColourField {
   return { kind: 'colour', ...spec };
 }
 
+/** Declares a text field, its length bounded. */
 export function text(spec: Spec<TextField>): TextField {
   return { kind: 'text', ...spec };
 }
 
+/** Declares an entity's id: the caller gives it, never a default (`Given`). */
 export function id(spec: Spec<IdField>): IdField {
   return { kind: 'id', ...spec };
 }
 
+/** Declares a reference to an item of a list, by its id: the caller gives it, and the check at open holds it to one. */
 export function reference(spec: Spec<ReferenceField>): ReferenceField {
   return { kind: 'reference', ...spec };
 }
 
+/** Declares a field that may be empty, holding the field it wraps when it is not. */
 export function optional<O extends Field>(spec: Spec<OptionalField<O>>): OptionalField<O> {
   return { kind: 'optional', ...spec };
 }
 
 type Ruled<F extends ListField | GroupField> = Omit<Spec<F>, 'rules'> & { readonly rules?: F['rules'] };
 
+/** Declares a list of entities, with the rules across them that no single field states (none if left out). */
 export function list<E extends Fields>(spec: Ruled<ListField<E>>): ListField<E> {
   return { kind: 'list', ...spec, rules: spec.rules ?? [] };
 }
 
+/** Declares fields saved together, with the rules across them that no single field states (none if left out). */
 export function group<E extends Fields>(spec: Ruled<GroupField<E>>): GroupField<E> {
   return { kind: 'group', ...spec, rules: spec.rules ?? [] };
 }
@@ -209,6 +219,7 @@ const COLOUR = /^#[0-9a-f]{6}$/i;
 /** The rule a value breaks for one field, or null when the field accepts it: the one test behind every check. */
 type FieldRule = 'type' | 'range' | 'integer' | 'choice' | 'colour' | 'length' | 'id' | 'reference' | 'count';
 
+/** The rule one value breaks for its field, or null when the field accepts it: every check at open asks this. */
 export function ruleBrokenBy(field: Field, value: unknown): FieldRule | null {
   switch (field.kind) {
     case 'number':

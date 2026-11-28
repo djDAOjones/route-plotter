@@ -53,6 +53,10 @@ interface Drag {
   readonly starts: readonly Start[];
 }
 
+/**
+ * Binds the pointer's state machine to the store: each input steps it, its effects act on the store (a drag is one
+ * store gesture), and the effects come back so the page can take and release pointer capture.
+ */
 export function bindPointer({ store, bounds, onTap, limit }: PointerBindingOptions): PointerBinding {
   let state: PointerState = IDLE;
   let drag: Drag | null = null;

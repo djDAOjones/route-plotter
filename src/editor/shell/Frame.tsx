@@ -75,6 +75,7 @@ function column(place: string, regions: readonly ReactNode[]): ReactNode {
   return shown.length ? <div className={`frame__column frame__column--${place}`}>{shown}</div> : null;
 }
 
+/** The frame every control of the page stands in: it lays out the slots it is given and owns nothing else. */
 export function Frame({ help, open, notice, outline, pointsList, preview, transport, panels, exportPanel, children }: FrameProps) {
   const left = column('left', [region('outline', outline), region('pointsList', pointsList)]);
   const right = column('right', [region('panels', panels), region('exportPanel', exportPanel)]);

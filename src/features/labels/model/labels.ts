@@ -51,6 +51,7 @@ function lookOf(settings: Settings): LabelLook {
   return { size, width, offsetX, offsetY, textColour, backgroundColour, backgroundOpacity };
 }
 
+/** The module's evaluation, once a route a frame: each stop's label at this moment, where the settings show it. */
 function evaluate({ settings, route, timeMs }: RouteInput<Settings>): Evaluation<LabelsDrawing> {
   const look = lookOf(settings);
   const { appearance } = settings;

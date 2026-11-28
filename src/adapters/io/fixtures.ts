@@ -16,17 +16,22 @@ const le16 = (value: number) => [value & 255, (value >>> 8) & 255];
 const le24 = (value: number) => [value & 255, (value >>> 8) & 255, (value >>> 16) & 255];
 const le32 = (value: number) => [...le16(value & 0xffff), ...le16(value >>> 16)];
 
+/** A PNG's signature and IHDR header alone, at the size asked for: all admission reads, so no encoder is needed. */
 export const png = (width: number, height: number) =>
   Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, ...ascii('IHDR'), ...be32(width), ...be32(height), 8, 6, 0, 0, 0, 0, 0, 0, 0]);
 
+/** A JPEG header alone, its progressive frame header (after one table segment) naming the size asked for. */
 export const jpeg = (width: number, height: number) =>
   Uint8Array.from([0xff, 0xd8, 0xff, 0xe0, 0, 16, ...ascii('JFIF'), 0, 1, 1, 0, 0, 1, 0, 1, 0, 0,
     0xff, 0xc4, 0, 3, 0, 0xff, 0xc2, 0, 11, 8, ...be16(height), ...be16(width), 1, 1, 0x11, 0, 0xff, 0xd9]);
 
 const riff = (chunk: number[]) => [...ascii('RIFF'), ...le32(chunk.length + 4), ...ascii('WEBP'), ...chunk];
+/** A lossy WebP (VP8) header alone, at the size asked for: the first of the three ways a WebP states its size. */
 export const webpLossy = (width: number, height: number) =>
   Uint8Array.from(riff([...ascii('VP8 '), ...le32(10), 0, 0, 0, 0x9d, 0x01, 0x2a, ...le16(width), ...le16(height)]));
+/** A lossless WebP (VP8L) header alone, at the size asked for. */
 export const webpLossless = (width: number, height: number) =>
   Uint8Array.from(riff([...ascii('VP8L'), ...le32(5), 0x2f, ...le32((width - 1) | ((height - 1) << 14))]));
+/** An extended WebP (VP8X) header alone, at the size asked for. */
 export const webpExtended = (width: number, height: number) =>
   Uint8Array.from(riff([...ascii('VP8X'), ...le32(10), 0, 0, 0, 0, ...le24(width - 1), ...le24(height - 1)]));

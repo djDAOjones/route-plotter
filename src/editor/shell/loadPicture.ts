@@ -8,6 +8,7 @@
 // one plain colour shows that colour on the canvas; a loader giving null fails it.
 import type { LoadPicture } from './previewLogic';
 
+/** The background picture's loader in the browser: the bitmap and the call that closes it, or null if undecodable. */
 export const loadPicture: LoadPicture = async (bytes, type) => {
   try {
     const bitmap = await createImageBitmap(new Blob([bytes.slice()], { type }));

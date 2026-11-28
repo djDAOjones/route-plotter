@@ -230,6 +230,7 @@ function leftOutProgress({ appearance }: Settings, { timeline, shape }: RouteInp
   };
 }
 
+/** The module's evaluation, once a route a frame: the line's strokes at this moment, from the lead's progress. */
 function evaluate({ settings, route, lead, timeMs }: RouteInput<Settings>): Evaluation<LineDrawing> {
   const { appearance } = settings;
   if (appearance === 'hidden') return { ok: true, value: { strokes: [] } };

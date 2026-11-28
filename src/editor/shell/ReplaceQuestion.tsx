@@ -52,6 +52,7 @@ export interface ReplaceAsker {
   readonly subscribe: (listener: () => void) => () => void;
 }
 
+/** The page's one question before an opened project replaces a changed route: the opener asks it, the page answers. */
 export function createReplaceAsker(): ReplaceAsker {
   let shown: {
     readonly question: AskedQuestion;

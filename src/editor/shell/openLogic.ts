@@ -209,6 +209,10 @@ function intoStore(store: Pick<Store, 'open'>, project: Project): Refusal | null
   }
 }
 
+/**
+ * Open's rule over the store: opens a project file's bytes, asking first when a changed route would be replaced, and
+ * announces the outcome; it never rejects.
+ */
 export function createOpener({
   store, announce, player, decode, openProject = ioOpenProject, confirmReplace,
 }: OpenerOptions): Opener {
